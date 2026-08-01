@@ -1,0 +1,422 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  useAdmins,
+  useCreateAdmin,
+  useUpdateAdminStatus,
+  useColleges,
+} from '../hooks/useSuperAdmin';
+import { useNotification } from '../../../shared/providers/NotificationProvider';
+import {
+  Shield, Search, Filter, ArrowLeft, Plus, Edit3, Eye,
+  Power, PowerOff, Mail, Phone, Building2, UserPlus,
+  X, Check, Loader2
+} from "lucide-react";
+import type { Admin, CreateAdminInput, AdminRole } from '../types/superAdmin';
+
+const ROLE_LABELS: Record<AdminRole, string> = {
+  superadmin: "Super Admin",
+  admin: "Principal",
+  hod: "HOD",
+  mentor: "Mentor",
+  coordinator: "Coordinator",
+  department_head: "Dept Head",
+};
+
+const ROLE_COLORS: Record<AdminRole, string> = {
+  superadmin: "bg-red-500/10 text-red-400",
+  admin: "bg-blue-500/10 text-blue-400",
+  hod: "bg-purple-500/10 text-purple-400",
+  mentor: "bg-green-500/10 text-green-400",
+  coordinator: "bg-amber-500/10 text-amber-400",
+  department_head: "bg-cyan-500/10 text-cyan-400",
+};
+
+const SuperAdminAdmins: React.FC = () => {
+  const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
+
+  const [createForm, setCreateForm] = useState<CreateAdminInput>({
+    name: "",
+    email: "",
+    role: "admin",
+    collegeId: "",
+    phone: "",
+    department: "",
+  });
+
+  const { data: adminsData, isLoading } = useAdmins({
+    role: roleFilter === "all" ? undefined : (roleFilter as AdminRole),
+    status: statusFilter === "all" ? undefined : statusFilter,
+    search: searchQuery || undefined,
+  });
+
+  const { data: collegesData } = useColleges({ status: "active" });
+  const createAdmin = useCreateAdmin();
+  const updateAdminStatus = useUpdateAdminStatus();
+
+  const admins = adminsData?.items || [];
+  const colleges = collegesData?.items || [];
+
+  const handleCreate = async () => {
+    if (!createForm.name.trim() || !createForm.email.trim() || !createForm.collegeId) {
+      showError("Name, email, and college are required");
+      return;
+    }
+    try {
+      await createAdmin.mutateAsync(createForm);
+      showSuccess(`Admin "${createForm.name}" created successfully`);
+      setShowCreateModal(false);
+      setCreateForm({ name: "", email: "", role: "admin", collegeId: "", phone: "", department: "" });
+    } catch {
+      showError("Failed to create admin");
+    }
+  };
+
+  const handleToggleStatus = async (admin: Admin) => {
+    const newStatus = admin.status === "active" ? "inactive" : "active";
+    try {
+      await updateAdminStatus.mutateAsync({ adminId: admin.id, status: newStatus });
+      showSuccess(`Admin ${admin.name} is now ${newStatus}`);
+    } catch {
+      showError("Failed to update admin status");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900 p-6">
+      {/* Header */}
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+            <ArrowLeft className="w-5 h-5 text-slate-400" />
+          </button>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <Shield className="w-6 h-6 text-amber-400" />
+              <h1 className="text-2xl font-bold text-white">Admin Management</h1>
+            </div>
+            <p className="text-slate-400 text-sm">Manage all college administrators</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+        >
+          <UserPlus className="w-4 h-4" />
+          Create Admin
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+          <p className="text-xs text-slate-500 mb-1">Total Admins</p>
+          <p className="text-2xl font-bold text-white">{admins.length}</p>
+        </div>
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+          <p className="text-xs text-slate-500 mb-1">Active</p>
+          <p className="text-2xl font-bold text-green-400">{admins.filter((a: Admin) => a.status === "active").length}</p>
+        </div>
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+          <p className="text-xs text-slate-500 mb-1">Inactive</p>
+          <p className="text-2xl font-bold text-red-400">{admins.filter((a: Admin) => a.status === "inactive").length}</p>
+        </div>
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+          <p className="text-xs text-slate-500 mb-1">Principals</p>
+          <p className="text-2xl font-bold text-blue-400">{admins.filter((a: Admin) => a.role === "admin").length}</p>
+        </div>
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+          <p className="text-xs text-slate-500 mb-1">HODs</p>
+          <p className="text-2xl font-bold text-purple-400">{admins.filter((a: Admin) => a.role === "hod").length}</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search admins..."
+            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+        <div className="relative">
+          <Filter className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+          <select
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
+            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none appearance-none"
+          >
+            <option value="all">All Roles</option>
+            <option value="superadmin">Super Admin</option>
+                    <option value="admin">Principal</option>
+            <option value="hod">HOD</option>
+            <option value="mentor">Mentor</option>
+            <option value="coordinator">Coordinator</option>
+            <option value="department_head">Dept Head</option>
+          </select>
+        </div>
+        <div className="relative">
+          <Filter className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
+            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none appearance-none"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-slate-400 border-b border-slate-700">
+              <th className="text-left px-4 py-3 font-medium">Name</th>
+              <th className="text-left px-4 py-3 font-medium">Email</th>
+              <th className="text-center px-4 py-3 font-medium">Role</th>
+              <th className="text-left px-4 py-3 font-medium">College</th>
+              <th className="text-center px-4 py-3 font-medium">Department</th>
+              <th className="text-center px-4 py-3 font-medium">Status</th>
+              <th className="text-center px-4 py-3 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {admins.map((admin: Admin) => (
+              <tr key={admin.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <span className="text-xs font-bold text-amber-400">{admin.name[0]}</span>
+                    </div>
+                    <span className="text-white font-medium">{admin.name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-slate-300">{admin.email}</td>
+                <td className="px-4 py-3 text-center">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[admin.role]}`}>
+                    {ROLE_LABELS[admin.role]}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-slate-300">{admin.collegeName || admin.collegeCode || "—"}</td>
+                <td className="px-4 py-3 text-center text-slate-400">{admin.department || "—"}</td>
+                <td className="px-4 py-3 text-center">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    admin.status === "active" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                  }`}>
+                    {admin.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleToggleStatus(admin)}
+                      disabled={updateAdminStatus.isPending}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        admin.status === "active"
+                          ? "hover:bg-red-500/20 text-red-400"
+                          : "hover:bg-green-500/20 text-green-400"
+                      }`}
+                      title={admin.status === "active" ? "Deactivate" : "Activate"}
+                    >
+                      {admin.status === "active" ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => setSelectedAdmin(admin)} className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors">
+                      <Eye className="w-4 h-4 text-slate-400" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {admins.length === 0 && (
+          <div className="text-center py-8 text-slate-500">
+            <Shield className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>No admins found</p>
+          </div>
+        )}
+      </div>
+
+      {/* Create Admin Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Create New Admin</h2>
+              <button onClick={() => setShowCreateModal(false)} className="p-1 hover:bg-slate-700 rounded-lg">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Name *</label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  placeholder="Full name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={createForm.email}
+                  onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  placeholder="admin@college.edu"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Role *</label>
+                  <select
+                    value={createForm.role}
+                    onChange={e => setCreateForm({ ...createForm, role: e.target.value as AdminRole })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  >
+                    <option value="superadmin">Super Admin</option>
+                    <option value="superadmin">Super Admin</option>
+                    <option value="admin">Principal</option>
+                    <option value="hod">HOD</option>
+                    <option value="mentor">Mentor</option>
+                    <option value="coordinator">Coordinator</option>
+                    <option value="department_head">Dept Head</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">College *</label>
+                  <select
+                    value={createForm.collegeId}
+                    onChange={e => setCreateForm({ ...createForm, collegeId: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  >
+                    <option value="">Select College</option>
+                    {colleges.map((college) => (
+                      <option key={college.id} value={college.id}>{college.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={createForm.phone || ""}
+                    onChange={e => setCreateForm({ ...createForm, phone: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    placeholder="10-digit number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Department</label>
+                  <input
+                    type="text"
+                    value={createForm.department || ""}
+                    onChange={e => setCreateForm({ ...createForm, department: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    placeholder="Department"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleCreate}
+                  disabled={createAdmin.isPending}
+                  className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {createAdmin.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  {createAdmin.isPending ? "Creating..." : "Create Admin"}
+                </button>
+                <button onClick={() => setShowCreateModal(false)} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Admin Modal */}
+      {selectedAdmin && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Admin Details</h2>
+              <button onClick={() => setSelectedAdmin(null)} className="p-1 hover:bg-slate-700 rounded-lg">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Name</span>
+                <span className="text-white font-medium">{selectedAdmin.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Email</span>
+                <span className="text-white">{selectedAdmin.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Role</span>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[selectedAdmin.role]}`}>
+                  {ROLE_LABELS[selectedAdmin.role]}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">College</span>
+                <span className="text-white">{selectedAdmin.collegeName || selectedAdmin.collegeCode || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Department</span>
+                <span className="text-white">{selectedAdmin.department || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Status</span>
+                <span className={`${selectedAdmin.status === "active" ? "text-green-400" : "text-red-400"}`}>{selectedAdmin.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Created</span>
+                <span className="text-slate-300">{new Date(selectedAdmin.createdAt).toLocaleDateString("en-IN")}</span>
+              </div>
+              {selectedAdmin.lastLogin && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Last Login</span>
+                  <span className="text-slate-300">{new Date(selectedAdmin.lastLogin).toLocaleDateString("en-IN")}</span>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setSelectedAdmin(null)} className="w-full mt-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SuperAdminAdmins;

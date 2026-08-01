@@ -1,0 +1,46 @@
+// hooks/index.ts
+export { useAuth } from '../contexts/AuthContext';
+export { useAdminDashboardData as useAdminDashboard } from './useAdminDashboard';
+// export { useAssessments } from './useAssessments'; // OLD - replaced by useAssessment
+export { useAttendance } from './useAttendance';
+export { useAttendanceMarking } from './useAttendanceMarking';
+export { useCollegeStudents } from './useCollegeStudents';
+export { useCurriculum } from './useCurriculum';
+export { useDashboardData } from './useDashboardData';
+export { useFacultyData } from './useFacultyData';
+export { useFeeData } from './useFeeData';
+export { useGreeting } from './useGreeting';
+export { useAIAgent } from './useAIAgent';
+export { useAdminSchedule as useSchedules } from './useAdminSchedule';
+export { useStudentData } from './useStudentData';
+export { useAttendanceExport } from './useAttendanceExport';
+export { useQuestionBank } from './useQuestionBank';
+export { usePaperGenerator } from './usePaperGenerator';
+export { useAIQuestionGenerator } from './useAIQuestionGenerator';
+export { useFacultyAttendance } from './useFacultyAttendance';
+
+// ─── NEW: Assessment System Hooks ───
+export {
+  useQuestions,
+  useQuestion,
+  usePapers,
+  usePaper,
+  useScheduledTests,
+  useStudentTests,
+  useActiveTest,
+  useTestResult,
+  useTestResults,
+  useTestAnalytics,
+  useReviewQueue,
+  useTestNotifications,
+  useBulkImport,
+} from './useAssessment';
+// ─── NEW: Syllabus Parser Hooks ───
+export { useSyllabusParser } from './useSyllabusParser';
+export {
+  useSyllabusExtracts,
+  useSyllabusExtract,
+  useCurriculumDocs,
+  useCurriculumAssignment,
+  useCurriculumStats,
+} from './useSyllabusCurriculum';

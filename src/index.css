@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-800 font-sans antialiased dark:bg-slate-950 dark:text-slate-100;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer components {
+  /* Glass card - adapts to light/dark */
+  .glass-card {
+    @apply bg-white/80 dark:bg-slate-800/60 backdrop-blur-xl 
+           border border-slate-200 dark:border-slate-700/50 
+           rounded-2xl shadow-sm dark:shadow-none;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .glass-card-hover {
+    @apply glass-card;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card-hover:hover {
+    @apply border-teal-500/50;
+    box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.1);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply px-6 py-3 font-medium rounded-xl transition-all duration-200 flex items-center gap-2;
+    background-color: #14b8a6;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: rgba(20, 184, 166, 0.9);
+  }
+
+  /* Secondary button - adapts to light/dark */
+  .btn-secondary {
+    @apply px-6 py-3 font-medium rounded-xl transition-all duration-200 flex items-center gap-2;
+    background-color: rgba(226, 232, 240, 0.8);
+    color: #475569;
+  }
+  
+  .dark .btn-secondary {
+    background-color: rgba(51, 65, 85, 0.5);
+    color: #e2e8f0;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #cbd5e1;
+  }
+  
+  .dark .btn-secondary:hover {
+    background-color: #334155;
+  }
+
+  /* Input field - adapts to light/dark */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-200;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+  }
+  
+  .dark .input-field {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+  
+  .input-field::placeholder {
+    color: #94a3b8;
+  }
+  
+  .input-field:focus {
+    border-color: #14b8a6;
+    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.5);
+  }
+
+  /* Page container */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  /* Section title - adapts to light/dark */
+  .section-title {
+    @apply text-2xl font-bold mb-6;
+    color: #1e293b;
+  }
+  
+  .dark .section-title {
+    color: #e2e8f0;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply glass-card-hover p-6;
+  }
+
+  /* Table container */
+  .table-container {
+    @apply glass-card overflow-hidden;
+  }
+
+  /* Table header - adapts to light/dark */
+  .table-header {
+    @apply px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider;
+    color: #64748b;
+    background-color: rgba(248, 250, 252, 0.8);
+  }
+  
+  .dark .table-header {
+    color: #94a3b8;
+    background-color: rgba(15, 23, 42, 0.5);
+  }
+
+  /* Table cell - adapts to light/dark */
+  .table-cell {
+    @apply px-6 py-4 text-sm;
+    color: #334155;
+    border-top: 1px solid rgba(226, 232, 240, 0.5);
+  }
+  
+  .dark .table-cell {
+    color: #e2e8f0;
+    border-top-color: rgba(51, 65, 85, 0.3);
+  }
+
+  /* ─── Vriddhi Theme Tokens (for AdminFeeManagement) ─── */
+  :root {
+    --vriddhi-bg: #f8fafc;
+    --vriddhi-card: rgba(255, 255, 255, 0.8);
+    --vriddhi-border: #e2e8f0;
+    --vriddhi-text: #1e293b;
+    --vriddhi-muted: #64748b;
+    --vriddhi-accent: #14b8a6;
+    --vriddhi-dark: #f1f5f9;
+  }
+
+  .dark {
+    --vriddhi-bg: #0f172a;
+    --vriddhi-card: rgba(30, 41, 59, 0.6);
+    --vriddhi-border: rgba(51, 65, 85, 0.5);
+    --vriddhi-text: #f8fafc;
+    --vriddhi-muted: #94a3b8;
+    --vriddhi-accent: #14b8a6;
+    --vriddhi-dark: #0f172a;
+  }
+
+  .bg-vriddhi-bg { background-color: var(--vriddhi-bg); }
+  .bg-vriddhi-card { background-color: var(--vriddhi-card); }
+  .bg-vriddhi-dark { background-color: var(--vriddhi-dark); }
+  .border-vriddhi-border { border-color: var(--vriddhi-border); }
+  .text-vriddhi-text { color: var(--vriddhi-text); }
+  .text-vriddhi-muted { color: var(--vriddhi-muted); }
+  .text-vriddhi-accent { color: var(--vriddhi-accent); }
+  .bg-vriddhi-accent { background-color: var(--vriddhi-accent); }
+}
+
+/* Custom scrollbar - adapts to light/dark */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Chart tooltips */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}

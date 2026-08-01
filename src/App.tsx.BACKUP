@@ -1,0 +1,633 @@
+import React, { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext'
+import Layout from './components/Layout'
+import Login from './pages/Login'
+import FacultyImport from './components/superadmin/FacultyImport'
+import QuestionBankManager from './components/question-bank/QuestionBankManager'
+
+// ── Eager-loaded (small, critical pages) ───────────────────────────────
+import Dashboard from './pages/Dashboard'
+import Unauthorized from './pages/Unauthorized'
+
+// ── Lazy-loaded pages (code-split by route) ────────────────────────────
+
+// Student pages
+const StudentLogin = lazy(() => import('./pages/StudentLogin'))
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'))
+const StudentSidebar = lazy(() => import('./components/student/StudentSidebar'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEW: Student Assessment Portal Pages
+// ═══════════════════════════════════════════════════════════════════════
+const StudentTestDashboard = lazy(() => import('./pages/student/StudentTestDashboard'))
+const TestInstructionsPage = lazy(() => import('./pages/student/TestInstructionsPage'))
+const ActiveTestPage = lazy(() => import('./pages/student/ActiveTestPage'))
+const TestResultPage = lazy(() => import('./pages/student/TestResultPage'))
+
+// Student sub-pages
+const SchedulingPage = lazy(() => import('./components/student/SchedulingPage').then(m => ({ default: m.SchedulingPage })))
+const UpcomingAssessments = lazy(() => import('./components/student/UpcomingAssessments'))
+const PendingAssignments = lazy(() => import('./components/student/PendingAssignments'))
+const AttendancePage = lazy(() => import('./components/student/AttendancePage').then(m => ({ default: m.AttendancePage })))
+const FeeManagementPage = lazy(() => import('./components/student/FeeManagementPage').then(m => ({ default: m.FeeManagementPage })))
+const NotificationsPanel = lazy(() => import('./components/student/NotificationsPanel'))
+
+// NEW: Student pages that were missing
+const StudentGrades = lazy(() => import('./pages/student/StudentGrades'))
+const StudentSettings = lazy(() => import('./pages/student/StudentSettings'))
+const StudentMaterials = lazy(() => import('./pages/student/StudentMaterials'))
+const StudentTimetable = lazy(() => import('./pages/student/StudentTimetable'))
+const StudentLibrary = lazy(() => import('./pages/student/StudentLibrary'))
+const StudentEvents = lazy(() => import('./pages/student/StudentEvents'))
+const StudentNotificationsPage = lazy(() => import('./pages/student/StudentNotificationsPage'))
+
+// Principal (Admin) pages
+const Students = lazy(() => import('./pages/Students'))
+const View360 = lazy(() => import('./pages/View360'))
+const Attendance = lazy(() => import('./pages/Attendance'))
+const Assessments = lazy(() => import('./pages/Assessments'))
+const Settings = lazy(() => import('./pages/Settings'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'))
+const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEW: Admin Curriculum Mapping & Scheduling Page
+// ═══════════════════════════════════════════════════════════════════════
+const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'))
+
+// HOD pages
+const HODDashboard = lazy(() => import('./pages/HODDashboard'))
+
+// Question Bank & Papers (heavy pages — separate chunks)
+const QuestionBank = lazy(() => import('./pages/QuestionBank'))
+const QuestionBankAdmin = lazy(() => import('./components/question-bank/FacultyBankAdmin'))
+const PaperGenerator = lazy(() => import('./pages/PaperGenerator'))
+const PaperGeneratorAdmin = lazy(() => import('./pages/PaperGeneratorAdmin'))
+
+// Analytics (heavy — recharts)
+const Analytics = lazy(() => import('./pages/Analytics'))
+const Journey = lazy(() => import('./pages/Journey'))
+
+// Faculty pages
+const FacultyDashboard = lazy(() => import('./pages/faculty/FacultyDashboard'))
+const FacultyAttendance = lazy(() => import('./pages/faculty/FacultyAttendance'))
+const FacultyTopics = lazy(() => import('./pages/faculty/FacultyTopics'))
+const FacultyPapers = lazy(() => import('./pages/faculty/FacultyPapers'))
+const FacultyQuestionBank = lazy(() => import('./pages/faculty/FacultyQuestionBank'))
+const FacultyPaperGenerator = lazy(() => import('./pages/faculty/FacultyPaperGenerator'))
+const FacultyStudentAnalysis = lazy(() => import('./pages/faculty/FacultyStudentAnalysis'))
+const FacultyReschedule = lazy(() => import('./pages/faculty/FacultyReschedule'))
+const FacultyUploadMaterial = lazy(() => import('./pages/faculty/FacultyUploadMaterial'))
+const FacultyLibrary = lazy(() => import('./pages/faculty/FacultyLibrary'))
+const FacultyAnnouncements = lazy(() => import('./pages/faculty/FacultyAnnouncements'))
+const FacultyAssignments = lazy(() => import('./pages/faculty/FacultyAssignments'))
+const FacultyCalendar = lazy(() => import('./pages/faculty/FacultyCalendar'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEW: Faculty Curriculum Page
+// ═══════════════════════════════════════════════════════════════════════
+const FacultyCurriculum = lazy(() => import('./pages/faculty/FacultyCurriculum'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEW: Faculty Attendance Marking
+// ═══════════════════════════════════════════════════════════════════════
+const FacultyAttendanceMarking = lazy(() => import('./components/FacultyAttendanceMarking'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEW: AI Question Generator
+// ═══════════════════════════════════════════════════════════════════════
+const AIQuestionGenerator = lazy(() => import('./components/question-bank/AIQuestionGenerator'))
+
+// Super Admin pages
+const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard'))
+const SuperAdminColleges = lazy(() => import('./pages/superadmin/SuperAdminColleges'))
+const SuperAdminAdmins = lazy(() => import('./pages/superadmin/SuperAdminAdmins'))
+const SuperAdminStudents = lazy(() => import('./pages/superadmin/SuperAdminStudents'))
+const CreateCollege = lazy(() => import('./pages/superadmin/CreateCollege'))
+const SuperAdminFaculty = lazy(() => import('./pages/superadmin/SuperAdminFaculty'))
+const SuperAdminFacultyDetail = lazy(() => import('./pages/superadmin/SuperAdminFacultyDetail'))
+const CreateCollegeAdmin = lazy(() => import('./pages/superadmin/CreateCollegeAdmin'))
+const UserImport = lazy(() => import('./pages/superadmin/UserImport'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// FIX #1: Added missing SuperAdminCollegeDetail page
+// ═══════════════════════════════════════════════════════════════════════
+const SuperAdminCollegeDetail = lazy(() => import('./pages/superadmin/SuperAdminCollegeDetail'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEW: University Master pages for Karnataka Government Universities
+// ═══════════════════════════════════════════════════════════════════════
+const SuperAdminUniversities = lazy(() => import('./pages/superadmin/SuperAdminUniversities'))
+const SuperAdminUniversityDetail = lazy(() => import('./pages/superadmin/SuperAdminUniversityDetail'))
+const SuperAdminCurriculum = lazy(() => import('./pages/superadmin/SuperAdminCurriculum'))
+
+// ═══════════════════════════════════════════════════════════════════════
+// Super Admin — Analytics & Monitoring
+// ═══════════════════════════════════════════════════════════════════════
+const MultiCollegeComparison = lazy(() => import('./pages/superadmin/MultiCollegeComparison'))
+const SubscriptionBilling = lazy(() => import('./pages/superadmin/SubscriptionBilling'))
+const SystemHealthMonitor = lazy(() => import('./pages/superadmin/SystemHealthMonitor'))
+
+// ── Loading fallback ──────────────────────────────────────────────────
+const PageLoader = () => (
+  <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+  </div>
+)
+
+// ── Role-based route guard ────────────────────────────────────────────
+function RoleRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/" replace />
+  if (!allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" replace />
+  return <>{children}</>
+}
+
+// ── Student route guard ───────────────────────────────────────────────
+function StudentRoute({ children }: { children: React.ReactNode }) {
+  const studentToken = localStorage.getItem('studentToken')
+  const studentRole = localStorage.getItem('studentRole')
+  if (!studentToken || studentRole !== 'student') return <Navigate to="/student/login" replace />
+  return <>{children}</>
+}
+
+// ── Student Layout wrapper ────────────────────────────────────────────
+function StudentLayout() {
+  const studentToken = localStorage.getItem('studentToken')
+  const studentRole = localStorage.getItem('studentRole')
+  if (!studentToken || studentRole !== 'student') return <Navigate to="/student/login" replace />
+
+  return (
+    <div className="flex min-h-screen bg-slate-950">
+      <Suspense fallback={<div className="w-72 bg-slate-900" />}>
+        <StudentSidebar />
+      </Suspense>
+      <main className="flex-1 overflow-auto pb-20 md:pb-0">
+        <Routes>
+          <Route path="/" element={<StudentDashboard />} />
+          <Route path="/schedule" element={
+            <Suspense fallback={<PageLoader />}>
+              <SchedulingPage studentId={studentToken} />
+            </Suspense>
+          } />
+          {/* ═══════════════════════════════════════════════════════════════
+              NEW: Student Assessment Portal Routes
+          ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/assessments" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentTestDashboard />
+            </Suspense>
+          } />
+          <Route path="/test/:testId/instructions" element={
+            <Suspense fallback={<PageLoader />}>
+              <TestInstructionsPage />
+            </Suspense>
+          } />
+          <Route path="/test/:testId/take" element={
+            <Suspense fallback={<PageLoader />}>
+              <ActiveTestPage />
+            </Suspense>
+          } />
+          <Route path="/test/:testId/result" element={
+            <Suspense fallback={<PageLoader />}>
+              <TestResultPage />
+            </Suspense>
+          } />
+          {/* Legacy route — redirect to new portal */}
+          <Route path="/upcoming-assessments" element={
+            <Suspense fallback={<PageLoader />}>
+              <UpcomingAssessments assessments={[]} />
+            </Suspense>
+          } />
+          <Route path="/assignments" element={
+            <Suspense fallback={<PageLoader />}>
+              <PendingAssignments
+                assignments={[]}
+                onSubmit={(assignmentId: string) => {
+                  console.log('Submit assignment', assignmentId)
+                }}
+              />
+            </Suspense>
+          } />
+          <Route path="/attendance" element={
+            <Suspense fallback={<PageLoader />}>
+              <AttendancePage studentId={studentToken} />
+            </Suspense>
+          } />
+          {/* NEW: Grades & Progress page */}
+          <Route path="/grades" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentGrades />
+            </Suspense>
+          } />
+          <Route path="/fees" element={
+            <Suspense fallback={<PageLoader />}>
+              <FeeManagementPage studentId={studentToken} />
+            </Suspense>
+          } />
+          {/* NEW: Study Materials page */}
+          <Route path="/materials" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentMaterials />
+            </Suspense>
+          } />
+          {/* NEW: Time Table page */}
+          <Route path="/timetable" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentTimetable />
+            </Suspense>
+          } />
+          {/* NEW: Library page */}
+          <Route path="/library" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentLibrary />
+            </Suspense>
+          } />
+          {/* NEW: Events page */}
+          <Route path="/events" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentEvents />
+            </Suspense>
+          } />
+          {/* FIXED: Only one notifications route using the full page */}
+          <Route path="/notifications" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentNotificationsPage />
+            </Suspense>
+          } />
+          {/* Settings page */}
+          <Route path="/settings" element={
+            <Suspense fallback={<PageLoader />}>
+              <StudentSettings />
+            </Suspense>
+          } />
+        </Routes>
+      </main>
+    </div>
+  )
+}
+
+// ── Main App ────────────────────────────────────────────────────────
+function App() {
+  const { user, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+      </div>
+    )
+  }
+
+  const studentToken = localStorage.getItem('studentToken')
+  const isStudentLoggedIn = studentToken && localStorage.getItem('studentRole') === 'student'
+
+  const isFaculty = user?.role === 'faculty'
+  const isAdmin = user?.role === 'admin'
+  const isHOD = user?.role === 'hod'
+  const isMentor = user?.role === 'mentor'
+  const isSuperAdmin = user?.role === 'superadmin'
+
+  // NOT logged in at all → show login pages
+  if (!user && !isStudentLoggedIn) {
+    return (
+      <Routes>
+        <Route path="/student/login" element={<StudentLogin />} />
+        <Route path="/*" element={<Login />} />
+      </Routes>
+    )
+  }
+
+  return (
+    <Routes>
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* STUDENT ROUTES — accessible if student is logged in            */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <Route path="/student/login" element={
+        isStudentLoggedIn ? <Navigate to="/student" replace /> : <StudentLogin />
+      } />
+      <Route path="/student/*" element={
+        isStudentLoggedIn ? <StudentLayout /> : <Navigate to="/student/login" replace />
+      } />
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MAIN APP ROUTES — only if auth user exists                     */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {user && (
+        <Route element={<Layout />}>
+          {/* Root redirect based on role */}
+          <Route path="/" element={
+            isFaculty ? <Navigate to="/faculty" replace /> :
+            isHOD ? <Navigate to="/hod" replace /> :
+            isAdmin ? <Navigate to="/admin" replace /> :
+            isSuperAdmin ? <Navigate to="/superadmin" replace /> :
+            <Dashboard />
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* PRINCIPAL (admin) Routes — FULL COLLEGE ACCESS               */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/admin" element={
+            <RoleRoute allowedRoles={['admin']}>
+              <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/students" element={
+            <RoleRoute allowedRoles={['admin', 'hod', 'mentor']}>
+              <Suspense fallback={<PageLoader />}><Students /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/360-view" element={
+            <RoleRoute allowedRoles={['admin', 'hod', 'mentor', 'faculty']}>
+              <Suspense fallback={<PageLoader />}><View360 /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/attendance" element={
+            <RoleRoute allowedRoles={['admin', 'hod', 'mentor']}>
+              <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/assessments" element={
+            <RoleRoute allowedRoles={['admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><Assessments /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/class-schedule" element={
+            <RoleRoute allowedRoles={['admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><AdminClassSchedule /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/fees" element={
+            <RoleRoute allowedRoles={['admin']}>
+              <Suspense fallback={<PageLoader />}><AdminFeeManagement /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/question-bank" element={
+            <RoleRoute allowedRoles={['admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><QuestionBank /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/question-bank/admin" element={
+            <RoleRoute allowedRoles={['admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><QuestionBankAdmin /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/paper-generator" element={
+            <RoleRoute allowedRoles={['admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><PaperGeneratorAdmin /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/analytics" element={
+            <RoleRoute allowedRoles={['admin', 'hod', 'mentor']}>
+              <Suspense fallback={<PageLoader />}><Analytics /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/journey" element={
+            <RoleRoute allowedRoles={['admin', 'hod', 'mentor', 'faculty']}>
+              <Suspense fallback={<PageLoader />}><Journey /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/settings" element={
+            <RoleRoute allowedRoles={['admin']}>
+              <Suspense fallback={<PageLoader />}><Settings /></Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════
+              NEW: Admin Curriculum Mapping & Scheduling Route
+          ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/admin/curriculum" element={
+            <RoleRoute allowedRoles={['admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><AdminCurriculum /></Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* HOD Routes — DEPARTMENT-ONLY                                   */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/hod" element={
+            <RoleRoute allowedRoles={['hod']}>
+              <Suspense fallback={<PageLoader />}><HODDashboard /></Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* Super Admin Routes                                           */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/superadmin" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminDashboard /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/colleges" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminColleges /></Suspense>
+            </RoleRoute>
+          } />
+          {/* ═══════════════════════════════════════════════════════════════
+              FIX #1: Added missing /superadmin/college/:id route
+          ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/superadmin/college/:id" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminCollegeDetail /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/colleges/create" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><CreateCollege /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/create-admin" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><CreateCollegeAdmin /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/admins" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminAdmins /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/students" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminStudents /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/user-import" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><UserImport /></Suspense>
+            </RoleRoute>
+          } />
+          {/* ═══ FACULTY ROUTES ═══ */}
+          <Route path="/superadmin/faculty-import" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><FacultyImport /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/faculty" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminFaculty /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/faculty/:id" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminFacultyDetail /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/comparison" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><MultiCollegeComparison /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/billing" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SubscriptionBilling /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/health" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SystemHealthMonitor /></Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════
+              NEW: University Master Routes
+              Karnataka Government Universities management
+          ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/superadmin/universities" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminUniversities /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/university/:id" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminUniversityDetail /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/superadmin/curriculum" element={
+            <RoleRoute allowedRoles={['superadmin']}>
+              <Suspense fallback={<PageLoader />}><SuperAdminCurriculum /></Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* Faculty Routes                                               */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/faculty" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyDashboard /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/attendance" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyAttendance /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/topics" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyTopics /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/papers" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyPapers /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/question-bank" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyQuestionBank /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/paper-generator" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyPaperGenerator /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/student-analysis" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyStudentAnalysis /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/reschedule" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyReschedule /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/upload-material" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyUploadMaterial /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/library" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyLibrary /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/announcements" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyAnnouncements /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/assignments" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyAssignments /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/calendar" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyCalendar /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/360-view" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><View360 /></Suspense>
+            </RoleRoute>
+          } />
+          <Route path="/faculty/mark-attendance" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}>
+                <FacultyAttendanceMarking 
+                  collegeId={user?.collegeId || ''} 
+                  facultyId={user?.id || ''} 
+                  facultyName={user?.name || 'Faculty'} 
+                />
+              </Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════
+              NEW: Faculty Curriculum Route
+          ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/faculty/curriculum" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><FacultyCurriculum /></Suspense>
+            </RoleRoute>
+          } />
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* NEW: AI Question Generator Route                             */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <Route path="/faculty/ai-questions" element={
+            <RoleRoute allowedRoles={['faculty', 'admin', 'hod']}>
+              <Suspense fallback={<PageLoader />}><AIQuestionGenerator /></Suspense>
+            </RoleRoute>
+          } />
+
+          <Route path="/unauthorized" element={<Unauthorized />} />
+        </Route>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* FALLBACK REDIRECTS                                             */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <Route path="*" element={
+        isStudentLoggedIn ? <Navigate to="/student" replace /> :
+        user ? <Navigate to="/" replace /> :
+        <Navigate to="/" replace />
+      } />
+    </Routes>
+  )
+}
+
+export default App
