@@ -16,7 +16,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import { Question, QuestionFilters, PaginatedResult, BulkImportResult } from '../../admin/types/questionBank';
 import { Paper } from '../../admin/types/questionBank';
 

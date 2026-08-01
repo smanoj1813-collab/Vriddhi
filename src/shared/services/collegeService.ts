@@ -27,7 +27,7 @@ import {
   deleteUser,
   getAuth
 } from 'firebase/auth';
-import { db } from '../../Firebase/config';
+import { db } from '@/Firebase/config';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES

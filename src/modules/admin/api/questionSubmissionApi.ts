@@ -11,9 +11,9 @@ import {
   getDoc,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import app from '../../../Firebase/config';
+import app from '@/Firebase/config';
 import {
   type QuestionContent,
   type QuestionReview,

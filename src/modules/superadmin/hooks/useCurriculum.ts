@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   collection, getDocs, addDoc, updateDoc, doc, query, where, orderBy, limit, Timestamp,
 } from 'firebase/firestore';

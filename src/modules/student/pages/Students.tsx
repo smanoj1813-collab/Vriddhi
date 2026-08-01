@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '../../auth/context/AuthContext'
-import { db } from '../../../Firebase/config'
+import { db } from '@/Firebase/config'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import {
   Users, Search, Filter, Download, Eye, Edit3, Trash2, ChevronDown, ChevronUp,

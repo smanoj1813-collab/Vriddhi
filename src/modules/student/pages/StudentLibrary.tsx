@@ -4,7 +4,7 @@ import {
   Search, BookOpen, Calendar, AlertTriangle, CheckCircle, Clock, Library,
   Filter, BookMarked, RefreshCw
 } from 'lucide-react';
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 // ─── Types ───────────────────────────────────────────────────────────

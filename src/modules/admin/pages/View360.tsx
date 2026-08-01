@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useAuth } from '../../auth/context/AuthContext'
-import { db } from '../../Firebase/config'
+import { db } from '@/Firebase/config'
 import {
   collection, query, where, getDocs, limit
 } from 'firebase/firestore'

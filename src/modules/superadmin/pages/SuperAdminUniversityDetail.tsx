@@ -8,10 +8,10 @@ import {
   useUniversity,
   useUniversityColleges,
   useUpdateUniversity,
-} from '../../../hooks/useUniversities';
-import { getPriorityLabel, getManagementTypeColor } from '../../../shared/types/university';
+} from '../../hooks/useUniversities';
+import { getPriorityLabel, getManagementTypeColor } from '@/shared/types/university';
 import { DISTRICT_UNIVERSITY_MAP } from '../../../shared/data/karnatakaUniversities';
-import type { University, UniversityCollege, DistrictUniversityMapping } from '../../../shared/types/university';
+import type { University, UniversityCollege, DistrictUniversityMapping } from '@/shared/types/university';
 
 import {
   ArrowLeft,

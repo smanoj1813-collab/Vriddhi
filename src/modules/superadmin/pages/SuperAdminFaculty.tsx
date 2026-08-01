@@ -10,7 +10,7 @@ import {
 import type { Faculty } from '../api/superAdminApi'
 import { collection, getDocs, updateDoc, doc, deleteField } from 'firebase/firestore'
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
-import { db } from '../../../Firebase/config'
+import { db } from '@/Firebase/config'
 
 const SuperAdminFaculty: React.FC = () => {
   const navigate = useNavigate()

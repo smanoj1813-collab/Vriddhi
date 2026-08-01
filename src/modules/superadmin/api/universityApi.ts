@@ -1,7 +1,7 @@
 // src/api/universityApi.ts
 // Firestore CRUD for universities collection + college classification updates
 
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   collection,
   doc,

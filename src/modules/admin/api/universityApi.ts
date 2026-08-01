@@ -1,5 +1,5 @@
   // src/modules/admin/api/universityApi.ts
-  import type { University, ListUniversitiesOptions } from '../../../shared/types/university';
+  import type { University, ListUniversitiesOptions } from '@/shared/types/university';
 
   export const listUniversities = async (options?: ListUniversitiesOptions): Promise<{ data: University[]; total: number }> => {
     console.warn('[STUB] listUniversities called with', options);

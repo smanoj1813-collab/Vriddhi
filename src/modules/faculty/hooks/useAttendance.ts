@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   collection, query, where, getDocs, limit, Timestamp
 } from 'firebase/firestore';
-import { db } from '../../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import type {
   AttendanceRecord,
   CalendarDayData,

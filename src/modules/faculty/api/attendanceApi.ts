@@ -14,7 +14,7 @@ import {
   onSnapshot,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   AttendanceRecord,
   AttendanceStatus,

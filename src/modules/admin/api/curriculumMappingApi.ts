@@ -2,7 +2,7 @@
 // api/curriculumMappingApi.ts — Curriculum Faculty Mapping & Scheduling
 // ═══════════════════════════════════════════════════════════════════════
 
-import { db } from "../../../Firebase/config";
+import { db } from '@/Firebase/config';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, Timestamp, writeBatch,
@@ -15,7 +15,7 @@ import type {
   UpdateMappingInput,
   MappingFilterOptions,
   FacultyCurriculumView,
-} from "../../../../superadmin/types/curriculum";
+} from '@/modules/superadmin/types/curriculum';
 
 const MAPPINGS_COLLECTION = "curriculumFacultyMappings";
 

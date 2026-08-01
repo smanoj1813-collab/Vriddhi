@@ -5,7 +5,7 @@ import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc,
   query, where, limit, serverTimestamp,
 } from 'firebase/firestore'
-import { db } from '../../../Firebase/config'
+import { db } from '@/Firebase/config'
 
 const MAX_READS = 500
 

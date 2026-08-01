@@ -18,7 +18,7 @@ import {
   DocumentData
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { db } from '../../Firebase/config'; // Fixed: capital F in Firebase
+import { db } from '@/Firebase/config'; // Fixed: capital F in Firebase
 import { getStorage } from 'firebase/storage';
 const storage = getStorage(); // Fixed: import storage separately if exported
 

@@ -1,7 +1,7 @@
 // src/shared/services/firestoreService.ts
 // ─── Firestore Database Operations ────────────────────────
 
-import { db } from '../../Firebase/config'
+import { db } from '@/Firebase/config'
 import {
   collection,
   doc,

@@ -1,7 +1,7 @@
 // src/api/scheduleApi.ts
 // ─── Firestore CRUD for Class Schedules (Weekly Recurring + Daily Sessions) ─────────────────
 
-import { db } from '../../../Firebase/config'
+import { db } from '@/Firebase/config'
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
   deleteDoc, orderBy, limit, writeBatch, getDoc

@@ -3,7 +3,7 @@
 // FIXED: All TS strict-null errors resolved
 // ═══════════════════════════════════════════════════════════════════════
 
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, limit, Timestamp, writeBatch,

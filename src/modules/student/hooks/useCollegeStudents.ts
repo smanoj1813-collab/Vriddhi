@@ -2,7 +2,7 @@
 // Hook to fetch students for a specific college
 
 import { useState, useEffect } from 'react';
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export interface CollegeStudent {

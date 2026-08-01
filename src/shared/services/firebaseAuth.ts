@@ -1,6 +1,6 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { auth, db } from "../../Firebase/config";
+import { auth, db } from '@/Firebase/config';
 
 export type UserRole = 'superadmin' | 'admin' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor';
 

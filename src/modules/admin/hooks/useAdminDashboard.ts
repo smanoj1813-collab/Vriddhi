@@ -2,7 +2,7 @@
 // Hook to fetch real college data for Principal/Admin dashboard
 
 import { useState, useEffect } from 'react';
-import { db } from '../../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   collection,
   query,

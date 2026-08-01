@@ -35,7 +35,7 @@ import {
   Warning as WarningIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { useAuth } from '/../../../auth/context/AuthContext';
+import { useAuth } from '../../../auth/context/AuthContext';
 import { useAIQuestionGenerator } from '../../hooks/useAIQuestionGenerator';
 import {
   generateQuestionsWithAI,

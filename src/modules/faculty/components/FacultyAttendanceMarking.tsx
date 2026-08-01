@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, getDocs, doc, setDoc, writeBatch, Timestamp
 } from 'firebase/firestore';
-import { db } from '../../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
 import type { AttendanceStatus, Student } from '../../../modules/faculty/types/attendance';
 

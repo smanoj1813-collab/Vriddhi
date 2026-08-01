@@ -38,7 +38,7 @@ import {
   Archive as ArchiveIcon,
 } from "@mui/icons-material";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 
 import { useSyllabusParser } from '../hooks/useSyllabusParser';
 import {

@@ -1,95 +1,231 @@
-export type QuestionType =
-  | "mcq"
-  | "true_false"
-  | "short_answer"
-  | "long_answer"
-  | "fill_in_blanks"
-  | "match_the_following";
+// src/types/assessment.ts — APPEND these to your existing file
 
-export interface PaperQuestion {
-  id: string;
-  question: string;
-  type: QuestionType;
-  options?: string[];
-  correctAnswer?: string | string[];
-  marks: number;
-  difficulty: "easy" | "medium" | "hard";
-  topic?: string;
-  subject?: string;
-  imageUrl?: string;
+export type QuestionDifficulty = 'easy' | 'medium' | 'hard'
+export type QuestionStatus = 'draft' | 'pending' | 'approved' | 'rejected'
+
+export interface AssessmentQuestion {
+  id: string
+  subject: string
+  topic: string
+  type: 'mcq' | 'short_answer' | 'long_answer' | 'true_false' | 'fill_in_blank'
+  difficulty: QuestionDifficulty
+  marks: number
+  content: string
+  options?: { id: string; text: string; isCorrect?: boolean }[]
+  answer?: string
+  explanation?: string
+  imageUrl?: string
+  status: QuestionStatus
+  createdBy: string
+  createdAt: string
+  updatedAt?: string
+  tags?: string[]
+  bloomLevel?: string
 }
 
-export interface StudentAnswer {
-  questionId: string;
-  answer: string | string[];
-  isCorrect?: boolean;
-  marksObtained?: number;
+export interface PaperSection {
+  id: string
+  name: string
+  instructions?: string
+  questions: { questionId: string; order: number; marks: number }[]
+  totalMarks: number
 }
 
-export interface TestResultSummary {
-  totalQuestions: number;
-  attempted: number;
-  correct: number;
-  totalMarks: number;
-  obtainedMarks: number;
-  percentage: number;
-  status: "pass" | "fail" | "pending";
-}
-
-export type TestStatus = "draft" | "scheduled" | "active" | "completed" | "graded";
-
-export interface Assessment {
-  id: string;
-  title: string;
-  subject: string;
-  classId: string;
-  questions: PaperQuestion[];
-  totalMarks: number;
-  duration: number; // minutes
-  status: TestStatus;
-  scheduledAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+export interface AssessmentPaper {
+  id: string
+  title: string
+  subject: string
+  type: 'quiz' | 'midterm' | 'final' | 'assignment' | 'practice' | 'mock'
+  duration: number
+  totalMarks: number
+  sections: PaperSection[]
+  instructions?: string
+  status: 'draft' | 'published' | 'archived'
+  createdBy: string
+  createdAt: string
+  updatedAt?: string
 }
 
 export interface StudentTest {
-  id: string;
-  assessmentId: string;
-  studentId: string;
-  status: "not_started" | "in_progress" | "submitted" | "graded";
-  answers: StudentAnswer[];
-  result?: TestResultSummary;
-  startedAt?: Date;
-  submittedAt?: Date;
+  id: string
+  studentId: string
+  paperId: string
+  title: string
+  subject: string
+  scheduledAt: string
+  duration: number
+  totalMarks: number
+  status: 'upcoming' | 'ongoing' | 'completed' | 'missed'
+  score?: number
+  percentage?: number
+  grade?: string
+}
+
+export interface StudentTestCard {
+  test: StudentTest
+  paper: AssessmentPaper
+  timeRemaining?: number
+  canStart: boolean
+}
+
+export interface StudentSubmission {
+  id: string
+  testId: string
+  studentId: string
+  answers: {
+    questionId: string
+    answer: string | string[]
+    marksObtained?: number
+    timeSpent?: number
+  }[]
+  submittedAt: string
+  totalScore?: number
+  percentage?: number
+  status: 'submitted' | 'graded' | 'pending'
 }
 
 export interface ActiveTest {
-  id: string;
-  assessment: Assessment;
-  timeRemaining: number;
-  currentQuestionIndex: number;
+  testId: string
+  studentId: string
+  paperId: string
+  questions: {
+    questionId: string
+    order: number
+    content: string
+    type: string
+    marks: number
+    options?: { id: string; text: string }[]
+    imageUrl?: string
+  }[]
+  flaggedQuestions: string[]
+  currentQuestionIndex: number
+  answers: Record<string, string | string[]>
+  startTime: string
+  endTime?: string
+  timeRemaining: number
+  status: 'in_progress' | 'submitted' | 'timed_out'
+}
+
+export interface ActiveTestState {
+  test: ActiveTest | null
+  loading: boolean
+  error: string | null
+  currentQuestion: number
+  flaggedQuestions: string[]
+  answers: Record<string, string | string[]>
+  timeRemaining: number
+}
+
+export interface TestAnalytics {
+  testId: string
+  totalStudents: number
+  submittedCount: number
+  averageScore: number
+  highestScore: number
+  lowestScore: number
+  passRate: number
+  questionStats: {
+    questionId: string
+    correctCount: number
+    incorrectCount: number
+    averageTime: number
+    difficultyIndex: number
+  }[]
+}
+
+export interface ReviewQueueItem {
+  id: string
+  type: 'question' | 'paper' | 'submission'
+  title: string
+  submittedBy: string
+  submittedAt: string
+  status: 'pending' | 'approved' | 'rejected'
+  priority: 'low' | 'medium' | 'high'
+  data: any
+}
+
+export interface TestNotification {
+  id: string
+  testId: string
+  studentId: string
+  type: 'reminder' | 'started' | 'ending_soon' | 'submitted' | 'graded'
+  message: string
+  read: boolean
+  createdAt: string
+}
+
+export interface CreateQuestionInput {
+  subject: string
+  topic: string
+  type: AssessmentQuestion['type']
+  difficulty: QuestionDifficulty
+  marks: number
+  content: string
+  options?: { id: string; text: string; isCorrect?: boolean }[]
+  answer?: string
+  explanation?: string
+  tags?: string[]
+  bloomLevel?: string
+}
+
+export interface CreatePaperInput {
+  title: string
+  subject: string
+  type: AssessmentPaper['type']
+  duration: number
+  totalMarks: number
+  sections: Omit<PaperSection, 'id'>[]
+  instructions?: string
+}
+
+export interface ScheduleTestInput {
+  paperId: string
+  title: string
+  subject: string
+  batch: string
+  scheduledAt: string
+  duration: number
+  instructions?: string
+}
+
+export interface SubmitTestInput {
+  testId: string
+  studentId: string
+  answers: {
+    questionId: string
+    answer: string | string[]
+    timeSpent?: number
+  }[]
+}
+
+export interface QuestionFilter {
+  subject?: string
+  topic?: string
+  type?: AssessmentQuestion['type']
+  difficulty?: QuestionDifficulty
+  status?: QuestionStatus
+  search?: string
+  createdBy?: string
+}
+
+export interface TestFilter {
+  subject?: string
+  type?: AssessmentPaper['type']
+  status?: string
+  batch?: string
+  search?: string
+  dateFrom?: string
+  dateTo?: string
 }
 
 export interface ScheduledTest {
-  id: string;
-  title: string;
-  subject: string;
-  scheduledAt: Date;
-  duration: number;
-  status: TestStatus;
+  id: string
+  paperId: string
+  title: string
+  subject: string
+  batch: string
+  scheduledAt: string
+  duration: number
+  status: 'upcoming' | 'ongoing' | 'completed'
+  createdBy: string
 }
-
-export interface TestResultView {
-  id: string;
-  studentTestId: string;
-  assessmentTitle: string;
-  subject: string;
-  summary: TestResultSummary;
-  answers: StudentAnswer[];
-  gradedAt?: Date;
-  gradedBy?: string;
-}
-// Paper & Test metadata types
-export type PaperStatus = 'draft' | 'published' | 'archived';
-export type PaperType = 'internal' | 'external' | 'quiz' | 'midterm' | 'final';
-export type TestVisibility = 'public' | 'private' | 'college_only';

@@ -1,4 +1,4 @@
-import { db } from '../../Firebase/config';
+import { db } from '@/Firebase/config';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 export interface StudentProfile {

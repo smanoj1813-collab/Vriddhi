@@ -2,7 +2,7 @@
 // Cleaned - No mock data. Connects to Firebase Firestore.
 // All types imported from ../types/superAdmin.ts (single source of truth)
 
-import { db } from '../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   collection,
   doc,

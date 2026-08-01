@@ -3,7 +3,7 @@
 // ============================================================
 
 import { getStorage, ref, uploadString, uploadBytes, getDownloadURL, getBytes, deleteObject, listAll } from 'firebase/storage';
-import app from '../../Firebase/config';
+import app from '@/Firebase/config';
 
 // ============================================================
 // TYPES (self-contained — no external import dependency)

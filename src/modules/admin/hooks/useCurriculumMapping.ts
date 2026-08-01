@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../../../../Firebase/config';
+import { db } from '@/Firebase/config';
 import {
   collection, getDocs, query, where, orderBy,
 } from 'firebase/firestore';
@@ -15,7 +15,7 @@ import type {
   CreateMappingInput,
   UpdateMappingInput,
   MappingFilterOptions,
-} from '../../../../superadmin/types/curriculum';
+} from '@/modules/superadmin/types/curriculum';
 
 import {
   createMapping,

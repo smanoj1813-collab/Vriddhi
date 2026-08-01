@@ -6,9 +6,9 @@ import {
   useRolloutProgress,
   useSeedUniversities,
 } from '../../admin/hooks/useUniversities';
-import { getManagementTypeColor } from '../../../shared/types/university';
+import { getManagementTypeColor } from '@/shared/types/university';
 import { getTotalEstimatedColleges, getPrioritySummary } from '../../../shared/data/karnatakaUniversities';
-import type { ListUniversitiesOptions, University, UniversityStats, RolloutItem } from '../../../shared/types/university';
+import type { ListUniversitiesOptions, University, UniversityStats, RolloutItem } from '@/shared/types/university';
 
 import {
   Building2, MapPin, GraduationCap, TrendingUp, Target, Search,
