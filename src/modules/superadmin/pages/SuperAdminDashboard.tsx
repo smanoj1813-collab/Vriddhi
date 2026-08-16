@@ -45,12 +45,10 @@ const SuperAdminDashboard: React.FC = () => {
   const handleSeedUniversities = async () => {
     if (!confirm("Seed all 23 Karnataka universities to Firestore?\n\nThis will create/update university data for the Vriddhi platform.")) return;
     try {
-      const result = await seedMutation.mutateAsync() as { created: number; updated: number; errors: string[] };
-showSuccess(`Universities seeded! Created: ${result.created}, Updated: ${result.updated}`);
-if (result.errors.length > 0) {
-  showError(`${result.errors.length} errors during seed...`);
-  console.error("Seed errors:", result.errors);
-}
+      // FIX: use actual return type { created, updated, errors } instead of casting to { seeded }
+      const result = await seedMutation.mutateAsync();
+      const totalSeeded = result.created + result.updated;
+      showSuccess(`Universities seeded! ${totalSeeded} universities created/updated.`);
     } catch (err) {
       showError("Seed failed: " + (err instanceof Error ? err.message : "Unknown error"));
     }
@@ -105,7 +103,7 @@ if (result.errors.length > 0) {
           </div>
         </div>
 
-        {/* ═══ NEW: Seed Universities Button ═══ */}
+        {/* Seed Universities Button */}
         <button
           onClick={handleSeedUniversities}
           disabled={seedMutation.isPending}

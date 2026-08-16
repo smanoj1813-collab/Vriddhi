@@ -1,111 +1,196 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { StudentTestCard, TestResultSummary, PaperQuestion, StudentAnswer } from '../types/assessment';
+// src/modules/student/hooks/useAssessment.ts
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  fetchScheduledTests,
+  fetchTestResult,
+  fetchActiveTest,
+  saveStudentSubmission,
+  logProctorEvent,
+} from "../api/testApi";
+import type {
+  StudentTestCard,
+  TestResultDetail,
+  TestResultSummary,
+  ActiveTest,
+  StudentAnswer,
+} from "../types/assessment";
 
-export interface UseStudentTestsReturn {
-  testCards: StudentTestCard[];
-  completedTests: TestResultSummary[];
-  loading: boolean;
-  error: string | null;
-  refresh: () => void;
-}
-
-export const useStudentTests = (collegeId?: string, studentId?: string): UseStudentTestsReturn => {
+/* ───────────────────────────────────────────────
+   useStudentTests
+   ─────────────────────────────────────────────── */
+export function useStudentTests(collegeId: string, studentId: string) {
   const [testCards, setTestCards] = useState<StudentTestCard[]>([]);
   const [completedTests, setCompletedTests] = useState<TestResultSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    if (!studentId) { setLoading(false); return; }
-    try {
-      setLoading(true);
-      // TODO: Wire to Firestore — use collegeId + studentId
-      console.log('Fetching tests for', collegeId, studentId);
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setLoading(false);
-    }
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchScheduledTests(collegeId, studentId)
+      .then((data) => {
+        if (cancelled) return;
+        setTestCards(data.upcoming);
+        setCompletedTests(data.completed);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Failed to load tests");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [collegeId, studentId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  return { testCards, completedTests, loading, error, refresh: fetchData };
-};
-
-export interface UseActiveTestReturn {
-  activeTest: StudentTestCard | null;
-  questions: PaperQuestion[];
-  answers: Record<string, StudentAnswer>;
-  currentQuestionIndex: number;
-  timeRemaining: number;
-  loading: boolean;
-  error: string | null;
-  submitAnswer: (questionId: string, answer: StudentAnswer) => void;
-  submitTest: () => Promise<void>;
-  goToQuestion: (index: number) => void;
+  return { testCards, completedTests, loading, error };
 }
 
-export const useActiveTest = (collegeId?: string, testId?: string, studentId?: string): UseActiveTestReturn => {
-  const [activeTest, setActiveTest] = useState<StudentTestCard | null>(null);
-  const [questions, setQuestions] = useState<PaperQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, StudentAnswer>>({});
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(0);
+/* ───────────────────────────────────────────────
+   useTestResult
+   ─────────────────────────────────────────────── */
+export function useTestResult(collegeId: string, testId: string, studentId: string) {
+  const [result, setResult] = useState<TestResultDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!testId || !studentId) { setLoading(false); return; }
-    console.log('Loading active test', collegeId, testId, studentId);
-    setLoading(false);
+    let cancelled = false;
+    if (!testId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    fetchTestResult(collegeId, testId, studentId)
+      .then((data) => {
+        if (cancelled) return;
+        setResult(data);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Failed to load result");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [collegeId, testId, studentId]);
 
-  const submitAnswer = useCallback((questionId: string, answer: StudentAnswer) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answer }));
-  }, []);
-
-  const submitTest = useCallback(async () => {
-    console.log('Submitting test', answers);
-  }, [answers]);
-
-  const goToQuestion = useCallback((index: number) => {
-    setCurrentQuestionIndex(index);
-  }, []);
-
-  return {
-    activeTest, questions, answers, currentQuestionIndex, timeRemaining,
-    loading, error, submitAnswer, submitTest, goToQuestion,
-  };
-};
-
-export interface UseTestResultReturn {
-  result: TestResultSummary | null;
-  loading: boolean;
-  error: string | null;
-  refresh: () => void;
+  return { result, loading, error };
 }
 
-export const useTestResult = (collegeId?: string, testId?: string, studentId?: string): UseTestResultReturn => {
-  const [result, setResult] = useState<TestResultSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+/* ───────────────────────────────────────────────
+   useActiveTest
+   ─────────────────────────────────────────────── */
+export function useActiveTest(collegeId: string) {
+  const [activeTest, setActiveTest] = useState<ActiveTest | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    if (!testId || !studentId) { setLoading(false); return; }
-    try {
-      setLoading(true);
-      console.log('Fetching result for', collegeId, testId, studentId);
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setLoading(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const testIdRef = useRef<string | null>(null);
+  const studentRef = useRef<{ id: string; name: string; regNo: string } | null>(null);
+  const answersRef = useRef<Record<string, Partial<StudentAnswer>>>({});
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-  }, [collegeId, testId, studentId]);
+  }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const start = useCallback(
+    async (testId: string, studentId: string, studentName: string, studentRegNo: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const test = await fetchActiveTest(collegeId, testId);
+        if (!test) throw new Error("Test not found");
+        setActiveTest(test);
+        testIdRef.current = testId;
+        studentRef.current = { id: studentId, name: studentName, regNo: studentRegNo };
+        setTimeRemaining(test.duration * 60);
+        clearTimer();
+        timerRef.current = setInterval(() => {
+          setTimeRemaining((prev) => {
+            if (prev <= 1) {
+              clearTimer();
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to start test");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [collegeId, clearTimer]
+  );
 
-  return { result, loading, error, refresh: fetchData };
-};
+  const navigateToQuestion = useCallback((_index: number) => {
+    // Placeholder for future sync
+  }, []);
 
-export default useStudentTests;
+  const saveCurrentAnswer = useCallback((questionId: string, answer: Partial<StudentAnswer>) => {
+    answersRef.current[questionId] = { ...answersRef.current[questionId], ...answer };
+  }, []);
+
+  const toggleFlagQuestion = useCallback((_questionId: string) => {
+    // Placeholder
+  }, []);
+
+  const submit = useCallback(
+    async (reason?: string) => {
+      if (!testIdRef.current || !studentRef.current) return;
+      setIsSubmitting(true);
+      try {
+        await saveStudentSubmission(
+          collegeId,
+          testIdRef.current,
+          studentRef.current.id,
+          studentRef.current.name,
+          studentRef.current.regNo,
+          answersRef.current,
+          timeRemaining,
+          reason ? [{ type: "auto_submit", details: { reason } }] : []
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Submission failed");
+      } finally {
+        setIsSubmitting(false);
+        clearTimer();
+      }
+    },
+    [collegeId, timeRemaining, clearTimer]
+  );
+
+  const logProctorEventFn = useCallback(
+    async (type: string, details?: Record<string, unknown>) => {
+      if (!testIdRef.current || !studentRef.current) return;
+      await logProctorEvent(collegeId, testIdRef.current, studentRef.current.id, { type, details });
+    },
+    [collegeId]
+  );
+
+  useEffect(() => {
+    return () => clearTimer();
+  }, [clearTimer]);
+
+  return {
+    activeTest,
+    timeRemaining,
+    loading,
+    error,
+    isSubmitting,
+    start,
+    saveCurrentAnswer,
+    navigateToQuestion,
+    toggleFlagQuestion,
+    submit,
+    logProctorEvent: logProctorEventFn,
+  };
+}

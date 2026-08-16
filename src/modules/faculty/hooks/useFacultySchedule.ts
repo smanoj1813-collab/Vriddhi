@@ -1,66 +1,66 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  ClassSchedule,
+  DayOfWeek,
+  WeeklySchedule,
+} from '../../../types/schedule';
 
-export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+const DAYS: DayOfWeek[] = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
-export interface FacultyScheduleItem {
-  id: string;
-  subject: string;
-  subjectCode?: string;
-  className: string;
-  section?: string;
-  semester?: number;
-  batch?: string;
-  room: string;
-  startTime: string;
-  endTime: string;
-  day: DayOfWeek;
-  type: 'lecture' | 'lab' | 'tutorial';
-  status: 'scheduled' | 'completed' | 'cancelled' | 'ongoing';
-  topics?: string[];
-  topicsPlanned?: string[];
-}
-
-export interface UseFacultyScheduleReturn {
-  todayClasses: FacultyScheduleItem[];
-  weekSchedule: Record<DayOfWeek, FacultyScheduleItem[]>;
-  classes: FacultyScheduleItem[]; // alias for legacy comps
-  loading: boolean;
-  error: string | null;
-  refresh: () => void;
-}
-
-export const useFacultySchedule = (facultyId?: string): UseFacultyScheduleReturn => {
-  const [todayClasses, setTodayClasses] = useState<FacultyScheduleItem[]>([]);
-  const [weekSchedule, setWeekSchedule] = useState<Record<DayOfWeek, FacultyScheduleItem[]>>({
-    Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: [],
-  });
-  const [loading, setLoading] = useState(true);
+export function useFacultySchedule() {
+  const [schedule, setSchedule] = useState<ClassSchedule[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const allClasses = Object.values(weekSchedule).flat();
+  useEffect(() => {
+    // TODO: wire to real API
+    setSchedule([]);
+    setLoading(false);
+    setError(null);
+  }, []);
 
-  const fetchData = useCallback(async () => {
-    if (!facultyId) { setLoading(false); return; }
-    try {
-      setLoading(true);
-      // TODO: Wire to Firestore
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setLoading(false);
-    }
-  }, [facultyId]);
+  const weeklySchedule = useMemo<WeeklySchedule>(() => {
+    const map: WeeklySchedule = {};
+    DAYS.forEach((day) => (map[day] = []));
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+    schedule.forEach((cls) => {
+      if (cls.day && map[cls.day]) {
+        map[cls.day].push(cls);
+      }
+    });
 
-  return { 
-    todayClasses, 
-    weekSchedule, 
-    classes: allClasses, // alias
-    loading, 
-    error, 
-    refresh: fetchData 
+    DAYS.forEach((day) => {
+      map[day].sort((a, b) =>
+        a.timeSlot.startTime.localeCompare(b.timeSlot.startTime)
+      );
+    });
+
+    return map;
+  }, [schedule]);
+
+  const todayClasses = useMemo(() => {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+    }) as DayOfWeek;
+    return weeklySchedule[today] || [];
+  }, [weeklySchedule]);
+
+  const totalClasses = schedule.length;
+
+  return {
+    weeklySchedule,
+    todayClasses,
+    totalClasses,
+    isLoading: loading,
+    error,
+    refetch: () => {},
   };
-};
-
-export default useFacultySchedule;
+}

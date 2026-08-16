@@ -6,9 +6,7 @@ import {
   FileText, Layers, GraduationCap, RefreshCw, Loader2
 } from 'lucide-react'
 import { useTopics } from '../../../hooks/useTopics'
-import type { TopicStatus } from '../../../api/topicApi'
-
-type StatusFilter = 'all' | TopicStatus
+import type { TopicStatus, StatusFilter, Topic, TopicStats, ReadStats } from '../../../hooks/useTopics'
 
 interface StatusConfigItem {
   label: string;
@@ -53,50 +51,24 @@ const statusConfig: Record<StatusFilter, StatusConfigItem> = {
     bg: 'bg-rose-500/10',
     border: 'border-rose-500/20',
     icon: AlertTriangle
+  },
+  pending: {
+    label: 'Pending',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/20',
+    icon: Calendar
+  },
+  cancelled: {
+    label: 'Cancelled',
+    color: 'text-rose-400',
+    bg: 'bg-rose-500/10',
+    border: 'border-rose-500/20',
+    icon: AlertTriangle
   }
 }
 
-interface Topic {
-  id: string;
-  title: string;
-  description: string;
-  course: string;
-  batch: string;
-  division: string;
-  plannedDate: string;
-  duration: number;
-  status: TopicStatus;
-  resources: string[];
-  notes: string;
-  subject: string;
-}
-
-interface TopicFormData {
-  title: string;
-  description: string;
-  course: string;
-  batch: string;
-  division: string;
-  plannedDate: string;
-  duration: number;
-  status: TopicStatus;
-  resources: string[];
-  notes: string;
-  subject: string;
-}
-
-interface TopicStats {
-  total: number;
-  planned: number;
-  inProgress: number;
-  completed: number;
-  delayed: number;
-}
-
-interface ReadStats {
-  used: number;
-  remaining: number;
-}
+type TopicFormData = Omit<Topic, 'id'>;
 
 export default function FacultyTopics() {
   const {
@@ -115,7 +87,6 @@ export default function FacultyTopics() {
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // Form state
   const [formData, setFormData] = useState<TopicFormData>({
     title: '',
     description: '',
@@ -156,7 +127,7 @@ export default function FacultyTopics() {
   }
 
   const openEditModal = (topicId: string) => {
-    const topic = (topics as Topic[]).find((t: Topic) => t.id === topicId)
+    const topic = topics.find((t) => t.id === topicId)
     if (!topic) return
     setFormData({
       title: topic.title,
@@ -246,9 +217,7 @@ export default function FacultyTopics() {
     return statsData[status as keyof TopicStats] as number
   }
 
-  const typedTopics = topics as Topic[]
-  const typedStats = stats as TopicStats
-  const typedReadStats = readStats as ReadStats
+  const safeReadStats: ReadStats = readStats || { used: 0, remaining: 999 }
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -265,13 +234,12 @@ export default function FacultyTopics() {
           <p className="text-slate-400">Manage syllabus topics and lesson plans</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Read Budget */}
           <div className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
-            typedReadStats.remaining < 50 ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-            typedReadStats.remaining < 200 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+            safeReadStats.remaining < 50 ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+            safeReadStats.remaining < 200 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
             'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
           }`}>
-            Reads: {typedReadStats.used}/{typedReadStats.used + typedReadStats.remaining}
+            Reads: {safeReadStats.used}/{safeReadStats.used + safeReadStats.remaining}
           </div>
           <button
             onClick={refresh}
@@ -294,23 +262,23 @@ export default function FacultyTopics() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
           <p className="text-xs text-slate-400 mb-1">Total Topics</p>
-          <p className="text-2xl font-bold text-white">{typedStats.total}</p>
+          <p className="text-2xl font-bold text-white">{stats.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-400 mb-1">Planned</p>
-          <p className="text-2xl font-bold text-blue-400">{typedStats.planned}</p>
+          <p className="text-2xl font-bold text-blue-400">{stats.planned}</p>
         </div>
         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <p className="text-xs text-amber-400 mb-1">In Progress</p>
-          <p className="text-2xl font-bold text-amber-400">{typedStats.inProgress}</p>
+          <p className="text-2xl font-bold text-amber-400">{stats.inProgress}</p>
         </div>
         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
           <p className="text-xs text-emerald-400 mb-1">Completed</p>
-          <p className="text-2xl font-bold text-emerald-400">{typedStats.completed}</p>
+          <p className="text-2xl font-bold text-emerald-400">{stats.completed}</p>
         </div>
         <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20">
           <p className="text-xs text-rose-400 mb-1">Delayed</p>
-          <p className="text-2xl font-bold text-rose-400">{typedStats.delayed}</p>
+          <p className="text-2xl font-bold text-rose-400">{stats.delayed}</p>
         </div>
       </div>
 
@@ -319,7 +287,7 @@ export default function FacultyTopics() {
         <div className="flex items-center gap-2 flex-wrap">
           {(['all', 'planned', 'in-progress', 'completed', 'delayed'] as StatusFilter[]).map(status => {
             const config = statusConfig[status]
-            const count = getStatusCount(status, typedStats)
+            const count = getStatusCount(status, stats)
             return (
               <button
                 key={status}
@@ -358,7 +326,7 @@ export default function FacultyTopics() {
       </div>
 
       {/* Loading */}
-      {loading && typedTopics.length === 0 && (
+      {loading && topics.length === 0 && (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
           <span className="ml-3 text-slate-400">Loading topics...</span>
@@ -367,9 +335,8 @@ export default function FacultyTopics() {
 
       {/* Topics List */}
       <div className="space-y-3">
-        {typedTopics.map((topic: Topic) => {
-          const config = statusConfig[topic.status]
-          const StatusIcon = config.icon
+        {topics.map((topic) => {
+          const config = statusConfig[topic.status as StatusFilter] || statusConfig.pending
           const isExpanded = expandedTopic === topic.id
 
           return (
@@ -428,7 +395,6 @@ export default function FacultyTopics() {
               {isExpanded && (
                 <div className="px-4 pb-4 border-t border-slate-700/50 pt-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left Column */}
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-xs text-slate-400 mb-2 flex items-center gap-1">
@@ -470,7 +436,6 @@ export default function FacultyTopics() {
                       )}
                     </div>
 
-                    {/* Right Column */}
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-xs text-slate-400 mb-2 flex items-center gap-1">
@@ -492,7 +457,6 @@ export default function FacultyTopics() {
                         )}
                       </div>
 
-                      {/* Progress Bar */}
                       <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs text-slate-400">Progress</span>
@@ -510,7 +474,6 @@ export default function FacultyTopics() {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); openEditModal(topic.id); }}
@@ -539,7 +502,7 @@ export default function FacultyTopics() {
           )
         })}
 
-        {!loading && typedTopics.length === 0 && (
+        {!loading && topics.length === 0 && (
           <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
             <BookOpen className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-slate-400">No topics found</p>

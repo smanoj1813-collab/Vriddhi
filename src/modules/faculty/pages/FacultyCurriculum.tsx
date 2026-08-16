@@ -11,31 +11,8 @@ import {
   RefreshCw, Loader2, Search, Play, FileText, Timer
 } from 'lucide-react'
 import { useAuth } from '../../auth/context/AuthContext'
-import { useFacultyCurriculum } from '../../../hooks/useFacultyCurriculum'
-import type { ParsedModule, FacultyCurriculumView, FacultyScheduleItem, FacultyCurriculumStats } from '../../../types/curriculum'
-
-// ─── Module Status Config ────────────────────────────────────────────────
-
-const moduleStatusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  planned: {
-    label: 'Planned',
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20',
-  },
-  'in-progress': {
-    label: 'In Progress',
-    color: 'text-amber-400',
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/20',
-  },
-  completed: {
-    label: 'Completed',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/20',
-  },
-}
+import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
+import type { ParsedModule, FacultyCurriculumView, FacultyScheduleItem, FacultyCurriculumStats } from '../types/curriculum'
 
 // ─── Component ───────────────────────────────────────────────────────────
 
@@ -43,7 +20,7 @@ export default function FacultyCurriculum() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const facultyId = user?.id || ''
-  const collegeId = user?.collegeId || ''
+  const collegeId = (user as any)?.collegeId || ''
 
   const {
     curriculum,

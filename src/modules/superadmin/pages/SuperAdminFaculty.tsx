@@ -8,9 +8,10 @@ import {
   CheckCircle, XCircle, Download
 } from 'lucide-react'
 import type { Faculty } from '../api/superAdminApi'
-import { collection, getDocs, updateDoc, doc, deleteField } from 'firebase/firestore'
-import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
+import { collection, getDocs, updateDoc, doc, setDoc, deleteField } from 'firebase/firestore'
+import { sendPasswordResetEmail } from 'firebase/auth'
 import { db } from '@/Firebase/config'
+import { createFirebaseAuthUser } from '../api/superAdminApi'
 
 const SuperAdminFaculty: React.FC = () => {
   const navigate = useNavigate()
@@ -82,12 +83,11 @@ const SuperAdminFaculty: React.FC = () => {
     }
   }
 
-  // FIX #8: Removed plaintext password storage. Now uses Firebase Auth.
-  // Passwords are NEVER stored in Firestore. Only auth UIDs are stored.
+  // FIX: Uses REST API (createFirebaseAuthUser) so it does NOT log out the current superadmin.
+  // Also checks data.uid (not data.authUid) to match the field stored by importFaculty.
   const handleFixPasswords = async () => {
     if (!confirm('This will create Firebase Auth accounts for faculty without one. Continue?')) return
     try {
-      const auth = getAuth()
       const snap = await getDocs(collection(db, 'faculty'))
       let fixed = 0
       const newAccounts: Array<{ name: string; email: string; tempPassword: string }> = []
@@ -95,20 +95,40 @@ const SuperAdminFaculty: React.FC = () => {
       for (const d of snap.docs) {
         const data = d.data()
         // Only create auth account if they don't have one already
-        if (!data.authUid) {
+        if (!data.uid) {
           const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
           let tempPwd = ''
           for (let i = 0; i < 12; i++) tempPwd += chars.charAt(Math.floor(Math.random() * chars.length))
 
-          // Create Firebase Auth user (secure - password hashed by Firebase)
-          const userCred = await createUserWithEmailAndPassword(auth, data.email, tempPwd)
+          // Create Firebase Auth user via REST API (does NOT affect current session)
+          let uid: string
+          try {
+            uid = await createFirebaseAuthUser(data.email, tempPwd)
+          } catch (authErr: any) {
+            console.warn(`Skipping ${data.email}: ${authErr.message}`)
+            continue
+          }
 
           // Store ONLY the auth UID in Firestore, NEVER the password
           await updateDoc(doc(db, 'faculty', d.id), {
-            authUid: userCred.user.uid,
+            uid,
             passwordResetRequired: true,
             // Remove any existing plaintext password field
             password: deleteField(),
+          })
+
+          // Also create users doc so they can log in
+          await setDoc(doc(db, 'users', uid), {
+            uid,
+            email: data.email,
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+            role: 'faculty',
+            collegeId: data.collegeId || '',
+            department: data.department || '',
+            phone: data.phone || '',
+            avatar: data.profilePhotoUrl || '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           })
 
           newAccounts.push({ name: `${data.firstName} ${data.lastName}`, email: data.email, tempPassword: tempPwd })

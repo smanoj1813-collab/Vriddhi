@@ -36,7 +36,7 @@ import type {
   ActiveTestState, QuestionType, PaperType,
 } from '../types/assessment';
 
-import type { FacultyCurriculumView } from '@/modules/superadmin/types/curriculum';
+import type { FacultyCurriculumView } from '@/shared/types/curriculum';
 import type { Question, QuestionFilters, PaginatedResult, BulkImportResult } from '../../admin/types/questionBank';
 
 import {

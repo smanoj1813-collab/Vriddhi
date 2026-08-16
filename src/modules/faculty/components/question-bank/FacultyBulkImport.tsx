@@ -1,4 +1,6 @@
 // src/modules/components/question-bank/FacultyBulkImport.tsx
+// FIXED: onImport returns Promise<void>, not Promise<void> with async param
+
 import React, { useState, useRef } from 'react';
 import {
   Box, Button, Typography, Paper, Alert, List, ListItem,

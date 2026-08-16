@@ -162,32 +162,38 @@ export async function listUniversities(
   options: ListUniversitiesOptions = {}
 ): Promise<PaginatedResult<University>> {
   try {
-    let q: Query<DocumentData> = query(collection(db, "universities"), orderBy("priority", "asc"));
+    let constraints: any[] = [];
+    let appliedOrderBy = false;
 
     if (options.status && options.status !== "all") {
-      q = query(q, where("status", "==", options.status));
+      constraints.push(where("status", "==", options.status));
     }
     if (options.managementType && options.managementType !== "all") {
-      q = query(q, where("managementType", "==", options.managementType));
+      constraints.push(where("managementType", "==", options.managementType));
     }
     if (options.priority && options.priority !== "all") {
-      q = query(q, where("priority", "==", options.priority));
+      constraints.push(where("priority", "==", Number(options.priority)));
+    }
+    if (constraints.length === 0) {
+      constraints.push(orderBy("priority", "asc"));
+      appliedOrderBy = true;
     }
 
+    let q = query(collection(db, "universities"), ...constraints);
     const limitCount = options.limit || options.pageSize || 50;
     q = query(q, limit(limitCount));
 
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToUniversity);
 
-    // Client-side search (name or code)
+    // Client-side search
     if (options.search) {
       const searchLower = options.search.toLowerCase();
       items = items.filter(
         (u) =>
           u.name.toLowerCase().includes(searchLower) ||
           u.code.toLowerCase().includes(searchLower) ||
-          u.shortName.toLowerCase().includes(searchLower)
+          (u.shortName && u.shortName.toLowerCase().includes(searchLower))
       );
     }
 

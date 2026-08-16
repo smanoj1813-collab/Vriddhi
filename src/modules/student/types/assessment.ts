@@ -1,179 +1,357 @@
-export type QuestionType =
-  | "mcq"
-  | "mcq_single"
-  | "mcq_multiple"
-  | "true_false"
-  | "short_answer"
-  | "long_answer"
-  | "fill_in_blank"
-  | "fill_in_blanks"
-  | "match_following"
-  | "match_the_following";
+// src/modules/student/types/assessment.ts
+// Complete assessment types for student test-taking
 
-export interface QuestionOption {
+export type TestStatus = 'upcoming' | 'available' | 'ongoing' | 'completed' | 'graded' | 'missed';
+export type StudentTestStatus = 'not_started' | 'in_progress' | 'submitted' | 'graded' | 'absent';
+
+export interface StudentTestCard {
   id: string;
-  text: string;
-}
-
-export interface MatchedPair {
-  left: string;
-  right: string;
+  assessmentId: string;
+  title: string;
+  subject: string;
+  courseCode?: string;
+  courseName?: string;
+  totalMarks: number;
+  duration: number; // minutes
+  startDateTime: string;
+  endDateTime: string;
+  status: TestStatus;
+  studentStatus: StudentTestStatus;
+  canStart: boolean;
+  instructions: string[];
+  totalQuestions: number;
+  marksObtained?: number;
+  percentage?: number;
+  grade?: string;
+  timeSpent?: number;
+  submittedAt?: string;
+  paperId: string;
+  collegeId: string;
+  branch: string;
+  batch: string;
+  semester: number;
+  division?: string;
+  section?: string;
 }
 
 export interface PaperQuestion {
   id: string;
-  /** Alias for `id` — used by test-taking UI */
-  questionId?: string;
-  question: string;
-  /** Alias for `question` — used by test-taking UI */
-  questionText?: string;
-  type: QuestionType;
-  /** Alias for `type` — used by test-taking UI */
-  questionType?: QuestionType;
-  options?: string[] | QuestionOption[];
-  correctAnswer?: string | string[];
+  questionId: string;
+  order: number;
   marks: number;
-  difficulty: "easy" | "medium" | "hard";
-  topic?: string;
-  subject?: string;
+  text: string;
+  type: 'mcq' | 'true_false' | 'fill_in_blank' | 'short_answer' | 'long_answer' | 'numerical' | 'assertion_reason' | 'case_based' | 'matching';
+  difficulty: 'easy' | 'medium' | 'hard';
+  options?: { id: string; text: string }[];
+  hasImage?: boolean;
   imageUrl?: string;
+  sectionId?: string;
+  sectionName?: string;
+  negativeMarks?: number;
+  // Compatibility aliases used by pages
+  questionText?: string;
+  questionType?: string;
 }
 
 export interface StudentAnswer {
   questionId: string;
-  /** Legacy flat answer field */
-  answer?: string | string[];
-  /** MCQ single / multiple */
+  selectedOptionId?: string;
   selectedOptionIds?: string[];
-  /** Fill-in-blank, short/long answer, true/false */
   textAnswer?: string;
-  /** Match-the-following */
-  matchedPairs?: MatchedPair[];
-  isCorrect?: boolean;
-  marksObtained?: number;
-}
-
-export interface QuestionScore {
-  questionId: string;
-  questionText?: string;
-  isCorrect: boolean;
-  yourAnswer?: string | string[];
-  correctAnswer?: string | string[];
-  marks: number;
-  obtainedMarks?: number;
-  timeSpent?: number;
-}
-
-export interface SectionScore {
-  sectionName: string;
-  totalMarks: number;
-  obtainedMarks: number;
-}
-
-export interface TestResultSummary {
-  totalQuestions: number;
-  attempted: number;
-  correct: number;
-  totalMarks: number;
-  obtainedMarks: number;
-  /** Alias for obtainedMarks */
-  marksObtained?: number;
-  percentage: number;
-  status: "pass" | "fail" | "pending";
-  /** Extended fields used by result views */
-  title?: string;
-  subject?: string;
-  passed?: boolean;
-  grade?: string;
-  gradePoint?: number;
-  timeSpent?: number;
-  facultyFeedback?: string;
-  rank?: number;
-  totalParticipants?: number;
-  classAverage?: number;
-  classHighest?: number;
-  averageTimePerQuestion?: number;
-  questionScores?: QuestionScore[];
-  sectionScores?: SectionScore[];
-}
-
-export type TestStatus = "draft" | "scheduled" | "active" | "completed" | "graded";
-
-export interface Assessment {
-  id: string;
-  title: string;
-  subject: string;
-  classId: string;
-  questions: PaperQuestion[];
-  totalMarks: number;
-  duration: number; // minutes
-  status: TestStatus;
-  scheduledAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface StudentTest {
-  id: string;
-  assessmentId: string;
-  studentId: string;
-  status: "not_started" | "in_progress" | "submitted" | "graded";
-  answers: StudentAnswer[];
-  result?: TestResultSummary;
-  startedAt?: Date;
-  submittedAt?: Date;
+  numericalAnswer?: number;
+  isFlagged: boolean;
+  timeSpent: number; // seconds
+  visitedAt: string;
+  answeredAt?: string;
+  // Compatibility alias for match-following questions
+  matchedPairs?: Array<{ left: string; right: string }>;
 }
 
 export interface ActiveTest {
+  studentAssessmentId: string;
+  assessmentId: string;
+  paperId: string;
+  title: string;
+  subject: string;
+  totalMarks: number;
+  duration: number;
+  startedAt: string;
+  endsAt: string;
+  questions: PaperQuestion[];
+  flaggedQuestions: string[];
+  instructions: string[];
+  negativeMarking: boolean;
+  collegeId: string;
+  // Compatibility alias used by instructions page
+  totalQuestions?: number;
+}
+
+export interface TestResultSummary {
+  studentAssessmentId: string;
+  assessmentId: string;
+  title: string;
+  subject: string;
+  totalMarks: number;
+  marksObtained: number;
+  percentage: number;
+  grade: string;
+  gradePoint: number;
+  timeSpent: number;
+  totalQuestions: number;
+  answeredCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  unattemptedCount: number;
+  sectionWise: {
+    sectionId: string;
+    sectionName: string;
+    totalMarks: number;
+    marksObtained: number;
+    questionsCount: number;
+    answeredCount: number;
+  }[];
+  questionResults: {
+    questionId: string;
+    order: number;
+    marks: number;
+    marksObtained: number;
+    status: 'correct' | 'incorrect' | 'unattempted' | 'partial';
+    yourAnswer: string;
+    correctAnswer: string;
+    explanation?: string;
+  }[];
+  rank?: number;
+  totalStudents?: number;
+  facultyFeedback?: string;
+  submittedAt: string;
+  gradedAt?: string;
+  // Dashboard compatibility aliases
+  testId?: string;
+  score?: number;
+  completedAt?: string;
+}
+
+export interface TestResultDetail {
+  studentAssessmentId: string;
+  assessmentId: string;
+  title: string;
+  subject: string;
+  totalMarks: number;
+  marksObtained: number;
+  percentage: number;
+  grade: string;
+  gradePoint: number;
+  timeSpent: number;
+  totalQuestions: number;
+  answeredCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  unattemptedCount: number;
+  sectionScores: {
+    sectionName: string;
+    total: number;
+    correct: number;
+    incorrect: number;
+    score: number;
+    totalMarks: number;
+    percentage: number;
+    timeTaken: number;
+    accuracy: number;
+  }[];
+  questionResults: {
+    questionId: string;
+    questionText: string;
+    questionType?: string;
+    marks: number;
+    options?: string[];
+    correctAnswer?: string;
+    studentAnswer?: string;
+    isCorrect: boolean;
+    isAttempted: boolean;
+    explanation?: string;
+  }[];
+  leaderboard: {
+    studentId: string;
+    studentName: string;
+    avatar?: string;
+    rank: number;
+    score: number;
+    totalMarks: number;
+    percentage: number;
+    timeTaken: number;
+    isPassed: boolean;
+    isCurrentUser?: boolean;
+  }[];
+  rank?: number;
+  totalStudents?: number;
+  facultyFeedback?: string;
+  submittedAt: string;
+  gradedAt?: string;
+  passingPercentage: number;
+  percentile: number;
+  completedAt: string;
+  flaggedCount: number;
+}
+
+export interface AssessmentQuestion {
   id: string;
-  assessment: Assessment;
-  timeRemaining: number;
-  currentQuestionIndex: number;
-  /** Runtime state */
-  status?: "in_progress" | "completed" | "not_started";
-  flaggedQuestions?: string[];
-  paperTitle?: string;
-  questions?: PaperQuestion[];
-  allowNavigation?: boolean;
-  currentQuestion?: PaperQuestion;
-  answers?: Record<string, StudentAnswer>;
-  isSubmitting?: boolean;
+  text: string;
+  type: string;
+  difficulty: string;
+  subject: string;
+  chapter?: string;
+  topic?: string;
+  marks: number;
+  negativeMarks?: number;
+  options?: { id: string; text: string; isCorrect?: boolean }[];
+  correctAnswer?: string;
+  explanation?: string;
+  tags: string[];
+  bloomLevel?: string;
+  status: string;
+  collegeId: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+  usageCount: number;
+  linkedPaperIds: string[];
+  isPYQ?: boolean;
+}
+
+export interface AssessmentPaper {
+  id: string;
+  title: string;
+  subject: string;
+  subjectId?: string;
+  examType: string;
+  totalMarks: number;
+  totalQuestions: number;
+  duration: number;
+  sections: {
+    id: string;
+    name: string;
+    title: string;
+    description?: string;
+    marksPerQuestion: number;
+    numQuestions: number;
+    compulsory: boolean;
+    questionType: string;
+    difficulty: string;
+    questions?: PaperQuestion[];
+  }[];
+  instructions: string[];
+  status: 'draft' | 'published' | 'archived';
+  collegeId: string;
+  createdBy: string;
+  createdByName: string;
+  linkedQuestionIds: string[];
+  batch: string;
+  branch: string;
+  semester?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePaperInput {
+  title: string;
+  subject: string;
+  examType: string;
+  totalMarks: number;
+  duration: number;
+  sections: {
+    name: string;
+    description?: string;
+    marksPerQuestion: number;
+    numQuestions: number;
+    compulsory: boolean;
+    questionType: string;
+    difficulty: string;
+    difficultyMix?: { easy: number; medium: number; hard: number };
+  }[];
+  instructions: string[];
+  batch: string;
+  branch: string;
+  semester?: number;
+  collegeId: string;
+  createdBy: string;
+  createdByName: string;
 }
 
 export interface ScheduledTest {
   id: string;
-  title: string;
+  assessmentId?: string;
+  paperId: string;
+  paperTitle: string;
   subject: string;
-  scheduledAt: Date;
-  duration: number;
-  status: TestStatus;
-}
-
-export interface TestResultView {
-  id: string;
-  studentTestId: string;
-  assessmentTitle: string;
-  subject: string;
-  summary: TestResultSummary;
-  answers: StudentAnswer[];
-  gradedAt?: Date;
-  gradedBy?: string;
-}
-
-// Paper & Test metadata types
-export type PaperStatus = 'draft' | 'published' | 'archived';
-export type PaperType = 'internal' | 'external' | 'quiz' | 'midterm' | 'final';
-export type TestVisibility = 'public' | 'private' | 'college_only';
-
-/** Used by TestInstructionsPage */
-export interface StudentTestCard {
-  id: string;
-  title: string;
-  subject: string;
+  collegeId: string;
+  facultyId: string;
+  facultyName: string;
+  branch: string;
+  batch: string;
+  semester: number;
+  division?: string;
+  section?: string;
+  startDateTime: string;
+  endDateTime: string;
   duration: number;
   totalMarks: number;
-  questions?: PaperQuestion[];
-  instructions?: string[];
-  scheduledAt?: Date;
-  status?: TestStatus;
+  totalQuestions: number;
+  instructions: string[];
+  status: 'scheduled' | 'published' | 'active' | 'completed' | 'cancelled';
+  totalRegistered: number;
+  totalStarted: number;
+  totalSubmitted: number;
+  negativeMarking: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScheduleTestInput {
+  paperId: string;
+  paperTitle: string;
+  subject: string;
+  collegeId: string;
+  facultyId: string;
+  facultyName: string;
+  branch: string;
+  batch: string;
+  semester: number;
+  division?: string;
+  section?: string;
+  startDateTime: string;
+  endDateTime: string;
+  duration: number;
+  totalMarks: number;
+  totalQuestions: number;
+  instructions: string[];
+  negativeMarking: boolean;
+}
+
+export interface ProctorEvent {
+  id: string;
+  studentAssessmentId: string;
+  eventType: 'tab_switch' | 'window_blur' | 'copy_paste' | 'right_click' | 'fullscreen_exit' | 'multiple_faces' | 'no_face' | 'suspicious_activity' | 'auto_submit';
+  details?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface TestAnalytics {
+  assessmentId: string;
+  totalStudents: number;
+  startedCount: number;
+  submittedCount: number;
+  absentCount: number;
+  averageScore: number;
+  highestScore: number;
+  lowestScore: number;
+  passCount: number;
+  failCount: number;
+  gradeDistribution: Record<string, number>;
+  sectionWiseAverage: Record<string, number>;
+  questionWiseStats: {
+    questionId: string;
+    correctPercentage: number;
+    averageTime: number;
+  }[];
 }

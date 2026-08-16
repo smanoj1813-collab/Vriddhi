@@ -1,8 +1,6 @@
 import React from 'react';
-import { useAuth } from '../../auth/context/AuthContext';
+import { useAuth, type UserRole } from '../../auth/context/AuthContext';
 
-// Self-contained types — swap to canonical imports once AuthContext exports stabilize
-type UserRole = 'student' | 'faculty' | 'admin' | 'principal' | 'superadmin' | 'hod';
 type Permission = string;
 
 interface RoleGuardProps {
@@ -13,28 +11,19 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ children, allowedRoles, requiredPermission, fallback = null }: RoleGuardProps) {
-  const { user } = useAuth();
-  
-  // Inline role check — no dependency on hasRole() from AuthContext
+  const { user, hasRole, hasPermission } = useAuth();
+
   if (allowedRoles && user) {
-    const userRole = user.role as string;
-    if (!allowedRoles.includes(userRole as UserRole)) {
+    if (!hasRole(allowedRoles)) {
       return <>{fallback}</>;
     }
   }
-  
-  // Inline permission check — stub until permission system is implemented
+
   if (requiredPermission) {
-    // TODO: Wire up to AuthContext once hasPermission() is available
-    if (!user) {
+    if (!user || !hasPermission(requiredPermission)) {
       return <>{fallback}</>;
     }
   }
-  
+
   return <>{children}</>;
 }
-
-// Usage example inside any component:
-// <RoleGuard allowedRoles={['principal']}>
-//   <DeleteButton />
-// </RoleGuard>

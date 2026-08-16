@@ -1,14 +1,23 @@
-// src/modules/faculty/types/curriculum.ts
+export type CurriculumStatus = 'parsing' | 'review' | 'approved' | 'assigned' | 'archived';
+export type ParseConfidence = 'high' | 'medium' | 'low';
+
 export interface ParsedModule {
   id: string;
-  moduleNo: string;
+  moduleNo: string | number;
   title?: string;
   moduleName?: string;
+  name?: string;
+  description?: string | null;
   hours: number;
   marks?: number;
+  type?: string;
   topics: string[];
-  description?: string;
-  learningOutcomes?: string[];
+  learningOutcomes?: string[] | null;
+  confidence?: ParseConfidence;
+  isEdited?: boolean;
+  subject?: string;
+  course?: string;
+  semester?: number;
   resources?: string[];
 }
 
@@ -19,11 +28,15 @@ export interface FacultyCurriculumView {
   branch: string;
   semester: number;
   batch: string;
-  division?: string;
-  section?: string;
-  credits: number;
+  division?: string | null;
+  section?: string | null;
   totalHours: number;
+  credits: number;
   modules: ParsedModule[];
+  mappingId?: string;
+  curriculumId?: string;
+  curriculumTitle?: string;
+  assignedAt?: string;
 }
 
 export interface FacultyScheduleItem {

@@ -1,4 +1,4 @@
-// src/components/student/PendingAssignments.tsx
+// src/modules/student/components/PendingAssignments.tsx
 import { motion } from 'framer-motion';
 import { FileUp, Clock, AlertTriangle, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import type { Assignment } from '../types/student';
@@ -8,12 +8,17 @@ interface PendingAssignmentsProps {
   onSubmit: (assignmentId: string) => void;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string; label: string }> = {
   pending: { icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Pending' },
   overdue: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Overdue' },
   submitted: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'Submitted' },
   'late-submitted': { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', label: 'Late' },
   graded: { icon: CheckCircle2, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Graded' },
+};
+
+const submissionTypeIcons: Record<string, string> = {
+  document: '📄', image: '🖼️', code: '💻', video: '🎥', presentation: '📊', mixed: '📁',
+  online: '📄', offline: '📄', file: '📄', text: '📝',
 };
 
 export default function PendingAssignments({ assignments, onSubmit }: PendingAssignmentsProps) {
@@ -22,8 +27,9 @@ export default function PendingAssignments({ assignments, onSubmit }: PendingAss
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 4);
 
-  const getDaysLeft = (dueDate: string, dueTime: string) => {
-    const due = new Date(`${dueDate}T${dueTime}`);
+  const getDaysLeft = (dueDate: string, dueTime?: string) => {
+    const timeStr = dueTime ? `T${dueTime}` : 'T23:59:59';
+    const due = new Date(`${dueDate}${timeStr}`);
     const now = new Date();
     const hours = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
@@ -63,12 +69,12 @@ export default function PendingAssignments({ assignments, onSubmit }: PendingAss
           </div>
         ) : (
           pending.map((assignment, index) => {
-            const status = statusConfig[assignment.status];
+            const statusKey = assignment.status ?? 'pending';
+            const status = statusConfig[statusKey] || statusConfig.pending;
             const StatusIcon = status.icon;
             const timeLeft = getDaysLeft(assignment.dueDate, assignment.dueTime);
-            const submissionTypeIcons: Record<string, string> = {
-              document: '📄', image: '🖼️', code: '💻', video: '🎥', presentation: '📊', mixed: '📁'
-            };
+            const subType = assignment.submissionType ?? 'document';
+            const subIcon = submissionTypeIcons[subType] ?? '📄';
 
             return (
               <motion.div
@@ -82,7 +88,7 @@ export default function PendingAssignments({ assignments, onSubmit }: PendingAss
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-semibold text-white truncate">{assignment.title}</h4>
-                      <span className="text-sm">{submissionTypeIcons[assignment.submissionType]}</span>
+                      <span className="text-sm">{subIcon}</span>
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{assignment.subject} • {assignment.maxMarks} marks</p>
 

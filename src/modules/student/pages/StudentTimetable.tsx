@@ -1,5 +1,4 @@
-// src/pages/student/StudentTimetable.tsx
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Typography,
@@ -20,7 +19,7 @@ import {
   CheckCircle as CompletedIcon,
 } from '@mui/icons-material'
 import { useStudentSchedule } from '../hooks/useStudentSchedule'
-import type { DayOfWeek } from '../types/schedule'
+import type { DayOfWeek, ClassSchedule } from '../../../types/schedule'
 
 const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -43,14 +42,26 @@ const STATUS_CONFIG = {
     label: 'Completed',
     borderColor: 'grey.400',
   },
+  scheduled: {
+    color: 'default' as const,
+    icon: <UpcomingIcon fontSize="small" />,
+    label: 'Scheduled',
+    borderColor: 'grey.400',
+  },
 }
 
-// Student profile from localStorage or auth context
-function getStudentProfile() {
+interface StudentProfile {
+  branch: string;
+  batch: string;
+  semester: number;
+  division: string;
+  section: string;
+}
+
+function getStudentProfile(): StudentProfile | null {
   const studentToken = localStorage.getItem('studentToken')
   if (!studentToken) return null
 
-  // Try to get from stored student data
   try {
     const studentData = JSON.parse(localStorage.getItem('studentData') || '{}')
     return {
@@ -87,6 +98,8 @@ const StudentTimetable: React.FC = () => {
     )
   }
 
+  const todayDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
       {/* Header */}
@@ -116,9 +129,9 @@ const StudentTimetable: React.FC = () => {
           </Card>
         ) : (
           <Stack spacing={2}>
-            {todayClasses.map(cls => {
-              const status = cls.status as keyof typeof STATUS_CONFIG
-              const config = STATUS_CONFIG[status]
+            {todayClasses.map((cls: ClassSchedule) => {
+              const status = (cls.status || 'scheduled') as keyof typeof STATUS_CONFIG
+              const config = STATUS_CONFIG[status] || STATUS_CONFIG.scheduled
 
               return (
                 <Card
@@ -149,7 +162,7 @@ const StudentTimetable: React.FC = () => {
                           />
                         </Box>
                         <Typography variant="body2" color="text.secondary">
-                          {cls.subjectCode} &middot; {cls.type.charAt(0).toUpperCase() + cls.type.slice(1)}
+                          {cls.subjectCode || '—'} &middot; {(cls.type || 'lecture').charAt(0).toUpperCase() + (cls.type || 'lecture').slice(1)}
                         </Typography>
                       </Box>
                     </Box>
@@ -160,19 +173,19 @@ const StudentTimetable: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <TimeIcon fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {cls.startTime} - {cls.endTime}
+                          {cls.startTime || cls.timeSlot?.startTime || '—'} - {cls.endTime || cls.timeSlot?.endTime || '—'}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <RoomIcon fontSize="small" color="action" />
                         <Typography variant="body2">
-                          Room {cls.room}
+                          Room {cls.room || 'TBD'}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <SchoolIcon fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {cls.facultyName}
+                          {cls.facultyName || 'TBD'}
                           {cls.facultyInitials && ` (${cls.facultyInitials})`}
                         </Typography>
                       </Box>
@@ -194,8 +207,8 @@ const StudentTimetable: React.FC = () => {
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
         {DAYS.map(day => {
-          const classes = weeklySchedule[day] || []
-          const isToday = day === new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+          const classes: ClassSchedule[] = weeklySchedule[day] || []
+          const isToday = day.toLowerCase() === todayDayName.toLowerCase()
 
           return (
             <Box key={day} sx={{ flex: '1 1 300px', minWidth: 280 }}>
@@ -239,15 +252,15 @@ const StudentTimetable: React.FC = () => {
                 </Typography>
               ) : (
                 <Stack spacing={1}>
-                  {classes.map(cls => (
+                  {classes.map((cls: ClassSchedule) => (
                     <Card key={cls.id} variant="outlined">
                       <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
-                            {cls.startTime} - {cls.endTime}
+                            {cls.startTime || cls.timeSlot?.startTime || '—'} - {cls.endTime || cls.timeSlot?.endTime || '—'}
                           </Typography>
                           <Chip
-                            label={cls.type}
+                            label={cls.type || 'lecture'}
                             size="small"
                             variant="outlined"
                             sx={{ height: 20, fontSize: 11, textTransform: 'capitalize' }}
@@ -258,10 +271,10 @@ const StudentTimetable: React.FC = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
-                            Room {cls.room}
+                            Room {cls.room || 'TBD'}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {cls.facultyInitials || cls.facultyName}
+                            {cls.facultyInitials || cls.facultyName || 'TBD'}
                           </Typography>
                         </Box>
                       </CardContent>

@@ -5,19 +5,30 @@ import { Bell, CheckCheck, ArrowLeft, BookOpen, DollarSign, Info, AlertCircle, C
 import { useNavigate } from 'react-router-dom';
 import type { Notification } from './../types/student';
 
-const typeConfig = {
+const typeConfig: Record<string, { icon: typeof Info; color: string; bg: string; label: string }> = {
   academic: { icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Academic' },
   fee: { icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Fee' },
   general: { icon: Info, color: 'text-slate-400', bg: 'bg-slate-500/10', label: 'General' },
   alert: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Alert' },
   success: { icon: Check, color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'Success' },
+  error: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Error' },
+  info: { icon: Info, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Info' },
+  warning: { icon: AlertCircle, color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Warning' },
 };
 
-const priorityConfig = {
+const priorityConfig: Record<string, string> = {
   low: 'border-l-slate-500',
   medium: 'border-l-amber-500',
   high: 'border-l-red-500',
 };
+
+function getPriorityClass(priority: string | undefined): string {
+  return priorityConfig[priority ?? 'medium'] ?? priorityConfig.medium;
+}
+
+function getTypeConfig(type: string) {
+  return typeConfig[type] ?? typeConfig.general;
+}
 
 export default function StudentNotificationsPage() {
   const navigate = useNavigate();
@@ -56,7 +67,7 @@ export default function StudentNotificationsPage() {
       title: 'College Fest Registration',
       message: 'Register for the annual cultural fest "Utsav 2026" by July 5.',
       type: 'general',
-      createdAt: '2026-06-28T11:00:00Z',
+      timestamp: '2026-06-28T11:00:00Z',
       read: true,
       priority: 'low',
     },
@@ -129,14 +140,15 @@ export default function StudentNotificationsPage() {
           )}
 
           {filtered.map((notification) => {
-            const config = typeConfig[notification.type];
+            const config = getTypeConfig(notification.type);
             const Icon = config.icon;
+            const priorityClass = getPriorityClass(notification.priority);
             return (
               <motion.div
                 key={notification.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className={`p-4 rounded-lg bg-slate-800/50 border-l-2 ${priorityConfig[notification.priority]} hover:bg-slate-800 transition-colors ${
+                className={`p-4 rounded-lg bg-slate-800/50 border-l-2 ${priorityClass} hover:bg-slate-800 transition-colors ${
                   notification.read ? 'opacity-60' : ''
                 }`}
               >
@@ -159,12 +171,21 @@ export default function StudentNotificationsPage() {
                             {config.label}
                           </span>
                           <span className="text-xs text-slate-500">
-                            {new Date(notification.createdAt).toLocaleDateString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {notification.createdAt
+                              ? new Date(notification.createdAt).toLocaleDateString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : notification.timestamp
+                                ? new Date(notification.timestamp).toLocaleDateString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : ''}
                           </span>
                         </div>
                       </div>

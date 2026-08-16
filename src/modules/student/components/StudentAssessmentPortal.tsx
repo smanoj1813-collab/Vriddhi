@@ -1,16 +1,14 @@
 // components/student/StudentAssessmentPortal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box, Typography, Button, Stack, Card, CardContent, Chip, Tabs, Tab,
-  Alert, CircularProgress, Paper,
+  Alert, CircularProgress,
 } from '@mui/material';
 import {
   CalendarToday as CalendarIcon, AccessTime as TimeIcon,
   School as SchoolIcon, TrendingUp as TrendIcon,
 } from '@mui/icons-material';
-import { useStudentTests } from '../../../hooks/useAssessment';
-import { useAuth } from '../../auth/hooks/useAuth';
-import { StudentTestCard } from '../../../types/assessment';
+import type { StudentTestCard } from '../../../types/assessment';
 
 /** Safely convert Timestamp | Date | string to Date */
 const toDate = (value: unknown): Date => {
@@ -22,13 +20,84 @@ const toDate = (value: unknown): Date => {
   return new Date();
 };
 
+// ═══════════════════════════════════════════════════════
+// DEMO DATA — Remove this block after testing
+// ═══════════════════════════════════════════════════════
+const demoTests: StudentTestCard[] = [
+  {
+    id: 'demo-001',
+    title: 'Data Structures & Algorithms — Mid Term',
+    subjectName: 'Computer Science',
+    startDateTime: new Date(Date.now() + 2 * 86400000),
+    endDateTime: new Date(Date.now() + 2 * 86400000 + 2 * 3600000),
+    durationMinutes: 120,
+    totalMarks: 100,
+    status: 'upcoming',
+    paperType: 'objective',
+  },
+  {
+    id: 'demo-002',
+    title: 'Database Management Systems — Quiz 3',
+    subjectName: 'DBMS',
+    startDateTime: new Date(Date.now() + 5 * 86400000),
+    endDateTime: new Date(Date.now() + 5 * 86400000 + 3600000),
+    durationMinutes: 60,
+    totalMarks: 20,
+    status: 'upcoming',
+    paperType: 'objective',
+  },
+  {
+    id: 'demo-003',
+    title: 'Operating Systems — End Semester',
+    subjectName: 'OS',
+    startDateTime: new Date(),
+    endDateTime: new Date(Date.now() + 3 * 3600000),
+    durationMinutes: 180,
+    totalMarks: 100,
+    status: 'ongoing',
+    paperType: 'mixed',
+  },
+  {
+    id: 'demo-004',
+    title: 'Mathematics — Unit Test 1',
+    subjectName: 'Mathematics',
+    startDateTime: new Date(Date.now() - 7 * 86400000),
+    endDateTime: new Date(Date.now() - 7 * 86400000 + 3600000),
+    durationMinutes: 60,
+    totalMarks: 50,
+    status: 'completed',
+    score: 42,
+    percentage: 84,
+    paperType: 'objective',
+  },
+  {
+    id: 'demo-005',
+    title: 'Computer Networks — Surprise Test',
+    subjectName: 'CN',
+    startDateTime: new Date(Date.now() - 3 * 86400000),
+    endDateTime: new Date(Date.now() - 3 * 86400000 + 1800000),
+    durationMinutes: 30,
+    totalMarks: 15,
+    status: 'completed',
+    score: 10,
+    percentage: 66.7,
+    paperType: 'subjective',
+  },
+];
+
+const upcomingTests = demoTests.filter(t => t.status === 'upcoming');
+const availableTests = demoTests.filter(t => t.status === 'ongoing' || t.status === 'upcoming');
+const completedTests = demoTests.filter(t => t.status === 'completed' || t.status === 'graded');
+const tests = demoTests;
+// ═══════════════════════════════════════════════════════
+// END DEMO DATA
+// ═══════════════════════════════════════════════════════
+
 const StudentAssessmentPortal: React.FC = () => {
-  const { user } = useAuth();
-  const { tests, upcomingTests, availableTests, completedTests, loading, error, refresh } = useStudentTests(
-    user?.collegeId,
-    user?.id
-  );
   const [activeTab, setActiveTab] = useState(0);
+  const loading = false;
+  const error = null;
+  const refresh = () => {};
 
   if (loading) {
     return (
@@ -67,8 +136,8 @@ const StudentAssessmentPortal: React.FC = () => {
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 1 }}>
             {start && <Chip size="small" icon={<CalendarIcon fontSize="small" />} label={start.toLocaleDateString()} />}
-            <Chip size="small" icon={<TimeIcon fontSize="small" />} label={`${test.durationMinutes} min`} />
-            <Chip size="small" icon={<SchoolIcon fontSize="small" />} label={`${test.totalMarks} marks`} />
+            <Chip size="small" icon={<TimeIcon fontSize="small" />} label={`${test.durationMinutes ?? test.duration ?? 0} min`} />
+            <Chip size="small" icon={<SchoolIcon fontSize="small" />} label={`${test.totalMarks ?? 0} marks`} />
             {test.paperType && (
               <Chip size="small" label={test.paperType.replace(/_/g, ' ').toUpperCase()} variant="outlined" />
             )}
@@ -77,7 +146,7 @@ const StudentAssessmentPortal: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
               <TrendIcon color="primary" fontSize="small" />
               <Typography variant="body2">
-                Score: <strong>{test.score}</strong> / {test.totalMarks}
+                Score: <strong>{test.score}</strong> / {test.totalMarks ?? 0}
                 {test.percentage !== undefined && ` (${test.percentage.toFixed(1)}%)`}
               </Typography>
             </Box>

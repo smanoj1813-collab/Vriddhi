@@ -11,9 +11,7 @@ import {
   AccessTime, People, BarChart, ArrowForward, Lock,
   Assessment,
 } from "@mui/icons-material";
-import { useStudentTests } from './../hooks/useAssessment';
 import { MathRenderer } from '../components/MathRenderer';
-import { StudentTestCard } from './../types/assessment';
 
 const TABS = [
   { key: "upcoming", label: "Upcoming", icon: <Schedule fontSize="small" />, color: "info" },
@@ -24,12 +22,97 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
+// ═══════════════════════════════════════════════════════════════
+// DEMO DATA — Remove this block after testing
+// ═══════════════════════════════════════════════════════════════
+const demoTests = [
+  {
+    id: "demo-001",
+    title: "Data Structures & Algorithms — Mid Term",
+    subject: "Computer Science",
+    status: "scheduled",
+    startTime: new Date(Date.now() + 2 * 86400000).toISOString(),
+    totalQuestions: 50,
+    duration: 120,
+    totalMarks: 100,
+    totalStudents: 120,
+  },
+  {
+    id: "demo-002",
+    title: "Database Management Systems — Quiz 3",
+    subject: "DBMS",
+    status: "scheduled",
+    startTime: new Date(Date.now() + 5 * 86400000).toISOString(),
+    totalQuestions: 30,
+    duration: 60,
+    totalMarks: 20,
+    totalStudents: 120,
+  },
+  {
+    id: "demo-003",
+    title: "Operating Systems — End Semester",
+    subject: "OS",
+    status: "active",
+    startTime: new Date().toISOString(),
+    totalQuestions: 80,
+    duration: 180,
+    totalMarks: 100,
+    totalStudents: 120,
+  },
+  {
+    id: "demo-004",
+    title: "Mathematics — Unit Test 1",
+    subject: "Mathematics",
+    status: "completed",
+    startTime: new Date(Date.now() - 7 * 86400000).toISOString(),
+    totalQuestions: 25,
+    duration: 60,
+    totalMarks: 50,
+    totalStudents: 120,
+  },
+  {
+    id: "demo-005",
+    title: "Computer Networks — Surprise Test",
+    subject: "CN",
+    status: "missed",
+    startTime: new Date(Date.now() - 3 * 86400000).toISOString(),
+    totalQuestions: 10,
+    duration: 30,
+    totalMarks: 15,
+    totalStudents: 120,
+  },
+];
+
+const demoResults = [
+  {
+    testId: "demo-004",
+    testTitle: "Mathematics — Unit Test 1",
+    score: 42,
+    totalMarks: 50,
+    rank: 8,
+    completedAt: new Date(Date.now() - 7 * 86400000 + 3600000).toISOString(),
+  },
+  {
+    testId: "demo-005",
+    testTitle: "Computer Networks — Surprise Test",
+    score: 0,
+    totalMarks: 15,
+    rank: 95,
+    completedAt: new Date(Date.now() - 3 * 86400000 + 1800000).toISOString(),
+  },
+];
+// ═══════════════════════════════════════════════════════════════
+// END DEMO DATA
+// ═══════════════════════════════════════════════════════════════
+
 const StudentTestDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
-  const collegeId = localStorage.getItem("collegeId") || "";
-  const studentId = localStorage.getItem("studentId") || "";
-  const { testCards: tests, completedTests: results, loading, error } = useStudentTests(collegeId, studentId);
+
+  const tests = demoTests;
+  const results = demoResults;
+  const loading = false;
+  const error = null;
 
   const filteredTests = tests.filter((t: any) => {
     if (activeTab === "upcoming") return t.status === "scheduled";
@@ -121,9 +204,11 @@ const StudentTestDashboard: React.FC = () => {
           ) : (
             filteredTests.map((test: any, idx: number) => (
               <Grow in key={test.id} timeout={300 + idx * 100}>
-                <TestCard test={test} result={results.find((r: any) => r.testId === test.id)}
-                  onStart={handleStartTest} onViewResult={handleViewResult}
-                  onViewAnalysis={handleViewAnalysis} onViewLeaderboard={handleViewLeaderboard} />
+                <div>
+                  <TestCard test={test} result={results.find((r: any) => r.testId === test.id)}
+                    onStart={handleStartTest} onViewResult={handleViewResult}
+                    onViewAnalysis={handleViewAnalysis} onViewLeaderboard={handleViewLeaderboard} />
+                </div>
               </Grow>
             ))
           )}
@@ -137,7 +222,13 @@ const StudentTestDashboard: React.FC = () => {
             <RecentResultsCard results={results.slice(0, 5)} onViewResult={handleViewResult} />
           </Box>
           <Box sx={{ flex: "1 1 400px" }}>
-            <LeaderboardPreviewCard leaderboard={[]} />
+            <LeaderboardPreviewCard leaderboard={[
+              { rank: 1, studentName: "Rahul Sharma", score: 98, avatar: "" },
+              { rank: 2, studentName: "Priya Patel", score: 94, avatar: "" },
+              { rank: 3, studentName: "Amit Kumar", score: 91, avatar: "" },
+              { rank: 4, studentName: "Sneha Gupta", score: 88, avatar: "" },
+              { rank: 5, studentName: "Vikram Rao", score: 85, avatar: "" },
+            ]} />
           </Box>
         </Box>
       )}
@@ -189,7 +280,6 @@ const TestCard: React.FC<{
     }}>
       <CardContent sx={{ p: 3 }}>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, alignItems: "flex-start" }}>
-          {/* Left: Test Info */}
           <Box sx={{ flex: "1 1 300px" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1, flexWrap: "wrap" }}>
               <Chip size="small" label={getStatusLabel()} color={getStatusColor() as any}
@@ -197,7 +287,6 @@ const TestCard: React.FC<{
               {test && (
                 <Chip size="small" icon={<Lock fontSize="small" />} label="Proctored" variant="outlined" />)}
             </Box>
-            {/* Title with math support */}
             <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>
               <MathRenderer text={test.title} inline />
             </Typography>
@@ -224,7 +313,6 @@ const TestCard: React.FC<{
             </Box>
           </Box>
 
-          {/* Right: Actions */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, minWidth: 200, alignItems: "flex-end" }}>
             {isActive && (
               <Button variant="contained" color="success" size="large" startIcon={<PlayArrow />}

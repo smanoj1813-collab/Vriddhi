@@ -1,4 +1,13 @@
-// src/types/student.ts
+// src/types/students.ts
+// ============================================================
+// Student Types — Original dashboard types + Master Index types
+// ============================================================
+
+import { Timestamp } from 'firebase/firestore';
+
+// ════════════════════════════════════════════════════════════
+// ORIGINAL TYPES (dashboard / UI)
+// ════════════════════════════════════════════════════════════
 
 export interface StudentProfile {
   name: string;
@@ -124,4 +133,85 @@ export interface UseStudentDataReturn {
   notifications: Notification[];
   unreadNotifications: number;
   todayDate: string;
+}
+
+// ════════════════════════════════════════════════════════════
+// STUDENT INDEX TYPES (Firestore master record)
+// ════════════════════════════════════════════════════════════
+
+/** Master student document stored in colleges/{collegeId}/students/{regNo} */
+export interface StudentIndex {
+  id: string;
+  collegeId: string;
+  name: string;
+  email: string;
+  registrationNumber: string;
+  phoneNumber: string;
+  department: string;
+  course: string;
+  batch: number;
+  batchString: string;
+  division: string;
+  mentorName: string;
+  mentorId?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  importedAt?: Timestamp;
+  isActive: boolean;
+  userId?: string;
+  avatar?: string;
+}
+
+/** CSV row shape before import */
+export interface StudentImportRow {
+  name: string;
+  email: string;
+  registrationNumber: string;
+  phoneNumber: string;
+  division: string;
+  batch: number;
+  mentorName: string;
+  department: string;
+}
+
+/** Bulk import result */
+export interface StudentImportResult {
+  success: boolean;
+  total: number;
+  created: number;
+  skipped: number;
+  failed: number;
+  errors: Array<{ row: number; regNo: string; message: string }>;
+  elapsedMs: number;
+}
+
+/** Filter for listing students */
+export interface StudentIndexFilter {
+  collegeId: string;
+  department?: string;
+  batch?: number;
+  division?: string;
+  mentorName?: string;
+  searchQuery?: string;
+  isActive?: boolean;
+}
+
+/** Lightweight list item for tables */
+export interface StudentIndexListItem {
+  id: string;
+  name: string;
+  registrationNumber: string;
+  department: string;
+  batch: number;
+  division: string;
+  mentorName: string;
+}
+
+/** Dashboard stats from the index */
+export interface StudentIndexStats {
+  total: number;
+  byDepartment: Record<string, number>;
+  byBatch: Record<string, number>;
+  byDivision: Record<string, number>;
+  byMentor: Record<string, number>;
 }

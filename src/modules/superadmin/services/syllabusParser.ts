@@ -1,554 +1,740 @@
 // ═══════════════════════════════════════════════════════════════════════
-// SYLLABUS PARSER SERVICE — mammoth.js DOCX + heuristic extraction
-// IMPROVED: Better Indian University syllabus support
+// services/syllabusParser.ts — Universal Syllabus Parser v2.3
+// Handles: Course Matrix tables + Detailed Syllabus sections
+// Tuned for: BCU B.Com (Regular) SEP 2024 format
 // ═══════════════════════════════════════════════════════════════════════
 
-import mammoth from 'mammoth';
 import type {
-  ParseResult,
-  SyllabusExtract,
   ParsedCourse,
   ParsedModule,
+  SyllabusExtract,
+  ParseResult,
   ParseConfidence,
   SyllabusFormat,
 } from '../types/curriculum';
 
-// ── COURSE PATTERNS ──────────────────────────────────────────────────
-const COURSE_CODE_PATTERN = /\b([A-Z]{2,8}(?:\s+)?\d(?:\.?\d)*)\b/gi;
-const COURSE_CODE_EXPLICIT = /(?:Course\s*Code|COURSE\s*CODE|Paper\s*Code|Subject\s*Code)[:;\s]+([A-Z0-9\s.]+)/i;
-const COURSE_NAME_EXPLICIT = /(?:Name\s*of\s*the\s*Course|COURSE\s*NAME|Paper\s*Name|Title)[:;\s]+(.+?)(?:\n|\*\*|$)/i;
-const CREDIT_PATTERN = /(?:Credits?|CREDITS?|Credit)[:;\s]*(\d+(?:\.\d+)?)/i;
-const HOURS_PATTERN = /(?:Total\s*)?(?:Hours?|HOURS?|Teaching\s*Hours?|Contact\s*Hours?)[:;\s]*(\d+)/i;
-const MARKS_PATTERN = /(?:Total\s*)?(?:Marks?|MARKS?|Max\s*Marks?|Maximum\s*Marks?)[:;\s]*(\d+)/i;
-const SEMESTER_PATTERN = /(?:Semester|SEMESTER|Sem)[\s.:]*(\d+)/i;
-const BRANCH_PATTERN = /(?:Branch|BRANCH|Department|DEPT|Programme|Program)[:.]?\s*([A-Za-z\s]{2,20})/i;
-const SCHEME_PATTERN = /(?:Scheme|SCHEME|Regulation|Batch)[:.]?\s*(\d{4})/i;
+// ─── Parser Config ──────────────────────────────────────────────────────
 
-// ── MODULE PATTERNS ──────────────────────────────────────────────────
-// Module 1: Name or Module 1 - Name or 1. Name
-const MODULE_HEADER_PATTERN = /(?:Module\s*No\.?|MODULE|Module|Unit|UNIT)\s*[.:]?\s*(\d+)[:.\s\-—]+(.+)/i;
-const MODULE_ALT_PATTERN = /^(\d+)[.:)\s]+([A-Z][A-Za-z\s&]+)$/;
-
-// Hours: many formats
-const HOURS_LINE_PATTERN = /(?:Hours?|Hrs?|Periods?|Teaching)[:;\s]*(\d+)/i;
-const HOURS_PAREN_PATTERN = /\((\d+)\s*(?:hours?|hrs?)\)/i;
-const HOURS_BRACKET_PATTERN = /\[(\d+)\s*(?:hours?|hrs?)\]/i;
-const HOURS_AFTER_NAME = /[:\-—]\s*(\d+)\s*(?:hours?|hrs?)/i;
-
-// Marks: many formats
-const MARKS_LINE_PATTERN = /(?:Marks?|Max\s*Marks?)[:;\s]*(\d+)/i;
-const MARKS_PAREN_PATTERN = /\((\d+)\s*(?:marks?)\)/i;
-const MARKS_BRACKET_PATTERN = /\[(\d+)\s*(?:marks?)\]/i;
-
-// Table cell hours/marks: | 14 | 100 | patterns
-const TABLE_CELL_NUMBER = /\|\s*\*\*(\d+)\*\*\s*\|/g;
-const TABLE_ROW_HOURS_MARKS = /\|\s*(?:hours?|hrs?|marks?)\s*\|\s*(\d+)\s*\|/i;
-
-// Topics
-const TOPIC_BULLET = /^[-•\*\+\.]\s*(.+)/;
-const TOPIC_NUMBERED = /^\d+[.)]\s*(.+)/;
-
-function computeConfidence(fieldsFound: number, totalFields: number): ParseConfidence {
-  const ratio = fieldsFound / totalFields;
-  if (ratio >= 0.8) return 'high';
-  if (ratio >= 0.5) return 'medium';
-  return 'low';
+export interface ParserConfig {
+  courseCodeRegex: RegExp;
+  semesterRegex: RegExp;
+  unitHeaderRegex: RegExp;
+  hoursRegex: RegExp;
+  creditRegex: RegExp;
+  totalHoursRegex: RegExp;
+  marksRegex: RegExp;
+  outcomeRegex: RegExp;
+  referenceRegex: RegExp;
+  electiveRegex: RegExp;
+  projectKeywords: string[];
+  courseNameCleanRegex: RegExp;
+  ignoredModuleNames: string[];
+  branchRegex: RegExp;
+  moduleHoursRegex: RegExp;
+  moduleMarksRegex: RegExp;
 }
 
-function normalizeText(text: string): string {
+export const DEFAULT_CONFIG: ParserConfig = {
+  courseCodeRegex: /\b([1-6]\.[1-6](?:\([a-z]\))?)\b/,
+  semesterRegex: /(?:Semester|Sem)[\s\-]*([IViv0-9]+|1st|2nd|3rd|[4-6]th)/i,
+  unitHeaderRegex: /(?:^|\n)[|>\s]*(?:\*\*)?\s*Unit[\s\-]*([0-9IVXivx]+)[:.]?\s*([^\n|*]+?)(?:\*\*)?/gi,
+  hoursRegex: /\b(\d{1,3})\s*(?:hrs?|hours?|h)\b/i,
+  creditRegex: /(?:Credits?[\s:]*)?(\d(?:\.\d)?)\s*(?:Credits?|CREDITS|credits)/i,
+  totalHoursRegex: /(?:Total\s*(?:No\.\s*)?(?:Teaching|Instructional)?\s*(?:Hours?)?[\s:]*)(\d{1,3})/i,
+  marksRegex: /(?:(?:IA|Internal)[\s:]*([\d\-]+)[\s+\-]*)?(?:(?:Uni|Exam|External)[\s:]*([\d\-]+)[\s+\-]*)?(?:Total)?[\s:]*([\d\-]+)/i,
+  outcomeRegex: /(?:^|\n)\s*(?:[a-e][.)]|CO\d+[.:]|Outcome\s*\d+[.:])\s*([^\n]+)/gi,
+  referenceRegex: /(?:Books?\s*(?:for\s*)?(?:Reference|References)|Reference\s*Books?|Bibliography|Suggested\s*Readings)/i,
+  electiveRegex: /(?:Elective|Optional|Choice\s*Based)[\s\-]*/i,
+  projectKeywords: ['project', 'internship', 'survey', 'dissertation', 'thesis', 'practical', 'lab', 'viva'],
+  courseNameCleanRegex: /^\s*\[HOURS\s*\d+\]\s*/i,
+  ignoredModuleNames: ['credits', 'hours', 'total', 'grand total', 'scheme', ''],
+  branchRegex: /(?:BACHELOR\s+OF\s+(?:COMMERCE|BUSINESS|SCIENCE|ARTS|TECHNOLOGY|ENGINEERING)|B\.?Com|B\.?BA|B\.?Sc|B\.?Tech|B\.?E|MBA|M\.?Com|MCA)/i,
+  moduleHoursRegex: /\b(\d{1,3})\s*(?:hrs?|hours?|h)\b/i,
+  moduleMarksRegex: /\b(\d{1,3})\s*(?:marks?|m)\b/i,
+};
+
+// ─── BCU-specific override ──────────────────────────────────────────────
+export const BCU_CONFIG: ParserConfig = {
+  ...DEFAULT_CONFIG,
+  courseCodeRegex: /\b([1-6]\.[1-6](?:\([a-z]\))?)\b/,
+  semesterRegex: /(?:Semester|Sem)[\s.:]*([IViv0-9]+)/i,
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────
+
+function cleanText(text: string): string {
   return text
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .replace(/\t/g, ' ')
+    .replace(/\*\*/g, '')
+    .split('\n')
+    .map(line => line.replace(/[ \t]+/g, ' ').trim())
+    .filter(line => line.length > 0)
+    .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
-function splitIntoParagraphs(text: string): string[] {
-  return text.split(/\n{2,}/).map(p => p.trim()).filter(p => p.length > 0);
+function extractNumber(text: string, regex: RegExp, defaultValue: number = 0): number {
+  const match = text.match(regex);
+  if (!match) return defaultValue;
+  const num = parseFloat(match[1]);
+  return isNaN(num) ? defaultValue : num;
 }
 
-function splitIntoLines(text: string): string[] {
-  return text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+function romanToInt(roman: string): number {
+  const map: Record<string, number> = { I: 1, V: 5, X: 10, L: 50 };
+  let val = 0;
+  for (let i = 0; i < roman.length; i++) {
+    const curr = map[roman[i].toUpperCase()] || 0;
+    const next = map[roman[i + 1]?.toUpperCase()] || 0;
+    val += curr < next ? -curr : curr;
+  }
+  return val;
 }
 
-function cleanCourseName(name: string): string {
-  return name
-    .replace(/^\d+\.?\s*/, '')
-    .replace(/\(.*?\)/g, '')
-    .replace(/\[.*?\]/g, '')
-    .replace(/\*\*/g, '')
-    .replace(/\|/g, '')
-    .replace(/^[->\s]+/, '')
-    .trim();
+function parseSemesterNumber(text: string): number {
+  const match = text.match(/([IViv]+|[0-9]+|1st|2nd|3rd|[4-6]th)/i);
+  if (!match) return 0;
+  const val = match[1].toUpperCase();
+  if (val === 'I' || val === '1' || val === '1ST') return 1;
+  if (val === 'II' || val === '2' || val === '2ND') return 2;
+  if (val === 'III' || val === '3' || val === '3RD') return 3;
+  if (val === 'IV' || val === '4' || val === '4TH') return 4;
+  if (val === 'V' || val === '5' || val === '5TH') return 5;
+  if (val === 'VI' || val === '6' || val === '6TH') return 6;
+  return romanToInt(val) || parseInt(val) || 0;
 }
 
-function cleanModuleName(name: string): string {
-  return name
-    .replace(/\*\*/g, '')
-    .replace(/\|/g, '')
-    .replace(/\(\d+\s*(?:hours?|hrs?|marks?)\)/gi, '')
-    .replace(/\[\d+\s*(?:hours?|hrs?|marks?)\]/gi, '')
-    .trim();
-}
+// Section headers that mark the end of a unit's topic area
+const UNIT_BOUNDARY_PATTERNS = [
+  /Skill\s*Development\s*Activities?/i,
+  /Books?\s*(?:for\s*)?(?:Reference|References)/i,
+  /Reference\s*Books?/i,
+  /Bibliography/i,
+  /Suggested\s*Readings/i,
+  /Course\s*Outcomes?/i,
+  /Pedagogy/i,
+];
 
-function extractCourseCode(text: string): string | undefined {
-  const explicit = text.match(COURSE_CODE_EXPLICIT);
-  if (explicit) return explicit[1].trim();
-  const match = text.match(COURSE_CODE_PATTERN);
-  return match ? match[0].trim() : undefined;
-}
-
-function extractCourseName(text: string): string | undefined {
-  const explicit = text.match(COURSE_NAME_EXPLICIT);
-  if (explicit) return cleanCourseName(explicit[1]);
-  return undefined;
-}
-
-function extractNumber(text: string, pattern: RegExp): number | undefined {
-  const match = text.match(pattern);
-  return match ? parseInt(match[1], 10) : undefined;
-}
-
-function tryExtractHours(line: string): number | undefined {
-  const m1 = line.match(HOURS_LINE_PATTERN);
-  if (m1) return parseInt(m1[1], 10);
-  const m2 = line.match(HOURS_PAREN_PATTERN);
-  if (m2) return parseInt(m2[1], 10);
-  const m3 = line.match(HOURS_BRACKET_PATTERN);
-  if (m3) return parseInt(m3[1], 10);
-  const m4 = line.match(HOURS_AFTER_NAME);
-  if (m4) return parseInt(m4[1], 10);
-  return undefined;
-}
-
-function tryExtractMarks(line: string): number | undefined {
-  const m1 = line.match(MARKS_LINE_PATTERN);
-  if (m1) return parseInt(m1[1], 10);
-  const m2 = line.match(MARKS_PAREN_PATTERN);
-  if (m2) return parseInt(m2[1], 10);
-  const m3 = line.match(MARKS_BRACKET_PATTERN);
-  if (m3) return parseInt(m3[1], 10);
-  return undefined;
-}
-
-function parseSummaryTable(text: string): Array<{ code: string; name: string; credits: number }> {
-  const courses: Array<{ code: string; name: string; credits: number }> = [];
-  const lines = splitIntoLines(text);
-  for (const line of lines) {
-    const cells = line.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(c => c.length > 0);
-    if (cells.length >= 3) {
-      const code = cells[0];
-      const name = cells[1];
-      const credits = parseInt(cells[2], 10);
-      if (/^[A-Z0-9.]+$/i.test(code) && name.length > 3 && !isNaN(credits)) {
-        courses.push({ code, name: cleanCourseName(name), credits });
-      }
+function findNextBoundary(text: string, startPos: number): number {
+  let nearest = text.length;
+  for (const pattern of UNIT_BOUNDARY_PATTERNS) {
+    const match = text.slice(startPos).match(pattern);
+    if (match && match.index !== undefined) {
+      nearest = Math.min(nearest, startPos + match.index);
     }
   }
+  return nearest;
+}
+
+// ─── Outcome Extractor (handles wrapped lines) ──────────────────────────
+
+function extractOutcomes(text: string): string[] {
+  const outcomes: string[] = [];
+
+  // Find the Course Outcomes section
+  const sectionMatch = text.match(/Course\s*Outcomes?[:.]?/i);
+  if (!sectionMatch || sectionMatch.index === undefined) return outcomes;
+
+  const start = sectionMatch.index + sectionMatch[0].length;
+  const end = findNextBoundary(text, start);
+  const sectionText = text.slice(start, end);
+
+  const lines = sectionText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  let currentOutcome = '';
+
+  for (const line of lines) {
+    // Check if line starts with a bullet like a., b., c. or CO1:, etc.
+    const isNewOutcome = /^[a-e][.)]\s+/i.test(line) || /^CO\d+[.:]\s+/i.test(line);
+
+    if (isNewOutcome) {
+      if (currentOutcome) outcomes.push(currentOutcome.trim());
+      currentOutcome = line.replace(/^[a-e][.)]\s+/i, '').replace(/^CO\d+[.:]\s+/i, '');
+    } else if (currentOutcome) {
+      // Continuation line (wrapped text)
+      currentOutcome += ' ' + line;
+    }
+  }
+  if (currentOutcome) outcomes.push(currentOutcome.trim());
+
+  return outcomes.filter(o => o.length > 10);
+}
+
+// ─── Course Matrix Parser ───────────────────────────────────────────────
+
+interface MatrixCourse {
+  code: string;
+  name: string;
+  hoursPerWeek: number;
+  examDuration: number;
+  iaMarks: number;
+  examMarks: number;
+  totalMarks: number;
+  credits: number;
+  semester: number;
+  isElective: boolean;
+  isProject: boolean;
+  isLanguage: boolean;
+}
+
+function parseCourseMatrix(text: string, config: ParserConfig): MatrixCourse[] {
+  const courses: MatrixCourse[] = [];
+  const lines = text.split('\n');
+  let currentSemester = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    const semMatch = line.match(config.semesterRegex);
+    if (semMatch) {
+      currentSemester = parseSemesterNumber(semMatch[1]);
+      continue;
+    }
+
+    if (line.startsWith('+')) continue;
+    if (/Courses|Paper Code|Total/i.test(line) && !/[1-6]\.[1-6]/.test(line)) continue;
+
+    const codeMatch = line.match(/\|\s*([1-6]\.[1-6](?:\([a-z]\))?)\s*\|/);
+    if (codeMatch) {
+      const code = codeMatch[1].trim();
+      const nameParts: string[] = [];
+      let credits = 0, iaMarks = 0, examMarks = 0, totalMarks = 0, hoursPerWeek = 0;
+
+      for (let j = i; j < Math.min(i + 6, lines.length); j++) {
+        const l = lines[j].replace(/\*\*/g, '');
+
+        const cells = l.match(/\|\s*([^|]{3,60}?)\s*(?=\|)/g);
+        if (cells) {
+          for (const cell of cells) {
+            const clean = cell.replace(/^\|\s*/, '').trim();
+            if (!clean) continue;
+            if (/^\d+(\.\d+)?$/.test(clean)) continue;
+            if (/^(?:Part|DSC|CC|SEC|Language|Courses|Paper|Code|IA|Uni|Exam|Total)/i.test(clean)) continue;
+            if (clean.length > 3 && !nameParts.includes(clean)) nameParts.push(clean);
+          }
+        }
+
+        const creditMatch = l.match(/\|\s*(\d)\s*\|/);
+        if (creditMatch && !credits) credits = parseInt(creditMatch[1]) || 0;
+
+        const marksMatch = l.match(/\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|/);
+        if (marksMatch) {
+          iaMarks = parseInt(marksMatch[1]) || 0;
+          examMarks = parseInt(marksMatch[2]) || 0;
+          totalMarks = parseInt(marksMatch[3]) || 0;
+        }
+
+        const hrsMatch = l.match(/\|\s*(\d)\s*\|\s*3\s*\|/);
+        if (hrsMatch && !hoursPerWeek) hoursPerWeek = parseInt(hrsMatch[1]) || 0;
+      }
+
+      const name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
+      if (!name || name.length < 3) continue;
+
+      const lowerName = name.toLowerCase();
+      const isProject = config.projectKeywords.some(k => lowerName.includes(k));
+      const isElective = config.electiveRegex.test(line) || lowerName.includes('elective');
+      const isLanguage = /language|kannada|sanskrit|urdu|tamil|telugu|malayalam|hindi|marathi|english/i.test(name);
+
+      courses.push({
+        code,
+        name,
+        hoursPerWeek: hoursPerWeek || 4,
+        examDuration: 3,
+        iaMarks: iaMarks || 20,
+        examMarks: examMarks || 80,
+        totalMarks: totalMarks || (iaMarks + examMarks) || 100,
+        credits: credits || 4,
+        semester: currentSemester,
+        isElective,
+        isProject,
+        isLanguage,
+      });
+    }
+  }
+
   return courses;
 }
 
-function parseModules(text: string): ParsedModule[] {
-  const modules: ParsedModule[] = [];
-  const lines = splitIntoLines(text);
-  let current: Partial<ParsedModule> | null = null;
-  let topics: string[] = [];
-  let inTopicsSection = false;
+// ─── Detailed Syllabus Parser ───────────────────────────────────────────
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+interface SyllabusSection {
+  code: string;
+  name: string;
+  credits: number;
+  hoursPerWeek: number;
+  totalHours: number;
+  outcomes: string[];
+  units: { number: number; title: string; hours: number; topics: string[] }[];
+  references: string[];
+  skillActivities: string[];
+  branch: string;
+  semester: number;
+}
 
-    // Try module header patterns
-    const headerMatch = line.match(MODULE_HEADER_PATTERN);
-    const altMatch = !headerMatch ? line.match(MODULE_ALT_PATTERN) : null;
+function parseDetailedSyllabus(text: string, config: ParserConfig): SyllabusSection[] {
+  const sections: SyllabusSection[] = [];
 
-    if (headerMatch || altMatch) {
-      // Save previous module
-      if (current && current.moduleNo !== undefined) {
-        modules.push({
-          id: `mod-${Date.now()}-${modules.length}`,
-          moduleNo: current.moduleNo,
-          moduleName: cleanModuleName(current.moduleName || `Module ${current.moduleNo}`),
-          title: cleanModuleName(current.title || current.moduleName || `Module ${current.moduleNo}`),
-          description: current.description,
-          hours: current.hours || 0,
-          marks: current.marks || 0,
-          type: 'theory',
-          topics: topics.length > 0 ? topics : [],
-          learningOutcomes: current.learningOutcomes,
-          confidence: current.confidence || 'low',
-        });
-      }
+  const codePattern = /Course\s*Code[:.]?\s*([1-6]\.[1-6](?:\([a-z]\))?)/gi;
+  const matches = Array.from(text.matchAll(codePattern));
 
-      const match = headerMatch || altMatch!;
-      current = {
-        moduleNo: parseInt(match[1], 10),
-        moduleName: cleanModuleName(match[2]),
-        title: cleanModuleName(match[2]),
-      };
-      topics = [];
-      inTopicsSection = false;
-
-      // Try to extract hours/marks from the header line itself
-      const h = tryExtractHours(line);
-      if (h !== undefined && h <= 100) current.hours = h;
-      const m = tryExtractMarks(line);
-      if (m !== undefined && m <= 200) current.marks = m;
-
-      continue;
+  if (matches.length === 0) {
+    const namePattern = /Name\s*of\s*the\s*Course[:.]?\s*([^\n|]+)/gi;
+    const nameMatches = Array.from(text.matchAll(namePattern));
+    for (let i = 0; i < nameMatches.length; i++) {
+      const start = nameMatches[i].index || 0;
+      const end = nameMatches[i + 1]?.index || text.length;
+      const blockText = text.slice(start, end);
+      const codeM = blockText.match(config.courseCodeRegex);
+      const code = codeM ? codeM[1] : `C${i + 1}`;
+      const section = parseSingleSyllabusSection(blockText, code, nameMatches[i][1], config);
+      if (section) sections.push(section);
     }
-
-    if (!current) continue;
-
-    // Check for hours on this line
-    const hoursVal = tryExtractHours(line);
-    if (hoursVal !== undefined && hoursVal <= 100) {
-      current.hours = hoursVal;
-      continue;
-    }
-
-    // Check for marks on this line
-    const marksVal = tryExtractMarks(line);
-    if (marksVal !== undefined && marksVal <= 200) {
-      current.marks = marksVal;
-      continue;
-    }
-
-    // Check for "Topics:" or "Contents:" header
-    if (/^(Topics?|Contents?|Syllabus|Unit\s*Details)[:\s]/i.test(line)) {
-      inTopicsSection = true;
-      continue;
-    }
-
-    // Skip structural lines
-    if (/^[+|=|\-\s]+$/.test(line) || line.length === 0) continue;
-    if (/^(Hours?|Marks?|Credits?|Course\s*Code|Name\s*of|Total\s*Hours|Total\s*Marks)/i.test(line)) continue;
-
-    // Collect topics
-    const bulletMatch = line.match(TOPIC_BULLET);
-    if (bulletMatch) {
-      const clean = bulletMatch[1].replace(/\*\*/g, '').trim();
-      if (clean.length > 3) topics.push(clean);
-      continue;
-    }
-
-    const numberedMatch = line.match(TOPIC_NUMBERED);
-    if (numberedMatch) {
-      const clean = numberedMatch[1].replace(/\*\*/g, '').trim();
-      if (clean.length > 3) topics.push(clean);
-      continue;
-    }
-
-    // Fallback: any line that's not too short and not a header
-    if (line.length > 10 && line.length < 300 && !line.match(/^(Module|Unit|Course)\s*\d/i)) {
-      const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
-      if (clean.length > 10 && inTopicsSection) topics.push(clean);
-    }
+    return sections;
   }
 
-  if (current && current.moduleNo !== undefined) {
-    modules.push({
-      id: `mod-${Date.now()}-${modules.length}`,
-      moduleNo: current.moduleNo,
-      moduleName: cleanModuleName(current.moduleName || `Module ${current.moduleNo}`),
-      title: cleanModuleName(current.title || current.moduleName || `Module ${current.moduleNo}`),
-      description: current.description,
-      hours: current.hours || 0,
-      marks: current.marks || 0,
-      type: 'theory',
-      topics: topics.length > 0 ? topics : [],
-      learningOutcomes: current.learningOutcomes,
-      confidence: current.confidence || 'low',
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index || 0;
+    const end = matches[i + 1]?.index || text.length;
+    const blockText = text.slice(start, end);
+    const code = matches[i][1].trim();
+    const section = parseSingleSyllabusSection(blockText, code, '', config);
+    if (section) sections.push(section);
+  }
+
+  return sections;
+}
+
+function parseSingleSyllabusSection(
+  text: string,
+  code: string,
+  fallbackName: string,
+  config: ParserConfig
+): SyllabusSection | null {
+  // Extract course name
+  const nameMatch = text.match(/Name\s*of\s*the\s*Course[:.]?\s*([^\n|]+)/i);
+  let name = (nameMatch ? nameMatch[1] : fallbackName)
+    .replace(/Name\s*of\s*the\s*Course[:.]?/gi, '')
+    .replace(/BACHELOR\s*OF\s*COMMERCE\s*\(REGULAR\)/gi, '')
+    .replace(/\(REGULAR\)/gi, '')
+    .replace(config.courseNameCleanRegex, '')
+    .trim();
+
+  if (!name) {
+    const boldMatch = text.match(/\*\*([^*]{5,80})\*\*/);
+    if (boldMatch) name = boldMatch[1].trim();
+  }
+
+  if (!name || name.length < 3) return null;
+
+  const branchMatch = text.match(config.branchRegex);
+  const branch = branchMatch ? branchMatch[0].trim() : 'B.Com';
+
+  const semMatch = text.match(config.semesterRegex);
+  const semester = semMatch ? parseSemesterNumber(semMatch[1]) : 0;
+
+  const credits = extractNumber(text, config.creditRegex, 4);
+  const totalHours = extractNumber(text, config.totalHoursRegex, 56);
+
+  // Use the robust outcome extractor
+  const outcomes = extractOutcomes(text);
+
+  // Units
+  const units: { number: number; title: string; hours: number; topics: string[] }[] = [];
+
+  // FIXED: Use greedy + instead of lazy +? so the title isn't truncated to 1 char
+  const unitPattern = /(?:^|\n)[|>\s]*(?:\*\*)?\s*Unit[\s\-]*([0-9IVXivx]+)[:.]?\s*([^\n|*]+)(?:\*\*)?/gi;
+  const unitMatches = Array.from(text.matchAll(unitPattern));
+
+  for (let idx = 0; idx < unitMatches.length; idx++) {
+    const m = unitMatches[idx];
+    const unitNum = parseInt(m[1]) || romanToInt(m[1]) || 0;
+    const unitTitle = m[2]
+      .replace(/(?:Hours?|HOURS?)[\s:]*/i, '')
+      .replace(/^[:\|\s>]+/, '')
+      .trim();
+
+    const unitStart = m.index || 0;
+    const nextUnit = unitMatches[idx + 1];
+
+    // FIXED: Stop unit text at next unit OR at section boundaries (skill dev, references)
+    let unitEnd: number;
+    if (nextUnit) {
+      unitEnd = nextUnit.index || text.length;
+    } else {
+      unitEnd = findNextBoundary(text, unitStart + 1);
+    }
+
+    const unitText = text.slice(unitStart, unitEnd);
+
+    // Hours
+    let hours = 0;
+    const boldNumMatch = unitText.match(/\*\*(\d{1,3})\*\*/);
+    if (boldNumMatch) hours = parseInt(boldNumMatch[1]);
+    if (hours === 0) hours = extractNumber(unitText, config.moduleHoursRegex, 0);
+    if (hours === 0) hours = Math.round(totalHours / (unitMatches.length || 1));
+
+    // Topics
+    const topics: string[] = [];
+    const lines = unitText.split('\n').slice(1);
+    let currentTopic = '';
+    let inTopic = false;
+
+    for (const rawLine of lines) {
+      const line = rawLine
+        .replace(/^[|>\s*•\-\d.)]+/, '')
+        .replace(/\*\*/g, '')
+        .trim();
+      if (!line || line.length < 5) continue;
+
+      // FIXED: Stop accumulating when we hit a section boundary
+      if (/^(?:Skill\s*Development|Books\s*(?:for\s*)?(?:Reference|References)|Reference\s*Books?|Bibliography|Suggested\s*Readings)/i.test(line)) {
+        break;
+      }
+
+      // Skip other structural lines
+      if (/^(?:Unit|UNIT|Outcome|SYLLABUS|Course\s*Outcomes|CREDITS|HOURS|NO\.OF|Pedagogy)/i.test(line)) continue;
+
+      if (currentTopic) {
+        currentTopic += ' ' + line;
+      } else {
+        currentTopic = line;
+      }
+      inTopic = true;
+    }
+    if (currentTopic) topics.push(currentTopic);
+
+    if (topics.length === 0) {
+      const fallback = unitText
+        .replace(unitPattern, '')
+        .replace(/^[|>\s*\-]+/gm, '')
+        .replace(/\*\*/g, '')
+        .replace(/\n+/g, ' ')
+        .trim();
+      if (fallback.length > 20) topics.push(fallback.substring(0, 500));
+    }
+
+    units.push({
+      number: unitNum,
+      title: unitTitle || `Unit ${unitNum}`,
+      hours,
+      topics: topics.length > 0 ? topics : [`Topics for ${unitTitle || 'Unit ' + unitNum}`],
     });
   }
 
-  return modules.map(m => {
-    const found = [
-      m.moduleName && m.moduleName !== `Module ${m.moduleNo}`,
-      m.hours > 0,
-      m.topics.length > 0,
-    ].filter(Boolean).length;
-    return { ...m, confidence: computeConfidence(found, 3) };
-  });
-}
-
-function parseSingleCourse(text: string, id: string): ParsedCourse | null {
-  const code = extractCourseCode(text);
-  const explicitName = extractCourseName(text);
-
-  if (!code && text.length < 80) return null;
-
-  let name = explicitName || '';
-  if (!name) {
-    const lines = splitIntoLines(text);
-    for (const line of lines) {
-      const cleaned = cleanCourseName(line);
-      if (cleaned.length > 5 && cleaned.length < 150 &&
-          !line.match(/^(Code|Credits?|Hours?|Marks?|Semester|Course\s*Code|Name\s*of|Total)/i) &&
-          !line.match(/^\*\*Name\s*of\s*the/i)) {
-        name = cleaned; break;
-      }
+  // References
+  const references: string[] = [];
+  const refMatch = text.match(config.referenceRegex);
+  if (refMatch) {
+    const refText = text.slice(refMatch.index || 0);
+    const refLines = refText.split('\n').slice(1);
+    for (const rawLine of refLines) {
+      const line = rawLine.replace(/^[|>\s*•\-\d.)]+/, '').replace(/\*\*/g, '').trim();
+      if (!line || line.length < 10) continue;
+      if (/^(?:Unit|UNIT|Skill|Outcome|SYLLABUS)/i.test(line)) break;
+      references.push(line);
     }
   }
-  if (!name && !code) return null;
 
-  const credits = extractNumber(text, CREDIT_PATTERN) || 0;
-  const totalHours = extractNumber(text, HOURS_PATTERN) || 0;
-  const totalMarks = extractNumber(text, MARKS_PATTERN) || 0;
-  const semester = extractNumber(text, SEMESTER_PATTERN) || 0;
-  const branchMatch = text.match(BRANCH_PATTERN);
-  const branch = branchMatch ? branchMatch[1].trim() : '';
-  const schemeMatch = text.match(SCHEME_PATTERN);
-  const scheme = schemeMatch ? schemeMatch[1] : '';
-  const modules = parseModules(text);
-
-  // If no explicit hours found but modules have hours, sum them
-  const computedHours = modules.reduce((sum, m) => sum + (m.hours || 0), 0);
-  const finalHours = totalHours > 0 ? totalHours : computedHours;
-
-  const computedMarks = modules.reduce((sum, m) => sum + (m.marks || 0), 0);
-  const finalMarks = totalMarks > 0 ? totalMarks : computedMarks;
-
-  const fieldsFound = [
-    !!code,
-    !!name,
-    credits > 0,
-    finalHours > 0,
-    finalMarks > 0 || modules.length > 0,
-    modules.length > 0,
-  ].filter(Boolean).length;
-  const confidence = computeConfidence(fieldsFound, 6);
+  // Skill activities
+  const skillActivities: string[] = [];
+  const skillMatch = text.match(/(?:Skill\s*Development\s*Activities?|Practical\s*Exercises?)/i);
+  if (skillMatch) {
+    const skillText = text.slice(skillMatch.index || 0);
+    const skillLines = skillText.split('\n').slice(1);
+    for (const rawLine of skillLines) {
+      const line = rawLine.replace(/^[|>\s*•\-\d.)]+/, '').replace(/\*\*/g, '').trim();
+      if (!line || line.length < 10) continue;
+      if (/^(?:Unit|UNIT|Books|Reference|Outcome)/i.test(line)) break;
+      skillActivities.push(line);
+    }
+  }
 
   return {
-    id, code: code || `COURSE-${id}`, name: name || 'Untitled Course',
-    credits, totalHours: finalHours, totalMarks: finalMarks, semester, branch, scheme,
-    modules, confidence,
+    code,
+    name,
+    credits,
+    hoursPerWeek: Math.round(totalHours / 14) || 4,
+    totalHours,
+    outcomes,
+    units,
+    references,
+    skillActivities,
+    branch,
+    semester,
   };
 }
 
-function parseCourses(text: string): ParsedCourse[] {
-  const courses: ParsedCourse[] = [];
+// ─── Post-Processing ────────────────────────────────────────────────────
 
-  // First, try explicit course sections
-  const explicitBlocks = text.split(/(?=Name\s*of\s*the\s*Course|COURSE\s*CODE|Course\s*Code)/gi);
-  if (explicitBlocks.length > 1) {
-    for (let i = 1; i < explicitBlocks.length; i++) {
-      const blockText = explicitBlocks[i];
-      const course = parseSingleCourse(blockText, `course-${i - 1}`);
-      if (course) courses.push(course);
-    }
-    if (courses.length > 0) return courses;
-  }
+function postProcessExtract(extract: SyllabusExtract, config: ParserConfig): SyllabusExtract {
+  const cleanedCourses = extract.courses.map(course => {
+    let cleanName = course.name.replace(config.courseNameCleanRegex, '').trim();
+    if (!cleanName) cleanName = course.name;
 
-  // Fallback: paragraph-based splitting
-  const paragraphs = splitIntoParagraphs(text);
-  const boundaries: number[] = [];
-  paragraphs.forEach((p, i) => {
-    if (COURSE_CODE_EXPLICIT.test(p) || /^(Course|Subject|Paper)\s*\d+/i.test(p) ||
-        /Name\s*of\s*the\s*Course/i.test(p) || /^[A-Z]{2,8}\s*\d[\d.]*$/m.test(p)) {
-      boundaries.push(i);
-    }
+    const cleanModules = course.modules
+      .filter(m => {
+        const n = (m.moduleName ?? m.title ?? m.name ?? '').toLowerCase().trim();
+        return !config.ignoredModuleNames.includes(n);
+      })
+      .map(m => {
+        const desc = `${m.moduleName ?? ''} ${m.title ?? ''} ${m.name ?? ''} ${m.description ?? ''}`;
+        const hrs = m.hours || extractNumber(desc, config.moduleHoursRegex, 0);
+        const mrk = m.marks || extractNumber(desc, config.moduleMarksRegex, 0);
+        return { ...m, hours: hrs, marks: mrk };
+      });
+
+    const totalHours = cleanModules.reduce((s, m) => s + (m.hours || 0), 0);
+    const totalMarks = cleanModules.reduce((s, m) => s + (m.marks || 0), 0);
+
+    return {
+      ...course,
+      name: cleanName,
+      totalHours: totalHours || course.totalHours,
+      totalMarks: totalMarks || course.totalMarks,
+      modules: cleanModules,
+    };
   });
 
-  if (boundaries.length === 0) {
-    const single = parseSingleCourse(text, 'course-0');
-    if (single) courses.push(single);
-    return courses;
-  }
+  const totalModules = cleanedCourses.reduce((s, c) => s + c.modules.length, 0);
+  const totalHours = cleanedCourses.reduce((s, c) => s + c.totalHours, 0);
+  const totalMarks = cleanedCourses.reduce((s, c) => s + c.totalMarks, 0);
 
-  for (let i = 0; i < boundaries.length; i++) {
-    const start = boundaries[i];
-    const end = boundaries[i + 1] !== undefined ? boundaries[i + 1] : paragraphs.length;
-    const blockText = paragraphs.slice(start, end).join('\n');
-    const course = parseSingleCourse(blockText, `course-${i}`);
-    if (course) courses.push(course);
-  }
-
-  return courses;
+  return {
+    ...extract,
+    courses: cleanedCourses,
+    totalModules,
+    totalHours,
+    totalMarks,
+  };
 }
 
-async function parseDocx(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  return result.value;
-}
+// ─── Main Parser ──────────────────────────────────────────────────────────
 
-async function parsePdf(file: File): Promise<string> {
-  return await file.text();
-}
-
-async function parseTxt(file: File): Promise<string> {
-  return await file.text();
-}
-
-function buildParseResult(
-  success: boolean,
-  file: File,
-  format: SyllabusFormat,
-  extractedBy: string,
-  extractedByName: string | undefined,
-  courses: ParsedCourse[],
-  errors: string[],
-  warnings: string[],
-  rawText: string
+export function parseSyllabusDocument(
+  rawText: string,
+  fileName: string,
+  fileSize: number = 0,
+  format: SyllabusFormat = 'docx',
+  config: ParserConfig = DEFAULT_CONFIG
 ): ParseResult {
-  const totalModules = courses.reduce((sum, c) => sum + c.modules.length, 0);
-  const totalHours = courses.reduce((sum, c) => sum + c.totalHours, 0);
-  const totalMarks = courses.reduce((sum, c) => sum + c.totalMarks, 0);
-
-  const confidenceScores = courses.map(c => c.confidence === 'high' ? 85 : c.confidence === 'medium' ? 60 : 30);
-  const avgScore = confidenceScores.length > 0 ? Math.round(confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length) : 0;
-  const overallConfidence: ParseConfidence = avgScore >= 70 ? 'high' : avgScore >= 40 ? 'medium' : 'low';
-
-  const extract: SyllabusExtract = {
-    id: `extract-${Date.now()}`,
-    fileName: file.name,
-    fileSize: file.size,
-    format,
-    extractedBy,
-    extractedByName,
-    extractedAt: new Date().toISOString(),
-    status: 'review',
-    courses,
-    totalCourses: courses.length,
-    totalModules,
-    totalHours,
-    totalMarks,
-    averageConfidence: overallConfidence,
-    confidenceScore: avgScore,
-  };
-
-  return {
-    success,
-    extract,
-    courses,
-    errors,
-    warnings,
-    rawText,
-    confidenceScore: avgScore,
-    totalCourses: courses.length,
-    totalModules,
-    totalHours,
-    totalMarks,
-  };
-}
-
-export async function parseSyllabus(
-  file: File, format: SyllabusFormat, extractedBy: string, extractedByName?: string
-): Promise<ParseResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   try {
-    let rawText = '';
-    switch (format) {
-      case 'docx': rawText = await parseDocx(file); break;
-      case 'pdf': rawText = await parsePdf(file); warnings.push('PDF parsing is basic; complex layouts may not extract perfectly.'); break;
-      case 'txt': rawText = await parseTxt(file); break;
-      default:
-        errors.push(`Unsupported format: ${format}`);
-        return { success: false, courses: [], errors, warnings, confidenceScore: 0, totalCourses: 0, totalModules: 0, totalHours: 0, totalMarks: 0 };
+    const cleanRaw = cleanText(rawText);
+
+    const matrixCourses = parseCourseMatrix(cleanRaw, config);
+    if (matrixCourses.length === 0) {
+      warnings.push('Could not parse course matrix. Falling back to detailed syllabus parsing only.');
     }
 
-    if (!rawText || rawText.trim().length < 50) {
-      errors.push('Extracted text is too short or empty. Please check the file.');
-      return { success: false, courses: [], errors, warnings, confidenceScore: 0, totalCourses: 0, totalModules: 0, totalHours: 0, totalMarks: 0 };
+    const detailedSections = parseDetailedSyllabus(cleanRaw, config);
+    if (detailedSections.length === 0) {
+      warnings.push('Could not parse detailed syllabus sections.');
     }
 
-    const normalizedText = normalizeText(rawText);
-    const courses = parseCourses(normalizedText);
+    const courses: ParsedCourse[] = [];
+    const usedCodes = new Set<string>();
 
-    if (courses.length === 0) {
-      const summaryCourses = parseSummaryTable(normalizedText);
-      if (summaryCourses.length > 0) {
-        for (let i = 0; i < summaryCourses.length; i++) {
-          const sc = summaryCourses[i];
-          courses.push({
-            id: `course-${i}`,
-            code: sc.code,
-            name: sc.name,
-            credits: sc.credits,
-            totalHours: 0,
-            totalMarks: 100,
-            semester: 0,
-            branch: '',
-            scheme: '',
-            modules: [],
-            confidence: 'low',
+    // First pass: match matrix + detailed
+    for (const mc of matrixCourses) {
+      const detail = detailedSections.find(d => d.code === mc.code);
+      usedCodes.add(mc.code);
+
+      const modules: ParsedModule[] = [];
+      let moduleNo = 1;
+
+      if (detail && detail.units.length > 0) {
+        for (const unit of detail.units) {
+          modules.push({
+            id: `${mc.code}_u${unit.number}`,
+            moduleNo: moduleNo++,
+            moduleName: unit.title,
+            title: unit.title,
+            name: unit.title,
+            description: unit.topics.join('\n'),
+            hours: unit.hours,
+            marks: Math.round(mc.totalMarks / (detail.units.length || 1)),
+            type: 'theory',
+            topics: unit.topics,
+            learningOutcomes: detail.outcomes,
+            confidence: unit.topics.length > 2 ? 'high' : unit.topics.length > 0 ? 'medium' : 'low',
+            isEdited: false,
+            subject: mc.name,
+            course: mc.name,
+            semester: mc.semester,
           });
         }
-        warnings.push('Only summary table data extracted. Detailed module breakdown requires manual review.');
+      } else {
+        warnings.push(`No detailed syllabus found for ${mc.code}: ${mc.name}`);
+        const defaultUnits = 5;
+        const hoursPerUnit = Math.round((mc.hoursPerWeek * 14) / defaultUnits);
+        for (let u = 1; u <= defaultUnits; u++) {
+          modules.push({
+            id: `${mc.code}_u${u}`,
+            moduleNo: moduleNo++,
+            moduleName: `Unit ${u}`,
+            title: `Unit ${u}`,
+            name: `Unit ${u}`,
+            description: `Unit ${u} of ${mc.name}`,
+            hours: hoursPerUnit,
+            marks: Math.round(mc.totalMarks / defaultUnits),
+            type: 'theory',
+            topics: [`Unit ${u} topics for ${mc.name}`],
+            learningOutcomes: [],
+            confidence: 'low',
+            isEdited: false,
+            subject: mc.name,
+            course: mc.name,
+            semester: mc.semester,
+          });
+        }
       }
+
+      courses.push({
+        id: mc.code,
+        code: mc.code,
+        name: mc.name,
+        shortName: mc.name.length > 40 ? mc.name.substring(0, 37) + '...' : mc.name,
+        credits: mc.credits,
+        totalHours: mc.hoursPerWeek * 14,
+        totalMarks: mc.totalMarks,
+        internalMarks: mc.iaMarks,
+        externalMarks: mc.examMarks,
+        semester: mc.semester,
+        branch: detail?.branch || 'B.Com',
+        scheme: 'CBCS',
+        modules,
+        // FIXED: Add outcomes at course level so the UI tab can display them
+        outcomes: detail?.outcomes || [],
+        references: detail?.references || [],
+        confidence: modules.some(m => m.confidence === 'high') ? 'high' :
+                    modules.some(m => m.confidence === 'medium') ? 'medium' : 'low',
+        isEdited: false,
+      });
     }
 
-    if (courses.length === 0) {
-      warnings.push('No courses could be extracted. The document format may be unstructured.');
+    // Second pass: detailed sections not in matrix
+    for (const detail of detailedSections) {
+      if (usedCodes.has(detail.code)) continue;
+      usedCodes.add(detail.code);
+
+      const modules: ParsedModule[] = [];
+      let moduleNo = 1;
+      for (const unit of detail.units) {
+        modules.push({
+          id: `${detail.code}_u${unit.number}`,
+          moduleNo: moduleNo++,
+          moduleName: unit.title,
+          title: unit.title,
+          name: unit.title,
+          description: unit.topics.join('\n'),
+          hours: unit.hours,
+          marks: Math.round(100 / (detail.units.length || 1)),
+          type: 'theory',
+          topics: unit.topics,
+          learningOutcomes: detail.outcomes,
+          confidence: unit.topics.length > 2 ? 'high' : unit.topics.length > 0 ? 'medium' : 'low',
+          isEdited: false,
+          subject: detail.name,
+          course: detail.name,
+          semester: detail.semester,
+        });
+      }
+
+      courses.push({
+        id: detail.code,
+        code: detail.code,
+        name: detail.name,
+        shortName: detail.name.length > 40 ? detail.name.substring(0, 37) + '...' : detail.name,
+        credits: detail.credits,
+        totalHours: detail.totalHours,
+        totalMarks: 100,
+        internalMarks: 20,
+        externalMarks: 80,
+        semester: detail.semester,
+        branch: detail.branch,
+        scheme: '',
+        modules,
+        // FIXED: Add outcomes at course level
+        outcomes: detail.outcomes || [],
+        references: detail.references || [],
+        confidence: modules.some(m => m.confidence === 'high') ? 'high' :
+                    modules.some(m => m.confidence === 'medium') ? 'medium' : 'low',
+        isEdited: false,
+      });
     }
 
-    const lowConfidenceCourses = courses.filter(c => c.confidence === 'low');
-    if (lowConfidenceCourses.length > 0) {
-      warnings.push(`${lowConfidenceCourses.length} course(s) have low extraction confidence and need manual review.`);
-    }
+    const totalModules = courses.reduce((sum, c) => sum + c.modules.length, 0);
+    const highConfModules = courses.reduce(
+      (sum, c) => sum + c.modules.filter(m => m.confidence === 'high').length, 0
+    );
+    const mediumConfModules = courses.reduce(
+      (sum, c) => sum + c.modules.filter(m => m.confidence === 'medium').length, 0
+    );
 
-    return buildParseResult(true, file, format, extractedBy, extractedByName, courses, errors, warnings, normalizedText);
+    const confidenceScore = totalModules > 0
+      ? Math.round(((highConfModules * 1.0 + mediumConfModules * 0.6) / totalModules) * 100)
+      : 0;
+
+    let averageConfidence: ParseConfidence = 'low';
+    if (confidenceScore >= 70) averageConfidence = 'high';
+    else if (confidenceScore >= 40) averageConfidence = 'medium';
+
+    const totalHours = courses.reduce((sum, c) => sum + c.totalHours, 0);
+    const totalMarks = courses.reduce((sum, c) => sum + c.totalMarks, 0);
+
+    let extract: SyllabusExtract = {
+      id: `extract_${Date.now()}`,
+      fileName,
+      fileSize,
+      format,
+      extractedBy: 'system',
+      extractedByName: 'Syllabus Parser v2.3',
+      extractedAt: new Date().toISOString(),
+      status: 'review',
+      courses,
+      totalCourses: courses.length,
+      totalModules,
+      totalHours,
+      totalMarks,
+      averageConfidence,
+      confidenceScore,
+    };
+
+    extract = postProcessExtract(extract, config);
+
+    return {
+      success: courses.length > 0,
+      extract,
+      courses,
+      errors,
+      warnings,
+      rawText: rawText.substring(0, 2000),
+      confidenceScore,
+      totalCourses: courses.length,
+      totalModules: extract.totalModules,
+      totalHours: extract.totalHours,
+      totalMarks: extract.totalMarks,
+    };
+
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Unknown parsing error';
-    errors.push(msg);
-    return { success: false, courses: [], errors, warnings, confidenceScore: 0, totalCourses: 0, totalModules: 0, totalHours: 0, totalMarks: 0 };
+    errors.push(err instanceof Error ? err.message : 'Unknown parsing error');
+    return {
+      success: false,
+      courses: [],
+      errors,
+      warnings,
+      rawText: rawText.substring(0, 1000),
+      confidenceScore: 0,
+      totalCourses: 0,
+      totalModules: 0,
+      totalHours: 0,
+      totalMarks: 0,
+    };
   }
 }
 
-export function reparseFromText(rawText: string, fileName: string, fileSize: number, format: SyllabusFormat, extractedBy: string): ParseResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-  try {
-    const normalizedText = normalizeText(rawText);
-    const courses = parseCourses(normalizedText);
-
-    if (courses.length === 0) {
-      const summaryCourses = parseSummaryTable(normalizedText);
-      if (summaryCourses.length > 0) {
-        for (let i = 0; i < summaryCourses.length; i++) {
-          const sc = summaryCourses[i];
-          courses.push({
-            id: `course-${i}`,
-            code: sc.code,
-            name: sc.name,
-            credits: sc.credits,
-            totalHours: 0,
-            totalMarks: 100,
-            semester: 0,
-            branch: '',
-            scheme: '',
-            modules: [],
-            confidence: 'low',
-          });
-        }
-        warnings.push('Only summary table data extracted. Detailed module breakdown requires manual review.');
-      }
-    }
-
-    return buildParseResult(true, new File([], fileName), format, extractedBy, undefined, courses, errors, warnings, normalizedText);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Unknown reparsing error';
-    errors.push(msg);
-    return { success: false, courses: [], errors, warnings, confidenceScore: 0, totalCourses: 0, totalModules: 0, totalHours: 0, totalMarks: 0 };
-  }
-}
-
-export function detectFormat(fileName: string): SyllabusFormat {
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  if (ext === 'docx') return 'docx';
-  if (ext === 'pdf') return 'pdf';
-  return 'txt';
-}
-
-export function validateFile(file: File): { valid: boolean; error?: string } {
-  const maxSize = 10 * 1024 * 1024;
-  const allowedExts = ['.docx', '.pdf', '.txt'];
-  if (file.size > maxSize) return { valid: false, error: 'File size exceeds 10MB limit.' };
-  const ext = `.${file.name.split('.').pop()?.toLowerCase()}`;
-  if (!allowedExts.includes(ext)) return { valid: false, error: 'Only .docx, .pdf, and .txt files are supported.' };
-  return { valid: true };
-}
+// ─── Exports ────────────────────────────────────────────────────────────
+export { parseCourseMatrix, parseDetailedSyllabus, parseSingleSyllabusSection, postProcessExtract };
+export default parseSyllabusDocument;

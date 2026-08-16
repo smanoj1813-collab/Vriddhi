@@ -1,4 +1,3 @@
-// src/modules/faculty/hooks/useFacultyCurriculum.ts
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type {
   ParsedModule,

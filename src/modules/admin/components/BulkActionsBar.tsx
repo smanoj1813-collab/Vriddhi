@@ -45,13 +45,13 @@ export function BulkActionsBar({
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => onMarkAll('Present')}
+            onClick={() => onMarkAll('present')}
             className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-100 active:scale-95"
           >
             Mark All Present
           </button>
           <button
-            onClick={() => onMarkAll('Absent')}
+            onClick={() => onMarkAll('absent')}
             className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-all hover:bg-red-100 active:scale-95"
           >
             Mark All Absent

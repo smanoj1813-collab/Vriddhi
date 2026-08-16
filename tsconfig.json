@@ -20,6 +20,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "generate-routes.cjs"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

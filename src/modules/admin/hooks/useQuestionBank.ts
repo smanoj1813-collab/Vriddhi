@@ -824,7 +824,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
       const result = await paperGeneratorApi.generate(config, createdBy);
       if (result.success && result.data) {
         globalCache.invalidate('papers');
-        return result.data;
+        return result.data as PaperGenerationResult;
       } else {
         setErrorsUniversal(prev => ({ ...prev, generate: result.error || 'Failed to generate paper' }));
         return null;
@@ -853,7 +853,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
       );
       if (result.success && result.data) {
         globalCache.invalidate('papers');
-        return result.data;
+        return result.data as PaperGenerationResult;
       } else {
         setErrorsUniversal(prev => ({ ...prev, generate: result.error || 'Failed to generate paper' }));
         return null;
@@ -866,12 +866,20 @@ export function useQuestionBank(): UseQuestionBankReturn {
     }
   }, []);
 
-  const previewPaper = useCallback(async (paperId: string) => {
+  const previewPaper = useCallback(async (paperId: string): Promise<{
+    paper: Paper;
+    questions: Array<{
+      questionId: string;
+      order: number;
+      marks: number;
+      content: QuestionContent;
+    }>;
+  } | null> => {
     setLoadingUniversal(prev => ({ ...prev, questionDetail: true }));
     try {
       const result = await paperPreviewApi.getPaperWithContent(paperId);
       if (result.success && result.data) {
-        return result.data;
+        return result.data as { paper: Paper; questions: Array<{ questionId: string; order: number; marks: number; content: QuestionContent; }> };
       }
       return null;
     } catch {
@@ -881,12 +889,25 @@ export function useQuestionBank(): UseQuestionBankReturn {
     }
   }, []);
 
-  const getStudentPaper = useCallback(async (paperId: string) => {
+  const getStudentPaper = useCallback(async (paperId: string): Promise<{
+    paperId: string;
+    title: string;
+    duration: number;
+    totalMarks: number;
+    questions: Array<{
+      order: number;
+      marks: number;
+      questionText: string;
+      options: Array<{ id: string; text: string }>;
+      hasImage: boolean;
+      imageUrl?: string;
+    }>;
+  } | null> => {
     setLoadingUniversal(prev => ({ ...prev, questionDetail: true }));
     try {
       const result = await paperPreviewApi.getStudentPaper(paperId);
       if (result.success && result.data) {
-        return result.data;
+        return result.data as { paperId: string; title: string; duration: number; totalMarks: number; questions: Array<{ order: number; marks: number; questionText: string; options: Array<{ id: string; text: string }>; hasImage: boolean; imageUrl?: string; }> };
       }
       return null;
     } catch {

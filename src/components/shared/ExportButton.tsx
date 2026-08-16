@@ -1,39 +1,64 @@
-import React from "react";
-import { Button, ButtonProps } from "@mui/material";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import React, { useState } from 'react';
+import {
+  Button,
+  Menu,
+  MenuItem,
+  CircularProgress,
+} from '@mui/material';
+import { Download as DownloadIcon } from '@mui/icons-material';
 
-interface ExportButtonProps extends ButtonProps {
-  data?: unknown[];
-  filename?: string;
-  format?: "csv" | "pdf" | "excel";
-  onExport?: () => void;
+export type ExportFormat = 'csv' | 'excel' | 'pdf' | 'json';
+
+export interface ExportButtonProps {
+  onExport: (format: string) => void | Promise<void>;
+  exporting?: boolean;
+  hasData?: boolean;
+  label?: string;
+  formats?: string[];
 }
 
 export const ExportButton: React.FC<ExportButtonProps> = ({
-  data,
-  filename = "export",
-  format = "csv",
   onExport,
-  children = "Export",
-  ...props
+  exporting = false,
+  hasData = true,
+  label = 'Export',
+  formats = ['csv', 'excel'],
 }) => {
-  const handleExport = () => {
-    if (onExport) {
-      onExport();
-      return;
-    }
-    console.log(`Exporting ${data?.length ?? 0} rows as ${format}`);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelect = (format: string) => {
+    handleClose();
+    onExport(format);
   };
 
   return (
-    <Button
-      variant="outlined"
-      startIcon={<FileDownloadIcon />}
-      onClick={handleExport}
-      {...props}
-    >
-      {children}
-    </Button>
+    <>
+      <Button
+        variant="outlined"
+        size="small"
+        startIcon={exporting ? <CircularProgress size={16} /> : <DownloadIcon />}
+        onClick={handleClick}
+        disabled={exporting || !hasData}
+      >
+        {exporting ? 'Exporting…' : label}
+      </Button>
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        {formats.map((fmt) => (
+          <MenuItem key={fmt} onClick={() => handleSelect(fmt)}>
+            {fmt.toUpperCase()}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 };
 

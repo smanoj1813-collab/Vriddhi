@@ -1,4 +1,4 @@
-// src/api/superAdminApi.ts
+// src/modules/superadmin/api/superAdminApi.ts
 // Cleaned - No mock data. Connects to Firebase Firestore.
 // All types imported from ../types/superAdmin.ts (single source of truth)
 
@@ -31,6 +31,7 @@ import {
   type CreateCollegeInput,
   type ListCollegesOptions,
   type Admin,
+  type AdminRole,
   type CreateAdminInput,
   type ListAdminsOptions,
   type Student,
@@ -179,11 +180,14 @@ function docToStudent(docSnap: QueryDocumentSnapshot<DocumentData>): Student {
 
 function docToFaculty(docSnap: QueryDocumentSnapshot<DocumentData>): Faculty {
   const data = docSnap.data();
+  const firstName = data.firstName || "";
+  const lastName = data.lastName || "";
   return {
     id: docSnap.id,
     facultyId: data.facultyId || docSnap.id,
-    firstName: data.firstName || "",
-    lastName: data.lastName || "",
+    name: `${firstName} ${lastName}`.trim(),
+    firstName,
+    lastName,
     email: data.email || "",
     phone: data.phone || "",
     gender: data.gender || "",
@@ -209,13 +213,68 @@ function docToFaculty(docSnap: QueryDocumentSnapshot<DocumentData>): Faculty {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// STRIP UNDEFINED / NULL — prevents Firestore addDoc/updateDoc errors
+// ═══════════════════════════════════════════════════════════════════════
+function stripUndefined(obj: object): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== undefined && v !== null)
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FIREBASE AUTH REST API — create users without affecting current session
+// ═══════════════════════════════════════════════════════════════════════
+
+const FIREBASE_API_KEY = import.meta.env.VITE_FIREBASE_API_KEY;
+
+export async function createFirebaseAuthUser(email: string, password: string): Promise<string> {
+  const res = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    if (data.error?.message === 'EMAIL_EXISTS') {
+      const lookupRes = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: [email] }),
+        }
+      );
+      const lookupData = await lookupRes.json();
+      if (lookupData.users?.[0]?.localId) {
+        return lookupData.users[0].localId;
+      }
+    }
+    throw new Error(data.error?.message || 'Failed to create Firebase Auth user');
+  }
+  return data.localId;
+}
+
+function generateTempPassword(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let password = "";
+  for (let i = 0; i < 10; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // COLLEGE API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function createCollege(input: CreateCollegeInput): Promise<College> {
   const now = Timestamp.now();
+
   const collegeData = {
-    ...input,
+    ...stripUndefined(input),
     plan: input.plan || "standard",
     billingCycle: input.billingCycle || "monthly",
     status: "active",
@@ -249,7 +308,6 @@ export async function listColleges(options: ListCollegesOptions = {}): Promise<P
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToCollege);
 
-    // Client-side status filter
     if (options.status && options.status !== "all") {
       items = items.filter(c => {
         const docStatus = c.status;
@@ -258,7 +316,6 @@ export async function listColleges(options: ListCollegesOptions = {}): Promise<P
       });
     }
 
-    // Client-side search
     if (options.search) {
       const searchLower = options.search.toLowerCase();
       items = items.filter(c =>
@@ -290,17 +347,11 @@ export async function getCollegeById(collegeId: string): Promise<College | null>
   }
 }
 
-/**
- * Get college detail with enriched counts from sub-collections.
- * This ensures accurate student/faculty/admin counts even if the
- * college document counters are stale.
- */
 export async function getCollegeDetailWithCounts(collegeId: string): Promise<College | null> {
   try {
     const college = await getCollegeById(collegeId);
     if (!college) return null;
 
-    // Fetch actual counts from sub-collections in parallel
     const [studentsSnap, facultySnap, adminsSnap] = await Promise.all([
       getDocs(query(collection(db, "students"), where("collegeId", "==", collegeId))),
       getDocs(query(collection(db, "faculty"), where("collegeId", "==", collegeId))),
@@ -317,7 +368,7 @@ export async function getCollegeDetailWithCounts(collegeId: string): Promise<Col
     };
   } catch (error) {
     console.error("Error fetching college detail with counts:", error);
-    return getCollegeById(collegeId); // Fallback to basic fetch
+    return getCollegeById(collegeId);
   }
 }
 
@@ -325,7 +376,7 @@ export async function updateCollege(collegeId: string, updates: Partial<College>
   try {
     const docRef = doc(db, "colleges", collegeId);
     const updateData = {
-      ...updates,
+      ...stripUndefined(updates),
       updatedAt: Timestamp.now(),
     };
     await updateDoc(docRef, updateData);
@@ -363,27 +414,109 @@ export async function bulkUpdateCollegeStatus(
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function createAdmin(input: CreateAdminInput): Promise<Admin> {
+  const password = input.password || generateTempPassword();
+
+  const uid = await createFirebaseAuthUser(input.email, password);
+
   const now = Timestamp.now();
+
+  // Strip undefined for Firestore write only
   const adminData = {
-    ...input,
+    ...stripUndefined(input),
+    uid,
+    password,
     status: "active",
     createdAt: now,
   };
 
   const docRef = await addDoc(collection(db, "admins"), adminData);
 
+  await setDoc(doc(db, "users", uid), {
+    uid,
+    email: input.email,
+    name: input.name,
+    role: input.role,
+    collegeId: input.collegeId || "",
+    department: input.department || "",
+    phone: input.phone || "",
+    avatar: "",
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // Explicit return — satisfies Admin type
   return {
     id: docRef.id,
-    ...adminData,
+    name: input.name,
+    email: input.email,
+    role: input.role,
+    collegeId: input.collegeId,
+    status: "active",
     createdAt: now.toDate().toISOString(),
+    uid,
+    ...(input.phone ? { phone: input.phone } : {}),
+    ...(input.department ? { department: input.department } : {}),
+  } as Admin;
+}
+
+export async function promoteToAdmin(payload: {
+  uid: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  collegeId: string;
+  phone?: string;
+  department?: string;
+}): Promise<Admin> {
+  const now = Timestamp.now();
+
+  const adminData = {
+    ...stripUndefined({
+      uid: payload.uid,
+      name: payload.name,
+      email: payload.email,
+      role: payload.role,
+      collegeId: payload.collegeId,
+      phone: payload.phone,
+      department: payload.department,
+    }),
+    status: "active",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const docRef = doc(db, "admins", payload.uid);
+  await setDoc(docRef, adminData, { merge: true });
+
+  await setDoc(doc(db, "users", payload.uid), {
+    uid: payload.uid,
+    email: payload.email,
+    name: payload.name,
+    role: payload.role,
+    collegeId: payload.collegeId,
+    department: payload.department || "",
+    phone: payload.phone || "",
+    avatar: "",
+    updatedAt: now,
+  }, { merge: true });
+
+  return {
+    id: payload.uid,
+    uid: payload.uid,
+    name: payload.name,
+    email: payload.email,
+    role: payload.role,
+    collegeId: payload.collegeId,
+    status: "active",
+    createdAt: now.toDate().toISOString(),
+    updatedAt: now.toDate().toISOString(),
+    ...(payload.phone ? { phone: payload.phone } : {}),
+    ...(payload.department ? { department: payload.department } : {}),
   } as Admin;
 }
 
 export async function listAdmins(options: ListAdminsOptions = {}): Promise<PaginatedResult<Admin>> {
   try {
-    // FIX: Build query without orderBy when collegeId filter is present
-    // to avoid Firestore composite index requirement.
-    // Results are sorted client-side below.
     let q: Query<DocumentData>;
     if (options.collegeId) {
       q = query(collection(db, "admins"), where("collegeId", "==", options.collegeId));
@@ -398,12 +531,10 @@ export async function listAdmins(options: ListAdminsOptions = {}): Promise<Pagin
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToAdmin);
 
-    // Client-side sort by createdAt desc when no orderBy in query
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
-    // Enrich with college names
     const collegesSnap = await getDocs(collection(db, "colleges"));
     const collegeMap: Record<string, string> = {};
     collegesSnap.docs.forEach(d => {
@@ -436,9 +567,6 @@ export async function updateAdminStatus(adminId: string, status: "active" | "ina
 
 export async function listStudents(options: ListStudentsOptions = {}): Promise<PaginatedResult<Student>> {
   try {
-    // FIX: Build query without orderBy when collegeId filter is present
-    // to avoid Firestore composite index requirement.
-    // Results are sorted client-side below.
     let q: Query<DocumentData>;
     if (options.collegeId) {
       q = query(collection(db, "students"), where("collegeId", "==", options.collegeId));
@@ -456,7 +584,6 @@ export async function listStudents(options: ListStudentsOptions = {}): Promise<P
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToStudent);
 
-    // Client-side sort by createdAt desc when no orderBy in query
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
@@ -486,7 +613,7 @@ export async function getStudentByIdSuperAdmin(studentId: string): Promise<Stude
 export async function updateStudentSuperAdmin(studentId: string, updates: UpdateStudentInput): Promise<Student> {
   try {
     const docRef = doc(db, "students", studentId);
-    await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
+    await updateDoc(docRef, { ...stripUndefined(updates), updatedAt: Timestamp.now() });
 
     const updated = await getDoc(docRef);
     if (!updated.exists()) throw new SuperAdminApiError("Student not found after update");
@@ -512,7 +639,7 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
       const collectionName = user.role === "student" ? "students" : "faculty";
       const docRef = doc(collection(db, collectionName));
       batch.set(docRef, {
-        ...user,
+        ...stripUndefined(user),
         collegeId: input.collegeId,
         status: "active",
         createdAt: Timestamp.now(),
@@ -528,7 +655,6 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
 
   await batch.commit();
 
-  // Update college counts
   if (studentCount > 0 || facultyCount > 0) {
     try {
       const collegeRef = doc(db, "colleges", input.collegeId);
@@ -556,15 +682,6 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
 // ═══════════════════════════════════════════════════════════════════════
 // FACULTY IMPORT API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════
-
-function generateTempPassword(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let password = "";
-  for (let i = 0; i < 10; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
 
 export async function importFaculty(payload: FacultyImportPayload): Promise<ImportResult> {
   try {
@@ -594,6 +711,15 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
         const facultyId = faculty.facultyId || `FAC${Date.now()}${index}`;
         const tempPassword = generateTempPassword();
 
+        let uid: string;
+        try {
+          uid = await createFirebaseAuthUser(faculty.email.toLowerCase().trim(), tempPassword);
+        } catch (authErr: any) {
+          failed++;
+          errors.push(`Row ${index + 1}: ${authErr.message}`);
+          continue;
+        }
+
         const facultyData = {
           id: facultyId,
           facultyId,
@@ -617,12 +743,26 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
           isHOD: faculty.isHOD || false,
           role: "faculty",
           status: "active",
+          uid,
           password: tempPassword,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
 
         await setDoc(doc(db, "faculty", facultyId), facultyData);
+
+        await setDoc(doc(db, "users", uid), {
+          uid,
+          email: faculty.email.toLowerCase().trim(),
+          name: `${faculty.firstName} ${faculty.lastName || ""}`.trim(),
+          role: "faculty",
+          collegeId: payload.collegeId,
+          department: faculty.department || "",
+          phone: faculty.phone || "",
+          avatar: "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
 
         if (faculty.isHOD && faculty.department) {
           await setDoc(doc(db, "hods", `${payload.collegeId}_${faculty.department}`), {
@@ -927,17 +1067,10 @@ export async function resolveError(errorId: string): Promise<void> {
   await updateDoc(doc(db, "errors", errorId), { resolved: true, resolvedAt: Timestamp.now() });
 }
 
-
-
 // ═══════════════════════════════════════════════════════════════════════
-// COLLEGE RESET API — Delete all students, faculty, admins for a college
+// COLLEGE RESET API
 // ═══════════════════════════════════════════════════════════════════════
 
-/**
- * Reset college data by deleting all students, faculty, and admins
- * associated with the given collegeId. The college document itself
- * is preserved but its counters are reset to zero.
- */
 export async function resetCollegeData(collegeId: string): Promise<{
   deletedStudents: number;
   deletedFaculty: number;
@@ -949,7 +1082,6 @@ export async function resetCollegeData(collegeId: string): Promise<{
     let deletedFaculty = 0;
     let deletedAdmins = 0;
 
-    // Delete all students for this college
     const studentsQuery = query(collection(db, "students"), where("collegeId", "==", collegeId));
     const studentsSnap = await getDocs(studentsQuery);
     studentsSnap.docs.forEach((docSnap) => {
@@ -957,7 +1089,6 @@ export async function resetCollegeData(collegeId: string): Promise<{
       deletedStudents++;
     });
 
-    // Delete all faculty for this college
     const facultyQuery = query(collection(db, "faculty"), where("collegeId", "==", collegeId));
     const facultySnap = await getDocs(facultyQuery);
     facultySnap.docs.forEach((docSnap) => {
@@ -965,7 +1096,6 @@ export async function resetCollegeData(collegeId: string): Promise<{
       deletedFaculty++;
     });
 
-    // Delete all admins for this college
     const adminsQuery = query(collection(db, "admins"), where("collegeId", "==", collegeId));
     const adminsSnap = await getDocs(adminsQuery);
     adminsSnap.docs.forEach((docSnap) => {
@@ -973,7 +1103,6 @@ export async function resetCollegeData(collegeId: string): Promise<{
       deletedAdmins++;
     });
 
-    // Reset college document counters
     const collegeRef = doc(db, "colleges", collegeId);
     batch.update(collegeRef, {
       studentCount: 0,
@@ -984,7 +1113,6 @@ export async function resetCollegeData(collegeId: string): Promise<{
       updatedAt: Timestamp.now(),
     });
 
-    // Commit all deletions in one batch
     await batch.commit();
 
     console.log(`Reset college ${collegeId}:`, {
@@ -1055,10 +1183,7 @@ export async function getHealthHistory(hours: number = 24): Promise<PerformanceM
 }
 
 export async function acknowledgeAlert(alertId: string): Promise<void> {
-  await updateDoc(doc(db, "alerts", alertId), {
-    acknowledged: true,
-    acknowledgedAt: Timestamp.now(),
-  });
+  await updateDoc(doc(db, "alerts", alertId), { acknowledged: true, acknowledgedAt: Timestamp.now() });
 }
 
 export async function getCollegeComparisonTrend(
@@ -1075,9 +1200,6 @@ export async function getCollegeComparisonTrend(
 
 export async function listFaculty(options: ListFacultyOptions = {}): Promise<PaginatedResult<Faculty>> {
   try {
-    // FIX: Build query without orderBy when collegeId filter is present
-    // to avoid Firestore composite index requirement.
-    // Results are sorted client-side below.
     let q: Query<DocumentData>;
     if (options.collegeId) {
       q = query(collection(db, "faculty"), where("collegeId", "==", options.collegeId));
@@ -1092,7 +1214,6 @@ export async function listFaculty(options: ListFacultyOptions = {}): Promise<Pag
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToFaculty);
 
-    // Client-side sort by createdAt desc when no orderBy in query
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
@@ -1130,7 +1251,7 @@ export async function getFacultyById(facultyId: string): Promise<Faculty | null>
 export async function updateFaculty(facultyId: string, updates: UpdateFacultyInput): Promise<Faculty> {
   try {
     const docRef = doc(db, "faculty", facultyId);
-    await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
+    await updateDoc(docRef, { ...stripUndefined(updates), updatedAt: Timestamp.now() });
     const updated = await getDoc(docRef);
     if (!updated.exists()) throw new SuperAdminApiError("Faculty not found after update");
     return docToFaculty(updated as QueryDocumentSnapshot<DocumentData>);

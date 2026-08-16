@@ -59,7 +59,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
-import type { CurriculumDoc, ParsedCourse, FacultyOption } from '../../superadmin/types/curriculum'
+import type { CurriculumDoc, ParsedCourse, FacultyOption } from '../../../shared/types/curriculum'
 
 // ─── Tabs ──────────────────────────────────────────────────────────────
 type AdminTab = 'curriculum' | 'mappings' | 'schedule'

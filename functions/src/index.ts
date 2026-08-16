@@ -1,4 +1,6 @@
 // functions/src/index.ts
+// Main entry point — V2 HTTPS + Callable functions
+
 import { onRequest } from 'firebase-functions/v2/https'
 import * as logger from 'firebase-functions/logger'
 import express from 'express'
@@ -18,6 +20,13 @@ import { router as questionsRouter } from './routes/questions'
 import { router as papersRouter } from './routes/papers'
 import { router as configRouter } from './routes/config'
 import { generalLimiter } from './middleware/rateLimit'
+
+// ═══════ Student Auth callable functions ═══════
+import {
+  syncStudentsToAuth,
+  createStudentAuth,
+  bulkCreateStudentAccounts,
+} from './studentAuth'
 
 const app = express()
 
@@ -49,7 +58,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: '1.1.0',
     environment: 'firebase-functions',
     providers: {
       gemini: !!process.env.GEMINI_API_KEY,
@@ -59,10 +68,9 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// ─── Mount AI questions routes at BOTH paths ───
-app.use('/api/ai-questions', aiQuestionsRouter)   // Original path
-app.use('/api/ai', aiQuestionsRouter)              // NEW: Frontend's expected path
-
+// ─── Mount routes ───
+app.use('/api/ai-questions', aiQuestionsRouter)
+app.use('/api/ai', aiQuestionsRouter)
 app.use('/api/questions', questionsRouter)
 app.use('/api/papers', papersRouter)
 app.use('/api/config', configRouter)
@@ -79,6 +87,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   })
 })
 
+// ─── Express API export (v2) ───
 export const api = onRequest(
   {
     region: 'asia-south1',
@@ -89,3 +98,6 @@ export const api = onRequest(
   },
   app
 )
+
+// ═══════ Callable functions exports ═══════
+export { syncStudentsToAuth, createStudentAuth, bulkCreateStudentAccounts }

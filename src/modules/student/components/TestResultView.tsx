@@ -15,7 +15,7 @@ import {
   Download as DownloadIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
-import { TestResultSummary } from '../../../types/assessment';
+import type { TestResultSummary } from '../../../types/assessment';
 
 interface TestResultViewProps {
   result: TestResultSummary;
@@ -34,9 +34,10 @@ const TestResultView: React.FC<TestResultViewProps> = ({ result, onBack }) => {
   const safeClassAverage = classAverage ?? 0;
   const safeAvgTime = averageTimePerQuestion ?? 0;
 
-  const correctCount = questionScores.filter((q) => q.isCorrect).length;
-  const wrongCount = questionScores.filter((q) => !q.isCorrect && q.yourAnswer).length;
-  const unansweredCount = questionScores.filter((q) => !q.yourAnswer).length;
+  const scores = questionScores ?? [];
+  const correctCount = scores.filter((q) => q.isCorrect).length;
+  const wrongCount = scores.filter((q) => !q.isCorrect && q.yourAnswer).length;
+  const unansweredCount = scores.filter((q) => !q.yourAnswer).length;
 
   const getGradeColor = (g?: string | null) => {
     if (!g) return 'default';
@@ -94,7 +95,7 @@ const TestResultView: React.FC<TestResultViewProps> = ({ result, onBack }) => {
 
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Question-wise Analysis</Typography>
       <Stack spacing={1}>
-        {questionScores.map((q, idx) => {
+        {scores.map((q, idx) => {
           const yourScore = q.yourScore ?? q.marksObtained ?? 0;
           const maxScore = q.maxScore ?? q.maxMarks ?? 1;
           return (
@@ -109,7 +110,7 @@ const TestResultView: React.FC<TestResultViewProps> = ({ result, onBack }) => {
                     {idx + 1}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" noWrap sx={{ maxWidth: { xs: 200, sm: 400 } }}>{q.questionText}</Typography>
+                    <Typography variant="body2" noWrap sx={{ maxWidth: { xs: 200, sm: 400 } }}>{q.questionText || 'Question'}</Typography>
                   </Box>
                   <Chip size="small" label={`${yourScore}/${maxScore}`}
                     color={q.isCorrect ? 'success' : q.yourAnswer ? 'error' : 'warning'} sx={{ mr: 2 }} />
@@ -147,10 +148,10 @@ const TestResultView: React.FC<TestResultViewProps> = ({ result, onBack }) => {
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Section Scores</Typography>
           <Stack spacing={1}>
-            {(sectionScores as Array<{ sectionId: string; sectionTitle: string; score: number; maxScore: number }>).map((section) => (
+            {sectionScores.map((section) => (
               <Card key={section.sectionId} variant="outlined" sx={{ borderRadius: 2 }}>
                 <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{section.sectionTitle}</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{section.sectionTitle || section.sectionName}</Typography>
                   <Chip label={`${section.score} / ${section.maxScore}`} color="primary" />
                 </CardContent>
               </Card>

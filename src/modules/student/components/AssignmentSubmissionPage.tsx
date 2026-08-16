@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Upload, X, Send, Clock, CheckCircle, AlertCircle, Download, BookOpen } from 'lucide-react';
-import { Assignment, AssignmentSubmission, SubmissionFile } from '../types/student';
+import { FileText, Upload, X, Send, Clock, CheckCircle, BookOpen } from 'lucide-react';
+import type { Assignment, AssignmentSubmission } from '../types/student';
 import { getStudentAssignments, getAssignmentSubmission, submitAssignment } from '../services/studentService';
 import { StatusBadge } from './shared/StatusBadge';
 import { PageHeader } from './shared/PageHeader';
@@ -24,7 +24,7 @@ export const AssignmentSubmissionPage: React.FC<{ studentId: string }> = ({ stud
       // Load submissions for each assignment
       const submissionsMap: Record<string, AssignmentSubmission> = {};
       await Promise.all(
-        assignmentsData.map(async (assignment) => {
+        assignmentsData.map(async (assignment: Assignment) => {
           const submission = await getAssignmentSubmission(assignment.id, studentId);
           if (submission) {
             submissionsMap[assignment.id] = submission;
@@ -37,7 +37,7 @@ export const AssignmentSubmissionPage: React.FC<{ studentId: string }> = ({ stud
     loadData();
   }, [studentId]);
 
-  const filteredAssignments = assignments.filter(a => {
+  const filteredAssignments = assignments.filter((a: Assignment) => {
     if (filter === 'all') return true;
     if (filter === 'pending') return a.status === 'pending';
     if (filter === 'submitted') return a.status === 'submitted' || a.status === 'graded';
@@ -71,7 +71,7 @@ export const AssignmentSubmissionPage: React.FC<{ studentId: string }> = ({ stud
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-700';
       case 'submitted': return 'bg-blue-100 text-blue-700';
@@ -112,7 +112,7 @@ export const AssignmentSubmissionPage: React.FC<{ studentId: string }> = ({ stud
               <p className="text-gray-500">No assignments found.</p>
             </div>
           ) : (
-            filteredAssignments.map(assignment => {
+            filteredAssignments.map((assignment: Assignment) => {
               const submission = submissions[assignment.id];
               const isOverdue = new Date(assignment.dueDate) < new Date() && assignment.status === 'pending';
 
@@ -153,7 +153,9 @@ export const AssignmentSubmissionPage: React.FC<{ studentId: string }> = ({ stud
                     <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-2 text-sm">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-green-700">Submitted on {new Date(submission.submittedAt).toLocaleDateString()}</span>
+                        <span className="text-green-700">
+                          Submitted on {submission.submittedAt ? new Date(submission.submittedAt).toLocaleDateString() : 'N/A'}
+                        </span>
                       </div>
                       {submission.marksObtained !== undefined && (
                         <p className="text-sm text-gray-600 mt-1">
@@ -193,7 +195,7 @@ export const AssignmentSubmissionPage: React.FC<{ studentId: string }> = ({ stud
                       >
                         <FileText className="w-4 h-4 text-blue-500" />
                         <span className="text-sm text-blue-600 hover:underline">{attachment.name}</span>
-                        <Download className="w-4 h-4 text-gray-400 ml-auto" />
+                        <X className="w-4 h-4 text-gray-400 ml-auto" />
                       </a>
                     ))}
                   </div>

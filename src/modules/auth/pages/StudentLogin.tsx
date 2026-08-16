@@ -1,39 +1,51 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GraduationCap, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function StudentLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
+
+  const { login, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setLocalError('');
 
     try {
-      // TODO: Replace with your real student auth API
-      // e.g. const { token, studentId } = await studentLogin(email, password);
-      // localStorage.setItem('studentToken', studentId);
-      // localStorage.setItem('studentRole', 'student');
-      localStorage.setItem('studentToken', 'demo-student-id');
-      localStorage.setItem('studentRole', 'student');
-      window.location.href = '/student';
+      await login(email, password);
+      navigate('/student/dashboard', { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
-    } finally {
-      setLoading(false);
+      const msg = err?.message || '';
+      if (msg.includes('ACCOUNT_NOT_FOUND')) {
+        setLocalError('Student account not found in system. Contact your administrator.');
+      } else if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
+        setLocalError('Invalid email or password.');
+      } else if (msg.includes('auth/user-not-found')) {
+        setLocalError('No account found with this email.');
+      } else if (msg.includes('auth/invalid-email')) {
+        setLocalError('Please enter a valid email address.');
+      } else if (msg.includes('auth/too-many-requests')) {
+        setLocalError('Too many failed attempts. Please try again later.');
+      } else {
+        setLocalError(msg || 'Login failed. Please try again.');
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm md:max-w-md">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-6 md:mb-8"
+        >
           <div className="w-14 h-14 md:w-16 md:h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-teal-500/20 mb-4">
             <GraduationCap size={28} className="text-white md:hidden" />
             <GraduationCap size={32} className="text-white hidden md:block" />
@@ -42,8 +54,12 @@ export default function StudentLogin() {
           <p className="text-slate-400 mt-1 text-sm md:text-base">Sign in to access your dashboard</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-slate-700/30 p-5 md:p-8 bg-slate-900/50 backdrop-blur">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl border border-slate-700/30 p-5 md:p-8 bg-slate-900/50 backdrop-blur"
+        >
           <div className="flex items-center gap-2 mb-5 md:mb-6 p-2.5 md:p-3 rounded-lg bg-teal-500/10 border border-teal-500/20">
             <BookOpen size={16} className="text-teal-400" />
             <span className="text-sm text-teal-400 font-medium">Student Access Only</span>
@@ -51,53 +67,83 @@ export default function StudentLogin() {
 
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-1.5 md:mb-2 block">Email or Reg. No</label>
+              <label className="text-sm font-medium text-slate-300 mb-1.5 md:mb-2 block">
+                Email Address
+              </label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@vriddhi.edu"
+                  autoComplete="email"
                   className="w-full pl-10 pr-4 py-2.5 md:py-3 min-h-[48px] rounded-lg bg-slate-800/50 border border-slate-700/30 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 text-base"
-                  required />
+                  required
+                />
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-1.5 md:mb-2 block">Password</label>
+              <label className="text-sm font-medium text-slate-300 mb-1.5 md:mb-2 block">
+                Password
+              </label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   className="w-full pl-10 pr-12 py-2.5 md:py-3 min-h-[48px] rounded-lg bg-slate-800/50 border border-slate-700/30 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 text-base"
-                  required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1">
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
+                >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            {error && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
-                {error}
+            {localError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400"
+              >
+                {localError}
               </motion.div>
             )}
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 min-h-[48px] rounded-lg bg-teal-500 hover:bg-teal-400 disabled:bg-slate-700 text-white font-medium transition-colors flex items-center justify-center gap-2 text-base">
-              {loading ? (
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 min-h-[48px] rounded-lg bg-teal-500 hover:bg-teal-400 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center justify-center gap-2 text-base"
+            >
+              {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>Sign In <ArrowRight size={18} /></>
+                <>
+                  Sign In <ArrowRight size={18} />
+                </>
               )}
             </button>
           </form>
 
           <div className="mt-5 md:mt-6 flex flex-col gap-3 text-center">
-            <Link to="/" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors flex items-center justify-center gap-1">
+            <Link
+              to="/"
+              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors flex items-center justify-center gap-1"
+            >
               <ArrowRight size={14} className="rotate-180" /> Staff Login
             </Link>
-            <a href="#" className="text-sm text-slate-500 hover:text-slate-400 transition-colors">Forgot password?</a>
+            <a href="#" className="text-sm text-slate-500 hover:text-slate-400 transition-colors">
+              Forgot password?
+            </a>
           </div>
         </motion.div>
       </div>

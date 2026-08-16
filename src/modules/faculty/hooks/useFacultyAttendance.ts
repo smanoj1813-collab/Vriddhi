@@ -1,98 +1,92 @@
-// src/hooks/useFacultyAttendance.ts
-// ─── Faculty Attendance Hook ──────────────────────────────
-
-import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../auth/context/AuthContext'
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../auth/context/AuthContext';
 import {
   fetchFacultyClassSessions,
   fetchStudentsForSession,
   fetchAttendanceForSession,
   saveAttendance,
-} from '../api/facultyApi'
+} from '../api/facultyApi';
 import type {
   FacultyClassSession,
   FacultyStudent,
   FacultyAttendanceRecord,
   FacultyAttendanceDoc,
   AttendanceStatus,
-} from '../types/attendance'
+} from '../types/attendance';
 
 interface AttendanceState {
   [studentId: string]: {
-    status: AttendanceStatus
-    notes: string
-  }
+    status: AttendanceStatus;
+    notes: string;
+  };
 }
 
 interface AttendanceStats {
-  total: number
-  present: number
-  absent: number
-  late: number
-  leave: number
-  onDuty: number
-  medicalLeave: number
+  total: number;
+  present: number;
+  absent: number;
+  late: number;
+  leave: number;
+  onDuty: number;
+  medicalLeave: number;
 }
 
 export function useFacultyAttendance() {
-  const { user } = useAuth()
-  const [searchParams] = useSearchParams()
-  const preselectedSessionId = searchParams.get('sessionId')
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const preselectedSessionId = searchParams.get('sessionId');
 
-  const collegeId = user?.collegeId
-  const facultyId = user?.id
-  const facultyName = user?.name || 'Faculty'
+  const collegeId = (user as any)?.collegeId as string | undefined;
+  const facultyId = user?.id;
+  const facultyName = user?.name || 'Faculty';
 
-  const [classSessions, setClassSessions] = useState<FacultyClassSession[]>([])
-  const [selectedClass, setSelectedClass] = useState<FacultyClassSession | null>(null)
-  const [students, setStudents] = useState<FacultyStudent[]>([])
-  const [attendance, setAttendance] = useState<AttendanceState>({})
-  const [existingAttendance, setExistingAttendance] = useState<FacultyAttendanceDoc | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [classSessions, setClassSessions] = useState<FacultyClassSession[]>([]);
+  const [selectedClass, setSelectedClass] = useState<FacultyClassSession | null>(null);
+  const [students, setStudents] = useState<FacultyStudent[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceState>({});
+  const [existingAttendance, setExistingAttendance] = useState<FacultyAttendanceDoc | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // ─── Load class sessions ────────────────────────────────
   useEffect(() => {
-    if (!facultyId) return
-    const fid = facultyId
+    if (!facultyId) return;
+    const fid = facultyId;
     async function load() {
-      setLoading(true)
+      setLoading(true);
       try {
-        const today = new Date().toISOString().split('T')[0]
-        const sessions = await fetchFacultyClassSessions(fid, today)
-        setClassSessions(sessions)
+        const today = new Date().toISOString().split('T')[0];
+        const sessions = await fetchFacultyClassSessions(fid, today);
+        setClassSessions(sessions);
 
-        // If preselected sessionId from URL, select it
         if (preselectedSessionId) {
-          const preselected = sessions.find(s => s.id === preselectedSessionId)
-          if (preselected) {
-            setSelectedClass(preselected)
-          }
+          const preselected = sessions.find((s) => s.id === preselectedSessionId);
+          if (preselected) setSelectedClass(preselected);
         } else if (sessions.length > 0) {
-          setSelectedClass(sessions[0])
+          setSelectedClass(sessions[0]);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load sessions')
+        setError(err instanceof Error ? err.message : 'Failed to load sessions');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    load()
-  }, [facultyId, preselectedSessionId])
+    load();
+  }, [facultyId, preselectedSessionId]);
 
   // ─── Load students when class selected ──────────────────
   useEffect(() => {
-    if (!selectedClass || !collegeId) return
+    if (!selectedClass || !collegeId) return;
 
-    const cls = selectedClass
-    const cid = collegeId
+    const cls = selectedClass;
+    const cid = collegeId;
 
     async function load() {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
         const studentsData = await fetchStudentsForSession(
           cls.branch,
@@ -101,125 +95,136 @@ export function useFacultyAttendance() {
           cls.semester,
           cls.subject,
           cid
-        )
-        setStudents(studentsData)
+        );
+        setStudents(studentsData);
 
-        // Check for existing attendance
-        const existing = await fetchAttendanceForSession(cls.id, cls.date)
-        setExistingAttendance(existing)
+        const existing = await fetchAttendanceForSession(cls.id, cls.date);
+        setExistingAttendance(existing);
 
         if (existing) {
-          // Populate attendance from existing records
-          const existingState: AttendanceState = {}
+          const existingState: AttendanceState = {};
           existing.records.forEach((r: FacultyAttendanceRecord) => {
             existingState[r.studentId] = {
               status: r.status,
               notes: r.notes || '',
-            }
-          })
-          setAttendance(existingState)
+            };
+          });
+          setAttendance(existingState);
         } else {
-          // Default all to Present
-          const defaultState: AttendanceState = {}
+          const defaultState: AttendanceState = {};
           studentsData.forEach((s: FacultyStudent) => {
-            defaultState[s.id] = { status: 'Present', notes: '' }
-          })
-          setAttendance(defaultState)
+            defaultState[s.id] = { status: 'Present', notes: '' };
+          });
+          setAttendance(defaultState);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load students')
+        setError(err instanceof Error ? err.message : 'Failed to load students');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    load()
-  }, [selectedClass, collegeId])
+    load();
+  }, [selectedClass, collegeId]);
 
   // ─── Stats computation ──────────────────────────────────
   const stats: AttendanceStats = {
     total: students.length,
-    present: Object.values(attendance).filter(a => a.status === 'Present').length,
-    absent: Object.values(attendance).filter(a => a.status === 'Absent').length,
-    late: Object.values(attendance).filter(a => a.status === 'Late').length,
-    leave: Object.values(attendance).filter(a => a.status === 'Leave').length,
-    onDuty: Object.values(attendance).filter(a => a.status === 'OnDuty').length,
-    medicalLeave: Object.values(attendance).filter(a => a.status === 'MedicalLeave').length,
-  }
+    present: Object.values(attendance).filter((a) => a.status === 'Present').length,
+    absent: Object.values(attendance).filter((a) => a.status === 'Absent').length,
+    late: Object.values(attendance).filter((a) => a.status === 'Late').length,
+    leave: Object.values(attendance).filter((a) => a.status === 'Leave').length,
+    onDuty: Object.values(attendance).filter((a) => a.status === 'OnDuty').length,
+    medicalLeave: Object.values(attendance).filter((a) => a.status === 'MedicalLeave').length,
+  };
 
   // ─── Actions ────────────────────────────────────────────
-  const updateStudentStatus = useCallback((studentId: string, status: AttendanceStatus) => {
-    setAttendance(prev => ({
-      ...prev,
-      [studentId]: { ...prev[studentId], status },
-    }))
-  }, [])
+  const updateStudentStatus = useCallback(
+    (studentId: string, status: AttendanceStatus) => {
+      setAttendance((prev) => ({
+        ...prev,
+        [studentId]: { ...prev[studentId], status },
+      }));
+    },
+    []
+  );
 
-  const updateStudentNotes = useCallback((studentId: string, notes: string) => {
-    setAttendance(prev => ({
-      ...prev,
-      [studentId]: { ...prev[studentId], notes },
-    }))
-  }, [])
+  const updateStudentNotes = useCallback(
+    (studentId: string, notes: string) => {
+      setAttendance((prev) => ({
+        ...prev,
+        [studentId]: { ...prev[studentId], notes },
+      }));
+    },
+    []
+  );
 
-  const setAllStatus = useCallback((status: AttendanceStatus) => {
-    setAttendance(prev => {
-      const next: AttendanceState = {}
-      students.forEach(s => {
-        next[s.id] = { status, notes: prev[s.id]?.notes || '' }
-      })
-      return next
-    })
-  }, [students])
+  const setAllStatus = useCallback(
+    (status: AttendanceStatus) => {
+      setAttendance((prev) => {
+        const next: AttendanceState = {};
+        students.forEach((s) => {
+          next[s.id] = { status, notes: prev[s.id]?.notes || '' };
+        });
+        return next;
+      });
+    },
+    [students]
+  );
 
   const resetAttendance = useCallback(() => {
-    const defaultState: AttendanceState = {}
-    students.forEach(s => {
-      defaultState[s.id] = { status: 'Present', notes: '' }
-    })
-    setAttendance(defaultState)
-  }, [students])
+    const defaultState: AttendanceState = {};
+    students.forEach((s) => {
+      defaultState[s.id] = { status: 'Present', notes: '' };
+    });
+    setAttendance(defaultState);
+  }, [students]);
 
   const handleSave = useCallback(async () => {
-    if (!selectedClass || !facultyId) return
-    setSaving(true)
-    setError(null)
+    if (!selectedClass || !facultyId) return;
+    setSaving(true);
+    setError(null);
     try {
-      const records: FacultyAttendanceRecord[] = students.map(s => ({
+      const records: FacultyAttendanceRecord[] = students.map((s) => ({
         studentId: s.id,
         name: s.name,
         usn: s.usn,
         regNo: s.regNo,
         status: attendance[s.id]?.status || 'Present',
         notes: attendance[s.id]?.notes || '',
-      }))
+      }));
 
-      await saveAttendance(selectedClass, records, facultyId, facultyName)
-      setSaveSuccess(true)
-      setExistingAttendance(prev => prev ? {
-        ...prev,
-        records,
-        presentCount: records.filter(r => r.status === 'Present').length,
-        absentCount: records.filter(r => r.status === 'Absent').length,
-        lateCount: records.filter(r => r.status === 'Late').length,
-        leaveCount: records.filter(r => r.status === 'Leave').length,
-        onDutyCount: records.filter(r => r.status === 'OnDuty').length,
-        medicalLeaveCount: records.filter(r => r.status === 'MedicalLeave').length,
-        totalStudents: records.length,
-        markedAt: new Date().toISOString(),
-      } : null)
+      await saveAttendance(selectedClass, records, facultyId, facultyName);
+      setSaveSuccess(true);
+      setExistingAttendance((prev) =>
+        prev
+          ? {
+              ...prev,
+              records,
+              presentCount: records.filter((r) => r.status === 'Present').length,
+              absentCount: records.filter((r) => r.status === 'Absent').length,
+              lateCount: records.filter((r) => r.status === 'Late').length,
+              leaveCount: records.filter((r) => r.status === 'Leave').length,
+              onDutyCount: records.filter((r) => r.status === 'OnDuty').length,
+              medicalLeaveCount: records.filter((r) => r.status === 'MedicalLeave').length,
+              totalStudents: records.length,
+              markedAt: new Date().toISOString(),
+            }
+          : null
+      );
 
-      // Update class session status to completed if it was ongoing
       if (selectedClass.status === 'ongoing') {
-        setSelectedClass(prev => prev ? { ...prev, status: 'completed' as const } : null)
+        setSelectedClass((prev) =>
+          prev ? { ...prev, status: 'completed' as const } : null
+        );
       }
 
-      setTimeout(() => setSaveSuccess(false), 3000)
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save attendance')
+      setError(err instanceof Error ? err.message : 'Failed to save attendance');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }, [selectedClass, facultyId, facultyName, students, attendance])
+  }, [selectedClass, facultyId, facultyName, students, attendance]);
 
   return {
     classSessions,
@@ -238,5 +243,5 @@ export function useFacultyAttendance() {
     setAllStatus,
     resetAttendance,
     handleSave,
-  }
+  };
 }

@@ -15,7 +15,7 @@ import type {
   CreateMappingInput,
   UpdateMappingInput,
   MappingFilterOptions,
-} from '@/modules/superadmin/types/curriculum';
+} from '@/shared/types/curriculum';
 
 import {
   createMapping,

@@ -103,14 +103,13 @@ const CreateCollegeAdmin: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      // FIX: Include password in the API call
       await createAdmin.mutateAsync({
         name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        role: formData.role as 'admin' | 'hod' | 'mentor' | 'coordinator' | 'department_head',
+        role: formData.role as string as any,
         collegeId: formData.collegeId,
-        password: formData.password,  // <-- PASSWORD WAS MISSING
+        password: formData.password,
       });
 
       showSuccess(`Admin "${formData.firstName} ${formData.lastName}" created successfully!`);
@@ -286,6 +285,7 @@ const CreateCollegeAdmin: React.FC = () => {
                   className={`${inputClasses('role')} appearance-none pr-10`}
                 >
                   <option value="admin" className="bg-slate-800">College Admin</option>
+                  <option value="principal" className="bg-slate-800">Principal</option>
                   <option value="hod" className="bg-slate-800">Head of Department</option>
                   <option value="mentor" className="bg-slate-800">Mentor</option>
                   <option value="coordinator" className="bg-slate-800">Coordinator</option>

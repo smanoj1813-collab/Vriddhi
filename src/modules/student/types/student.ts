@@ -1,132 +1,143 @@
 // src/modules/student/types/student.ts
 
-export interface StudentProfile {
-  name: string;
-  regNo: string;
-  course: string;
-  batch: string;
-  email?: string;
-  phone?: string;
-  avatar?: string;
-}
-
-export interface AttendanceSummary {
-  percentage: number;
-  presentClasses: number;
-  totalClasses: number;
-}
-
-export interface Assessment {
-  id: string;
-  title: string;
-  subject: string;
-  type: string;
-  date: string;
-  time?: string;
-  venue?: string;
-  duration?: number;
-  totalMarks?: number;
-  status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
-}
-
-export interface AssignmentAttachment {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  size?: number;
-}
-
-export interface Assignment {
-  id: string;
-  title: string;
-  subject: string;
-  subjectCode?: string;
-  description?: string;
-  dueDate: string;
-  dueTime?: string;
-  maxMarks?: number;
-  totalMarks?: number;
-  status?: "pending" | "submitted" | "graded" | "overdue";
-  submissionType?: 'online' | 'offline' | 'file' | 'text';
-  attachments?: AssignmentAttachment[];
-  createdAt?: string;
-}
-
+/* ─── Submission / File ─── */
 export interface SubmissionFile {
   id: string;
   name: string;
   url: string;
-  type: string;
-  size: number;
+  type?: string;
+  size?: number;
 }
 
+/* ─── Assignment ─── */
+export interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  subject: string;
+  subjectCode?: string;
+  dueDate: string;
+  dueTime?: string;
+  maxMarks?: number;
+  totalMarks?: number;
+  status: 'pending' | 'submitted' | 'graded' | 'overdue' | 'late-submitted' | string;
+  attachments?: SubmissionFile[];
+  createdAt?: string;
+  submissionType?: string;
+}
+
+/* ─── Assignment Submission ─── */
 export interface AssignmentSubmission {
   id: string;
   assignmentId: string;
   studentId: string;
-  files: SubmissionFile[];
+  files?: SubmissionFile[];
   remarks?: string;
-  marksObtained?: number;
+  status: 'submitted' | 'graded' | 'pending' | string;
   submittedAt?: string;
-  status?: 'submitted' | 'graded' | 'pending';
+  marksObtained?: number;
+  feedback?: string;
+  gradedAt?: string;
 }
 
-export interface FeeItem {
-  id: string;
-  name: string;
-  amount: number;
-  dueDate: string;
-  status: 'paid' | 'pending' | 'overdue';
-}
-
-export interface FeeSummary {
-  paidFees: number;
-  pendingFees: number;
-  totalFees: number;
-  totalPaid?: number;
-  totalBalance?: number;
-  totalOverdue?: number;
-  upcomingDue?: FeeItem[];
-  lastPaidDate?: string;
-  nextDueDate?: string;
-}
-
-export interface StudentDashboardStats {
-  totalAssessments: number;
-  completedAssessments: number;
-  averageScore: number;
-  totalAssignments: number;
-  pendingAssignments: number;
-  attendanceRate: number;
-  feePaidPercentage: number;
-  attendancePercentage?: number;
-}
-
-export interface ClassSchedule {
-  id: string;
-  subject: string;
-  subjectCode?: string;
-  room: string;
-  startTime: string;
-  endTime: string;
-  teacher?: string;
-  faculty?: string;
-  facultyName?: string;
-  facultyInitials?: string;
-  day?: string;
-  type?: 'lecture' | 'lab' | 'tutorial';
-  topic?: string;
-  status?: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
-}
-
+/* ─── Notification ─── */
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: "info" | "warning" | "success" | "error" | "academic" | "fee" | "general" | "alert";
-  read: boolean;
-  priority?: 'low' | 'medium' | 'high';
+  type: string;
   timestamp?: string;
   createdAt?: string;
+  read: boolean;
+  priority?: string;
+}
+
+/* ─── Fee ─── */
+export interface FeeItem {
+  id: string;
+  name: string;
+  dueDate: string;
+  amount: number;
+  balance?: number;
+  status?: string;
+}
+
+export interface FeeSummary {
+  totalBalance?: number;
+  pendingFees?: number;
+  totalOverdue?: number;
+  totalPaid?: number;
+  paidFees?: number;
+  totalFees?: number;
+  upcomingDue?: FeeItem[];
+}
+
+/* ─── Attendance ─── */
+export interface AttendanceSummary {
+  presentClasses?: number;
+  totalClasses?: number;
+  absentClasses?: number;
+  percentage?: number;
+}
+
+/* ─── Schedule ─── */
+export interface ClassSchedule {
+  id?: string;
+  subject: string;
+  startTime: string;
+  endTime?: string;
+  room?: string;
+  faculty?: string;
+  type?: string;
+  day?: string;
+  topic?: string;
+  teacher?: string;
+  facultyName?: string;
+}
+
+/* ─── Assessment (lightweight card) ─── */
+export interface Assessment {
+  id: string;
+  title: string;
+  subject: string;
+  date: string;
+  type?: string;
+  status?: string;
+  totalMarks?: number;
+  time?: string;
+  venue?: string;
+}
+
+/* ─── Dashboard Stats ─── */
+export interface StudentDashboardStats {
+  cgpa?: number;
+  rank?: number;
+  totalStudents?: number;
+  attendancePercentage?: number;
+  pendingAssignments?: number;
+  upcomingTests?: number;
+  upcomingClasses?: number;
+  upcomingAssessments?: number;
+  feeDue?: number;
+  newNotifications?: number;
+  overdueAssignments?: number;
+  lowAttendanceSubjects?: number;
+}
+
+/* ─── Profile ─── */
+export interface StudentProfile {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  regNo?: string;
+  rollNumber?: string;
+  branch?: string;
+  semester?: number;
+  division?: string;
+  section?: string;
+  batch?: string;
+  avatar?: string;
+  collegeId?: string;
+  course?: string;
 }

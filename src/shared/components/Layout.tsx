@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '../../modules/auth/context/AuthContext';
 import { useThemeMode } from "../contexts/ThemeProvider";
@@ -45,9 +45,10 @@ import {
   LightMode,
   DarkMode,
   AccountBalance,
-  AutoFixHigh,
   CheckCircle,
 } from "@mui/icons-material";
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/Firebase/config';
 
 const DRAWER_WIDTH = 260;
 
@@ -59,62 +60,49 @@ interface NavItem {
   badge?: number;
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// NAVIGATION ITEMS — SPLIT BY ROLE
-// ═══════════════════════════════════════════════════════════════════════
-
 const navItems: NavItem[] = [
-  // ── SUPER ADMIN ─────────────────────────────────────────────────────
   { label: "Dashboard", path: "/superadmin", icon: <Dashboard />, roles: ["superadmin"] },
   { label: "Colleges", path: "/superadmin/colleges", icon: <Business />, roles: ["superadmin"] },
   { label: "Universities", path: "/superadmin/universities", icon: <AccountBalance />, roles: ["superadmin"] },
-  { label: "Create College", path: "/superadmin/colleges/create", icon: <PersonAdd />, roles: ["superadmin"] },
+  { label: "Create College", path: "/superadmin/colleges/new", icon: <PersonAdd />, roles: ["superadmin"] },
   { label: "Admins", path: "/superadmin/admins", icon: <SupervisedUserCircle />, roles: ["superadmin"] },
-  { label: "Create Admin", path: "/superadmin/create-admin", icon: <AdminPanelSettings />, roles: ["superadmin"] },
+  { label: "Create Admin", path: "/superadmin/admins/new", icon: <AdminPanelSettings />, roles: ["superadmin"] },
   { label: "Curriculum", path: "/superadmin/curriculum", icon: <School />, roles: ["superadmin"] },
   { label: "Manage Students", path: "/superadmin/students", icon: <ManageAccounts />, roles: ["superadmin"] },
-  { label: "Import Users", path: "/superadmin/user-import", icon: <UploadFile />, roles: ["superadmin"] },
+  { label: "Import Users", path: "/superadmin/students/import", icon: <UploadFile />, roles: ["superadmin"] },
   { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon />, roles: ["superadmin"] },
   { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon />, roles: ["superadmin"] },
   { label: "Health", path: "/superadmin/health", icon: <MonitorHeartIcon />, roles: ["superadmin"] },
-  { label: "Import Faculty", path: "/superadmin/faculty-import", icon: <School />, roles: ["superadmin"] },
+  { label: "Import Faculty", path: "/superadmin/faculty/import", icon: <School />, roles: ["superadmin"] },
   { label: "Manage Faculty", path: "/superadmin/faculty", icon: <People />, roles: ["superadmin"] },
 
-  // ── PRINCIPAL (admin) — FULL COLLEGE CONTROL ──────────────────────
-  { label: "Dashboard", path: "/admin", icon: <Dashboard />, roles: ["admin"] },
-  { label: "Students", path: "/students", icon: <People />, roles: ["admin"] },
-  { label: "360° View", path: "/360-view", icon: <Assessment />, roles: ["admin", "mentor", "faculty"] },
-  { label: "Attendance", path: "/attendance", icon: <CalendarToday />, roles: ["admin", "mentor"] },
-  { label: "Assessments", path: "/assessments", icon: <Assignment />, roles: ["admin"] },
-  { label: "Fees", icon: <AttachMoney />, path: "/fees", roles: ["admin"] },
-  { label: "Question Bank", path: "/question-bank", icon: <QuestionAnswer />, roles: ["admin"] },
-  { label: "Paper Generator", path: "/paper-generator", icon: <Description />, roles: ["admin"] },
-  { label: "Class Schedule", path: "/class-schedule", icon: <CalendarToday />, roles: ["admin"] },
-  // ═══════════════════════════════════════════════════════════════════════
-  // NEW: Curriculum Mapping for Admin
-  // ═══════════════════════════════════════════════════════════════════════
-  { label: "Curriculum", path: "/admin/curriculum", icon: <School />, roles: ["admin"] },
-  { label: "Analytics", path: "/analytics", icon: <Assessment />, roles: ["admin", "mentor"] },
-  { label: "Journey", path: "/journey", icon: <TrendingUp />, roles: ["admin", "mentor", "faculty"] },
-  { label: "Settings", path: "/settings", icon: <Settings />, roles: ["admin"] },
+  // ─── ADMIN / HOD / PRINCIPAL (legacy shared) ───
+  { label: "Dashboard", path: "/admin", icon: <Dashboard />, roles: ["admin", "principal"] },
+  { label: "Students", path: "/admin/students", icon: <People />, roles: ["admin", "principal"] },
+  { label: "360° View", path: "/admin/view360", icon: <Assessment />, roles: ["admin", "principal"] },
+  { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday />, roles: ["admin", "principal"] },
+  { label: "Assessments", path: "/admin/assessments", icon: <Assignment />, roles: ["admin", "principal"] },
+  { label: "Fees", icon: <AttachMoney />, path: "/admin/fee-management", roles: ["admin", "principal"] },
+  { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer />, roles: ["admin", "principal"] },
+  { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description />, roles: ["admin", "principal"] },
+  { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday />, roles: ["admin", "principal"] },
+  { label: "Curriculum", path: "/admin/curriculum", icon: <School />, roles: ["admin", "principal"] },
+  { label: "Analytics", path: "/admin/analytics", icon: <Assessment />, roles: ["admin", "principal"] },
+  { label: "Journey", path: "/admin/journey", icon: <TrendingUp />, roles: ["admin", "principal"] },
+  { label: "Settings", path: "/admin/settings", icon: <Settings />, roles: ["admin", "principal"] },
 
-  // ── HOD — DEPARTMENT-ONLY ────────────────────────────────────────
-  { label: "HOD Dashboard", path: "/hod", icon: <Dashboard />, roles: ["hod"] },
-  { label: "My Students", path: "/students", icon: <People />, roles: ["hod"] },
-  { label: "360° View", path: "/360-view", icon: <Assessment />, roles: ["hod"] },
-  { label: "Attendance", path: "/attendance", icon: <CalendarToday />, roles: ["hod"] },
-  { label: "Assessments", path: "/assessments", icon: <Assignment />, roles: ["hod"] },
-  { label: "Question Bank", path: "/question-bank", icon: <QuestionAnswer />, roles: ["hod"] },
-  { label: "Paper Generator", path: "/paper-generator", icon: <Description />, roles: ["hod"] },
-  { label: "Class Schedule", path: "/class-schedule", icon: <CalendarToday />, roles: ["hod"] },
-  // ═══════════════════════════════════════════════════════════════════════
-  // NEW: Curriculum Mapping for HOD
-  // ═══════════════════════════════════════════════════════════════════════
-  { label: "Curriculum", path: "/admin/curriculum", icon: <School />, roles: ["hod"] },
-  { label: "Department Analytics", path: "/analytics", icon: <BarChartIcon />, roles: ["hod"] },
-  { label: "Journey", path: "/journey", icon: <TrendingUp />, roles: ["hod"] },
+  { label: "HOD Dashboard", path: "/admin/hod-dashboard", icon: <Dashboard />, roles: ["hod", "principal"] },
+  { label: "My Students", path: "/admin/students", icon: <People />, roles: ["hod", "principal"] },
+  { label: "360° View", path: "/admin/view360", icon: <Assessment />, roles: ["hod", "principal"] },
+  { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday />, roles: ["hod", "principal"] },
+  { label: "Assessments", path: "/admin/assessments", icon: <Assignment />, roles: ["hod", "principal"] },
+  { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer />, roles: ["hod", "principal"] },
+  { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description />, roles: ["hod", "principal"] },
+  { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday />, roles: ["hod", "principal"] },
+  { label: "Curriculum", path: "/admin/curriculum", icon: <School />, roles: ["hod", "principal"] },
+  { label: "Department Analytics", path: "/admin/analytics", icon: <BarChartIcon />, roles: ["hod", "principal"] },
+  { label: "Journey", path: "/admin/journey", icon: <TrendingUp />, roles: ["hod", "principal"] },
 
-  // ── MENTOR ─────────────────────────────────────────────────────────
   { label: "Dashboard", path: "/", icon: <Dashboard />, roles: ["mentor"] },
   { label: "My Students", path: "/students", icon: <People />, roles: ["mentor"] },
   { label: "360° View", path: "/360-view", icon: <Assessment />, roles: ["mentor"] },
@@ -122,23 +110,14 @@ const navItems: NavItem[] = [
   { label: "Analytics", path: "/analytics", icon: <Assessment />, roles: ["mentor"] },
   { label: "Journey", path: "/journey", icon: <TrendingUp />, roles: ["mentor"] },
 
-  // ── FACULTY ────────────────────────────────────────────────────────
   { label: "Faculty Dashboard", path: "/faculty", icon: <Dashboard />, roles: ["faculty"] },
-  { label: "My Schedule", path: "/faculty/schedule", icon: <CalendarToday />, roles: ["faculty"] },
   { label: "My Attendance", path: "/faculty/attendance", icon: <CalendarToday />, roles: ["faculty"] },
-  { label: "Mark Attendance", path: "/faculty/mark-attendance", icon: <CheckCircle />, roles: ["faculty"] },
-  // ═══════════════════════════════════════════════════════════════════════
-  // NEW: My Curriculum for Faculty
-  // ═══════════════════════════════════════════════════════════════════════
+  { label: "Mark Attendance", path: "/faculty/attendance-marking", icon: <CheckCircle />, roles: ["faculty"] },
   { label: "My Curriculum", path: "/faculty/curriculum", icon: <School />, roles: ["faculty"] },
   { label: "Topics", path: "/faculty/topics", icon: <School />, roles: ["faculty"] },
   { label: "Papers", path: "/faculty/papers", icon: <Description />, roles: ["faculty"] },
   { label: "Question Bank", path: "/faculty/question-bank", icon: <QuestionAnswer />, roles: ["faculty"] },
   { label: "Paper Generator", path: "/faculty/paper-generator", icon: <Description />, roles: ["faculty"] },
-  // ═══════════════════════════════════════════════════════════════════════
-  // NEW: AI Question Generator
-  // ═══════════════════════════════════════════════════════════════════════
-  { label: "AI Question Generator", path: "/faculty/ai-questions", icon: <AutoFixHigh />, roles: ["faculty"] },
   { label: "Student Analysis", path: "/faculty/student-analysis", icon: <Assessment />, roles: ["faculty"] },
   { label: "Reschedule", path: "/faculty/reschedule", icon: <CalendarToday />, roles: ["faculty"] },
   { label: "Upload Material", path: "/faculty/upload-material", icon: <UploadFile />, roles: ["faculty"] },
@@ -147,12 +126,41 @@ const navItems: NavItem[] = [
   { label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday />, roles: ["faculty"] },
 ];
 
-const Layout: React.FC = () => {
+interface LayoutProps {
+  children?: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const { resolvedMode, toggleMode } = useThemeMode();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collegeName, setCollegeName] = useState<string>('');
+
+  useEffect(() => {
+    console.log('[Layout] Route changed:', location.pathname);
+    console.log('[Layout DEBUG] user.role:', user?.role, '| pathname:', location.pathname);
+  }, [location.pathname, user?.role]);
+
+  useEffect(() => {
+    const loadCollegeName = async () => {
+      if (!user?.collegeId) {
+        setCollegeName('');
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db, 'colleges', user.collegeId));
+        if (snap.exists()) {
+          const data = snap.data();
+          setCollegeName(data.name || data.shortName || data.collegeName || '');
+        }
+      } catch (err) {
+        console.error('[Layout] Failed to fetch college name:', err);
+      }
+    };
+    loadCollegeName();
+  }, [user?.collegeId]);
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
@@ -161,16 +169,25 @@ const Layout: React.FC = () => {
     navigate("/");
   };
 
-  // Filter nav items by user role
-  const filteredNav = navItems.filter(item =>
-    item.roles.includes(user?.role || "")
-  );
+  const effectiveRole = user?.role;
 
-  // Group nav items by category for better visual separation
+  // Deduplicate: same path may appear under multiple role blocks
+  const filteredNav = React.useMemo(() => {
+    const seen = new Set<string>();
+    return navItems
+      .filter(item => item.roles.includes(effectiveRole || ""))
+      .filter(item => {
+        if (seen.has(item.path)) return false;
+        seen.add(item.path);
+        return true;
+      });
+  }, [effectiveRole]);
+
   const getRoleLabel = (role: string) => {
     switch (role) {
       case "superadmin": return "Super Admin";
-      case "admin": return "Principal";
+      case "admin": return "Admin";
+      case "principal": return "Principal";
       case "hod": return "HOD";
       case "mentor": return "Mentor";
       case "faculty": return "Faculty";
@@ -180,7 +197,6 @@ const Layout: React.FC = () => {
 
   const drawerContent = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* Logo */}
       <Toolbar sx={{ px: 2, display: "flex", alignItems: "center", gap: 1 }}>
         <School sx={{ color: "primary.main", fontSize: 32 }} />
         <Typography variant="h6" sx={{ fontWeight: 700, color: "text.primary" }}>
@@ -189,24 +205,27 @@ const Layout: React.FC = () => {
       </Toolbar>
       <Divider sx={{ borderColor: "divider" }} />
 
-      {/* User Info */}
       <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
         <Avatar src={user?.avatar || undefined} sx={{ width: 40, height: 40, bgcolor: "primary.main" }}>
           {user?.name?.charAt(0)}
         </Avatar>
-        <Box sx={{ overflow: "hidden" }}>
+        <Box sx={{ overflow: "hidden", flex: 1 }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {user?.name}
           </Typography>
-          <Typography variant="caption" sx={{ color: "text.secondary", textTransform: "capitalize" }}>
-            {getRoleLabel(user?.role || "")}
+          <Typography variant="caption" sx={{ color: "text.secondary", textTransform: "capitalize", display: "block" }}>
+            {getRoleLabel(effectiveRole || "")}
             {user?.department && ` · ${user.department}`}
           </Typography>
+          {collegeName && (
+            <Typography variant="caption" sx={{ color: "primary.main", display: "block", mt: 0.5, fontWeight: 500 }}>
+              {collegeName}
+            </Typography>
+          )}
         </Box>
       </Box>
       <Divider sx={{ borderColor: "divider" }} />
 
-      {/* Navigation */}
       <List sx={{ flex: 1, overflowY: "auto", py: 1 }}>
         {filteredNav.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
@@ -258,7 +277,6 @@ const Layout: React.FC = () => {
 
       <Divider sx={{ borderColor: "divider" }} />
 
-      {/* Theme Toggle + Logout */}
       <Box sx={{ p: 1 }}>
         <ListItem disablePadding>
           <ListItemButton
@@ -310,7 +328,6 @@ const Layout: React.FC = () => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
-      {/* Mobile AppBar */}
       <AppBar
         position="fixed"
         sx={{
@@ -319,15 +336,23 @@ const Layout: React.FC = () => {
           display: { md: "none" },
           bgcolor: "background.paper",
           color: "text.primary",
+          boxShadow: 1,
         }}
       >
         <Toolbar>
           <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flex: 1 }}>
-            Vriddhi
-          </Typography>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              Vriddhi
+            </Typography>
+            {collegeName && (
+              <Typography variant="caption" sx={{ color: "primary.main", display: "block" }}>
+                {collegeName}
+              </Typography>
+            )}
+          </Box>
           <Tooltip title={resolvedMode === "dark" ? "Switch to light" : "Switch to dark"}>
             <IconButton onClick={toggleMode} color="inherit">
               {resolvedMode === "dark" ? <LightMode /> : <DarkMode />}
@@ -336,7 +361,6 @@ const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Drawer */}
       <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
         <Drawer
           variant="temporary"
@@ -362,7 +386,6 @@ const Layout: React.FC = () => {
         </Drawer>
       </Box>
 
-      {/* Main Content */}
       <Box
         component="main"
         sx={{
@@ -371,9 +394,10 @@ const Layout: React.FC = () => {
           minHeight: "100vh",
           pt: { xs: 8, md: 0 },
           bgcolor: "background.default",
+          overflow: "auto",
         }}
       >
-        <Outlet />
+        {children || <Outlet />}
       </Box>
     </Box>
   );

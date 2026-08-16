@@ -1,64 +1,184 @@
-import { useState, useEffect, useCallback } from "react";
-import type { University, UniversityCollege, UniversityFilters } from "../shared/types/university";
+// src/hooks/useUniversities.ts
+// React Query hooks for university data
 
-export function useUniversities(filters?: UniversityFilters) {
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type {
+  University,
+  CreateUniversityInput,
+  UpdateUniversityInput,
+  ListUniversitiesOptions,
+  UpdateCollegeClassificationInput,
+  UniversityStats,
+  UniversityRolloutProgress,
+} from "../modules/superadmin/types/university";
+import type { PaginatedResult } from "../modules/superadmin/types/superAdmin";
+import {
+  listUniversities,
+  getUniversityById,
+  getUniversityByCodeFromDb,
+  createUniversity,
+  updateUniversity,
+  deleteUniversity,
+  seedUniversities,
+  getUniversityStats,
+  getRolloutProgress,
+  updateCollegeClassification,
+  getCollegesByUniversity,
+} from "../modules/superadmin/api/universityApi";
 
-  useEffect(() => {
-    setUniversities([]);
-    setLoading(false);
-    setError(null);
-  }, [filters]);
+// ═══════════════════════════════════════════════════════════════════════
+// QUERY KEYS
+// ═══════════════════════════════════════════════════════════════════════
 
-  return { universities, loading, error, refetch: () => {} };
+const universityKeys = {
+  all: ["universities"] as const,
+  lists: () => [...universityKeys.all, "list"] as const,
+  list: (filters: ListUniversitiesOptions) => [...universityKeys.lists(), filters] as const,
+  details: () => [...universityKeys.all, "detail"] as const,
+  detail: (id: string) => [...universityKeys.details(), id] as const,
+  byCode: (code: string) => [...universityKeys.all, "byCode", code] as const,
+  stats: () => [...universityKeys.all, "stats"] as const,
+  rollout: () => [...universityKeys.all, "rollout"] as const,
+  colleges: (universityId: string) => [...universityKeys.all, "colleges", universityId] as const,
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// LIST HOOK
+// ═══════════════════════════════════════════════════════════════════════
+
+export function useUniversities(options: ListUniversitiesOptions = {}, enabled = true) {
+  return useQuery({
+    queryKey: universityKeys.list(options),
+    queryFn: () => listUniversities(options),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useUniversity(id?: string) {
-  const [university, setUniversity] = useState<University | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// ═══════════════════════════════════════════════════════════════════════
+// DETAIL HOOKS
+// ═══════════════════════════════════════════════════════════════════════
 
-  useEffect(() => {
-    setUniversity(null);
-    setLoading(false);
-    setError(null);
-  }, [id]);
-
-  return { university, loading, error, refetch: () => {} };
+export function useUniversity(universityId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: universityKeys.detail(universityId || ""),
+    queryFn: () => getUniversityById(universityId!),
+    enabled: enabled && !!universityId,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
-export function useUniversityColleges(universityId?: string) {
-  const [colleges, setColleges] = useState<UniversityCollege[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useUniversityByCode(code: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: universityKeys.byCode(code || ""),
+    queryFn: () => getUniversityByCodeFromDb(code!),
+    enabled: enabled && !!code,
+    staleTime: 10 * 60 * 1000,
+  });
+}
 
-  useEffect(() => {
-    setColleges([]);
-    setLoading(false);
-    setError(null);
-  }, [universityId]);
+// ═══════════════════════════════════════════════════════════════════════
+// STATS & ANALYTICS HOOKS
+// ═══════════════════════════════════════════════════════════════════════
 
-  return { colleges, loading, error, refetch: () => {} };
+export function useUniversityStats(enabled = true) {
+  return useQuery({
+    queryKey: universityKeys.stats(),
+    queryFn: getUniversityStats,
+    enabled,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useRolloutProgress(enabled = true) {
+  return useQuery({
+    queryKey: universityKeys.rollout(),
+    queryFn: getRolloutProgress,
+    enabled,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// COLLEGE AFFILIATION HOOK
+// ═══════════════════════════════════════════════════════════════════════
+
+export function useUniversityColleges(universityId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: universityKeys.colleges(universityId || ""),
+    queryFn: () => getCollegesByUniversity(universityId!),
+    enabled: enabled && !!universityId,
+    staleTime: 3 * 60 * 1000,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MUTATIONS
+// ═══════════════════════════════════════════════════════════════════════
+
+export function useCreateUniversity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUniversity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.stats() });
+    },
+  });
 }
 
 export function useUpdateUniversity() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: UpdateUniversityInput }) =>
+      updateUniversity(id, updates),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: universityKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.rollout() });
+    },
+  });
+}
 
-  const mutateAsync = useCallback(async (_data: Partial<University> & { id: string }) => {
-    setLoading(true);
-    try {
-      // TODO: wire to actual API
-      return { success: true };
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-      throw e;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+export function useDeleteUniversity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteUniversity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.rollout() });
+    },
+  });
+}
 
-  return { mutateAsync, loading, error };
+export function useSeedUniversities() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seedUniversities,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.rollout() });
+    },
+  });
+}
+
+export function useUpdateCollegeClassification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ collegeId, input }: { collegeId: string; input: UpdateCollegeClassificationInput }) =>
+      updateCollegeClassification(collegeId, input),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["college", variables.collegeId] });
+      if (variables.input.universityId) {
+        queryClient.invalidateQueries({
+          queryKey: universityKeys.colleges(variables.input.universityId),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: universityKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.rollout() });
+    },
+  });
 }

@@ -1,11 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════════
-// types/curriculum.ts — Syllabus Parser & Curriculum Types
-// EXTENDED: Added CurriculumMapping, FacultyAssignment, ScheduleFromCurriculum types
+// types/curriculum.ts — Universal Syllabus & Curriculum Types v2.0
+// Supports: Course matrix, detailed syllabus, units/modules, outcomes, references
 // ═══════════════════════════════════════════════════════════════════════
 
 export type SyllabusFormat = 'docx' | 'pdf' | 'txt';
 export type CurriculumStatus = 'parsing' | 'review' | 'approved' | 'assigned' | 'archived';
 export type ParseConfidence = 'high' | 'medium' | 'low';
+export type CourseType = 'core' | 'elective' | 'language' | 'project' | 'internship' | 'practical' | 'value_added';
+
+// ─── Parsed Module (Unit-level detail) ────────────────────────────────────
 
 export interface ParsedModule {
   id: string;
@@ -16,7 +19,7 @@ export interface ParsedModule {
   description?: string | null;
   hours: number;
   marks: number;
-  type: string;
+  type: 'theory' | 'practical' | 'project' | 'seminar' | 'tutorial';
   topics: string[];
   learningOutcomes?: string[] | null;
   confidence: ParseConfidence;
@@ -25,6 +28,8 @@ export interface ParsedModule {
   course?: string;
   semester?: number;
 }
+
+// ─── Parsed Course ──────────────────────────────────────────────────────
 
 export interface ParsedCourse {
   id: string;
@@ -39,11 +44,17 @@ export interface ParsedCourse {
   semester: number;
   branch: string;
   scheme?: string | null;
+  courseType?: CourseType;
   modules: ParsedModule[];
+  outcomes?: string[];
+  references?: string[];
+  skillActivities?: string[];
   confidence: ParseConfidence;
   isEdited?: boolean;
   extractedAt?: string;
 }
+
+// ─── Syllabus Extract (full document) ───────────────────────────────────
 
 export interface SyllabusExtract {
   id: string;
@@ -71,6 +82,74 @@ export interface SyllabusExtract {
   assignedBy?: string | null;
 }
 
+// ─── Parse Result ───────────────────────────────────────────────────────
+
+export interface ParseResult {
+  success: boolean;
+  extract?: SyllabusExtract;
+  courses: ParsedCourse[];
+  errors: string[];
+  warnings: string[];
+  rawText?: string;
+  confidenceScore: number;
+  totalCourses: number;
+  totalModules: number;
+  totalHours: number;
+  totalMarks: number;
+}
+
+// ─── List Options ───────────────────────────────────────────────────────
+
+export interface ListSyllabusOptions {
+  status?: CurriculumStatus | 'all';
+  collegeId?: string;
+  search?: string;
+  format?: SyllabusFormat | 'all';
+  limit?: number;
+}
+
+export interface ListCurriculumOptions {
+  collegeId?: string;
+  status?: string;
+  branch?: string;
+  semester?: number;
+  search?: string;
+  limit?: number;
+}
+
+// ─── Assignment ─────────────────────────────────────────────────────────
+
+export interface AssignCurriculumInput {
+  syllabusExtractId: string;
+  collegeId: string;
+  collegeName: string;
+  selectedCourseIds?: string[];
+  reviewNotes?: string;
+}
+
+// ─── Stats ──────────────────────────────────────────────────────────────
+
+export interface CurriculumStats {
+  totalExtracts: number;
+  pendingReview: number;
+  approved: number;
+  assigned: number;
+  totalCourses: number;
+  totalModules: number;
+  averageConfidence: number;
+  byFormat: Record<string, number>;
+  byStatus: Record<string, number>;
+}
+
+// ─── College Option ─────────────────────────────────────────────────────
+
+export interface CollegeOption {
+  id: string;
+  name: string;
+}
+
+// ─── Curriculum Document (assigned to college) ──────────────────────────
+
 export interface CurriculumDoc {
   id: string;
   collegeId: string;
@@ -94,68 +173,8 @@ export interface CurriculumDoc {
   assignedAt: string;
 }
 
-export interface ParseResult {
-  success: boolean;
-  extract?: SyllabusExtract;
-  courses: ParsedCourse[];
-  errors: string[];
-  warnings: string[];
-  rawText?: string;
-  confidenceScore: number;
-  totalCourses: number;
-  totalModules: number;
-  totalHours: number;
-  totalMarks: number;
-}
-
-export interface ListSyllabusOptions {
-  status?: CurriculumStatus | 'all';
-  collegeId?: string;
-  search?: string;
-  format?: SyllabusFormat | 'all';
-  limit?: number;
-}
-
-export interface ListCurriculumOptions {
-  collegeId?: string;
-  status?: string;
-  branch?: string;
-  semester?: number;
-  search?: string;
-  limit?: number;
-}
-
-export interface AssignCurriculumInput {
-  syllabusExtractId: string;
-  collegeId: string;
-  collegeName: string;
-  selectedCourseIds?: string[];
-  reviewNotes?: string;
-}
-
-export interface CurriculumStats {
-  totalExtracts: number;
-  pendingReview: number;
-  approved: number;
-  assigned: number;
-  totalCourses: number;
-  totalModules: number;
-  averageConfidence: number;
-  byFormat: Record<string, number>;
-  byStatus: Record<string, number>;
-}
-
-export interface CollegeOption {
-  id: string;
-  name: string;
-}
-
 // ═══════════════════════════════════════════════════════════════════════
-// NEW: Curriculum Faculty Mapping Types
-// ═══════════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════════
-// NEW: Curriculum Faculty Mapping Types
+// Faculty Mapping Types
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface FacultyOption {

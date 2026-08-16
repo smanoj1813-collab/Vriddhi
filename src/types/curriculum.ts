@@ -1,5 +1,11 @@
+// src/types/curriculum.ts
+// ═══════════════════════════════════════════════════════════════════════
+// KEEP these exact literal unions — do NOT change to string
+// ═══════════════════════════════════════════════════════════════════════
+
 export type CurriculumStatus = 'parsing' | 'review' | 'approved' | 'assigned' | 'archived';
 export type ParseConfidence = 'high' | 'medium' | 'low';
+export type CourseType = 'core' | 'elective' | 'language' | 'project' | 'internship' | 'practical' | 'value_added';
 
 export interface ParsedModule {
   id: string;
@@ -10,7 +16,8 @@ export interface ParsedModule {
   description?: string | null;
   hours: number;
   marks: number;
-  type: string;
+  // KEEP the literal union — components depend on it for switch/if logic
+  type: 'theory' | 'practical' | 'project' | 'seminar' | 'tutorial';
   topics: string[];
   learningOutcomes?: string[] | null;
   confidence: ParseConfidence;

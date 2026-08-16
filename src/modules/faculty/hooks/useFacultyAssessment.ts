@@ -1,8 +1,16 @@
-// hooks/useFacultyAssessment.ts
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { listAssessments, listStudentAssessments } from '../api/assessmentsApi';
-import type { Assessment, StudentAssessment, AssessmentFilterOptions } from '../types/assessment';
+import type { Assessment } from '../../../types/assessment';
+
+interface StudentAssessment {
+  id: string;
+  status: string;
+  percentage?: number;
+  score?: number;
+  studentId?: string;
+  assessmentId?: string;
+}
 
 export function useFacultyAssessment(collegeId: string) {
   const { user } = useAuth();
@@ -24,21 +32,25 @@ export function useFacultyAssessment(collegeId: string) {
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      const data = await listAssessments({ collegeId });
+      const data = await listAssessments({ collegeId } as any);
       setAssessments(data);
 
       setTodayAssessments(data.filter((a: Assessment) => {
-        const sd = a.scheduledDate || a.startDate;
-        return sd && (sd as string).startsWith(today);
+        const sd = a.startTime;
+        if (!sd) return false;
+        const dateStr = typeof sd === 'string' ? sd : sd.toISOString();
+        return dateStr.startsWith(today);
       }));
 
       setUpcomingAssessments(data.filter((a: Assessment) => {
-        const sd = a.scheduledDate || a.startDate;
-        return sd && (sd as string) > today && a.status === 'published';
+        const sd = a.startTime;
+        if (!sd) return false;
+        const dateStr = typeof sd === 'string' ? sd : sd.toISOString();
+        return dateStr > today && a.status === 'published';
       }));
 
       // Calculate stats
-      const subs = await listStudentAssessments({});
+      const subs = await listStudentAssessments({} as any) as StudentAssessment[];
       const gradedSubs = subs.filter((sa: StudentAssessment) => sa.status === 'graded');
       const avgScore = gradedSubs.length > 0
         ? gradedSubs.reduce((sum: number, sa: StudentAssessment) => sum + (sa.percentage || 0), 0) / gradedSubs.length
@@ -47,12 +59,16 @@ export function useFacultyAssessment(collegeId: string) {
       setStats({
         totalAssessments: data.length,
         todayCount: data.filter((a: Assessment) => {
-          const sd = a.scheduledDate || a.startDate;
-          return sd && (sd as string).startsWith(today);
+          const sd = a.startTime;
+          if (!sd) return false;
+          const dateStr = typeof sd === 'string' ? sd : sd.toISOString();
+          return dateStr.startsWith(today);
         }).length,
         upcomingCount: data.filter((a: Assessment) => {
-          const sd = a.scheduledDate || a.startDate;
-          return sd && (sd as string) > today && a.status === 'published';
+          const sd = a.startTime;
+          if (!sd) return false;
+          const dateStr = typeof sd === 'string' ? sd : sd.toISOString();
+          return dateStr > today && a.status === 'published';
         }).length,
         averageScore: avgScore,
         passRate: 0,

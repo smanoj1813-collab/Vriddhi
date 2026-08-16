@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════
 // SYLLABUS UPLOADER — Type-safe version compatible with unified hook
+// FIXED: Defensive optional chaining on warnings/errors arrays
 // ═══════════════════════════════════════════════════════════════════════
 
 import React, { useRef } from "react";
@@ -59,6 +60,10 @@ export const SyllabusUploader: React.FC = () => {
 
   const isBusy = phase === "uploading" || phase === "parsing" || phase === "saving";
 
+  // DEFENSIVE: coerce to arrays even if hook returns undefined
+  const safeWarnings = Array.isArray(warnings) ? warnings : [];
+  const safeErrors = Array.isArray(errors) ? errors : [];
+
   return (
     <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
@@ -115,32 +120,32 @@ export const SyllabusUploader: React.FC = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
             {FORMAT_ICONS[extract.format]}
             <Typography variant="h6" sx={{ flex: 1 }}>
-              {extract.fileName}
+              {extract.fileName ?? "Untitled"}
             </Typography>
             <Chip
-              label={extract.format.toUpperCase()}
+              label={(extract.format ?? "unknown").toUpperCase()}
               size="small"
-              color={FORMAT_COLORS[extract.format]}
+              color={FORMAT_COLORS[extract.format] ?? "default"}
             />
           </Box>
 
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-            <Chip label={`${extract.totalCourses} courses`} size="small" />
-            <Chip label={`${extract.totalModules} modules`} size="small" />
-            <Chip label={`${extract.totalHours} hours`} size="small" />
-            <Chip label={`${extract.totalMarks} marks`} size="small" />
+            <Chip label={`${extract.totalCourses ?? 0} courses`} size="small" />
+            <Chip label={`${extract.totalModules ?? 0} modules`} size="small" />
+            <Chip label={`${extract.totalHours ?? 0} hours`} size="small" />
+            <Chip label={`${extract.totalMarks ?? 0} marks`} size="small" />
             <Chip
-              label={`${confidenceScore}% confidence`}
+              label={`${confidenceScore ?? 0}% confidence`}
               size="small"
-              color={confidenceScore >= 70 ? "success" : confidenceScore >= 40 ? "warning" : "error"}
+              color={(confidenceScore ?? 0) >= 70 ? "success" : (confidenceScore ?? 0) >= 40 ? "warning" : "error"}
             />
           </Box>
 
-          {warnings.length > 0 && (
+          {safeWarnings.length > 0 && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              <AlertTitle>Warnings ({warnings.length})</AlertTitle>
+              <AlertTitle>Warnings ({safeWarnings.length})</AlertTitle>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
-                {warnings.map((w: string, i: number) => (
+                {safeWarnings.map((w: string, i: number) => (
                   <li key={i}>{w}</li>
                 ))}
               </ul>
@@ -173,11 +178,11 @@ export const SyllabusUploader: React.FC = () => {
       )}
 
       {/* Errors */}
-      {errors.length > 0 && phase === "error" && (
+      {safeErrors.length > 0 && phase === "error" && (
         <Alert severity="error" sx={{ mt: 3 }}>
-          <AlertTitle>Errors ({errors.length})</AlertTitle>
+          <AlertTitle>Errors ({safeErrors.length})</AlertTitle>
           <ul style={{ margin: 0, paddingLeft: 16 }}>
-            {errors.map((err: string, i: number) => (
+            {safeErrors.map((err: string, i: number) => (
               <li key={i}>{err}</li>
             ))}
           </ul>

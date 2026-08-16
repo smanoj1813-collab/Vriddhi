@@ -1,4 +1,4 @@
-// src/components/student/UpcomingClasses.tsx
+// src/modules/student/components/UpcomingClasses.tsx
 import { motion } from 'framer-motion';
 import { Clock, MapPin, User, BookOpen, ChevronRight } from 'lucide-react';
 import type { ClassSchedule } from '../types/student';
@@ -50,7 +50,8 @@ export default function UpcomingClasses({ classes }: UpcomingClassesProps) {
           </div>
         ) : (
           todayClasses.map((cls, index) => {
-            const colors = typeColors[cls.type] || typeColors.lecture;
+            const classType = cls.type ?? 'lecture';
+            const colors = typeColors[classType] || typeColors.lecture;
             const now = new Date();
             const startTime = new Date(`${now.toDateString()} ${cls.startTime}`);
             const endTime = new Date(`${now.toDateString()} ${cls.endTime}`);
@@ -92,7 +93,7 @@ export default function UpcomingClasses({ classes }: UpcomingClassesProps) {
                         <p className="text-xs text-slate-400 mt-0.5">{cls.topic}</p>
                       </div>
                       <span className={`px-2 py-0.5 text-xs font-medium rounded-md border ${colors.bg} ${colors.text} ${colors.border} capitalize shrink-0`}>
-                        {cls.type}
+                        {classType}
                       </span>
                     </div>
 

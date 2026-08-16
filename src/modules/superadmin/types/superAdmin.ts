@@ -275,6 +275,7 @@ export interface FacultyImportPayload {
 export interface Faculty {
   id: string;
   facultyId: string;
+  name: string;           // ← computed from firstName + lastName
   firstName: string;
   lastName: string;
   email: string;

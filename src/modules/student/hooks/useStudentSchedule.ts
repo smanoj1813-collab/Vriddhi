@@ -1,42 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import type { ClassSchedule, WeeklySchedule } from '../../../types/schedule';
 
-export interface StudentProfileInput {
+interface StudentProfile {
   branch: string;
   batch: string;
   semester: number;
-  division?: string;
-  section?: string;
+  division: string;
+  section: string;
 }
 
-export interface ClassSchedule {
-  id: string;
-  subject: string;
-  teacher: string;
-  room: string;
-  startTime: string;
-  endTime: string;
-  day: string;
-}
-
-export interface UseStudentScheduleReturn {
-  weeklySchedule: ClassSchedule[];
-  todayClasses: ClassSchedule[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-export function useStudentSchedule(profile: StudentProfileInput | string | null | undefined): UseStudentScheduleReturn {
-  const [weeklySchedule, setWeeklySchedule] = useState<ClassSchedule[]>([]);
-  const [todayClasses, setTodayClasses] = useState<ClassSchedule[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function useStudentSchedule(studentProfile: StudentProfile | null) {
+  const [schedule, setSchedule] = useState<ClassSchedule[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Fetch from API
+    if (!studentProfile) return;
+    setIsLoading(true);
+    // TODO: wire to real API using studentProfile filters
+    setSchedule([]);
     setIsLoading(false);
-  }, [profile]);
+  }, [studentProfile]);
+
+  const weeklySchedule = useMemo<WeeklySchedule>(() => {
+    const map: WeeklySchedule = {};
+    schedule.forEach((cls) => {
+      if (cls.day) {
+        if (!map[cls.day]) map[cls.day] = [];
+        map[cls.day].push(cls);
+      }
+    });
+    return map;
+  }, [schedule]);
+
+  const todayClasses = useMemo(() => {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    return weeklySchedule[today] || [];
+  }, [weeklySchedule]);
 
   return { weeklySchedule, todayClasses, isLoading, error };
 }
-
-export default useStudentSchedule;

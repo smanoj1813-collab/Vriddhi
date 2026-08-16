@@ -1,4 +1,4 @@
-// src/components/student/FeeDueCard.tsx
+// src/modules/student/components/FeeDueCard.tsx
 import { motion } from 'framer-motion';
 import { IndianRupee, AlertTriangle, Calendar, CreditCard } from 'lucide-react';
 import type { FeeSummary } from '../types/student';
@@ -9,8 +9,14 @@ interface FeeDueCardProps {
 }
 
 export default function FeeDueCard({ fees, onPayNow }: FeeDueCardProps) {
-  const totalDue = fees.totalBalance + fees.totalOverdue;
-  const hasOverdue = fees.totalOverdue > 0;
+  const totalBalance = fees.totalBalance ?? fees.pendingFees ?? 0;
+  const totalOverdue = fees.totalOverdue ?? 0;
+  const totalPaid = fees.totalPaid ?? fees.paidFees ?? 0;
+  const totalFees = fees.totalFees ?? 0;
+  const totalDue = totalBalance + totalOverdue;
+  const hasOverdue = totalOverdue > 0;
+  const upcomingDue = fees.upcomingDue ?? [];
+  const paidPercent = totalFees > 0 ? (totalPaid / totalFees) * 100 : 0;
 
   return (
     <motion.div
@@ -46,20 +52,20 @@ export default function FeeDueCard({ fees, onPayNow }: FeeDueCardProps) {
         <div className="mt-4 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-slate-400">Total Fees</span>
-            <span className="text-white font-medium">Rs.{fees.totalFees.toLocaleString('en-IN')}</span>
+            <span className="text-white font-medium">Rs.{totalFees.toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-400">Paid</span>
-            <span className="text-emerald-400 font-medium">Rs.{fees.totalPaid.toLocaleString('en-IN')}</span>
+            <span className="text-emerald-400 font-medium">Rs.{totalPaid.toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-400">Balance</span>
-            <span className="text-amber-400 font-medium">Rs.{fees.totalBalance.toLocaleString('en-IN')}</span>
+            <span className="text-amber-400 font-medium">Rs.{totalBalance.toLocaleString('en-IN')}</span>
           </div>
           {hasOverdue && (
             <div className="flex justify-between text-sm">
               <span className="text-red-400">Overdue + Late Fee</span>
-              <span className="text-red-400 font-medium">Rs.{fees.totalOverdue.toLocaleString('en-IN')}</span>
+              <span className="text-red-400 font-medium">Rs.{totalOverdue.toLocaleString('en-IN')}</span>
             </div>
           )}
         </div>
@@ -67,23 +73,23 @@ export default function FeeDueCard({ fees, onPayNow }: FeeDueCardProps) {
         <div className="mt-4 h-2 rounded-full bg-slate-700/50 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${(fees.totalPaid / fees.totalFees) * 100}%` }}
+            animate={{ width: `${paidPercent}%` }}
             transition={{ delay: 0.8, duration: 1, ease: 'easeOut' }}
             className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
           />
         </div>
-        <p className="text-xs text-slate-500 mt-1">{((fees.totalPaid / fees.totalFees) * 100).toFixed(1)}% paid</p>
+        <p className="text-xs text-slate-500 mt-1">{paidPercent.toFixed(1)}% paid</p>
 
-        {fees.upcomingDue.length > 0 && (
+        {upcomingDue.length > 0 && (
           <div className="mt-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
             <p className="text-xs font-medium text-slate-300 mb-2">Upcoming Due Dates</p>
-            {fees.upcomingDue.slice(0, 2).map(fee => (
+            {upcomingDue.slice(0, 2).map((fee) => (
               <div key={fee.id} className="flex items-center justify-between text-xs">
                 <span className="flex items-center gap-1 text-slate-400">
                   <Calendar size={10} />
                   {new Date(fee.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                 </span>
-                <span className="text-white font-medium">Rs.{fee.balance.toLocaleString('en-IN')}</span>
+                <span className="text-white font-medium">Rs.{(fee.balance ?? 0).toLocaleString('en-IN')}</span>
               </div>
             ))}
           </div>

@@ -5,6 +5,13 @@ export type PriorityLevel = 1 | 2 | 3 | 4 | 5;
 export type UniversityStatus = 'active' | 'inactive' | 'pending' | 'onboarding';
 export type CourseCode = "BA" | "B.Com" | "BBA" | "BCA" | "B.Sc" | "BSW" | "BPA" | "B.Voc";
 
+// ═══════════════════════════════════════════════════════════════════════
+// MISSING TYPES (referenced by universityApi.ts and other files)
+// ═══════════════════════════════════════════════════════════════════════
+export type UniversityManagementType = "Government" | "Government Aided" | "Private";
+export type AutonomyStatus = "Autonomous" | "Non-Autonomous";
+export type VriddhiStatus = "not_onboarded" | "onboarding" | "active" | "suspended";
+
 export interface UniversityCourse {
   id: string;
   name: string;
@@ -34,7 +41,7 @@ export interface University {
   districts?: string[];
   state?: string;
   managementType: ManagementType;
-  priority: PriorityLevel;
+  priority: PriorityLevel | null;
   status: UniversityStatus;
   courses: CourseCode[];
   colleges?: UniversityCollege[];
@@ -66,6 +73,7 @@ export interface University {
 export interface ListUniversitiesOptions {
   status?: string;
   managementType?: string;
+  priority?: string;
   search?: string;
   limit?: number;
   offset?: number;
@@ -75,9 +83,23 @@ export interface ListUniversitiesOptions {
 
 export interface UniversityStats {
   totalUniversities: number;
+  totalColleges: number;
   onboardedColleges: number;
   activeColleges: number;
   coveragePercentage: number;
+  byManagementType: Record<string, number>;
+  byPriority: Record<string, number>;
+  byDistrict: Record<string, number>;
+}
+
+export interface UniversityRolloutProgress {
+  universityId: string;
+  universityName: string;
+  priority: number;
+  targetColleges: number;
+  onboardedColleges: number;
+  activeColleges: number;
+  percentageComplete: number;
 }
 
 export interface RolloutItem {
@@ -100,7 +122,7 @@ export interface DistrictUniversityMapping {
   primaryUniversityName: string;
   secondaryUniversityId?: string;
   secondaryUniversityName?: string;
-  courses: CourseCode[];
+  courses: UniversityCourse[];
   notes?: string;
 }
 
@@ -109,6 +131,62 @@ export interface UniversityPriorityConfig {
   priority: number;
   reason?: string;
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// INPUT TYPES
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface CreateUniversityInput {
+  name: string;
+  shortName?: string;
+  code: string;
+  managementType?: ManagementType;
+  priority?: number | null;
+  districts?: string[];
+  collegeCountMin?: number;
+  collegeCountMax?: number;
+  courses?: CourseCode[];
+  isWomensUniversity?: boolean;
+  isNewUniversity?: boolean;
+  website?: string;
+  location?: string;
+  establishedYear?: number;
+  status?: UniversityStatus;
+  city?: string;
+  district?: string;
+  state?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  description?: string;
+  logoUrl?: string;
+  coverImageUrl?: string;
+  accreditation?: string;
+  naacGrade?: string;
+  nbaAccredited?: boolean;
+  totalStudents?: number;
+  totalFaculty?: number;
+  departments?: string[];
+  affiliatedColleges?: number;
+}
+
+export interface UpdateUniversityInput extends Partial<CreateUniversityInput> {}
+
+export interface CollegeClassification {
+  universityId: string;
+  universityName?: string;
+  managementType?: UniversityManagementType;
+  autonomyStatus?: AutonomyStatus;
+  district?: string;
+  offeredCourses?: CourseCode[];
+  vriddhiStatus?: VriddhiStatus;
+}
+
+export interface UpdateCollegeClassificationInput extends Partial<CollegeClassification> {}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════
 
 export const getPriorityLabel = (priority: number): string => {
   const labels: Record<number, string> = {
@@ -131,6 +209,18 @@ export const getManagementTypeColor = (type: string): string => {
     deemed: 'bg-pink-100 text-pink-800',
   };
   return colors[normalized] || 'bg-gray-100 text-gray-800';
+};
+
+export const getManagementTypeColorHex = (type: string): { bg: string; text: string } => {
+  const normalized = type.toLowerCase();
+  const colors: Record<string, { bg: string; text: string }> = {
+    government: { bg: "#1e40af", text: "#60a5fa" },
+    private: { bg: "#7e22ce", text: "#c084fc" },
+    aided: { bg: "#15803d", text: "#4ade80" },
+    autonomous: { bg: "#c2410c", text: "#fb923c" },
+    deemed: { bg: "#be185d", text: "#f472b6" },
+  };
+  return colors[normalized] || { bg: "#4b5563", text: "#9ca3af" };
 };
 
 export const getStatusColor = (status: string): string => {

@@ -81,19 +81,19 @@ const CreateCollege: React.FC = () => {
       await createCollege.mutateAsync({
         name: formData.name.trim(),
         code: formData.code.trim(),
-        shortName: formData.shortName.trim() || undefined,
-        address: formData.address.trim() || undefined,
-        city: formData.city.trim() || undefined,
-        state: formData.state.trim() || undefined,
-        country: formData.country.trim() || undefined,
-        location: formData.location.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        email: formData.email.trim() || undefined,
-        website: formData.website.trim() || undefined,
+        shortName: formData.shortName.trim(),
+        address: formData.address.trim(),
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        country: formData.country.trim(),
+        location: formData.location.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        website: formData.website.trim(),
         plan: formData.plan,
-        currentStudents: formData.currentStudents || undefined,
-        currentFaculty: formData.currentFaculty || undefined,
-        courses: formData.courses || undefined,
+        currentStudents: formData.currentStudents,
+        currentFaculty: formData.currentFaculty,
+        courses: formData.courses,
       })
       showSuccess(`College "${formData.name}" created successfully!`)
       navigate('/superadmin/colleges')
@@ -187,19 +187,6 @@ const CreateCollege: React.FC = () => {
                 <option value="enterprise" className="bg-slate-800">Enterprise</option>
                 <option value="pro" className="bg-slate-800">Pro</option>
               </select>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Courses</label>
-              <input
-                type="number"
-                name="courses"
-                value={formData.courses}
-                onChange={handleChange}
-                className={inputClasses('courses')}
-                placeholder="0"
-                min={0}
-              />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 // SUPER ADMIN CURRICULUM — 4-Tab Master Page
 // Tabs: UPLOAD → REVIEW → ASSIGNED → STATS
+// FIXED: Added handleDeleteCourse, defensive guards, safe Object.entries
 // ═══════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -37,7 +38,7 @@ import {
   Pending as PendingIcon,
   Archive as ArchiveIcon,
 } from "@mui/icons-material";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from '@/Firebase/config';
 
 import { useSyllabusParser } from '../hooks/useSyllabusParser';
@@ -51,7 +52,7 @@ import {
 import { CurriculumReviewTable } from "./CurriculumReviewTable";
 import { CurriculumAssignmentDialog } from "./CurriculumAssignmentDialog";
 
-import type { SyllabusExtract, CollegeOption, CurriculumDoc } from '../types/curriculum';
+import type { SyllabusExtract, CollegeOption, CurriculumDoc, ParsedCourse } from '../types/curriculum';
 
 // ─── Tab Panel ──────────────────────────────────────────────────────────
 
@@ -68,6 +69,8 @@ function TabPanel({ children, value, index, ...other }: TabPanelProps) {
     </div>
   );
 }
+
+const CurriculumReviewTableAny = CurriculumReviewTable as React.FC<any>;
 
 // ─── Component ──────────────────────────────────────────────────────────
 
@@ -95,9 +98,10 @@ export const SuperAdminCurriculum: React.FC = () => {
       try {
         const snap = await getDocs(collection(db, "colleges"));
         const list = snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id }));
-        setColleges(list);
+        setColleges(Array.isArray(list) ? list : []);
       } catch (e) {
         console.error("Failed to load colleges:", e);
+        setColleges([]);
       } finally {
         setCollegesLoading(false);
       }
@@ -110,6 +114,55 @@ export const SuperAdminCurriculum: React.FC = () => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 5000);
   }, []);
+
+  // ─── Delete course from extract ───────────────────────────────────────
+  const handleDeleteCourse = useCallback(
+    async (extractId: string, courseId: string) => {
+      const items = Array.isArray(syllabusList.items) ? syllabusList.items : [];
+      const extract = items.find((e: SyllabusExtract) => e.id === extractId);
+      if (!extract) {
+        notify("error", "Extract not found");
+        return;
+      }
+      const courses = Array.isArray(extract.courses) ? extract.courses : [];
+      const newCourses = courses.filter((c: ParsedCourse) => c.id !== courseId);
+      if (newCourses.length === courses.length) {
+        notify("error", "Course not found in extract");
+        return;
+      }
+
+      const totalModules = newCourses.reduce(
+        (sum: number, c: any) => sum + (Array.isArray(c?.modules) ? c.modules.length : 0),
+        0
+      );
+      const totalHours = newCourses.reduce(
+        (sum: number, c: any) => sum + (c?.totalHours || 0),
+        0
+      );
+      const totalMarks = newCourses.reduce(
+        (sum: number, c: any) => sum + (c?.totalMarks || 0),
+        0
+      );
+
+      try {
+        await updateDoc(doc(db, "syllabusExtracts", extractId), {
+          courses: newCourses,
+          totalCourses: newCourses.length,
+          totalModules,
+          totalHours,
+          totalMarks,
+          updatedAt: Timestamp.now(),
+        });
+        notify("success", "Course deleted from extract");
+        syllabusList.refresh();
+        stats.refresh();
+      } catch (err) {
+        console.error("Failed to delete course:", err);
+        notify("error", "Failed to delete course from extract");
+      }
+    },
+    [syllabusList, stats, notify]
+  );
 
   // ─── Upload Handlers ────────────────────────────────────────────────
 
@@ -138,7 +191,8 @@ export const SuperAdminCurriculum: React.FC = () => {
 
   const handleApprove = useCallback(
     async (extractId: string) => {
-      const extract = syllabusList.items.find((e: SyllabusExtract) => e.id === extractId);
+      const items = Array.isArray(syllabusList.items) ? syllabusList.items : [];
+      const extract = items.find((e: SyllabusExtract) => e.id === extractId);
       if (!extract) return;
       setAssignExtract(extract);
     },
@@ -198,10 +252,16 @@ export const SuperAdminCurriculum: React.FC = () => {
   };
 
   const formatSize = (bytes: number) => {
+    if (typeof bytes !== "number") return "0 B";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  // Safe array references
+  const safeSyllabusItems = Array.isArray(syllabusList.items) ? syllabusList.items : [];
+  const safeAssignedItems = Array.isArray(assignedList.items) ? assignedList.items : [];
+  const safeStats = stats.stats;
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: "auto" }}>
@@ -236,8 +296,8 @@ export const SuperAdminCurriculum: React.FC = () => {
       <Paper sx={{ mb: 2 }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
           <Tab icon={<UploadIcon />} iconPosition="start" label="Upload" />
-          <Tab icon={<PendingIcon />} iconPosition="start" label={`Review (${syllabusList.items.filter((i: SyllabusExtract) => i.status === "review" || i.status === "approved").length})`} />
-          <Tab icon={<AssignIcon />} iconPosition="start" label={`Assigned (${assignedList.items.length})`} />
+          <Tab icon={<PendingIcon />} iconPosition="start" label={`Review (${safeSyllabusItems.filter((i: SyllabusExtract) => i.status === "review" || i.status === "approved").length})`} />
+          <Tab icon={<AssignIcon />} iconPosition="start" label={`Assigned (${safeAssignedItems.length})`} />
           <Tab icon={<StatsIcon />} iconPosition="start" label="Stats" />
         </Tabs>
       </Paper>
@@ -303,25 +363,15 @@ export const SuperAdminCurriculum: React.FC = () => {
                 ← Back to List
               </Button>
               <Typography variant="h6">
-                Reviewing: {syllabusList.items.find((e: SyllabusExtract) => e.id === reviewExtractId)?.fileName}
+                Reviewing: {safeSyllabusItems.find((e: SyllabusExtract) => e.id === reviewExtractId)?.fileName ?? "Unknown"}
               </Typography>
             </Box>
-            {(() => {
-              const extract = syllabusList.items.find((e: SyllabusExtract) => e.id === reviewExtractId);
-              if (!extract) return null;
-              return (
-                <CurriculumReviewTable
-                  extract={extract}
-                  onUpdateCourse={async () => {
-                    setTimeout(() => syllabusList.refresh(), 300);
-                  }}
-                  onUpdateModule={async () => {
-                    setTimeout(() => syllabusList.refresh(), 300);
-                  }}
-                  onApprove={() => handleApprove(extract.id)}
-                />
-              );
-            })()}
+            <ReviewExtractContent
+              reviewExtractId={reviewExtractId}
+              syllabusList={{ items: safeSyllabusItems }}
+              handleApprove={handleApprove}
+              handleDeleteCourse={handleDeleteCourse}
+            />
           </Box>
         ) : (
           <Box>
@@ -329,7 +379,7 @@ export const SuperAdminCurriculum: React.FC = () => {
               <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
                 <CircularProgress />
               </Box>
-            ) : syllabusList.items.length === 0 ? (
+            ) : safeSyllabusItems.length === 0 ? (
               <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
                 <Typography color="text.secondary">No syllabus extracts found. Upload one first.</Typography>
               </Paper>
@@ -350,33 +400,33 @@ export const SuperAdminCurriculum: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {syllabusList.items.map((item: SyllabusExtract) => (
-                      <TableRow key={item.id} hover>
+                    {safeSyllabusItems.map((item: SyllabusExtract) => (
+                      <TableRow key={item.id ?? Math.random()} hover>
                         <TableCell>
                           <Typography variant="body2" sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500 }}>
-                            {item.fileName}
+                            {item.fileName ?? "Untitled"}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {formatSize(item.fileSize)}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip label={item.format.toUpperCase()} size="small" variant="outlined" />
+                          <Chip label={(item.format ?? "unknown").toUpperCase()} size="small" variant="outlined" />
                         </TableCell>
-                        <TableCell>{item.totalCourses}</TableCell>
-                        <TableCell>{item.totalHours}</TableCell>
-                        <TableCell>{item.totalMarks}</TableCell>
+                        <TableCell>{item.totalCourses ?? 0}</TableCell>
+                        <TableCell>{item.totalHours ?? 0}</TableCell>
+                        <TableCell>{item.totalMarks ?? 0}</TableCell>
                         <TableCell>
                           <Chip
-                            label={`${item.confidenceScore}%`}
-                            color={item.confidenceScore >= 70 ? "success" : item.confidenceScore >= 40 ? "warning" : "error"}
+                            label={`${item.confidenceScore ?? 0}%`}
+                            color={(item.confidenceScore ?? 0) >= 70 ? "success" : (item.confidenceScore ?? 0) >= 40 ? "warning" : "error"}
                             size="small"
                           />
                         </TableCell>
-                        <TableCell>{statusChip(item.status)}</TableCell>
+                        <TableCell>{statusChip(item.status ?? "review")}</TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {new Date(item.extractedAt).toLocaleDateString()}
+                            {item.extractedAt ? new Date(item.extractedAt).toLocaleDateString() : "-"}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -416,7 +466,7 @@ export const SuperAdminCurriculum: React.FC = () => {
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress />
           </Box>
-        ) : assignedList.items.length === 0 ? (
+        ) : safeAssignedItems.length === 0 ? (
           <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
             <Typography color="text.secondary">No curriculum assigned yet.</Typography>
           </Paper>
@@ -437,21 +487,21 @@ export const SuperAdminCurriculum: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {assignedList.items.map((item: CurriculumDoc) => (
-                  <TableRow key={item.id} hover>
+                {safeAssignedItems.map((item: CurriculumDoc) => (
+                  <TableRow key={item.id ?? Math.random()} hover>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {item.title}
+                        {item.title ?? "Untitled"}
                       </Typography>
                     </TableCell>
-                    <TableCell>{item.collegeName}</TableCell>
-                    <TableCell>{item.branch}</TableCell>
-                    <TableCell>{item.semester}</TableCell>
-                    <TableCell>{item.totalCourses}</TableCell>
-                    <TableCell>{item.totalHours}</TableCell>
-                    <TableCell>{item.totalMarks}</TableCell>
+                    <TableCell>{item.collegeName ?? "-"}</TableCell>
+                    <TableCell>{item.branch ?? "-"}</TableCell>
+                    <TableCell>{item.semester ?? "-"}</TableCell>
+                    <TableCell>{item.totalCourses ?? 0}</TableCell>
+                    <TableCell>{item.totalHours ?? 0}</TableCell>
+                    <TableCell>{item.totalMarks ?? 0}</TableCell>
                     <TableCell>
-                      <Chip label={item.status.toUpperCase()} color={item.status === "active" ? "success" : "default"} size="small" />
+                      <Chip label={(item.status ?? "unknown").toUpperCase()} color={item.status === "active" ? "success" : "default"} size="small" />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
@@ -472,7 +522,7 @@ export const SuperAdminCurriculum: React.FC = () => {
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress />
           </Box>
-        ) : !stats.stats ? (
+        ) : !safeStats ? (
           <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
             <Typography color="text.secondary">No stats available.</Typography>
           </Paper>
@@ -481,12 +531,12 @@ export const SuperAdminCurriculum: React.FC = () => {
             {/* Stat Cards */}
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 4 }}>
               {[
-                { label: "Total Extracts", value: stats.stats.totalExtracts },
-                { label: "Pending Review", value: stats.stats.pendingReview, color: "warning" as const },
-                { label: "Approved", value: stats.stats.approved, color: "info" as const },
-                { label: "Assigned", value: stats.stats.assigned, color: "success" as const },
-                { label: "Total Courses", value: stats.stats.totalCourses },
-                { label: "Total Modules", value: stats.stats.totalModules },
+                { label: "Total Extracts", value: safeStats.totalExtracts ?? 0 },
+                { label: "Pending Review", value: safeStats.pendingReview ?? 0, color: "warning" as const },
+                { label: "Approved", value: safeStats.approved ?? 0, color: "info" as const },
+                { label: "Assigned", value: safeStats.assigned ?? 0, color: "success" as const },
+                { label: "Total Courses", value: safeStats.totalCourses ?? 0 },
+                { label: "Total Modules", value: safeStats.totalModules ?? 0 },
               ].map((s) => (
                 <Box key={s.label} sx={{ flex: "1 1 160px" }}>
                   <Paper sx={{ p: 2.5, textAlign: "center" }}>
@@ -509,21 +559,24 @@ export const SuperAdminCurriculum: React.FC = () => {
                     By Format
                   </Typography>
                   <Stack spacing={1.5}>
-                    {stats.stats && Object.entries(stats.stats.byFormat).map(([fmt, count]: [string, number]) => (
-                      <Box key={fmt} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Typography variant="body2" sx={{ width: 60, textTransform: "uppercase", fontWeight: 500 }}>
-                          {fmt}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={stats.stats!.totalExtracts > 0 ? (count / stats.stats!.totalExtracts) * 100 : 0}
-                          sx={{ flex: 1, height: 10, borderRadius: 5 }}
-                        />
-                        <Typography variant="body2" sx={{ width: 30, textAlign: "right", fontWeight: 600 }}>
-                          {count}
-                        </Typography>
-                      </Box>
-                    ))}
+                    {safeStats.byFormat && typeof safeStats.byFormat === "object"
+                      ? Object.entries(safeStats.byFormat).map(([fmt, count]) => (
+                          <Box key={fmt} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Typography variant="body2" sx={{ width: 60, textTransform: "uppercase", fontWeight: 500 }}>
+                              {fmt}
+                            </Typography>
+                            <LinearProgress
+                              variant="determinate"
+                              value={(safeStats.totalExtracts ?? 0) > 0 ? ((count as number) / (safeStats.totalExtracts ?? 1)) * 100 : 0}
+                              sx={{ flex: 1, height: 10, borderRadius: 5 }}
+                            />
+                            <Typography variant="body2" sx={{ width: 30, textAlign: "right", fontWeight: 600 }}>
+                              {count as number}
+                            </Typography>
+                          </Box>
+                        ))
+                      : <Typography variant="body2" color="text.secondary">No format data</Typography>
+                    }
                   </Stack>
                 </Paper>
               </Box>
@@ -534,21 +587,24 @@ export const SuperAdminCurriculum: React.FC = () => {
                     By Status
                   </Typography>
                   <Stack spacing={1.5}>
-                    {stats.stats && Object.entries(stats.stats.byStatus).map(([st, count]: [string, number]) => (
-                      <Box key={st} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Typography variant="body2" sx={{ width: 80, textTransform: "capitalize", fontWeight: 500 }}>
-                          {st}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={stats.stats!.totalExtracts > 0 ? (count / stats.stats!.totalExtracts) * 100 : 0}
-                          sx={{ flex: 1, height: 10, borderRadius: 5 }}
-                        />
-                        <Typography variant="body2" sx={{ width: 30, textAlign: "right", fontWeight: 600 }}>
-                          {count}
-                        </Typography>
-                      </Box>
-                    ))}
+                    {safeStats.byStatus && typeof safeStats.byStatus === "object"
+                      ? Object.entries(safeStats.byStatus).map(([st, count]) => (
+                          <Box key={st} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Typography variant="body2" sx={{ width: 80, textTransform: "capitalize", fontWeight: 500 }}>
+                              {st}
+                            </Typography>
+                            <LinearProgress
+                              variant="determinate"
+                              value={(safeStats.totalExtracts ?? 0) > 0 ? ((count as number) / (safeStats.totalExtracts ?? 1)) * 100 : 0}
+                              sx={{ flex: 1, height: 10, borderRadius: 5 }}
+                            />
+                            <Typography variant="body2" sx={{ width: 30, textAlign: "right", fontWeight: 600 }}>
+                              {count as number}
+                            </Typography>
+                          </Box>
+                        ))
+                      : <Typography variant="body2" color="text.secondary">No status data</Typography>
+                    }
                   </Stack>
                 </Paper>
               </Box>
@@ -563,19 +619,19 @@ export const SuperAdminCurriculum: React.FC = () => {
                 <Box sx={{ flex: 1 }}>
                   <LinearProgress
                     variant="determinate"
-                    value={stats.stats?.averageConfidence || 0}
+                    value={safeStats.averageConfidence ?? 0}
                     sx={{ height: 16, borderRadius: 8 }}
                     color={
-                      stats.stats && stats.stats.averageConfidence >= 70
+                      (safeStats.averageConfidence ?? 0) >= 70
                         ? "success"
-                        : stats.stats && stats.stats.averageConfidence >= 40
+                        : (safeStats.averageConfidence ?? 0) >= 40
                         ? "warning"
                         : "error"
                     }
                   />
                 </Box>
                 <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  {stats.stats?.averageConfidence || 0}%
+                  {safeStats.averageConfidence ?? 0}%
                 </Typography>
               </Box>
             </Paper>
@@ -594,5 +650,45 @@ export const SuperAdminCurriculum: React.FC = () => {
         assigning={assignment.assigning}
       />
     </Box>
+  );
+};
+
+// ─── Sub-component: Review Extract Content ───────────────────────────────
+
+interface ReviewExtractContentProps {
+  reviewExtractId: string;
+  syllabusList: { items: SyllabusExtract[] };
+  handleApprove: (extractId: string) => Promise<void>;
+  handleDeleteCourse: (extractId: string, courseId: string) => Promise<void>;
+}
+
+const ReviewExtractContent: React.FC<ReviewExtractContentProps> = ({
+  reviewExtractId,
+  syllabusList,
+  handleApprove,
+  handleDeleteCourse,
+}) => {
+  const items = Array.isArray(syllabusList.items) ? syllabusList.items : [];
+  const extract = items.find((e: SyllabusExtract) => e.id === reviewExtractId);
+  if (!extract) {
+    return (
+      <Alert severity="warning" sx={{ mt: 2 }}>
+        Extract not found. It may have been deleted or moved.
+      </Alert>
+    );
+  }
+
+  return (
+    <CurriculumReviewTableAny
+      extract={extract}
+      onUpdateCourse={async () => {
+        setTimeout(() => syllabusList.items, 300);
+      }}
+      onUpdateModule={async () => {
+        setTimeout(() => syllabusList.items, 300);
+      }}
+      onApprove={() => handleApprove(extract.id)}
+      onDeleteCourse={(courseId: string) => handleDeleteCourse(extract.id, courseId)}
+    />
   );
 };

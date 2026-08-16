@@ -29,8 +29,8 @@ import {
   downloadTemplate,
   parseCSV,
   type ParseResult,
-} from '../../services/onboardingService';
-import type { UploadTemplate, OnboardingError, TemplateField } from '../../types/system';
+} from '../services/onboardingService';
+import type { UploadTemplate, OnboardingError, TemplateField } from '../types/onboarding';
 
 const TABS = [
   { id: 'students', label: 'Students', icon: Users, template: STUDENT_TEMPLATE },

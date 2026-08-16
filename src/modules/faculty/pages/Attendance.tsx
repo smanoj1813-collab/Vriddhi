@@ -164,7 +164,7 @@ export default function Attendance() {
 
   const { exportAdminAttendance, exporting: exportLoading } = useAttendanceExport();
 
-  const handleExport = (format: 'csv' | 'excel') => {
+  const handleExport = (format: string) => {
     if (dayRecords.length === 0) {
       alert('No attendance records to export for the selected date.');
       return;
@@ -183,7 +183,7 @@ export default function Attendance() {
       markedBy: record.markedBy || 'System',
     }));
 
-    exportAdminAttendance(format, rows, dateStr, branchFilter, batchFilter);
+    exportAdminAttendance(format as 'csv' | 'excel', rows, dateStr, branchFilter, batchFilter);
   };
 
   // ═══════════════════════════════════════════════════════════════

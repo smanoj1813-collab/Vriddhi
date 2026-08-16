@@ -4,25 +4,29 @@ import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: string[];
+  redirectIfAuth?: boolean;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { user } = useAuth();
+export function ProtectedRoute({ children, redirectIfAuth = false }: ProtectedRouteProps) {
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
-  // Removed isLoading — AuthContext doesn't expose it.
-  // If auth is still initializing, user will be null and redirect to login.
-
-  if (!user) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        Loading...
+      </div>
+    );
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role as string)) {
-    return <Navigate to="/unauthorized" replace />;
+  if (redirectIfAuth && user) {
+    const from = (location.state as any)?.from || '/';
+    return <Navigate to={from} replace />;
+  }
+
+  if (!redirectIfAuth && !user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return <>{children}</>;
-};
-
-export default ProtectedRoute;
+}

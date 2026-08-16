@@ -1,5 +1,4 @@
 import './Firebase/config'
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
@@ -22,9 +21,9 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter>                          {/* ← ONLY Router in entire app */}
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+        <AuthProvider>                       {/* ← ONLY AuthProvider in entire app */}
           <AppThemeProvider>
             <NotificationProvider>
               <App />

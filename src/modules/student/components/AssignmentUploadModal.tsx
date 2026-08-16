@@ -1,4 +1,4 @@
-// src/components/student/AssignmentUploadModal.tsx
+// src/modules/student/components/AssignmentUploadModal.tsx
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, File, Image, Loader2, CheckCircle2, AlertTriangle, Eye, FileText } from 'lucide-react';
@@ -10,7 +10,7 @@ import {
   getAllowedFileTypes,
   isImageFile,
   type ParsedImageContent,
-} from '../services/assignmentService';
+} from '../services/studentService';
 
 interface AssignmentUploadModalProps {
   assignment: Assignment;
@@ -187,7 +187,7 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
                   <Upload size={32} className="mx-auto mb-3 text-slate-500" />
                   <p className="text-sm text-slate-300 font-medium">Drop files here or click to browse</p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Supported: {allowedTypes.join(', ')} • Max 50MB per file • Max 10 files
+                    Supported: {allowedTypes.join(', ')} &bull; Max 50MB per file &bull; Max 10 files
                   </p>
                 </div>
 

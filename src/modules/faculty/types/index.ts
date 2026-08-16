@@ -30,3 +30,6 @@ export const STATUS_CONFIG: Record<AttendanceStatus, { bg: string; color: string
   OnDuty: { bg: 'bg-purple-100', color: 'text-purple-700', key: 'O', label: 'On Duty', description: 'On official duty' },
   MedicalLeave: { bg: 'bg-cyan-100', color: 'text-cyan-700', key: 'M', label: 'Medical', description: 'Medical leave' },
 }
+
+// Alias for components that import ClassSession
+export type ClassSession = FacultyClass

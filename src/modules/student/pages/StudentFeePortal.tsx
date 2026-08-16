@@ -1,3 +1,4 @@
+import { useAuth } from '@/hooks/useAuth';
 import React, { useState, useMemo } from 'react'
 import {
   DollarSign, CreditCard, CheckCircle, Clock, AlertTriangle,
@@ -363,7 +364,9 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
 }
 
 // ─── Main Component ──────────────────────────────────────
-export default function StudentFeePortal({ studentId }: { studentId: string }) {
+export default function StudentFeePortal({ studentId: studentIdProp }: { studentId?: string }) {
+  const { user } = useAuth();
+  const studentId = studentIdProp || user?.id || '';
   const {
     loading,
     studentPayments,

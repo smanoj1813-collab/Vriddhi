@@ -1,11 +1,13 @@
 // ═══════════════════════════════════════════════════════════════════════
 // hooks/useSyllabusParser.ts — Syllabus Parser Hook
+// REQUIRES: npm install mammoth
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useState, useCallback } from 'react';
-import { parseSyllabus, detectFormat, validateFile } from '../services/syllabusParser';
+import mammoth from 'mammoth';
+import { parseSyllabusDocument, DEFAULT_CONFIG } from '../services/syllabusParser';
 import { createSyllabusExtract } from '../api/syllabusCurriculumApi';
-import type { SyllabusExtract, SyllabusFormat } from '../types/curriculum';
+import type { SyllabusExtract } from '../types/curriculum';
 
 type ParserPhase = 'idle' | 'uploading' | 'parsing' | 'saving' | 'done' | 'error';
 
@@ -19,28 +21,42 @@ export function useSyllabusParser() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const extractText = useCallback(async (file: File): Promise<string> => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'docx') {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value;
+    }
+    return file.text();
+  }, []);
+
   const parseFile = useCallback(async (file: File) => {
     setPhase('parsing');
     setError(null);
     setErrors([]);
     setWarnings([]);
     try {
-      const format = detectFormat(file.name);
-      const validation = validateFile(file);
-      if (!validation.valid) {
-        throw new Error(validation.error || 'Invalid file');
-      }
-      const result = await parseSyllabus(file, format, 'super-admin', 'Super Admin');
-      if (result.success && result.extract) {
+      const text = await extractText(file);
+
+      const result = parseSyllabusDocument(
+        text,
+        file.name,
+        file.size,
+        'docx',
+        DEFAULT_CONFIG
+      );
+
+      if (result.extract) {
         setExtract(result.extract);
-        setRawText(result.rawText || '');
+        setRawText(text);
         setConfidenceScore(result.confidenceScore);
-        setWarnings(result.warnings);
-        setErrors(result.errors);
+        setWarnings(result.warnings || []);
+        setErrors(result.errors || []);
         setPhase('done');
       } else {
-        setErrors(result.errors);
-        setWarnings(result.warnings);
+        setErrors(result.errors || ['Failed to parse syllabus']);
+        setWarnings(result.warnings || []);
         setConfidenceScore(result.confidenceScore);
         setPhase('error');
       }
@@ -48,7 +64,7 @@ export function useSyllabusParser() {
       setError(err instanceof Error ? err.message : 'Parse failed');
       setPhase('error');
     }
-  }, []);
+  }, [extractText]);
 
   const saveExtract = useCallback(async () => {
     if (!extract) return;
@@ -74,7 +90,7 @@ export function useSyllabusParser() {
     setError(null);
   }, []);
 
-  const uploadAndParse = useCallback(async (file: File, userId: string, userName: string) => {
+  const uploadAndParse = useCallback(async (file: File, _userId: string, _userName: string) => {
     setPhase('uploading');
     setUploadProgress(0);
     setError(null);
@@ -83,23 +99,30 @@ export function useSyllabusParser() {
         setUploadProgress(p => Math.min(p + 10, 90));
       }, 200);
 
-      const format = detectFormat(file.name);
-      const result = await parseSyllabus(file, format, userId, userName);
+      const text = await extractText(file);
+
+      const result = parseSyllabusDocument(
+        text,
+        file.name,
+        file.size,
+        'docx',
+        DEFAULT_CONFIG
+      );
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (result.success && result.extract) {
+      if (result.extract) {
         setExtract(result.extract);
-        setRawText(result.rawText || '');
+        setRawText(text);
         setConfidenceScore(result.confidenceScore);
-        setWarnings(result.warnings);
-        setErrors(result.errors);
+        setWarnings(result.warnings || []);
+        setErrors(result.errors || []);
         setPhase('done');
         return result.extract;
       } else {
-        setErrors(result.errors);
-        setWarnings(result.warnings);
+        setErrors(result.errors || ['Failed to parse syllabus']);
+        setWarnings(result.warnings || []);
         setConfidenceScore(result.confidenceScore);
         setPhase('error');
         return null;
@@ -109,7 +132,7 @@ export function useSyllabusParser() {
       setPhase('error');
       return null;
     }
-  }, []);
+  }, [extractText]);
 
   return {
     phase,

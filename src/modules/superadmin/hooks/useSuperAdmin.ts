@@ -8,6 +8,7 @@ import {
   deleteCollege,
   resetCollegeData,
   createAdmin,
+  promoteToAdmin,
   listAdmins,
   updateAdminStatus,
   importUsers,
@@ -52,6 +53,7 @@ import {
   type UpdateStudentInput,
   type College,
   type Admin,
+  type AdminRole,
   type Student,
   type Faculty,
   type ListFacultyOptions,
@@ -221,6 +223,30 @@ export const useUpdateAdminStatus = () => {
   });
 };
 
+export const usePromoteToAdmin = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    Admin,
+    SuperAdminApiError,
+    {
+      uid: string;
+      name: string;
+      email: string;
+      role: AdminRole;
+      collegeId: string;
+      phone?: string;
+      department?: string;
+    }
+  >({
+    mutationFn: promoteToAdmin,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.admins() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.dashboard() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.faculty() });
+    },
+  });
+};
+
 // ═══════════════════════════════════════════════════════════════════════
 // STUDENT HOOKS
 // ═══════════════════════════════════════════════════════════════════════
@@ -298,7 +324,6 @@ export const useDashboardStats = (queryOptions?: Omit<UseQueryOptions<{ stats: D
 // COMPARISON HOOKS
 // ═══════════════════════════════════════════════════════════════════════
 export const useCollegeComparison = (filters: ComparisonFilter) => {
-  // FIX: Bug #3 — Dynamically fetch college IDs instead of hardcoding
   const { data: collegesData } = useColleges({ status: "active" });
   const allCollegeIds = collegesData?.items.map(c => c.id) || [];
 

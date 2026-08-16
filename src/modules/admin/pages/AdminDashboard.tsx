@@ -1,19 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
 import { db } from '@/Firebase/config'
 import {
-  collection, query, where, getDocs, orderBy, limit, Timestamp
+  collection, query, where, getDocs
 } from 'firebase/firestore'
 import {
-  Shield, Users, Building2, Settings, FileText, Activity, CheckCircle, XCircle,
-  Clock, Search, Filter, Plus, ChevronDown, ChevronRight, BarChart3, Bell,
+  Shield, Users, Building2, Settings, Activity, CheckCircle,
+  Clock, Search, Filter, Plus, BarChart3, Bell,
   Lock, Eye, Trash2, Edit3, Download, Upload, RefreshCw, AlertTriangle,
   UserCheck, GraduationCap, BookOpen, Calendar, TrendingUp, MoreHorizontal,
-  DollarSign, School
+  DollarSign, School, LogOut, User as UserIcon
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+  PieChart, Pie, Cell
 } from 'recharts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -59,32 +60,6 @@ interface ApprovalItem {
   requestedAt: string
   status: 'pending' | 'approved' | 'rejected'
   amount?: number
-}
-
-interface BudgetDataItem {
-  department: string
-  allocated: number
-  spent: number
-  remaining: number
-}
-
-interface RoleDistributionItem {
-  name: string
-  value: number
-}
-
-interface ScoreTrendItem {
-  month: string
-  BA: number
-  BCom: number
-  BSc: number
-  BBA: number
-}
-
-interface AttendanceDataItem {
-  name: string
-  attendance: number
-  target: number
 }
 
 interface DashboardData {
@@ -176,6 +151,15 @@ function Badge({ children, variant = 'default' }: { children: React.ReactNode; v
   )
 }
 
+// ─── Safe Helpers ─────────────────────────────────────────────────────────────
+
+function getInitials(name: string | null | undefined): string {
+  if (!name || typeof name !== 'string') return '?'
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  return parts.map(n => n[0]).join('').toUpperCase().slice(0, 2)
+}
+
 // ─── Firestore Data Hook ──────────────────────────────────────────────────────
 
 function useCollegeDashboardData(collegeId: string | undefined) {
@@ -190,45 +174,35 @@ function useCollegeDashboardData(collegeId: string | undefined) {
       return
     }
 
+    let cancelled = false
+
     async function fetchData() {
       try {
-        // Fetch students for this college
-        const studentsQuery = query(
-          collection(db, 'students'),
-          where('collegeId', '==', collegeId)
-        )
-        const studentsSnap = await getDocs(studentsQuery)
+        const [studentsSnap, facultySnap, adminsSnap] = await Promise.all([
+          getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId))),
+          getDocs(query(collection(db, 'faculty'), where('collegeId', '==', collegeId))),
+          getDocs(query(collection(db, 'admins'), where('collegeId', '==', collegeId))),
+        ])
+
+        if (cancelled) return
+
         const students = studentsSnap.docs.map(d => d.data())
-        const totalStudents = students.length
-
-        // Fetch faculty for this college
-        const facultyQuery = query(
-          collection(db, 'faculty'),
-          where('collegeId', '==', collegeId)
-        )
-        const facultySnap = await getDocs(facultyQuery)
         const faculty = facultySnap.docs.map(d => d.data())
-        const totalFaculty = faculty.length
-
-        // Fetch admins for this college
-        const adminsQuery = query(
-          collection(db, 'admins'),
-          where('collegeId', '==', collegeId)
-        )
-        const adminsSnap = await getDocs(adminsQuery)
         const admins = adminsSnap.docs.map(d => d.data())
-        const totalAdmins = admins.length
-        const totalHODs = admins.filter(a => a.role === 'hod').length
-        const totalMentors = admins.filter(a => a.role === 'mentor').length
 
-        // Build department data from faculty departments
+        const totalStudents = students.length
+        const totalFaculty = faculty.length
+        const totalAdmins = admins.length
+        const totalHODs = admins.filter((a: any) => a.role === 'hod').length
+        const totalMentors = admins.filter((a: any) => a.role === 'mentor').length
+
         const deptMap: Record<string, { name: string; code: string; faculty: number; students: number }> = {}
-        faculty.forEach(f => {
+        faculty.forEach((f: any) => {
           const dept = f.department || 'General'
           if (!deptMap[dept]) deptMap[dept] = { name: dept, code: dept, faculty: 0, students: 0 }
           deptMap[dept].faculty++
         })
-        students.forEach(s => {
+        students.forEach((s: any) => {
           const dept = s.department || 'General'
           if (!deptMap[dept]) deptMap[dept] = { name: dept, code: dept, faculty: 0, students: 0 }
           deptMap[dept].students++
@@ -238,57 +212,73 @@ function useCollegeDashboardData(collegeId: string | undefined) {
           id: String(idx + 1),
           name: info.name,
           code,
-          hod: faculty.find(f => f.department === code && f.isHOD)?.firstName || 'TBD',
+          hod: (faculty.find((f: any) => f.department === code && f.isHOD)?.firstName as string) || 'TBD',
           facultyCount: info.faculty,
           studentCount: info.students,
-          avgAttendance: 0, // TODO: Calculate from attendance collection
-          avgScore: 0, // TODO: Calculate from assessments
+          avgAttendance: 0,
+          avgScore: 0,
           budget: 0,
           courses: 0,
         }))
 
-        // Build users list
+        const safeRole = (r: any): User['role'] => {
+          const valid: User['role'][] = ['admin', 'hod', 'faculty', 'mentor', 'student']
+          return valid.includes(r) ? r : 'admin'
+        }
+
         const users: User[] = [
-          ...admins.map((a, i) => ({
-            id: `admin-${i}`,
-            name: a.name || `${a.firstName || ''} ${a.lastName || ''}`.trim(),
-            email: a.email,
-            role: a.role as User['role'],
+          ...admins.map((a: any, i: number) => ({
+            id: a.uid || `admin-${i}`,
+            name: a.name || `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Unknown',
+            email: a.email || '',
+            role: safeRole(a.role),
             department: a.department || 'All',
             status: (a.status || 'active') as User['status'],
             lastActive: 'Recently',
           })),
-          ...faculty.map((f, i) => ({
-            id: `faculty-${i}`,
-            name: `${f.firstName || ''} ${f.lastName || ''}`.trim(),
-            email: f.email,
+          ...faculty.map((f: any, i: number) => ({
+            id: f.uid || `faculty-${i}`,
+            name: `${f.firstName || ''} ${f.lastName || ''}`.trim() || 'Unknown',
+            email: f.email || '',
             role: 'faculty' as User['role'],
             department: f.department || 'General',
             status: (f.status || 'active') as User['status'],
             lastActive: 'Recently',
           })),
+          ...students.map((s: any, i: number) => ({
+            id: s.uid || s.id || `student-${i}`,
+            name: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim() || 'Unknown',
+            email: s.email || '',
+            role: 'student' as User['role'],
+            department: s.department || s.division || 'General',
+            status: (s.status || 'active') as User['status'],
+            lastActive: 'Recently',
+          })),
         ]
 
-        setData({
-          totalUsers: totalStudents + totalFaculty + totalAdmins,
-          totalStudents,
-          totalFaculty,
-          totalMentors,
-          totalHODs,
-          avgAttendance: 0, // TODO
-          departments,
-          users,
-          auditLogs: [], // TODO: Add auditLogs collection
-          approvals: [], // TODO: Add approvals collection
-          loading: false,
-        })
+        if (!cancelled) {
+          setData({
+            totalUsers: totalStudents + totalFaculty + totalAdmins,
+            totalStudents,
+            totalFaculty,
+            totalMentors,
+            totalHODs,
+            avgAttendance: 0,
+            departments,
+            users,
+            auditLogs: [],
+            approvals: [],
+            loading: false,
+          })
+        }
       } catch (err) {
         console.error('Dashboard data fetch error:', err)
-        setData(prev => ({ ...prev, loading: false }))
+        if (!cancelled) setData(prev => ({ ...prev, loading: false }))
       }
     }
 
     fetchData()
+    return () => { cancelled = true }
   }, [collegeId])
 
   return data
@@ -302,16 +292,20 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
   const [statusFilter, setStatusFilter] = useState('all')
   const [deptFilter, setDeptFilter] = useState('all')
 
-  const filtered = users.filter(u => {
+  const filtered = useMemo(() => users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
     const matchRole = roleFilter === 'all' || u.role === roleFilter
     const matchStatus = statusFilter === 'all' || u.status === statusFilter
     const matchDept = deptFilter === 'all' || u.department === deptFilter
     return matchSearch && matchRole && matchStatus && matchDept
-  })
+  }), [users, search, roleFilter, statusFilter, deptFilter])
 
-  const roleIcons = {
-    admin: Shield, hod: Building2, faculty: GraduationCap, mentor: UserCheck, student: BookOpen
+  const roleIcons: Record<string, React.ElementType> = {
+    admin: Shield,
+    hod: Building2,
+    faculty: GraduationCap,
+    mentor: UserCheck,
+    student: BookOpen,
   }
 
   return (
@@ -363,13 +357,13 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
           </thead>
           <tbody>
             {filtered.map(user => {
-              const RoleIcon = roleIcons[user.role]
+              const RoleIcon = roleIcons[user.role] || UserIcon
               return (
                 <tr key={user.id} className="hover:bg-slate-200/30 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold text-sm">
-                        {user.name.split(' ').map(n => n[0]).join('')}
+                        {getInitials(user.name)}
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 dark:text-white">{user.name}</p>
@@ -411,20 +405,6 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
 }
 
 function DepartmentOverview({ departments }: { departments: Department[] }) {
-  // Mock budget/attendance data for charts (can be replaced later)
-  const budgetData = departments.map(d => ({
-    department: d.code,
-    allocated: 2500000,
-    spent: Math.round(2500000 * 0.7),
-    remaining: Math.round(2500000 * 0.3),
-  }))
-
-  const attendanceData = departments.map(d => ({
-    name: d.code,
-    attendance: d.avgAttendance || 85,
-    target: 90,
-  }))
-
   return (
     <div className="animate-fade-in">
       <SectionHeader title="Department Overview" icon={Building2} action={<button className="btn-secondary"><Download size={16} />Export Report</button>} />
@@ -489,7 +469,7 @@ function ApprovalWorkflows() {
 }
 
 function ReportsAnalytics({ totalStudents, totalFaculty }: { totalStudents: number; totalFaculty: number }) {
-  const roleDistribution: RoleDistributionItem[] = [
+  const roleDistribution = [
     { name: 'Students', value: totalStudents || 1 },
     { name: 'Faculty', value: totalFaculty || 1 },
     { name: 'Admin', value: 1 },
@@ -568,10 +548,42 @@ function SystemSettings() {
 // ─── Main Principal Dashboard ─────────────────────────────────────────────────
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('overview')
+  const { user, logout } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
 
-  // FIX: Use collegeId from auth user to fetch real data
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FIX: Sync active tab with URL so sidebar links & browser back/forward work
+  // ═══════════════════════════════════════════════════════════════════════════
+  const pathToTab: Record<string, string> = {
+    '/': 'overview',
+    '/dashboard': 'overview',
+    '/admin/dashboard': 'overview',
+    '/admin': 'overview',
+    '/students': 'users',
+    '/admin/students': 'users',
+    '/departments': 'departments',
+    '/admin/departments': 'departments',
+    '/approvals': 'approvals',
+    '/admin/approvals': 'approvals',
+    '/reports': 'reports',
+    '/admin/reports': 'reports',
+    '/audit': 'audit',
+    '/admin/audit': 'audit',
+    '/settings': 'settings',
+    '/admin/settings': 'settings',
+  }
+
+  const activeTab = searchParams.get('tab') || pathToTab[location.pathname] || 'overview'
+
+  useEffect(() => {
+    const tabFromPath = pathToTab[location.pathname]
+    const tabFromQuery = searchParams.get('tab')
+    if (tabFromPath && tabFromPath !== tabFromQuery) {
+      setSearchParams({ tab: tabFromPath }, { replace: true })
+    }
+  }, [location.pathname])
+
   const collegeId = user?.collegeId
   const dashboardData = useCollegeDashboardData(collegeId)
 
@@ -585,12 +597,12 @@ export default function AdminDashboard() {
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
-  if (dashboardData.loading) {
-    return (
-      <div className="min-h-full p-6 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
-      </div>
-    )
+  const handleLogout = useCallback(async () => {
+    await logout()
+  }, [logout])
+
+  const handleTabChange = (tabId: string) => {
+    setSearchParams({ tab: tabId }, { replace: false })
   }
 
   const renderContent = () => {
@@ -598,7 +610,6 @@ export default function AdminDashboard() {
       case 'overview':
         return (
           <div className="animate-fade-in space-y-6">
-            {/* Welcome Banner */}
             <div className="glass-card p-6 bg-teal-500/5 border border-teal-500/20">
               <div className="flex items-center justify-between">
                 <div>
@@ -613,7 +624,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Stats Row — REAL DATA FROM FIRESTORE */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Users} label="Total Users" value={dashboardData.totalUsers.toLocaleString()} color="teal" />
               <StatCard icon={GraduationCap} label="Faculty" value={dashboardData.totalFaculty.toLocaleString()} color="sky" />
@@ -621,7 +631,6 @@ export default function AdminDashboard() {
               <StatCard icon={Activity} label="Departments" value={dashboardData.departments.length.toString()} color="rose" />
             </div>
 
-            {/* Quick Sections */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -652,7 +661,7 @@ export default function AdminDashboard() {
                   {dashboardData.users.slice(0, 4).map(u => (
                     <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
                       <div className="h-8 w-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold text-xs">
-                        {u.name.split(' ').map(n => n[0]).join('')}
+                        {getInitials(u.name)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-900 dark:text-white truncate">{u.name}</p>
@@ -667,7 +676,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Department Performance Chart */}
             {dashboardData.departments.length > 0 && (
               <div className="glass-card p-6">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Department Overview</h3>
@@ -695,25 +703,43 @@ export default function AdminDashboard() {
     }
   }
 
+  if (dashboardData.loading) {
+    return (
+      <div className="min-h-full p-6 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-full p-6">
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-teal-500/10 text-teal-400">
-            <Shield size={22} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-teal-500/10 text-teal-400">
+              <Shield size={22} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Principal Dashboard</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {activeTab === 'overview' && 'College-wide overview and key metrics'}
+                {activeTab === 'users' && 'Manage all users, roles and permissions'}
+                {activeTab === 'departments' && 'Department performance and analytics'}
+                {activeTab === 'approvals' && 'Review and approve pending requests'}
+                {activeTab === 'reports' && 'Generate and download reports'}
+                {activeTab === 'audit' && 'System activity and security logs'}
+                {activeTab === 'settings' && 'Configure system preferences'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Principal Dashboard</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {activeTab === 'overview' && 'College-wide overview and key metrics'}
-              {activeTab === 'users' && 'Manage all users, roles and permissions'}
-              {activeTab === 'departments' && 'Department performance and analytics'}
-              {activeTab === 'approvals' && 'Review and approve pending requests'}
-              {activeTab === 'reports' && 'Generate and download reports'}
-              {activeTab === 'audit' && 'System activity and security logs'}
-              {activeTab === 'settings' && 'Configure system preferences'}
-            </p>
-          </div>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-colors"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
         </div>
       </div>
 
@@ -724,7 +750,7 @@ export default function AdminDashboard() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200
                 ${active ? 'bg-teal-500/10 text-teal-400 border border-teal-500/30' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 border border-transparent'}`}
             >
@@ -739,3 +765,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+

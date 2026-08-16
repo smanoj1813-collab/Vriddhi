@@ -28,7 +28,6 @@ import {
   Divider,
   Tooltip,
   Badge,
-  Grid,
 } from '@mui/material';
 import {
   Flag as FlagIcon,
@@ -42,7 +41,7 @@ import {
 } from '@mui/icons-material';
 import { useActiveTest } from '../../../hooks/useAssessment';
 import { useAuth } from '../../auth/hooks/useAuth';
-import {
+import type {
   PaperQuestion,
   StudentAnswer,
   QuestionType,
@@ -119,8 +118,8 @@ const TestTaking: React.FC<TestTakingProps> = ({
 
   const handleSubmit = async () => {
     setShowSubmitConfirm(false);
-    const result = await submit();
-    if (result && onComplete) {
+    const success = await submit();
+    if (success && onComplete) {
       onComplete();
     }
   };
@@ -133,7 +132,7 @@ const TestTaking: React.FC<TestTakingProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getQuestionStatus = (questionId: string, index: number) => {
+  const getQuestionStatus = (questionId: string, _index: number) => {
     const isAnswered = !!answers[questionId];
     const isFlagged = activeTest?.flaggedQuestions?.includes(questionId);
     const isCurrent = currentQuestion?.questionId === questionId;
@@ -180,8 +179,8 @@ const TestTaking: React.FC<TestTakingProps> = ({
     );
   }
 
-  const isLastQuestion = questions.findIndex((q: PaperQuestion) => q.questionId === currentQuestion.questionId) === questions.length - 1;
-  const currentIndex = questions.findIndex((q: PaperQuestion) => q.questionId === currentQuestion.questionId);
+  const currentIndex = questions.findIndex((q) => q.questionId === currentQuestion.questionId);
+  const isLastQuestion = currentIndex === questions.length - 1;
   const progress = ((currentIndex + 1) / questions.length) * 100;
   const answeredCount = Object.keys(answers).length;
   const flaggedCount = activeTest.flaggedQuestions?.length || 0;
@@ -241,7 +240,7 @@ const TestTaking: React.FC<TestTakingProps> = ({
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                 <Chip
-                  label={currentQuestion.questionType?.replace(/_/g, ' ').toUpperCase()}
+                  label={(currentQuestion.questionType || currentQuestion.type || 'mcq_single').replace(/_/g, ' ').toUpperCase()}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -250,14 +249,14 @@ const TestTaking: React.FC<TestTakingProps> = ({
               </Box>
 
               <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.6, mb: 3 }}>
-                <strong>Q{currentIndex + 1}.</strong> {currentQuestion.questionText}
+                <strong>Q{currentIndex + 1}.</strong> {currentQuestion.questionText || currentQuestion.content || 'Question text unavailable'}
               </Typography>
 
               <Divider sx={{ mb: 3 }} />
 
               {/* Answer Input */}
               <AnswerInput
-                questionType={currentQuestion.questionType || 'mcq_single'}
+                questionType={(currentQuestion.questionType || currentQuestion.type || 'mcq_single') as QuestionType}
                 options={currentQuestion.options || []}
                 value={answers[currentQuestion.questionId] || {}}
                 onChange={handleAnswer}
@@ -326,7 +325,7 @@ const TestTaking: React.FC<TestTakingProps> = ({
           </Box>
           <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {questions.map((q: PaperQuestion, idx: number) => {
+              {questions.map((q, idx) => {
                 const status = getQuestionStatus(q.questionId, idx);
                 return (
                   <Button

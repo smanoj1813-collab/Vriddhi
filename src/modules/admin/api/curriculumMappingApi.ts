@@ -15,7 +15,7 @@ import type {
   UpdateMappingInput,
   MappingFilterOptions,
   FacultyCurriculumView,
-} from '@/modules/superadmin/types/curriculum';
+} from '@/shared/types/curriculum';
 
 const MAPPINGS_COLLECTION = "curriculumFacultyMappings";
 

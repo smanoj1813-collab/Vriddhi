@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ChevronLeft, Upload, FileText, Video, Link2, X, Check,
@@ -8,28 +8,40 @@ import {
 import { useMaterials } from '../../../hooks/useMaterials'
 import type { MaterialType } from '../../../api/materialApi'
 
+const TYPE_LABELS: Record<MaterialType, string> = {
+  pdf: 'PDF',
+  video: 'VIDEO',
+  link: 'LINK',
+  image: 'IMAGE',
+  document: 'DOC',
+  presentation: 'PPT',
+}
+
 const typeIcons: Record<MaterialType, React.ReactNode> = {
   pdf: <FileText className="w-5 h-5 text-rose-400" />,
   video: <Video className="w-5 h-5 text-purple-400" />,
   link: <Link2 className="w-5 h-5 text-blue-400" />,
-  doc: <File className="w-5 h-5 text-blue-400" />,
-  ppt: <File className="w-5 h-5 text-orange-400" />,
+  image: <File className="w-5 h-5 text-green-400" />,
+  document: <File className="w-5 h-5 text-blue-400" />,
+  presentation: <File className="w-5 h-5 text-orange-400" />,
 }
 
 const typeColors: Record<MaterialType, string> = {
   pdf: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
   video: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   link: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  doc: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  ppt: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  image: 'bg-green-500/10 text-green-400 border-green-500/20',
+  document: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  presentation: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
 }
 
 const typeLabelColors: Record<MaterialType, string> = {
   pdf: 'text-rose-400',
   video: 'text-purple-400',
   link: 'text-blue-400',
-  doc: 'text-blue-400',
-  ppt: 'text-orange-400',
+  image: 'text-green-400',
+  document: 'text-blue-400',
+  presentation: 'text-orange-400',
 }
 
 const BATCH_OPTIONS = ['All Batches', 'CTD 1', 'CTD 2', 'CTD 3', '2023-2024', '2024-2025', '2025-2026']
@@ -39,6 +51,38 @@ const TOPIC_OPTIONS = [
   'Hash Tables', 'AVL Trees', 'Greedy Algorithms', 'Backtracking'
 ]
 
+type FilterType = MaterialType | 'all'
+
+interface MaterialItem {
+  id: string
+  title: string
+  type: MaterialType
+  topic: string
+  batch: string
+  uploadDate: string
+  size?: string
+  views: number
+  downloads: number
+  url?: string
+}
+
+interface MaterialsHookReturn {
+  materials: MaterialItem[]
+  stats: Record<string, number>
+  loading: boolean
+  error: string | null
+  readStats: { used: number; remaining: number }
+  search: string
+  setSearch: (s: string) => void
+  filterType: FilterType
+  setFilterType: (f: FilterType) => void
+  refresh: () => void
+  addMaterial: (data: any) => Promise<void>
+  removeMaterial: (id: string) => Promise<void>
+  trackView: (id: string) => Promise<void>
+  trackDownload: (id: string) => Promise<void>
+}
+
 export default function FacultyUploadMaterial() {
   const {
     materials, stats, loading, error, readStats,
@@ -46,7 +90,7 @@ export default function FacultyUploadMaterial() {
     filterType, setFilterType,
     refresh,
     addMaterial, removeMaterial, trackView, trackDownload,
-  } = useMaterials()
+  } = useMaterials() as unknown as MaterialsHookReturn
 
   const [showModal, setShowModal] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -71,9 +115,10 @@ export default function FacultyUploadMaterial() {
       setUploadTitle(files[0].name.replace(/\.[^/.]+$/, ''))
       const ext = files[0].name.split('.').pop()?.toLowerCase()
       if (ext === 'pdf') setUploadType('pdf')
-      else if (['doc', 'docx'].includes(ext || '')) setUploadType('doc')
-      else if (['ppt', 'pptx'].includes(ext || '')) setUploadType('ppt')
+      else if (['doc', 'docx'].includes(ext || '')) setUploadType('document')
+      else if (['ppt', 'pptx'].includes(ext || '')) setUploadType('presentation')
       else if (['mp4', 'mov', 'avi', 'mkv'].includes(ext || '')) setUploadType('video')
+      else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) setUploadType('image')
     }
   }
 
@@ -150,11 +195,13 @@ export default function FacultyUploadMaterial() {
   }
 
   const statCards = [
-    { label: 'Total', value: stats.total, icon: <FolderOpen className="w-5 h-5 text-teal-400" /> },
-    { label: 'PDFs', value: stats.pdf, icon: <FileText className="w-5 h-5 text-rose-400" /> },
-    { label: 'Videos', value: stats.video, icon: <Video className="w-5 h-5 text-purple-400" /> },
-    { label: 'Links', value: stats.link, icon: <Link2 className="w-5 h-5 text-blue-400" /> },
+    { label: 'Total', value: stats?.total ?? 0, icon: <FolderOpen className="w-5 h-5 text-teal-400" /> },
+    { label: 'PDFs', value: stats?.pdf ?? 0, icon: <FileText className="w-5 h-5 text-rose-400" /> },
+    { label: 'Videos', value: stats?.video ?? 0, icon: <Video className="w-5 h-5 text-purple-400" /> },
+    { label: 'Links', value: stats?.link ?? 0, icon: <Link2 className="w-5 h-5 text-blue-400" /> },
   ]
+
+  const safeReadStats = readStats || { used: 0, remaining: 999 }
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
@@ -172,11 +219,11 @@ export default function FacultyUploadMaterial() {
         <div className="flex items-center gap-2">
           {/* Read Budget */}
           <div className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
-            readStats.remaining < 50 ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-            readStats.remaining < 200 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+            safeReadStats.remaining < 50 ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+            safeReadStats.remaining < 200 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
             'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
           }`}>
-            Reads: {readStats.used}/{readStats.used + readStats.remaining}
+            Reads: {safeReadStats.used}/{safeReadStats.used + safeReadStats.remaining}
           </div>
           <button
             onClick={refresh}
@@ -228,7 +275,7 @@ export default function FacultyUploadMaterial() {
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {(['all', 'pdf', 'video', 'link', 'doc', 'ppt'] as const).map(type => (
+          {(['all', 'pdf', 'video', 'link', 'image', 'document', 'presentation'] as FilterType[]).map(type => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
@@ -238,7 +285,7 @@ export default function FacultyUploadMaterial() {
                   : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:bg-slate-700/50'
               }`}
             >
-              {type === 'all' ? 'All' : type.toUpperCase()}
+              {type === 'all' ? 'All' : TYPE_LABELS[type]}
             </button>
           ))}
         </div>
@@ -277,16 +324,16 @@ export default function FacultyUploadMaterial() {
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold text-white truncate">{material.title}</h3>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${typeColors[material.type]}`}>
-                      {material.type.toUpperCase()}
+                      {TYPE_LABELS[material.type]}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
                     <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {material.topic}</span>
-                    <span>•</span>
+                    <span>&bull;</span>
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {material.batch}</span>
-                    <span>•</span>
+                    <span>&bull;</span>
                     <span>{material.uploadDate}</span>
-                    {material.size && <><span>•</span><span>{material.size}</span></>}
+                    {material.size && <><span>&bull;</span><span>{material.size}</span></>}
                   </div>
                 </div>
 
@@ -355,7 +402,7 @@ export default function FacultyUploadMaterial() {
 
             {/* Type Selector */}
             <div className="flex gap-2 mb-5 flex-wrap">
-              {(['pdf', 'video', 'link', 'doc', 'ppt'] as MaterialType[]).map(type => (
+              {(['pdf', 'video', 'link', 'image', 'document', 'presentation'] as MaterialType[]).map(type => (
                 <button
                   key={type}
                   onClick={() => setUploadType(type)}
@@ -366,7 +413,7 @@ export default function FacultyUploadMaterial() {
                   }`}
                 >
                   {typeIcons[type]}
-                  {type.toUpperCase()}
+                  {TYPE_LABELS[type]}
                 </button>
               ))}
             </div>
@@ -393,7 +440,8 @@ export default function FacultyUploadMaterial() {
                     accept={
                       uploadType === 'pdf' ? '.pdf' :
                       uploadType === 'video' ? 'video/*' :
-                      uploadType === 'doc' ? '.doc,.docx' :
+                      uploadType === 'image' ? 'image/*' :
+                      uploadType === 'document' ? '.doc,.docx' :
                       '.ppt,.pptx'
                     }
                   />
@@ -404,8 +452,9 @@ export default function FacultyUploadMaterial() {
                   <p className="text-xs text-slate-500 mt-1">
                     {uploadType === 'pdf' && 'PDF files up to 10MB'}
                     {uploadType === 'video' && 'Video files up to 100MB'}
-                    {uploadType === 'doc' && 'Word documents up to 10MB'}
-                    {uploadType === 'ppt' && 'PowerPoint files up to 10MB'}
+                    {uploadType === 'image' && 'Image files up to 10MB'}
+                    {uploadType === 'document' && 'Word documents up to 10MB'}
+                    {uploadType === 'presentation' && 'PowerPoint files up to 10MB'}
                   </p>
                 </div>
               )}

@@ -1,4 +1,6 @@
 // src/modules/components/question-bank/FacultyQuestionForm.tsx
+// FIXED: subjects prop accepts string[] (not readonly), all type casts safe
+
 import React, { useState } from 'react';
 import {
   Box, TextField, Select, MenuItem, FormControl, InputLabel,
@@ -16,9 +18,9 @@ interface FacultyQuestionFormProps {
   onCancel: () => void;
 }
 
-const DIFFICULTIES = ['easy', 'medium', 'hard'];
-const TYPES = ['mcq', 'short', 'long', 'numerical'];
-const UNITS = ['1', '2', '3', '4', '5'];
+const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+const TYPES = ['mcq', 'short', 'long', 'numerical'] as const;
+const UNITS = ['1', '2', '3', '4', '5'] as const;
 
 const FacultyQuestionForm: React.FC<FacultyQuestionFormProps> = ({
   initialData,

@@ -1,4 +1,4 @@
-// src/components/student/NotificationsPanel.tsx
+// src/modules/student/components/NotificationsPanel.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, Check, AlertCircle, BookOpen, DollarSign, Info, CheckCheck } from 'lucide-react';
 import type { Notification } from '../types/student';
@@ -11,19 +11,30 @@ interface NotificationsPanelProps {
   onClose: () => void;
 }
 
-const typeConfig = {
+const typeConfig: Record<string, { icon: typeof Info; color: string; bg: string }> = {
   academic: { icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10' },
   fee: { icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10' },
   general: { icon: Info, color: 'text-slate-400', bg: 'bg-slate-500/10' },
   alert: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10' },
   success: { icon: Check, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  error: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10' },
+  info: { icon: Info, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  warning: { icon: AlertCircle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
 };
 
-const priorityConfig = {
+const priorityConfig: Record<string, string> = {
   low: 'border-l-slate-500',
   medium: 'border-l-amber-500',
   high: 'border-l-red-500',
 };
+
+function getPriorityClass(priority: string | undefined): string {
+  return priorityConfig[priority ?? 'medium'] ?? priorityConfig.medium;
+}
+
+function getTypeConfig(type: string) {
+  return typeConfig[type] ?? typeConfig.general;
+}
 
 export default function NotificationsPanel({ notifications, onMarkRead, onMarkAllRead, isOpen, onClose }: NotificationsPanelProps) {
   const unread = notifications.filter(n => !n.read);
@@ -75,14 +86,15 @@ export default function NotificationsPanel({ notifications, onMarkRead, onMarkAl
                 <div className="p-3">
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">New</p>
                   {unread.map((notification) => {
-                    const config = typeConfig[notification.type];
+                    const config = getTypeConfig(notification.type);
                     const Icon = config.icon;
+                    const priorityClass = getPriorityClass(notification.priority);
                     return (
                       <motion.div
                         key={notification.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`p-3 mb-2 rounded-lg bg-slate-800/50 border-l-2 ${priorityConfig[notification.priority]} hover:bg-slate-800 transition-colors cursor-pointer group`}
+                        className={`p-3 mb-2 rounded-lg bg-slate-800/50 border-l-2 ${priorityClass} hover:bg-slate-800 transition-colors cursor-pointer group`}
                         onClick={() => onMarkRead(notification.id)}
                       >
                         <div className="flex items-start gap-3">
@@ -93,7 +105,9 @@ export default function NotificationsPanel({ notifications, onMarkRead, onMarkAl
                             <div className="flex items-start justify-between gap-2">
                               <h4 className="text-sm font-medium text-white">{notification.title}</h4>
                               <span className="text-xs text-slate-500 shrink-0">
-                                {new Date(notification.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                {notification.timestamp
+                                  ? new Date(notification.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                                  : ''}
                               </span>
                             </div>
                             <p className="text-xs text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
@@ -109,7 +123,7 @@ export default function NotificationsPanel({ notifications, onMarkRead, onMarkAl
                 <div className="p-3 pt-0">
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Earlier</p>
                   {read.slice(0, 10).map((notification) => {
-                    const config = typeConfig[notification.type];
+                    const config = getTypeConfig(notification.type);
                     const Icon = config.icon;
                     return (
                       <div
@@ -124,7 +138,9 @@ export default function NotificationsPanel({ notifications, onMarkRead, onMarkAl
                             <div className="flex items-start justify-between gap-2">
                               <h4 className="text-sm font-medium text-slate-300">{notification.title}</h4>
                               <span className="text-xs text-slate-600 shrink-0">
-                                {new Date(notification.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                {notification.createdAt
+                                  ? new Date(notification.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                                  : ''}
                               </span>
                             </div>
                             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{notification.message}</p>

@@ -32,7 +32,6 @@ import {
   Print as PrintIcon,
 } from '@mui/icons-material';
 import { useTestResult } from '../../../hooks/useAssessment';
-import { TestResultSummary } from '../../../types/assessment';
 
 interface TestResultsProps {
   studentAssessmentId: string;
@@ -77,9 +76,10 @@ const TestResults: React.FC<TestResultsProps> = ({ studentAssessmentId, onBack }
     questionScores,
   } = result;
 
-  const correctCount = questionScores.filter((q) => q.isCorrect).length;
-  const wrongCount = questionScores.filter((q) => !q.isCorrect && q.yourAnswer).length;
-  const unansweredCount = questionScores.filter((q) => !q.yourAnswer).length;
+  const scores = questionScores ?? [];
+  const correctCount = scores.filter((q) => q.isCorrect).length;
+  const wrongCount = scores.filter((q) => !q.isCorrect && q.yourAnswer).length;
+  const unansweredCount = scores.filter((q) => !q.yourAnswer).length;
 
   const getGradeColor = (g?: string) => {
     if (!g) return 'default';
@@ -196,7 +196,7 @@ const TestResults: React.FC<TestResultsProps> = ({ studentAssessmentId, onBack }
       {/* Question-wise Analysis */}
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Question-wise Analysis</Typography>
       <Stack spacing={1}>
-        {questionScores.map((q, idx) => (
+        {scores.map((q, idx) => (
           <Accordion
             key={q.questionId}
             expanded={expandedQuestion === q.questionId}
@@ -223,12 +223,12 @@ const TestResults: React.FC<TestResultsProps> = ({ studentAssessmentId, onBack }
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" noWrap sx={{ maxWidth: { xs: 200, sm: 400 } }}>
-                    {q.questionText}
+                    {q.questionText || 'Question'}
                   </Typography>
                 </Box>
                 <Chip
                   size="small"
-                  label={`${q.yourScore ?? q.marksObtained}/${q.maxScore ?? q.maxMarks}`}
+                  label={`${q.yourScore ?? q.marksObtained ?? 0}/${q.maxScore ?? q.maxMarks ?? 1}`}
                   color={q.isCorrect ? 'success' : q.yourAnswer ? 'error' : 'warning'}
                   sx={{ mr: 2 }}
                 />
@@ -265,7 +265,7 @@ const TestResults: React.FC<TestResultsProps> = ({ studentAssessmentId, onBack }
                     </Paper>
                   </Box>
                 )}
-                {q.timeSpent && (
+                {q.timeSpent !== undefined && q.timeSpent > 0 && (
                   <Typography variant="caption" color="text.secondary">
                     Time spent: {q.timeSpent}s
                   </Typography>

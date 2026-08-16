@@ -11,7 +11,60 @@ import type {
   TemplateField,
   ParseResult,
 } from '../types/onboarding';
-import type { Student, Faculty } from '../types/system';
+// Local system type stubs — TODO: move to shared types when available
+interface Student {
+  id: string;
+  regNo: string;
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  gender?: string;
+  bloodGroup?: string;
+  collegeId: string;
+  collegeName: string;
+  courseId: string;
+  courseName: string;
+  departmentId: string;
+  departmentName: string;
+  batchId: string;
+  batchName: string;
+  semester: number;
+  division: string;
+  mentorId?: string;
+  mentorName?: string;
+  enrollmentDate: string;
+  passwordHash: string;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Faculty {
+  id: string;
+  facultyId: string;
+  name: string;
+  email: string;
+  phone: string;
+  designation: string;
+  specialization?: string;
+  qualification?: string;
+  experience?: number;
+  collegeId: string;
+  collegeName: string;
+  departmentId: string;
+  departmentName: string;
+  subjects: string[];
+  menteeCount: number;
+  passwordHash: string;
+  status: string;
+  isHOD: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 
 // ============================================================
 // TEMPLATE DEFINITIONS
@@ -248,7 +301,7 @@ export function parseCSV<T extends Record<string, string>>(
           if (rowErrors.length === 0) {
             // Normalize: ensure every template field exists as a string (empty string if missing)
             const normalizedRow: Record<string, string> = {};
-            template.fields.forEach((field) => {
+            template.fields.forEach((field: TemplateField) => {
               normalizedRow[field.key] = (row[field.key]?.trim() || '') as string;
             });
             data.push(normalizedRow as T);
@@ -280,8 +333,7 @@ export function parseCSV<T extends Record<string, string>>(
 export function generateTemplateCSV(template: UploadTemplate): string {
   const headers = template.fields.map((f: TemplateField) => f.key).join(',');
   const sampleValues = template.fields.map((f: TemplateField) => `"${template.sampleRow[f.key] || ''}"`).join(',');
-  return `${headers}
-${sampleValues}`;
+  return `${headers}\n${sampleValues}`;
 }
 
 /**
@@ -381,6 +433,7 @@ export async function bulkOnboardStudents(
     processedBy: createdBy,
     processedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   // Process valid records
@@ -481,6 +534,7 @@ export async function bulkOnboardFaculty(
     processedBy: createdBy,
     processedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   for (const data of parseResult.data) {

@@ -46,7 +46,7 @@ export function ClassCard({ session, onStart, onViewSummary }: ClassCardProps) {
       </div>
 
       <div className="flex items-center justify-between text-sm text-gray-500">
-        <span>{session.students.length} students</span>
+        <span>{session.students?.length ?? 0} students</span>
         {isPending ? (
           <button
             onClick={onStart}

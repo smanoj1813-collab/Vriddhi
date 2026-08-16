@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════
 // hooks/useSyllabusCurriculum.ts — Syllabus & Curriculum Hooks
+// FIXED: Defensive API response checks, never let arrays become undefined
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,6 +9,19 @@ import type {
   SyllabusExtract, ParsedCourse, CurriculumDoc, AssignCurriculumInput,
   CurriculumStats, ListSyllabusOptions, ListCurriculumOptions,
 } from '../types/curriculum';
+
+// ─── Helpers ────────────────────────────────────────────────────────────
+
+function coerceArray<T>(val: unknown): T[] {
+  if (Array.isArray(val)) return val;
+  return [];
+}
+
+function coerceNumber(val: unknown): number {
+  return typeof val === 'number' && !isNaN(val) ? val : 0;
+}
+
+// ─── Hooks ──────────────────────────────────────────────────────────────
 
 export function useSyllabusExtract(extractId: string | null) {
   const [extract, setExtract] = useState<SyllabusExtract | null>(null);
@@ -20,7 +34,7 @@ export function useSyllabusExtract(extractId: string | null) {
     setError(null);
     try {
       const data = await api.getSyllabusExtractById(extractId);
-      setExtract(data);
+      setExtract(data ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load extract');
     } finally {
@@ -56,10 +70,14 @@ export function useSyllabusExtracts(options: ListSyllabusOptions = {}) {
     setError(null);
     try {
       const result = await api.listSyllabusExtracts(options);
-      setItems(result.items);
-      setTotal(result.total);
+      // DEFENSIVE: coerce whatever the API returns into safe shapes
+      const safeItems = coerceArray<SyllabusExtract>(result?.items);
+      setItems(safeItems);
+      setTotal(coerceNumber(result?.total));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load extracts');
+      setItems([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -68,7 +86,11 @@ export function useSyllabusExtracts(options: ListSyllabusOptions = {}) {
   useEffect(() => { refresh(); }, [refresh]);
 
   const approveExtract = useCallback(async (id: string) => {
-    await api.updateSyllabusExtractStatus(id, 'approved');
+    try {
+      await api.updateSyllabusExtractStatus(id, 'approved');
+    } catch (e) {
+      console.error('approveExtract failed:', e);
+    }
     await refresh();
   }, [refresh]);
 
@@ -85,9 +107,10 @@ export function useCurriculumDocs(options: ListCurriculumOptions = {}) {
     setError(null);
     try {
       const result = await api.listCurriculumDocs(options);
-      setItems(result.items);
+      setItems(coerceArray<CurriculumDoc>(result?.items));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load curriculum docs');
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -106,7 +129,7 @@ export function useCurriculumAssignment() {
     setError(null);
     try {
       const result = await api.assignCurriculumToCollege(input);
-      return result;
+      return result ?? null;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Assignment failed');
       return null;
@@ -128,7 +151,18 @@ export function useCurriculumStats() {
     setError(null);
     try {
       const data = await api.getCurriculumStats();
-      setStats(data);
+      // DEFENSIVE: ensure all required fields exist even if API is partial
+      setStats({
+        totalExtracts: coerceNumber(data?.totalExtracts),
+        pendingReview: coerceNumber(data?.pendingReview),
+        approved: coerceNumber(data?.approved),
+        assigned: coerceNumber(data?.assigned),
+        totalCourses: coerceNumber(data?.totalCourses),
+        totalModules: coerceNumber(data?.totalModules),
+        averageConfidence: coerceNumber(data?.averageConfidence),
+        byFormat: data?.byFormat && typeof data.byFormat === 'object' ? data.byFormat : {},
+        byStatus: data?.byStatus && typeof data.byStatus === 'object' ? data.byStatus : {},
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stats');
     } finally {

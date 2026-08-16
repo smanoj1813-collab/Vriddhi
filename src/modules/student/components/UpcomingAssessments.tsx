@@ -1,4 +1,4 @@
-// src/components/student/UpcomingAssessments.tsx
+// src/modules/student/components/UpcomingAssessments.tsx
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, FileText, AlertCircle, ChevronRight } from 'lucide-react';
 import type { Assessment } from '../types/student';
@@ -58,7 +58,7 @@ export default function UpcomingAssessments({ assessments }: UpcomingAssessments
           </div>
         ) : (
           upcoming.map((assessment, index) => {
-            const colors = typeColors[assessment.type] || typeColors.quiz;
+            const colors = typeColors[assessment.type ?? 'quiz'] || typeColors.quiz;
             const daysLeft = getDaysLeft(assessment.date);
             const isUrgent = daysLeft === 'Today' || daysLeft === 'Tomorrow';
 
@@ -87,11 +87,11 @@ export default function UpcomingAssessments({ assessments }: UpcomingAssessments
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock size={12} />
-                        {assessment.time}
+                        {assessment.time ?? '—'}
                       </span>
                       <span className="flex items-center gap-1">
                         <MapPin size={12} />
-                        {assessment.venue}
+                        {assessment.venue ?? 'TBA'}
                       </span>
                     </div>
                   </div>

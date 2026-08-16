@@ -1,248 +1,399 @@
-// components/student/TestInterface.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+// src/modules/student/components/TestInterface.tsx
+// Full-screen test-taking interface with timer, navigation, question palette
+
+import React, { useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Button, Stack, Card, CardContent, LinearProgress,
-  Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  Alert, Paper, Radio, RadioGroup, FormControlLabel, Checkbox, TextField,
-  Tooltip, Badge,
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  LinearProgress,
+  IconButton,
+  Tooltip,
+  Divider,
+  Alert,
 } from '@mui/material';
 import {
-  Flag as FlagIcon, FlagOutlined as FlagOutlinedIcon,
-  NavigateNext as NextIcon, NavigateBefore as PrevIcon,
-  Send as SubmitIcon, Timer as TimerIcon,
+  NavigateNext as NextIcon,
+  NavigateBefore as PrevIcon,
+  AccessTime as TimeIcon,
+  Warning as WarningIcon,
+  Fullscreen as FullscreenIcon,
+  ExitToApp as ExitIcon,
 } from '@mui/icons-material';
-import { useActiveTest } from '../../../hooks/useAssessment';
-import { PaperQuestion, StudentAnswer, QuestionType } from '../../../types/assessment';
+import QuestionRenderer from './QuestionRenderer';
+import type { ActiveTest, PaperQuestion, StudentAnswer } from '../types/assessment';
 
 interface TestInterfaceProps {
-  assessmentId: string;
-  studentId: string;
-  onComplete?: () => void;
-  onExit?: () => void;
+  activeTest: ActiveTest;
+  questions: PaperQuestion[];
+  answers: Record<string, Partial<StudentAnswer>>;
+  currentQuestionIndex: number;
+  timeRemaining: number;
+  isSubmitting: boolean;
+  onAnswer: (questionId: string, answer: Partial<StudentAnswer>) => void;
+  onNavigate: (direction: 'prev' | 'next') => void;
+  onNavigateTo: (index: number) => void;
+  onToggleFlag: (questionId: string) => void;
+  onSubmit: () => void;
+  onLogProctor: (eventType: string, details?: Record<string, unknown>) => void;
+  isFlagged: (questionId: string) => boolean;
+  isAnswered: (questionId: string) => boolean;
+  answeredCount: number;
+  flaggedCount: number;
 }
 
-const TestInterface: React.FC<TestInterfaceProps> = ({ assessmentId, studentId, onComplete, onExit }) => {
-  const {
-    activeTest,
-    currentQuestion,
-    questions,
-    answers,
-    timeRemaining,
-    loading,
-    isSubmitting,
-    error,
-    startTest,
-    saveCurrentAnswer,
-    submitTest,
-    navigateQuestion,
-    navigateToQuestion,
-    toggleFlagQuestion,
-  } = useActiveTest();
+const TestInterface: React.FC<TestInterfaceProps> = ({
+  activeTest,
+  questions,
+  answers,
+  currentQuestionIndex,
+  timeRemaining,
+  isSubmitting,
+  onAnswer,
+  onNavigate,
+  onNavigateTo,
+  onToggleFlag,
+  onSubmit,
+  onLogProctor,
+  isFlagged,
+  isAnswered,
+  answeredCount,
+  flaggedCount,
+}) => {
+  const [showSubmitConfirm, setShowSubmitConfirm] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
 
-  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    if (!started && !activeTest) {
-      startTest(assessmentId, studentId);
-      setStarted(true);
-    }
-  }, [started, activeTest, assessmentId, studentId, startTest]);
-
-  const handleAnswer = useCallback((answer: Partial<StudentAnswer>) => {
-    if (currentQuestion) {
-      saveCurrentAnswer(currentQuestion.questionId, answer);
-    }
-  }, [currentQuestion, saveCurrentAnswer]);
-
-  const handleSubmit = async () => {
-    setShowSubmitConfirm(false);
-    const result = await submitTest();
-    if (result && onComplete) {
-      onComplete();
-    }
-  };
+  const currentQuestion = questions[currentQuestionIndex];
+  const totalQuestions = questions.length;
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const currentIndex = questions.findIndex((q: PaperQuestion) => q.questionId === currentQuestion?.questionId);
-  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
-  const answeredCount = Object.keys(answers).length;
+  const isTimeLow = timeRemaining < 300;
+  const isTimeCritical = timeRemaining < 60;
 
-  if (loading && !activeTest) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Typography>Loading...</Typography></Box>;
-  }
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        onLogProctor('tab_switch', { timestamp: new Date().toISOString() });
+      }
+    };
 
-  if (error) {
-    return <Box sx={{ p: 3 }}><Alert severity="error">{error}</Alert><Button onClick={onExit} sx={{ mt: 2 }}>Go Back</Button></Box>;
-  }
+    const handleBlur = () => {
+      onLogProctor('window_blur', { timestamp: new Date().toISOString() });
+    };
 
-  if (!activeTest || !currentQuestion) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Typography>Preparing test...</Typography></Box>;
-  }
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      onLogProctor('copy_paste', { action: 'copy' });
+    };
 
-  const isLastQuestion = currentIndex === questions.length - 1;
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      onLogProctor('copy_paste', { action: 'paste' });
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      onLogProctor('right_click', { timestamp: new Date().toISOString() });
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('paste', handlePaste);
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [onLogProctor]);
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
+
+  const getQuestionStatus = (q: PaperQuestion, index: number) => {
+    if (isFlagged(q.id)) return 'flagged';
+    if (isAnswered(q.id)) return 'answered';
+    if (index === currentQuestionIndex) return 'current';
+    return 'unvisited';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'answered': return { bg: '#e8f5e9', border: '#4caf50', color: '#2e7d32' };
+      case 'flagged': return { bg: '#fff3e0', border: '#ff9800', color: '#ef6c00' };
+      case 'current': return { bg: '#e3f2fd', border: '#2196f3', color: '#1565c0' };
+      default: return { bg: '#fafafa', border: '#e0e0e0', color: '#9e9e9e' };
+    }
+  };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Paper elevation={2} sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>{activeTest.paperTitle || 'Test'}</Typography>
-            <Typography variant="caption">Question {currentIndex + 1} of {questions.length}</Typography>
-          </Box>
-          <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-            <Chip icon={<TimerIcon />} label={formatTime(timeRemaining)}
-              color={timeRemaining < 300 ? 'error' : timeRemaining < 600 ? 'warning' : 'default'}
-              sx={{ fontWeight: 600 }} />
-            <Button variant="contained" color="success" size="small" startIcon={<SubmitIcon />} onClick={() => setShowSubmitConfirm(true)}>
-              Submit
-            </Button>
-          </Stack>
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#f5f5f5' }}>
+      {/* Top Bar */}
+      <Paper
+        elevation={3}
+        sx={{
+          p: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
+          zIndex: 10,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
+            {activeTest.title}
+          </Typography>
+          <Chip label={activeTest.subject} size="small" color="primary" />
+          <Chip label={`${activeTest.totalMarks} marks`} size="small" variant="outlined" />
         </Box>
-        <LinearProgress variant="determinate" value={progress} sx={{ mt: 1, height: 6, borderRadius: 3 }} />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              px: 2,
+              py: 0.5,
+              bgcolor: isTimeCritical ? 'error.main' : isTimeLow ? 'warning.main' : 'primary.main',
+              color: 'white',
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <TimeIcon fontSize="small" />
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.2rem', fontFamily: 'monospace' }}>
+              {formatTime(timeRemaining)}
+            </Typography>
+          </Paper>
+
+          <Tooltip title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}>
+            <IconButton onClick={handleFullscreen} size="small">
+              <FullscreenIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Paper>
 
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-          <Card variant="outlined" sx={{ borderRadius: 2, mb: 2 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Chip label={(currentQuestion.questionType || 'mcq_single').replace(/_/g, ' ').toUpperCase()} size="small" color="primary" variant="outlined" />
-                <Chip label={`${currentQuestion.marks} Marks`} size="small" color="success" />
-              </Box>
-              <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.6, mb: 3 }}>
-                <strong>Q{currentIndex + 1}.</strong> {currentQuestion.questionText || 'Question text unavailable'}
-              </Typography>
-              <AnswerInput
-                questionType={currentQuestion.questionType || 'mcq_single'}
-                options={currentQuestion.options || []}
-                value={answers[currentQuestion.questionId] || {}}
-                onChange={handleAnswer}
-              />
-            </CardContent>
-          </Card>
+      {/* Progress Bar */}
+      <LinearProgress
+        variant="determinate"
+        value={(answeredCount / totalQuestions) * 100}
+        sx={{
+          height: 4,
+          bgcolor: 'grey.200',
+          '& .MuiLinearProgress-bar': {
+            bgcolor: answeredCount === totalQuestions ? 'success.main' : 'primary.main',
+          },
+        }}
+      />
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button variant="outlined" startIcon={<PrevIcon />} onClick={() => navigateQuestion('prev')} disabled={currentIndex === 0}>
+      {/* Main Content */}
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Question Area */}
+        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+          {currentQuestion && (
+            <Paper elevation={1} sx={{ p: 3, maxWidth: 900, mx: 'auto', minHeight: '60vh' }}>
+              <QuestionRenderer
+                question={currentQuestion}
+                answer={answers[currentQuestion.id]}
+                onAnswer={(ans) => onAnswer(currentQuestion.id, ans)}
+                isFlagged={isFlagged(currentQuestion.id)}
+                onToggleFlag={() => onToggleFlag(currentQuestion.id)}
+                questionNumber={currentQuestionIndex + 1}
+              />
+            </Paper>
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, maxWidth: 900, mx: 'auto' }}>
+            <Button
+              variant="outlined"
+              startIcon={<PrevIcon />}
+              onClick={() => onNavigate('prev')}
+              disabled={currentQuestionIndex === 0}
+              size="large"
+            >
               Previous
             </Button>
-            <Button variant={activeTest.flaggedQuestions?.includes(currentQuestion.questionId) ? 'contained' : 'outlined'}
-              color="warning" startIcon={activeTest.flaggedQuestions?.includes(currentQuestion.questionId) ? <FlagIcon /> : <FlagOutlinedIcon />}
-              onClick={() => toggleFlagQuestion(currentQuestion.questionId)}>
-              {activeTest.flaggedQuestions?.includes(currentQuestion.questionId) ? 'Flagged' : 'Flag'}
+
+            <Button
+              variant="contained"
+              endIcon={<NextIcon />}
+              onClick={() => onNavigate('next')}
+              disabled={currentQuestionIndex === totalQuestions - 1}
+              size="large"
+            >
+              Next
             </Button>
-            {isLastQuestion ? (
-              <Button variant="contained" color="success" endIcon={<SubmitIcon />} onClick={() => setShowSubmitConfirm(true)}>
-                Submit Test
-              </Button>
-            ) : (
-              <Button variant="contained" endIcon={<NextIcon />} onClick={() => navigateQuestion('next')}>
-                Next
-              </Button>
-            )}
           </Box>
         </Box>
 
-        <Paper variant="outlined" sx={{ width: 260, display: { xs: 'none', md: 'block' }, borderRadius: 0, borderTop: 0, borderBottom: 0, borderRight: 0 }}>
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Questions</Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {questions.map((q: PaperQuestion, idx: number) => {
-                const isAnswered = !!answers[q.questionId];
-                const isFlagged = activeTest.flaggedQuestions?.includes(q.questionId);
-                const isCurrent = currentQuestion.questionId === q.questionId;
-                return (
-                  <Button key={q.questionId} size="small" variant={isCurrent ? 'contained' : 'outlined'}
-                    color={isCurrent ? 'primary' : isAnswered ? 'success' : isFlagged ? 'warning' : 'inherit'}
-                    onClick={() => navigateToQuestion(idx)} sx={{ minWidth: 36, height: 36, p: 0 }}>
-                    {idx + 1}
-                  </Button>
-                );
-              })}
+        {/* Question Palette Sidebar */}
+        <Paper
+          elevation={2}
+          sx={{
+            width: 280,
+            minWidth: 280,
+            p: 2,
+            overflow: 'auto',
+            display: { xs: 'none', md: 'block' },
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+            Question Palette
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 16, height: 16, borderRadius: 0.5, bgcolor: '#e8f5e9', border: '1px solid #4caf50' }} />
+              <Typography variant="caption">Answered</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 16, height: 16, borderRadius: 0.5, bgcolor: '#fff3e0', border: '1px solid #ff9800' }} />
+              <Typography variant="caption">Flagged</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 16, height: 16, borderRadius: 0.5, bgcolor: '#e3f2fd', border: '1px solid #2196f3' }} />
+              <Typography variant="caption">Current</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ width: 16, height: 16, borderRadius: 0.5, bgcolor: '#fafafa', border: '1px solid #e0e0e0' }} />
+              <Typography variant="caption">Unvisited</Typography>
             </Box>
           </Box>
+
+          <Divider sx={{ mb: 2 }} />
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {questions.map((q, idx) => {
+              const status = getQuestionStatus(q, idx);
+              const colors = getStatusColor(status);
+              return (
+                <Box
+                  key={q.id}
+                  onClick={() => onNavigateTo(idx)}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 1,
+                    bgcolor: colors.bg,
+                    border: `2px solid ${colors.border}`,
+                    color: colors.color,
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    '&:hover': { transform: 'scale(1.1)' },
+                  }}
+                >
+                  {idx + 1}
+                </Box>
+              );
+            })}
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Answered: <strong>{answeredCount}</strong> / {totalQuestions}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Flagged: <strong>{flaggedCount}</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Unanswered: <strong>{totalQuestions - answeredCount}</strong>
+            </Typography>
+          </Box>
+
+          <Button
+            variant="contained"
+            color="success"
+            fullWidth
+            size="large"
+            onClick={() => setShowSubmitConfirm(true)}
+            disabled={isSubmitting}
+            startIcon={isSubmitting ? undefined : <ExitIcon />}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Test'}
+          </Button>
         </Paper>
       </Box>
 
+      {/* Submit Confirmation Dialog */}
       <Dialog open={showSubmitConfirm} onClose={() => setShowSubmitConfirm(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Submit Test?</DialogTitle>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon color="warning" />
+          Submit Test?
+        </DialogTitle>
         <DialogContent>
           <Alert severity="warning" sx={{ mb: 2 }}>
-            You have answered {answeredCount} out of {questions.length} questions.
+            Once submitted, you cannot modify your answers.
           </Alert>
-          <Typography>Are you sure you want to submit? You cannot change your answers after submission.</Typography>
+          <Typography variant="body1" gutterBottom>
+            You have answered <strong>{answeredCount}</strong> out of <strong>{totalQuestions}</strong> questions.
+          </Typography>
+          {answeredCount < totalQuestions && (
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              <strong>{totalQuestions - answeredCount}</strong> questions are still unanswered.
+            </Typography>
+          )}
+          {flaggedCount > 0 && (
+            <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>
+              <strong>{flaggedCount}</strong> question(s) are flagged for review.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowSubmitConfirm(false)}>Continue Test</Button>
-          <Button variant="contained" color="success" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit Test'}
+          <Button onClick={() => setShowSubmitConfirm(false)} variant="outlined">
+            Continue Test
+          </Button>
+          <Button
+            onClick={() => { setShowSubmitConfirm(false); onSubmit(); }}
+            variant="contained"
+            color="success"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Confirm Submit'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-};
-
-interface AnswerInputProps {
-  questionType: QuestionType;
-  options: Array<{ id: string; text: string; matchWith?: string }>;
-  value: Partial<StudentAnswer>;
-  onChange: (answer: Partial<StudentAnswer>) => void;
-}
-
-const AnswerInput: React.FC<AnswerInputProps> = ({ questionType, options, value, onChange }) => {
-  switch (questionType) {
-    case 'mcq_single':
-    case 'true_false':
-      return (
-        <RadioGroup value={value.selectedOptionIds?.[0] || ''} onChange={(e) => onChange({ selectedOptionIds: [e.target.value] })}>
-          <Stack spacing={1}>
-            {options.map((option) => (
-              <Paper key={option.id} variant="outlined" sx={{
-                p: 2, cursor: 'pointer',
-                borderColor: value.selectedOptionIds?.includes(option.id) ? 'primary.main' : 'divider',
-                bgcolor: value.selectedOptionIds?.includes(option.id) ? 'primary.50' : 'background.paper',
-              }} onClick={() => onChange({ selectedOptionIds: [option.id] })}>
-                <FormControlLabel value={option.id} control={<Radio />} label={option.text} sx={{ width: '100%', m: 0 }} />
-              </Paper>
-            ))}
-          </Stack>
-        </RadioGroup>
-      );
-    case 'mcq_multiple':
-      return (
-        <Stack spacing={1}>
-          {options.map((option) => (
-            <Paper key={option.id} variant="outlined" sx={{
-              p: 2, cursor: 'pointer',
-              borderColor: value.selectedOptionIds?.includes(option.id) ? 'primary.main' : 'divider',
-              bgcolor: value.selectedOptionIds?.includes(option.id) ? 'primary.50' : 'background.paper',
-            }} onClick={() => {
-              const current = value.selectedOptionIds || [];
-              const updated = current.includes(option.id) ? current.filter((id) => id !== option.id) : [...current, option.id];
-              onChange({ selectedOptionIds: updated });
-            }}>
-              <FormControlLabel control={<Checkbox checked={value.selectedOptionIds?.includes(option.id) || false} />} label={option.text} sx={{ width: '100%', m: 0 }} />
-            </Paper>
-          ))}
-        </Stack>
-      );
-    case 'fill_in_blank':
-      return <TextField fullWidth variant="outlined" placeholder="Type your answer..." value={value.textAnswer || ''} onChange={(e) => onChange({ textAnswer: e.target.value })} />;
-    case 'short_answer':
-      return <TextField fullWidth variant="outlined" placeholder="Type your answer..." value={value.textAnswer || ''} onChange={(e) => onChange({ textAnswer: e.target.value })} multiline rows={3} />;
-    case 'long_answer':
-      return <TextField fullWidth variant="outlined" placeholder="Type your detailed answer..." value={value.textAnswer || ''} onChange={(e) => onChange({ textAnswer: e.target.value })} multiline rows={8} />;
-    default:
-      return <TextField fullWidth variant="outlined" placeholder="Type your answer..." value={value.textAnswer || ''} onChange={(e) => onChange({ textAnswer: e.target.value })} multiline rows={3} />;
-  }
 };
 
 export default TestInterface;

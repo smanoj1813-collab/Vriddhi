@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -117,7 +116,6 @@ export default function FacultyAttendance() {
   const hasAttendanceData = filteredStudents.length > 0;
   const isAttendanceAlreadySaved = !!existingAttendance;
 
-  // Loading state
   if (loading && students.length === 0) {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
@@ -127,7 +125,6 @@ export default function FacultyAttendance() {
     )
   }
 
-  // Error state
   if (error && students.length === 0) {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
@@ -144,7 +141,6 @@ export default function FacultyAttendance() {
     )
   }
 
-  // No class sessions state
   if (classSessions.length === 0 && !loading) {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
@@ -159,7 +155,6 @@ export default function FacultyAttendance() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
@@ -182,7 +177,6 @@ export default function FacultyAttendance() {
         )}
       </div>
 
-      {/* Class Selector & Date */}
       <div className="mb-6 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
@@ -236,7 +230,6 @@ export default function FacultyAttendance() {
         )}
       </div>
 
-      {/* Stats Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20">
           <div className="flex items-center gap-2 mb-1">
@@ -278,11 +271,10 @@ export default function FacultyAttendance() {
             <Pill className="w-4 h-4 text-pink-500 dark:text-pink-400" />
             <span className="text-sm text-pink-600 dark:text-pink-400">Medical</span>
           </div>
-          <p className="text-xl font-bold text-pink-600 dark:text-pink-400">{stats.medicalLeave}</p>
+          <p className="text-xl font-bold text-pink-600 dark:text-emerald-400">{stats.medicalLeave}</p>
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <button
@@ -337,9 +329,9 @@ export default function FacultyAttendance() {
           </select>
 
           <ExportButton
-            onExport={(format) =>
+            onExport={(format: string) =>
               exportFacultyAttendance(
-                format,
+                format as any,
                 getExportRows(),
                 selectedClass?.subject || 'Class',
                 selectedClass?.date || selectedDate
@@ -352,7 +344,6 @@ export default function FacultyAttendance() {
         </div>
       </div>
 
-      {/* Attendance Table */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -445,13 +436,12 @@ export default function FacultyAttendance() {
         )}
       </div>
 
-      {/* Save Button */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-500 dark:text-slate-400">
           Marked: {stats.present + stats.absent + stats.late + stats.leave + stats.onDuty + stats.medicalLeave} / {stats.total} students
-          {isAttendanceAlreadySaved && (
+          {isAttendanceAlreadySaved && existingAttendance && (
             <span className="ml-2 text-emerald-600 dark:text-emerald-400">
-              • Previously saved at {existingAttendance?.markedAt ? new Date(existingAttendance.markedAt).toLocaleTimeString() : ''}
+              • Previously saved at {new Date(existingAttendance.markedAt).toLocaleTimeString()}
             </span>
           )}
         </div>
@@ -465,7 +455,6 @@ export default function FacultyAttendance() {
         </button>
       </div>
 
-      {/* Save Success Toast */}
       {saveSuccess && (
         <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-lg">
           <Check className="w-4 h-4" />
@@ -473,7 +462,6 @@ export default function FacultyAttendance() {
         </div>
       )}
 
-      {/* Error Toast */}
       {error && (
         <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 shadow-lg">
           <AlertTriangle className="w-4 h-4" />

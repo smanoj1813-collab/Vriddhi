@@ -8,9 +8,8 @@ import {
   useUniversity,
   useUniversityColleges,
   useUpdateUniversity,
-} from '../../hooks/useUniversities';
+} from '../../admin/hooks/useUniversities';
 import { getPriorityLabel, getManagementTypeColor } from '@/shared/types/university';
-import { DISTRICT_UNIVERSITY_MAP } from '../../../shared/data/karnatakaUniversities';
 import type { University, UniversityCollege, DistrictUniversityMapping } from '@/shared/types/university';
 
 import {
@@ -31,6 +30,10 @@ import {
   Globe,
   Calendar,
 } from "lucide-react";
+
+// TODO: Move this data to ../../../shared/data/karnatakaUniversities and export it,
+// then re-enable the import above and remove this local definition.
+const DISTRICT_UNIVERSITY_MAP: DistrictUniversityMapping[] = [];
 
 // ── Component ─────────────────────────────────────────────────────────
 const SuperAdminUniversityDetail: React.FC = () => {
@@ -133,7 +136,8 @@ const SuperAdminUniversityDetail: React.FC = () => {
                   : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
               }`}
             >
-              {getPriorityLabel(university.priority)}
+              {/* FIX: priority may be null — default to 0 */}
+              {getPriorityLabel(university.priority ?? 0)}
             </span>
             <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-500/20 text-slate-300 border border-slate-500/30 capitalize">
               {university.managementType}
@@ -165,6 +169,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
           icon={<BookOpen className="w-5 h-5 text-amber-400" />}
           label="UG Courses"
           value={university.courses.length}
+          // FIX: courses is string[] (course codes), not object array
           subtext={university.courses.join(", ")}
         />
         <StatCard
@@ -247,7 +252,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
                 <InfoRow icon={<Globe className="w-4 h-4" />} label="Short Name" value={university.shortName} />
                 <InfoRow icon={<MapPin className="w-4 h-4" />} label="Location" value={university.location} />
                 <InfoRow icon={<Calendar className="w-4 h-4" />} label="Established" value={university.establishedYear?.toString()} />
-                <InfoRow icon={<Target className="w-4 h-4" />} label="Priority" value={getPriorityLabel(university.priority)} />
+                <InfoRow icon={<Target className="w-4 h-4" />} label="Priority" value={getPriorityLabel(university.priority ?? 0)} />
                 <InfoRow icon={<Users className="w-4 h-4" />} label="Management Type" value={university.managementType} />
                 {university.website && (
                   <InfoRow icon={<Globe className="w-4 h-4" />} label="Website" value={university.website} isLink />
@@ -259,6 +264,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
             <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4">UG Courses Offered</h3>
               <div className="grid grid-cols-2 gap-3">
+                {/* FIX: courses is string[] — use course code directly */}
                 {university.courses.map((course) => (
                   <div
                     key={course}
@@ -269,7 +275,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm text-white font-medium">{course}</p>
-                      <p className="text-xs text-slate-500">Undergraduate</p>
+                      <p className="text-xs text-slate-500">{course}</p>
                     </div>
                   </div>
                 ))}
@@ -406,6 +412,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
                         {m.courses.length} courses offered
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
+                        {/* FIX: m.courses is string[] */}
                         {m.courses.slice(0, 5).map((c) => (
                           <span
                             key={c}

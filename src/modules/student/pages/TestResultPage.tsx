@@ -1,6 +1,6 @@
 // src/pages/student/TestResultPage.tsx
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Box, Typography, Button, Card, CardContent, Chip, LinearProgress,
   Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -11,7 +11,6 @@ import {
   Visibility, Download, Share, ArrowBack, School, Timer,
   NavigateNext, NavigateBefore, Assessment,
 } from "@mui/icons-material";
-import { useTestResult } from './../hooks/useAssessment';
 import { MathRenderer } from '../components/MathRenderer';
 
 interface TabPanelProps { children?: React.ReactNode; index: number; value: number; }
@@ -22,14 +21,105 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </Box>
 );
 
+// ═══════════════════════════════════════════════════════════════
+// DEMO RESULT DATA — Remove after connecting real API
+// ═══════════════════════════════════════════════════════════════
+const DEMO_RESULT = {
+  testTitle: "Operating Systems — End Semester",
+  subject: "OS",
+  completedAt: new Date().toISOString(),
+  score: 85,
+  totalMarks: 100,
+  passingPercentage: 60,
+  rank: 12,
+  percentile: 78.5,
+  timeTaken: 7200, // seconds
+  correctCount: 18,
+  incorrectCount: 2,
+  unattemptedCount: 0,
+  flaggedCount: 1,
+  totalQuestions: 20,
+  sectionScores: [
+    { sectionName: "Process Management", total: 8, correct: 7, incorrect: 1, score: 35, totalMarks: 40, percentage: 87.5, timeTaken: 180, accuracy: 87.5 },
+    { sectionName: "Memory Management", total: 6, correct: 6, incorrect: 0, score: 30, totalMarks: 30, percentage: 100, timeTaken: 150, accuracy: 100 },
+    { sectionName: "File Systems", total: 6, correct: 5, incorrect: 1, score: 20, totalMarks: 30, percentage: 66.7, timeTaken: 120, accuracy: 83.3 },
+  ],
+  questionResults: [
+    {
+      questionId: "q1", questionText: "What is the primary purpose of a process scheduler?",
+      options: ["Memory allocation", "CPU allocation", "Disk I/O", "Network management"],
+      correctAnswer: "CPU allocation", studentAnswer: "CPU allocation",
+      isCorrect: true, isAttempted: true, marks: 5,
+      explanation: "The process scheduler decides which process runs on the CPU at any given time.",
+    },
+    {
+      questionId: "q2", questionText: "Which algorithm suffers from starvation?",
+      options: ["Round Robin", "FCFS", "Priority Scheduling", "SJF"],
+      correctAnswer: "Priority Scheduling", studentAnswer: "Priority Scheduling",
+      isCorrect: true, isAttempted: true, marks: 5,
+      explanation: "Low priority processes may never execute if high priority processes keep arriving.",
+    },
+    {
+      questionId: "q3", questionText: "Virtual memory allows execution of processes that are:",
+      options: ["Not entirely in memory", "Only in cache", "On disk only", "In registers"],
+      correctAnswer: "Not entirely in memory", studentAnswer: "On disk only",
+      isCorrect: false, isAttempted: true, marks: 5,
+      explanation: "Virtual memory enables partial loading of processes, allowing execution without full memory residence.",
+    },
+    {
+      questionId: "q4", questionText: "Thrashing occurs when:",
+      options: ["CPU is idle", "System spends more time paging than executing", "Memory is full", "Disk is corrupted"],
+      correctAnswer: "System spends more time paging than executing", studentAnswer: "System spends more time paging than executing",
+      isCorrect: true, isAttempted: true, marks: 5,
+      explanation: "Thrashing happens when excessive paging/swapping dominates actual computation.",
+    },
+    {
+      questionId: "q5", questionText: "Which page replacement algorithm uses the principle of locality?",
+      options: ["FIFO", "LRU", "Optimal", "Random"],
+      correctAnswer: "LRU", studentAnswer: "LRU",
+      isCorrect: true, isAttempted: true, marks: 5,
+      explanation: "LRU (Least Recently Used) leverages temporal locality by replacing least recently accessed pages.",
+    },
+  ],
+  leaderboard: [
+    { studentId: "s1", studentName: "Rahul Sharma", rank: 1, score: 98, totalMarks: 100, percentage: 98, timeTaken: 6500, isPassed: true, isCurrentUser: false },
+    { studentId: "s2", studentName: "Priya Patel", rank: 2, score: 94, totalMarks: 100, percentage: 94, timeTaken: 7000, isPassed: true, isCurrentUser: false },
+    { studentId: "s3", studentName: "Amit Kumar", rank: 3, score: 91, totalMarks: 100, percentage: 91, timeTaken: 6800, isPassed: true, isCurrentUser: false },
+    { studentId: "s4", studentName: "Sneha Gupta", rank: 4, score: 88, totalMarks: 100, percentage: 88, timeTaken: 7100, isPassed: true, isCurrentUser: false },
+    { studentId: "s5", studentName: "Vikram Rao", rank: 5, score: 85, totalMarks: 100, percentage: 85, timeTaken: 7200, isPassed: true, isCurrentUser: false },
+    { studentId: "s6", studentName: "Ananya Iyer", rank: 6, score: 82, totalMarks: 100, percentage: 82, timeTaken: 7300, isPassed: true, isCurrentUser: false },
+    { studentId: "s7", studentName: "Arjun Nair", rank: 7, score: 79, totalMarks: 100, percentage: 79, timeTaken: 6900, isPassed: true, isCurrentUser: false },
+    { studentId: "s8", studentName: "Divya Menon", rank: 8, score: 76, totalMarks: 100, percentage: 76, timeTaken: 7500, isPassed: true, isCurrentUser: false },
+    { studentId: "s9", studentName: "Karan Shah", rank: 9, score: 73, totalMarks: 100, percentage: 73, timeTaken: 7400, isPassed: true, isCurrentUser: false },
+    { studentId: "s10", studentName: "Meera Joshi", rank: 10, score: 70, totalMarks: 100, percentage: 70, timeTaken: 7600, isPassed: true, isCurrentUser: false },
+    { studentId: "s11", studentName: "You", rank: 12, score: 85, totalMarks: 100, percentage: 85, timeTaken: 7200, isPassed: true, isCurrentUser: true },
+  ],
+};
+// ═══════════════════════════════════════════════════════════════
+// END DEMO DATA
+// ═══════════════════════════════════════════════════════════════
+
 const TestResultPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
-  const collegeId = localStorage.getItem("collegeId") || "";
-  const studentId = localStorage.getItem("studentId") || "";
-  const { result, loading, error } = useTestResult(collegeId, testId || "", studentId);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
+
+  // Use navigation state if available (from ActiveTestPage), else demo data
+  const navState = (location.state as any) || {};
+  const result = navState.score !== undefined
+    ? {
+        ...DEMO_RESULT,
+        score: navState.correct * (DEMO_RESULT.totalMarks / DEMO_RESULT.totalQuestions),
+        correctCount: navState.correct,
+        incorrectCount: DEMO_RESULT.totalQuestions - navState.correct,
+        unattemptedCount: 0,
+      }
+    : DEMO_RESULT;
+
+  const loading = false;
+  const error = null;
 
   if (loading) return <ResultSkeleton />;
   if (error || !result) {
@@ -322,7 +412,6 @@ const QuestionDetailCard: React.FC<{ question: any; questionNumber: number }> =
           <Typography variant="caption" sx={{ color: "text.secondary" }}>{question.marks} marks</Typography>
         </Box>
 
-        {/* Question text with LaTeX */}
         <Box sx={{ mb: 3 }}>
           <MathRenderer text={question.questionText || ''} />
         </Box>
@@ -351,7 +440,6 @@ const QuestionDetailCard: React.FC<{ question: any; questionNumber: number }> =
           </Box>
         )}
 
-        {/* Student's answer */}
         {question.studentAnswer !== undefined && (
           <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: question.isCorrect ? "success.light" + "10" : "error.light" + "10", borderRadius: 2 }}>
             <Typography variant="body2" sx={{ fontWeight: 600 }} gutterBottom
@@ -362,7 +450,6 @@ const QuestionDetailCard: React.FC<{ question: any; questionNumber: number }> =
           </Paper>
         )}
 
-        {/* Correct answer */}
         {!question.isCorrect && (
           <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: "success.light" + "10", borderRadius: 2 }}>
             <Typography variant="body2" sx={ { fontWeight: 600, color: "success.main" } } gutterBottom>

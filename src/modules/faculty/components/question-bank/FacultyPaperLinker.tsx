@@ -1,4 +1,6 @@
 // src/modules/components/question-bank/FacultyPaperLinker.tsx
+// FIXED: Uses Question type from questionBank, onLink/onUnlink signatures match parent
+
 import React, { useState } from 'react';
 import {
   Box, Typography, List, ListItem, ListItemText,

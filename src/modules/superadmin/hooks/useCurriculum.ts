@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════
 // hooks/useCurriculum.ts — Legacy Curriculum/Topics + Syllabus Parser Lists
+// FIXED: Defensive API response checks, ensure arrays never undefined
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback } from 'react';
@@ -96,7 +97,13 @@ export function useCurriculum() {
 
 // ═══════════════════════════════════════════════════════════════════════
 // SYLLABUS PARSER: List hooks (for components/superadmin/SuperAdminCurriculum.tsx)
+// FIXED: Never let items become undefined; coerce API results to arrays
 // ═══════════════════════════════════════════════════════════════════════
+
+function coerceArray<T>(val: unknown): T[] {
+  if (Array.isArray(val)) return val;
+  return [];
+}
 
 export function useSyllabusList(options: ListSyllabusOptions = {}) {
   const [items, setItems] = useState<SyllabusExtract[]>([]);
@@ -112,9 +119,11 @@ export function useSyllabusList(options: ListSyllabusOptions = {}) {
         q = query(collection(db, 'syllabusExtracts'), where('status', '==', options.status), orderBy('extractedAt', 'desc'), limit(options.limit || 50));
       }
       const snap = await getDocs(q);
-      setItems(snap.docs.map((d: any) => ({ id: d.id, ...d.data() } as SyllabusExtract)));
+      const mapped = snap.docs.map((d: any) => ({ id: d.id, ...d.data() } as SyllabusExtract));
+      setItems(coerceArray(mapped));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load syllabus list');
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -138,9 +147,11 @@ export function useCurriculumList(options: ListCurriculumOptions = {}) {
         q = query(collection(db, 'curriculum'), where('collegeId', '==', options.collegeId), where('status', '==', 'active'));
       }
       const snap = await getDocs(q);
-      setItems(snap.docs.map((d: any) => ({ id: d.id, ...d.data() } as CurriculumDoc)));
+      const mapped = snap.docs.map((d: any) => ({ id: d.id, ...d.data() } as CurriculumDoc));
+      setItems(coerceArray(mapped));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load curriculum list');
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -165,11 +176,13 @@ export function useCurriculumStats() {
       const byStatus: Record<string, number> = { parsing: 0, review: 0, approved: 0, assigned: 0, archived: 0 };
       let totalCourses = 0, totalModules = 0, confidenceSum = 0;
       for (const e of extracts) {
-        byFormat[e.format || 'docx'] = (byFormat[e.format || 'docx'] || 0) + 1;
-        byStatus[e.status || 'review'] = (byStatus[e.status || 'review'] || 0) + 1;
-        totalCourses += e.totalCourses || 0;
-        totalModules += e.totalModules || 0;
-        confidenceSum += e.confidenceScore || 0;
+        const fmt = e?.format || 'docx';
+        const st = e?.status || 'review';
+        byFormat[fmt] = (byFormat[fmt] || 0) + 1;
+        byStatus[st] = (byStatus[st] || 0) + 1;
+        totalCourses += e?.totalCourses || 0;
+        totalModules += e?.totalModules || 0;
+        confidenceSum += e?.confidenceScore || 0;
       }
       setStats({
         totalExtracts: extracts.length,
@@ -184,6 +197,7 @@ export function useCurriculumStats() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stats');
+      // Keep previous stats on error, don't wipe them
     } finally {
       setLoading(false);
     }
@@ -205,23 +219,24 @@ export function useCurriculumAssignment() {
       if (extractSnap.empty) throw new Error('Extract not found');
       const extract = extractSnap.docs[0].data();
       const now = Timestamp.now();
+      const allCourses = Array.isArray(extract.courses) ? extract.courses : [];
       const selectedCourses = input.selectedCourseIds
-        ? (extract.courses || []).filter((c: any) => input.selectedCourseIds?.includes(c.id))
-        : (extract.courses || []);
+        ? allCourses.filter((c: any) => input.selectedCourseIds?.includes(c?.id))
+        : allCourses;
       if (selectedCourses.length === 0) throw new Error('No courses selected');
-      const firstCourse = selectedCourses[0];
-      const totalModules = selectedCourses.reduce((sum: number, c: any) => sum + (c.modules || []).length, 0);
-      const totalHours = selectedCourses.reduce((sum: number, c: any) => sum + (c.totalHours || 0), 0);
-      const totalMarks = selectedCourses.reduce((sum: number, c: any) => sum + (c.totalMarks || 0), 0);
+      const firstCourse = selectedCourses[0] || {};
+      const totalModules = selectedCourses.reduce((sum: number, c: any) => sum + (Array.isArray(c?.modules) ? c.modules.length : 0), 0);
+      const totalHours = selectedCourses.reduce((sum: number, c: any) => sum + (c?.totalHours || 0), 0);
+      const totalMarks = selectedCourses.reduce((sum: number, c: any) => sum + (c?.totalMarks || 0), 0);
       await addDoc(collection(db, 'curriculum'), {
         collegeId: input.collegeId,
         collegeName: input.collegeName,
         syllabusExtractId: input.syllabusExtractId,
-        title: `${firstCourse.branch || 'Curriculum'} - Semester ${firstCourse.semester || ''}`,
+        title: `${firstCourse?.branch || 'Curriculum'} - Semester ${firstCourse?.semester || ''}`,
         description: input.reviewNotes || null,
-        scheme: firstCourse.scheme || '',
-        branch: firstCourse.branch || '',
-        semester: firstCourse.semester || 0,
+        scheme: firstCourse?.scheme || '',
+        branch: firstCourse?.branch || '',
+        semester: firstCourse?.semester || 0,
         courses: selectedCourses,
         totalCourses: selectedCourses.length,
         totalModules,

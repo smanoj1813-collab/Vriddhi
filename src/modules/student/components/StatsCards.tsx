@@ -1,4 +1,4 @@
-// src/components/student/StatsCards.tsx
+// src/modules/student/components/StatsCards.tsx
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -101,7 +101,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, index) => {
         const Icon = card.icon;
-        const value = stats[card.key];
+        const value = stats[card.key] ?? 0;
         const isAlert = card.alert && (typeof value === 'number' ? value > 0 : false);
 
         return (
