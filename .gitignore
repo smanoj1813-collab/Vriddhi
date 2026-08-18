@@ -34,3 +34,7 @@ Thumbs.db
 # Firebase
 .firebase/
 .firebaserc
+
+# Project artifacts / scratch
+*.BACKUP
+assessment_files_dump.txt
