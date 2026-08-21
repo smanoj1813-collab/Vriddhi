@@ -19,8 +19,8 @@ import SyllabusUploader from '../components/SyllabusUploader';
 import { CurriculumReviewTable } from '../components/CurriculumReviewTable';
 import { CurriculumAssignmentDialog } from '../components/CurriculumAssignmentDialog';
 import { useSyllabusExtracts, useCurriculumStats } from '../hooks/useSyllabusCurriculum';
-import { assignCurriculumToCollege } from '../api/curriculumApi';
-import type { SyllabusExtract, CollegeOption, ParsedCourse } from '../types/curriculum';
+import { assignCurriculumToCollege, updateExtractCourse, updateExtractModule } from '../api/curriculumApi';
+import type { SyllabusExtract, CollegeOption, ParsedCourse, ParsedModule } from '../types/curriculum';
 import StandardizedCurriculumUploader from '../components/StandardizedCurriculumUploader';
 
 interface TabPanelProps {
@@ -54,10 +54,9 @@ export default function SuperAdminCurriculum() {
     extracts,
     items,
     loading: extractsLoading,
-    total,
     approveExtract,
     refresh: refreshExtracts,
-  } = useSyllabusExtracts({ status: 'review' });
+  } = useSyllabusExtracts({ status: 'all', limit: 100 });
 
   const { stats, refresh: refreshStats } = useCurriculumStats();
 
@@ -101,7 +100,11 @@ export default function SuperAdminCurriculum() {
   // DEFENSIVE: ensure arrays even if hook returns garbage
   const safeItems = Array.isArray(items) ? items : [];
   const safeExtracts = Array.isArray(extracts) ? extracts : [];
-  const displayItems = safeExtracts.length > 0 ? safeExtracts : safeItems;
+  // FIX: Show both `review` and `approved` extracts so items approved but not
+  // yet assigned don't disappear from the UI. (Assigned/archived stay in Assigned tab.)
+  const displayItems = (safeExtracts.length > 0 ? safeExtracts : safeItems).filter(
+    (e: SyllabusExtract) => e.status === 'review' || e.status === 'approved'
+  );
 
   // Safe lookup for review
   const reviewExtract = reviewExtractId
@@ -207,14 +210,33 @@ export default function SuperAdminCurriculum() {
     refreshStats();
   };
 
-  const handleAssignSuccess = () => {
-    setReviewExtractId(null);
-    refreshExtracts();
-    refreshStats();
-    fetchAssigned();
-    setTab(2);
-    setNotification({ type: 'success', message: 'Curriculum assigned successfully!' });
-    setTimeout(() => setNotification(null), 4000);
+  // FIX: Actually persist review edits to Firestore (previously edits were discarded)
+  const handleUpdateCourse = async (courseId: string, updates: Partial<ParsedCourse>) => {
+    if (!reviewExtractId) return;
+    try {
+      await updateExtractCourse(reviewExtractId, { courseId, updates });
+      refreshExtracts();
+      refreshStats();
+      setNotification({ type: 'success', message: 'Course updated.' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      console.error('Failed to update course:', err);
+      setNotification({ type: 'error', message: 'Failed to update course.' });
+    }
+  };
+
+  const handleUpdateModule = async (courseId: string, moduleId: string, updates: Partial<ParsedModule>) => {
+    if (!reviewExtractId) return;
+    try {
+      await updateExtractModule(reviewExtractId, { courseId, moduleId, updates });
+      refreshExtracts();
+      refreshStats();
+      setNotification({ type: 'success', message: 'Module updated.' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      console.error('Failed to update module:', err);
+      setNotification({ type: 'error', message: 'Failed to update module.' });
+    }
   };
 
   const handleDeleteExtract = async (extractId: string, e: React.MouseEvent) => {
@@ -270,7 +292,7 @@ export default function SuperAdminCurriculum() {
       <Paper sx={{ borderRadius: 2 }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tab icon={<UploadIcon />} iconPosition="start" label="Upload" />
-          <Tab icon={<ReviewIcon />} iconPosition="start" label={`Review (${typeof total === 'number' ? total : 0})`} />
+          <Tab icon={<ReviewIcon />} iconPosition="start" label={`Review (${displayItems.length})`} />
           <Tab icon={<AssignIcon />} iconPosition="start" label={`Assigned (${Array.isArray(assignedCurriculum) ? assignedCurriculum.length : 0})`} />
           <Tab icon={<StatsIcon />} iconPosition="start" label="Stats" />
         </Tabs>
@@ -314,7 +336,8 @@ export default function SuperAdminCurriculum() {
                     extract={reviewExtract}
                     colleges={colleges}
                     onApprove={handleApprove}
-                    onAssignSuccess={handleAssignSuccess}
+                    onUpdateCourse={handleUpdateCourse}
+                    onUpdateModule={handleUpdateModule}
                     onDeleteCourse={(courseId: string) => handleDeleteCourse(reviewExtractId, courseId)}
                   />
                 ) : (

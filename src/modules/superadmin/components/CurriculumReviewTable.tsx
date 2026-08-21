@@ -42,7 +42,6 @@ export interface CurriculumReviewTableProps {
   extract?: SyllabusExtract;
   colleges?: CollegeOption[];
   onApprove?: (extractId: string) => void | Promise<void>;
-  onAssignSuccess?: () => void;
   onUpdateCourse?: (courseId: string, updates: Partial<ParsedCourse>) => void | Promise<void>;
   onUpdateModule?: (courseId: string, moduleId: string, updates: Partial<ParsedModule>) => void | Promise<void>;
   onDeleteCourse?: (courseId: string) => void | Promise<void>;
@@ -55,7 +54,7 @@ export interface CurriculumReviewTableProps {
 export function CurriculumReviewTable({
   items: legacyItems,
   onApproveItem, onRejectItem, onEditItem,
-  extract, onApprove, onAssignSuccess, onUpdateCourse, onUpdateModule, onDeleteCourse,
+  extract, onApprove, onUpdateCourse, onUpdateModule, onDeleteCourse,
   readOnly = false,
 }: CurriculumReviewTableProps) {
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
@@ -435,9 +434,11 @@ export function CurriculumReviewTable({
         {!readOnly && (
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
             {onApprove && (
+              // FIX: This only approves the extract — it never assigns to a college.
+              // Renamed from "Approve & Assign" and dropped the false success toast.
               <Button variant="contained" color="success" startIcon={<CheckCircle />}
-                onClick={() => { onApprove(extract.id); onAssignSuccess?.(); }}>
-                Approve & Assign
+                onClick={() => { onApprove(extract.id); }}>
+                Approve
               </Button>
             )}
           </Box>

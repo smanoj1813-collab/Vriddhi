@@ -114,6 +114,9 @@ function deepSanitize<T>(obj: T): T {
   if (obj === null || obj === undefined) return null as T;
   if (typeof obj !== 'object') return obj;
   if (obj instanceof Date) return obj;
+  // FIX: preserve Firestore Timestamp objects instead of flattening them
+  // into {seconds, nanoseconds} maps (which breaks date rendering & orderBy)
+  if (obj instanceof Timestamp) return obj;
   if (Array.isArray(obj)) {
     return obj.map(deepSanitize).filter(v => v !== undefined) as unknown as T;
   }

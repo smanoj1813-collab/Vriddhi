@@ -209,7 +209,8 @@ const AdminCurriculum: React.FC = () => {
         faculty,
         formData.batch,
         formData.division || undefined,
-        formData.section || undefined
+        formData.section || undefined,
+        user?.name || user?.email || 'Admin'
       )
       if (result) {
         setSnackbar({ open: true, message: 'Faculty assigned successfully', severity: 'success' })
@@ -232,7 +233,7 @@ const AdminCurriculum: React.FC = () => {
   }
 
   const handleScheduleClass = (mapping: typeof mappings[0]) => {
-    navigate('/class-schedule', {
+    navigate('/admin/class-schedule', {
       state: {
         prefill: {
           subject: mapping.courseName,

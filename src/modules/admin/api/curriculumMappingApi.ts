@@ -5,7 +5,7 @@
 import { db } from '@/Firebase/config';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, Timestamp, writeBatch,
+  query, where, Timestamp, writeBatch,
   DocumentData, QueryDocumentSnapshot, Query,
 } from "firebase/firestore";
 
@@ -26,6 +26,9 @@ function deepSanitize<T>(obj: T): T {
   if (obj === null || obj === undefined) return null as T;
   if (typeof obj !== 'object') return obj;
   if (obj instanceof Date) return obj;
+  // FIX: preserve Firestore Timestamp objects instead of flattening them
+  // into {seconds, nanoseconds} maps (which breaks date rendering & orderBy)
+  if (obj instanceof Timestamp) return obj;
   if (Array.isArray(obj)) {
     return obj.map(deepSanitize).filter(v => v !== undefined) as unknown as T;
   }
@@ -96,37 +99,32 @@ export async function getMappingById(mappingId: string): Promise<CurriculumFacul
 
 export async function listMappings(options: MappingFilterOptions = {}): Promise<CurriculumFacultyMapping[]> {
   try {
-    let q: Query<DocumentData> = query(collection(db, MAPPINGS_COLLECTION), orderBy("assignedAt", "desc"));
-
+    // FIX: Build the query with a single equality filter, then apply the rest
+    // client-side. Chaining many where() clauses required composite indexes
+    // for every combination and silently returned empty lists when missing.
+    let q: Query<DocumentData>;
     if (options.collegeId) {
       q = query(collection(db, MAPPINGS_COLLECTION), where("collegeId", "==", options.collegeId));
-    }
-    if (options.curriculumId) {
-      q = query(q, where("curriculumId", "==", options.curriculumId));
-    }
-    if (options.facultyId) {
-      q = query(q, where("facultyId", "==", options.facultyId));
-    }
-    if (options.branch) {
-      q = query(q, where("branch", "==", options.branch));
-    }
-    if (options.semester) {
-      q = query(q, where("semester", "==", options.semester));
-    }
-    if (options.batch) {
-      q = query(q, where("batch", "==", options.batch));
-    }
-    if (options.status && options.status !== 'all') {
-      q = query(q, where("status", "==", options.status));
+    } else if (options.facultyId) {
+      q = query(collection(db, MAPPINGS_COLLECTION), where("facultyId", "==", options.facultyId));
+    } else {
+      q = query(collection(db, MAPPINGS_COLLECTION));
     }
 
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToMapping);
 
-    // Client-side sort if we added filters that break ordering
-    if (options.collegeId || options.facultyId) {
-      items = items.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
-    }
+    // Client-side filtering (no composite indexes required)
+    if (options.collegeId) items = items.filter((m) => m.collegeId === options.collegeId);
+    if (options.facultyId) items = items.filter((m) => m.facultyId === options.facultyId);
+    if (options.curriculumId) items = items.filter((m) => m.curriculumId === options.curriculumId);
+    if (options.branch) items = items.filter((m) => m.branch === options.branch);
+    if (options.semester) items = items.filter((m) => m.semester === options.semester);
+    if (options.batch) items = items.filter((m) => m.batch === options.batch);
+    if (options.status && options.status !== 'all') items = items.filter((m) => m.status === options.status);
+
+    // Sort newest first
+    items = items.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
 
     return items;
   } catch (error) {
@@ -179,9 +177,9 @@ export async function bulkCreateMappings(inputs: CreateMappingInput[]): Promise<
 // Faculty Curriculum View
 // ═══════════════════════════════════════════════════════════════════════
 
-export async function getFacultyCurriculum(facultyId: string): Promise<FacultyCurriculumView[]> {
+export async function getFacultyCurriculum(facultyId: string, collegeId?: string): Promise<FacultyCurriculumView[]> {
   try {
-    const mappings = await listMappings({ facultyId, status: 'active' });
+    const mappings = await listMappings({ facultyId, collegeId, status: 'active' });
     const views: FacultyCurriculumView[] = [];
 
     for (const mapping of mappings) {

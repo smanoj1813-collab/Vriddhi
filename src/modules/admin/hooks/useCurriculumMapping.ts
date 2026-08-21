@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/Firebase/config';
 import {
-  collection, getDocs, query, where, orderBy,
+  collection, getDocs, query, where,
 } from 'firebase/firestore';
 
 import type {
@@ -65,24 +65,24 @@ export function useCurriculumMapping(collegeId: string | undefined) {
   const fetchFaculty = useCallback(async () => {
     if (!collegeId) return;
     try {
-      const q = query(
-        collection(db, 'faculty'),
-        where('collegeId', '==', collegeId),
-        where('status', '==', 'active'),
-        orderBy('firstName', 'asc')
-      );
+      // FIX: single-equality query + client-side filter/sort (no composite index)
+      const q = query(collection(db, 'faculty'), where('collegeId', '==', collegeId));
       const snap = await getDocs(q);
-      const list = snap.docs.map(d => {
-        const data = d.data();
-        return {
-          id: d.id,
-          name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.name || 'Unknown',
-          email: data.email || '',
-          department: data.department || 'General',
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-        } as FacultyOption;
-      });
+      const list = snap.docs
+        .map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.name || 'Unknown',
+            email: data.email || '',
+            department: data.department || 'General',
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            status: data.status || 'active',
+          } as FacultyOption & { status: string };
+        })
+        .filter(f => f.status === 'active')
+        .sort((a, b) => a.name.localeCompare(b.name));
       setFacultyList(list);
     } catch (err) {
       console.error('Error fetching faculty:', err);
@@ -149,7 +149,8 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     faculty: FacultyOption,
     batch: string,
     division?: string,
-    section?: string
+    section?: string,
+    assignedBy?: string
   ) => {
     setError(null);
     try {
@@ -170,7 +171,7 @@ export function useCurriculumMapping(collegeId: string | undefined) {
         totalHours: course.totalHours,
         credits: course.credits,
         modulesCount: course.modules.length,
-        assignedBy: '', // Will be set by caller
+        assignedBy: assignedBy || '',
       };
       const result = await createMapping(input);
       setMappings(prev => [result, ...prev]);

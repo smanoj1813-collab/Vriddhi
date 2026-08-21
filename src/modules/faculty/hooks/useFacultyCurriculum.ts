@@ -5,6 +5,8 @@ import type {
   FacultyScheduleItem,
   FacultyCurriculumStats,
 } from '../types/curriculum';
+import { getFacultyCurriculum } from '../../admin/api/curriculumMappingApi';
+import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 
 export interface UseFacultyCurriculumReturn {
   curriculum: FacultyCurriculumView[];
@@ -22,6 +24,38 @@ export interface UseFacultyCurriculumReturn {
   getUpcomingSchedule: () => FacultyScheduleItem[];
 }
 
+// ─── Helpers ────────────────────────────────────────────────────────────
+
+function localISO(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+/** Next occurrence of a weekday (today counts) as a local YYYY-MM-DD date. */
+function nextOccurrenceISO(dayOfWeek: string): string {
+  const target = DAYS.indexOf(String(dayOfWeek).toLowerCase());
+  if (target < 0) return localISO(new Date());
+  const today = new Date();
+  let diff = target - today.getDay();
+  if (diff < 0) diff += 7;
+  const d = new Date(today);
+  d.setDate(today.getDate() + diff);
+  return localISO(d);
+}
+
+function deriveStatus(date: string, startTime: string, endTime: string): FacultyScheduleItem['status'] {
+  if (date !== localISO(new Date())) return 'scheduled';
+  const now = new Date();
+  const current = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  if (current < startTime) return 'scheduled';
+  if (current > endTime) return 'completed';
+  return 'ongoing';
+}
+
 export function useFacultyCurriculum(
   facultyId: string,
   collegeId: string,
@@ -34,15 +68,42 @@ export function useFacultyCurriculum(
 
   const fetchData = useCallback(async () => {
     if (!facultyId || !collegeId) {
+      setCurriculum([]);
+      setSchedules([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      // TODO: Wire to Firestore / API
-      setCurriculum([]);
-      setSchedules([]);
+      // Curriculum: fetch mappings for this faculty and resolve course modules
+      const views = await getFacultyCurriculum(facultyId, collegeId);
+      setCurriculum(views as FacultyCurriculumView[]);
+
+      // Schedule: weekly recurring classes for this faculty
+      const weekly = await fetchFacultyWeeklySchedule(facultyId);
+      const mapped: FacultyScheduleItem[] = weekly.map((w) => {
+        const date = nextOccurrenceISO(w.dayOfWeek);
+        return {
+          id: w.id,
+          subject: w.subject || '',
+          subjectCode: w.subjectCode || '',
+          status: deriveStatus(date, w.startTime, w.endTime),
+          startTime: w.startTime,
+          endTime: w.endTime,
+          room: w.room || '',
+          branch: w.branch || '',
+          batch: w.batch || '',
+          semester: w.semester || 0,
+          type: w.type || 'lecture',
+          date,
+          attendanceMarked: false,
+          division: w.division,
+          section: w.section,
+          topicsPlanned: [],
+        };
+      });
+      setSchedules(mapped);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load curriculum');
     } finally {
@@ -70,14 +131,14 @@ export function useFacultyCurriculum(
   }, [curriculum, schedules, selectedCourse]);
 
   const todaySchedule = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = localISO(new Date());
     return schedules.filter(s => s.date === today);
   }, [schedules]);
 
   const upcomingSchedule = useMemo(() => {
-    const now = new Date().toISOString();
+    const today = localISO(new Date());
     return schedules
-      .filter(s => s.date >= now.split('T')[0] && s.status === 'scheduled')
+      .filter(s => s.date >= today && s.status === 'scheduled')
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [schedules]);
 
@@ -89,15 +150,15 @@ export function useFacultyCurriculum(
         ? {
             totalCourses: curriculum.length,
             totalModules: curriculum.reduce(
-              (sum, c) => sum + c.modules.length,
+              (sum, c) => sum + (c.modules?.length || 0),
               0,
             ),
             totalHours: curriculum.reduce(
-              (sum, c) => sum + c.totalHours,
+              (sum, c) => sum + (c.totalHours || 0),
               0,
             ),
             totalCredits: curriculum.reduce(
-              (sum, c) => sum + c.credits,
+              (sum, c) => sum + (c.credits || 0),
               0,
             ),
           }

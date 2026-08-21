@@ -7,9 +7,18 @@ import { useState, useCallback } from 'react';
 import mammoth from 'mammoth';
 import { parseSyllabusDocument, DEFAULT_CONFIG } from '../services/syllabusParser';
 import { createSyllabusExtract } from '../api/syllabusCurriculumApi';
-import type { SyllabusExtract } from '../types/curriculum';
+import type { SyllabusExtract, SyllabusFormat } from '../types/curriculum';
 
 type ParserPhase = 'idle' | 'uploading' | 'parsing' | 'saving' | 'done' | 'error';
+
+// ─── Helpers ────────────────────────────────────────────────────────────
+
+function detectFormat(fileName: string): SyllabusFormat {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  if (ext === 'docx') return 'docx';
+  if (ext === 'pdf') return 'pdf';
+  return 'txt';
+}
 
 export function useSyllabusParser() {
   const [phase, setPhase] = useState<ParserPhase>('idle');
@@ -28,6 +37,11 @@ export function useSyllabusParser() {
       const result = await mammoth.extractRawText({ arrayBuffer });
       return result.value;
     }
+    // FIX: PDFs can't be read with file.text() — that produced garbage.
+    // Fail loudly instead of silently parsing gibberish.
+    if (ext === 'pdf') {
+      throw new Error('PDF parsing is not supported yet. Please convert the syllabus to DOCX or TXT and re-upload.');
+    }
     return file.text();
   }, []);
 
@@ -43,7 +57,7 @@ export function useSyllabusParser() {
         text,
         file.name,
         file.size,
-        'docx',
+        detectFormat(file.name),
         DEFAULT_CONFIG
       );
 
@@ -105,7 +119,7 @@ export function useSyllabusParser() {
         text,
         file.name,
         file.size,
-        'docx',
+        detectFormat(file.name),
         DEFAULT_CONFIG
       );
 

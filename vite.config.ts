@@ -21,6 +21,12 @@ export default defineConfig(({ mode }) => {
   return {
     plugins,
     base: '/',  // Required for Firebase Hosting root deploy
+    // Dev server: bind to all interfaces and accept the preview proxy host
+    // (the Arena preview routes through a *.e2b.app host, not localhost).
+    server: {
+      host: true,
+      allowedHosts: true,
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
