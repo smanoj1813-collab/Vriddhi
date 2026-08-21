@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/context/AuthContext'
 import {
   ArrowLeft, Plus, Search, BookOpen, Calendar, Clock, CheckCircle,
   AlertTriangle, Edit3, Trash2, Eye, ChevronDown, ChevronUp,
@@ -71,13 +72,16 @@ const statusConfig: Record<StatusFilter, StatusConfigItem> = {
 type TopicFormData = Omit<Topic, 'id'>;
 
 export default function FacultyTopics() {
+  const { user } = useAuth()
+  const facultyId = user?.id || user?.uid || ''
+
   const {
     topics, stats, loading, error, readStats,
     search, setSearch,
     statusFilter, setStatusFilter,
     refresh,
     addTopic, editTopic, removeTopic,
-  } = useTopics()
+  } = useTopics(facultyId || undefined)
 
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)

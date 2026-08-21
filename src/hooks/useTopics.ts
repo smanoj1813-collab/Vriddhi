@@ -1,4 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { db } from '../Firebase/config';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from 'firebase/firestore';
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -18,6 +29,9 @@ export interface Topic {
   resources: string[];
   notes: string;
   subject: string;
+  facultyId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TopicStats {
@@ -57,19 +71,66 @@ export interface TopicResource {
   uploadedAt?: Date | string;
 }
 
+// ─── Firestore collection ──────────────────────────────
+
+const TOPICS_COLLECTION = 'facultyTopics';
+
+function docToTopic(d: any, id: string): Topic {
+  return {
+    id,
+    title: d.title || '',
+    description: d.description || '',
+    course: d.course || '',
+    batch: d.batch || '',
+    division: d.division || '',
+    plannedDate: d.plannedDate || '',
+    duration: typeof d.duration === 'number' ? d.duration : 0,
+    status: d.status || 'planned',
+    resources: Array.isArray(d.resources) ? d.resources : [],
+    notes: d.notes || '',
+    subject: d.subject || '',
+    facultyId: d.facultyId || '',
+    createdAt: d.createdAt || '',
+    updatedAt: d.updatedAt || '',
+  };
+}
+
 // ─── Hook ──────────────────────────────────────────────
 
-export function useTopics(_facultyId?: string): UseTopicsReturn {
+export function useTopics(facultyId?: string): UseTopicsReturn {
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  useEffect(() => {
-    setLoading(false);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     setError(null);
-  }, []);
+    try {
+      // Single equality filter (no composite index needed), sort client-side
+      let q;
+      if (facultyId) {
+        q = query(collection(db, TOPICS_COLLECTION), where('facultyId', '==', facultyId));
+      } else {
+        q = query(collection(db, TOPICS_COLLECTION));
+      }
+      const snap = await getDocs(q);
+      const list = snap.docs
+        .map((d) => docToTopic(d.data(), d.id))
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setAllTopics(list);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load topics');
+      setAllTopics([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [facultyId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const topics = useMemo(() => {
     return allTopics.filter(t => {
@@ -93,15 +154,25 @@ export function useTopics(_facultyId?: string): UseTopicsReturn {
   }), [allTopics]);
 
   const addTopic = useCallback(async (data: Omit<Topic, 'id'>) => {
-    const newTopic: Topic = { ...data, id: Math.random().toString(36).substring(2, 9) };
-    setAllTopics(prev => [...prev, newTopic]);
-  }, []);
+    const now = new Date().toISOString();
+    const payload = {
+      ...data,
+      facultyId: facultyId || '',
+      createdAt: now,
+      updatedAt: now,
+    };
+    const docRef = await addDoc(collection(db, TOPICS_COLLECTION), payload);
+    setAllTopics(prev => [docToTopic(payload, docRef.id), ...prev]);
+  }, [facultyId]);
 
   const editTopic = useCallback(async (id: string, data: Partial<Topic>) => {
-    setAllTopics(prev => prev.map(t => (t.id === id ? { ...t, ...data } : t)));
+    const updatedAt = new Date().toISOString();
+    await updateDoc(doc(db, TOPICS_COLLECTION, id), { ...data, updatedAt });
+    setAllTopics(prev => prev.map(t => (t.id === id ? { ...t, ...data, updatedAt } : t)));
   }, []);
 
   const removeTopic = useCallback(async (id: string) => {
+    await deleteDoc(doc(db, TOPICS_COLLECTION, id));
     setAllTopics(prev => prev.filter(t => t.id !== id));
   }, []);
 
@@ -115,7 +186,7 @@ export function useTopics(_facultyId?: string): UseTopicsReturn {
     setSearch,
     statusFilter,
     setStatusFilter,
-    refresh: () => {},
+    refresh: fetchData,
     addTopic,
     editTopic,
     removeTopic,
