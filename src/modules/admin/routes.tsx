@@ -4,6 +4,7 @@ import { RoleRoute } from '@/routes/components/RoleRoute';
 import Layout from '@/shared/components/Layout';
 
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
+const AcademicCalendarPage = lazy(() => import('./pages/AcademicCalendarPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
 const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -92,6 +93,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'question-bank', element: <LazyPage><QuestionBank /></LazyPage> },
       { path: 'paper-generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
       { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },
+      { path: 'academic-calendar', element: <LazyPage><AcademicCalendarPage /></LazyPage> },
       { path: 'curriculum', element: <LazyPage><AdminCurriculum /></LazyPage> },
       { path: 'analytics', element: <LazyPage><Analytics /></LazyPage> },
       { path: 'journey', element: <LazyPage><Journey /></LazyPage> },

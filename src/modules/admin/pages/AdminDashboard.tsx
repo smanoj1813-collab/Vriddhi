@@ -10,8 +10,10 @@ import {
   Clock, Search, Filter, Plus, BarChart3, Bell,
   Lock, Eye, Trash2, Edit3, Download, Upload, RefreshCw, AlertTriangle,
   UserCheck, GraduationCap, BookOpen, Calendar, TrendingUp, MoreHorizontal,
-  DollarSign, School, LogOut, User as UserIcon
+  DollarSign, School, LogOut, User as UserIcon, CalendarDays
 } from 'lucide-react'
+import AcademicCalendar from '@/components/AcademicCalendar'
+import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -572,6 +574,8 @@ export default function AdminDashboard() {
     '/admin/audit': 'audit',
     '/settings': 'settings',
     '/admin/settings': 'settings',
+    '/academic-calendar': 'calendar',
+    '/admin/academic-calendar': 'calendar',
   }
 
   const activeTab = searchParams.get('tab') || pathToTab[location.pathname] || 'overview'
@@ -586,11 +590,13 @@ export default function AdminDashboard() {
 
   const collegeId = user?.collegeId
   const dashboardData = useCollegeDashboardData(collegeId)
+  const { facultyList, curriculumList } = useCurriculumMapping(collegeId)
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'departments', label: 'Departments', icon: Building2 },
+    { id: 'calendar', label: 'Academic Calendar', icon: CalendarDays },
     { id: 'approvals', label: 'Approvals', icon: CheckCircle },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'audit', label: 'Audit Logs', icon: Clock },
@@ -695,6 +701,16 @@ export default function AdminDashboard() {
         )
       case 'users': return <UserManagement users={dashboardData.users} collegeId={collegeId} />
       case 'departments': return <DepartmentOverview departments={dashboardData.departments} />
+      case 'calendar':
+        return (
+          <AcademicCalendar
+            collegeId={collegeId}
+            userId={user?.id || ''}
+            userName={user?.name || null}
+            facultyList={facultyList}
+            curriculumList={curriculumList}
+          />
+        )
       case 'approvals': return <ApprovalWorkflows />
       case 'reports': return <ReportsAnalytics totalStudents={dashboardData.totalStudents} totalFaculty={dashboardData.totalFaculty} />
       case 'audit': return <AuditLogs />
@@ -725,6 +741,7 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'College-wide overview and key metrics'}
                 {activeTab === 'users' && 'Manage all users, roles and permissions'}
                 {activeTab === 'departments' && 'Department performance and analytics'}
+                {activeTab === 'calendar' && 'Plan classes, exams, holidays and deadlines'}
                 {activeTab === 'approvals' && 'Review and approve pending requests'}
                 {activeTab === 'reports' && 'Generate and download reports'}
                 {activeTab === 'audit' && 'System activity and security logs'}
