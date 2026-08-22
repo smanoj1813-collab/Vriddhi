@@ -10,9 +10,11 @@ import {
   collection, doc, setDoc, writeBatch, Timestamp
 } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
+import { getAttendanceBatches } from './attendanceBatches';
 
 const BRANCHES = ['BCom', 'BA', 'BSc', 'BBA', 'BCA'];
-const BATCHES = ['2022', '2023', '2024', '2025'];
+// Attendance batches: 2026 and above only (2025 and older are inactive).
+const BATCHES = getAttendanceBatches();
 const DIVISIONS = ['A', 'B', 'C'];
 const SUBJECTS = [
   { name: 'Mathematics', code: 'MAT101' },

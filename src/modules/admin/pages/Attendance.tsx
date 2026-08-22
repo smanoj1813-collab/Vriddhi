@@ -3,6 +3,7 @@
 // ADMIN ATTENDANCE MANAGEMENT — Real Firestore Data
 // ============================================
 
+import { isAllowedAttendanceBatch } from '../../../shared/utils/attendanceBatches';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -124,12 +125,14 @@ export default function Attendance() {
   }, [fetchData]);
 
   // Unique branches & batches from sessions for filter dropdowns
+  // Batches are restricted to 2026 and above (older data stays visible, but
+  // is no longer selectable as a filter).
   const { branches, batches } = useMemo(() => {
     const bSet = new Set<string>();
     const baSet = new Set<string>();
     sessions.forEach((s) => {
       if (s.branch) bSet.add(s.branch);
-      if (s.batch) baSet.add(s.batch);
+      if (s.batch && isAllowedAttendanceBatch(s.batch)) baSet.add(s.batch);
     });
     return { branches: Array.from(bSet), batches: Array.from(baSet) };
   }, [sessions]);
