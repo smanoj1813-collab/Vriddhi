@@ -285,18 +285,36 @@ export async function fetchFacultyWeeklySchedule(facultyId: string): Promise<Wee
   }
 
   try {
-    const q = query(
+    // Keep each Firestore query to one equality constraint. Admin schedules use
+    // the faculty profile document ID, while signed-in faculty usually have an
+    // Auth UID. Try the UID directly, then resolve its faculty profile.
+    const runScheduleQuery = (id: string) => getDocs(query(
       collection(db, WEEKLY_COLLECTION),
-      where('facultyId', '==', facultyId),
-      where('isActive', '==', true),
+      where('facultyId', '==', id),
       limit(100)
-    )
-    const snap = await getDocs(q)
-    console.log('[ScheduleApi] fetchFacultyWeeklySchedule — docs found:', snap.size)
+    ))
+
+    let snap = await runScheduleQuery(facultyId)
     trackRead(snap.size)
 
+    if (snap.empty) {
+      const profileSnap = await getDocs(query(
+        collection(db, 'faculty'),
+        where('uid', '==', facultyId),
+        limit(1)
+      ))
+      trackRead(profileSnap.size)
+      const profileId = profileSnap.docs[0]?.id
+      if (profileId && profileId !== facultyId) {
+        snap = await runScheduleQuery(profileId)
+        trackRead(snap.size)
+      }
+    }
+
+    console.log('[ScheduleApi] fetchFacultyWeeklySchedule — docs found:', snap.size)
     return snap.docs
       .map(d => docToWeeklySchedule(d.data(), d.id))
+      .filter(schedule => schedule.isActive)
       .sort((a, b) => {
         const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         const dayDiff = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek)
@@ -305,7 +323,7 @@ export async function fetchFacultyWeeklySchedule(facultyId: string): Promise<Wee
       })
   } catch (err) {
     console.error('[ScheduleApi] Faculty weekly fetch failed:', err)
-    return []
+    throw new Error('Failed to load your weekly schedule. Please try again.')
   }
 }
 

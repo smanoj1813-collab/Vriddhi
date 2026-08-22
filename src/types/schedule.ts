@@ -29,7 +29,7 @@ export interface ClassSchedule {
   facultyId?: string;
   facultyName?: string;
   facultyInitials?: string;
-  type?: 'lecture' | 'lab' | 'tutorial';
+  type?: 'lecture' | 'lab' | 'tutorial' | 'seminar' | 'workshop';
   status?: 'scheduled' | 'completed' | 'cancelled' | 'ongoing' | 'upcoming';
   /** Flat time fields — populated by student schedule APIs */
   startTime?: string;

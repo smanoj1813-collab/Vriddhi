@@ -3,6 +3,7 @@ import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
   getDoc, Timestamp, orderBy, limit, writeBatch
 } from 'firebase/firestore';
+import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import type {
   FacultyClassSession,
   FacultyAttendanceDoc,
@@ -74,22 +75,58 @@ export async function fetchFacultyClassSessions(
   if (sessionReadCount >= MAX_READS_PER_SESSION) return [];
   if (!facultyId) return [];
 
-  try {
-    const constraints: any[] = [
-      where('facultyId', '==', facultyId),
-      limit(100)
-    ];
-    if (dateStr) constraints.splice(1, 0, where('date', '==', dateStr));
+  const requestedDate = dateStr || new Date().toISOString().split('T')[0];
+  // Parse at local noon so an ISO date is not shifted by the browser timezone.
+  const requestedDay = new Date(`${requestedDate}T12:00:00`)
+    .toLocaleDateString('en-US', { weekday: 'long' })
+    .toLowerCase();
 
-    const q = query(collection(db, 'classSessions'), ...constraints);
+  try {
+    // Admin creates recurring classes in weeklySchedules. Turn the matching
+    // weekday into dated attendance sessions for the selected date.
+    const weekly = await fetchFacultyWeeklySchedule(facultyId);
+    const scheduleFacultyId = weekly[0]?.facultyId || facultyId;
+    const recurringSessions: FacultyClassSession[] = weekly
+      .filter(item => item.dayOfWeek === requestedDay)
+      .map(item => ({
+        id: item.id,
+        source: 'weekly',
+        subject: item.subject,
+        subjectCode: item.subjectCode,
+        facultyId: item.facultyId,
+        facultyName: item.facultyName,
+        branch: item.branch,
+        batch: item.batch,
+        semester: item.semester,
+        division: item.division,
+        section: item.section,
+        room: item.room,
+        timeSlot: `${item.startTime}-${item.endTime}`,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        date: requestedDate,
+        topicsPlanned: [],
+        status: 'scheduled',
+        attendanceMarked: false,
+      }));
+
+    // Preserve explicitly-created/rescheduled daily sessions. Use one server
+    // filter and filter the date client-side to avoid a composite index.
+    const q = query(
+      collection(db, 'classSessions'),
+      where('facultyId', '==', scheduleFacultyId),
+      limit(100)
+    );
     const snap = await getDocs(q);
     trackRead(snap.size);
 
-    return snap.docs
+    const dailySessions = snap.docs
+      .filter(d => d.data().date === requestedDate)
       .map(d => {
         const data = d.data();
         return {
           id: d.id,
+          source: 'daily',
           subject: data.subject || '',
           subjectCode: data.subjectCode || '',
           facultyId: data.facultyId || '',
@@ -101,16 +138,28 @@ export async function fetchFacultyClassSessions(
           section: data.section || '',
           room: data.room || '',
           timeSlot: data.timeSlot || '',
-          date: data.date || '',
+          startTime: data.startTime || '',
+          endTime: data.endTime || '',
+          date: data.date || requestedDate,
           topicsPlanned: data.topicsPlanned || [],
           status: data.status || 'scheduled',
           attendanceMarked: data.attendanceMarked || false,
         } as FacultyClassSession;
-      })
-      .sort((a, b) => (a.timeSlot || '').localeCompare(b.timeSlot || ''));
+      });
+
+    // A daily session supersedes the matching recurring slot.
+    const dailyKeys = new Set(dailySessions.map(session =>
+      `${session.subjectCode}|${session.timeSlot}|${session.branch}|${session.batch}|${session.division}`
+    ));
+    return [
+      ...dailySessions,
+      ...recurringSessions.filter(session => !dailyKeys.has(
+        `${session.subjectCode}|${session.timeSlot}|${session.branch}|${session.batch}|${session.division}`
+      )),
+    ].sort((a, b) => (a.timeSlot || '').localeCompare(b.timeSlot || ''));
   } catch (err) {
     console.error('[FacultyApi] Class sessions query failed:', err);
-    return [];
+    throw new Error('Failed to load scheduled classes. Please try again.');
   }
 }
 
@@ -128,14 +177,13 @@ export async function fetchStudentsForSession(
   if (!collegeId) return [];
 
   try {
+    // Query only by tenant and filter the cohort client-side. This avoids a
+    // five-field composite index and tolerates legacy numeric/string values.
     const q = query(
       collection(db, 'students'),
       where('collegeId', '==', collegeId),
-      where('branch', '==', branch),
-      where('batch', '==', batch),
-      where('division', '==', division),
-      where('semester', '==', semester),
-      limit(200)
+      // Keep enough headroom for aggregate documents in the 500-write save batch.
+      limit(450)
     );
 
     const snap = await getDocs(q);
@@ -145,21 +193,36 @@ export async function fetchStudentsForSession(
 
     for (const docSnap of snap.docs) {
       const d = docSnap.data();
-      const studentSubjects = d.subjects || d.assignedSubjects || [];
-      if (studentSubjects.length > 0 && !studentSubjects.includes(subject)) {
+      const studentDivision = d.division || d.section || '';
+      if (
+        String(d.branch || d.department || '') !== String(branch) ||
+        String(d.batch || '') !== String(batch) ||
+        String(studentDivision) !== String(division) ||
+        Number(d.semester || 0) !== Number(semester)
+      ) {
         continue;
       }
+
+      const studentSubjects = d.subjects || d.assignedSubjects || [];
+      const subjectNames = Array.isArray(studentSubjects)
+        ? studentSubjects.map((item: any) => typeof item === 'string' ? item : item.name || item.subject || '')
+        : [];
+      if (subjectNames.length > 0 && !subjectNames.includes(subject)) continue;
       students.push(buildFacultyStudent(d, docSnap.id));
     }
 
     return students.sort((a, b) => a.name.localeCompare(b.name));
   } catch (err) {
     console.error('[FacultyApi] Students query failed:', err);
-    return [];
+    throw new Error('Failed to load students for this class.');
   }
 }
 
 // ─── Fetch Existing Attendance ─────────────────────────────────────────────
+
+function attendanceDocumentId(sessionId: string, date: string): string {
+  return `${date}_${sessionId}`.replace(/\//g, '_');
+}
 
 export async function fetchAttendanceForSession(
   sessionId: string,
@@ -168,19 +231,26 @@ export async function fetchAttendanceForSession(
   if (sessionReadCount >= MAX_READS_PER_SESSION) return null;
 
   try {
-    const q = query(
-      collection(db, 'attendance'),
-      where('sessionId', '==', sessionId),
-      where('date', '==', date)
-    );
+    // New records use a deterministic ID, avoiding a query and duplicate saves.
+    let docSnap = await getDoc(doc(db, 'attendance', attendanceDocumentId(sessionId, date)));
+    trackRead(1);
 
-    const snap = await getDocs(q);
-    trackRead(snap.size);
+    // Backward-compatible lookup for attendance written before deterministic IDs.
+    if (!docSnap.exists()) {
+      const q = query(
+        collection(db, 'attendance'),
+        where('sessionId', '==', sessionId),
+        limit(20)
+      );
+      const snap = await getDocs(q);
+      trackRead(snap.size);
+      const legacy = snap.docs.find(candidate => candidate.data().date === date);
+      if (!legacy) return null;
+      docSnap = legacy;
+    }
 
-    if (snap.empty) return null;
-
-    const docSnap = snap.docs[0];
     const data = docSnap.data();
+    if (!data) return null;
     return {
       id: docSnap.id,
       sessionId: data.sessionId,
@@ -218,7 +288,8 @@ export async function saveAttendance(
   session: FacultyClassSession,
   records: FacultyAttendanceRecord[],
   facultyId: string,
-  facultyName: string
+  facultyName: string,
+  collegeId: string
 ): Promise<string> {
   const presentCount = records.filter(r => r.status === 'Present').length;
   const absentCount = records.filter(r => r.status === 'Absent').length;
@@ -226,8 +297,12 @@ export async function saveAttendance(
   const leaveCount = records.filter(r => r.status === 'Leave').length;
   const onDutyCount = records.filter(r => r.status === 'OnDuty').length;
   const medicalLeaveCount = records.filter(r => r.status === 'MedicalLeave').length;
+  const markedAt = new Date().toISOString();
+  const timestamp = Timestamp.now();
+  const documentId = attendanceDocumentId(session.id, session.date || '');
 
   const attendanceData = {
+    collegeId,
     sessionId: session.id,
     facultyId,
     facultyName,
@@ -241,7 +316,7 @@ export async function saveAttendance(
     room: session.room,
     timeSlot: session.timeSlot,
     date: session.date,
-    markedAt: new Date().toISOString(),
+    markedAt,
     markedBy: facultyName,
     records,
     presentCount,
@@ -251,20 +326,84 @@ export async function saveAttendance(
     onDutyCount,
     medicalLeaveCount,
     totalStudents: records.length,
+    updatedAt: timestamp,
   };
 
-  const existing = await fetchAttendanceForSession(session.id, session.date || '');
+  const statusMap: Record<AttendanceStatus, string> = {
+    Present: 'present',
+    Absent: 'absent',
+    Late: 'late',
+    Leave: 'leave',
+    OnDuty: 'onDuty',
+    MedicalLeave: 'medicalLeave',
+  };
 
-  if (existing) {
-    const docRef = doc(db, 'attendance', existing.id);
-    await updateDoc(docRef, attendanceData);
-    return existing.id;
-  } else {
-    const docRef = await addDoc(collection(db, 'attendance'), attendanceData);
-    const sessionRef = doc(db, 'classSessions', session.id);
-    await updateDoc(sessionRef, { attendanceMarked: true });
-    return docRef.id;
+  // Keep the detailed faculty document, per-student reporting records and
+  // session summary in sync in one atomic write.
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'attendance', documentId), attendanceData, { merge: true });
+
+  records.forEach(record => {
+    const recordId = `${documentId}_${record.studentId}`.replace(/\//g, '_');
+    batch.set(doc(db, 'attendanceRecords', recordId), {
+      collegeId,
+      sessionId: session.id,
+      classSessionId: session.id,
+      studentId: record.studentId,
+      studentName: record.name,
+      usn: record.usn,
+      regNo: record.regNo,
+      status: statusMap[record.status],
+      date: session.date,
+      subject: session.subject,
+      subjectCode: session.subjectCode,
+      branch: session.branch,
+      batch: session.batch,
+      division: session.division,
+      semester: session.semester,
+      markedBy: facultyId,
+      markedAt: timestamp,
+      note: record.notes || '',
+      notes: record.notes || '',
+      updatedAt: timestamp,
+    }, { merge: true });
+  });
+
+  batch.set(doc(db, 'attendanceSummary', documentId), {
+    collegeId,
+    sessionId: session.id,
+    facultyId,
+    facultyName,
+    date: session.date,
+    subject: session.subject,
+    subjectCode: session.subjectCode,
+    branch: session.branch,
+    batch: session.batch,
+    division: session.division,
+    semester: session.semester,
+    total: records.length,
+    present: presentCount,
+    absent: absentCount,
+    late: lateCount,
+    leave: leaveCount,
+    onDuty: onDutyCount,
+    medicalLeave: medicalLeaveCount,
+    percentage: records.length ? Math.round((presentCount / records.length) * 100) : 0,
+    sessions: 1,
+    markedAt: timestamp,
+    updatedAt: timestamp,
+  }, { merge: true });
+
+  if (session.source === 'daily') {
+    batch.update(doc(db, 'classSessions', session.id), {
+      attendanceMarked: true,
+      markedAt: timestamp,
+      updatedAt: timestamp,
+    });
   }
+
+  await batch.commit();
+  return documentId;
 }
 
 // ─── Create a Class Session ────────────────────────────────────────────────
