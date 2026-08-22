@@ -16,6 +16,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 // ─── NEW IMPORTS ───
 import { useAttendanceExport, AdminExportRow } from '../../../modules/faculty/hooks/useAttendanceExport';
 import { ExportButton } from '../../../components/shared/ExportButton';
+import { getAttendanceBatches } from '../../../shared/utils/attendanceBatches';
 
 type ViewMode = 'calendar' | 'list' | 'analytics';
 
@@ -29,7 +30,8 @@ const STATUS_COLORS: Record<AttendanceStatus, string> = {
 };
 
 const BRANCHES = ['BCom', 'BA', 'BSc', 'BBA', 'BCA'];
-const BATCHES = ['2026', '2027', '2028', '2029'];
+// Attendance batches: 2026 and above only (2025 and older are inactive).
+const BATCHES = getAttendanceBatches();
 
 // ═══════════════════════════════════════════════════════════════════
 // GET COLLEGE ID - tries multiple sources
