@@ -1,10 +1,10 @@
-// src/modules/admin/pages/QuestionBank.tsx
-// Admin Question Bank page — AI generation, CRUD and paper building.
+// src/modules/admin/pages/PaperGeneratorPage.tsx
+// Admin Paper Generator page — configure sections and generate a paper from the bank.
 
 import React, { useEffect, useState } from 'react';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import { useAuth } from '../../auth/context/AuthContext';
-import QuestionBankManager from '../components/question-bank/QuestionBankManager';
+import PaperGenerator from '../components/question-bank/PaperGenerator';
 import { getBatchBranchConfig, getQuestionStats } from '../api/questionBankApi';
 
 const DEFAULT_SUBJECTS = [
@@ -23,7 +23,7 @@ const DEFAULT_SUBJECTS = [
   'Statistics',
 ];
 
-export default function QuestionBank() {
+export default function PaperGeneratorPage() {
   const { user } = useAuth();
   const collegeId = user?.collegeId || '';
   const [batches, setBatches] = useState<string[]>([]);
@@ -49,14 +49,14 @@ export default function QuestionBank() {
         setBranches(cfg.branches || []);
         setSubjects(derived.length > 0 ? derived : DEFAULT_SUBJECTS);
       })
-      .catch((err) => setError(err.message || 'Failed to load question bank configuration'))
+      .catch((err) => setError(err.message || 'Failed to load paper generator configuration'))
       .finally(() => setLoading(false));
   }, [collegeId]);
 
   if (!collegeId) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Please sign in with a college account to manage the question bank.</Alert>
+        <Alert severity="error">Please sign in with a college account to generate papers.</Alert>
       </Box>
     );
   }
@@ -65,7 +65,7 @@ export default function QuestionBank() {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
         <CircularProgress />
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>Loading question bank...</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>Loading paper generator...</Typography>
       </Box>
     );
   }
@@ -73,7 +73,7 @@ export default function QuestionBank() {
   return (
     <Box sx={{ p: 3 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <QuestionBankManager batches={batches} branches={branches} subjects={subjects} />
+      <PaperGenerator batches={batches} branches={branches} subjects={subjects} />
     </Box>
   );
 }

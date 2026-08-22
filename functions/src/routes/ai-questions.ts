@@ -1,12 +1,15 @@
 // src/routes/ai-questions.ts
 import * as express from 'express'
 import { db } from '../config/firebase'
-import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
+import { verifyAuth, requireRole, AuthenticatedRequest } from '../middleware/auth'
+import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/tierCheck'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { validateRequest } from '../validation/validateRequest'
 import { aiGenerateSchema } from '../validation'
 import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
+
+const WRITE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
 
 const router = express.Router()
 
@@ -185,27 +188,8 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
       learningOutcomes: normalizedConfig.learningOutcomes,
     }
 
-    // ─── Prepare Firestore data (with FieldValue) ───
-    const now = FieldValue.serverTimestamp()
-    const isoNow = new Date().toISOString()
-
-    const firestoreQuestions = questions.map((q: any, index: number) => {
-      const normalized = normalizeQuestion(q, normalizedConfig)
-      return {
-        ...normalized,
-        id: `ai-${Date.now()}-${index}`,
-        generatedBy: userId,
-        collegeId: collegeId || null,
-        provider,
-        generationConfig,
-        createdAt: now,
-        updatedAt: now,
-        source: 'ai',
-        isAIGenerated: true,
-      }
-    })
-
     // ─── Prepare response data (JSON-safe, NO FieldValue) ───
+    const isoNow = new Date().toISOString()
     const responseQuestions = questions.map((q: any, index: number) => {
       const normalized = normalizeQuestion(q, normalizedConfig)
       return {
@@ -222,18 +206,9 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
       }
     })
 
-    // ─── Save to Firestore ───
-    const batch = db.batch()
-    const savedIds: string[] = []
-
-    for (const q of firestoreQuestions) {
-      const docRef = db.collection('questions').doc()
-      batch.set(docRef, q)
-      savedIds.push(docRef.id)
-    }
-
-    await batch.commit()
-    console.log('[AI Generate] Saved', savedIds.length, 'questions to Firestore')
+    // Generation does NOT auto-save. The client is responsible for saving the
+    // reviewed questions through /api/ai-questions/save or the question bank.
+    // This prevents duplicate documents when the UI performs its own save step.
 
     // ─── Log generation usage ───
     await db.collection('ai_generation_logs').add({
@@ -243,20 +218,20 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
       numQuestions: questions.length,
       config: normalizedConfig,
       generationTime: Date.now() - startTime,
-      savedIds,
+      savedIds: [],
       createdAt: FieldValue.serverTimestamp(),
     })
 
+    // ─── Update tier usage counters ───
+    await incrementUsage(userId, questions.length)
+
     res.json({
       success: true,
-      questions: responseQuestions.map((q: any, i: number) => ({
-        ...q,
-        firestoreId: savedIds[i],
-      })),
+      questions: responseQuestions,
       provider,
       generationTime: Date.now() - startTime,
-      savedCount: savedIds.length,
-      savedIds,
+      savedCount: 0,
+      savedIds: [],
     })
   } catch (err: any) {
     console.error('[AI Generate] CRITICAL ERROR:', err)
@@ -272,6 +247,9 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
 router.post(
   '/generate',
   verifyAuth,
+  requireRole(...WRITE_ROLES),
+  checkTier,
+  enforceQuestionLimit,
   aiGenerationLimiter,
   validateRequest(aiGenerateSchema),
   handleGenerateQuestions
@@ -281,6 +259,9 @@ router.post(
 router.post(
   '/generate-questions',
   verifyAuth,
+  requireRole(...WRITE_ROLES),
+  checkTier,
+  enforceQuestionLimit,
   aiGenerationLimiter,
   validateRequest(aiGenerateSchema),
   handleGenerateQuestions
@@ -290,6 +271,7 @@ router.post(
 router.post(
   '/save',
   verifyAuth,
+  requireRole(...WRITE_ROLES),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { questions } = req.body
@@ -302,25 +284,31 @@ router.post(
 
       const batch = db.batch()
       const savedQuestions: any[] = []
+      const savedIds: string[] = []
+      const now = new Date().toISOString()
 
       for (const q of questions) {
-        const docRef = q.id && !q.id.startsWith('ai-')
-          ? db.collection('questions').doc(q.id)
+        const existingId = q.firestoreId || q.id
+        const docRef = existingId && !String(existingId).startsWith('ai-')
+          ? db.collection('questions').doc(String(existingId))
           : db.collection('questions').doc()
 
+        const { id: _id, firestoreId: _fid, generatedAt: _g, ...rest } = q
         const data = {
-          ...q,
-          id: docRef.id,
-          createdBy: userId,
-          collegeId: q.collegeId || req.user!.collegeId || null,
+          ...rest,
+          createdBy: rest.createdBy || userId,
+          createdByName: rest.createdByName || req.user?.name || 'Unknown',
+          collegeId: rest.collegeId || req.user!.collegeId || null,
           updatedAt: FieldValue.serverTimestamp(),
-          createdAt: q.createdAt || FieldValue.serverTimestamp(),
+          createdAt: rest.createdAt || now,
+          searchKeywords: (rest.searchKeywords || buildSearchKeywords(rest)),
           isAIGenerated: true,
           reviewed: true,
         }
 
         batch.set(docRef, data, { merge: true })
-        savedQuestions.push({ ...data, firestoreId: docRef.id })
+        savedIds.push(docRef.id)
+        savedQuestions.push({ ...data, id: docRef.id, firestoreId: docRef.id })
       }
 
       await batch.commit()
@@ -328,6 +316,8 @@ router.post(
       res.status(201).json({
         success: true,
         savedCount: savedQuestions.length,
+        importedIds: savedIds,
+        createdIds: savedIds,
         questions: savedQuestions,
       })
     } catch (err: any) {
@@ -490,6 +480,19 @@ function mapQuestionTypeForAI(type: string): string {
   if (type === 'mcq_single' || type === 'mcq_multiple') return 'mcq'
   if (type === 'match_following') return 'matching'
   return type
+}
+
+function buildSearchKeywords(q: any): string[] {
+  return [
+    q?.text,
+    q?.subject,
+    q?.topic,
+    q?.chapter,
+    q?.unit,
+    ...(Array.isArray(q?.tags) ? q.tags : []),
+  ]
+    .filter(Boolean)
+    .map((v) => String(v).toLowerCase())
 }
 
 export { router }

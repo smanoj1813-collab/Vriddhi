@@ -36,6 +36,8 @@ import {
 } from '@mui/icons-material';
 import { useQuestionBank } from '../hooks/useQuestionBank';
 import { useAuth } from '../../auth/context/AuthContext';
+import { createPaper } from '../api/paperApi';
+import { linkQuestionToPaper } from '../api/questionBankApi';
 import {
   type Paper,
   type PaperQuestionRef,
@@ -202,8 +204,45 @@ export function PaperBuilder({ initialPaper, onSave, onClose }: PaperBuilderProp
     setSaveError(null);
 
     try {
-      // In production, save via API
-      if (onSave) onSave(paper);
+      if (!user?.collegeId) {
+        throw new Error('Not authenticated — missing collegeId');
+      }
+
+      const subjectName = subjects.find((s) => s.id === paper.subjectId)?.name || paper.subjectId;
+      const questionIds = paper.questions.map((q) => q.questionId).filter(Boolean);
+
+      const saved = await createPaper(
+        user.collegeId,
+        {
+          title: paper.title,
+          subject: subjectName,
+          totalMarks: paper.totalMarks,
+          duration: paper.duration,
+          instructions: paper.description ? [paper.description] : [],
+          negativeMarking: false,
+        },
+        questionIds,
+        user.id || user.uid,
+        user.name || user.email || 'Unknown',
+        true
+      );
+
+      const newPaper: Paper = {
+        ...paper,
+        id: saved.id,
+        status: saved.status === 'published' ? 'published' : 'draft',
+        storagePath: '',
+        createdAt: saved.createdAt,
+        updatedAt: saved.updatedAt || new Date().toISOString(),
+      };
+      setPaper(newPaper);
+
+      // Keep the linked questions and paper in sync.
+      for (const qid of questionIds) {
+        await linkQuestionToPaper(qid, saved.id);
+      }
+
+      onSave?.(newPaper);
     } catch (error) {
       setSaveError((error as Error).message);
     } finally {

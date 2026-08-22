@@ -75,6 +75,8 @@ export interface Question {
 
 export interface GeneratedQuestion {
   id?: string;
+  /** Firestore document id returned by the backend for an already-persisted AI question. */
+  firestoreId?: string;
   text: string;
   type: QuestionType;
   difficulty: DifficultyLevel;
@@ -147,6 +149,10 @@ export interface PaperConfig {
   negativeMarking?: boolean;
   negativeMarkingValue?: number;
   passingPercentage?: number;
+  examType?: string;
+  batch?: string;
+  branch?: string;
+  date?: string;
 }
 
 export interface GeneratedSection extends PaperSection {

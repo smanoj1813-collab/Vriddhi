@@ -3,10 +3,296 @@
 
 import express from 'express'
 import puppeteer from 'puppeteer'
+import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
-import { verifyAuth } from '../middleware/auth'
+import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
 
 const router = express.Router()
+
+const PAPERS_COLLECTION = 'papers'
+const QUESTIONS_COLLECTION = 'questions'
+
+function getCollegeId(req: AuthenticatedRequest): string | undefined {
+  const fromHeader = (req.headers['x-college-id'] as string) || undefined
+  return (
+    req.body?.collegeId ||
+    (req.query?.collegeId as string | undefined) ||
+    fromHeader ||
+    req.user?.collegeId ||
+    undefined
+  )
+}
+
+function assertCollegeAccess(req: AuthenticatedRequest, collegeId?: string | null): boolean {
+  if (!collegeId) return true
+  if (req.user?.role === 'superadmin') return true
+  return req.user?.collegeId === collegeId
+}
+
+function toISO(v: unknown): string | unknown {
+  if (v instanceof Timestamp) return v.toDate().toISOString()
+  return v
+}
+
+function normalizePaperDoc(docSnap: FirebaseFirestore.DocumentSnapshot): any {
+  const data = docSnap.data() || {}
+  return {
+    ...data,
+    id: docSnap.id,
+    createdAt: toISO(data.createdAt),
+    updatedAt: toISO(data.updatedAt),
+  }
+}
+
+function paperQuestionIds(paper: any): string[] {
+  const ids = paper?.questionIds || []
+  if (Array.isArray(ids)) return ids.map(String)
+  return []
+}
+
+/**
+ * GET /api/papers
+ * List papers for the current college.
+ */
+router.get('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const collegeId = getCollegeId(req)
+    if (!assertCollegeAccess(req, collegeId)) {
+      res.status(403).json({ error: 'Forbidden' })
+      return
+    }
+    let snap
+    if (collegeId) {
+      snap = await db.collection(PAPERS_COLLECTION).where('collegeId', '==', collegeId).orderBy('createdAt', 'desc').get()
+    } else {
+      snap = await db.collection(PAPERS_COLLECTION).orderBy('createdAt', 'desc').get()
+    }
+    const papers = snap.docs.map((doc) => normalizePaperDoc(doc))
+    res.json({ data: papers, total: papers.length })
+  } catch (err: any) {
+    console.error('[papers/list]', err)
+    res.status(500).json({ error: err.message || 'Failed to fetch papers' })
+  }
+})
+
+/**
+ * GET /api/papers/:id
+ * Get a single paper.
+ */
+router.get('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      res.status(404).json({ message: 'Paper not found' })
+      return
+    }
+    const paper = normalizePaperDoc(docSnap)
+    if (!assertCollegeAccess(req, paper.collegeId)) {
+      res.status(403).json({ message: 'Access denied' })
+      return
+    }
+    res.json(paper)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch paper' })
+  }
+})
+
+/**
+ * POST /api/papers
+ * Create a paper and link its question ids on both sides.
+ */
+router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const collegeId = getCollegeId(req)
+    if (!collegeId) {
+      res.status(400).json({ error: 'collegeId is required' })
+      return
+    }
+    if (!assertCollegeAccess(req, collegeId)) {
+      res.status(403).json({ error: 'Forbidden' })
+      return
+    }
+
+    const body = req.body || {}
+    const now = Timestamp.now()
+    const raw = { ...body, collegeId }
+    delete raw.id
+    const questionIds = Array.isArray(raw.questionIds || raw.linkedQuestionIds)
+      ? (raw.questionIds || raw.linkedQuestionIds).map(String)
+      : []
+    delete raw.questionIds
+    delete raw.linkedQuestionIds
+
+    const docRef = db.collection(PAPERS_COLLECTION).doc()
+    const data = {
+      ...raw,
+      questionIds,
+      linkedQuestionIds: questionIds,
+      totalQuestions: questionIds.length,
+      usageCount: raw.usageCount ?? 0,
+      status: raw.status || 'draft',
+      createdBy: raw.createdBy || req.user?.uid,
+      createdByName: raw.createdByName || req.user?.name || 'Unknown',
+      createdAt: raw.createdAt || now,
+      updatedAt: now,
+    }
+    await docRef.set(data)
+
+    // Link question docs back to the paper.
+    const batch = db.batch()
+    for (const qid of questionIds) {
+      batch.update(db.collection(QUESTIONS_COLLECTION).doc(qid), {
+        linkedPaperIds: FieldValue.arrayUnion(docRef.id),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+    }
+    await batch.commit()
+
+    res.status(201).json({ id: docRef.id, ...data, createdAt: now.toDate().toISOString(), updatedAt: now.toDate().toISOString() })
+  } catch (err: any) {
+    console.error('[papers/create]', err)
+    res.status(500).json({ error: err.message || 'Failed to create paper' })
+  }
+})
+
+/**
+ * PUT /api/papers/:id
+ * Update a paper.
+ */
+router.put('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      res.status(404).json({ message: 'Paper not found' })
+      return
+    }
+    const current = docSnap.data() || {}
+    if (!assertCollegeAccess(req, current.collegeId)) {
+      res.status(403).json({ message: 'Access denied' })
+      return
+    }
+
+    const updates = { ...(req.body || {}) }
+    delete updates.id
+    delete updates.collegeId
+    if (updates.questionIds) {
+      const ids = updates.questionIds.map(String)
+      updates.questionIds = ids
+      updates.linkedQuestionIds = ids
+      updates.totalQuestions = ids.length
+    }
+    updates.updatedAt = FieldValue.serverTimestamp()
+    await docRef.update(updates)
+    const updated = await docRef.get()
+    res.json(normalizePaperDoc(updated))
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to update paper' })
+  }
+})
+
+/**
+ * DELETE /api/papers/:id
+ * Delete a paper and unlink its questions.
+ */
+router.delete('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      res.status(404).json({ message: 'Paper not found' })
+      return
+    }
+    const current = docSnap.data() || {}
+    if (!assertCollegeAccess(req, current.collegeId)) {
+      res.status(403).json({ message: 'Access denied' })
+      return
+    }
+
+    const batch = db.batch()
+    for (const qid of paperQuestionIds(current)) {
+      batch.update(db.collection(QUESTIONS_COLLECTION).doc(qid), {
+        linkedPaperIds: FieldValue.arrayRemove(req.params.id),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+    }
+    batch.delete(docRef)
+    await batch.commit()
+    res.json({ success: true, id: req.params.id })
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to delete paper' })
+  }
+})
+
+/**
+ * POST /api/papers/:id/duplicate
+ * Duplicate a paper into a draft.
+ */
+router.post('/:id/duplicate', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const sourceDoc = await db.collection(PAPERS_COLLECTION).doc(req.params.id).get()
+    if (!sourceDoc.exists) {
+      res.status(404).json({ message: 'Paper not found' })
+      return
+    }
+    const source = sourceDoc.data() || {}
+    if (!assertCollegeAccess(req, source.collegeId)) {
+      res.status(403).json({ message: 'Access denied' })
+      return
+    }
+
+    const collegeId = source.collegeId || getCollegeId(req) || ''
+    const now = Timestamp.now()
+    const docRef = db.collection(PAPERS_COLLECTION).doc()
+    const { createdAt: _c, updatedAt: _u, id: _i, status: _s, usageCount: _us, ...rest } = source
+    const data = {
+      ...rest,
+      title: req.body?.title || `${source.title || 'Paper'} (Copy)`,
+      status: 'draft',
+      usageCount: 0,
+      collegeId,
+      createdBy: req.user?.uid,
+      createdByName: req.user?.name || 'Unknown',
+      createdAt: now,
+      updatedAt: now,
+    }
+    await docRef.set(data)
+    res.status(201).json({ id: docRef.id, ...data, createdAt: now.toDate().toISOString(), updatedAt: now.toDate().toISOString() })
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to duplicate paper' })
+  }
+})
+
+/**
+ * POST /api/papers/:id/status
+ * Update status (draft | published | archived).
+ */
+router.post('/:id/status', verifyAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const status = req.body?.status
+    if (!['draft', 'published', 'archived'].includes(status)) {
+      res.status(400).json({ error: 'status must be draft, published or archived' })
+      return
+    }
+    const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
+    const docSnap = await docRef.get()
+    if (!docSnap.exists) {
+      res.status(404).json({ message: 'Paper not found' })
+      return
+    }
+    const current = docSnap.data() || {}
+    if (!assertCollegeAccess(req, current.collegeId)) {
+      res.status(403).json({ message: 'Access denied' })
+      return
+    }
+    await docRef.update({ status, updatedAt: FieldValue.serverTimestamp() })
+    const updated = await docRef.get()
+    res.json(normalizePaperDoc(updated))
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to update status' })
+  }
+})
 
 /**
  * GET /api/papers/:id/pdf
@@ -76,67 +362,6 @@ router.get('/:id/pdf', verifyAuth, async (req, res) => {
 
   } catch (error: any) {
     console.error('[PDF Generation] Error:', error)
-    res.status(500).json({ message: error.message || 'Failed to generate PDF' })
-    return
-  }
-})
-
-/**
- * POST /api/questions/export/pdf
- * Export selected questions as PDF
- * Requires: auth
- */
-router.post('/questions/export/pdf', verifyAuth, async (req, res) => {
-  try {
-    const { questionIds, title } = req.body
-    const user = (req as any).user
-
-    if (!Array.isArray(questionIds) || questionIds.length === 0) {
-      res.status(400).json({ message: 'questionIds array required' })
-      return
-    }
-
-    // Fetch questions
-    const questions: any[] = []
-    for (const qid of questionIds) {
-      const qDoc = await db.collection('questions').doc(qid).get()
-      if (qDoc.exists) {
-        const q = qDoc.data()
-        if (q?.collegeId === user.collegeId || user.role === 'superadmin') {
-          questions.push({ id: qDoc.id, ...q })
-        }
-      }
-    }
-
-    // Build HTML
-    const html = buildQuestionsHTML(questions, title || 'Question Export', user)
-
-    // Generate PDF
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    })
-    const page = await browser.newPage()
-
-    // FIX: Use 'load' instead of 'networkidle0' for setContent
-    await page.setContent(html, { waitUntil: 'load' })
-
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' },
-    })
-
-    await browser.close()
-
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename="${title?.replace(/[^a-zA-Z0-9]/g, '_') || 'questions'}.pdf"`)
-    res.setHeader('Content-Length', pdf.length)
-    res.send(pdf)
-    return
-
-  } catch (error: any) {
-    console.error('[Questions PDF] Error:', error)
     res.status(500).json({ message: error.message || 'Failed to generate PDF' })
     return
   }
@@ -238,68 +463,6 @@ function buildPaperHTML(paper: any, collegeName: string, user: any): string {
     <div class="footer">
       *** END OF QUESTION PAPER ***<br/>
       Generated via VRIDDHI Platform | ${new Date().toLocaleDateString()}
-    </div>
-  </div>
-</body>
-</html>
-  `.trim()
-}
-
-function buildQuestionsHTML(questions: any[], title: string, user: any): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    @page { size: A4; margin: 15mm; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; color: #000; }
-    .container { max-width: 180mm; margin: 0 auto; }
-    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-    .title { font-size: 16pt; font-weight: bold; }
-    .subtitle { font-size: 11pt; color: #666; margin-top: 4px; }
-    .question { margin: 15px 0; padding: 10px; border: 1px solid #ddd; page-break-inside: avoid; }
-    .question-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .question-meta { font-size: 9pt; color: #666; }
-    .question-text { font-weight: 500; margin-bottom: 6px; }
-    .options { margin-left: 20px; }
-    .option { margin: 3px 0; }
-    .answer { margin-top: 6px; padding: 6px; background: #f0f8f0; border-left: 3px solid #006400; }
-    .explanation { margin-top: 4px; font-size: 10pt; color: #444; font-style: italic; }
-    .footer { margin-top: 20px; text-align: center; font-size: 9pt; color: #666; border-top: 1px solid #ccc; padding-top: 8px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="title">${escapeHtml(title)}</div>
-      <div class="subtitle">${questions.length} Questions | Generated on ${new Date().toLocaleDateString()}</div>
-    </div>
-
-    ${questions.map((q, idx) => `
-      <div class="question">
-        <div class="question-header">
-          <span class="question-meta">#${idx + 1} | ${q.type} | ${q.difficulty} | ${q.marks} marks</span>
-          <span class="question-meta">${q.subject}${q.chapter ? ' > ' + q.chapter : ''}</span>
-        </div>
-        <div class="question-text">${escapeHtml(q.text)}</div>
-
-        ${q.options ? `
-          <div class="options">
-            ${q.options.map((opt: any, oIdx: number) => `
-              <div class="option">${String.fromCharCode(65 + oIdx)}. ${escapeHtml(opt.text || opt)} ${opt.isCorrect ? '✓' : ''}</div>
-            `).join('')}
-          </div>
-        ` : ''}
-
-        ${q.correctAnswer ? `<div class="answer"><strong>Answer:</strong> ${escapeHtml(String(q.correctAnswer))}</div>` : ''}
-        ${q.explanation ? `<div class="explanation">${escapeHtml(q.explanation)}</div>` : ''}
-      </div>
-    `).join('')}
-
-    <div class="footer">
-      Generated via VRIDDHI Platform | Confidential
     </div>
   </div>
 </body>

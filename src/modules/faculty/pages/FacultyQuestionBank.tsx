@@ -73,6 +73,7 @@ import {
   linkQuestionToPaper,
   unlinkQuestionFromPaper
 } from '../../../services/questionBankAPI';
+import { getPapers } from '../../admin/services/paperAPI';
 import FacultyQuestionForm from '../../components/question-bank/FacultyQuestionForm';
 import FacultyBulkImport from '../../components/question-bank/FacultyBulkImport';
 import FacultyPaperLinker from '../../components/question-bank/FacultyPaperLinker';
@@ -139,7 +140,7 @@ const FacultyQuestionBank: React.FC = () => {
   const [statsOpen, setStatsOpen] = useState(false);
 
   // NEW: Papers for FacultyPaperLinker
-  const [availablePapers, setAvailablePapers] = useState<Array<{ id: string; title: string; examType: string; year: number }>>([]);
+  const [availablePapers, setAvailablePapers] = useState<Array<{ id: string; title: string; examType?: string; totalMarks?: number; year?: number }>>([]);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -170,6 +171,17 @@ const FacultyQuestionBank: React.FC = () => {
       setBranches(config.branches);
       const years = await getPYQExamYears(collegeId);
       setPyqYears(years);
+
+      const allPapers = await getPapers(collegeId);
+      setAvailablePapers(allPapers.map((p: any) => ({
+        id: p.id,
+        title: p.title || 'Untitled Paper',
+        examType: p.examType || 'paper',
+        totalMarks: p.totalMarks,
+        year: p.year,
+      })));
+
+      loadSubjects();
     } catch (err: unknown) {
       console.error('Error loading config:', err);
       showSnackbar('Failed to load configuration', 'error');
@@ -177,15 +189,13 @@ const FacultyQuestionBank: React.FC = () => {
   };
 
   const loadSubjects = async () => {
-    setSubjects([
-      'Mathematics I', 'Mathematics II', 'Mathematics III',
-      'Physics', 'Chemistry',
-      'Computer Science', 'Data Structures', 'Algorithms',
-      'Database Management', 'Operating Systems',
-      'Electronics', 'Digital Logic',
-      'Mechanics', 'Thermodynamics',
-      'English', 'Communication Skills'
-    ]);
+    try {
+      const stats = await getQuestionStats(collegeId);
+      const derived = Object.keys(stats?.bySubject || {});
+      setSubjects(derived);
+    } catch {
+      setSubjects([]);
+    }
   };
 
   const loadQuestions = useCallback(async (reset = false) => {
@@ -279,12 +289,29 @@ const FacultyQuestionBank: React.FC = () => {
     }
   };
 
-  // FIXED: Signature changed to File to match FacultyBulkImport
-  const handleBulkImport = async (file: File) => {
+  // Receives parsed question rows from FacultyBulkImport (format: Record<string, unknown>[])
+  const handleBulkImport = async (questions: Record<string, unknown>[]) => {
     try {
-      // TODO: Implement CSV/Excel file parsing
-      console.log('Importing file:', file.name);
-      showSnackbar('File received. CSV/Excel parser not yet implemented.', 'info');
+      if (!collegeId) throw new Error('collegeId is required to import questions');
+      const mapped = questions.map((q) => ({
+        text: String(q.text || ''),
+        subject: String(q.subject || ''),
+        topic: String(q.topic || q.chapter || ''),
+        chapter: String(q.chapter || q.topic || ''),
+        type: (q.type as Question['type']) || 'short_answer',
+        difficulty: (q.difficulty as Question['difficulty']) || 'medium',
+        marks: Number(q.marks) || 1,
+        unit: q.unit ? String(q.unit) : undefined,
+        correctAnswer: q.correctAnswer ? String(q.correctAnswer) : undefined,
+        batch: q.batch ? String(q.batch) : undefined,
+        branch: q.branch ? String(q.branch) : undefined,
+        tags: Array.isArray(q.tags) ? q.tags.map(String) : [],
+        status: 'active',
+        createdBy: user?.id || user?.uid || '',
+        createdByName: user?.name || 'Unknown',
+      }));
+      const result = await bulkImportQuestions(collegeId, mapped as any);
+      showSnackbar(`Imported ${result.success} of ${mapped.length} questions`, 'success');
       setImportOpen(false);
       loadQuestions(true);
     } catch (err: unknown) {

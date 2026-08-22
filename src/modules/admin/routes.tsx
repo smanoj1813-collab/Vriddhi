@@ -15,7 +15,7 @@ const CollegeOnboarding = lazy(() => import('./pages/CollegeOnboarding'));
 const HODDashboard = lazy(() => import('./pages/HODDashboard'));
 const Journey = lazy(() => import('./pages/Journey'));
 const PaperBuilder = lazy(() => import('./pages/PaperBuilder'));
-const PaperGeneratorAdmin = lazy(() => import('./pages/PaperGeneratorAdmin'));
+const PaperGeneratorAdmin = lazy(() => import('./pages/PaperGeneratorPage'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const Settings = lazy(() => import('./pages/Settings'));
 const View360 = lazy(() => import('./pages/View360'));

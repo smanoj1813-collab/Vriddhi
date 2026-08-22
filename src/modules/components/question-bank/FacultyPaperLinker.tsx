@@ -4,8 +4,9 @@ import { X, Link2, Check } from 'lucide-react';
 interface Paper {
   id: string;
   title: string;
-  examType: string;
-  year: number;
+  examType?: string;
+  totalMarks?: number;
+  year?: number;
 }
 
 interface FacultyPaperLinkerProps {
@@ -64,7 +65,11 @@ export default function FacultyPaperLinker({
             >
               <div>
                 <p className="text-sm font-medium text-white">{paper.title}</p>
-                <p className="text-xs text-slate-400">{paper.examType} • {paper.year}</p>
+                <p className="text-xs text-slate-400">
+                  {paper.examType || 'Paper'}
+                  {paper.totalMarks ? ` • ${paper.totalMarks} marks` : ''}
+                  {paper.year ? ` • ${paper.year}` : ''}
+                </p>
               </div>
               {selectedPaperId === paper.id && <Check className="w-4 h-4 text-teal-400" />}
             </div>

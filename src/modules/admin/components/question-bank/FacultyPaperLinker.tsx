@@ -62,7 +62,7 @@ const FacultyPaperLinker: React.FC<FacultyPaperLinkerProps> = ({
     if (!question) return;
     setLoading(true);
     try {
-      const linked = await getLinkedPapers(question.id);
+      const linked = (await getLinkedPapers(question.id)) as unknown as PaperType[];
       setLinkedPapers(linked);
 
       const allPapers = await getAllPapers(question.collegeId);

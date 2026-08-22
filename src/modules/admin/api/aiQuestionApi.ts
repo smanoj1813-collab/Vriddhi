@@ -29,14 +29,31 @@ export type {
 // BACKEND API CLIENT
 // ═══════════════════════════════════════════════════════════════════════
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'https://asia-south1-vriddhi-academic.cloudfunctions.net/api'
+).replace(/\/$/, '');
+
+async function getBearerToken(): Promise<string | null> {
+  const stored = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('vriddhi_auth_token');
+  if (stored) return stored;
+  try {
+    const { auth } = await import('@/Firebase/config');
+    if (auth.currentUser) return await auth.currentUser.getIdToken();
+  } catch {
+    // ignore
+  }
+  return null;
+}
 
 async function apiPost<T>(endpoint: string, body: any): Promise<T> {
+  const token = await getBearerToken();
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+      'Authorization': `Bearer ${token || ''}`,
     },
     body: JSON.stringify(body),
   });
@@ -60,7 +77,8 @@ export async function generateQuestionsWithAI(
 
   // Ensure all questions have required fields and proper types
   const questions: GeneratedQuestion[] = (data.questions || []).map((q: any, index: number) => ({
-    id: q.id || `ai-gen-${Date.now()}-${index}`,
+    id: q.firestoreId || q.id || `ai-gen-${Date.now()}-${index}`,
+    firestoreId: q.firestoreId,
     text: q.text || '',
     type: (q.type as QuestionType) || config.questionType,
     difficulty: (q.difficulty as DifficultyLevel) || config.difficulty,
