@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../config/firebase';
+import { getAuth } from 'firebase-admin/auth';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -7,9 +8,106 @@ export interface AuthenticatedRequest extends Request {
     email?: string;
     role?: string;
     collegeId?: string;
+    name?: string;
   };
 }
 
+const VALID_ROLES = ['superadmin', 'admin', 'principal', 'faculty', 'hod', 'mentor', 'student', 'parent'];
+
+function normalizeRole(raw: unknown): string | undefined {
+  if (!raw) return undefined;
+  const cleaned = String(raw).trim().toLowerCase();
+  return VALID_ROLES.includes(cleaned) ? cleaned : undefined;
+}
+
+/**
+ * Resolve a user profile from Firestore, matching the same fallback order the
+ * React auth layer uses. The most common storage is the `users` collection.
+ */
+async function resolveUserProfile(
+  uid: string,
+  email?: string
+): Promise<{ role?: string; collegeId?: string; name?: string; email?: string } | null> {
+  const toText = (v: unknown): string => (v == null ? '' : String(v));
+
+  // 1. users by document id
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    if (doc.exists) {
+      const d = doc.data() || {};
+      const role = normalizeRole(d.role);
+      if (role) {
+        return {
+          role,
+          collegeId: d.collegeId || d.college_id || undefined,
+          name: toText(d.name || d.displayName) || undefined,
+          email: d.email || email,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('[auth] users lookup failed:', err);
+  }
+
+  // 2. Legacy collections by document id, then uid/email fields.
+  const legacyCollections = [
+    { collection: 'superadmins', fallbackRole: 'superadmin' },
+    { collection: 'admins', fallbackRole: 'admin' },
+    { collection: 'faculty', fallbackRole: 'faculty' },
+    { collection: 'hods', fallbackRole: 'hod' },
+    { collection: 'mentors', fallbackRole: 'mentor' },
+    { collection: 'students', fallbackRole: 'student' },
+  ];
+
+  for (const entry of legacyCollections) {
+    try {
+      const doc = await db.collection(entry.collection).doc(uid).get();
+      if (doc.exists) {
+        const d = doc.data() || {};
+        const role = normalizeRole(d.role) || entry.fallbackRole;
+        return {
+          role,
+          collegeId: d.collegeId || d.college_id || undefined,
+          name: toText(d.name || d.displayName || `${d.firstName || ''} ${d.lastName || ''}`) || undefined,
+          email: d.email || email,
+        };
+      }
+    } catch (err) {
+      console.error(`[auth] ${entry.collection} doc lookup failed:`, err);
+    }
+
+    // Fallback by uid field
+    try {
+      const snap = await db
+        .collection(entry.collection)
+        .where('uid', '==', uid)
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        const d = snap.docs[0].data();
+        const role = normalizeRole(d.role) || entry.fallbackRole;
+        return {
+          role,
+          collegeId: d.collegeId || d.college_id || undefined,
+          name: toText(d.name || d.displayName || `${d.firstName || ''} ${d.lastName || ''}`) || undefined,
+          email: d.email || email,
+        };
+      }
+    } catch (err) {
+      console.error(`[auth] ${entry.collection} uid lookup failed:`, err);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Authentication middleware.
+ *
+ * Primary path verifies a standard Firebase Authentication ID token through
+ * the Admin SDK. A legacy custom `vriddhi_<uid>_<timestamp>` token is also
+ * supported for older installs/clients that still store that shape.
+ */
 export const verifyAuth = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -23,71 +121,57 @@ export const verifyAuth = async (
       return;
     }
 
-    const token = authHeader.split('Bearer ')[1];
-    
-    // Simple token validation: check if it starts with 'vriddhi_'
-    if (!token.startsWith('vriddhi_')) {
-      res.status(401).json({ error: 'Unauthorized: Invalid token format' });
+    const token = authHeader.split(' ')[1].trim();
+    if (!token) {
+      res.status(401).json({ error: 'Unauthorized: No token provided' });
       return;
     }
 
-    // Extract user ID from token (format: vriddhi_USERID_timestamp)
-    const parts = token.split('_');
-    if (parts.length < 3) {
+    let verified: { uid: string; email?: string } | null = null;
+
+    // Firebase ID token (used by the React + Firebase Auth clients)
+    try {
+      const decoded = await getAuth().verifyIdToken(token);
+      verified = { uid: decoded.uid, email: decoded.email };
+    } catch (firebaseErr) {
+      // Legacy custom token shape: vriddhi_<userId>_<timestamp>
+      if (token.startsWith('vriddhi_')) {
+        const parts = token.split('_');
+        if (parts.length < 3) {
+          res.status(401).json({ error: 'Unauthorized: Invalid token' });
+          return;
+        }
+        verified = { uid: parts[1] };
+      } else {
+        console.error('[auth] Firebase token verification failed:', firebaseErr);
+        res.status(401).json({ error: 'Unauthorized: Invalid Firebase token' });
+        return;
+      }
+    }
+
+    if (!verified) {
       res.status(401).json({ error: 'Unauthorized: Invalid token' });
       return;
     }
 
-    const userId = parts[1];
+    const profile = await resolveUserProfile(verified.uid, verified.email);
 
-    // Verify user exists in Firestore (check multiple collections)
-    let userDoc = null;
-    let userData = null;
-    let userRole = '';
-
-    // Check faculty
-    const facultyDoc = await db.collection('faculty').doc(userId).get();
-    if (facultyDoc.exists) {
-      userDoc = facultyDoc;
-      userData = facultyDoc.data();
-      userRole = 'faculty';
-    }
-
-    // Check admins
-    if (!userDoc) {
-      const adminDoc = await db.collection('admins').doc(userId).get();
-      if (adminDoc.exists) {
-        userDoc = adminDoc;
-        userData = adminDoc.data();
-        userRole = adminDoc.data()?.role || 'admin';
-      }
-    }
-
-    // Check superAdmins
-    if (!userDoc) {
-      const superDoc = await db.collection('superAdmins').doc(userId).get();
-      if (superDoc.exists) {
-        userDoc = superDoc;
-        userData = superDoc.data();
-        userRole = 'superadmin';
-      }
-    }
-
-    if (!userDoc || !userData) {
-      res.status(401).json({ error: 'Unauthorized: User not found' });
+    if (!profile) {
+      res.status(401).json({ error: 'Unauthorized: User profile not found' });
       return;
     }
 
     req.user = {
-      uid: userId,
-      email: userData.email || undefined,
-      role: userRole,
-      collegeId: userData.collegeId || undefined,
+      uid: verified.uid,
+      email: profile.email || verified.email,
+      role: profile.role,
+      collegeId: profile.collegeId,
+      name: profile.name,
     };
 
     next();
   } catch (err: any) {
-    console.error('Auth middleware error:', err.message);
+    console.error('[auth] Auth middleware error:', err?.message || err);
     res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 };

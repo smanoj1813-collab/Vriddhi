@@ -63,7 +63,7 @@ const PaperLinkageModal: React.FC<PaperLinkageModalProps> = ({
     setLoading(true);
     try {
       // Load linked papers
-      const linked = await getLinkedPapers(question.id);
+      const linked = (await getLinkedPapers(question.id)) as unknown as PaperType[];
       setLinkedPapers(linked);
 
       // Load all papers (filter out already linked)

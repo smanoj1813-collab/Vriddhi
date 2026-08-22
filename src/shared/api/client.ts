@@ -1,14 +1,25 @@
 // src/api/client.ts
 // ─── API Client (fetch-based, no external dependencies) ───
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/api'
+const BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'https://asia-south1-vriddhi-academic.cloudfunctions.net'
+).replace(/\/$/, '') + '/api'
 
 async function getToken(): Promise<string | null> {
-  return (
+  const stored =
     localStorage.getItem('token') ||
-    localStorage.getItem('vriddhi_auth_token') ||
-    null
-  )
+    sessionStorage.getItem('token') ||
+    localStorage.getItem('vriddhi_auth_token');
+  if (stored) return stored;
+  try {
+    const { auth } = await import('@/Firebase/config');
+    if (auth.currentUser) return await auth.currentUser.getIdToken();
+  } catch {
+    // ignore
+  }
+  return null;
 }
 
 function getHeaders(token: string | null): Record<string, string> {

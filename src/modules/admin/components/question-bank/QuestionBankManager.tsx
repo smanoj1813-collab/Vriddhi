@@ -21,6 +21,10 @@ import {
   CardContent,
   LinearProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -158,30 +162,50 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
       {/* Filters */}
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="subtitle2" gutterBottom>Filters</Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          <Chip
-            label={filters.subject || 'All Subjects'}
-            onClick={() => {
-              /* TODO: Add subject filter dropdown */
-            }}
-            variant={filters.subject ? 'filled' : 'outlined'}
-          />
-          <Chip
-            label={filters.type || 'All Types'}
-            onClick={() => {
-              /* TODO: Add type filter dropdown */
-            }}
-            variant={filters.type ? 'filled' : 'outlined'}
-          />
-          <Chip
-            label={filters.difficulty || 'All Difficulties'}
-            onClick={() => {
-              /* TODO: Add difficulty filter dropdown */
-            }}
-            variant={filters.difficulty ? 'filled' : 'outlined'}
-          />
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Subject</InputLabel>
+            <Select
+              label="Subject"
+              value={filters.subject || ''}
+              onChange={(e) => setFilter('subject', e.target.value || undefined)}
+            >
+              <MenuItem value="">All Subjects</MenuItem>
+              {subjects.map((s) => (
+                <MenuItem key={s} value={s}>{s}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Type</InputLabel>
+            <Select
+              label="Type"
+              value={filters.type || ''}
+              onChange={(e) => setFilter('type', e.target.value || undefined)}
+            >
+              <MenuItem value="">All Types</MenuItem>
+              {['mcq', 'true_false', 'fill_in_blank', 'short_answer', 'long_answer', 'matching', 'assertion_reason', 'case_based', 'short', 'long', 'numerical'].map((t) => (
+                <MenuItem key={t} value={t}>{t}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Difficulty</InputLabel>
+            <Select
+              label="Difficulty"
+              value={filters.difficulty || ''}
+              onChange={(e) => setFilter('difficulty', e.target.value || undefined)}
+            >
+              <MenuItem value="">All Difficulties</MenuItem>
+              <MenuItem value="easy">Easy</MenuItem>
+              <MenuItem value="medium">Medium</MenuItem>
+              <MenuItem value="hard">Hard</MenuItem>
+            </Select>
+          </FormControl>
           {(filters.subject || filters.type || filters.difficulty) && (
-            <Chip label="Clear All" onClick={clearFilters} color="error" size="small" />
+            <Button onClick={clearFilters} color="error" size="small" sx={{ alignSelf: 'center' }}>
+              Clear All
+            </Button>
           )}
         </Box>
       </Paper>

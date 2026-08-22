@@ -30,21 +30,11 @@ import {
 
 const app = express()
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://vriddhi-academic.web.app',
-]
-
+// API is protected by Firebase auth tokens, so reflect the caller's origin
+// rather than hard-coding a host list. This keeps the Firebase Hosting app,
+// local development and preview environments all working.
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      logger.warn(`CORS blocked: ${origin}`)
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-College-Id'],

@@ -1,15 +1,18 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckSquare, Square, Eye, Printer, Download,
   Send, CheckCircle, Clock, AlertTriangle, X, Sparkles, Plus, Trash2,
   Loader2, BookOpen, Calendar, Award, ChevronRight, Save
 } from 'lucide-react'
-const mockQuestions: MockQuestion[] = [] // Temporary until Firebase integration
-const testPapers: any[] = []
-const currentFaculty = { name: 'Faculty', department: 'CSE', subject: 'Data Structures' }
+import { useAuth } from '../../auth/context/AuthContext'
+import { getQuestions, linkQuestionToPaper } from '../../admin/api/questionBankApi'
+import { createPaper } from '../../admin/api/paperApi'
+import { getPapers } from '../../admin/services/paperAPI'
+import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
+import type { Question as BankQuestion } from '../../admin/types/questionBank'
 
-interface MockQuestion {
+interface FacultyQuestion {
   id: string
   status: string
   courseCode: string
@@ -49,12 +52,17 @@ interface TestPaper {
 interface PaperSection {
   id: string
   name: string
-  questions: { questionId: string; question: MockQuestion }[]
+  questions: { questionId: string; question: FacultyQuestion }[]
   totalMarks: number
 }
 
 export default function FacultyPaperGenerator() {
-  const [papers, setPapers] = useState<TestPaper[]>(testPapers)
+  const { user } = useAuth()
+  const collegeId = user?.collegeId || ''
+  const [papers, setPapers] = useState<TestPaper[]>([])
+  const [availableQuestions, setAvailableQuestions] = useState<FacultyQuestion[]>([])
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const [lastSavedPaperId, setLastSavedPaperId] = useState<string>('')
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [paperTitle, setPaperTitle] = useState('')
   const [assessmentType, setAssessmentType] = useState<'C1' | 'C2' | 'C3'>('C3')
@@ -65,10 +73,62 @@ export default function FacultyPaperGenerator() {
   const [showToast, setShowToast] = useState('')
   const [activeTab, setActiveTab] = useState<'generate' | 'my-papers'>('generate')
 
-  // Filter only approved questions for this faculty's subject
-  const availableQuestions = useMemo(() => 
-    mockQuestions.filter(q => q.status === 'Approved' && q.courseCode === 'CS301'),
-  [])
+  const currentFaculty = useMemo(() => ({
+    name: user?.name || 'Faculty',
+    department: user?.department || 'CSE',
+    subject: user?.department || 'Data Structures',
+  }), [user])
+
+  const loadData = useCallback(async () => {
+    if (!collegeId) return
+    setLoadingQuestions(true)
+    try {
+      const result = await getQuestions(collegeId, { status: 'active' }, 100)
+      const mapped: FacultyQuestion[] = result.data.map((q: BankQuestion) => ({
+        id: q.id,
+        status: q.status === 'active' ? 'Approved' : q.status,
+        courseCode: q.courseCode || q.subject || '',
+        marks: q.marks ?? 1,
+        questionText: q.text || '',
+        topic: q.topic || q.chapter || '',
+        difficulty: q.difficulty || 'Medium',
+        questionType: q.type || 'Short Answer',
+      }))
+      setAvailableQuestions(mapped.filter(q => q.status === 'Approved'))
+
+      const saved = await getPapers(collegeId)
+      setPapers(saved.map((p: any) => ({
+        id: p.id,
+        title: p.title || '',
+        subject: p.subject || currentFaculty.subject,
+        className: p.batch || p.className || '',
+        division: p.branch || p.division || '',
+        totalMarks: p.totalMarks || 0,
+        duration: p.duration || duration,
+        fileName: `${(p.title || 'paper').replace(/\\s+/g, '_')}.pdf`,
+        verificationStatus: 'submitted-for-approval',
+        questions: (p.sections || []).flatMap((s: any) => (s.questions || []).map((q: any) => ({
+          number: 0,
+          topic: q.topic || '',
+          type: q.type || 'long',
+          marks: q.marks || 1,
+          questionText: q.text || '',
+        }))),
+        createdBy: currentFaculty.name,
+        createdAt: p.createdAt || '',
+        submittedAt: p.updatedAt || '',
+        aiGenerated: false,
+      })))
+    } catch {
+      // Keep existing empty state; the error is surfaced by the toast below.
+    } finally {
+      setLoadingQuestions(false)
+    }
+  }, [collegeId, currentFaculty.name, currentFaculty.subject, duration])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const totalSelectedMarks = useMemo(() => 
     availableQuestions
@@ -131,7 +191,7 @@ export default function FacultyPaperGenerator() {
     return html
   }
 
-  const handleSubmitForApproval = () => {
+  const handleSubmitForApproval = async () => {
     if (!paperTitle) {
       setShowToast('Please enter a paper title')
       setTimeout(() => setShowToast(''), 3000)
@@ -142,55 +202,94 @@ export default function FacultyPaperGenerator() {
       setTimeout(() => setShowToast(''), 3000)
       return
     }
+    if (!collegeId) {
+      setShowToast('Not authenticated — missing collegeId')
+      setTimeout(() => setShowToast(''), 3000)
+      return
+    }
 
-    const newPaper: TestPaper = {
-      id: `tp-${Date.now()}`,
-      title: paperTitle,
-      subject: 'Data Structures',
-      className: 'CS 3rd Year - A & B',
-      division: 'A,B',
-      totalMarks: totalSelectedMarks,
-      duration,
-      fileName: `${paperTitle.replace(/\s+/g, '_')}.pdf`,
-      verificationStatus: 'submitted-for-approval',
-      questions: availableQuestions
-        .filter(q => selectedQuestions.includes(q.id))
-        .map((q, i) => ({
+    const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id))
+    const questionIds = selected.map(q => q.id)
+
+    try {
+      const saved = await createPaper(
+        collegeId,
+        {
+          title: paperTitle,
+          subject: currentFaculty.subject,
+          totalMarks: totalSelectedMarks,
+          duration,
+          instructions: customInstructions ? [customInstructions] : [],
+          negativeMarking: false,
+        },
+        questionIds,
+        user?.id || user?.uid || '',
+        user?.name || user?.email || 'Unknown',
+        true
+      )
+
+      for (const qid of questionIds) {
+        await linkQuestionToPaper(qid, saved.id)
+      }
+
+      const newPaper: TestPaper = {
+        id: saved.id,
+        title: paperTitle,
+        subject: currentFaculty.subject,
+        className: user?.department || '',
+        division: '',
+        totalMarks: totalSelectedMarks,
+        duration,
+        fileName: `${paperTitle.replace(/\s+/g, '_')}.pdf`,
+        verificationStatus: 'submitted-for-approval',
+        questions: selected.map((q, i) => ({
           number: i + 1,
           topic: q.topic,
           type: q.questionType === 'MCQ' ? 'mcq' : q.questionType === 'Short Answer' ? 'short' : 'long',
           marks: q.marks,
           questionText: q.questionText
         })),
-      createdBy: currentFaculty.name,
-      createdAt: new Date().toISOString(),
-      submittedAt: new Date().toISOString(),
-      aiGenerated: false
+        createdBy: currentFaculty.name,
+        createdAt: new Date().toISOString(),
+        submittedAt: new Date().toISOString(),
+        aiGenerated: false
+      }
+
+      setLastSavedPaperId(saved.id)
+      setPapers(prev => [newPaper, ...prev])
+      setShowSubmitConfirm(false)
+      setShowToast('Paper submitted for HOD approval!')
+      setTimeout(() => setShowToast(''), 3000)
+
+      // Reset form
+      setSelectedQuestions([])
+      setPaperTitle('')
+      setCustomInstructions('')
+      setActiveTab('my-papers')
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to submit paper')
+      setTimeout(() => setShowToast(''), 3000)
     }
-
-    setPapers(prev => [newPaper, ...prev])
-    setShowSubmitConfirm(false)
-    setShowToast('Paper submitted for HOD approval!')
-    setTimeout(() => setShowToast(''), 3000)
-
-    // Reset form
-    setSelectedQuestions([])
-    setPaperTitle('')
-    setCustomInstructions('')
-    setActiveTab('my-papers')
   }
 
-  const handleExportPDF = () => {
-    const element = document.getElementById('paper-preview')
-    if (!element) return
-    // In real app, use html2pdf.js
-    setShowToast('PDF downloaded (mock)')
-    setTimeout(() => setShowToast(''), 3000)
+  const handleExportPDF = async () => {
+    try {
+      let paperId = lastSavedPaperId
+      if (!paperId) {
+        await handleSubmitForApproval()
+        return
+      }
+      await downloadPaperPDF(paperId, paperTitle || 'question_paper')
+      setShowToast('PDF downloaded')
+      setTimeout(() => setShowToast(''), 3000)
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to download PDF')
+      setTimeout(() => setShowToast(''), 3000)
+    }
   }
 
   const handlePrint = () => {
-    setShowToast('Print dialog opened (mock)')
-    setTimeout(() => setShowToast(''), 3000)
+    window.print()
   }
 
   const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -511,7 +610,10 @@ export default function FacultyPaperGenerator() {
                       <button className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors">
                         <Eye className="w-4 h-4" /> View
                       </button>
-                      <button className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors">
+                      <button
+                        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                        onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
+                      >
                         <Download className="w-4 h-4" /> Download
                       </button>
                     </div>

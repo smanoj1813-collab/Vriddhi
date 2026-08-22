@@ -1,23 +1,23 @@
-// src/services/questionBankAPI.ts
-// Bridge layer: re-exports from src/api/questions.ts for useQuestionBank hook compatibility
+// src/modules/admin/services/questionBankAPI.ts
+// Re-exports the real Firestore-backed question bank API so every admin/faculty
+// surface uses one consistent implementation instead of HTTP stubs.
 
 export {
-  createQuestion,
-  bulkCreateQuestions as bulkImportQuestions,
   getQuestions,
+  getAllQuestions,
   getQuestionById,
+  createQuestion,
   updateQuestion,
   deleteQuestion,
+  bulkImportQuestions,
   getQuestionStats,
   linkQuestionToPaper,
   unlinkQuestionFromPaper,
-  cloneQuestion,
-  // Stubs
   getLinkedPapers,
   getBatchBranchConfig,
   getPYQExamYears,
   getPYQExamNames,
   findDuplicateQuestions,
-} from '../api/questions'
+} from '../api/questionBankApi'
 
-export type { QuestionStats } from '../api/questions'
+export type { BatchBranchConfig } from '../api/questionBankApi'

@@ -1,11 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckCircle, XCircle, AlertTriangle,
   Eye, Upload, Clock, ChevronRight, Download, Send,
   FileUp, BookOpen, Calendar
 } from 'lucide-react'
-// TODO: Fetch from Firebase
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '@/Firebase/config'
+import { useAuth } from '../../auth/context/AuthContext'
+import { getPapers } from '../../admin/services/paperAPI'
+import { getPaperQuestions } from '../../admin/api/paperApi'
+import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
+import type { Paper as BankPaper } from '../../admin/types/questionBank'
 interface PaperQuestion {
   number: number
   topic: string
@@ -40,8 +47,6 @@ interface PaperVerificationRequest {
   requestedChanges?: { topic: string; questionNumbers: string; remarks: string }
   submittedAt: string
 }
-const testPapers: TestPaper[] = []
-
 interface VerificationModalProps {
   paper: TestPaper
   onClose: () => void
@@ -257,51 +262,185 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
 // ===== MAIN COMPONENT =====
 
 export default function FacultyPapers() {
-  const [papers, setPapers] = useState<TestPaper[]>(testPapers)
+  const { user } = useAuth()
+  const collegeId = user?.collegeId || ''
+  const [papers, setPapers] = useState<TestPaper[]>([])
   const [verificationRequests, setVerificationRequests] = useState<PaperVerificationRequest[]>([])
   const [selectedPaper, setSelectedPaper] = useState<TestPaper | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'verified' | 'requests'>('all')
   const [uploadMode, setUploadMode] = useState<'question' | 'answer'>('question')
   const [showToast, setShowToast] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleVerify = (paperId: string) => {
-    setPapers(prev => prev.map(p =>
-      p.id === paperId ? { ...p, verificationStatus: 'verified' } : p
-    ))
-    const paper = papers.find(p => p.id === paperId)
-    if (paper) {
-      const request: PaperVerificationRequest = {
-        id: `vr-${Date.now()}`,
-        paperId,
-        paperTitle: paper.title,
-        subject: paper.subject,
-        className: paper.className,
-        verifiedBy: 'Dr. Rajesh Kumar',
-        status: 'verified',
-        submittedAt: new Date().toISOString(),
+  const loadData = useCallback(async () => {
+    if (!collegeId) return
+    setLoading(true)
+    try {
+      const result = await getPapers(collegeId)
+      const mapped: TestPaper[] = []
+      for (const p of result) {
+        const questions = await getPaperQuestions(p.id)
+        const paper: TestPaper = {
+          id: p.id,
+          title: p.title || '',
+          subject: p.subject || '',
+          className: p.batch || p.branch || '',
+          division: '',
+          totalMarks: p.totalMarks || 0,
+          duration: p.duration || 0,
+          fileName: `${(p.title || 'paper').replace(/\s+/g, '_')}.pdf`,
+          verificationStatus: (p as any).verificationStatus || (p.status === 'published' ? 'approved-by-hod' : p.status || 'draft'),
+          questions: (p.sections || []).flatMap((s: any) => (s.questions || []).map((q: any, i: number) => ({
+            number: i + 1,
+            topic: q.topic || q.chapter || '',
+            type: q.type || 'long',
+            marks: q.marks || s.marksPerQuestion || 1,
+          }))),
+          createdBy: p.createdByName || p.createdBy || '',
+          createdAt: p.createdAt || '',
+          submittedAt: p.updatedAt || '',
+          aiGenerated: (p as any).isAIGenerated === true || (p as any).source === 'ai',
+          approvalRemarks: (p as any).approvalRemarks,
+        }
+        mapped.push(paper)
       }
-      setVerificationRequests(prev => [request, ...prev])
+      setPapers(mapped)
+      setVerificationRequests(
+        mapped
+          .filter((p) => p.verificationStatus === 'modification-requested' || p.verificationStatus === 'approved-by-hod')
+          .map((p) => ({
+            id: `vr-${p.id}`,
+            paperId: p.id,
+            paperTitle: p.title,
+            subject: p.subject,
+            className: p.className,
+            verifiedBy: user?.name || (p as any).verifiedBy || 'HOD',
+            status: p.verificationStatus === 'approved-by-hod' ? 'verified' : 'modification-requested',
+            requestedChanges: p.verificationStatus === 'modification-requested'
+              ? { topic: p.approvalRemarks || '', questionNumbers: '', remarks: p.approvalRemarks || '' }
+              : undefined,
+            submittedAt: p.submittedAt,
+          }))
+      )
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to load papers')
+      setTimeout(() => setShowToast(''), 3000)
+    } finally {
+      setLoading(false)
+    }
+  }, [collegeId, user?.name])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const handleVerify = async (paperId: string) => {
+    try {
+      await updateDoc(doc(db, 'papers', paperId), {
+        verificationStatus: 'approved-by-hod',
+        status: 'published',
+        verifiedBy: user?.name || 'HOD',
+        verifiedAt: new Date().toISOString(),
+        reviewedAt: new Date().toISOString(),
+      })
+      setPapers(prev => prev.map(p =>
+        p.id === paperId ? { ...p, verificationStatus: 'approved-by-hod' } : p
+      ))
+      const paper = papers.find(p => p.id === paperId)
+      if (paper) {
+        const request: PaperVerificationRequest = {
+          id: `vr-${Date.now()}`,
+          paperId,
+          paperTitle: paper.title,
+          subject: paper.subject,
+          className: paper.className,
+          verifiedBy: user?.name || 'HOD',
+          status: 'verified',
+          submittedAt: new Date().toISOString(),
+        }
+        setVerificationRequests(prev => [request, ...prev])
+      }
+      setShowToast('Paper verified and published')
+      setTimeout(() => setShowToast(''), 3000)
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to verify paper')
+      setTimeout(() => setShowToast(''), 3000)
     }
   }
 
-  const handleRequestModify = (paperId: string, data: { topic: string; questionNumbers: string; remarks: string }) => {
-    setPapers(prev => prev.map(p =>
-      p.id === paperId ? { ...p, verificationStatus: 'modification-requested' } : p
-    ))
-    const paper = papers.find(p => p.id === paperId)
-    if (paper) {
-      const request: PaperVerificationRequest = {
-        id: `vr-${Date.now()}`,
-        paperId,
-        paperTitle: paper.title,
-        subject: paper.subject,
-        className: paper.className,
-        verifiedBy: 'Dr. Rajesh Kumar',
-        status: 'modification-requested',
+  const handleRequestModify = async (paperId: string, data: { topic: string; questionNumbers: string; remarks: string }) => {
+    try {
+      await updateDoc(doc(db, 'papers', paperId), {
+        verificationStatus: 'modification-requested',
+        approvalRemarks: data.remarks,
         requestedChanges: data,
-        submittedAt: new Date().toISOString(),
+        reviewedBy: user?.name || 'HOD',
+        reviewedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      setPapers(prev => prev.map(p =>
+        p.id === paperId ? { ...p, verificationStatus: 'modification-requested', approvalRemarks: data.remarks } : p
+      ))
+      const paper = papers.find(p => p.id === paperId)
+      if (paper) {
+        const request: PaperVerificationRequest = {
+          id: `vr-${Date.now()}`,
+          paperId,
+          paperTitle: paper.title,
+          subject: paper.subject,
+          className: paper.className,
+          verifiedBy: user?.name || 'HOD',
+          status: 'modification-requested',
+          requestedChanges: data,
+          submittedAt: new Date().toISOString(),
+        }
+        setVerificationRequests(prev => [request, ...prev])
       }
-      setVerificationRequests(prev => [request, ...prev])
+      setShowToast('Modification request sent')
+      setTimeout(() => setShowToast(''), 3000)
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to submit request')
+      setTimeout(() => setShowToast(''), 3000)
+    }
+  }
+
+  const handleUploadFile = async (file: File) => {
+    if (!collegeId || !file) return
+    try {
+      const path = `papers/${collegeId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+      const storageRef = ref(storage, path)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      const docRef = await addDoc(collection(db, 'papers'), {
+        title: file.name.replace(/\.[^.]+$/, ''),
+        subject: user?.department || 'General',
+        batch: '',
+        branch: '',
+        totalMarks: 0,
+        duration: 0,
+        sections: [],
+        questionIds: [],
+        linkedQuestionIds: [],
+        status: 'draft',
+        verificationStatus: 'pending-verification',
+        fileUrl: url,
+        fileName: file.name,
+        filePath: path,
+        fileType: 'upload',
+        collegeId,
+        createdBy: user?.id || user?.uid || '',
+        createdByName: user?.name || 'Unknown',
+        totalQuestions: 0,
+        usageCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      setShowToast(`Uploaded: ${file.name}`)
+      setTimeout(() => setShowToast(''), 3000)
+      if (docRef) await loadData()
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Upload failed')
+      setTimeout(() => setShowToast(''), 3000)
     }
   }
 
@@ -424,10 +563,7 @@ export default function FacultyPapers() {
                     </span>
                   )}
                   <button
-                    onClick={() => {
-                      setShowToast(`Downloaded: ${paper.fileName}`)
-                      setTimeout(() => setShowToast(''), 3000)
-                    }}
+                    onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
                     className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors ml-auto"
                   >
                     <Download className="w-4 h-4" /> Download
@@ -511,10 +647,7 @@ export default function FacultyPapers() {
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               onChange={(e) => {
                 const file = e.target.files?.[0]
-                if (file) {
-                  setShowToast(`Uploaded: ${file.name}`)
-                  setTimeout(() => setShowToast(''), 3000)
-                }
+                if (file) handleUploadFile(file)
               }}
               className="block w-full text-xs text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-teal-500/20 file:text-teal-400 hover:file:bg-teal-500/30 cursor-pointer"
             />
@@ -536,10 +669,7 @@ export default function FacultyPapers() {
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               onChange={(e) => {
                 const file = e.target.files?.[0]
-                if (file) {
-                  setShowToast(`Uploaded: ${file.name}`)
-                  setTimeout(() => setShowToast(''), 3000)
-                }
+                if (file) handleUploadFile(file)
               }}
               className="block w-full text-xs text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-violet-500/20 file:text-violet-400 hover:file:bg-violet-500/30 cursor-pointer"
             />

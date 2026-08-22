@@ -42,9 +42,11 @@ import {
   Save as SaveIcon,
   Warning as WarningIcon,
   CheckCircle as CheckIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material'
 import { usePaperGenerator } from '../../hooks/usePaperGenerator'
 import { useQuestionBank } from '../../hooks/useQuestionBank'
+import { downloadPaperPDF } from '../../../../shared/utils/pdfDownloader'
 import type { GenerationConfig, PaperSection } from '../../types/questionBank'
 import QuestionPreview from './QuestionPreview'
 
@@ -723,6 +725,15 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
               >
                 Full Preview
               </Button>
+              {generatedResult.paper && (
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => downloadPaperPDF(generatedResult.paper!.id, generatedResult.paper!.title || 'paper')}
+                >
+                  Download PDF
+                </Button>
+              )}
               {generatedResult.paper && (
                 <Button
                   variant="contained"

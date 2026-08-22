@@ -1,4 +1,16 @@
+// src/modules/faculty/services/questionBankAPI.ts
+// Faculty-facing question bank API backed by the real Firestore repository.
+
 import type { QuestionType } from '../../admin/types/questionBank';
+import {
+  createQuestion as createCollegeQuestion,
+  bulkImportQuestions as bulkImportCollegeQuestions,
+  linkQuestionToPaper,
+  unlinkQuestionFromPaper,
+  getQuestions,
+  getLinkedPapers,
+} from '../../admin/api/questionBankApi';
+import { getPapers } from '../../admin/services/paperAPI';
 
 export interface CreateQuestionData {
   question: string;
@@ -14,31 +26,50 @@ export interface CreateQuestionData {
   collegeId?: string;
 }
 
-export const createQuestion = async (data: CreateQuestionData) => {
-  // TODO: Implement Firestore write
-  console.log('Creating question', data);
-  return { id: crypto.randomUUID(), ...data, createdAt: new Date().toISOString() };
+export const createQuestionApi = (data: CreateQuestionData) => {
+  if (!data.collegeId) throw new Error('collegeId is required to create a question');
+  return createCollegeQuestion(data.collegeId, {
+    ...data,
+    text: data.question,
+    unit: '',
+    chapter: data.topic,
+    tags: [],
+    status: 'active',
+    createdBy: data.facultyId,
+    createdByName: data.facultyId,
+  } as any);
 };
 
-export const bulkImportQuestions = async (questions: CreateQuestionData[]) => {
-  // TODO: Implement batch Firestore write
-  console.log('Bulk importing', questions.length, 'questions');
-  return questions.map(q => ({ id: crypto.randomUUID(), ...q, createdAt: new Date().toISOString() }));
+export const createQuestion = createQuestionApi;
+
+export const bulkImportQuestionsApi = async (collegeId: string, questions: any[]) => {
+  return bulkImportCollegeQuestions(collegeId, questions);
 };
 
-export const linkQuestionToPaper = async (questionId: string, paperId: string) => {
-  // TODO: Implement Firestore update
-  console.log('Linking question', questionId, 'to paper', paperId);
+export const bulkImportFacultyQuestions = async (collegeId: string, questions: any[]) => {
+  return bulkImportCollegeQuestions(collegeId, questions);
 };
 
-export const getQuestionsByFaculty = async (facultyId: string) => {
-  // TODO: Implement Firestore query
-  console.log('Fetching questions for faculty', facultyId);
-  return [];
+export const linkQuestionToPaperApi = linkQuestionToPaper;
+export const unlinkQuestionFromPaperApi = unlinkQuestionFromPaper;
+
+export const getQuestionsByFacultyApi = async (collegeId: string, facultyId: string) => {
+  const result = await getQuestions(collegeId, { createdBy: facultyId }, 200);
+  return result.data;
 };
 
-export const getPapersByFaculty = async (facultyId: string) => {
-  // TODO: Implement Firestore query
-  console.log('Fetching papers for faculty', facultyId);
-  return [];
+export const getPapersByFaculty = async (collegeId: string) => {
+  return getPapers(collegeId);
+};
+
+export const getLinkedPapersApi = getLinkedPapers;
+
+export default {
+  createQuestion: createQuestionApi,
+  bulkImportQuestions: bulkImportQuestionsApi,
+  linkQuestionToPaper: linkQuestionToPaperApi,
+  unlinkQuestionFromPaper: unlinkQuestionFromPaperApi,
+  getQuestionsByFaculty: getQuestionsByFacultyApi,
+  getPapersByFaculty,
+  getLinkedPapers: getLinkedPapersApi,
 };

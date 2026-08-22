@@ -1,7 +1,23 @@
-// src/utils/pdfDownloader.ts
-// Backend PDF download helper — fetches generated PDF from Express server
+// src/shared/utils/pdfDownloader.ts
+// Backend PDF download helper — fetches generated PDF from the API backend.
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'https://asia-south1-vriddhi-academic.cloudfunctions.net'
+).replace(/\/$/, '') + '/api'
+
+async function getToken(): Promise<string> {
+  const stored = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('vriddhi_auth_token');
+  if (stored) return stored;
+  try {
+    const { auth } = await import('@/Firebase/config');
+    if (auth.currentUser) return await auth.currentUser.getIdToken();
+  } catch {
+    // ignore
+  }
+  return '';
+}
 
 /**
  * Download paper as proper text-based PDF from backend
@@ -11,7 +27,7 @@ export async function downloadPaperPDF(
   paperId: string,
   filename?: string
 ): Promise<void> {
-  const token = localStorage.getItem('token') || localStorage.getItem('vriddhi_auth_token')
+  const token = await getToken()
 
   const res = await fetch(`${API_BASE_URL}/papers/${paperId}/pdf`, {
     method: 'GET',
@@ -45,7 +61,7 @@ export async function downloadQuestionsPDF(
   title: string,
   filename?: string
 ): Promise<void> {
-  const token = localStorage.getItem('token') || localStorage.getItem('vriddhi_auth_token')
+  const token = await getToken()
 
   const res = await fetch(`${API_BASE_URL}/questions/export/pdf`, {
     method: 'POST',
