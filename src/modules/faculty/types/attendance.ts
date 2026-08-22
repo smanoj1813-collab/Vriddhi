@@ -162,6 +162,7 @@ export interface FacultyTopic {
 
 export interface FacultyClassSession {
   id: string;
+  source?: 'weekly' | 'daily';
   subject: string;
   subjectCode: string;
   facultyId: string;

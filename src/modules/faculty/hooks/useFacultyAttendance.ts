@@ -22,6 +22,14 @@ interface AttendanceState {
   };
 }
 
+function todayLocalISO(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 interface AttendanceStats {
   total: number;
   present: number;
@@ -41,6 +49,7 @@ export function useFacultyAttendance() {
   const facultyId = user?.id;
   const facultyName = user?.name || 'Faculty';
 
+  const [selectedDate, setSelectedDate] = useState(todayLocalISO);
   const [classSessions, setClassSessions] = useState<FacultyClassSession[]>([]);
   const [selectedClass, setSelectedClass] = useState<FacultyClassSession | null>(null);
   const [students, setStudents] = useState<FacultyStudent[]>([]);
@@ -58,15 +67,17 @@ export function useFacultyAttendance() {
     async function load() {
       setLoading(true);
       try {
-        const today = new Date().toISOString().split('T')[0];
-        const sessions = await fetchFacultyClassSessions(fid, today);
+        const sessions = await fetchFacultyClassSessions(fid, selectedDate);
         setClassSessions(sessions);
 
-        if (preselectedSessionId) {
-          const preselected = sessions.find((s) => s.id === preselectedSessionId);
-          if (preselected) setSelectedClass(preselected);
-        } else if (sessions.length > 0) {
-          setSelectedClass(sessions[0]);
+        const preselected = preselectedSessionId
+          ? sessions.find((session) => session.id === preselectedSessionId)
+          : undefined;
+        setSelectedClass(preselected || sessions[0] || null);
+        if (sessions.length === 0) {
+          setStudents([]);
+          setAttendance({});
+          setExistingAttendance(null);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sessions');
@@ -75,7 +86,7 @@ export function useFacultyAttendance() {
       }
     }
     load();
-  }, [facultyId, preselectedSessionId]);
+  }, [facultyId, preselectedSessionId, selectedDate]);
 
   // ─── Load students when class selected ──────────────────
   useEffect(() => {
@@ -180,7 +191,10 @@ export function useFacultyAttendance() {
   }, [students]);
 
   const handleSave = useCallback(async () => {
-    if (!selectedClass || !facultyId) return;
+    if (!selectedClass || !facultyId || !collegeId) {
+      setError('Your faculty account is missing a college assignment.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -193,24 +207,39 @@ export function useFacultyAttendance() {
         notes: attendance[s.id]?.notes || '',
       }));
 
-      await saveAttendance(selectedClass, records, facultyId, facultyName);
-      setSaveSuccess(true);
-      setExistingAttendance((prev) =>
-        prev
-          ? {
-              ...prev,
-              records,
-              presentCount: records.filter((r) => r.status === 'Present').length,
-              absentCount: records.filter((r) => r.status === 'Absent').length,
-              lateCount: records.filter((r) => r.status === 'Late').length,
-              leaveCount: records.filter((r) => r.status === 'Leave').length,
-              onDutyCount: records.filter((r) => r.status === 'OnDuty').length,
-              medicalLeaveCount: records.filter((r) => r.status === 'MedicalLeave').length,
-              totalStudents: records.length,
-              markedAt: new Date().toISOString(),
-            }
-          : null
+      const attendanceId = await saveAttendance(
+        selectedClass,
+        records,
+        facultyId,
+        facultyName,
+        collegeId
       );
+      setSaveSuccess(true);
+      setExistingAttendance({
+        id: attendanceId,
+        sessionId: selectedClass.id,
+        facultyId,
+        subject: selectedClass.subject,
+        subjectCode: selectedClass.subjectCode,
+        branch: selectedClass.branch,
+        batch: selectedClass.batch,
+        semester: selectedClass.semester,
+        division: selectedClass.division,
+        section: selectedClass.section,
+        room: selectedClass.room,
+        timeSlot: selectedClass.timeSlot,
+        date: selectedClass.date,
+        records,
+        presentCount: records.filter((r) => r.status === 'Present').length,
+        absentCount: records.filter((r) => r.status === 'Absent').length,
+        lateCount: records.filter((r) => r.status === 'Late').length,
+        leaveCount: records.filter((r) => r.status === 'Leave').length,
+        onDutyCount: records.filter((r) => r.status === 'OnDuty').length,
+        medicalLeaveCount: records.filter((r) => r.status === 'MedicalLeave').length,
+        totalStudents: records.length,
+        markedAt: new Date().toISOString(),
+        markedBy: facultyName,
+      });
 
       if (selectedClass.status === 'ongoing') {
         setSelectedClass((prev) =>
@@ -224,9 +253,11 @@ export function useFacultyAttendance() {
     } finally {
       setSaving(false);
     }
-  }, [selectedClass, facultyId, facultyName, students, attendance]);
+  }, [selectedClass, facultyId, facultyName, collegeId, students, attendance]);
 
   return {
+    selectedDate,
+    setSelectedDate,
     classSessions,
     selectedClass,
     setSelectedClass,

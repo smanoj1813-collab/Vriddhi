@@ -59,6 +59,8 @@ const allStatuses: AttendanceStatus[] = ['Present', 'Absent', 'Late', 'Leave', '
 
 export default function FacultyAttendance() {
   const {
+    selectedDate,
+    setSelectedDate,
     classSessions,
     selectedClass,
     setSelectedClass,
@@ -81,7 +83,6 @@ export default function FacultyAttendance() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<AttendanceStatus | 'all'>('all')
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
 
   const filteredStudents = useMemo(() => {
     return students.filter((s: FacultyStudent) => {
@@ -145,10 +146,19 @@ export default function FacultyAttendance() {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
         <Calendar className="w-12 h-12 text-slate-400 mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Class Sessions</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-center max-w-md">
-          No class sessions are scheduled for you today. Contact your admin to add class sessions.
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Classes Scheduled</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-4">
+          No recurring or rescheduled classes were found for this date. Choose another date or contact your admin.
         </p>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(event) => setSelectedDate(event.target.value)}
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        />
+        <Link to="/faculty/schedule" className="mt-4 text-sm text-blue-500 hover:text-blue-400">
+          View my weekly schedule
+        </Link>
       </div>
     )
   }
