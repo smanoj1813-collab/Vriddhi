@@ -20,6 +20,7 @@ import {
   limit,
   doc,
   getDoc,
+  documentId,
 } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
 
@@ -292,6 +293,8 @@ export async function fetchAttendance(studentId: string): Promise<AttendanceSumm
 export interface StudentTestCardData {
   id: string;
   assessmentId: string;
+  /** scheduledTests doc id (Phase 2 authoritative link) */
+  testId: string;
   title: string;
   subject: string;
   totalMarks: number;
@@ -301,12 +304,34 @@ export interface StudentTestCardData {
   status: 'upcoming' | 'available' | 'ongoing' | 'completed' | 'missed' | 'graded';
   studentStatus: string;
   canStart: boolean;
+  canResume: boolean;
   marksObtained?: number;
   percentage?: number;
   grade?: string;
   timeSpent?: number;
   submittedAt?: string;
   totalQuestions?: number;
+  needsManualGrading?: boolean;
+}
+
+/** Batched doc lookup (Firestore `in` queries cap at 30 ids). */
+async function fetchDocsByIds(
+  collectionName: string,
+  ids: string[]
+): Promise<Map<string, Record<string, any>>> {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  const out = new Map<string, Record<string, any>>();
+  for (let i = 0; i < unique.length; i += 30) {
+    const chunk = unique.slice(i, i + 30);
+    try {
+      const q = query(collection(db, collectionName), where(documentId(), 'in', chunk));
+      const snap = await getDocs(q);
+      snap.docs.forEach((d) => out.set(d.id, d.data() as Record<string, any>));
+    } catch (err) {
+      console.error(`[fetchDocsByIds:${collectionName}] chunk failed:`, err);
+    }
+  }
+  return out;
 }
 
 export async function fetchStudentTests(
@@ -325,10 +350,25 @@ export async function fetchStudentTests(
     (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
   );
 
-  // Hydrate with assessment metadata
+  // Resolve links: Phase 2 rows carry testId (scheduledTests); legacy rows
+  // only carry assessmentId, which may point at EITHER scheduledTests or
+  // assessments. Batch-load both collections.
+  const candidateIds = new Set<string>();
+  studentAssessments.forEach((sa) => {
+    const t = String(sa.testId || sa.assessmentId || '');
+    if (t) candidateIds.add(t);
+  });
+  const [schedMap, assessMap] = await Promise.all([
+    fetchDocsByIds('scheduledTests', Array.from(candidateIds)),
+    fetchDocsByIds('assessments', Array.from(candidateIds)),
+  ]);
+
   const cards: StudentTestCardData[] = [];
   for (const sa of studentAssessments) {
-    const assessmentId = sa.assessmentId;
+    const linkId = String(sa.testId || sa.assessmentId || '');
+    const sched = schedMap.get(linkId);
+    const assess = assessMap.get(linkId);
+
     let title = sa.title || 'Assessment';
     let subject = sa.subject || '';
     let totalMarks = Number(sa.totalMarks) || 0;
@@ -336,39 +376,57 @@ export async function fetchStudentTests(
     let startDateTime = toIso(sa.startDateTime);
     let endDateTime = toIso(sa.endDateTime);
     let totalQuestions = sa.totalQuestions || 0;
+    let schedStatus = '';
 
-    if (assessmentId) {
-      const aDoc = await getDoc(doc(db, 'assessments', assessmentId)).catch(() => null);
-      if (aDoc && aDoc.exists()) {
-        const a = aDoc.data() as Record<string, any>;
-        title = a.title || title;
-        subject = a.subject || subject;
-        totalMarks = Number(a.totalMarks) || totalMarks;
-        duration = Number(a.duration) || duration;
-        startDateTime = toIso(a.startDateTime) || startDateTime;
-        endDateTime = toIso(a.endDateTime) || endDateTime;
-        totalQuestions = a.totalQuestions || totalQuestions;
-      }
+    if (sched) {
+      // Authoritative: scheduledTests metadata
+      title = sched.title || sched.paperTitle || title;
+      subject = sched.subject || subject;
+      totalMarks = Number(sched.totalMarks) || totalMarks;
+      duration = Number(sched.duration) || duration;
+      startDateTime = toIso(sched.startDateTime) || startDateTime;
+      endDateTime = toIso(sched.endDateTime) || endDateTime;
+      totalQuestions = sched.totalQuestions || totalQuestions;
+      schedStatus = String(sched.status || '');
+    } else if (assess) {
+      // Legacy: assessments metadata
+      title = assess.title || title;
+      subject = assess.subject || subject;
+      totalMarks = Number(assess.totalMarks) || totalMarks;
+      duration = Number(assess.duration) || duration;
+      startDateTime = toIso(assess.startDateTime) || startDateTime;
+      endDateTime = toIso(assess.endDateTime) || endDateTime;
+      totalQuestions = assess.totalQuestions || totalQuestions;
+      schedStatus = String(assess.status || '');
     }
 
+    const saStatus = String(sa.status || 'not_started');
     const now = Date.now();
     const startMs = startDateTime ? new Date(startDateTime).getTime() : 0;
-    const endMs = endDateTime ? new Date(endDateTime).getTime() : startMs + duration * 60_000;
+    const endMs = endDateTime
+      ? new Date(endDateTime).getTime()
+      : startMs + duration * 60_000;
 
+    // Authoritative lifecycle statuses. Timer policy = per-student duration
+    // (no hard window): students may start any time until the test is
+    // closed/cancelled, and always resume an in_progress attempt.
     let status: StudentTestCardData['status'] = 'upcoming';
-    if (sa.status === 'graded' || sa.status === 'submitted') {
-      status = sa.status === 'graded' ? 'graded' : 'completed';
-    } else if (sa.status === 'in_progress') {
-      status = 'ongoing';
-    } else if (startMs && endMs) {
-      if (now < startMs) status = 'upcoming';
-      else if (now >= startMs && now <= endMs) status = 'available';
-      else status = 'missed';
-    }
+    if (saStatus === 'graded') status = 'graded';
+    else if (saStatus === 'submitted') status = 'completed';
+    else if (saStatus === 'in_progress') status = 'ongoing';
+    else if (schedStatus === 'cancelled') status = 'missed';
+    else if (schedStatus === 'completed') status = 'missed';
+    else if (startMs && now < startMs) status = 'upcoming';
+    else status = 'available';
+
+    const canStart =
+      (status === 'available' || status === 'upcoming') && saStatus === 'not_started';
+    const canResume = saStatus === 'in_progress';
 
     cards.push({
       id: sa.id,
-      assessmentId: assessmentId || '',
+      assessmentId: sa.assessmentId || linkId,
+      testId: sched ? linkId : '',
       title,
       subject,
       totalMarks,
@@ -376,14 +434,16 @@ export async function fetchStudentTests(
       startDateTime,
       endDateTime,
       status,
-      studentStatus: sa.status || 'not_started',
-      canStart: status === 'available' || status === 'ongoing',
+      studentStatus: saStatus,
+      canStart,
+      canResume,
       marksObtained: sa.marksObtained,
       percentage: sa.percentage,
       grade: sa.grade,
       timeSpent: sa.timeSpent,
       submittedAt: toIso(sa.submittedAt),
       totalQuestions,
+      needsManualGrading: Boolean(sa.needsManualGrading),
     });
   }
 

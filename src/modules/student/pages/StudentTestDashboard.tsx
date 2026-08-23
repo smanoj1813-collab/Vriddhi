@@ -193,7 +193,15 @@ const TestRow: React.FC<{
         </div>
 
         <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-2">
-          {isActive && (
+          {test.canResume && (
+            <button
+              onClick={() => onStart(test.id)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-sm font-medium"
+            >
+              <PlayArrow fontSize="small" /> Resume Test
+            </button>
+          )}
+          {isActive && !test.canResume && test.canStart && (
             <button
               onClick={() => onStart(test.id)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium"
@@ -201,10 +209,18 @@ const TestRow: React.FC<{
               <PlayArrow fontSize="small" /> Start Test
             </button>
           )}
-          {test.status === 'upcoming' && start && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs">
-              <Schedule fontSize="small" /> Starts in {getTimeRemaining(test.startDateTime)}
+          {isActive && !test.canResume && !test.canStart && (
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs">
+              <Schedule fontSize="small" /> Not started
             </span>
+          )}
+          {test.status === 'upcoming' && start && (
+            <button
+              onClick={() => onStart(test.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs hover:bg-sky-500/20 transition-colors"
+            >
+              <Schedule fontSize="small" /> Starts in {getTimeRemaining(test.startDateTime)}
+            </button>
           )}
           {isMissed && (
             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
@@ -214,9 +230,13 @@ const TestRow: React.FC<{
           {isCompleted && (
             <>
               <div className="text-right">
-                <div className={`text-lg font-bold ${(pct ?? 0) >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {test.marksObtained ?? '—'}/{test.totalMarks || '—'}
-                </div>
+                {test.studentStatus === 'submitted' && test.needsManualGrading ? (
+                  <div className="text-sm text-amber-400">Awaiting grading</div>
+                ) : (
+                  <div className={`text-lg font-bold ${(pct ?? 0) >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {test.marksObtained ?? '—'}/{test.totalMarks || '—'}
+                  </div>
+                )}
                 <div className="text-xs text-slate-500">
                   {pct != null ? `${Math.round(pct)}%` : ''} {test.grade ? `• Grade ${test.grade}` : ''}
                 </div>
@@ -225,7 +245,7 @@ const TestRow: React.FC<{
                 onClick={() => onResult(test.id)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-teal-500/50 text-slate-300 text-xs"
               >
-                <Visibility fontSize="small" /> View Result
+                <Visibility fontSize="small" /> {test.studentStatus === 'submitted' ? 'View Submission' : 'View Result'}
               </button>
             </>
           )}

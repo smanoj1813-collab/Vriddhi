@@ -1,11 +1,9 @@
 // src/modules/student/hooks/useStudentTests.ts
+// Delegates to studentDataApi.fetchStudentTests (single source of truth) and
+// maps to the StudentTestCard shape used by the test dashboard components.
 import { useState, useEffect, useCallback } from 'react';
-import {
-  collection, query, where, orderBy, getDocs,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '@/Firebase/config';
-import type { StudentTestCard, TestStatus } from '../types/assessment';
+import { fetchStudentTests, type StudentTestCardData } from '../api/studentDataApi';
+import type { StudentTestCard } from '../types/assessment';
 
 export interface UseStudentTestsReturn {
   tests: StudentTestCard[];
@@ -15,6 +13,34 @@ export interface UseStudentTestsReturn {
   loading: boolean;
   error: string | null;
   refresh: () => void;
+}
+
+function toCard(t: StudentTestCardData): StudentTestCard {
+  return {
+    id: t.id,
+    assessmentId: t.assessmentId,
+    title: t.title,
+    subject: t.subject,
+    totalMarks: t.totalMarks,
+    duration: t.duration,
+    startDateTime: t.startDateTime,
+    endDateTime: t.endDateTime,
+    status: t.status,
+    studentStatus: t.studentStatus as StudentTestCard['studentStatus'],
+    canStart: t.canStart,
+    instructions: [],
+    totalQuestions: t.totalQuestions || 0,
+    marksObtained: t.marksObtained,
+    percentage: t.percentage,
+    grade: t.grade,
+    timeSpent: t.timeSpent,
+    submittedAt: t.submittedAt,
+    paperId: '',
+    collegeId: '',
+    branch: '',
+    batch: '',
+    semester: 0,
+  };
 }
 
 export const useStudentTests = (
@@ -33,74 +59,8 @@ export const useStudentTests = (
     try {
       setLoading(true);
       setError(null);
-
-      const q = query(
-        collection(db, 'studentAssessments'),
-        where('collegeId', '==', collegeId),
-        where('studentId', '==', studentId),
-        orderBy('createdAt', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const now = new Date();
-
-      const items: StudentTestCard[] = [];
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
-        const startDate = data.startDateTime ? new Date(data.startDateTime) : null;
-        const endDate = data.endDateTime ? new Date(data.endDateTime) : null;
-
-        let testStatus: TestStatus = 'upcoming';
-        let canStart = false;
-
-        if (data.status === 'graded' || data.status === 'submitted') {
-          testStatus = 'completed';
-        } else if (data.status === 'in_progress') {
-          testStatus = 'ongoing';
-          canStart = true;
-        } else if (startDate && endDate) {
-          if (now < startDate) {
-            testStatus = 'upcoming';
-          } else if (now >= startDate && now <= endDate) {
-            testStatus = 'available';
-            canStart = data.status === 'not_started';
-          } else {
-            testStatus = 'missed';
-          }
-        }
-
-        items.push({
-          id: docSnap.id,
-          assessmentId: data.assessmentId || '',
-          title: data.title || 'Untitled Test',
-          subject: data.subject || '',
-          courseCode: data.courseCode || '',
-          courseName: data.courseName || '',
-          totalMarks: data.totalMarks || 0,
-          duration: data.duration || 0,
-          startDateTime: data.startDateTime || '',
-          endDateTime: data.endDateTime || '',
-          status: testStatus,
-          studentStatus: data.status || 'not_started',
-          canStart,
-          instructions: data.instructions || [],
-          totalQuestions: data.totalQuestions || 0,
-          marksObtained: data.marksObtained,
-          percentage: data.percentage,
-          grade: data.grade,
-          timeSpent: data.timeSpent,
-          submittedAt: data.submittedAt,
-          paperId: data.paperId || '',
-          collegeId: data.collegeId || '',
-          branch: data.branch || '',
-          batch: data.batch || '',
-          semester: data.semester || 0,
-          division: data.division,
-          section: data.section,
-        });
-      }
-
-      setTests(items);
+      const cards = await fetchStudentTests(collegeId, studentId);
+      setTests(cards.map(toCard));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -109,12 +69,16 @@ export const useStudentTests = (
   }, [collegeId, studentId]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   const upcomingTests = tests.filter((t) => t.status === 'upcoming');
-  const availableTests = tests.filter((t) => t.status === 'available' || t.status === 'ongoing');
-  const completedTests = tests.filter((t) => t.status === 'completed' || t.status === 'graded');
+  const availableTests = tests.filter(
+    (t) => (t.status === 'available' || t.status === 'ongoing') && t.studentStatus !== 'submitted' && t.studentStatus !== 'graded'
+  );
+  const completedTests = tests.filter(
+    (t) => t.status === 'completed' || t.status === 'graded' || t.studentStatus === 'submitted' || t.studentStatus === 'graded'
+  );
 
   return {
     tests,

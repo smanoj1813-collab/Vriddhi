@@ -1,145 +1,198 @@
-# Student Portal — Phase 2 Handoff (Test / Assessment Engine)
+# Student Portal — Phase 2 (Test / Assessment Engine) — BUILT
 
-Branch: `arena/01a02a01-vriddhi` · Phase 1 PR: #9
-Date: 2026-08-23
+Phase 1 PR: #9 · Phase 2 branch: `arena/01a02d11-vriddhi` · Status: **implemented** (2026-08-23)
 
 Phase 1 delivered login, auth, dashboard, attendance, grades, timetable, fees,
 materials, library, events, notifications, settings, and assignment submission
-against real Firestore data. **Phase 2 = the end-to-end test/assessment engine.**
-The list/instructions/result screens already read real data, but the taking +
-grading round-trip is not yet unified.
+against real Firestore data. **Phase 2 is the end-to-end test/assessment
+engine** described below — built, type-checked and wired to the authoritative
+data model. This document is now the contract + test plan for the work.
 
 ---
 
-## 1. The core problem to solve: two parallel data models
+## 0. Decisions taken (2026-08-23)
 
-Today there are **two inconsistent representations** of a test:
-
-| Layer | Collections used |
+| Decision | Choice |
 |---|---|
-| Admin writes | `assessments` (metadata) + `scheduledTests` (scheduling/paper) + per-student `studentAssessments` |
-| `student/api/testApi.ts` (take/submit/result) | reads `scheduledTests`, **writes `studentSubmissions`**, reads **`testResults`** |
-| Phase 1 dashboard/list (`studentDataApi.ts`) | reads `studentAssessments`, hydrates title from `assessments` |
-
-Consequences:
-- The test a student **sees** (`studentAssessments`) may not match what they
-  **take** (`scheduledTests` + `studentSubmissions`).
-- On submit, `ActiveTestPage` → `saveStudentSubmission()` writes to
-  `studentSubmissions`, but **grades live on `studentAssessments.status = graded`**
-  (updated by admin `gradeAssessment`). The dashboard/grades therefore never
-  reflect a completed test.
-- `TestResultPage` currently computes a result **locally in the browser** from
-  navigation state; nothing persists the score back to `studentAssessments`.
-
-### Target authoritative model (confirm with the team before building)
-`assessments` (paper/metadata) → `scheduledTests` (when/window/college) →
-`studentAssessments` (one row per student: `not_started | in_progress |
-submitted | graded`, answers, `marksObtained`, `percentage`, `grade`).
-- On **start**: set `studentAssessments.status = in_progress`, `startedAt`.
-- On **submit**: set `status = submitted`, `answers[]`, `timeSpent`,
-  `submittedAt` (**not** a new `studentSubmissions` doc).
-- On **grade**: faculty/admin flips `status = graded` with marks/grade; the
-  dashboard, grades page, and result page all read the same doc.
-- Decide: do we keep `studentSubmissions` for raw audit/proctoring, or drop it?
-  `testResults` appears unused — confirm and remove if dead.
+| Authoritative flow | `assessments → scheduledTests → studentAssessments`; `studentSubmissions` **kept** as raw audit copy; `testResults` **dropped** (dead — no longer read or written) |
+| Question source | `scheduledTests/{id}/assessmentQuestions` subcollection (frozen snapshot at schedule time; inline + paper fallbacks for legacy data) |
+| Question types | Full set: mcq, multi_select, true_false, fill_in_blank, numerical, short_answer, long_answer, assertion_reason, case_based, matching |
+| Grading | Hybrid — objective auto-graded on submit (shared core); subjective queued for faculty (`gradeAssessment` flips row to `graded`) |
+| Proctoring | Basic browser: tab-switch/blur detection + warnings, fullscreen enforcement, copy/paste/right-click/shortcut blocking; events → `proctoringLogs` + row + audit copy |
+| Timer | Per-student duration from `startedAt` (no hard window); autosave every 15 s; resume `in_progress` attempts; auto-submit on expiry |
+| Results | Visible only once graded (objective-only papers grade instantly on submit; mixed papers show "awaiting grading") |
 
 ---
 
-## 2. Files that will change
+## 1. The data contract
 
-Student-side:
-- `src/modules/student/api/testApi.ts` — align `fetchActiveTest`,
-  `saveStudentSubmission`, `fetchTestResult` to the target model.
-- `src/modules/student/api/studentDataApi.ts` — `fetchStudentTests()` should
-  join `studentAssessments` → `scheduledTests` (and/or `assessments`) for
-  question data, duration, window, paperId.
-- `src/modules/student/pages/ActiveTestPage.tsx` — call start/submit against
-  `studentAssessments`; proctoring event logging; timer auto-submit.
-- `src/modules/student/pages/TestInstructionsPage.tsx` — real metadata; "Start"
-  should transition the `studentAssessments` row to `in_progress`.
-- `src/modules/student/pages/TestResultPage.tsx` — read the graded
-  `studentAssessments` (+ question-level review) instead of local state.
-- `src/modules/student/pages/StudentTestDashboard.tsx` — keep tabs but ensure
-  statuses map to the authoritative lifecycle.
-- `src/modules/student/types/assessment.ts` — reconcile with admin types.
+```
+assessments/{id}                                paper metadata (admin flow)
+scheduledTests/{testId}                         scheduling: duration, window (display), instructions,
+                                                status, totalStarted/totalSubmitted counters
+scheduledTests/{testId}/assessmentQuestions/*   FROZEN question snapshot ← authoritative source
+studentAssessments/{saId}                       one row per student per test:
+                                                not_started → in_progress → submitted → graded
+studentSubmissions/{id}                         raw audit copy written on submit (kind: "test")
+proctoringLogs/{id}                             individual proctoring events (immediate, best-effort)
+```
 
-Admin/faculty-side (to verify the contract):
-- `src/modules/admin/api/assessmentsApi.ts`
-  (`createStudentAssessment`, `startAssessment`, `submitAssessment`,
-  `gradeAssessment`, `scheduleTest`).
-- Question source: `scheduledTests.questions[]` inline **or** the
-  `scheduledTests/{id}/assessmentQuestions` subcollection **or** linked
-  `papers` / `questions`. Pick one path and make the student reader match.
+### studentAssessments fields (Phase 2 additions in bold)
 
-Firestore indexes:
-- `studentAssessments`: `(collegeId, studentId, createdAt desc)` and possibly
-  `(collegeId, studentId, status)`. Add to `firestore.indexes.json` and deploy.
+| Field | Written when | Notes |
+|---|---|---|
+| `testId` | row creation | scheduledTests id (authoritative link) |
+| `assessmentId` | row creation | legacy compat (may equal testId or point at `assessments`) |
+| `status` | lifecycle | `not_started \| in_progress \| submitted \| graded` |
+| `startedAt` | start | ISO string; timer = startedAt + duration·60 000 |
+| `answers[]` | autosave/submit | `StudentAnswer[]` (questionId, selectedOptionId(s), textAnswer, numericalAnswer, isFlagged, …) |
+| `timeSpent` | autosave/submit | seconds |
+| **`autoScore` / `autoMax` / `manualMax`** | submit | objective score vs available; manual marks pending |
+| **`needsManualGrading`** | submit | true when ≥1 attempted subjective question |
+| **`objectiveCorrectCount` / `objectiveIncorrectCount`** | submit | |
+| **`questionResults[]`** | submit | per-question review rows (yourAnswer, correctAnswer, explanation, status) |
+| `marksObtained` / `percentage` / `grade` / `gradePoint` | grading | set instantly if fully objective, else by faculty `gradeAssessment` |
+| **`proctorEvents[]`** | autosave/submit | buffered basic-proctoring events (last 100) |
 
-Security rules:
-- Ensure a student can read their own `studentAssessments` and the parent
-  `scheduledTests`/`assessments`, and can update **only their own** row's
-  answers/status (and not set `marksObtained`/`grade`/`status=graded`).
+Lifecycle writes:
+- **Start** (instructions page): ensure row (idempotent, keyed `collegeId+studentId+testId`,
+  falls back to `assessmentId`) → `status: in_progress`, `startedAt`; `scheduledTests.totalStarted` +1.
+- **Autosave** (player, 15 s): `answers`, `timeSpent`, `proctorEvents` — in_progress only.
+- **Submit**: auto-grade via shared core → `submitted` (+ `graded` immediately when
+  fully objective with marks/percentage/grade) + audit copy in `studentSubmissions`
+  + `scheduledTests.totalSubmitted` +1.
+- **Grade** (faculty/admin): existing `gradeAssessment` sets final marks → `graded`.
+  Result page, dashboard and grades page all read the same row.
 
----
+Answer-key hygiene: `fetchActiveTest` **strips** `correctAnswer`, `isCorrect` and
+`explanation` from every question before the paper reaches the browser; they are
+only returned by `fetchTestResult` after the row is graded.
 
-## 3. Feature questions to answer before Phase 2 starts
+## 2. What changed (files)
 
-1. **Question source & types** — where do questions live, and which types must
-   the player support (MCQ, multi-select, true/false, fill-in-blank, numerical,
-   short/long answer, matching, assertion-reason, case-based)?
-2. **Auto-grading** — objective questions auto-graded on submit; subjective
-   questions sent to faculty for manual grading? Where do faculty grade?
-3. **Proctoring** — what is required (tab-switch, fullscreen, webcam snapshots,
-   copy/paste block)? `proctoringLogs` collection exists; is it in scope?
-4. **Timed window vs. duration** — enforce `startDateTime`/`endDateTime` hard
-   window, per-student duration, or both? Late join policy?
-5. **Resume / disconnect** — save answers periodically so a refresh doesn't
-   lose progress; resume `in_progress` tests.
-6. **Results & review** — show answers/explainations immediately, only after
-   grading, or only after the test window closes? Leaderboard/analytics needed?
-7. **Negative marking, section timers, shuffling** — supported?
-8. **Practice vs. proctored** — same flow or separate?
-9. **Bulk student enrollment** — how do `studentAssessments` rows get created
-   (admin bulk create already exists; confirm studentId matches the auth uid /
-   student doc id used in Phase 1).
+**Engine (new/rewritten)**
+- `src/shared/utils/assessmentGrading.ts` — **new** shared grading core (objective
+  auto-grading for mcq/multi_select/true_false/numerical/fill_in_blank/assertion_reason;
+  subjective → pending; negative marking; grade derivation).
+- `src/modules/student/api/testApi.ts` — **rewritten**: resolveTest, ensureRow,
+  fetchTestInstructions, startStudentAssessment, fetchActiveTest (key-stripped,
+  resume-aware), autosaveStudentAssessment, submitStudentAssessment (auto-grade +
+  audit copy), fetchTestResult (graded/pending states + leaderboard from sibling
+  graded rows, client-sorted), logProctorEvent. No `testResults` access anywhere.
+- `src/modules/student/api/studentDataApi.ts` — `fetchStudentTests` now batch-joins
+  `scheduledTests` (primary) / `assessments` (legacy) in chunks of 30, and returns
+  `testId`, `canStart`, `canResume`, `needsManualGrading`.
+- `src/modules/student/types/assessment.ts` — `multi_select` type, case/tolerance/
+  matchPairs/review fields, `ActiveTest` resume fields, `TestInstructionsData`,
+  `SubmitOutcome`, `BasicProctorEvent`.
 
----
+**Pages**
+- `TestInstructionsPage.tsx` — real scheduledTest metadata, live row state
+  (Start / Resume / View Result), agreement → `startStudentAssessment`.
+- `ActiveTestPage.tsx` — rewritten player: resume with restored answers, per-student
+  timer from `startedAt`, 15 s autosave (+ manual save), question palette/flags,
+  all question types via `QuestionRenderer`, proctoring listeners (visibility/blur/
+  fullscreen/copy/paste/contextmenu/keys) with warnings + counters, auto-submit,
+  enter-gate for fullscreen gesture.
+- `TestResultPage.tsx` — reads the graded row: score card, section analysis,
+  question-wise review (answers + explanations revealed only when graded),
+  leaderboard; "Submitted — awaiting grading" state for mixed papers.
+- `StudentTestDashboard.tsx` — Resume button, awaiting-grading badge, status logic
+  from the authoritative lifecycle.
 
-## 4. Suggested Phase 2 task breakdown
+**Hooks / cleanup**
+- `useStudentTests.ts` — delegates to `fetchStudentTests` (single source of truth).
+- `useTestResult.ts` — thin adapter over `fetchTestResult`.
+- **Deleted dead legacy paths**: `hooks/useActiveTest.ts`, `hooks/useAssessment.ts`
+  (student-module duplicate), `pages/TestDashboard.tsx`,
+  `components/{TestInterface,TestTaking,TestResults,TestResultView,UpcomingAssessments}.tsx`,
+  barrel pruned (`assessment/index.ts`). Also removed in the pre-Phase-2 cleanup:
+  `src/shared/api/studentApi.ts`.
 
-1. **Data-model contract** — document final collections/fields; align admin +
-   student types; add indexes + rules.
-2. **List & statuses** — `fetchStudentTests` joins schedule metadata; correct
-   upcoming/available/ongoing/submitted/graded/missed logic.
-3. **Start flow** — instructions page transitions row to `in_progress`;
-   enforce window/eligibility.
-4. **Test player** — load real questions from the chosen source; render all
-   required question types; question palette; periodic answer autosave; timer +
-   auto-submit; warnings on tab switch/fullscreen exit.
-5. **Submit** — persist answers/timeSpent to `studentAssessments`
-   (`submitted`); optional raw payload for audit.
-6. **Grading** — auto-grade objectives; wire to faculty manual grading for
-   subjectives; set `graded` with marks/percentage/grade.
-7. **Result page** — read graded doc; score summary, question review, section
-   analysis; empty/processing state before grading.
-8. **Polish** — resume in-progress test, accessibility, empty/error states,
-   remove the now-dead `studentSubmissions`/`testResults` paths.
-9. **End-to-end test** with seeded data: scheduled test → student starts →
-   submits → faculty grades → dashboard/grades/results reflect it.
+**Admin write-side**
+- `src/modules/admin/api/assessmentsApi.ts` — `scheduleTest()` now snapshots the
+  paper's questions into `scheduledTests/{id}/assessmentQuestions` (embedded
+  sections first, then `linkedQuestionIds` → `questions`) and back-fills
+  `totalQuestions`; `autoGradeStudentAssessment()` is a real implementation on the
+  shared grading core (grades instantly when nothing needs faculty, otherwise
+  persists the objective score and keeps `submitted`).
 
----
+**Infra**
+- `firestore.indexes.json` — new composites for `studentAssessments`:
+  `(collegeId, studentId, createdAt desc)`, `(collegeId, studentId, status)`,
+  `(collegeId, testId, studentId)`, `(testId, status, marksObtained desc)` (leaderboard).
+  Deploy with `firebase deploy --only firestore:indexes`.
+- `scripts/seed-phase2-assessment.mjs` — seeds a full mixed-type paper + snapshot +
+  optional studentAssessments row (see §4).
 
-## 5. Phase 1 reference points (so Phase 2 stays consistent)
+## 3. Security rules — status & next step
 
-- Auth identity: `useAuth()` → `user.uid`; student profile via
-  `useStudentProfile(uid)` / `useCurrentStudent()`. The Firestore student
-  document id is used everywhere (resolved by doc-id → `uid` → `email`).
-- All student data access is centralized in
-  `src/modules/student/api/studentDataApi.ts` — extend it rather than creating
-  parallel APIs.
-- Routes live in `src/modules/student/routes.tsx`; test flow paths are
-  `/student/test/:testId/{instructions,take,result}` (and the
-  `/student/assessments/:id/...` aliases).
-- Build/typecheck: `npm run build` (runs `tsc && vite build`) — must stay green.
-- A local `.env.local` with `VITE_FIREBASE_*` is required to run against live
-  Firebase (not committed).
+Deployed rules (`current-firestore.rules`) intentionally remain "any signed-in
+user read/write; roles enforced app-layer" until `users/{uid}.role` is trusted —
+tightening them per-collection now would silently break admin/faculty flows that
+rely on the open baseline. The client already enforces the intended shape
+(only the student's own row is written; keys are stripped pre-submit). When role
+trust lands, add before the catch-all:
+
+```js
+match /studentAssessments/{saId} {
+  allow read: if isSignedIn()
+                && (resource.data.studentId == request.auth.uid
+                    || request.auth.token.role in ['admin', 'faculty', 'superadmin']);
+  allow create: if isSignedIn() && request.resource.data.studentId == request.auth.uid;
+  allow update: if isSignedIn() && resource.data.studentId == request.auth.uid
+                && request.resource.data.status in ['in_progress', 'submitted']
+                && !request.resource.data.diff(resource.data).affectedKeys()
+                     .hasAny(['marksObtained', 'percentage', 'grade', 'gradePoint', 'gradedBy']);
+  allow write: if isSignedIn() && request.auth.token.role in ['admin', 'faculty', 'superadmin'];
+}
+```
+
+(Note: Firestore ORs overlapping matches with the existing catch-all, so this only
+becomes enforcement when the catch-all write is removed — do that as its own PR.)
+
+## 4. Seeded end-to-end test plan
+
+```bash
+# 1. seed (needs a service account with Firestore write access)
+GOOGLE_APPLICATION_CREDENTIALS=./sa.json \
+NODE_PATH=./functions/node_modules \
+node scripts/seed-phase2-assessment.mjs --college <COLLEGE_ID> --student-email <STUDENT_EMAIL>
+
+# 2. run the app against the same project
+npm run dev   # with .env.local VITE_FIREBASE_* pointing at the project
+```
+
+Manual walkthrough (expected results):
+1. Login as the seeded student → **Assessments** → the seeded test shows as
+   *available* with Start Test.
+2. **Instructions** → shows real title/duration/marks/question types → agree →
+   Start → row flips to `in_progress` with `startedAt`; re-opening shows **Resume**.
+3. **Player** → enter-gate requests fullscreen; answer an mcq, multi-select, a
+   numerical, fill-in-blank, a short answer; flag one; wait 15 s → console row
+   `answers` updates (check Firestore); refresh mid-test → resumes with answers
+   intact and the timer continues from `startedAt` (not restarted).
+4. Tab-switch once → warning chip + `proctoringLogs` doc appears; try Ctrl+C → blocked.
+5. **Submit** → row = `submitted` + `needsManualGrading: true` + `autoScore` set +
+   `studentSubmissions` audit doc (kind `test`) exists → result page shows
+   *Submitted — awaiting grading* (no answers revealed).
+6. Faculty/admin: grade the row (`gradeAssessment` with final marks) → dashboard
+   shows score/grade, **grades** page includes it, result page shows the full
+   review + explanations + leaderboard (once ≥2 students graded).
+7. Seed a second objective-only paper (drop the short/matching questions from the
+   script) → submit → flips straight to `graded` with marks/percentage/grade.
+8. Timer expiry: start a 1-minute test (`--minutes 1`) and wait → auto-submit fires
+   (`proctorEvents` includes `auto_submit`) and lands on the result state.
+
+## 5. Known follow-ups (not blockers)
+
+- Faculty grading UI: the contract is ready (`status: submitted` +
+  `needsManualGrading: true` rows with per-question answers); a dedicated grading
+  queue screen is the natural next PR.
+- `scheduledTests.totalStarted/totalSubmitted` use `increment()` and may drift if a
+  student's row was created outside the engine — acceptable for dashboards.
+- Browser clock is trusted for the timer (rules above + audit trail mitigate abuse;
+  server-side enforcement would need Cloud Functions).
+- Legacy `studentAssessments` rows without `testId` still resolve via
+  `assessmentId` (both `scheduledTests` and `assessments` checked) — no migration
+  required, but new rows always set `testId`.

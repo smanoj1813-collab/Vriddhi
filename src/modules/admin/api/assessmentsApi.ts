@@ -245,8 +245,55 @@ export async function gradeAssessment(
 }
 
 export async function autoGradeStudentAssessment(studentAssessmentId: string, _questions: any[]): Promise<StudentAssessment> {
-  // TODO: Implement actual auto-grading logic
-  return gradeAssessment(studentAssessmentId, 0, 0, 'F', 0, 'Auto-graded');
+  // Phase 2: real auto-grading via the shared objective grading core.
+  // Loads the submitted row, re-grades its answers against the frozen
+  // question snapshot, and grades immediately when nothing needs faculty.
+  const saSnap = await getDoc(doc(db, 'studentAssessments', studentAssessmentId));
+  if (!saSnap.exists()) throw new Error('Student assessment not found');
+  const sa = saSnap.data();
+  if (!['submitted', 'in_progress'].includes(String(sa.status))) {
+    return saSnap.data() as unknown as StudentAssessment;
+  }
+
+  const testId = String(sa.testId || sa.assessmentId || '');
+  let questions: any[] = _questions && _questions.length > 0 ? _questions : [];
+  if (questions.length === 0 && testId) {
+    const qSnap = await getDocs(collection(db, 'scheduledTests', testId, 'assessmentQuestions'));
+    questions = qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  }
+
+  const { gradePaper, deriveGradeFromPercentage } = await import('../../../shared/utils/assessmentGrading');
+  const graded = gradePaper(
+    questions.map((q: any) => ({
+      id: String(q.id || q.questionId),
+      type: String(q.type || 'mcq'),
+      marks: Number(q.marks) || 1,
+      negativeMarks: Number(q.negativeMarks) || undefined,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      tolerance: q.tolerance,
+    })),
+    (Array.isArray(sa.answers) ? sa.answers : []) as any[]
+  );
+
+  const totalMarks = Number(sa.totalMarks) || graded.autoMax + graded.manualMax;
+  if (graded.needsManualGrading) {
+    // Persist the objective score but keep status submitted for faculty
+    await updateDoc(doc(db, 'studentAssessments', studentAssessmentId), {
+      autoScore: graded.autoScore,
+      autoMax: graded.autoMax,
+      manualMax: graded.manualMax,
+      needsManualGrading: true,
+      updatedAt: Timestamp.now(),
+    });
+    const refreshed = await getDoc(doc(db, 'studentAssessments', studentAssessmentId));
+    return { id: refreshed.id, ...refreshed.data()! } as unknown as StudentAssessment;
+  }
+
+  const marksObtained = Math.max(0, graded.autoScore);
+  const percentage = totalMarks > 0 ? Math.round((marksObtained / totalMarks) * 10000) / 100 : 0;
+  const { grade, gradePoint } = deriveGradeFromPercentage(percentage);
+  return gradeAssessment(studentAssessmentId, marksObtained, percentage, grade, gradePoint, 'Auto-graded (objective paper)');
 }
 
 export async function bulkCreateStudentAssessments(assessment: Assessment, students: Array<{ id: string; name: string; regNo: string }>): Promise<StudentAssessment[]> {
@@ -449,6 +496,20 @@ export async function scheduleTest(input: ScheduleTestInput): Promise<ScheduledT
     updatedAt: now,
   };
   const docRef = await addDoc(collection(db, 'scheduledTests'), data);
+
+  // Phase 2: freeze the paper's questions into the assessmentQuestions
+  // subcollection so the student engine has one authoritative source
+  // (scheduledTests/{id}/assessmentQuestions). Non-fatal on failure —
+  // the reader falls back to inline questions / paper links.
+  try {
+    const snapshotted = await snapshotQuestionsToSchedule(docRef.id, String(input.paperId || ''));
+    if (snapshotted > 0 && !(input as unknown as Record<string, unknown>).totalQuestions) {
+      await updateDoc(doc(db, 'scheduledTests', docRef.id), { totalQuestions: snapshotted });
+    }
+  } catch (err) {
+    console.error('[scheduleTest] question snapshot failed (non-fatal):', err);
+  }
+
   return {
     id: docRef.id,
     ...data,
@@ -457,6 +518,70 @@ export async function scheduleTest(input: ScheduleTestInput): Promise<ScheduledT
     createdAt: now.toDate().toISOString(),
     updatedAt: now.toDate().toISOString(),
   } as unknown as ScheduledTest;
+}
+
+/**
+ * Copies the paper's questions into scheduledTests/{testId}/assessmentQuestions.
+ * Reads questions from (in order): paper.sections[].questions (embedded),
+ * paper.linkedQuestionIds → questions collection.
+ * Returns the number of questions snapshotted.
+ */
+async function snapshotQuestionsToSchedule(testId: string, paperId: string): Promise<number> {
+  if (!testId || !paperId) return 0;
+  const paperSnap = await getDoc(doc(db, 'papers', paperId));
+  if (!paperSnap.exists()) return 0;
+  const paper = paperSnap.data();
+
+  type SnapQuestion = Record<string, unknown>;
+  const questions: SnapQuestion[] = [];
+
+  const push = (q: any, sectionId?: string, sectionName?: string, order = questions.length + 1) => {
+    if (!q) return;
+    questions.push({
+      questionId: String(q.id || q.questionId || ''),
+      order: typeof q.order === 'number' ? q.order : order,
+      text: String(q.text || q.questionText || ''),
+      type: String(q.type || q.questionType || 'mcq'),
+      difficulty: String(q.difficulty || 'medium'),
+      marks: Number(q.marks) || 1,
+      negativeMarks: Number(q.negativeMarks) || 0,
+      options: Array.isArray(q.options)
+        ? q.options.map((o: any, i: number) =>
+            typeof o === 'string' ? { id: `opt-${i}`, text: o } : { id: String(o.id || `opt-${i}`), text: String(o.text ?? ''), isCorrect: Boolean(o.isCorrect) }
+          )
+        : undefined,
+      correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : undefined,
+      explanation: q.explanation || undefined,
+      imageUrl: q.imageUrl || undefined,
+      caseText: q.caseText || undefined,
+      matchPairs: Array.isArray(q.matchPairs) ? q.matchPairs : undefined,
+      tolerance: typeof q.tolerance === 'number' ? q.tolerance : undefined,
+      sectionId: sectionId || undefined,
+      sectionName: sectionName || undefined,
+    });
+  };
+
+  if (Array.isArray(paper.sections)) {
+    (paper.sections as any[]).forEach((s) => {
+      (Array.isArray(s.questions) ? s.questions : []).forEach((q: any) => push(q, s.id, s.name || s.title));
+    });
+  }
+  if (questions.length === 0) {
+    const qIds: string[] = (paper.linkedQuestionIds || paper.questionIds || []) as string[];
+    for (const qId of qIds) {
+      const qSnap = await getDoc(doc(db, 'questions', qId));
+      if (qSnap.exists()) push(qSnap.data());
+    }
+  }
+  if (questions.length === 0) return 0;
+
+  const batch = writeBatch(db);
+  questions.forEach((q) => {
+    const ref = doc(collection(db, 'scheduledTests', testId, 'assessmentQuestions'));
+    batch.set(ref, q);
+  });
+  await batch.commit();
+  return questions.length;
 }
 
 export async function listScheduledTests(filters: { collegeId?: string; facultyId?: string; status?: string } = {}): Promise<ScheduledTest[]> {

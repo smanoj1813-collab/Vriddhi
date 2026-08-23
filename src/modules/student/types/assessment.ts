@@ -40,14 +40,23 @@ export interface PaperQuestion {
   order: number;
   marks: number;
   text: string;
-  type: 'mcq' | 'true_false' | 'fill_in_blank' | 'short_answer' | 'long_answer' | 'numerical' | 'assertion_reason' | 'case_based' | 'matching';
+  type: 'mcq' | 'multi_select' | 'true_false' | 'fill_in_blank' | 'short_answer' | 'long_answer' | 'numerical' | 'assertion_reason' | 'case_based' | 'matching';
   difficulty: 'easy' | 'medium' | 'hard';
-  options?: { id: string; text: string }[];
+  options?: { id: string; text: string; isCorrect?: boolean }[];
   hasImage?: boolean;
   imageUrl?: string;
   sectionId?: string;
   sectionName?: string;
   negativeMarks?: number;
+  /** Numerical tolerance for auto-grading (paper-supplied) */
+  tolerance?: number;
+  /** Case-study / assertion prompt body shown above the question */
+  caseText?: string;
+  /** Matching-type pairs (manual grading in Phase 2) */
+  matchPairs?: Array<{ left: string; right: string }>;
+  // Review-only fields — stripped from payloads sent to the player before submit
+  correctAnswer?: string | string[];
+  explanation?: string;
   // Compatibility aliases used by pages
   questionText?: string;
   questionType?: string;
@@ -84,6 +93,14 @@ export interface ActiveTest {
   collegeId: string;
   // Compatibility alias used by instructions page
   totalQuestions?: number;
+  // Phase 2 engine fields
+  testId: string;
+  studentStatus: StudentTestStatus;
+  /** restored answers when resuming an in_progress attempt */
+  answers?: Record<string, Partial<StudentAnswer>>;
+  resumed?: boolean;
+  enableProctoring?: boolean;
+  allowResume?: boolean;
 }
 
 export interface TestResultSummary {
@@ -354,4 +371,58 @@ export interface TestAnalytics {
     correctPercentage: number;
     averageTime: number;
   }[];
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   Phase 2 — test engine contract types
+   Authoritative flow: scheduledTests (+ assessmentQuestions snapshot)
+   → studentAssessments (not_started → in_progress → submitted → graded)
+   ═════════════════════════════════════════════════════════════════════ */
+
+/** Metadata + own-row state shown on the instructions page. */
+export interface TestInstructionsData {
+  testId: string;
+  studentAssessmentId: string | null;
+  title: string;
+  subject: string;
+  totalMarks: number;
+  totalQuestions: number;
+  duration: number;
+  instructions: string[];
+  negativeMarking: boolean;
+  enableProctoring: boolean;
+  questionTypes: string[];
+  studentStatus: StudentTestStatus;
+  startedAt?: string;
+  endsAt?: string;
+  submittedAt?: string;
+  marksObtained?: number;
+  grade?: string;
+  needsManualGrading?: boolean;
+}
+
+export interface SubmitOutcome {
+  studentAssessmentId: string;
+  testId: string;
+  /** `graded` immediately when the paper is fully objective, else `submitted` */
+  status: 'submitted' | 'graded';
+  autoScore: number;
+  autoMax: number;
+  manualMax: number;
+  needsManualGrading: boolean;
+  marksObtained: number | null;
+  percentage: number | null;
+  grade: string | null;
+  correctCount: number;
+  incorrectCount: number;
+  unattemptedCount: number;
+  answeredCount: number;
+  timeSpent: number;
+}
+
+/** A single persisted proctoring event (basic browser proctoring). */
+export interface BasicProctorEvent {
+  type: 'tab_switch' | 'window_blur' | 'fullscreen_exit' | 'copy_attempt' | 'paste_attempt' | 'context_menu' | 'keyboard_shortcut' | 'auto_submit' | 'autosave_error' | string;
+  at: string;
+  details?: Record<string, unknown>;
 }
