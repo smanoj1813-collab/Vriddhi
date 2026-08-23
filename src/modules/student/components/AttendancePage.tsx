@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar, CheckCircle, XCircle, Clock, AlertCircle,
-  ChevronLeft, ChevronRight, BookOpen, Percent
+  ChevronLeft, ChevronRight, BookOpen, Percent, Award
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -45,25 +45,22 @@ interface AttendanceSummary {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// STATUS CONFIG (real Firestore statuses from attendanceRecords)
+// STATUS CONFIG
 // ═══════════════════════════════════════════════════════════════════
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; bg: string; text: string; label: string }> = {
-  present: { icon: CheckCircle, bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Present' },
-  absent: { icon: XCircle, bg: 'bg-red-500/15', text: 'text-red-400', label: 'Absent' },
-  late: { icon: Clock, bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Late' },
-  leave: { icon: AlertCircle, bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'On Leave' },
-  medicalLeave: { icon: AlertCircle, bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Medical Leave' },
-  onDuty: { icon: CheckCircle, bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'On Duty' },
-  excused: { icon: AlertCircle, bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Excused' },
+  present: { icon: CheckCircle, bg: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-400', label: 'Present' },
+  absent: { icon: XCircle, bg: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800', text: 'text-rose-700 dark:text-rose-400', label: 'Absent' },
+  late: { icon: Clock, bg: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-400', label: 'Late' },
+  leave: { icon: AlertCircle, bg: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-400', label: 'On Leave' },
+  medicalLeave: { icon: AlertCircle, bg: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-400', label: 'Medical Leave' },
+  onDuty: { icon: CheckCircle, bg: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-400', label: 'On Duty' },
+  excused: { icon: AlertCircle, bg: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-400', label: 'Excused' },
 };
 
 const PIE_COLORS: Record<string, string> = {
   present: '#10b981', absent: '#ef4444', late: '#f59e0b', excused: '#3b82f6',
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// COMPONENT
-// ═══════════════════════════════════════════════════════════════════
 export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: studentIdProp }) => {
   const { user } = useAuth();
   const { profile } = useStudentProfile(user?.uid);
@@ -76,15 +73,15 @@ export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: st
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
-  // Fetch all attendance records once from Firestore.
   useEffect(() => {
     if (!resolvedStudentId) return;
     let cancelled = false;
     setLoading(true);
+
     fetchAttendance(resolvedStudentId)
       .then((data) => {
         if (cancelled) return;
-        const mapped: AttendanceRecord[] = data.records.map((r: StudentAttendanceRecord) => ({
+        const mapped: AttendanceRecord[] = data.records.map((r) => ({
           id: r.id,
           date: r.date,
           subject: r.subject,
@@ -109,9 +106,8 @@ export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: st
       .catch((err) => console.error('[AttendancePage] load failed:', err))
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [resolvedStudentId]);
+  }, [resolvedStudentId, profile?.collegeId, user?.collegeId]);
 
-  // Records for the selected month (client-side filter)
   const records = useMemo(
     () => allRecords.filter((r) => r.date.startsWith(selectedMonth)),
     [allRecords, selectedMonth]
@@ -142,12 +138,12 @@ export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: st
   };
 
   const getDayColor = (present: number, total: number) => {
-    if (total === 0) return 'bg-slate-800/30 border-slate-700/20';
+    if (total === 0) return 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400';
     const pct = present / total;
-    if (pct >= 0.9) return 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400';
-    if (pct >= 0.75) return 'bg-blue-500/20 border-blue-500/40 text-blue-400';
-    if (pct >= 0.5) return 'bg-amber-500/20 border-amber-500/40 text-amber-400';
-    return 'bg-red-500/20 border-red-500/40 text-red-400';
+    if (pct >= 0.9) return 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold';
+    if (pct >= 0.75) return 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold';
+    if (pct >= 0.5) return 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold';
+    return 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 font-bold';
   };
 
   const pieData = summary ? [
@@ -163,223 +159,147 @@ export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: st
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-400" />
-          <p className="text-slate-400 text-sm">Loading attendance...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Attendance Records...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Attendance</h1>
-        <p className="text-slate-400 text-sm">Track your daily attendance and monthly progress</p>
+        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Attendance Record</h1>
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Comprehensive session tracking, monthly trends and compliance status</p>
       </div>
 
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-800/50 border border-slate-700/50 p-5 rounded-2xl">
+          <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-slate-400">Attendance %</span>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${summary.percentage >= summary.requiredPercentage ? 'bg-emerald-500/15' : 'bg-red-500/15'}`}>
-                <Percent className={`w-4 h-4 ${summary.percentage >= summary.requiredPercentage ? 'text-emerald-400' : 'text-red-400'}`} />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Rate</span>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${summary.percentage >= summary.requiredPercentage ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                <Percent className="w-4 h-4" />
               </div>
             </div>
-            <div className={`text-3xl font-bold ${summary.percentage >= summary.requiredPercentage ? 'text-emerald-400' : 'text-red-400'}`}>{summary.percentage}%</div>
-            <div className="text-xs text-slate-500 mt-1">Required: {summary.requiredPercentage}%</div>
+            <div className={`text-2xl md:text-3xl font-extrabold ${summary.percentage >= summary.requiredPercentage ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
+              {summary.percentage}%
+            </div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">Required Minimum: {summary.requiredPercentage}%</div>
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700/50 p-5 rounded-2xl">
+          <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-slate-400">Total Classes</span>
-              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center"><BookOpen className="w-4 h-4 text-blue-400" /></div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Classes</span>
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <BookOpen className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-bold text-white">{summary.totalClasses}</div>
-            <div className="text-xs text-slate-500 mt-1">{summary.totalDays} days attended</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">{summary.totalClasses}</div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">{summary.totalDays} Total Active Days</div>
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700/50 p-5 rounded-2xl">
+          <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-slate-400">Present</span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center"><CheckCircle className="w-4 h-4 text-emerald-400" /></div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Present Sessions</span>
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-bold text-emerald-400">{summary.present}</div>
-            <div className="text-xs text-slate-500 mt-1">{Math.round((summary.present / summary.totalClasses) * 100)}% of total</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400">{summary.present}</div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">{summary.late} marked with late entry</div>
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700/50 p-5 rounded-2xl">
+          <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-slate-400">Absent</span>
-              <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center"><XCircle className="w-4 h-4 text-red-400" /></div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Absences</span>
+              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <XCircle className="w-4 h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-bold text-red-400">{summary.absent}</div>
-            <div className="text-xs text-slate-500 mt-1">{Math.round((summary.absent / summary.totalClasses) * 100)}% of total</div>
+            <div className="text-2xl md:text-3xl font-extrabold text-rose-700 dark:text-rose-400">{summary.absent}</div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">{summary.excused} with verified leave</div>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="xl:col-span-2 space-y-6">
-          {/* Calendar */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-white">
-                {new Date(calendarYear, calendarMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </h3>
-              <div className="flex items-center gap-2">
-                <button onClick={() => navigateMonth(-1)} className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors">
-                  <ChevronLeft className="w-4 h-4 text-slate-300" />
-                </button>
-                <button onClick={() => navigateMonth(1)} className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors">
-                  <ChevronRight className="w-4 h-4 text-slate-300" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-2 mb-2">
-              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                <div key={d} className="text-center text-xs font-medium text-slate-500 py-2">{d}</div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-2">
-              {calendarDays.map((day, idx) => (
-                <div key={idx} className={`aspect-square rounded-xl border p-2 flex flex-col justify-between transition-all
-                  ${day.date === 0 ? 'opacity-0 pointer-events-none' : getDayColor(day.present, day.total)}
-                  ${day.total > 0 ? 'hover:scale-[1.05] cursor-pointer' : ''}`}
-                  title={day.total > 0 ? `${day.present}/${day.total} present` : ''}>
-                  {day.date > 0 && (
-                    <>
-                      <span className={`text-sm font-medium ${day.total > 0 ? 'text-white' : 'text-slate-600'}`}>{day.date}</span>
-                      {day.total > 0 && <div className="text-[10px] font-bold text-center">{day.present}/{day.total}</div>}
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-4 mt-4 text-xs">
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-emerald-500/40 border border-emerald-500/60" /><span className="text-slate-400">≥90%</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-blue-500/40 border border-blue-500/60" /><span className="text-slate-400">75-89%</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-amber-500/40 border border-amber-500/60" /><span className="text-slate-400">50-74%</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-red-500/40 border border-red-500/60" /><span className="text-slate-400">&lt;50%</span></div>
+      {/* Calendar & Details Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendar View */}
+        <div className="lg:col-span-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-teal-600" />
+              {new Date(calendarYear, calendarMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </h2>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+              <button
+                onClick={() => navigateMonth(-1)}
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => navigateMonth(1)}
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Daily Records Table */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-700/50 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Daily Records</h3>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-400" />
-                <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50" />
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-700/50">
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Date</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Subject</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Status</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Check-in</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Notes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-700/30">
-                  {records.length === 0 ? (
-                    <tr><td colSpan={5} className="px-5 py-12 text-center text-slate-500">No attendance records found for this month.</td></tr>
-                  ) : records.map(record => {
-                    const cfg = STATUS_CONFIG[record.status];
-                    const Icon = cfg.icon;
-                    return (
-                      <tr key={record.id} className="hover:bg-slate-700/20 transition-colors">
-                        <td className="px-5 py-4 text-sm text-white">{new Date(record.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-                        <td className="px-5 py-4"><div><div className="text-sm font-medium text-white">{record.subject}</div><div className="text-xs text-slate-500">{record.subjectCode}</div></div></td>
-                        <td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${cfg.bg} ${cfg.text}`}><Icon className="w-3.5 h-3.5" />{cfg.label}</span></td>
-                        <td className="px-5 py-4 text-sm text-slate-400">{record.checkInTime || '-'}</td>
-                        <td className="px-5 py-4 text-sm text-slate-400">{record.notes || '-'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          {/* Days Header */}
+          <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold uppercase tracking-wider text-slate-400">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-2">
+            {calendarDays.map((d, i) => {
+              if (d.date === 0) {
+                return <div key={`empty-${i}`} className="h-16 rounded-xl bg-transparent" />;
+              }
+              const colorClass = getDayColor(d.present, d.total);
+              return (
+                <div
+                  key={`day-${d.date}`}
+                  className={`h-16 rounded-2xl border p-2 flex flex-col justify-between transition-all hover:scale-102 ${colorClass}`}
+                >
+                  <span className="text-xs font-bold">{d.date}</span>
+                  {d.total > 0 && (
+                    <span className="text-[10px] text-right font-bold">
+                      {d.present}/{d.total}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* Breakdown Panel */}
         <div className="space-y-6">
-          {/* Pie Chart */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">This Month</h3>
-            {pieData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value">
-                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px' }} formatter={(value: any, name: any) => [`${value} classes`, name]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex justify-center gap-3 mt-2 flex-wrap">
-                  {pieData.map(item => (
-                    <div key={item.name} className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-xs text-slate-400">{item.name}: {item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : <div className="text-center text-slate-500 py-8">No data</div>}
-          </div>
-
-          {/* Monthly Trend */}
-          <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Monthly Trend</h3>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={monthlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="month" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px' }} formatter={(value: any) => [`${value}%`, 'Rate']} />
-                <Bar dataKey="rate" fill="#6366f1" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* 6-Month History */}
-          {summary?.monthlyBreakdown && summary.monthlyBreakdown.length > 0 && (
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">6-Month History</h3>
-              <div className="space-y-3">
-                {summary.monthlyBreakdown.map((month) => (
-                  <div key={month.month} className="p-3 rounded-xl bg-slate-700/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-white">{month.month}</span>
-                      <span className={`text-sm font-bold ${month.percentage >= 75 ? 'text-emerald-400' : 'text-red-400'}`}>{month.percentage}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${month.percentage >= 75 ? 'bg-emerald-500' : 'bg-red-500'}`} style={{ width: `${month.percentage}%` }} />
-                    </div>
-                    <div className="flex justify-between mt-1.5 text-xs text-slate-500">
-                      <span>{month.present} present</span><span>{month.absent} absent</span><span>{month.total} total</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Monthly Trend Chart */}
+          <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Monthly Rate %</h3>
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} />
+                  <YAxis domain={[0, 100]} stroke="#94a3b8" fontSize={11} />
+                  <Tooltip />
+                  <Bar dataKey="rate" fill="#0d9488" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default AttendancePage;

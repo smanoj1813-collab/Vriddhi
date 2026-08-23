@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen } from 'lucide-react';
+import { School, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -19,11 +19,9 @@ export default function StudentLogin() {
 
     try {
       const appUser = await login(email, password);
-      // Enforce that this account is a student. Non-student accounts are
-      // signed out immediately and shown an error.
       if (appUser.role !== 'student') {
         await logout();
-        setLocalError('This account does not have student access. Use the Staff Login instead.');
+        setLocalError('This account does not have student access. Please use Staff Login instead.');
         return;
       }
       navigate('/student/dashboard', { replace: true });
@@ -32,7 +30,7 @@ export default function StudentLogin() {
       if (msg.includes('ACCOUNT_NOT_FOUND')) {
         setLocalError('Student account not found in system. Contact your administrator.');
       } else if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
-        setLocalError('Invalid email or password.');
+        setLocalError('Invalid email address or password.');
       } else if (msg.includes('auth/user-not-found')) {
         setLocalError('No account found with this email.');
       } else if (msg.includes('auth/invalid-email')) {
@@ -46,81 +44,104 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm md:max-w-md">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-4 transition-colors duration-200">
+      <div className="w-full max-w-md">
+        {/* Brand Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6 md:mb-8"
+          className="text-center mb-8"
         >
-          <div className="w-14 h-14 md:w-16 md:h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-teal-500/20 mb-4">
-            <GraduationCap size={28} className="text-white md:hidden" />
-            <GraduationCap size={32} className="text-white hidden md:block" />
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-500/25 mb-4">
+            <School size={34} className="text-white" />
           </div>
-          <h1 className="text-xl md:text-2xl font-bold text-white">Student Portal</h1>
-          <p className="text-slate-400 mt-1 text-sm md:text-base">Sign in to access your dashboard</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Student Portal
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
+            Sign in to view classes, tests, attendance & grades
+          </p>
         </motion.div>
 
+        {/* Login Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-slate-700/30 p-5 md:p-8 bg-slate-900/50 backdrop-blur"
+          transition={{ delay: 0.08 }}
+          className="bg-white dark:bg-[#131b2e] rounded-3xl border border-slate-200 dark:border-slate-800 p-7 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none"
         >
-          <div className="flex items-center gap-2 mb-5 md:mb-6 p-2.5 md:p-3 rounded-lg bg-teal-500/10 border border-teal-500/20">
-            <BookOpen size={16} className="text-teal-400" />
-            <span className="text-sm text-teal-400 font-medium">Student Access Only</span>
+          {/* Portal Switcher Tabs */}
+          <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-900/60 p-1 mb-6 border border-slate-200/80 dark:border-slate-800">
+            <Link
+              to="/login"
+              className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5"
+            >
+              <Users size={14} />
+              Staff & Faculty
+            </Link>
+            <button
+              type="button"
+              className="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-sm flex items-center justify-center gap-1.5"
+            >
+              <BookOpen size={14} />
+              Student Portal
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-1.5 md:mb-2 block">
-                Email Address
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                Student Email / Reg. Email
               </label>
               <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@vriddhi.edu"
+                  placeholder="student@vriddhi.edu"
                   autoComplete="email"
-                  className="w-full pl-10 pr-4 py-2.5 md:py-3 min-h-[48px] rounded-lg bg-slate-800/50 border border-slate-700/30 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 text-base"
                   required
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-1.5 md:mb-2 block">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Password
+                </label>
+                <a href="#" className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                  Forgot?
+                </a>
+              </div>
               <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Enter your student password"
                   autoComplete="current-password"
-                  className="w-full pl-10 pr-12 py-2.5 md:py-3 min-h-[48px] rounded-lg bg-slate-800/50 border border-slate-700/30 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 text-base"
                   required
+                  className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
 
             {localError && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400"
+                className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs font-medium text-rose-700 dark:text-rose-300"
               >
                 {localError}
               </motion.div>
@@ -129,28 +150,26 @@ export default function StudentLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 min-h-[48px] rounded-lg bg-teal-500 hover:bg-teal-400 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center justify-center gap-2 text-base"
+              className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-bold text-sm shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Sign In <ArrowRight size={18} />
+                  Sign In as Student <ArrowRight size={17} />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-5 md:mt-6 flex flex-col gap-3 text-center">
-            <Link
-              to="/"
-              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors flex items-center justify-center gap-1"
-            >
-              <ArrowRight size={14} className="rotate-180" /> Staff Login
-            </Link>
-            <a href="#" className="text-sm text-slate-500 hover:text-slate-400 transition-colors">
-              Forgot password?
-            </a>
+          {/* Bottom link */}
+          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Need to access the faculty dashboard?{' '}
+              <Link to="/login" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">
+                Staff Login →
+              </Link>
+            </p>
           </div>
         </motion.div>
       </div>

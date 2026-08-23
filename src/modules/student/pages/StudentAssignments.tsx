@@ -1,5 +1,3 @@
-// src/modules/student/pages/StudentAssignments.tsx
-// Full assignments page backed by real Firestore data.
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Clock, CheckCircle2, XCircle, AlertTriangle, FileUp, Upload } from 'lucide-react';
@@ -10,11 +8,11 @@ import type { Assignment } from '../types/student';
 type FilterKey = 'pending' | 'submitted' | 'graded' | 'all';
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string; label: string }> = {
-  pending: { icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Pending' },
-  overdue: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Overdue' },
-  submitted: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'Submitted' },
-  'late-submitted': { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', label: 'Late' },
-  graded: { icon: CheckCircle2, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Graded' },
+  pending: { icon: Clock, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800', label: 'Pending' },
+  overdue: { icon: XCircle, color: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800', label: 'Overdue' },
+  submitted: { icon: CheckCircle2, color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800', label: 'Submitted' },
+  'late-submitted': { icon: AlertTriangle, color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:border-orange-800', label: 'Late' },
+  graded: { icon: CheckCircle2, color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800', label: 'Graded' },
 };
 
 export default function StudentAssignments() {
@@ -23,7 +21,6 @@ export default function StudentAssignments() {
   const [selected, setSelected] = useState<Assignment | null>(null);
 
   const handleSubmitted = () => {
-    // Refetch assignments so the card moves to "submitted".
     refresh();
   };
 
@@ -52,35 +49,36 @@ export default function StudentAssignments() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-400" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Assignments...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FileText className="text-amber-400" /> Assignments
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">Track and submit your assigned work.</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Course Assignments</h1>
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Submit homework, practical writeups and view teacher feedback</p>
       </div>
 
-      <div className="flex gap-2 mb-6 flex-wrap">
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {([
           { key: 'pending', label: 'Pending' },
           { key: 'submitted', label: 'Submitted' },
           { key: 'graded', label: 'Graded' },
-          { key: 'all', label: 'All' },
+          { key: 'all', label: 'All Assignments' },
         ] as { key: FilterKey; label: string }[]).map((tab) => (
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
               filter === tab.key
-                ? 'bg-teal-500/15 text-teal-400 border border-teal-500/30'
-                : 'text-slate-400 hover:text-white border border-transparent hover:bg-slate-800'
+                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label} ({counts[tab.key]})
@@ -89,10 +87,10 @@ export default function StudentAssignments() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16 rounded-xl border border-slate-800 bg-slate-900/40">
-          <FileUp className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-white font-medium">No assignments here</p>
-          <p className="text-sm text-slate-400 mt-1">Check back later for new assignments.</p>
+        <div className="text-center py-16 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-sm">
+          <FileUp className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+          <p className="text-slate-900 dark:text-white font-bold text-sm">No assignments found</p>
+          <p className="text-xs text-slate-500 mt-0.5">No tasks match your selected filter right now.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -105,27 +103,30 @@ export default function StudentAssignments() {
                 key={a.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 md:p-5"
+                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-5 shadow-sm hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700 transition-all"
               >
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-white">{a.title}</h3>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${cfg.bg} ${cfg.color}`}>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h3 className="font-bold text-sm md:text-base text-slate-900 dark:text-white">{a.title}</h3>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border ${cfg.bg} ${cfg.color}`}>
                         <Icon size={12} /> {cfg.label}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-400 mt-1">{a.subject}{a.subjectCode ? ` · ${a.subjectCode}` : ''}</p>
-                    {a.description && <p className="text-sm text-slate-500 mt-2 line-clamp-2">{a.description}</p>}
+                    <p className="text-xs text-teal-700 dark:text-teal-400 font-semibold mt-1">
+                      {a.subject}{a.subjectCode ? ` · ${a.subjectCode}` : ''}
+                    </p>
+                    {a.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">{a.description}</p>}
                   </div>
-                  <div className="text-right flex flex-col items-end gap-2">
+
+                  <div className="text-right flex flex-col items-end gap-2.5 shrink-0">
                     {a.status === 'graded' && a.marksObtained != null && (
-                      <div className="text-lg font-bold text-blue-400">
-                        {a.marksObtained}/{a.maxMarks ?? '—'}
+                      <div className="text-base font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-3 py-1 rounded-xl border border-blue-200 dark:border-blue-800">
+                        {a.marksObtained} / {a.maxMarks ?? '100'} Marks
                       </div>
                     )}
                     {a.dueDate && (
-                      <div className={`text-xs ${due.urgent && a.status === 'pending' ? 'text-red-400' : 'text-slate-500'}`}>
+                      <div className={`text-xs font-medium ${due.urgent && a.status === 'pending' ? 'text-rose-600 font-bold' : 'text-slate-500'}`}>
                         Due {new Date(a.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         {a.status === 'pending' && ` · ${due.text}`}
                       </div>
@@ -133,14 +134,14 @@ export default function StudentAssignments() {
                     {(a.status === 'pending' || a.status === 'overdue') && (
                       <button
                         onClick={() => setSelected(a)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/15 text-teal-400 text-xs font-medium hover:bg-teal-500/25 border border-teal-500/20 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition-colors"
                       >
-                        <Upload size={13} /> Submit
+                        <Upload size={13} /> Submit Assignment
                       </button>
                     )}
                     {a.status === 'submitted' && (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
-                        <CheckCircle2 size={13} /> Awaiting grade
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                        <CheckCircle2 size={13} /> Awaiting Faculty Grade
                       </span>
                     )}
                   </div>

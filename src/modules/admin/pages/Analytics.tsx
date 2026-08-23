@@ -40,13 +40,13 @@ const GRADE_COLORS: Record<string, string> = {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null
   return (
-    <div className="bg-vriddhi-card border border-vriddhi-border rounded-xl p-3 shadow-xl">
-      <p className="text-sm font-semibold text-white mb-2">{label}</p>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xl">
+      <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2">{label}</p>
       {payload.map((entry: any, idx: number) => (
         <div key={idx} className="flex items-center gap-2 text-xs">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-vriddhi-muted">{entry.name}:</span>
-          <span className="text-white font-medium">
+          <span className="text-slate-500">{entry.name}:</span>
+          <span className="text-slate-900 dark:text-white font-medium">
             {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
             {entry.unit || ''}
           </span>

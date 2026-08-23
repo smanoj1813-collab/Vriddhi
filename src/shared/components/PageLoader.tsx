@@ -1,29 +1,11 @@
 export default function PageLoader() {
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#0f172a',
-      }}
-    >
-      <div
-        style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid rgba(255,255,255,0.1)',
-          borderTopColor: '#14b8a6',
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite',
-        }}
-      />
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+    <div className="min-h-[70vh] flex flex-col items-center justify-center bg-transparent">
+      <div className="relative flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-3 border-slate-200 dark:border-slate-800" />
+        <div className="w-12 h-12 rounded-full border-3 border-teal-600 border-t-transparent animate-spin absolute" />
+      </div>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Loading...</p>
     </div>
   );
 }

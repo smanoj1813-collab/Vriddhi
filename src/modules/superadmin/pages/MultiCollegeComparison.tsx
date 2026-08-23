@@ -420,7 +420,7 @@ const MultiCollegeComparison: React.FC = () => {
                     <td className="px-4 py-3 text-center text-slate-300">{college.researchPapers}</td>
                     <td className="px-4 py-3 text-center">
                       <button
-                        onClick={e => { e.stopPropagation(); navigate(`/superadmin/college/${college.collegeId}`) }}
+                        onClick={e => { e.stopPropagation(); navigate(`/superadmin/colleges/${college.collegeId}`) }}
                         className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
                       >
                         <Eye className="w-4 h-4 text-slate-400" />

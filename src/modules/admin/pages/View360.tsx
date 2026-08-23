@@ -324,7 +324,7 @@ function DownloadMenu({ onCSV, onPDF }: { onCSV: () => void; onPDF: () => void }
   )
 }
 
-function MetricCard({ label, value, subtext, color = 'text-white' }: { label: string; value: string; subtext?: string; color?: string }) {
+function MetricCard({ label, value, subtext, color = 'text-slate-900 dark:text-white' }: { label: string; value: string; subtext?: string; color?: string }) {
   return (
     <div className="stat-card text-center">
       <p className={`text-3xl font-bold ${color}`}>{value}</p>

@@ -475,12 +475,12 @@ const SuperAdminCollegeDetail: React.FC = () => {
                   />
                   <ActionButton
                     label="Import Faculty"
-                    onClick={() => navigate("/superadmin/faculty-import")}
+                    onClick={() => navigate("/superadmin/faculty/import")}
                     icon={<GraduationCap className="w-4 h-4" />}
                   />
                   <ActionButton
                     label="Import Students"
-                    onClick={() => navigate("/superadmin/user-import")}
+                    onClick={() => navigate("/superadmin/students/import")}
                     icon={<Users className="w-4 h-4" />}
                   />
                 </div>
