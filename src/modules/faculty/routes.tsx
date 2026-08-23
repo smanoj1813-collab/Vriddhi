@@ -30,6 +30,7 @@ const FacultyCalendar = lazy(() => import('./pages/FacultyCalendar'));
 const FacultyCurriculum = lazy(() => import('./pages/FacultyCurriculum'));
 const FacultySchedule = lazy(() => import('./pages/FacultySchedule'));
 const FacultyAIQuestions = lazy(() => import('./pages/FacultyAIQuestions'));
+const FacultySettings = lazy(() => import('./pages/FacultySettings'));
 const View360 = lazy(() => import('../admin/pages/View360'));
 
 function FacultyAttendanceMarkingWrapper() {
@@ -134,6 +135,7 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'schedule', element: <LazyPage label="faculty/schedule"><FacultySchedule /></LazyPage> },
       { path: 'ai-questions', element: <LazyPage label="faculty/ai-questions"><FacultyAIQuestions /></LazyPage> },
       { path: 'view360', element: <LazyPage label="faculty/view360"><View360 /></LazyPage> },
+      { path: 'settings', element: <LazyPage label="faculty/settings"><FacultySettings /></LazyPage> },
     ],
   },
 ];

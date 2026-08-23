@@ -509,35 +509,147 @@ function AuditLogs() {
 }
 
 function SystemSettings() {
+  const { user } = useAuth()
   const [settings, setSettings] = useState({
-    emailNotifications: true, autoBackup: true, darkMode: true, maintenanceMode: false,
-    twoFactorAuth: true, sessionTimeout: '30', feeReminder: true, attendanceAlert: true, autoGradePublish: false,
+    emailNotifications: true,
+    autoBackup: true,
+    darkMode: true,
+    maintenanceMode: false,
+    twoFactorAuth: false,
+    sessionTimeout: '30',
+    feeReminder: true,
+    attendanceAlert: true,
+    autoGradePublish: false,
   })
-  const toggle = (key: keyof typeof settings) => setSettings(prev => ({ ...prev, [key]: !prev[key] }))
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('vriddhi_system_settings')
+      if (raw) setSettings(prev => ({ ...prev, ...JSON.parse(raw) }))
+    } catch {}
+    const loadFromFirestore = async () => {
+      if (!user?.collegeId) return
+      try {
+        const { doc, getDoc } = await import('firebase/firestore')
+        const { db } = await import('@/Firebase/config')
+        const snap = await getDoc(doc(db, 'colleges', user.collegeId))
+        if (snap.exists()) {
+          const data = snap.data() as any
+          if (data.systemSettings) setSettings(prev => ({ ...prev, ...data.systemSettings }))
+        }
+      } catch {}
+    }
+    loadFromFirestore()
+  }, [user?.collegeId])
+
+  const persist = async (next: typeof settings) => {
+    localStorage.setItem('vriddhi_system_settings', JSON.stringify(next))
+    setMsg('Saving...')
+    setSaving(true)
+    try {
+      if (user?.collegeId) {
+        const { doc, setDoc } = await import('firebase/firestore')
+        const { db } = await import('@/Firebase/config')
+        await setDoc(doc(db, 'colleges', user.collegeId), { systemSettings: next, updatedAt: new Date().toISOString() }, { merge: true })
+        setMsg('Saved to cloud ✓')
+      } else {
+        setMsg('Saved locally ✓')
+      }
+      setTimeout(() => setMsg(null), 2000)
+    } catch (e: any) {
+      setMsg(`Saved locally, cloud failed: ${e.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggle = (key: keyof typeof settings) => {
+    const next = { ...settings, [key]: !settings[key as keyof typeof settings] } as typeof settings
+    setSettings(next)
+    persist(next)
+  }
+
+  const updateField = (key: keyof typeof settings, value: any) => {
+    const next = { ...settings, [key]: value } as typeof settings
+    setSettings(next)
+    persist(next)
+  }
+
+  const items = [
+    { key: 'emailNotifications' as const, label: 'Email Notifications', desc: 'Send email alerts for important events', icon: Bell },
+    { key: 'feeReminder' as const, label: 'Fee Reminders', desc: 'Auto-remind students about pending fees', icon: Bell },
+    { key: 'attendanceAlert' as const, label: 'Attendance Alerts', desc: 'Alert mentors when attendance drops below 75%', icon: Bell },
+    { key: 'autoBackup' as const, label: 'Auto Backup', desc: 'Automatically backup data every 24 hours', icon: Settings },
+    { key: 'maintenanceMode' as const, label: 'Maintenance Mode', desc: 'Put system into maintenance for updates', icon: AlertTriangle },
+    { key: 'twoFactorAuth' as const, label: 'Enforce 2FA', desc: 'Require two-factor authentication for all admins', icon: Lock },
+    { key: 'autoGradePublish' as const, label: 'Auto Publish Grades', desc: 'Automatically publish grades after evaluation', icon: CheckCircle },
+  ]
 
   return (
     <div className="animate-fade-in">
-      <SectionHeader title="System Settings" icon={Settings} />
+      <SectionHeader title="System Settings" icon={Settings} action={msg ? <span className="text-xs font-semibold text-teal-500">{msg}</span> : null} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-2"><Bell size={18} className="text-teal-600 dark:text-teal-400" />Notifications</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><Bell size={18} className="text-teal-600 dark:text-teal-400" />Notifications & Automation</h3>
           <div className="space-y-5">
-            {[
-              { key: 'emailNotifications', label: 'Email Notifications', desc: 'Send email alerts for important events' },
-              { key: 'feeReminder', label: 'Fee Reminders', desc: 'Auto-remind students about pending fees' },
-              { key: 'attendanceAlert', label: 'Attendance Alerts', desc: 'Alert mentors when attendance drops below 75%' },
-              { key: 'autoBackup', label: 'Auto Backup', desc: 'Automatically backup data every 24 hours' },
-            ].map(item => (
-              <div key={item.key} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-900 dark:text-slate-900 dark:text-white">{item.label}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">{item.desc}</p>
+            {items.map(item => {
+              const Icon = item.icon
+              const isBool = typeof settings[item.key] === 'boolean'
+              return (
+                <div key={item.key} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mt-0.5">
+                      <Icon size={14} className="text-slate-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white text-sm">{item.label}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                    </div>
+                  </div>
+                  {isBool ? (
+                    <button onClick={() => toggle(item.key)} disabled={saving} className={`relative w-12 h-6 rounded-full transition-colors ${settings[item.key] ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                      <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${settings[item.key] ? 'translate-x-6' : ''}`} />
+                    </button>
+                  ) : null}
                 </div>
-                <button onClick={() => toggle(item.key as keyof typeof settings)} className={`relative w-12 h-6 rounded-full transition-colors ${settings[item.key as keyof typeof settings] ? 'bg-teal-500' : 'bg-slate-700'}`}>
-                  <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${settings[item.key as keyof typeof settings] ? 'translate-x-6' : ''}`} />
-                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="glass-card p-6">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><Settings size={18} className="text-teal-600 dark:text-teal-400" />System Preferences</h3>
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-slate-900 dark:text-white text-sm">Session Timeout</p>
+                <p className="text-xs text-slate-500">Auto logout after inactivity (minutes)</p>
               </div>
-            ))}
+              <select value={settings.sessionTimeout} onChange={e => updateField('sessionTimeout', e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="60">60 min</option>
+                <option value="120">120 min</option>
+              </select>
+            </div>
+
+            <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800">
+              <p className="text-xs font-semibold text-teal-800 dark:text-teal-300">Quick Actions</p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <a href="/admin/settings" className="px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition-colors">Open Full Settings</a>
+                <button onClick={() => {
+                  if (confirm('Clear all local system settings cache?')) {
+                    localStorage.removeItem('vriddhi_system_settings')
+                    setSettings({ emailNotifications: true, autoBackup: true, darkMode: true, maintenanceMode: false, twoFactorAuth: false, sessionTimeout: '30', feeReminder: true, attendanceAlert: true, autoGradePublish: false })
+                    setMsg('Cache cleared')
+                    setTimeout(() => setMsg(null), 2000)
+                  }
+                }} className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-50">Reset to Defaults</button>
+              </div>
+              <p className="text-[11px] text-teal-700/70 dark:text-teal-400/70 mt-2">These toggles are saved to localStorage and synced to your college document when possible. For full profile, appearance, and data backup controls, use the dedicated Settings page.</p>
+            </div>
           </div>
         </div>
       </div>
