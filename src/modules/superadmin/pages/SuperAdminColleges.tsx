@@ -63,10 +63,9 @@ const SuperAdminColleges: React.FC = () => {
             <p className="text-slate-400 text-sm">Manage all registered colleges</p>
           </div>
         </div>
-        {/* FIX: Navigate to dedicated Create College page instead of showing modal */}
         <button
-          onClick={() => navigate('/superadmin/colleges/create')}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          onClick={() => navigate('/superadmin/colleges/new')}
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm"
         >
           <Plus className="w-4 h-4" /> Add College
         </button>
@@ -169,7 +168,7 @@ const SuperAdminColleges: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-700/50">
-              <button onClick={() => navigate(`/superadmin/college/${college.id}`)} className="flex-1 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors">
+              <button onClick={() => navigate(`/superadmin/colleges/${college.id}`)} className="flex-1 py-1.5 text-xs font-medium text-teal-600 dark:text-teal-400 bg-teal-500/10 hover:bg-teal-500/20 rounded-lg transition-colors">
                 View Details
               </button>
               <button onClick={() => handleDelete(college.id)} className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors">

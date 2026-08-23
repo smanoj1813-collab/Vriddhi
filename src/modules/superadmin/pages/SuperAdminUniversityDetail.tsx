@@ -357,7 +357,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
                     {filteredColleges.map((c: UniversityCollege) => (
                       <tr
                         key={c.id}
-                        onClick={() => navigate(`/superadmin/college/${c.id}`)}
+                        onClick={() => navigate(`/superadmin/colleges/${c.id}`)}
                         className="border-b border-slate-700/50 hover:bg-slate-700/30 cursor-pointer transition-colors"
                       >
                         <td className="px-4 py-3 text-sm text-white">{c.name}</td>

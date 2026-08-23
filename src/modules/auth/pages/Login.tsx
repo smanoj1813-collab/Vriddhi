@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GraduationCap, Eye, EyeOff, Lock, Mail, ArrowRight, Shield, Users } from 'lucide-react';
+import { School, Eye, EyeOff, Lock, Mail, ArrowRight, Shield, Users, CheckCircle2, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 
 const ROLE_DASHBOARD: Record<string, string> = {
   superadmin: '/superadmin/dashboard',
@@ -16,24 +17,23 @@ const ROLE_DASHBOARD: Record<string, string> = {
 };
 
 export default function Login() {
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { login, isAuthenticated, user } = useAuth();
+  const { resolvedMode } = useThemeMode();
   const navigate = useNavigate();
   const location = useLocation();
   const hasRedirected = React.useRef(false);
 
   React.useEffect(() => {
-    console.log('[Login] useEffect check — isAuthenticated:', isAuthenticated, 'user.role:', user?.role, 'hasRedirected:', hasRedirected.current);
     if (hasRedirected.current) return;
     if (isAuthenticated && user) {
       hasRedirected.current = true;
       const from = (location.state as any)?.from?.pathname;
       const target = from || ROLE_DASHBOARD[user.role] || '/admin/dashboard';
-      console.log('[Login] Navigating to:', target);
       navigate(target, { replace: true });
     }
   }, [isAuthenticated, user, navigate, location]);
@@ -42,12 +42,9 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    console.log('[Login] Submitting...', email);
     try {
       await login(email, password);
-      console.log('[Login] login() resolved successfully');
     } catch (err: any) {
-      console.error('[Login] login() threw:', err);
       const msg = err?.message || err?.code || '';
       if (msg === 'ACCOUNT_NOT_FOUND') {
         setError('Account not found in the system. Please contact your administrator.');
@@ -57,7 +54,7 @@ export default function Login() {
         msg.includes('invalid-credential') ||
         msg.includes('invalid-login-credentials')
       ) {
-        setError('Invalid email or password');
+        setError('Invalid email address or password.');
       } else if (msg.includes('too-many-requests')) {
         setError('Too many failed attempts. Please try again later.');
       } else if (msg.includes('user-disabled')) {
@@ -67,79 +64,136 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
-      console.log('[Login] loading set to false');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-4 transition-colors duration-200">
       <div className="w-full max-w-md">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-700 flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-4">
-            <GraduationCap size={32} className="text-white" />
+        {/* Brand Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-500/25 mb-4">
+            <School size={34} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Vriddhi Portal</h1>
-          <p className="text-slate-400 mt-1">Sign in to your dashboard</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Vriddhi Portal
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
+            Academic Management & Assessment System
+          </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="glass-card rounded-2xl border border-slate-700/30 p-8 bg-slate-900/50 backdrop-blur">
-          <div className="flex items-center gap-2 mb-6 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-            <Users size={16} className="text-indigo-400" />
-            <span className="text-sm text-indigo-400 font-medium">Staff & Faculty Portal</span>
+        {/* Login Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="bg-white dark:bg-[#131b2e] rounded-3xl border border-slate-200 dark:border-slate-800 p-7 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none"
+        >
+          {/* Portal Switcher Tabs */}
+          <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-900/60 p-1 mb-6 border border-slate-200/80 dark:border-slate-800">
+            <button
+              type="button"
+              className="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-sm flex items-center justify-center gap-1.5"
+            >
+              <Users size={14} />
+              Staff & Faculty
+            </button>
+            <Link
+              to="/student/login"
+              className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1.5"
+            >
+              <Shield size={14} />
+              Student Portal
+            </Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-2 block">Email Address</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                Academic Email
+              </label>
               <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@vriddhi.edu" required
-                  className="w-full pl-10 pr-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700/30 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20" />
+                <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@college.edu"
+                  required
+                  autoComplete="email"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
+                />
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-2 block">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Password
+                </label>
+                <a href="#" className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                  Forgot?
+                </a>
+              </div>
               <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password" required
-                  className="w-full pl-10 pr-12 py-3 rounded-lg bg-slate-800/50 border border-slate-700/30 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter account password"
+                  required
+                  autoComplete="current-password"
+                  className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
 
             {error && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs font-medium text-rose-700 dark:text-rose-300"
+              >
                 {error}
               </motion.div>
             )}
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-lg bg-indigo-500 hover:bg-indigo-400 disabled:bg-slate-700 text-white font-medium transition-colors flex items-center justify-center gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-bold text-sm shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+            >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>Sign In <ArrowRight size={18} /></>
+                <>
+                  Sign In to Staff Portal <ArrowRight size={17} />
+                </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 flex flex-col gap-3 text-center">
-            {/* ═══════ FIX: Link to /student/login ═══════ */}
-            <Link
-              to="/student/login"
-              className="text-sm text-teal-400 hover:text-teal-300 transition-colors flex items-center justify-center gap-1"
-            >
-              <Shield size={14} />Student Login →
-            </Link>
-            <a href="#" className="text-sm text-slate-500 hover:text-slate-400 transition-colors">Forgot password?</a>
+          {/* Bottom hint */}
+          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Students should sign in using the{' '}
+              <Link to="/student/login" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">
+                Student Portal →
+              </Link>
+            </p>
           </div>
         </motion.div>
       </div>

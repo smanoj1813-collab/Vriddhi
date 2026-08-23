@@ -205,7 +205,7 @@ const SuperAdminFaculty: React.FC = () => {
           <button onClick={handleFixPasswords} className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm">
             <Key className="w-4 h-4" /> Create Auth Accounts
           </button>
-          <button onClick={() => navigate('/superadmin/faculty-import')} className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors text-sm">
+          <button onClick={() => navigate('/superadmin/faculty/import')} className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors text-sm">
             <GraduationCap className="w-4 h-4" /> Import Faculty
           </button>
         </div>
@@ -393,7 +393,7 @@ const SuperAdminFaculty: React.FC = () => {
             <p>No faculty found</p>
             <p className="text-sm mt-1">Try adjusting filters or import faculty first</p>
             <button
-              onClick={() => navigate('/superadmin/faculty-import')}
+              onClick={() => navigate('/superadmin/faculty/import')}
               className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm transition-colors"
             >
               Import Faculty

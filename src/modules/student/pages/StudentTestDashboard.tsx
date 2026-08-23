@@ -1,11 +1,9 @@
-// src/modules/student/pages/StudentTestDashboard.tsx
-// Real assessments dashboard — reads studentAssessments via useStudentData.
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlayArrow, Schedule, CheckCircle, Cancel,
   TrendingUp, EmojiEvents, Visibility, CalendarToday,
-  AccessTime, Assessment, Lock,
+  AccessTime, Assessment, Lock, ArrowForward,
 } from "@mui/icons-material";
 import { MathRenderer } from '../components/MathRenderer';
 import { useStudentData } from '../hooks/useStudentData';
@@ -66,53 +64,77 @@ const StudentTestDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-400" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Assessments...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Assessment className="text-teal-400" /> My Assessments
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <Assessment className="text-teal-600" /> My Assessments &amp; Online Tests
         </h1>
-        <p className="text-slate-400 text-sm mt-1">
-          View upcoming tests, track your progress, and analyze your performance.
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          Take scheduled exams, view question solutions, and track test performance.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatTile icon={<CheckCircle className="text-emerald-400" />} label="Completed" value={completedCount} subtitle={`${passedCount} passed`} />
-        <StatTile icon={<TrendingUp className="text-sky-400" />} label="Average Score" value={`${avgScore}%`} subtitle="Across tests" />
-        <StatTile icon={<EmojiEvents className="text-amber-400" />} label="Best Grade" value={results[0]?.grade || '—'} subtitle="Latest graded" />
-        <StatTile icon={<Schedule className="text-indigo-400" />} label="Upcoming" value={upcomingCount} subtitle="Scheduled tests" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatTile
+          icon={<CheckCircle className="text-emerald-600" />}
+          label="Completed"
+          value={completedCount}
+          subtitle={`${passedCount} passed exams`}
+          colorClass="border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200"
+        />
+        <StatTile
+          icon={<TrendingUp className="text-blue-600" />}
+          label="Average Score"
+          value={`${avgScore}%`}
+          subtitle="Cumulative percentage"
+          colorClass="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200"
+        />
+        <StatTile
+          icon={<EmojiEvents className="text-amber-600" />}
+          label="Best Grade"
+          value={results[0]?.grade || '—'}
+          subtitle="Latest assessment"
+          colorClass="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200"
+        />
+        <StatTile
+          icon={<Schedule className="text-teal-600" />}
+          label="Upcoming"
+          value={upcomingCount}
+          subtitle="Scheduled tests"
+          colorClass="border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/30 text-teal-800 dark:text-teal-200"
+        />
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 border-b border-slate-800 overflow-x-auto">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {TABS.map((tab) => {
           const count = tests.filter((t) => matchesTab(t, tab.key)).length;
           const active = activeTab === tab.key;
-          const colorMap: Record<string, string> = {
-            info: 'text-sky-400 border-sky-400 bg-sky-400/10',
-            success: 'text-emerald-400 border-emerald-400 bg-emerald-400/10',
-            primary: 'text-teal-400 border-teal-400 bg-teal-400/10',
-            error: 'text-red-400 border-red-400 bg-red-400/10',
-          };
           return (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 md:px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                active ? colorMap[tab.color] : 'text-slate-400 border-transparent hover:text-slate-200'
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-bold whitespace-nowrap transition-all ${
+                active
+                  ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {tab.icon}
               {tab.label}
-              <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-slate-800">{count}</span>
+              <span className={`ml-1 text-[11px] px-2 py-0.5 rounded-full font-extrabold ${active ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+                {count}
+              </span>
             </button>
           );
         })}
@@ -121,19 +143,19 @@ const StudentTestDashboard: React.FC = () => {
       {/* List */}
       <div className="space-y-3">
         {filteredTests.length === 0 ? (
-          <div className="text-center py-16 rounded-xl border border-slate-800 bg-slate-900/40">
-            <div className="text-slate-600 flex justify-center mb-2">
-              {activeTab === 'upcoming' ? <Schedule fontSize="large" /> :
-               activeTab === 'active' ? <PlayArrow fontSize="large" /> :
-               activeTab === 'completed' ? <CheckCircle fontSize="large" /> :
-               <Cancel fontSize="large" />}
+          <div className="text-center py-16 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-sm">
+            <div className="text-slate-400 flex justify-center mb-2">
+              {activeTab === 'upcoming' ? <Schedule sx={{ fontSize: 40 }} /> :
+               activeTab === 'active' ? <PlayArrow sx={{ fontSize: 40 }} /> :
+               activeTab === 'completed' ? <CheckCircle sx={{ fontSize: 40 }} /> :
+               <Cancel sx={{ fontSize: 40 }} />}
             </div>
-            <p className="text-slate-300 font-medium">No {activeTab} tests</p>
-            <p className="text-slate-500 text-sm mt-1">
-              {activeTab === 'upcoming' && "You're all caught up! Check back later."}
-              {activeTab === 'active' && 'No tests are currently in progress.'}
-              {activeTab === 'completed' && 'Your completed tests will appear here.'}
-              {activeTab === 'missed' && "Great job! You haven't missed any tests."}
+            <p className="text-slate-900 dark:text-white font-bold text-sm">No {activeTab} tests</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {activeTab === 'upcoming' && "You're all caught up! New tests will appear here when scheduled."}
+              {activeTab === 'active' && 'No online tests are currently in progress.'}
+              {activeTab === 'completed' && 'Your completed assessments and grades will appear here.'}
+              {activeTab === 'missed' && "Great job! You haven't missed any scheduled exams."}
             </p>
           </div>
         ) : (
@@ -151,12 +173,12 @@ const StudentTestDashboard: React.FC = () => {
   );
 };
 
-const StatTile: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode; subtitle: string }> =
-  ({ icon, label, value, subtitle }) => (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-      <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">{icon}{label}</div>
-      <div className="text-2xl font-bold text-white">{value}</div>
-      <div className="text-[11px] text-slate-500 mt-0.5">{subtitle}</div>
+const StatTile: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode; subtitle: string; colorClass: string }> =
+  ({ icon, label, value, subtitle, colorClass }) => (
+    <div className={`rounded-2xl border p-4 shadow-sm ${colorClass}`}>
+      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-1 opacity-90">{icon}{label}</div>
+      <div className="text-2xl font-extrabold">{value}</div>
+      <div className="text-[11px] font-medium opacity-80 mt-0.5">{subtitle}</div>
     </div>
   );
 
@@ -172,31 +194,35 @@ const TestRow: React.FC<{
   const pct = test.percentage ?? (test.totalMarks && test.marksObtained ? (test.marksObtained / test.totalMarks) * 100 : undefined);
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 md:p-5 hover:border-slate-700 transition-colors">
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-5 shadow-sm hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700 transition-all">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">
+          <h3 className="font-bold text-sm md:text-base text-slate-900 dark:text-white truncate">
             <MathRenderer text={test.title} inline />
           </h3>
-          <p className="text-sm text-slate-400 mt-0.5">{test.subject || 'Assessment'}</p>
-          <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-500">
-            {test.totalQuestions ? <span>{test.totalQuestions} questions</span> : null}
-            {test.duration ? <span>{test.duration} min</span> : null}
-            {test.totalMarks ? <span>{test.totalMarks} marks</span> : null}
+          <p className="text-xs text-teal-700 dark:text-teal-400 font-semibold mt-0.5">{test.subject || 'Academic Assessment'}</p>
+          <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-500 font-medium">
+            {test.totalQuestions ? <span>{test.totalQuestions} Questions</span> : null}
+            {test.duration ? <span>&bull; {test.duration} Minutes</span> : null}
+            {test.totalMarks ? <span>&bull; {test.totalMarks} Total Marks</span> : null}
             {start && (
               <>
-                <span className="flex items-center gap-1"><CalendarToday fontSize="inherit" /> {start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                <span className="flex items-center gap-1"><AccessTime fontSize="inherit" /> {start.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                  <CalendarToday sx={{ fontSize: 13 }} /> {start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                </span>
+                <span className="flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                  <AccessTime sx={{ fontSize: 13 }} /> {start.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </>
             )}
           </div>
         </div>
 
-        <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-2">
+        <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-2 shrink-0">
           {test.canResume && (
             <button
               onClick={() => onStart(test.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-sm font-medium"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm shadow-amber-500/20"
             >
               <PlayArrow fontSize="small" /> Resume Test
             </button>
@@ -204,26 +230,26 @@ const TestRow: React.FC<{
           {isActive && !test.canResume && test.canStart && (
             <button
               onClick={() => onStart(test.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-sm shadow-teal-600/20"
             >
               <PlayArrow fontSize="small" /> Start Test
             </button>
           )}
           {isActive && !test.canResume && !test.canStart && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs">
-              <Schedule fontSize="small" /> Not started
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 text-xs font-semibold">
+              <Schedule fontSize="small" /> Not Started
             </span>
           )}
           {test.status === 'upcoming' && start && (
             <button
               onClick={() => onStart(test.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 text-xs hover:bg-sky-500/20 transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300 text-xs font-bold hover:bg-sky-100 transition-colors"
             >
               <Schedule fontSize="small" /> Starts in {getTimeRemaining(test.startDateTime)}
             </button>
           )}
           {isMissed && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 text-xs font-bold">
               <Cancel fontSize="small" /> Missed
             </span>
           )}
@@ -231,26 +257,28 @@ const TestRow: React.FC<{
             <>
               <div className="text-right">
                 {test.studentStatus === 'submitted' && test.needsManualGrading ? (
-                  <div className="text-sm text-amber-400">Awaiting grading</div>
+                  <div className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded">
+                    Awaiting Faculty Grading
+                  </div>
                 ) : (
-                  <div className={`text-lg font-bold ${(pct ?? 0) >= 40 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {test.marksObtained ?? '—'}/{test.totalMarks || '—'}
+                  <div className={`text-base font-extrabold ${(pct ?? 0) >= 40 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    {test.marksObtained ?? '—'} / {test.totalMarks || '—'}
                   </div>
                 )}
-                <div className="text-xs text-slate-500">
-                  {pct != null ? `${Math.round(pct)}%` : ''} {test.grade ? `• Grade ${test.grade}` : ''}
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {pct != null ? `${Math.round(pct)}% Score` : ''} {test.grade ? `&bull; Grade ${test.grade}` : ''}
                 </div>
               </div>
               <button
                 onClick={() => onResult(test.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-teal-500/50 text-slate-300 text-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 text-xs font-bold transition-colors"
               >
-                <Visibility fontSize="small" /> {test.studentStatus === 'submitted' ? 'View Submission' : 'View Result'}
+                <Visibility fontSize="small" /> {test.studentStatus === 'submitted' ? 'View Submission' : 'Detailed Results'}
               </button>
             </>
           )}
           {!isActive && !isCompleted && !isMissed && test.status !== 'upcoming' && (
-            <Lock fontSize="small" className="text-slate-600" />
+            <Lock fontSize="small" className="text-slate-400" />
           )}
         </div>
       </div>

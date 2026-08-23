@@ -156,7 +156,7 @@ export default function FacultyCurriculum() {
               <div
                 key={cls.id}
                 className="p-4 rounded-xl bg-teal-500/5 border border-teal-500/20 hover:border-teal-500/40 transition-all cursor-pointer"
-                onClick={() => navigate('/faculty/mark-attendance')}
+                onClick={() => navigate('/faculty/attendance-marking')}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -387,7 +387,7 @@ export default function FacultyCurriculum() {
                             <Calendar className="w-3 h-3" /> View Schedule
                           </button>
                           <button
-                            onClick={() => navigate('/faculty/mark-attendance')}
+                            onClick={() => navigate('/faculty/attendance-marking')}
                             className="flex-1 px-3 py-2 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-1"
                           >
                             <CheckCircle className="w-3 h-3" /> Mark Attendance

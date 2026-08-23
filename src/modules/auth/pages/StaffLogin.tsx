@@ -140,8 +140,8 @@ export default function StaffLogin() {
           <div className="mt-5 md:mt-6 flex flex-col gap-3 text-center">
             {/* CRITICAL FIX: Use Link (not <a>) and correct path /student-login */}
             <Link
-              to="/student-login"
-              className="text-sm text-teal-400 hover:text-teal-300 transition-colors flex items-center justify-center gap-1"
+              to="/student/login"
+              className="text-sm text-teal-600 hover:text-teal-700 transition-colors flex items-center justify-center gap-1 font-semibold"
             >
               <GraduationCap size={14} /> Student Login <ArrowRight size={14} />
             </Link>

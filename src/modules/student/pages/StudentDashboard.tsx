@@ -4,6 +4,7 @@ import { useStudentData } from '../hooks/useStudentData';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings,
+  GraduationCap, Sparkles, User, CalendarDays
 } from 'lucide-react';
 import type { Assessment, ClassSchedule } from '../types/student';
 
@@ -12,24 +13,51 @@ import type { Assessment, ClassSchedule } from '../types/student';
 function StatCard({ icon: Icon, label, value, subtext, color }: {
   icon: React.ElementType; label: string; value: string; subtext?: string; color: string;
 }) {
-  const colorMap: Record<string, string> = {
-    teal: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
-    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    rose: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    violet: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  const colorMap: Record<string, { bg: string; text: string; border: string }> = {
+    teal: {
+      bg: 'bg-teal-50 dark:bg-teal-950/40',
+      text: 'text-teal-700 dark:text-teal-300',
+      border: 'border-teal-200/80 dark:border-teal-800/60',
+    },
+    blue: {
+      bg: 'bg-blue-50 dark:bg-blue-950/40',
+      text: 'text-blue-700 dark:text-blue-300',
+      border: 'border-blue-200/80 dark:border-blue-800/60',
+    },
+    amber: {
+      bg: 'bg-amber-50 dark:bg-amber-950/40',
+      text: 'text-amber-700 dark:text-amber-300',
+      border: 'border-amber-200/80 dark:border-amber-800/60',
+    },
+    rose: {
+      bg: 'bg-rose-50 dark:bg-rose-950/40',
+      text: 'text-rose-700 dark:text-rose-300',
+      border: 'border-rose-200/80 dark:border-rose-800/60',
+    },
+    emerald: {
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      border: 'border-emerald-200/80 dark:border-emerald-800/60',
+    },
+    violet: {
+      bg: 'bg-violet-50 dark:bg-violet-950/40',
+      text: 'text-violet-700 dark:text-violet-300',
+      border: 'border-violet-200/80 dark:border-violet-800/60',
+    },
   };
+
+  const scheme = colorMap[color] || colorMap.teal;
+
   return (
-    <div className={`rounded-xl md:rounded-2xl border p-3 md:p-4 ${colorMap[color]}`}>
+    <div className={`rounded-2xl border ${scheme.border} ${scheme.bg} p-4 md:p-5 shadow-sm transition-all duration-200 hover:shadow-md`}>
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-xs md:text-sm opacity-80 mb-0.5 md:mb-1 truncate">{label}</p>
-          <h3 className="text-lg md:text-2xl font-bold">{value}</h3>
-          {subtext && <p className="text-xs mt-0.5 md:mt-1 opacity-70 truncate">{subtext}</p>}
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 truncate">{label}</p>
+          <h3 className={`text-xl md:text-2xl font-extrabold ${scheme.text}`}>{value}</h3>
+          {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-400 truncate font-medium">{subtext}</p>}
         </div>
-        <div className="p-1.5 md:p-2 rounded-lg bg-white/5 shrink-0">
-          <Icon className="w-4 h-4 md:w-5 md:h-5" />
+        <div className={`p-2.5 rounded-xl bg-white dark:bg-slate-900/60 shadow-xs shrink-0 ${scheme.text}`}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
     </div>
@@ -38,20 +66,20 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
 
 function ScheduleCard({ session }: { session: ClassSchedule }) {
   return (
-    <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-      <div className="p-2 md:p-2.5 rounded-lg bg-teal-500/10 text-teal-400 shrink-0">
-        <Clock className="w-4 h-4 md:w-5 md:h-5" />
+    <div className="flex items-center gap-3 p-3.5 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-300 dark:hover:border-teal-700 transition-all">
+      <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 shrink-0">
+        <Clock className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm md:text-base font-medium text-white truncate">{session.subject}</p>
-        <p className="text-xs text-slate-400 truncate">
-          {session.teacher || session.facultyName || 'Faculty'}
+        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{session.subject}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
+          {session.teacher || session.facultyName || 'Faculty Member'}
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-sm font-medium text-white">{session.startTime}</p>
-        <p className="text-xs text-slate-500 flex items-center gap-1 justify-end">
-          <MapPin size={10} /> {session.room}
+        <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200">{session.startTime}</p>
+        <p className="text-[11px] text-slate-500 flex items-center gap-1 justify-end font-medium">
+          <MapPin size={11} className="text-teal-600" /> {session.room || 'Hall'}
         </p>
       </div>
     </div>
@@ -60,23 +88,23 @@ function ScheduleCard({ session }: { session: ClassSchedule }) {
 
 function NotificationCard({ notification }: { notification: { id: string; title: string; message: string; type: string; read: boolean } }) {
   const typeColors: Record<string, string> = {
-    info: 'border-blue-500/20 bg-blue-500/5',
-    warning: 'border-amber-500/20 bg-amber-500/5',
-    success: 'border-emerald-500/20 bg-emerald-500/5',
+    info: 'border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300',
+    warning: 'border-amber-200 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
+    success: 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300',
   };
   return (
-    <div className={`p-3 rounded-xl border ${typeColors[notification.type] || typeColors.info}`}>
-      <div className="flex items-start gap-2">
-        <div className="mt-0.5">
-          {notification.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-amber-400" /> :
-           notification.type === 'success' ? <CheckCircle className="w-4 h-4 text-emerald-400" /> :
-           <Bell className="w-4 h-4 text-blue-400" />}
+    <div className={`p-3.5 rounded-xl border ${typeColors[notification.type] || typeColors.info}`}>
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5 shrink-0">
+          {notification.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-amber-500" /> :
+           notification.type === 'success' ? <CheckCircle className="w-4 h-4 text-emerald-500" /> :
+           <Bell className="w-4 h-4 text-blue-500" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white">{notification.title}</p>
-          <p className="text-xs text-slate-400 line-clamp-2">{notification.message}</p>
+          <p className="text-xs font-bold text-slate-900 dark:text-white">{notification.title}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2">{notification.message}</p>
         </div>
-        {!notification.read && <div className="w-2 h-2 rounded-full bg-teal-400 shrink-0 mt-1" />}
+        {!notification.read && <div className="w-2 h-2 rounded-full bg-teal-600 shrink-0 mt-1" />}
       </div>
     </div>
   );
@@ -85,18 +113,15 @@ function NotificationCard({ notification }: { notification: { id: string; title:
 function QuickAction({ to, icon: Icon, label, color }: {
   to: string; icon: React.ElementType; label: string; color: string;
 }) {
-  const colorMap: Record<string, string> = {
-    teal: 'hover:border-teal-500/30 hover:bg-teal-500/5 text-teal-400',
-    blue: 'hover:border-blue-500/30 hover:bg-blue-500/5 text-blue-400',
-    amber: 'hover:border-amber-500/30 hover:bg-amber-500/5 text-amber-400',
-    violet: 'hover:border-violet-500/30 hover:bg-violet-500/5 text-violet-400',
-    rose: 'hover:border-rose-500/30 hover:bg-rose-500/5 text-rose-400',
-    emerald: 'hover:border-emerald-500/30 hover:bg-emerald-500/5 text-emerald-400',
-  };
   return (
-    <Link to={to} className={`p-3 md:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 transition-all text-center group ${colorMap[color]}`}>
-      <Icon className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-1.5 md:mb-2 group-hover:scale-110 transition-transform" />
-      <p className="text-xs md:text-sm font-medium text-white">{label}</p>
+    <Link
+      to={to}
+      className="p-3 md:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-all text-center group flex flex-col items-center justify-center"
+    >
+      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-xs">
+        <Icon className="w-5 h-5" />
+      </div>
+      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{label}</p>
     </Link>
   );
 }
@@ -104,83 +129,129 @@ function QuickAction({ to, icon: Icon, label, color }: {
 // ─── Main Component ─────────────────────────────────────────────────
 
 export default function StudentDashboard() {
-  // Identity comes from Firebase Auth via useStudentData — no localStorage token.
   const { loading, profile, attendance, assessments, assignments, fees, schedule, notifications, unreadNotifications, todayDate } =
     useStudentData();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'notifications'>('overview');
 
-  // Safe fee values
   const paidFees = fees?.paidFees || 0;
   const pendingFees = fees?.pendingFees || 0;
   const totalFees = fees?.totalFees || 0;
-  const paidPercent = totalFees > 0 ? (paidFees / totalFees) * 100 : 0;
-  const pendingPercent = totalFees > 0 ? (pendingFees / totalFees) * 100 : 0;
+  const paidPercent = totalFees > 0 ? Math.round((paidFees / totalFees) * 100) : 0;
+  const pendingPercent = totalFees > 0 ? Math.round((pendingFees / totalFees) * 100) : 0;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-400" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto bg-slate-950 min-h-screen pb-24 md:pb-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold text-lg md:text-xl">
-            {profile?.name?.charAt(0) || 'S'}
+    <div className="space-y-6 md:space-y-8">
+      {/* Welcome Banner */}
+      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-white p-6 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-white shadow-inner shrink-0">
+              {profile?.name?.charAt(0) || 'S'}
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold uppercase tracking-wider text-teal-100 mb-1">
+                <GraduationCap size={13} />
+                Student Portal
+              </div>
+              <h1 className="text-xl md:text-3xl font-extrabold tracking-tight">
+                Welcome back, {profile?.name?.split(' ')[0] || 'Student'}!
+              </h1>
+              <p className="text-xs md:text-sm text-teal-100 font-medium mt-0.5">
+                {profile?.regNo || 'Reg. ID'} &bull; {profile?.course || 'Undergraduate'} &bull; {profile?.batch || '2024–2028'}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-bold text-white truncate">
-              Welcome, {profile?.name?.split(' ')[0] || 'Student'}
-            </h1>
-            <p className="text-xs md:text-sm text-slate-400 truncate">
-              {profile?.regNo || 'Reg. No'} &bull; {profile?.course || 'Course'} &bull; {profile?.batch || 'Batch'}
-            </p>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/student/assessments"
+              className="px-4 py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+            >
+              <BookOpen size={16} />
+              Take Tests
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-        <StatCard icon={Calendar} label="Attendance" value={`${attendance?.percentage ?? 0}%`}
-          subtext={`${attendance?.presentClasses ?? 0}/${attendance?.totalClasses ?? 0} classes`} color="teal" />
-        <StatCard icon={BookOpen} label="Assessments" value={String(assessments?.length ?? 0)} subtext="Upcoming" color="blue" />
-        <StatCard icon={FileText} label="Assignments" value={String(assignments?.length ?? 0)} subtext="Pending" color="amber" />
-        <StatCard icon={CreditCard} label="Fees" value={`₹${pendingFees.toLocaleString()}`}
-          subtext={pendingFees > 0 ? 'Due' : 'Paid'} color={pendingFees > 0 ? 'rose' : 'emerald'} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+        <StatCard
+          icon={Calendar}
+          label="Attendance Rate"
+          value={`${attendance?.percentage ?? 0}%`}
+          subtext={`${attendance?.presentClasses ?? 0}/${attendance?.totalClasses ?? 0} sessions attended`}
+          color="teal"
+        />
+        <StatCard
+          icon={BookOpen}
+          label="Active Tests"
+          value={String(assessments?.length ?? 0)}
+          subtext="Available assessments"
+          color="blue"
+        />
+        <StatCard
+          icon={FileText}
+          label="Assignments"
+          value={String(assignments?.length ?? 0)}
+          subtext="Pending submissions"
+          color="amber"
+        />
+        <StatCard
+          icon={CreditCard}
+          label="Fee Balance"
+          value={`₹${pendingFees.toLocaleString()}`}
+          subtext={pendingFees > 0 ? 'Pending payment' : 'Fully cleared'}
+          color={pendingFees > 0 ? 'rose' : 'emerald'}
+        />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 mb-6 md:mb-8">
-        <QuickAction to="/student/attendance" icon={Calendar} label="Attendance" color="teal" />
-        <QuickAction to="/student/assessments" icon={BookOpen} label="Assessments" color="blue" />
-        <QuickAction to="/student/assignments" icon={FileText} label="Assignments" color="amber" />
-        <QuickAction to="/student/grades" icon={TrendingUp} label="Grades" color="emerald" />
-        <QuickAction to="/student/materials" icon={Library} label="Materials" color="violet" />
-        <QuickAction to="/student/timetable" icon={Clock} label="Timetable" color="rose" />
-        <QuickAction to="/student/fees" icon={CreditCard} label="Fees" color="teal" />
-        <QuickAction to="/student/library" icon={BookOpen} label="Library" color="blue" />
-        <QuickAction to="/student/events" icon={Calendar} label="Events" color="amber" />
-        <QuickAction to="/student/settings" icon={Settings} label="Settings" color="violet" />
+      {/* Quick Actions Grid */}
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-teal-600" />
+          Quick Navigation
+        </h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3">
+          <QuickAction to="/student/attendance" icon={Calendar} label="Attendance" color="teal" />
+          <QuickAction to="/student/assessments" icon={BookOpen} label="Assessments" color="blue" />
+          <QuickAction to="/student/assignments" icon={FileText} label="Assignments" color="amber" />
+          <QuickAction to="/student/grades" icon={TrendingUp} label="Grades & GPA" color="emerald" />
+          <QuickAction to="/student/materials" icon={Library} label="Study Notes" color="violet" />
+          <QuickAction to="/student/timetable" icon={Clock} label="Timetable" color="rose" />
+          <QuickAction to="/student/fees" icon={CreditCard} label="Fee Portal" color="teal" />
+          <QuickAction to="/student/library" icon={BookOpen} label="E-Library" color="blue" />
+          <QuickAction to="/student/events" icon={CalendarDays} label="Campus Events" color="amber" />
+          <QuickAction to="/student/notifications" icon={Bell} label="Alerts" color="violet" />
+          <QuickAction to="/student/settings" icon={Settings} label="Preferences" color="teal" />
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2">
+      {/* Main Tabs */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {[
-          { id: 'overview', label: 'Overview' },
+          { id: 'overview', label: 'Academic Overview' },
           { id: 'schedule', label: "Today's Schedule" },
           { id: 'notifications', label: `Notifications ${unreadNotifications > 0 ? `(${unreadNotifications})` : ''}` },
         ].map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-            className={`px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}>
+                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
             {tab.label}
           </button>
         ))}
@@ -188,124 +259,149 @@ export default function StudentDashboard() {
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left 2 Columns */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Upcoming Assessments */}
-            <div>
-              <div className="flex items-center justify-between mb-3 md:mb-4">
-                <h2 className="text-base md:text-lg font-semibold text-white flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-teal-400" /> Upcoming Assessments
+            <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-teal-600" /> Available Assessments & Tests
                 </h2>
-                <Link to="/student/assessments" className="text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1">
-                  View all <ChevronRight className="w-3 h-3" />
+                <Link to="/student/assessments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
+                  View All <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
+
               {assessments.length > 0 ? (
-                <div className="space-y-2 md:space-y-3">
+                <div className="space-y-3">
                   {assessments.slice(0, 3).map((a: Assessment) => (
-                    <div key={a.id} className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                      <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
-                        <BookOpen className="w-4 h-4" />
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between p-3.5 md:p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2.5 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 shrink-0 font-bold text-xs">
+                          {a.type || 'MCQ'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{a.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{a.subject}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{a.title}</p>
-                        <p className="text-xs text-slate-400">{a.subject} &bull; {a.type}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs text-slate-400">{a.date}</p>
-                      </div>
+                      <Link
+                        to={`/student/test/${a.id}/instructions`}
+                        className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs shrink-0"
+                      >
+                        Start Test
+                      </Link>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-6 md:p-8 text-center rounded-xl bg-slate-800/50 border border-slate-700/50">
-                  <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">No upcoming assessments</p>
+                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
+                  <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No pending assessments</p>
+                  <p className="text-xs text-slate-500 mt-0.5">You're all caught up with your online evaluations.</p>
                 </div>
               )}
             </div>
 
             {/* Pending Assignments */}
-            <div>
-              <div className="flex items-center justify-between mb-3 md:mb-4">
-                <h2 className="text-base md:text-lg font-semibold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 md:w-5 md:h-5 text-amber-400" /> Pending Assignments
+            <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-amber-600" /> Pending Assignments
                 </h2>
-                <Link to="/student/assignments" className="text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1">
-                  View all <ChevronRight className="w-3 h-3" />
+                <Link to="/student/assignments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
+                  View All <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
+
               {assignments.length > 0 ? (
-                <div className="space-y-2 md:space-y-3">
+                <div className="space-y-3">
                   {assignments.slice(0, 3).map((a) => (
-                    <div key={a.id} className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 shrink-0">
-                        <FileText className="w-4 h-4" />
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between p-3.5 md:p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{a.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{a.subject}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{a.title}</p>
-                        <p className="text-xs text-slate-400">{a.subject}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs text-amber-400">Due {a.dueDate}</p>
-                      </div>
+                      <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-lg border border-amber-200/60 shrink-0">
+                        Due {a.dueDate}
+                      </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-6 md:p-8 text-center rounded-xl bg-slate-800/50 border border-slate-700/50">
-                  <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">All assignments submitted!</p>
+                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
+                  <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No pending assignments</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Great job! All assigned submissions are completed.</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right Panel */}
-          <div className="space-y-4 md:space-y-6">
-            {/* Fee Status */}
-            <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 md:p-5">
-              <h3 className="font-semibold text-white mb-3 flex items-center gap-2 text-sm md:text-base">
-                <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-teal-400" /> Fee Status
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Fee Status Card */}
+            <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-base">
+                <CreditCard className="w-5 h-5 text-teal-600" /> Fee Summary
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-3.5">
                 <div>
-                  <div className="flex justify-between text-xs md:text-sm mb-1">
-                    <span className="text-slate-400">Paid</span>
-                    <span className="text-emerald-400">₹{paidFees.toLocaleString()}</span>
+                  <div className="flex justify-between text-xs font-bold mb-1.5">
+                    <span className="text-slate-500 dark:text-slate-400">Total Paid</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">₹{paidFees.toLocaleString()}</span>
                   </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
-                    <div className="h-full rounded-full bg-emerald-500 transition-all"
-                      style={{ width: `${paidPercent}%` }} />
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                    <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${paidPercent}%` }} />
                   </div>
                 </div>
+
                 <div>
-                  <div className="flex justify-between text-xs md:text-sm mb-1">
-                    <span className="text-slate-400">Pending</span>
-                    <span className="text-rose-400">₹{pendingFees.toLocaleString()}</span>
+                  <div className="flex justify-between text-xs font-bold mb-1.5">
+                    <span className="text-slate-500 dark:text-slate-400">Pending Amount</span>
+                    <span className="text-rose-600 dark:text-rose-400 font-extrabold">₹{pendingFees.toLocaleString()}</span>
                   </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
-                    <div className="h-full rounded-full bg-rose-500 transition-all"
-                      style={{ width: `${pendingPercent}%` }} />
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                    <div className="h-full rounded-full bg-rose-500 transition-all duration-500" style={{ width: `${pendingPercent}%` }} />
                   </div>
                 </div>
               </div>
-              <Link to="/student/fees" className="mt-3 md:mt-4 text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1">
-                Pay fees <ChevronRight className="w-3 h-3" />
+
+              <Link
+                to="/student/fees"
+                className="mt-5 block w-full py-2.5 rounded-xl text-center bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/50 dark:hover:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-bold text-xs border border-teal-200/80 dark:border-teal-800/80 transition-colors"
+              >
+                Go to Fee Portal →
               </Link>
             </div>
 
             {/* Recent Notifications */}
-            <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 md:p-5">
-              <h3 className="font-semibold text-white mb-3 flex items-center gap-2 text-sm md:text-base">
-                <Bell className="w-4 h-4 md:w-5 md:h-5 text-teal-400" /> Recent
+            <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-base">
+                <Bell className="w-5 h-5 text-teal-600" /> Recent Alerts
               </h3>
-              <div className="space-y-2 md:space-y-3">
-                {notifications.slice(0, 3).map((n) => <NotificationCard key={n.id} notification={n} />)}
+              <div className="space-y-2.5">
+                {notifications.slice(0, 3).map((n) => (
+                  <NotificationCard key={n.id} notification={n} />
+                ))}
               </div>
-              <Link to="/student/notifications" className="mt-3 md:mt-4 text-xs text-teal-400 hover:text-teal-300 flex items-center gap-1">
-                View all <ChevronRight className="w-3 h-3" />
+              <Link
+                to="/student/notifications"
+                className="mt-4 block text-center text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
+              >
+                View all notifications →
               </Link>
             </div>
           </div>
@@ -314,37 +410,45 @@ export default function StudentDashboard() {
 
       {activeTab === 'schedule' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-base md:text-lg font-semibold text-white flex items-center gap-2">
-              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-teal-400" /> Today's Schedule
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-teal-600" /> Today's Scheduled Lectures
             </h2>
-            <span className="text-xs text-slate-500">{todayDate}</span>
+            <span className="text-xs font-semibold text-slate-500">{todayDate}</span>
           </div>
+
           {schedule.length > 0 ? (
-            <div className="space-y-2 md:space-y-3">
-              {schedule.map((s) => <ScheduleCard key={s.id} session={s} />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {schedule.map((s) => (
+                <ScheduleCard key={s.id} session={s} />
+              ))}
             </div>
           ) : (
-            <div className="p-8 md:p-12 text-center rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <Calendar className="w-8 h-8 md:w-10 md:h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-sm md:text-base text-slate-400">No classes scheduled for today</p>
-              <p className="text-xs text-slate-500 mt-1">Enjoy your day off!</p>
+            <div className="p-10 text-center rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 shadow-sm">
+              <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No classes scheduled today</p>
+              <p className="text-xs text-slate-500 mt-1">Enjoy your study break or prepare for upcoming assessments.</p>
             </div>
           )}
         </div>
       )}
 
       {activeTab === 'notifications' && (
-        <div className="space-y-3 md:space-y-4">
-          <h2 className="text-base md:text-lg font-semibold text-white flex items-center gap-2">
-            <Bell className="w-4 h-4 md:w-5 md:h-5 text-teal-400" /> All Notifications
+        <div className="space-y-4">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Bell className="w-5 h-5 text-teal-600" /> All Notifications
           </h2>
           {notifications.length > 0 ? (
-            notifications.map((n) => <NotificationCard key={n.id} notification={n} />)
+            <div className="space-y-3">
+              {notifications.map((n) => (
+                <NotificationCard key={n.id} notification={n} />
+              ))}
+            </div>
           ) : (
-            <div className="p-8 md:p-12 text-center rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <Bell className="w-8 h-8 md:w-10 md:h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-sm md:text-base text-slate-400">No notifications yet</p>
+            <div className="p-10 text-center rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 shadow-sm">
+              <Bell className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No notifications</p>
+              <p className="text-xs text-slate-500 mt-1">You will see announcements and assignment alerts here.</p>
             </div>
           )}
         </div>

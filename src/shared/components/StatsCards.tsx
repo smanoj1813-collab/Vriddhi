@@ -10,30 +10,26 @@ export function StatsCards({ totalClasses, completedClasses, pendingClasses, tot
     {
       label: 'Classes Assigned Today',
       value: totalClasses,
-      color: 'text-gray-900',
-      bg: 'bg-white',
-      border: 'border-gray-200',
+      color: 'text-slate-900 dark:text-white',
+      badgeBg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
     },
     {
       label: 'Attendance Completed',
       value: `${completedClasses} / ${totalClasses}`,
-      color: 'text-emerald-700',
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-200',
+      color: 'text-emerald-700 dark:text-emerald-400',
+      badgeBg: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
     },
     {
       label: 'Pending Attendance',
       value: pendingClasses,
-      color: pendingClasses > 0 ? 'text-amber-700' : 'text-gray-700',
-      bg: pendingClasses > 0 ? 'bg-amber-50' : 'bg-gray-50',
-      border: pendingClasses > 0 ? 'border-amber-200' : 'border-gray-200',
+      color: pendingClasses > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300',
+      badgeBg: pendingClasses > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
     },
     {
       label: 'Students Absent Today',
       value: totalAbsent,
-      color: 'text-red-700',
-      bg: 'bg-red-50',
-      border: 'border-red-200',
+      color: 'text-rose-700 dark:text-rose-400',
+      badgeBg: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
     },
   ];
 
@@ -42,10 +38,12 @@ export function StatsCards({ totalClasses, completedClasses, pendingClasses, tot
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`rounded-xl border ${card.border} ${card.bg} p-4 shadow-sm transition-shadow duration-200 hover:shadow-md`}
+          className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700"
         >
-          <p className="text-xs font-medium text-gray-500">{card.label}</p>
-          <p className={`mt-1 text-2xl font-bold ${card.color}`}>{card.value}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{card.label}</p>
+          <div className="mt-2 flex items-baseline justify-between">
+            <p className={`text-2xl font-extrabold ${card.color}`}>{card.value}</p>
+          </div>
         </div>
       ))}
     </div>

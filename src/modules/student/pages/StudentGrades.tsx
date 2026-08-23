@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Award, BookOpen, ChevronDown, ChevronUp, GraduationCap, Loader2 } from 'lucide-react';
+import { TrendingUp, Award, BookOpen, ChevronDown, ChevronUp, GraduationCap, Loader2, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import { fetchGrades } from '../api/studentDataApi';
@@ -19,14 +19,14 @@ interface GradeRecord {
 }
 
 const gradeColors: Record<string, string> = {
-  'A+': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  'O': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  'A': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-  'B+': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  'B': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-  'C': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  'D': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  'F': 'bg-red-500/20 text-red-400 border-red-500/30',
+  'A+': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+  'O': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+  'A': 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800',
+  'B+': 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800',
+  'B': 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800',
+  'C': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+  'D': 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800',
+  'F': 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
 };
 
 export default function StudentGrades() {
@@ -82,203 +82,204 @@ export default function StudentGrades() {
 
   if (profileLoading || loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Grade Records...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-white">Grades &amp; Progress</h1>
-          <p className="text-sm text-slate-400">View your academic performance and track progress</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Grades &amp; Academic Progress</h1>
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Comprehensive performance scorecards and cumulative GPA trajectory</p>
+      </div>
+
+      {/* CGPA Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-6 md:p-8 shadow-sm"
+      >
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="relative w-36 h-36 shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" strokeWidth="8" className="dark:stroke-slate-800" />
+              <motion.circle
+                cx="50" cy="50" r="42"
+                fill="none"
+                stroke="#0d9488"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 42}`}
+                initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - parseFloat(cgpa) / 10) }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">{cgpa}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">CGPA</span>
+            </div>
+          </div>
+
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full">
+            <div className="text-center p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60">
+              <Award className="w-5 h-5 text-teal-600 dark:text-teal-400 mx-auto mb-1.5" />
+              <p className="text-xl font-black text-teal-900 dark:text-teal-100">{grades.filter(g => g.grade === 'A' || g.grade === 'A+' || g.grade === 'O').length}</p>
+              <p className="text-xs font-semibold text-teal-700 dark:text-teal-300">Top Grades</p>
+            </div>
+            <div className="text-center p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60">
+              <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1.5" />
+              <p className="text-xl font-black text-blue-900 dark:text-blue-100">{totalCredits}</p>
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">Earned Credits</p>
+            </div>
+            <div className="text-center p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
+              <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1.5" />
+              <p className="text-xl font-black text-emerald-900 dark:text-emerald-100">Sem {semesters[0] ?? '1'}</p>
+              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Current Level</p>
+            </div>
+            <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <GraduationCap className="w-5 h-5 text-slate-600 dark:text-slate-400 mx-auto mb-1.5" />
+              <p className="text-xl font-black text-slate-900 dark:text-slate-100">{grades.length}</p>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Total Courses</p>
+            </div>
+          </div>
         </div>
-      </header>
+      </motion.div>
 
-      <div className="p-6 space-y-6">
-        {/* CGPA Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-slate-700/30 bg-slate-900/40 p-6"
-        >
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="relative w-36 h-36">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#1e293b" strokeWidth="8" />
-                <motion.circle
-                  cx="50" cy="50" r="42"
-                  fill="none"
-                  stroke="#14b8a6"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 42}`}
-                  initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
-                  animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - parseFloat(cgpa) / 10) }}
-                  transition={{ duration: 1.5, ease: 'easeOut' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-white">{cgpa}</span>
-                <span className="text-xs text-slate-400">CGPA</span>
-              </div>
-            </div>
-            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-              <div className="text-center p-4 rounded-lg bg-slate-800/50">
-                <Award className="w-5 h-5 text-teal-400 mx-auto mb-1" />
-                <p className="text-xl font-bold text-white">{grades.filter(g => g.grade === 'A' || g.grade === 'A+' || g.grade === 'O').length}</p>
-                <p className="text-xs text-slate-400">A Grades</p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-slate-800/50">
-                <BookOpen className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                <p className="text-xl font-bold text-white">{totalCredits}</p>
-                <p className="text-xs text-slate-400">Total Credits</p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-slate-800/50">
-                <TrendingUp className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                <p className="text-xl font-bold text-white">{semesters[0] ?? '—'}</p>
-                <p className="text-xs text-slate-400">Current Sem</p>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-slate-800/50">
-                <GraduationCap className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-                <p className="text-xl font-bold text-white">{grades.length}</p>
-                <p className="text-xs text-slate-400">Subjects</p>
-              </div>
-            </div>
+      {grades.length === 0 ? (
+        <div className="text-center py-16 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-sm">
+          <GraduationCap className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-900 dark:text-white font-bold text-base">No published grade records yet</p>
+          <p className="text-xs text-slate-500 mt-1">Official semester transcripts will show up here after term evaluations.</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+            {(['grades', 'progress'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${
+                  activeTab === tab
+                    ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {tab === 'grades' ? 'Semester Grade Cards' : 'GPA Progression Trend'}
+              </button>
+            ))}
           </div>
-        </motion.div>
 
-        {grades.length === 0 ? (
-          <div className="text-center py-16 rounded-xl border border-slate-700/30 bg-slate-900/40">
-            <GraduationCap className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-white font-medium">No graded results yet</p>
-            <p className="text-sm text-slate-400 mt-1">Your graded assessments will appear here once published.</p>
-          </div>
-        ) : (
-          <>
-            <div className="flex gap-2">
-              {(['grades', 'progress'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === tab
-                      ? 'bg-teal-500/15 text-teal-400 border border-teal-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
+          {activeTab === 'grades' ? (
+            <div className="space-y-4">
+              {semesters.map((semester) => (
+                <motion.div
+                  key={semester}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] overflow-hidden shadow-sm"
                 >
-                  {tab === 'grades' ? 'Grade Cards' : 'Semester Progress'}
-                </button>
+                  <button
+                    onClick={() => setExpandedSemester(expandedSemester === semester ? null : semester)}
+                    className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 flex items-center justify-center text-sm font-extrabold border border-teal-200/80 dark:border-teal-800/60">
+                        {semester}
+                      </span>
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">Semester {semester}</p>
+                        <p className="text-xs text-slate-500 font-medium">{semesterWise[semester].length} courses &bull; SGPA: <span className="font-bold text-teal-600 dark:text-teal-400">{semesterGPA(semester)}</span></p>
+                      </div>
+                    </div>
+                    {expandedSemester === semester ? (
+                      <ChevronUp className="w-5 h-5 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-slate-400" />
+                    )}
+                  </button>
+
+                  {expandedSemester === semester && (
+                    <div className="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                              <th className="pb-3 pt-2 font-bold">Course Title</th>
+                              <th className="pb-3 pt-2 font-bold">Code</th>
+                              <th className="pb-3 pt-2 font-bold text-center">Credits</th>
+                              <th className="pb-3 pt-2 font-bold text-center">Internal</th>
+                              <th className="pb-3 pt-2 font-bold text-center">External</th>
+                              <th className="pb-3 pt-2 font-bold text-center">Total</th>
+                              <th className="pb-3 pt-2 font-bold text-center">Grade</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-xs md:text-sm divide-y divide-slate-100 dark:divide-slate-800">
+                            {semesterWise[semester].map((g) => (
+                              <tr key={g.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/20">
+                                <td className="py-3 font-semibold text-slate-900 dark:text-white">{g.subject}</td>
+                                <td className="py-3 text-slate-500 font-mono">{g.code}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-300 font-medium">{g.credits}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-300 font-medium">{g.internal}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-300 font-medium">{g.external}</td>
+                                <td className="py-3 text-center font-bold text-slate-900 dark:text-white">{g.total}</td>
+                                <td className="py-3 text-center">
+                                  <span className={`px-2.5 py-0.5 rounded-lg text-xs font-extrabold border ${gradeColors[g.grade] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                                    {g.grade}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
               ))}
             </div>
-
-            {activeTab === 'grades' ? (
-              <div className="space-y-4">
-                {semesters.map((semester) => (
-                  <motion.div
-                    key={semester}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl border border-slate-700/30 bg-slate-900/40 overflow-hidden"
-                  >
-                    <button
-                      onClick={() => setExpandedSemester(expandedSemester === semester ? null : semester)}
-                      className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-800/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-lg bg-teal-500/15 text-teal-400 flex items-center justify-center text-sm font-bold">
-                          {semester}
-                        </span>
-                        <div className="text-left">
-                          <p className="text-sm font-semibold text-white">Semester {semester}</p>
-                          <p className="text-xs text-slate-400">{semesterWise[semester].length} subjects · GPA: {semesterGPA(semester)}</p>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-6 md:p-8 shadow-sm"
+            >
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <BarChart2 className="w-5 h-5 text-teal-600" /> Semester-wise SGPA Progression
+              </h3>
+              <div className="space-y-4 max-w-2xl">
+                {semesters
+                  .slice()
+                  .sort((a, b) => a - b)
+                  .map((semester) => {
+                    const gpa = parseFloat(semesterGPA(semester));
+                    const percentage = (gpa / 10) * 100;
+                    return (
+                      <div key={semester} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                        <div className="flex justify-between text-xs font-bold mb-2">
+                          <span className="text-slate-800 dark:text-slate-200">Semester {semester}</span>
+                          <span className="text-teal-700 dark:text-teal-400 font-extrabold text-sm">{gpa} SGPA</span>
+                        </div>
+                        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 1, delay: semester * 0.1 }}
+                            className="h-full rounded-full bg-teal-600"
+                          />
                         </div>
                       </div>
-                      {expandedSemester === semester ? (
-                        <ChevronUp className="w-5 h-5 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
-                      )}
-                    </button>
-
-                    {expandedSemester === semester && (
-                      <div className="px-6 pb-4">
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="text-left text-xs text-slate-400 border-b border-slate-700/50">
-                                <th className="pb-2 font-medium">Subject</th>
-                                <th className="pb-2 font-medium">Code</th>
-                                <th className="pb-2 font-medium text-center">Credits</th>
-                                <th className="pb-2 font-medium text-center">Internal</th>
-                                <th className="pb-2 font-medium text-center">External</th>
-                                <th className="pb-2 font-medium text-center">Total</th>
-                                <th className="pb-2 font-medium text-center">Grade</th>
-                              </tr>
-                            </thead>
-                            <tbody className="text-sm">
-                              {semesterWise[semester].map((g) => (
-                                <tr key={g.id} className="border-b border-slate-800/50 last:border-0">
-                                  <td className="py-3 text-slate-200">{g.subject}</td>
-                                  <td className="py-3 text-slate-400">{g.code}</td>
-                                  <td className="py-3 text-center text-slate-400">{g.credits}</td>
-                                  <td className="py-3 text-center text-slate-400">{g.internal}</td>
-                                  <td className="py-3 text-center text-slate-400">{g.external}</td>
-                                  <td className="py-3 text-center font-semibold text-white">{g.total}</td>
-                                  <td className="py-3 text-center">
-                                    <span className={`px-2 py-0.5 rounded-md text-xs font-bold border ${gradeColors[g.grade] || 'bg-slate-700 text-slate-300'}`}>
-                                      {g.grade}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                    );
+                  })}
               </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="rounded-xl border border-slate-700/30 bg-slate-900/40 p-6"
-              >
-                <h3 className="text-lg font-semibold text-white mb-4">Semester-wise GPA Trend</h3>
-                <div className="space-y-4">
-                  {semesters
-                    .slice()
-                    .sort((a, b) => a - b)
-                    .map((semester) => {
-                      const gpa = parseFloat(semesterGPA(semester));
-                      const percentage = (gpa / 10) * 100;
-                      return (
-                        <div key={semester}>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-slate-300">Semester {semester}</span>
-                            <span className="text-teal-400 font-semibold">{gpa} GPA</span>
-                          </div>
-                          <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${percentage}%` }}
-                              transition={{ duration: 1, delay: semester * 0.1 }}
-                              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </motion.div>
-            )}
-          </>
-        )}
-      </div>
+            </motion.div>
+          )}
+        </>
+      )}
     </div>
   );
 }
