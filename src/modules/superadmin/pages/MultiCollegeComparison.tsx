@@ -61,8 +61,8 @@ const HorizontalBarChart: React.FC<{ data: { label: string; value: number; color
       {data.map((item, i) => (
         <div key={i} className="group">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-slate-300 font-medium">{item.label}</span>
-            <span className="text-sm text-slate-400">{item.value.toFixed(1)}{unit}</span>
+            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.label}</span>
+            <span className="text-sm text-slate-600 dark:text-slate-400">{item.value.toFixed(1)}{unit}</span>
           </div>
           <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
             <div
@@ -166,59 +166,59 @@ const MultiCollegeComparison: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 dark:border-teal-400" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Failed to load comparison</h2>
-          <button onClick={() => refetch()} className="px-4 py-2 bg-violet-600 text-white rounded-lg">Retry</button>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Failed to load comparison</h2>
+          <button onClick={() => refetch()} className="px-4 py-2 bg-violet-600 text-slate-900 dark:text-white rounded-lg">Retry</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
             <ArrowLeft className="w-5 h-5 text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <BarChart3 className="w-6 h-6 text-blue-400" />
-              <h1 className="text-2xl font-bold text-white">Multi-College Comparison</h1>
+              <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Multi-College Comparison</h1>
             </div>
-            <p className="text-slate-400 text-sm">Cross-college analytics and benchmarking</p>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Cross-college analytics and benchmarking</p>
           </div>
         </div>
-        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors">
+        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
           <Download className="w-4 h-4" /> Export CSV
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6">
+      <div className="glass-card p-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-4 h-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-300">Filters</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filters</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5">Metric</label>
+            <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Metric</label>
             <div className="relative">
               <select
                 value={filters.metric}
                 onChange={e => setFilters(f => ({ ...f, metric: e.target.value as ComparisonFilter['metric'] }))}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
               >
                 {METRIC_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
@@ -226,12 +226,12 @@ const MultiCollegeComparison: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5">Time Range</label>
+            <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Time Range</label>
             <div className="relative">
               <select
                 value={filters.timeRange}
                 onChange={e => setFilters(f => ({ ...f, timeRange: e.target.value as ComparisonFilter['timeRange'] }))}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
               >
                 {TIME_RANGES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
@@ -239,14 +239,14 @@ const MultiCollegeComparison: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1.5">Sort By</label>
+            <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Sort By</label>
             <div className="flex gap-2">
               {(['value', 'name', 'trend'] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => { if (sortBy === s) setSortDesc(!sortDesc); else { setSortBy(s); setSortDesc(true) } }}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    sortBy === s ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'
+                    sortBy === s ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-white'
                   }`}
                 >
                   {s === 'value' ? 'Score' : s === 'name' ? 'Name' : 'Trend'}
@@ -261,22 +261,22 @@ const MultiCollegeComparison: React.FC = () => {
       {/* Summary Stats */}
       {data && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-            <p className="text-xs text-slate-500 mb-1">Average</p>
-            <p className="text-2xl font-bold text-white">{data.average.toFixed(1)}{currentMetric.unit}</p>
+          <div className="glass-card p-4">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Average</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{data.average.toFixed(1)}{currentMetric.unit}</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-            <p className="text-xs text-slate-500 mb-1">Median</p>
-            <p className="text-2xl font-bold text-white">{data.median.toFixed(1)}{currentMetric.unit}</p>
+          <div className="glass-card p-4">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Median</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{data.median.toFixed(1)}{currentMetric.unit}</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-            <p className="text-xs text-slate-500 mb-1">Best</p>
+          <div className="glass-card p-4">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Best</p>
             <p className="text-lg font-bold text-green-400 truncate">{data.best.collegeName}</p>
             <p className="text-sm text-green-400/70">{getMetricValue(data.best, filters.metric).toFixed(1)}{currentMetric.unit}</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-            <p className="text-xs text-slate-500 mb-1">Std Dev</p>
-            <p className="text-2xl font-bold text-white">±{data.stdDev.toFixed(1)}</p>
+          <div className="glass-card p-4">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Std Dev</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">±{data.stdDev.toFixed(1)}</p>
           </div>
         </div>
       )}
@@ -284,11 +284,11 @@ const MultiCollegeComparison: React.FC = () => {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bar Chart */}
-        <div className="lg:col-span-2 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="lg:col-span-2 glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <BarChart className="w-5 h-5 text-blue-400" />
-              <h2 className="text-lg font-semibold text-white">{currentMetric.label} Comparison</h2>
+              <BarChart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{currentMetric.label} Comparison</h2>
             </div>
             <span className="text-xs text-slate-500 bg-slate-900 px-2 py-1 rounded">{TIME_RANGES.find(t => t.value === filters.timeRange)?.label}</span>
           </div>
@@ -296,26 +296,26 @@ const MultiCollegeComparison: React.FC = () => {
         </div>
 
         {/* Trend Detail */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Trend Detail</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Trend Detail</h2>
             {selectedCollegeId && (
-              <button onClick={() => setSelectedCollegeId(null)} className="text-xs text-slate-400 hover:text-white">Clear</button>
+              <button onClick={() => setSelectedCollegeId(null)} className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white">Clear</button>
             )}
           </div>
           {selectedCollegeId && trendData ? (
             <div>
-              <p className="text-sm text-slate-400 mb-3">
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
                 {sortedColleges.find(c => c.collegeId === selectedCollegeId)?.collegeName}
               </p>
               <Sparkline data={trendData} color="#3b82f6" height={80} />
-              <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+              <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                 <span>{trendData[0]?.date}</span>
                 <span>{trendData[trendData.length - 1]?.date}</span>
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400">
               <Eye className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Click a college row to view trend</p>
             </div>
@@ -324,15 +324,15 @@ const MultiCollegeComparison: React.FC = () => {
       </div>
 
       {/* Comparison Table */}
-      <div className="mt-6 bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+      <div className="mt-6 glass-card overflow-hidden">
         <div className="p-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-white">Detailed Comparison</h2>
-          <p className="text-sm text-slate-400">All metrics across colleges</p>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Detailed Comparison</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">All metrics across colleges</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-700">
+              <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
                 <th className="text-left px-4 py-3 font-medium">Rank</th>
                 <th className="text-left px-4 py-3 font-medium">College</th>
                 <th className="text-center px-4 py-3 font-medium">{currentMetric.label}</th>
@@ -357,14 +357,14 @@ const MultiCollegeComparison: React.FC = () => {
                 return (
                   <tr
                     key={college.collegeId}
-                    className={`border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors cursor-pointer ${
+                    className={`border-b border-slate-100 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors cursor-pointer ${
                       selectedCollegeId === college.collegeId ? 'bg-blue-500/10' : ''
                     }`}
                     onClick={() => setSelectedCollegeId(college.collegeId)}
                   >
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                        isBest ? 'bg-green-500/20 text-green-400' :
+                        isBest ? 'bg-emerald-100 dark:bg-emerald-900/30 text-green-400' :
                         isWorst ? 'bg-red-500/20 text-red-400' :
                         'bg-slate-700 text-slate-400'
                       }`}>
@@ -373,22 +373,22 @@ const MultiCollegeComparison: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                          <Building2 className="w-4 h-4 text-blue-400" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <p className="text-white font-medium">{college.collegeName}</p>
-                          <p className="text-xs text-slate-500">{college.collegeCode}</p>
+                          <p className="text-slate-900 dark:text-white font-medium">{college.collegeName}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{college.collegeCode}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="text-white font-semibold">{metricVal.toFixed(1)}{currentMetric.unit}</span>
+                      <span className="text-slate-900 dark:text-white font-semibold">{metricVal.toFixed(1)}{currentMetric.unit}</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        {trend > 0.5 ? <TrendingUp className="w-3.5 h-3.5 text-green-400" /> :
-                         trend < -0.5 ? <TrendingDown className="w-3.5 h-3.5 text-red-400" /> :
+                        {trend > 0.5 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> :
+                         trend < -0.5 ? <TrendingDown className="w-3.5 h-3.5 text-red-600 dark:text-red-400" /> :
                          <Minus className="w-3.5 h-3.5 text-slate-400" />}
                         <span className={`text-xs font-medium ${
                           trend > 0.5 ? 'text-green-400' : trend < -0.5 ? 'text-red-400' : 'text-slate-400'
@@ -397,8 +397,8 @@ const MultiCollegeComparison: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-300">{college.students.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-center text-slate-300">{college.faculty}</td>
+                    <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{college.students.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{college.faculty}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
                         college.avgAttendance >= 90 ? 'text-green-400' :
@@ -417,11 +417,11 @@ const MultiCollegeComparison: React.FC = () => {
                         college.placementRate >= 70 ? 'text-yellow-400' : 'text-red-400'
                       }`}>{college.placementRate}%</span>
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-300">{college.researchPapers}</td>
+                    <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{college.researchPapers}</td>
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={e => { e.stopPropagation(); navigate(`/superadmin/colleges/${college.collegeId}`) }}
-                        className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                       >
                         <Eye className="w-4 h-4 text-slate-400" />
                       </button>
@@ -436,39 +436,39 @@ const MultiCollegeComparison: React.FC = () => {
 
       {/* Benchmark Insights */}
       {data && (
-        <div className="mt-6 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="mt-6 glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Award className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-semibold text-white">Benchmark Insights</h2>
+            <Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Benchmark Insights</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-900/50 rounded-lg p-4">
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-medium text-green-400">Top Performer</span>
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Top Performer</span>
               </div>
-              <p className="text-white font-semibold">{data.best.collegeName}</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-slate-900 dark:text-white font-semibold">{data.best.collegeName}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                 {getMetricValue(data.best, filters.metric).toFixed(1)}{currentMetric.unit} — {getPercentile(data.best, filters.metric)}th percentile
               </p>
             </div>
-            <div className="bg-slate-900/50 rounded-lg p-4">
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 text-yellow-400" />
                 <span className="text-sm font-medium text-yellow-400">Needs Attention</span>
               </div>
-              <p className="text-white font-semibold">{data.worst.collegeName}</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-slate-900 dark:text-white font-semibold">{data.worst.collegeName}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                 {getMetricValue(data.worst, filters.metric).toFixed(1)}{currentMetric.unit} — {getPercentile(data.worst, filters.metric)}th percentile
               </p>
             </div>
-            <div className="bg-slate-900/50 rounded-lg p-4">
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="w-4 h-4 text-blue-400" />
-                <span className="text-sm font-medium text-blue-400">Variance</span>
+                <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Variance</span>
               </div>
-              <p className="text-white font-semibold">±{data.stdDev.toFixed(1)}{currentMetric.unit}</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-slate-900 dark:text-white font-semibold">±{data.stdDev.toFixed(1)}{currentMetric.unit}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                 {data.stdDev > data.average * 0.1 ? 'High variance — inconsistent performance' : 'Low variance — consistent performance'}
               </p>
             </div>

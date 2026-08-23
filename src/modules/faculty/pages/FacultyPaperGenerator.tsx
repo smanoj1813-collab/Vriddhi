@@ -310,13 +310,13 @@ export default function FacultyPaperGenerator() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 text-slate-400 hover:text-teal-400 transition-all"
+          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Paper Generator</h1>
-          <p className="text-slate-400">{currentFaculty.subject} • Create and submit papers for approval</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Paper Generator</h1>
+          <p className="text-slate-600 dark:text-slate-400">{currentFaculty.subject} • Create and submit papers for approval</p>
         </div>
       </div>
 
@@ -326,8 +326,8 @@ export default function FacultyPaperGenerator() {
           onClick={() => setActiveTab('generate')}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             activeTab === 'generate'
-              ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Sparkles className="w-4 h-4 inline mr-1.5" />
@@ -337,14 +337,14 @@ export default function FacultyPaperGenerator() {
           onClick={() => setActiveTab('my-papers')}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             activeTab === 'my-papers'
-              ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <FileText className="w-4 h-4 inline mr-1.5" />
           My Papers
           {myPapers.length > 0 && (
-            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-300 text-xs">{myPapers.length}</span>
+            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-700 dark:text-slate-300 text-xs">{myPapers.length}</span>
           )}
         </button>
       </div>
@@ -354,28 +354,28 @@ export default function FacultyPaperGenerator() {
           {/* Left Panel - Configuration & Questions */}
           <div className="lg:col-span-2 space-y-6">
             {/* Configuration */}
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-teal-400" />
+            <div className="p-4 rounded-xl glass-card/50">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 Paper Configuration
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Paper Title *</label>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Paper Title *</label>
                   <input
                     type="text"
                     placeholder="e.g., End Semester - Data Structures"
                     value={paperTitle}
                     onChange={(e) => setPaperTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-700/50 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Assessment Type</label>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Assessment Type</label>
                   <select
                     value={assessmentType}
                     onChange={(e) => setAssessmentType(e.target.value as 'C1' | 'C2' | 'C3')}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50"
                   >
                     <option value="C1">Class Test (20 marks)</option>
                     <option value="C2">Mid Semester (50 marks)</option>
@@ -383,22 +383,22 @@ export default function FacultyPaperGenerator() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Duration (minutes)</label>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Duration (minutes)</label>
                   <input
                     type="number"
                     value={duration}
                     onChange={(e) => setDuration(parseInt(e.target.value) || 120)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Custom Instructions</label>
+                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Custom Instructions</label>
                   <input
                     type="text"
                     placeholder="e.g., Answer any 5 out of 8"
                     value={customInstructions}
                     onChange={(e) => setCustomInstructions(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900/50 border border-slate-700/50 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
                   />
                 </div>
               </div>
@@ -406,50 +406,50 @@ export default function FacultyPaperGenerator() {
 
             {/* Questions Selection */}
             <div className="rounded-xl border border-slate-700/50 overflow-hidden">
-              <div className="p-4 border-b border-slate-700/50 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-teal-400" />
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   Select Questions ({availableQuestions.length} available)
                 </h3>
                 <button
                   onClick={selectAll}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-all"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all"
                 >
                   {selectedQuestions.length === availableQuestions.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
                 {availableQuestions.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400">
-                    <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-400" />
+                  <div className="p-8 text-center text-slate-600 dark:text-slate-400">
+                    <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-600 dark:text-amber-400" />
                     <p>No approved questions available. Add questions to the Question Bank first.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-700/50">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     {availableQuestions.map((q) => (
                       <div
                         key={q.id}
                         onClick={() => toggleQuestion(q.id)}
                         className={`p-3 flex items-start gap-3 cursor-pointer transition-colors ${
-                          selectedQuestions.includes(q.id) ? 'bg-teal-500/5' : 'hover:bg-slate-800/30'
+                          selectedQuestions.includes(q.id) ? 'bg-teal-500/5' : 'hover:bg-slate-100 dark:hover:bg-slate-800/30'
                         }`}
                       >
                         <div className="pt-0.5">
                           {selectedQuestions.includes(q.id) ? (
-                            <CheckSquare className="w-5 h-5 text-teal-400" />
+                            <CheckSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                           ) : (
                             <Square className="w-5 h-5 text-slate-600" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white line-clamp-2">{q.questionText}</p>
+                          <p className="text-sm text-slate-900 dark:text-white line-clamp-2">{q.questionText}</p>
                           <div className="flex flex-wrap gap-1.5 mt-1">
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{q.questionType}</span>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20">{q.marks}m</span>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">{q.topic}</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-500/20">{q.questionType}</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">{q.marks}m</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-500/20">{q.topic}</span>
                             <span className={`text-xs px-2 py-0.5 rounded-full border ${
                               q.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                              q.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                              q.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-500/20' :
                               'bg-rose-500/10 text-rose-400 border-rose-500/20'
                             }`}>{q.difficulty}</span>
                           </div>
@@ -465,38 +465,38 @@ export default function FacultyPaperGenerator() {
           {/* Right Panel - Summary & Actions */}
           <div className="space-y-6">
             {/* Summary Card */}
-            <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 sticky top-6">
-              <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                <Award className="w-4 h-4 text-teal-400" />
+            <div className="p-5 rounded-xl glass-card/50 sticky top-6">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Award className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 Paper Summary
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Title</span>
-                  <span className="text-white font-medium truncate max-w-[150px]">{paperTitle || 'Not set'}</span>
+                  <span className="text-slate-600 dark:text-slate-400">Title</span>
+                  <span className="text-slate-900 dark:text-white font-medium truncate max-w-[150px]">{paperTitle || 'Not set'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Assessment</span>
-                  <span className="text-white font-medium">{assessmentType}</span>
+                  <span className="text-slate-600 dark:text-slate-400">Assessment</span>
+                  <span className="text-slate-900 dark:text-white font-medium">{assessmentType}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Questions</span>
-                  <span className="text-white font-medium">{selectedQuestions.length}</span>
+                  <span className="text-slate-600 dark:text-slate-400">Questions</span>
+                  <span className="text-slate-900 dark:text-white font-medium">{selectedQuestions.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Total Marks</span>
+                  <span className="text-slate-600 dark:text-slate-400">Total Marks</span>
                   <span className={`font-medium ${totalSelectedMarks === expectedMarks ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {totalSelectedMarks} / {expectedMarks}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Duration</span>
-                  <span className="text-white font-medium">{duration} min</span>
+                  <span className="text-slate-600 dark:text-slate-400">Duration</span>
+                  <span className="text-slate-900 dark:text-white font-medium">{duration} min</span>
                 </div>
               </div>
 
               {totalSelectedMarks !== expectedMarks && totalSelectedMarks > 0 && (
-                <div className="mt-3 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs text-amber-400">
+                <div className="mt-3 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="w-3 h-3 inline mr-1" />
                   Marks mismatch! Expected {expectedMarks} marks.
                 </div>
@@ -506,7 +506,7 @@ export default function FacultyPaperGenerator() {
                 <button
                   onClick={() => setShowPreview(true)}
                   disabled={selectedQuestions.length === 0}
-                  className="w-full px-4 py-2.5 rounded-lg bg-slate-700/50 text-white border border-slate-600 hover:bg-slate-700 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 rounded-lg bg-slate-700/50 text-slate-900 dark:text-white border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
                   Preview Paper
@@ -514,7 +514,7 @@ export default function FacultyPaperGenerator() {
                 <button
                   onClick={() => setShowSubmitConfirm(true)}
                   disabled={selectedQuestions.length === 0 || !paperTitle}
-                  className="w-full px-4 py-2.5 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" />
                   Submit for HOD Approval
@@ -528,7 +528,7 @@ export default function FacultyPaperGenerator() {
                 <BookOpen className="w-4 h-4" />
                 How It Works
               </h4>
-              <ol className="text-xs text-slate-400 space-y-1.5 list-decimal list-inside">
+              <ol className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5 list-decimal list-inside">
                 <li>Select approved questions from the bank</li>
                 <li>Ensure total marks match expected ({expectedMarks})</li>
                 <li>Preview the paper before submitting</li>
@@ -546,10 +546,10 @@ export default function FacultyPaperGenerator() {
           {myPapers.length === 0 ? (
             <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
               <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No papers created yet</p>
+              <p className="text-slate-600 dark:text-slate-400">No papers created yet</p>
               <button
                 onClick={() => setActiveTab('generate')}
-                className="mt-3 px-4 py-2 rounded-lg text-sm bg-teal-500/20 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all"
+                className="mt-3 px-4 py-2 rounded-lg text-sm bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all"
               >
                 Generate Your First Paper
               </button>
@@ -558,22 +558,22 @@ export default function FacultyPaperGenerator() {
             myPapers.map(paper => {
               const status = statusConfig[paper.verificationStatus]
               return (
-                <div key={paper.id} className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 transition-all">
+                <div key={paper.id} className="p-5 rounded-xl glass-card/50 hover:border-slate-600 transition-all">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2.5 rounded-xl bg-teal-500/10">
-                        <FileText className="w-5 h-5 text-teal-400" />
+                        <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">{paper.title}</h3>
-                        <p className="text-sm text-slate-400">{paper.subject} • {paper.className}</p>
+                        <h3 className="font-semibold text-slate-900 dark:text-white">{paper.title}</h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">{paper.subject} • {paper.className}</p>
                       </div>
                     </div>
                     <span className={`text-xs px-2.5 py-1 rounded-full border ${status.bg} ${status.color} ${status.border}`}>
                       {status.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-6 text-sm text-slate-400 mb-4">
+                  <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400 mb-4">
                     <span className="flex items-center gap-1.5">
                       <BookOpen className="w-4 h-4" /> {paper.questions.length} questions
                     </span>
@@ -586,7 +586,7 @@ export default function FacultyPaperGenerator() {
                   </div>
                   <div className="flex items-center gap-3">
                     {paper.verificationStatus === 'submitted-for-approval' && (
-                      <span className="flex items-center gap-2 text-sm text-blue-400">
+                      <span className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                         <Clock className="w-4 h-4" />
                         Awaiting HOD review...
                       </span>
@@ -607,11 +607,11 @@ export default function FacultyPaperGenerator() {
                       <span className="text-xs text-slate-500 italic">"{paper.approvalRemarks}"</span>
                     )}
                     <div className="flex items-center gap-2 ml-auto">
-                      <button className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors">
+                      <button className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors">
                         <Eye className="w-4 h-4" /> View
                       </button>
                       <button
-                        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors"
+                        className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors"
                         onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
                       >
                         <Download className="w-4 h-4" /> Download
@@ -638,7 +638,7 @@ export default function FacultyPaperGenerator() {
                 <button onClick={handlePrint} className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1">
                   <Printer className="w-4 h-4" /> Print
                 </button>
-                <button onClick={handleExportPDF} className="px-3 py-1.5 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 flex items-center gap-1">
+                <button onClick={handleExportPDF} className="px-3 py-1.5 text-sm bg-teal-600 text-slate-900 dark:text-white rounded-lg hover:bg-teal-700 flex items-center gap-1">
                   <Download className="w-4 h-4" /> Export PDF
                 </button>
                 <button onClick={() => setShowPreview(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
@@ -659,27 +659,27 @@ export default function FacultyPaperGenerator() {
           <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-teal-500/10">
-                <Send className="w-5 h-5 text-teal-400" />
+                <Send className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               </div>
-              <h2 className="text-lg font-bold text-white">Submit for Approval</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Submit for Approval</h2>
             </div>
-            <p className="text-sm text-slate-400 mb-2">
-              You are about to submit <strong className="text-white">{paperTitle}</strong> for HOD approval.
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+              You are about to submit <strong className="text-slate-900 dark:text-white">{paperTitle}</strong> for HOD approval.
             </p>
-            <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 space-y-1 text-sm mb-4">
-              <p className="text-slate-400">Questions: <span className="text-white">{selectedQuestions.length}</span></p>
-              <p className="text-slate-400">Total Marks: <span className="text-white">{totalSelectedMarks}</span></p>
-              <p className="text-slate-400">Duration: <span className="text-white">{duration} min</span></p>
+            <div className="p-3 rounded-lg glass-card/50 space-y-1 text-sm mb-4">
+              <p className="text-slate-600 dark:text-slate-400">Questions: <span className="text-slate-900 dark:text-white">{selectedQuestions.length}</span></p>
+              <p className="text-slate-600 dark:text-slate-400">Total Marks: <span className="text-slate-900 dark:text-white">{totalSelectedMarks}</span></p>
+              <p className="text-slate-600 dark:text-slate-400">Duration: <span className="text-slate-900 dark:text-white">{duration} min</span></p>
             </div>
             <p className="text-xs text-amber-400 mb-4 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
               Once submitted, you cannot edit the paper until reviewed.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+              <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 Cancel
               </button>
-              <button onClick={handleSubmitForApproval} className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-teal-500/20 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all font-medium flex items-center justify-center gap-2">
+              <button onClick={handleSubmitForApproval} className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all font-medium flex items-center justify-center gap-2">
                 <Send className="w-4 h-4" />
                 Confirm Submit
               </button>
@@ -690,7 +690,7 @@ export default function FacultyPaperGenerator() {
 
       {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 z-50">
+        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 z-50">
           <CheckCircle className="w-4 h-4" />
           <span className="text-sm font-medium">{showToast}</span>
         </div>

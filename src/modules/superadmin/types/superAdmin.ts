@@ -223,6 +223,10 @@ export interface ImportUserEntry {
   phone?: string;
   mentor?: string;
   department?: string;
+  semester?: number;
+  dob?: string;
+  gender?: string;
+  address?: string;
 }
 
 export interface ImportUsersInput {

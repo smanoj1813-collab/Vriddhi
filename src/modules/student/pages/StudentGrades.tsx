@@ -93,8 +93,8 @@ export default function StudentGrades() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Grades &amp; Academic Progress</h1>
-        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Comprehensive performance scorecards and cumulative GPA trajectory</p>
+        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">Grades &amp; Academic Progress</h1>
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-0.5">Comprehensive performance scorecards and cumulative GPA trajectory</p>
       </div>
 
       {/* CGPA Card */}
@@ -120,8 +120,8 @@ export default function StudentGrades() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{cgpa}</span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">CGPA</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-slate-900 dark:text-white">{cgpa}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">CGPA</span>
             </div>
           </div>
 
@@ -142,9 +142,9 @@ export default function StudentGrades() {
               <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Current Level</p>
             </div>
             <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-              <GraduationCap className="w-5 h-5 text-slate-600 dark:text-slate-400 mx-auto mb-1.5" />
+              <GraduationCap className="w-5 h-5 text-slate-600 dark:text-slate-600 dark:text-slate-400 mx-auto mb-1.5" />
               <p className="text-xl font-black text-slate-900 dark:text-slate-100">{grades.length}</p>
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Total Courses</p>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-600 dark:text-slate-400">Total Courses</p>
             </div>
           </div>
         </div>
@@ -152,8 +152,8 @@ export default function StudentGrades() {
 
       {grades.length === 0 ? (
         <div className="text-center py-16 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-sm">
-          <GraduationCap className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-900 dark:text-white font-bold text-base">No published grade records yet</p>
+          <GraduationCap className="w-12 h-12 text-slate-600 dark:text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-900 dark:text-slate-900 dark:text-white font-bold text-base">No published grade records yet</p>
           <p className="text-xs text-slate-500 mt-1">Official semester transcripts will show up here after term evaluations.</p>
         </div>
       ) : (
@@ -165,8 +165,8 @@ export default function StudentGrades() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${
                   activeTab === tab
-                    ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-teal-600 text-slate-900 dark:text-white shadow-sm shadow-teal-600/20'
+                    : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {tab === 'grades' ? 'Semester Grade Cards' : 'GPA Progression Trend'}
@@ -185,15 +185,15 @@ export default function StudentGrades() {
                 >
                   <button
                     onClick={() => setExpandedSemester(expandedSemester === semester ? null : semester)}
-                    className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                    className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 flex items-center justify-center text-sm font-extrabold border border-teal-200/80 dark:border-teal-800/60">
                         {semester}
                       </span>
                       <div className="text-left">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">Semester {semester}</p>
-                        <p className="text-xs text-slate-500 font-medium">{semesterWise[semester].length} courses &bull; SGPA: <span className="font-bold text-teal-600 dark:text-teal-400">{semesterGPA(semester)}</span></p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white">Semester {semester}</p>
+                        <p className="text-xs text-slate-500 font-medium">{semesterWise[semester].length} courses &bull; SGPA: <span className="font-bold text-teal-600 dark:text-teal-600 dark:text-teal-400">{semesterGPA(semester)}</span></p>
                       </div>
                     </div>
                     {expandedSemester === semester ? (
@@ -208,7 +208,7 @@ export default function StudentGrades() {
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                            <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                               <th className="pb-3 pt-2 font-bold">Course Title</th>
                               <th className="pb-3 pt-2 font-bold">Code</th>
                               <th className="pb-3 pt-2 font-bold text-center">Credits</th>
@@ -220,13 +220,13 @@ export default function StudentGrades() {
                           </thead>
                           <tbody className="text-xs md:text-sm divide-y divide-slate-100 dark:divide-slate-800">
                             {semesterWise[semester].map((g) => (
-                              <tr key={g.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/20">
-                                <td className="py-3 font-semibold text-slate-900 dark:text-white">{g.subject}</td>
+                              <tr key={g.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-100 dark:hover:bg-slate-800/20">
+                                <td className="py-3 font-semibold text-slate-900 dark:text-slate-900 dark:text-white">{g.subject}</td>
                                 <td className="py-3 text-slate-500 font-mono">{g.code}</td>
-                                <td className="py-3 text-center text-slate-600 dark:text-slate-300 font-medium">{g.credits}</td>
-                                <td className="py-3 text-center text-slate-600 dark:text-slate-300 font-medium">{g.internal}</td>
-                                <td className="py-3 text-center text-slate-600 dark:text-slate-300 font-medium">{g.external}</td>
-                                <td className="py-3 text-center font-bold text-slate-900 dark:text-white">{g.total}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.credits}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.internal}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.external}</td>
+                                <td className="py-3 text-center font-bold text-slate-900 dark:text-slate-900 dark:text-white">{g.total}</td>
                                 <td className="py-3 text-center">
                                   <span className={`px-2.5 py-0.5 rounded-lg text-xs font-extrabold border ${gradeColors[g.grade] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                                     {g.grade}
@@ -248,7 +248,7 @@ export default function StudentGrades() {
               animate={{ opacity: 1 }}
               className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-6 md:p-8 shadow-sm"
             >
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <BarChart2 className="w-5 h-5 text-teal-600" /> Semester-wise SGPA Progression
               </h3>
               <div className="space-y-4 max-w-2xl">

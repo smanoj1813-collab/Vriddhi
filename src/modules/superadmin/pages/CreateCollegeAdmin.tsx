@@ -126,13 +126,13 @@ const CreateCollegeAdmin: React.FC = () => {
   };
 
   const inputClasses = (fieldName: keyof AdminFormData) =>
-    `w-full px-4 py-2.5 bg-slate-800 border rounded-lg text-sm text-white transition-colors
+    `w-full px-4 py-2.5 bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
      focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
      placeholder-slate-500
      ${errors[fieldName] ? 'border-red-500 bg-red-500/10' : 'border-slate-700 hover:border-slate-600'}`;
 
-  const labelClasses = "block text-sm font-medium text-slate-300 mb-1.5";
-  const requiredMark = <span className="text-red-400">*</span>;
+  const labelClasses = "block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5";
+  const requiredMark = <span className="text-red-600 dark:text-red-400">*</span>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -140,26 +140,26 @@ const CreateCollegeAdmin: React.FC = () => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-slate-400" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-white">Create College Admin</h1>
-          <p className="text-sm text-slate-400 mt-1">Assign an administrator to manage a college</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create College Admin</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Assign an administrator to manage a college</p>
         </div>
       </div>
 
       {/* Success Message */}
       {submitSuccess && (
         <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center gap-3">
-          <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <p className="font-medium text-green-400">Admin created successfully!</p>
+            <p className="font-medium text-emerald-600 dark:text-emerald-400">Admin created successfully!</p>
             <p className="text-sm text-green-400/70">Redirecting to admins list...</p>
           </div>
         </div>
@@ -167,10 +167,10 @@ const CreateCollegeAdmin: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Information */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-5">
-            <UserPlus className="w-5 h-5 text-teal-400" />
-            <h2 className="text-lg font-semibold text-white">Personal Information</h2>
+            <UserPlus className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Personal Information</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -186,7 +186,7 @@ const CreateCollegeAdmin: React.FC = () => {
                 className={inputClasses('firstName')}
                 placeholder="Enter first name"
               />
-              {errors.firstName && <p className="mt-1.5 text-xs text-red-400">{errors.firstName}</p>}
+              {errors.firstName && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.firstName}</p>}
             </div>
 
             <div>
@@ -201,7 +201,7 @@ const CreateCollegeAdmin: React.FC = () => {
                 className={inputClasses('lastName')}
                 placeholder="Enter last name"
               />
-              {errors.lastName && <p className="mt-1.5 text-xs text-red-400">{errors.lastName}</p>}
+              {errors.lastName && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.lastName}</p>}
             </div>
 
             <div>
@@ -217,7 +217,7 @@ const CreateCollegeAdmin: React.FC = () => {
                 className={inputClasses('email')}
                 placeholder="admin@college.edu"
               />
-              {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email}</p>}
+              {errors.email && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
             </div>
 
             <div>
@@ -233,16 +233,16 @@ const CreateCollegeAdmin: React.FC = () => {
                 className={inputClasses('phone')}
                 placeholder="10-digit phone number"
               />
-              {errors.phone && <p className="mt-1.5 text-xs text-red-400">{errors.phone}</p>}
+              {errors.phone && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.phone}</p>}
             </div>
           </div>
         </div>
 
         {/* College Assignment */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-5">
-            <Shield className="w-5 h-5 text-teal-400" />
-            <h2 className="text-lg font-semibold text-white">College Assignment</h2>
+            <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">College Assignment</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -258,7 +258,7 @@ const CreateCollegeAdmin: React.FC = () => {
                   disabled={collegesLoading}
                   className={`${inputClasses('collegeId')} appearance-none pr-10 disabled:opacity-50`}
                 >
-                  <option value="" className="bg-slate-800 text-slate-400">
+                  <option value="" className="bg-slate-800 text-slate-600 dark:text-slate-400">
                     {collegesLoading ? 'Loading colleges...' : 'Select a college'}
                   </option>
                   {colleges.map((college: College) => (
@@ -267,9 +267,9 @@ const CreateCollegeAdmin: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
               </div>
-              {errors.collegeId && <p className="mt-1.5 text-xs text-red-400">{errors.collegeId}</p>}
+              {errors.collegeId && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.collegeId}</p>}
               {colleges.length === 0 && !collegesLoading && (
                 <p className="mt-1.5 text-xs text-yellow-400">No colleges found. Create a college first.</p>
               )}
@@ -291,18 +291,18 @@ const CreateCollegeAdmin: React.FC = () => {
                   <option value="coordinator" className="bg-slate-800">Coordinator</option>
                   <option value="department_head" className="bg-slate-800">Department Head</option>
                 </select>
-                <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Password */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-teal-400" />
-              <h2 className="text-lg font-semibold text-white">Set Password</h2>
+              <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Set Password</h2>
             </div>
             <button
               type="button"
@@ -330,12 +330,12 @@ const CreateCollegeAdmin: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-300"
+                  className="absolute right-3 top-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-300"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1.5 text-xs text-red-400">{errors.password}</p>}
+              {errors.password && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.password}</p>}
             </div>
 
             <div>
@@ -350,7 +350,7 @@ const CreateCollegeAdmin: React.FC = () => {
                 className={inputClasses('confirmPassword')}
                 placeholder="Re-enter password"
               />
-              {errors.confirmPassword && <p className="mt-1.5 text-xs text-red-400">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.confirmPassword}</p>}
             </div>
           </div>
 
@@ -364,8 +364,8 @@ const CreateCollegeAdmin: React.FC = () => {
         </div>
 
         {/* Account Status */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Account Status</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Account Status</h2>
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -374,7 +374,7 @@ const CreateCollegeAdmin: React.FC = () => {
               onChange={handleChange}
               className="w-4 h-4 text-teal-600 bg-slate-800 border-slate-600 rounded focus:ring-teal-500"
             />
-            <span className="text-sm text-slate-300">Activate account immediately</span>
+            <span className="text-sm text-slate-700 dark:text-slate-300">Activate account immediately</span>
           </label>
         </div>
 
@@ -386,14 +386,14 @@ const CreateCollegeAdmin: React.FC = () => {
               setFormData(initialFormData);
               setErrors({});
             }}
-            className="px-6 py-2.5 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors"
+            className="px-6 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             Reset
           </button>
           <button
             type="submit"
             disabled={createAdmin.isPending || submitSuccess}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-slate-900 dark:text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {createAdmin.isPending ? (
               <>

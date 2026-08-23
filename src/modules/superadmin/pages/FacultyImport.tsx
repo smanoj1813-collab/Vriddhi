@@ -130,33 +130,33 @@ const FacultyImport: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
             <ArrowLeft className="w-5 h-5 text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <GraduationCap className="w-6 h-6 text-amber-400" />
-              <h1 className="text-2xl font-bold text-white">Import Faculty</h1>
+              <GraduationCap className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Import Faculty</h1>
             </div>
-            <p className="text-slate-400 text-sm">Bulk import faculty members from CSV file</p>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Bulk import faculty members from CSV file</p>
           </div>
         </div>
-        <button onClick={downloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors">
+        <button onClick={downloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
           <Download className="w-4 h-4" /> Download Template
         </button>
       </div>
 
       {/* College Selection */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
-        <label className="block text-sm text-slate-400 mb-2">Select Target College</label>
+      <div className="glass-card p-5 mb-6">
+        <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">Select Target College</label>
         <select
           value={selectedCollege}
           onChange={e => handleCollegeChange(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
           <option value="">{collegesLoading ? 'Loading colleges...' : 'Select a college...'}</option>
           {colleges.map((college: College) => (
@@ -169,11 +169,11 @@ const FacultyImport: React.FC = () => {
       </div>
 
       {/* File Upload */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 mb-6">
-        <label className="block text-sm text-slate-400 mb-2">Upload CSV File</label>
+      <div className="glass-card p-5 mb-6">
+        <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">Upload CSV File</label>
         <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-amber-500 transition-colors">
           <FileSpreadsheet className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-          <p className="text-sm text-slate-400 mb-2">Drag and drop or click to upload</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Drag and drop or click to upload</p>
           <p className="text-xs text-slate-500 mb-3">
             Supports: Faculty ID, First Name, Last Name, Email, Phone, Gender, College Code, Department, Designation, Employment Type, Joining Date, Qualification, Specialization, Subjects UG, Subjects PG, Experience, Is HOD
           </p>
@@ -184,10 +184,10 @@ const FacultyImport: React.FC = () => {
             className="hidden"
             id="csv-upload"
           />
-          <label htmlFor="csv-upload" className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg cursor-pointer transition-colors">
+          <label htmlFor="csv-upload" className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-slate-900 dark:text-white rounded-lg cursor-pointer transition-colors">
             <Upload className="w-4 h-4" /> Select File
           </label>
-          {file && <p className="mt-3 text-sm text-green-400">{file.name}</p>}
+          {file && <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-400">{file.name}</p>}
         </div>
       </div>
 
@@ -210,8 +210,8 @@ const FacultyImport: React.FC = () => {
       {validationErrors.length > 0 && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <XCircle className="w-4 h-4 text-red-400" />
-            <p className="text-sm font-medium text-red-400">Validation Errors ({validationErrors.length})</p>
+            <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">Validation Errors ({validationErrors.length})</p>
           </div>
           <div className="max-h-40 overflow-y-auto">
             <ul className="space-y-1">
@@ -225,17 +225,17 @@ const FacultyImport: React.FC = () => {
 
       {/* Preview */}
       {previewData.length > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden mb-6">
+        <div className="glass-card overflow-hidden mb-6">
           <div className="p-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-lg font-semibold text-white">Preview ({previewData.length} rows)</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Preview ({previewData.length} rows)</h2>
             <div className="flex items-center gap-3">
               {validationErrors.length > 0 && (
-                <span className="text-xs text-red-400">{validationErrors.length} errors found</span>
+                <span className="text-xs text-red-600 dark:text-red-400">{validationErrors.length} errors found</span>
               )}
               <button
                 onClick={handleImport}
                 disabled={isProcessing || !selectedCollege || validationErrors.length === previewData.length}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 dark:text-white rounded-lg transition-colors"
               >
                 {isProcessing ? 'Importing...' : 'Import Faculty'}
               </button>
@@ -244,7 +244,7 @@ const FacultyImport: React.FC = () => {
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-slate-800">
-                <tr className="text-slate-400 border-b border-slate-700">
+                <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
                   <th className="text-left px-4 py-3 font-medium">Faculty ID</th>
                   <th className="text-left px-4 py-3 font-medium">Name</th>
                   <th className="text-left px-4 py-3 font-medium">Email</th>
@@ -262,20 +262,20 @@ const FacultyImport: React.FC = () => {
                 {previewData.slice(0, 50).map((row, i) => {
                   const hasError = validationErrors.some(e => e.includes(`Row ${i + 2}:`))
                   return (
-                    <tr key={i} className={`border-b border-slate-700/50 ${hasError ? 'bg-red-500/5' : ''}`}>
-                      <td className="px-4 py-2 text-slate-400 font-mono text-xs">{row.facultyId || '—'}</td>
-                      <td className="px-4 py-2 text-white">
+                    <tr key={i} className={`border-b border-slate-100 dark:border-slate-800 ${hasError ? 'bg-red-500/5' : ''}`}>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400 font-mono text-xs">{row.facultyId || '—'}</td>
+                      <td className="px-4 py-2 text-slate-900 dark:text-white">
                         {row.firstName || ''} {row.lastName || ''}
                         {!row.firstName && !row.lastName && '—'}
                       </td>
-                      <td className="px-4 py-2 text-slate-300">{row.email || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400">{row.phone || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400">{row.collegeCode || selectedCollegeCode || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400">{row.department || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400">{row.designation || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400">{row.employmentType || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400 text-xs">{row.subjectsUG || '—'}</td>
-                      <td className="px-4 py-2 text-slate-400 text-xs">{row.subjectsPG || '—'}</td>
+                      <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{row.email || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.phone || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.collegeCode || selectedCollegeCode || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.department || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.designation || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.employmentType || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400 text-xs">{row.subjectsUG || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400 text-xs">{row.subjectsPG || '—'}</td>
                       <td className="px-4 py-2 text-center">
                         {parseBoolean(row.isHOD || '') ? (
                           <span className="text-amber-400 text-xs font-medium">HOD</span>
@@ -297,27 +297,27 @@ const FacultyImport: React.FC = () => {
 
       {/* Import Result */}
       {importResult && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="glass-card p-6">
           <div className="flex items-center gap-3 mb-4">
             {importResult.failed === 0 ? (
-              <CheckCircle2 className="w-6 h-6 text-green-400" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             ) : (
               <AlertTriangle className="w-6 h-6 text-yellow-400" />
             )}
-            <h2 className="text-lg font-semibold text-white">Import Complete</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Import Complete</h2>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-green-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-400">{importResult.success}</p>
-              <p className="text-xs text-slate-400">Successful</p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{importResult.success}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Successful</p>
             </div>
             <div className="bg-red-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-red-400">{importResult.failed}</p>
-              <p className="text-xs text-slate-400">Failed</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{importResult.failed}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Failed</p>
             </div>
             <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{importResult.imported?.length || 0}</p>
-              <p className="text-xs text-slate-400">Imported</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{importResult.imported?.length || 0}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Imported</p>
             </div>
           </div>
           {importResult.errors && importResult.errors.length > 0 && (

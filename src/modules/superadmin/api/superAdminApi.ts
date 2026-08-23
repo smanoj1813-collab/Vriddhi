@@ -628,44 +628,97 @@ export async function updateStudentSuperAdmin(studentId: string, updates: Update
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function importUsers(input: ImportUsersInput): Promise<ImportResult> {
-  const batch = writeBatch(db);
-  const imported: Array<{ id: string; email: string }> = [];
+  // Fetch college data once for enrichment
+  const collegeRef = doc(db, "colleges", input.collegeId);
+  const collegeSnap = await getDoc(collegeRef);
+  if (!collegeSnap.exists()) throw new SuperAdminApiError("College not found");
+  const collegeData = collegeSnap.data();
+  const collegeName = collegeData.name || "";
+
+  const imported: Array<{ id: string; email: string; password?: string }> = [];
   const errors: string[] = [];
   let studentCount = 0;
   let facultyCount = 0;
 
-  for (const user of input.users) {
+  for (const [index, user] of input.users.entries()) {
+    const rowNum = index + 2; // CSV row (1-indexed + header)
     try {
-      const collectionName = user.role === "student" ? "students" : "faculty";
-      const docRef = doc(collection(db, collectionName));
-      batch.set(docRef, {
-        ...stripUndefined(user),
-        collegeId: input.collegeId,
-        status: "active",
-        createdAt: Timestamp.now(),
-      });
-      imported.push({ id: docRef.id, email: user.email });
+      // Validate required fields
+      if (!user.email || !user.name) {
+        throw new Error(`Row ${rowNum}: Missing required fields (name, email)`);
+      }
 
+      const email = user.email.toLowerCase().trim();
+
+      // Check for existing user in Firestore
+      const collectionName = user.role === "student" ? "students" : "faculty";
+      const existingSnap = await getDocs(
+        query(collection(db, collectionName), where("email", "==", email))
+      );
+      if (!existingSnap.empty) {
+        throw new Error(`Row ${rowNum}: ${email} already exists`);
+      }
+
+      // Generate password and create Firebase Auth account
+      const tempPassword = generateTempPassword();
+      let uid: string;
+      try {
+        uid = await createFirebaseAuthUser(email, tempPassword);
+      } catch (authErr: any) {
+        throw new Error(`Row ${rowNum}: Auth creation failed — ${authErr.message}`);
+      }
+
+      // Build the Firestore document
+      const now = Timestamp.now();
+      const docRef = doc(collection(db, collectionName));
+      const userDoc = stripUndefined({
+        ...user,
+        email,
+        collegeId: input.collegeId,
+        collegeName,
+        uid,
+        password: tempPassword,
+        role: user.role,
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      await setDoc(docRef, userDoc);
+
+      // Create the users/ lookup document (used by login routing & role guards)
+      await setDoc(doc(db, "users", uid), {
+        uid,
+        email,
+        name: user.name,
+        role: user.role,
+        collegeId: input.collegeId,
+        department: user.department || "",
+        phone: user.phone || "",
+        avatar: "",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      imported.push({ id: docRef.id, email, password: tempPassword });
       if (user.role === "student") studentCount++;
       else facultyCount++;
     } catch (error) {
-      errors.push(`Failed to import ${user.email}: ${error instanceof Error ? error.message : "Unknown error"}`);
+      errors.push(
+        `Failed to import ${user.email || `row ${index + 2}`}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
-  await batch.commit();
-
+  // Update college aggregate counts
   if (studentCount > 0 || facultyCount > 0) {
     try {
-      const collegeRef = doc(db, "colleges", input.collegeId);
-      const collegeSnap = await getDoc(collegeRef);
-      if (collegeSnap.exists()) {
-        const data = collegeSnap.data();
-        const updates: Record<string, unknown> = { updatedAt: Timestamp.now() };
-        if (studentCount > 0) updates.studentCount = (data.studentCount || 0) + studentCount;
-        if (facultyCount > 0) updates.facultyCount = (data.facultyCount || 0) + facultyCount;
-        await updateDoc(collegeRef, updates);
-      }
+      const updates: Record<string, unknown> = { updatedAt: Timestamp.now() };
+      if (studentCount > 0) updates.studentCount = (collegeData.studentCount || 0) + studentCount;
+      if (facultyCount > 0) updates.facultyCount = (collegeData.facultyCount || 0) + facultyCount;
+      await updateDoc(collegeRef, updates);
     } catch (err) {
       console.error("Failed to update college counts:", err);
     }

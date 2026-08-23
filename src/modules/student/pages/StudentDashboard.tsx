@@ -52,9 +52,9 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
     <div className={`rounded-2xl border ${scheme.border} ${scheme.bg} p-4 md:p-5 shadow-sm transition-all duration-200 hover:shadow-md`}>
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 truncate">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-1 truncate">{label}</p>
           <h3 className={`text-xl md:text-2xl font-extrabold ${scheme.text}`}>{value}</h3>
-          {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-400 truncate font-medium">{subtext}</p>}
+          {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-600 dark:text-slate-400 truncate font-medium">{subtext}</p>}
         </div>
         <div className={`p-2.5 rounded-xl bg-white dark:bg-slate-900/60 shadow-xs shrink-0 ${scheme.text}`}>
           <Icon className="w-5 h-5" />
@@ -71,8 +71,8 @@ function ScheduleCard({ session }: { session: ClassSchedule }) {
         <Clock className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{session.subject}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
+        <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{session.subject}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 truncate font-medium">
           {session.teacher || session.facultyName || 'Faculty Member'}
         </p>
       </div>
@@ -101,8 +101,8 @@ function NotificationCard({ notification }: { notification: { id: string; title:
            <Bell className="w-4 h-4 text-blue-500" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-slate-900 dark:text-white">{notification.title}</p>
-          <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2">{notification.message}</p>
+          <p className="text-xs font-bold text-slate-900 dark:text-slate-900 dark:text-white">{notification.title}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">{notification.message}</p>
         </div>
         {!notification.read && <div className="w-2 h-2 rounded-full bg-teal-600 shrink-0 mt-1" />}
       </div>
@@ -118,7 +118,7 @@ function QuickAction({ to, icon: Icon, label, color }: {
       to={to}
       className="p-3 md:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-all text-center group flex flex-col items-center justify-center"
     >
-      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-xs">
+      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-slate-900 dark:text-white transition-all shadow-xs">
         <Icon className="w-5 h-5" />
       </div>
       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{label}</p>
@@ -152,10 +152,10 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Welcome Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-white p-6 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
+      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-slate-900 dark:text-white p-6 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-white shadow-inner shrink-0">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-slate-900 dark:text-white shadow-inner shrink-0">
               {profile?.name?.charAt(0) || 'S'}
             </div>
             <div>
@@ -217,7 +217,7 @@ export default function StudentDashboard() {
 
       {/* Quick Actions Grid */}
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-teal-600" />
           Quick Navigation
         </h2>
@@ -248,8 +248,8 @@ export default function StudentDashboard() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-teal-600 text-slate-900 dark:text-white shadow-sm shadow-teal-600/20'
+                : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -265,7 +265,7 @@ export default function StudentDashboard() {
             {/* Upcoming Assessments */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-teal-600" /> Available Assessments & Tests
                 </h2>
                 <Link to="/student/assessments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
@@ -285,13 +285,13 @@ export default function StudentDashboard() {
                           {a.type || 'MCQ'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{a.title}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{a.subject}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{a.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 font-medium">{a.subject}</p>
                         </div>
                       </div>
                       <Link
                         to={`/student/test/${a.id}/instructions`}
-                        className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white text-xs font-bold shadow-xs shrink-0"
                       >
                         Start Test
                       </Link>
@@ -299,7 +299,7 @@ export default function StudentDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
+                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No pending assessments</p>
                   <p className="text-xs text-slate-500 mt-0.5">You're all caught up with your online evaluations.</p>
@@ -310,7 +310,7 @@ export default function StudentDashboard() {
             {/* Pending Assignments */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-amber-600" /> Pending Assignments
                 </h2>
                 <Link to="/student/assignments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
@@ -330,8 +330,8 @@ export default function StudentDashboard() {
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{a.title}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{a.subject}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{a.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 font-medium">{a.subject}</p>
                         </div>
                       </div>
                       <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-lg border border-amber-200/60 shrink-0">
@@ -341,7 +341,7 @@ export default function StudentDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
+                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No pending assignments</p>
                   <p className="text-xs text-slate-500 mt-0.5">Great job! All assigned submissions are completed.</p>
@@ -354,13 +354,13 @@ export default function StudentDashboard() {
           <div className="space-y-6">
             {/* Fee Status Card */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-base">
+              <h3 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-base">
                 <CreditCard className="w-5 h-5 text-teal-600" /> Fee Summary
               </h3>
               <div className="space-y-3.5">
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-slate-500 dark:text-slate-400">Total Paid</span>
+                    <span className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Total Paid</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">₹{paidFees.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
@@ -370,7 +370,7 @@ export default function StudentDashboard() {
 
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-slate-500 dark:text-slate-400">Pending Amount</span>
+                    <span className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Pending Amount</span>
                     <span className="text-rose-600 dark:text-rose-400 font-extrabold">₹{pendingFees.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
@@ -389,7 +389,7 @@ export default function StudentDashboard() {
 
             {/* Recent Notifications */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-base">
+              <h3 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-base">
                 <Bell className="w-5 h-5 text-teal-600" /> Recent Alerts
               </h3>
               <div className="space-y-2.5">
@@ -411,10 +411,10 @@ export default function StudentDashboard() {
       {activeTab === 'schedule' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-teal-600" /> Today's Scheduled Lectures
             </h2>
-            <span className="text-xs font-semibold text-slate-500">{todayDate}</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{todayDate}</span>
           </div>
 
           {schedule.length > 0 ? (
@@ -425,7 +425,7 @@ export default function StudentDashboard() {
             </div>
           ) : (
             <div className="p-10 text-center rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 shadow-sm">
-              <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <Calendar className="w-10 h-10 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No classes scheduled today</p>
               <p className="text-xs text-slate-500 mt-1">Enjoy your study break or prepare for upcoming assessments.</p>
             </div>
@@ -435,7 +435,7 @@ export default function StudentDashboard() {
 
       {activeTab === 'notifications' && (
         <div className="space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
             <Bell className="w-5 h-5 text-teal-600" /> All Notifications
           </h2>
           {notifications.length > 0 ? (
@@ -446,7 +446,7 @@ export default function StudentDashboard() {
             </div>
           ) : (
             <div className="p-10 text-center rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 shadow-sm">
-              <Bell className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <Bell className="w-10 h-10 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No notifications</p>
               <p className="text-xs text-slate-500 mt-1">You will see announcements and assignment alerts here.</p>
             </div>

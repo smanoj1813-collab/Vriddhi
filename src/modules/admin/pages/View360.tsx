@@ -308,14 +308,14 @@ function DownloadMenu({ onCSV, onPDF }: { onCSV: () => void; onPDF: () => void }
             onClick={() => { onCSV(); setOpen(false) }}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm text-vriddhi-text hover:bg-white/5 transition-colors"
           >
-            <FileSpreadsheet size={16} className="text-green-400" />
+            <FileSpreadsheet size={16} className="text-emerald-600 dark:text-emerald-400" />
             Download Excel (CSV)
           </button>
           <button
             onClick={() => { onPDF(); setOpen(false) }}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm text-vriddhi-text hover:bg-white/5 transition-colors"
           >
-            <Printer size={16} className="text-red-400" />
+            <Printer size={16} className="text-red-600 dark:text-red-400" />
             Print PDF (A4)
           </button>
         </div>
@@ -483,7 +483,7 @@ export default function View360() {
   if (loading) {
     return (
       <div className="min-h-full p-6 flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 dark:border-teal-400" />
         <p className="text-sm text-vriddhi-muted">Loading student data...</p>
         <p className="text-xs text-vriddhi-muted">College ID: {collegeId || 'Not found'}</p>
         {isFaculty && <p className="text-xs text-vriddhi-muted">Department: {userDepartment || 'Not assigned'}</p>}
@@ -494,13 +494,13 @@ export default function View360() {
   if (error) {
     return (
       <div className="min-h-full p-6 flex flex-col items-center justify-center gap-4">
-        <AlertTriangle size={48} className="text-red-400" />
-        <h2 className="text-xl font-bold text-white">Failed to Load Data</h2>
+        <AlertTriangle size={48} className="text-red-600 dark:text-red-400" />
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Failed to Load Data</h2>
         <p className="text-sm text-vriddhi-muted text-center max-w-md">{error}</p>
         {collegeId && <p className="text-xs text-vriddhi-muted">College ID: {collegeId}</p>}
         <button 
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-vriddhi-accent text-white rounded-lg text-sm hover:bg-vriddhi-accent/80 transition-colors"
+          className="px-4 py-2 bg-vriddhi-accent text-slate-900 dark:text-white rounded-lg text-sm hover:bg-vriddhi-accent/80 transition-colors"
         >
           Retry
         </button>
@@ -534,7 +534,7 @@ export default function View360() {
       <div className="glass-card p-4 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Filter size={16} className="text-vriddhi-accent" />
-          <span className="text-sm font-medium text-white">Filters</span>
+          <span className="text-sm font-medium text-slate-900 dark:text-white">Filters</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
           <div className="relative">
@@ -592,7 +592,7 @@ export default function View360() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm whitespace-nowrap transition-all
-                ${activeTab === tab.id ? 'bg-vriddhi-accent text-white' : 'bg-vriddhi-card text-vriddhi-muted hover:text-white hover:bg-vriddhi-border/50'}`}
+                ${activeTab === tab.id ? 'bg-vriddhi-accent text-white' : 'bg-vriddhi-card text-vriddhi-muted hover:text-slate-900 dark:text-white hover:bg-vriddhi-border/50'}`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}
@@ -606,13 +606,13 @@ export default function View360() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <MetricCard label="Total Students" value={analytics.total.toString()} />
             <MetricCard label="Overall Average" value={analytics.overallAvg + '%'} color="text-vriddhi-accent" />
-            <MetricCard label="Avg Attendance" value={analytics.overallAttendance + '%'} color="text-green-400" />
-            <MetricCard label="Pass Rate" value={analytics.passRate + '%'} color="text-amber-400" />
+            <MetricCard label="Avg Attendance" value={analytics.overallAttendance + '%'} color="text-emerald-600 dark:text-emerald-400" />
+            <MetricCard label="Pass Rate" value={analytics.passRate + '%'} color="text-amber-600 dark:text-amber-400" />
           </div>
 
           <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <GraduationCap size={20} className="text-vriddhi-accent" />
                 Course-wise Performance
               </h3>
@@ -632,7 +632,7 @@ export default function View360() {
                 <tbody>
                   {Object.entries(analytics.courseStats).map(([course, stats]) => (
                     <tr key={course} className="hover:bg-white/5 transition-colors">
-                      <td className="table-cell font-semibold text-white">{course}</td>
+                      <td className="table-cell font-semibold text-slate-900 dark:text-white">{course}</td>
                       <td className="table-cell">{stats.count}</td>
                       <td className="table-cell">
                         <span className={`font-semibold ${stats.avgScore >= 80 ? 'text-green-400' : stats.avgScore >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
@@ -643,7 +643,7 @@ export default function View360() {
                       <td className="table-cell">
                         <div className="flex flex-wrap gap-1">
                           {analytics.courseStrengths[course]?.map((s, i) => (
-                            <span key={i} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">{s}</span>
+                            <span key={i} className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-green-400 rounded text-xs">{s}</span>
                           )) || '-'}
                         </div>
                       </td>
@@ -664,7 +664,7 @@ export default function View360() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <TrendingUp size={20} className="text-vriddhi-accent" />
                 Batch-wise Performance Trend
               </h3>
@@ -684,7 +684,7 @@ export default function View360() {
             </div>
 
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Target size={20} className="text-vriddhi-accent" />
                 Score Distribution
               </h3>
@@ -718,7 +718,7 @@ export default function View360() {
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Student Status Distribution</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Student Status Distribution</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {analytics.statusDist.map((status) => (
                 <div key={status.name} className="p-4 rounded-xl bg-vriddhi-dark/50 text-center">
@@ -734,8 +734,8 @@ export default function View360() {
 
           {analytics.atRiskStudents.length > 0 && (
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <AlertTriangle size={20} className="text-red-400" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
                 Students Needing Attention ({analytics.atRiskStudents.length})
               </h3>
               <div className="space-y-3">
@@ -749,11 +749,11 @@ export default function View360() {
                       {student.name.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white">{student.name}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{student.name}</p>
                       <p className="text-xs text-vriddhi-muted">{student.regNo} · {student.course} · Batch {student.batch}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-red-400">{student.avgScore}%</p>
+                      <p className="text-sm font-semibold text-red-600 dark:text-red-400">{student.avgScore}%</p>
                       <p className="text-xs text-vriddhi-muted">{student.attendance}% attendance</p>
                     </div>
                     <ChevronRight size={16} className="text-vriddhi-muted" />
@@ -792,7 +792,7 @@ export default function View360() {
                             {student.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-white">{student.name}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">{student.name}</p>
                           </div>
                         </div>
                       </td>
@@ -821,8 +821,8 @@ export default function View360() {
                       </td>
                       <td className="table-cell">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize
-                          ${student.status === 'active' ? 'bg-green-500/20 text-green-400' : 
-                            student.status === 'warning' ? 'bg-amber-500/20 text-amber-400' : 
+                          ${student.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-green-400' : 
+                            student.status === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400' : 
                             'bg-red-500/20 text-red-400'}`}>
                           {student.status}
                         </span>
@@ -850,8 +850,8 @@ export default function View360() {
 
           {analytics && analytics.topPerformers.length > 0 && (
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Award size={20} className="text-amber-400" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Award size={20} className="text-amber-600 dark:text-amber-400" />
                 Top Performers
               </h3>
               <div className="space-y-3">
@@ -863,18 +863,18 @@ export default function View360() {
                   >
                     <div className={`
                       w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                      ${i === 0 ? 'bg-amber-500/20 text-amber-400' : 
+                      ${i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400' : 
                         i === 1 ? 'bg-slate-400/20 text-slate-400' : 
                         i === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-vriddhi-border/50 text-vriddhi-muted'}
                     `}>
                       {i + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white">{student.name}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{student.name}</p>
                       <p className="text-xs text-vriddhi-muted">{student.regNo} · {student.course}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-green-400">{student.avgScore}%</p>
+                      <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{student.avgScore}%</p>
                     </div>
                     <ChevronRight size={16} className="text-vriddhi-muted" />
                   </div>
@@ -933,7 +933,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
 
   return (
     <div className="page-container">
-      <button onClick={onBack} className="flex items-center gap-2 text-vriddhi-muted hover:text-white transition-colors mb-6">
+      <button onClick={onBack} className="flex items-center gap-2 text-vriddhi-muted hover:text-slate-900 dark:text-white transition-colors mb-6">
         <ChevronRight size={16} className="rotate-180" />
         Back to {student.course} Students
       </button>
@@ -944,7 +944,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
             {student.name.charAt(0)}
           </div>
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-white">{student.name}</h2>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{student.name}</h2>
             <div className="flex flex-wrap gap-4 mt-3 text-sm text-vriddhi-muted">
               <span className="flex items-center gap-1.5"><User size={16} /> {student.regNo}</span>
               <span className="flex items-center gap-1.5"><BookOpen size={16} /> {student.course} · Div {student.division}</span>
@@ -954,7 +954,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
           </div>
           <div className="flex gap-4">
             <div className="text-center p-5 rounded-xl bg-green-500/10 border border-green-500/20">
-              <p className="text-3xl font-bold text-green-400">{student.attendance}%</p>
+              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{student.attendance}%</p>
               <p className="text-xs text-green-400/70 mt-1">Attendance</p>
             </div>
             <div className="text-center p-5 rounded-xl bg-vriddhi-accent/10 border border-vriddhi-accent/20">
@@ -973,7 +973,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
               key={tab.id}
               onClick={() => setActiveDetailTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm whitespace-nowrap transition-all
-                ${activeDetailTab === tab.id ? 'bg-vriddhi-accent text-white' : 'bg-vriddhi-card text-vriddhi-muted hover:text-white hover:bg-vriddhi-border/50'}`}
+                ${activeDetailTab === tab.id ? 'bg-vriddhi-accent text-white' : 'bg-vriddhi-card text-vriddhi-muted hover:text-slate-900 dark:text-white hover:bg-vriddhi-border/50'}`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}
@@ -985,7 +985,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
       {activeDetailTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Performance Radar</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Performance Radar</h3>
             <ResponsiveContainer width="100%" height={300}>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="#334155" />
@@ -999,39 +999,39 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
 
           <div className="space-y-4">
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Award size={20} className="text-green-400" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Award size={20} className="text-emerald-600 dark:text-emerald-400" />
                 What They're Good At
               </h3>
               {student.strengths.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {student.strengths.map((strength, i) => (
-                    <span key={i} className="px-4 py-2 bg-green-500/20 text-green-400 rounded-xl text-sm font-medium border border-green-500/30">{strength}</span>
+                    <span key={i} className="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-green-400 rounded-xl text-sm font-medium border border-green-500/30">{strength}</span>
                   ))}
                 </div>
               ) : <p className="text-sm text-vriddhi-muted">No strengths recorded yet</p>}
             </div>
 
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <AlertTriangle size={20} className="text-amber-400" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />
                 Areas to Improve
               </h3>
               {student.weaknesses.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {student.weaknesses.map((weakness, i) => (
-                    <span key={i} className="px-4 py-2 bg-amber-500/20 text-amber-400 rounded-xl text-sm font-medium border border-amber-500/30">{weakness}</span>
+                    <span key={i} className="px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-400 rounded-xl text-sm font-medium border border-amber-500/30">{weakness}</span>
                   ))}
                 </div>
               ) : <p className="text-sm text-vriddhi-muted">No areas of concern identified</p>}
             </div>
 
             <div className="glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Key Metrics</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Key Metrics</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-vriddhi-dark/50">
                   <p className="text-xs text-vriddhi-muted mb-1">Total Assessments</p>
-                  <p className="text-2xl font-bold text-white">{student.assessments.length}</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">{student.assessments.length}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-vriddhi-dark/50">
                   <p className="text-xs text-vriddhi-muted mb-1">Class Rank</p>
@@ -1039,11 +1039,11 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                 </div>
                 <div className="p-4 rounded-xl bg-vriddhi-dark/50">
                   <p className="text-xs text-vriddhi-muted mb-1">Highest Score</p>
-                  <p className="text-2xl font-bold text-green-400">{Math.max(...student.assessments.map(a => a.score), 0)}%</p>
+                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{Math.max(...student.assessments.map(a => a.score), 0)}%</p>
                 </div>
                 <div className="p-4 rounded-xl bg-vriddhi-dark/50">
                   <p className="text-xs text-vriddhi-muted mb-1">Lowest Score</p>
-                  <p className="text-2xl font-bold text-amber-400">{Math.min(...student.assessments.map(a => a.score), 100)}%</p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{Math.min(...student.assessments.map(a => a.score), 100)}%</p>
                 </div>
               </div>
             </div>
@@ -1054,7 +1054,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
       {activeDetailTab === 'academics' && (
         <div className="space-y-6">
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Assessment History</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Assessment History</h3>
             {student.assessments.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -1088,7 +1088,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                           </span>
                         </td>
                         <td className="table-cell">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${assessment.score >= 85 ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${assessment.score >= 85 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-green-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-400'}`}>
                             {assessment.score >= 85 ? 'Excellent' : 'Good'}
                           </span>
                         </td>
@@ -1107,15 +1107,15 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
       {activeDetailTab === 'insights' && (
         <div className="space-y-6">
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <TrendingUp size={20} className="text-vriddhi-accent" />
               AI-Powered Insights for {student.name}
             </h3>
             <div className="space-y-4">
               {student.avgScore >= 90 && (
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-green-500/5 border border-green-500/20">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                    <Award className="w-5 h-5 text-green-400" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                    <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
                     <p className="font-medium text-green-300">Exceptional Performer</p>
@@ -1126,7 +1126,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
               {student.attendance < 80 && (
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                   <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                    <AlertTriangle className="w-5 h-5 text-red-400" />
+                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </div>
                   <div>
                     <p className="font-medium text-red-300">Attendance Concern</p>
@@ -1147,8 +1147,8 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
               )}
               {student.weaknesses.length > 0 && (
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-5 h-5 text-amber-400" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
                     <p className="font-medium text-amber-300">Development Areas</p>
@@ -1157,8 +1157,8 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                 </div>
               )}
               <div className="flex items-start gap-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-blue-400" />
+                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <p className="font-medium text-blue-300">Recommendation</p>
@@ -1171,12 +1171,12 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Actions</h3>
             <div className="space-y-3">
               <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-vriddhi-dark/50 hover:bg-vriddhi-border/30 transition-colors text-left">
                 <FileText className="w-5 h-5 text-vriddhi-accent" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white">Generate Progress Report</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Generate Progress Report</p>
                   <p className="text-xs text-vriddhi-muted">Create a detailed PDF report for this student</p>
                 </div>
                 <ChevronRight size={16} className="text-vriddhi-muted" />
@@ -1184,7 +1184,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
               <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-vriddhi-dark/50 hover:bg-vriddhi-border/30 transition-colors text-left">
                 <Calendar className="w-5 h-5 text-vriddhi-accent" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white">Schedule Mentorship Session</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Schedule Mentorship Session</p>
                   <p className="text-xs text-vriddhi-muted">Book a one-on-one with {student.mentor}</p>
                 </div>
                 <ChevronRight size={16} className="text-vriddhi-muted" />

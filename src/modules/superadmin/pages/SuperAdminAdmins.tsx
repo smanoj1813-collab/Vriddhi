@@ -35,11 +35,11 @@ const ROLE_LABELS: Record<AdminRole, string> = {
 };
 
 const ROLE_COLORS: Record<AdminRole, string> = {
-  superadmin: "bg-red-500/10 text-red-400",
-  admin: "bg-blue-500/10 text-blue-400",
-  hod: "bg-purple-500/10 text-purple-400",
-  mentor: "bg-green-500/10 text-green-400",
-  coordinator: "bg-amber-500/10 text-amber-400",
+  superadmin: "bg-red-500/10 text-red-600 dark:text-red-400",
+  admin: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  hod: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+  mentor: "bg-green-500/10 text-emerald-600 dark:text-emerald-400",
+  coordinator: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   department_head: "bg-cyan-500/10 text-cyan-400",
 };
 
@@ -157,29 +157,29 @@ const SuperAdminAdmins: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 dark:border-teal-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <Shield className="w-6 h-6 text-amber-400" />
-              <h1 className="text-2xl font-bold text-white">Admin Management</h1>
+              <Shield className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Management</h1>
             </div>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               Manage all college administrators
             </p>
           </div>
@@ -187,14 +187,14 @@ const SuperAdminAdmins: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowPromoteModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
           >
             <GraduationCap className="w-4 h-4" />
             Promote Faculty
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
           >
             <UserPlus className="w-4 h-4" />
             Create Admin
@@ -204,31 +204,31 @@ const SuperAdminAdmins: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">Total Admins</p>
-          <p className="text-2xl font-bold text-white">{admins.length}</p>
+        <div className="glass-card p-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Admins</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{admins.length}</p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">Active</p>
-          <p className="text-2xl font-bold text-green-400">
+        <div className="glass-card p-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Active</p>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {admins.filter((a: Admin) => a.status === "active").length}
           </p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">Inactive</p>
-          <p className="text-2xl font-bold text-red-400">
+        <div className="glass-card p-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Inactive</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
             {admins.filter((a: Admin) => a.status === "inactive").length}
           </p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">Principals</p>
-          <p className="text-2xl font-bold text-blue-400">
+        <div className="glass-card p-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Principals</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {admins.filter((a: Admin) => a.role === "admin").length}
           </p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">HODs</p>
-          <p className="text-2xl font-bold text-purple-400">
+        <div className="glass-card p-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">HODs</p>
+          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
             {admins.filter((a: Admin) => a.role === "hod").length}
           </p>
         </div>
@@ -243,7 +243,7 @@ const SuperAdminAdmins: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search admins..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
         <div className="relative">
@@ -251,7 +251,7 @@ const SuperAdminAdmins: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none appearance-none"
+            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none appearance-none"
           >
             <option value="all">All Roles</option>
             <option value="superadmin">Super Admin</option>
@@ -269,7 +269,7 @@ const SuperAdminAdmins: React.FC = () => {
             onChange={(e) =>
               setStatusFilter(e.target.value as typeof statusFilter)
             }
-            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none appearance-none"
+            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none appearance-none"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -279,10 +279,10 @@ const SuperAdminAdmins: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-slate-400 border-b border-slate-700">
+            <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
               <th className="text-left px-4 py-3 font-medium">Name</th>
               <th className="text-left px-4 py-3 font-medium">Email</th>
               <th className="text-center px-4 py-3 font-medium">Role</th>
@@ -296,19 +296,19 @@ const SuperAdminAdmins: React.FC = () => {
             {admins.map((admin: Admin) => (
               <tr
                 key={admin.id}
-                className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors"
+                className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                      <span className="text-xs font-bold text-amber-400">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
                         {admin.name[0]}
                       </span>
                     </div>
-                    <span className="text-white font-medium">{admin.name}</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{admin.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-slate-300">{admin.email}</td>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{admin.email}</td>
                 <td className="px-4 py-3 text-center">
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[admin.role]}`}
@@ -316,18 +316,18 @@ const SuperAdminAdmins: React.FC = () => {
                     {ROLE_LABELS[admin.role]}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-slate-300">
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                   {admin.collegeName || admin.collegeCode || "—"}
                 </td>
-                <td className="px-4 py-3 text-center text-slate-400">
+                <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-400">
                   {admin.department || "—"}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       admin.status === "active"
-                        ? "bg-green-500/10 text-green-400"
-                        : "bg-red-500/10 text-red-400"
+                        ? "bg-green-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-red-500/10 text-red-600 dark:text-red-400"
                     }`}
                   >
                     {admin.status}
@@ -340,8 +340,8 @@ const SuperAdminAdmins: React.FC = () => {
                       disabled={updateAdminStatus.isPending}
                       className={`p-1.5 rounded-lg transition-colors ${
                         admin.status === "active"
-                          ? "hover:bg-red-500/20 text-red-400"
-                          : "hover:bg-green-500/20 text-green-400"
+                          ? "hover:bg-red-500/20 text-red-600 dark:text-red-400"
+                          : "hover:bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
                       }`}
                       title={
                         admin.status === "active" ? "Deactivate" : "Activate"
@@ -355,7 +355,7 @@ const SuperAdminAdmins: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setSelectedAdmin(admin)}
-                      className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                     >
                       <Eye className="w-4 h-4 text-slate-400" />
                     </button>
@@ -366,7 +366,7 @@ const SuperAdminAdmins: React.FC = () => {
           </tbody>
         </table>
         {admins.length === 0 && (
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
             <Shield className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No admins found</p>
           </div>
@@ -376,19 +376,19 @@ const SuperAdminAdmins: React.FC = () => {
       {/* ─── Create Admin Modal ─── */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Create New Admin</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Admin</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 hover:bg-slate-700 rounded-lg"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
               >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">
+                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                   Name *
                 </label>
                 <input
@@ -397,12 +397,12 @@ const SuperAdminAdmins: React.FC = () => {
                   onChange={(e) =>
                     setCreateForm({ ...createForm, name: e.target.value })
                   }
-                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  className="input-field"
                   placeholder="Full name"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">
+                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                   Email *
                 </label>
                 <input
@@ -411,13 +411,13 @@ const SuperAdminAdmins: React.FC = () => {
                   onChange={(e) =>
                     setCreateForm({ ...createForm, email: e.target.value })
                   }
-                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  className="input-field"
                   placeholder="admin@college.edu"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                     Role *
                   </label>
                   <select
@@ -428,7 +428,7 @@ const SuperAdminAdmins: React.FC = () => {
                         role: e.target.value as AdminRole,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    className="input-field"
                   >
                     <option value="superadmin">Super Admin</option>
                     <option value="admin">Principal</option>
@@ -439,7 +439,7 @@ const SuperAdminAdmins: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                     College *
                   </label>
                   <select
@@ -450,7 +450,7 @@ const SuperAdminAdmins: React.FC = () => {
                         collegeId: e.target.value,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    className="input-field"
                   >
                     <option value="">Select College</option>
                     {colleges.map((college) => (
@@ -463,7 +463,7 @@ const SuperAdminAdmins: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                     Phone
                   </label>
                   <input
@@ -472,12 +472,12 @@ const SuperAdminAdmins: React.FC = () => {
                     onChange={(e) =>
                       setCreateForm({ ...createForm, phone: e.target.value })
                     }
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    className="input-field"
                     placeholder="10-digit number"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                     Department
                   </label>
                   <input
@@ -489,7 +489,7 @@ const SuperAdminAdmins: React.FC = () => {
                         department: e.target.value,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    className="input-field"
                     placeholder="Department"
                   />
                 </div>
@@ -498,7 +498,7 @@ const SuperAdminAdmins: React.FC = () => {
                 <button
                   onClick={handleCreate}
                   disabled={createAdmin.isPending}
-                  className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   {createAdmin.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -509,7 +509,7 @@ const SuperAdminAdmins: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -522,26 +522,26 @@ const SuperAdminAdmins: React.FC = () => {
       {/* ─── Promote Faculty Modal ─── */}
       {showPromoteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                   Promote Faculty to Admin
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Select an existing faculty member and grant admin privileges.
                 </p>
               </div>
               <button
                 onClick={() => setShowPromoteModal(false)}
-                className="p-1 hover:bg-slate-700 rounded-lg"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
               >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">
+                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                   Faculty Member *
                 </label>
                 <select
@@ -557,7 +557,7 @@ const SuperAdminAdmins: React.FC = () => {
                       collegeId: fac?.collegeId || "",
                     });
                   }}
-                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                  className="input-field"
                 >
                   <option value="">Select Faculty</option>
                   {facultyList.map((faculty: Faculty) => (
@@ -575,7 +575,7 @@ const SuperAdminAdmins: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                     Admin Role *
                   </label>
                   <select
@@ -586,7 +586,7 @@ const SuperAdminAdmins: React.FC = () => {
                         role: e.target.value as AdminRole,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    className="input-field"
                   >
                     <option value="admin">Principal</option>
                     <option value="hod">HOD</option>
@@ -596,7 +596,7 @@ const SuperAdminAdmins: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
                     College *
                   </label>
                   <select
@@ -607,7 +607,7 @@ const SuperAdminAdmins: React.FC = () => {
                         collegeId: e.target.value,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                    className="input-field"
                   >
                     <option value="">Select College</option>
                     {colleges.map((college) => (
@@ -623,7 +623,7 @@ const SuperAdminAdmins: React.FC = () => {
                 <button
                   onClick={handlePromote}
                   disabled={promoteToAdmin.isPending}
-                  className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   {promoteToAdmin.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -636,7 +636,7 @@ const SuperAdminAdmins: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowPromoteModal(false)}
-                  className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -649,29 +649,29 @@ const SuperAdminAdmins: React.FC = () => {
       {/* View Admin Modal */}
       {selectedAdmin && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Admin Details</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Admin Details</h2>
               <button
                 onClick={() => setSelectedAdmin(null)}
-                className="p-1 hover:bg-slate-700 rounded-lg"
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
               >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-400">Name</span>
-                <span className="text-white font-medium">
+                <span className="text-slate-600 dark:text-slate-400">Name</span>
+                <span className="text-slate-900 dark:text-white font-medium">
                   {selectedAdmin.name}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Email</span>
-                <span className="text-white">{selectedAdmin.email}</span>
+                <span className="text-slate-600 dark:text-slate-400">Email</span>
+                <span className="text-slate-900 dark:text-white">{selectedAdmin.email}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Role</span>
+                <span className="text-slate-600 dark:text-slate-400">Role</span>
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[selectedAdmin.role]}`}
                 >
@@ -679,34 +679,34 @@ const SuperAdminAdmins: React.FC = () => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">College</span>
-                <span className="text-white">
+                <span className="text-slate-600 dark:text-slate-400">College</span>
+                <span className="text-slate-900 dark:text-white">
                   {selectedAdmin.collegeName ||
                     selectedAdmin.collegeCode ||
                     "—"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Department</span>
-                <span className="text-white">
+                <span className="text-slate-600 dark:text-slate-400">Department</span>
+                <span className="text-slate-900 dark:text-white">
                   {selectedAdmin.department || "—"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Status</span>
+                <span className="text-slate-600 dark:text-slate-400">Status</span>
                 <span
                   className={
                     selectedAdmin.status === "active"
-                      ? "text-green-400"
-                      : "text-red-400"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-600 dark:text-red-400"
                   }
                 >
                   {selectedAdmin.status}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Created</span>
-                <span className="text-slate-300">
+                <span className="text-slate-600 dark:text-slate-400">Created</span>
+                <span className="text-slate-700 dark:text-slate-300">
                   {new Date(selectedAdmin.createdAt).toLocaleDateString(
                     "en-IN"
                   )}
@@ -714,8 +714,8 @@ const SuperAdminAdmins: React.FC = () => {
               </div>
               {selectedAdmin.lastLogin && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Last Login</span>
-                  <span className="text-slate-300">
+                  <span className="text-slate-600 dark:text-slate-400">Last Login</span>
+                  <span className="text-slate-700 dark:text-slate-300">
                     {new Date(selectedAdmin.lastLogin).toLocaleDateString(
                       "en-IN"
                     )}
@@ -725,7 +725,7 @@ const SuperAdminAdmins: React.FC = () => {
             </div>
             <button
               onClick={() => setSelectedAdmin(null)}
-              className="w-full mt-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+              className="w-full mt-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
             >
               Close
             </button>

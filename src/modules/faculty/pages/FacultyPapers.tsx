@@ -73,14 +73,14 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h2 className="text-lg font-bold text-white">{paper.title}</h2>
-            <p className="text-sm text-slate-400">{paper.subject} • {paper.className}</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{paper.title}</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{paper.subject} • {paper.className}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-all"
           >
             <XCircle className="w-5 h-5" />
           </button>
@@ -89,51 +89,51 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
         <div className="p-6 space-y-6">
           {/* Paper Info */}
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-xs text-slate-500 mb-1">Total Marks</p>
-              <p className="text-lg font-bold text-white">{paper.totalMarks}</p>
+            <div className="p-3 rounded-xl glass-card/50">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Marks</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{paper.totalMarks}</p>
             </div>
-            <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-xs text-slate-500 mb-1">Duration</p>
-              <p className="text-lg font-bold text-white">{paper.duration} min</p>
+            <div className="p-3 rounded-xl glass-card/50">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Duration</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{paper.duration} min</p>
             </div>
-            <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-xs text-slate-500 mb-1">Questions</p>
-              <p className="text-lg font-bold text-white">{paper.questions.length}</p>
+            <div className="p-3 rounded-xl glass-card/50">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Questions</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{paper.questions.length}</p>
             </div>
           </div>
 
           {/* Questions Table */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-teal-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               Question Breakdown
             </h3>
             <div className="rounded-xl border border-slate-700/50 overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-800/80">
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-400 uppercase">Q.No</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-400 uppercase">Topic</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-400 uppercase">Type</th>
-                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-400 uppercase">Marks</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Q.No</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Topic</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Type</th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Marks</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {paper.questions.map((q: PaperQuestion) => (
-                    <tr key={q.number} className="hover:bg-slate-800/30">
-                      <td className="px-4 py-2.5 text-sm text-white font-medium">{q.number}</td>
-                      <td className="px-4 py-2.5 text-sm text-slate-300">{q.topic}</td>
+                    <tr key={q.number} className="hover:bg-slate-100 dark:hover:bg-slate-800/30">
+                      <td className="px-4 py-2.5 text-sm text-slate-900 dark:text-white font-medium">{q.number}</td>
+                      <td className="px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300">{q.topic}</td>
                       <td className="px-4 py-2.5">
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                          q.type === 'mcq' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                          q.type === 'short' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                          q.type === 'mcq' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-500/20' :
+                          q.type === 'short' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-500/20' :
                           'bg-violet-500/10 text-violet-400 border-violet-500/20'
                         }`}>
                           {q.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-sm text-slate-400 text-right">{q.marks}</td>
+                      <td className="px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 text-right">{q.marks}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -163,7 +163,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
               </button>
               <button
                 onClick={() => setMode('modify')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-100 dark:bg-amber-900/30 transition-all font-medium"
               >
                 <AlertTriangle className="w-4 h-4" />
                 Request Modification
@@ -181,7 +181,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
               <div className="flex gap-3">
                 <button
                   onClick={() => setMode('view')}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   Cancel
                 </button>
@@ -203,11 +203,11 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
                 Request changes to the paper
               </p>
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5">Topic to Modify</label>
+                <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Topic to Modify</label>
                 <select
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500/50"
                 >
                   <option value="">Select topic...</option>
                   {paper.questions.map((q: PaperQuestion) => (
@@ -216,36 +216,36 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5">Question Number(s)</label>
+                <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Question Number(s)</label>
                 <input
                   type="text"
                   placeholder="e.g., 2, 4, 5"
                   value={questionNumbers}
                   onChange={(e) => setQuestionNumbers(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
+                  className="w-full px-3 py-2 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5">Remarks / Suggested Changes</label>
+                <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Remarks / Suggested Changes</label>
                 <textarea
                   rows={3}
                   placeholder="Describe the changes needed..."
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 resize-none"
+                  className="w-full px-3 py-2 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 resize-none"
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setMode('view')}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!topic || !questionNumbers || !remarks}
-                  className="px-4 py-2 rounded-lg text-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-lg text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-3.5 h-3.5 inline mr-1.5" />
                   Submit Request
@@ -466,13 +466,13 @@ export default function FacultyPapers() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 text-slate-400 hover:text-teal-400 transition-all"
+          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Papers</h1>
-          <p className="text-slate-400">Manage test papers and answer keys</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Papers</h1>
+          <p className="text-slate-600 dark:text-slate-400">Manage test papers and answer keys</p>
         </div>
       </div>
 
@@ -489,13 +489,13 @@ export default function FacultyPapers() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
             {tab.id === 'pending' && papers.filter(p => p.verificationStatus === 'pending-verification').length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-400 text-xs">
                 {papers.filter(p => p.verificationStatus === 'pending-verification').length}
               </span>
             )}
@@ -511,16 +511,16 @@ export default function FacultyPapers() {
             return (
               <div
                 key={paper.id}
-                className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 transition-all"
+                className="p-5 rounded-xl glass-card/50 hover:border-slate-600 transition-all"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-xl bg-teal-500/10">
-                      <FileText className="w-5 h-5 text-teal-400" />
+                      <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">{paper.title}</h3>
-                      <p className="text-sm text-slate-400">{paper.subject} • {paper.className}</p>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">{paper.title}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{paper.subject} • {paper.className}</p>
                     </div>
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full border ${status.bg} ${status.color} ${status.border}`}>
@@ -528,7 +528,7 @@ export default function FacultyPapers() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-6 text-sm text-slate-400 mb-4">
+                <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400 mb-4">
                   <span className="flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4" /> {paper.questions.length} questions
                   </span>
@@ -544,7 +544,7 @@ export default function FacultyPapers() {
                   {paper.verificationStatus === 'pending-verification' && (
                     <button
                       onClick={() => setSelectedPaper(paper)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-all text-sm font-medium"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all text-sm font-medium"
                     >
                       <Eye className="w-4 h-4" />
                       Review & Verify
@@ -564,7 +564,7 @@ export default function FacultyPapers() {
                   )}
                   <button
                     onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
-                    className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors ml-auto"
+                    className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors ml-auto"
                   >
                     <Download className="w-4 h-4" /> Download
                   </button>
@@ -576,7 +576,7 @@ export default function FacultyPapers() {
           {filteredPapers.length === 0 && (
             <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
               <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No papers found</p>
+              <p className="text-slate-600 dark:text-slate-400">No papers found</p>
             </div>
           )}
         </div>
@@ -587,17 +587,17 @@ export default function FacultyPapers() {
             verificationRequests.map(req => (
               <div
                 key={req.id}
-                className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50"
+                className="p-5 rounded-xl glass-card/50"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-semibold text-white">{req.paperTitle}</h3>
-                    <p className="text-sm text-slate-400">{req.subject} • {req.className}</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{req.paperTitle}</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">{req.subject} • {req.className}</p>
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full border ${
                     req.status === 'verified'
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-500/20'
                   }`}>
                     {req.status === 'verified' ? 'Verified' : 'Modification Requested'}
                   </span>
@@ -605,9 +605,9 @@ export default function FacultyPapers() {
                 {req.requestedChanges && (
                   <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/30 space-y-1.5">
                     <p className="text-xs text-slate-500 uppercase tracking-wider">Requested Changes</p>
-                    <p className="text-sm text-slate-300"><span className="text-slate-500">Topic:</span> {req.requestedChanges.topic}</p>
-                    <p className="text-sm text-slate-300"><span className="text-slate-500">Questions:</span> {req.requestedChanges.questionNumbers}</p>
-                    <p className="text-sm text-slate-300"><span className="text-slate-500">Remarks:</span> {req.requestedChanges.remarks}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300"><span className="text-slate-500 dark:text-slate-400">Topic:</span> {req.requestedChanges.topic}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300"><span className="text-slate-500 dark:text-slate-400">Questions:</span> {req.requestedChanges.questionNumbers}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300"><span className="text-slate-500 dark:text-slate-400">Remarks:</span> {req.requestedChanges.remarks}</p>
                   </div>
                 )}
                 <p className="text-xs text-slate-500 mt-3">
@@ -618,7 +618,7 @@ export default function FacultyPapers() {
           ) : (
             <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
               <Clock className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No verification requests yet</p>
+              <p className="text-slate-600 dark:text-slate-400">No verification requests yet</p>
             </div>
           )}
         </div>
@@ -626,20 +626,20 @@ export default function FacultyPapers() {
 
       {/* Upload Section */}
       <div className="mt-8 pt-6 border-t border-slate-700/50">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Upload className="w-5 h-5 text-teal-400" />
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <Upload className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           Upload Papers
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Question Paper Upload */}
-          <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 border-dashed hover:border-teal-500/30 transition-all">
+          <div className="p-5 rounded-xl glass-card/50 border-dashed hover:border-teal-500/30 transition-all">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-teal-500/10">
-                <FileUp className="w-5 h-5 text-teal-400" />
+                <FileUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               </div>
               <div>
-                <h3 className="font-medium text-white">Question Paper</h3>
-                <p className="text-xs text-slate-400">Upload test question paper</p>
+                <h3 className="font-medium text-slate-900 dark:text-white">Question Paper</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Upload test question paper</p>
               </div>
             </div>
             <input
@@ -649,19 +649,19 @@ export default function FacultyPapers() {
                 const file = e.target.files?.[0]
                 if (file) handleUploadFile(file)
               }}
-              className="block w-full text-xs text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-teal-500/20 file:text-teal-400 hover:file:bg-teal-500/30 cursor-pointer"
+              className="block w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-teal-100 dark:bg-teal-900/30 file:text-teal-400 hover:file:bg-teal-500/30 cursor-pointer"
             />
             <p className="text-xs text-slate-500 mt-2">Supported: PDF, DOC, DOCX, JPG, PNG</p>
           </div>
           {/* Answer Key Upload */}
-          <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 border-dashed hover:border-violet-500/30 transition-all">
+          <div className="p-5 rounded-xl glass-card/50 border-dashed hover:border-violet-500/30 transition-all">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-violet-500/10">
                 <FileUp className="w-5 h-5 text-violet-400" />
               </div>
               <div>
-                <h3 className="font-medium text-white">Answer Key</h3>
-                <p className="text-xs text-slate-400">Upload answer key or solution</p>
+                <h3 className="font-medium text-slate-900 dark:text-white">Answer Key</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Upload answer key or solution</p>
               </div>
             </div>
             <input
@@ -671,7 +671,7 @@ export default function FacultyPapers() {
                 const file = e.target.files?.[0]
                 if (file) handleUploadFile(file)
               }}
-              className="block w-full text-xs text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-violet-500/20 file:text-violet-400 hover:file:bg-violet-500/30 cursor-pointer"
+              className="block w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-violet-500/20 file:text-violet-400 hover:file:bg-violet-500/30 cursor-pointer"
             />
             <p className="text-xs text-slate-500 mt-2">Supported: PDF, DOC, DOCX, JPG, PNG</p>
           </div>
@@ -690,7 +690,7 @@ export default function FacultyPapers() {
 
       {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 z-50">
+        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 z-50">
           <CheckCircle className="w-4 h-4" />
           <span className="text-sm font-medium">{showToast}</span>
         </div>

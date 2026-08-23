@@ -229,13 +229,13 @@ export default function FacultyTopics() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 text-slate-400 hover:text-teal-400 transition-all"
+          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-white">Topics</h1>
-          <p className="text-slate-400">Manage syllabus topics and lesson plans</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Topics</h1>
+          <p className="text-slate-600 dark:text-slate-400">Manage syllabus topics and lesson plans</p>
         </div>
         <div className="flex items-center gap-2">
           <div className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
@@ -247,7 +247,7 @@ export default function FacultyTopics() {
           </div>
           <button
             onClick={refresh}
-            className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 text-slate-400 hover:text-teal-400 transition-all"
+            className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -264,17 +264,17 @@ export default function FacultyTopics() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-          <p className="text-xs text-slate-400 mb-1">Total Topics</p>
-          <p className="text-2xl font-bold text-white">{stats.total}</p>
+        <div className="p-4 rounded-xl glass-card/50">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Topics</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-400 mb-1">Planned</p>
-          <p className="text-2xl font-bold text-blue-400">{stats.planned}</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.planned}</p>
         </div>
         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <p className="text-xs text-amber-400 mb-1">In Progress</p>
-          <p className="text-2xl font-bold text-amber-400">{stats.inProgress}</p>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.inProgress}</p>
         </div>
         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
           <p className="text-xs text-emerald-400 mb-1">Completed</p>
@@ -299,7 +299,7 @@ export default function FacultyTopics() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
                   statusFilter === status
                     ? `${config.bg} ${config.color} border ${config.border}`
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {config.label}
@@ -316,12 +316,12 @@ export default function FacultyTopics() {
               placeholder="Search topics..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
             />
           </div>
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             Add Topic
@@ -333,7 +333,7 @@ export default function FacultyTopics() {
       {loading && topics.length === 0 && (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
-          <span className="ml-3 text-slate-400">Loading topics...</span>
+          <span className="ml-3 text-slate-600 dark:text-slate-400">Loading topics...</span>
         </div>
       )}
 
@@ -363,34 +363,34 @@ export default function FacultyTopics() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-semibold text-white truncate">{topic.title}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{topic.title}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${config.bg} ${config.color} ${config.border}`}>
                       {config.label}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 truncate">{topic.description}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{topic.description}</p>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="text-center hidden sm:block">
-                    <p className="text-xs text-slate-500">Course</p>
-                    <p className="text-white font-medium">{topic.course}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Course</p>
+                    <p className="text-slate-900 dark:text-white font-medium">{topic.course}</p>
                   </div>
                   <div className="text-center hidden sm:block">
-                    <p className="text-xs text-slate-500">Batch</p>
-                    <p className="text-white font-medium">{topic.batch}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Batch</p>
+                    <p className="text-slate-900 dark:text-white font-medium">{topic.batch}</p>
                   </div>
                   <div className="text-center hidden md:block">
-                    <p className="text-xs text-slate-500">Planned</p>
-                    <p className="text-white font-medium">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Planned</p>
+                    <p className="text-slate-900 dark:text-white font-medium">
                       {topic.plannedDate ? new Date(topic.plannedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '-'}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-slate-500">Duration</p>
-                    <p className="text-white font-medium">{topic.duration}m</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Duration</p>
+                    <p className="text-slate-900 dark:text-white font-medium">{topic.duration}m</p>
                   </div>
                 </div>
-                <button className="p-1 text-slate-400 hover:text-white transition-colors">
+                <button className="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
@@ -401,48 +401,48 @@ export default function FacultyTopics() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                        <h4 className="text-xs text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1">
                           <FileText className="w-3 h-3" /> Description
                         </h4>
-                        <p className="text-sm text-slate-300 leading-relaxed">{topic.description}</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{topic.description}</p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1">Subject</p>
-                          <p className="text-slate-300">{topic.subject}</p>
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Subject</p>
+                          <p className="text-slate-700 dark:text-slate-300">{topic.subject}</p>
                         </div>
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1">Division</p>
-                          <p className="text-slate-300">{topic.division}</p>
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Division</p>
+                          <p className="text-slate-700 dark:text-slate-300">{topic.division}</p>
                         </div>
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1">Planned Date</p>
-                          <p className="text-slate-300">
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Planned Date</p>
+                          <p className="text-slate-700 dark:text-slate-300">
                             {topic.plannedDate
                               ? new Date(topic.plannedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
                               : 'Not set'}
                           </p>
                         </div>
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1">Duration</p>
-                          <p className="text-slate-300">{topic.duration} minutes</p>
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Duration</p>
+                          <p className="text-slate-700 dark:text-slate-300">{topic.duration} minutes</p>
                         </div>
                       </div>
 
                       {topic.notes && (
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
                             <Layers className="w-3 h-3" /> Notes
                           </p>
-                          <p className="text-sm text-slate-300">{topic.notes}</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{topic.notes}</p>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                        <h4 className="text-xs text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1">
                           <GraduationCap className="w-3 h-3" /> Resources
                         </h4>
                         {topic.resources.length > 0 ? (
@@ -457,13 +457,13 @@ export default function FacultyTopics() {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-slate-500">No resources added</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">No resources added</p>
                         )}
                       </div>
 
-                      <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
+                      <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-slate-400">Progress</span>
+                          <span className="text-xs text-slate-600 dark:text-slate-400">Progress</span>
                           <span className={`text-xs font-medium ${config.color}`}>{config.label}</span>
                         </div>
                         <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
@@ -481,13 +481,13 @@ export default function FacultyTopics() {
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); openEditModal(topic.id); }}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-all flex items-center justify-center gap-1"
+                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all flex items-center justify-center gap-1"
                         >
                           <Edit3 className="w-3 h-3" /> Edit
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setExpandedTopic(null); }}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700 transition-all flex items-center justify-center gap-1"
+                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-1"
                         >
                           <Eye className="w-3 h-3" /> Collapse
                         </button>
@@ -509,7 +509,7 @@ export default function FacultyTopics() {
         {!loading && topics.length === 0 && (
           <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
             <BookOpen className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No topics found</p>
+            <p className="text-slate-600 dark:text-slate-400">No topics found</p>
             <button
               onClick={openAddModal}
               className="mt-3 text-sm text-teal-400 hover:text-teal-300"
@@ -559,20 +559,20 @@ export default function FacultyTopics() {
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-6 w-full max-w-md">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-rose-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-white">Delete Topic?</h3>
-                <p className="text-sm text-slate-400">This action cannot be undone.</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white">Delete Topic?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">This action cannot be undone.</p>
               </div>
             </div>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700 transition-all text-sm"
+                className="px-4 py-2 rounded-lg bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-sm"
               >
                 Cancel
               </button>
@@ -613,11 +613,11 @@ function TopicFormModal({
 }: TopicFormModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up">
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
-            <span className="text-slate-400">✕</span>
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+            <span className="text-slate-600 dark:text-slate-400">✕</span>
           </button>
         </div>
 
@@ -629,43 +629,43 @@ function TopicFormModal({
           )}
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Topic Title *</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Topic Title *</label>
             <input
               type="text"
               placeholder="e.g., Binary Search Trees"
               value={formData.title}
               onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Description</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Description</label>
             <textarea
               rows={3}
               placeholder="Brief description of the topic..."
               value={formData.description}
               onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Subject</label>
+              <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Subject</label>
               <input
                 type="text"
                 value={formData.subject}
                 onChange={e => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Course</label>
+              <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Course</label>
               <select
                 value={formData.course}
                 onChange={e => setFormData(prev => ({ ...prev, course: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               >
                 <option>BCom</option>
                 <option>BA</option>
@@ -678,11 +678,11 @@ function TopicFormModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Batch</label>
+              <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Batch</label>
               <select
                 value={formData.batch}
                 onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               >
                 <option>2023-2024</option>
                 <option>2024-2025</option>
@@ -690,11 +690,11 @@ function TopicFormModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Division</label>
+              <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Division</label>
               <select
                 value={formData.division}
                 onChange={e => setFormData(prev => ({ ...prev, division: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               >
                 <option>A</option>
                 <option>B</option>
@@ -705,33 +705,33 @@ function TopicFormModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Planned Date *</label>
+              <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Planned Date *</label>
               <input
                 type="date"
                 value={formData.plannedDate}
                 onChange={e => setFormData(prev => ({ ...prev, plannedDate: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Duration (min)</label>
+              <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Duration (min)</label>
               <input
                 type="number"
                 min={15}
                 max={300}
                 value={formData.duration}
                 onChange={e => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Status</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Status</label>
             <select
               value={formData.status}
               onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as TopicStatus }))}
-              className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
             >
               <option value="planned">Planned</option>
               <option value="in-progress">In Progress</option>
@@ -742,7 +742,7 @@ function TopicFormModal({
 
           {/* Resources */}
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Resources</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Resources</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
@@ -750,11 +750,11 @@ function TopicFormModal({
                 value={resourceInput}
                 onChange={e => setResourceInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onAddResource(); } }}
-                className="flex-1 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="flex-1 px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
               />
               <button
                 onClick={onAddResource}
-                className="px-3 py-2 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm"
+                className="px-3 py-2 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm"
               >
                 Add
               </button>
@@ -772,27 +772,27 @@ function TopicFormModal({
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Notes</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">Notes</label>
             <textarea
               rows={2}
               placeholder="Faculty notes..."
               value={formData.notes}
               onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-teal-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50 resize-none"
             />
           </div>
 
           <div className="flex gap-3 pt-2">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700 transition-all text-sm"
+              className="flex-1 px-4 py-2 rounded-lg bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-sm"
             >
               Cancel
             </button>
             <button
               onClick={onSubmit}
               disabled={saving}
-              className="flex-1 px-4 py-2 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {submitLabel}
