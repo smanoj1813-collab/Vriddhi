@@ -3,6 +3,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
+import * as crypto from 'crypto'
 import * as logger from 'firebase-functions/logger'
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -78,21 +79,20 @@ export const createStudentAuth = onCall(
 // HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
 
-function generateRandomPassword(length = 10): string {
+function generateRandomPassword(length = 14): string {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
   const lower = 'abcdefghijkmnopqrstuvwxyz'
   const nums = '23456789'
   const special = '!@#$%^&*'
   const all = upper + lower + nums + special
-  let password = ''
-  password += upper[Math.floor(Math.random() * upper.length)]
-  password += lower[Math.floor(Math.random() * lower.length)]
-  password += nums[Math.floor(Math.random() * nums.length)]
-  password += special[Math.floor(Math.random() * special.length)]
-  for (let i = 4; i < length; i++) {
-    password += all[Math.floor(Math.random() * all.length)]
+  const pick = (set: string) => set[crypto.randomInt(0, set.length)]
+  const chars = [pick(upper), pick(lower), pick(nums), pick(special)]
+  for (let i = chars.length; i < length; i++) chars.push(pick(all))
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1)
+    ;[chars[i], chars[j]] = [chars[j], chars[i]]
   }
-  return password.split('').sort(() => Math.random() - 0.5).join('')
+  return chars.join('')
 }
 
 function normalizeSemester(val: number | string | undefined): number {

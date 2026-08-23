@@ -27,6 +27,7 @@ import {
   createStudentAuth,
   bulkCreateStudentAccounts,
 } from './studentAuth'
+import { provisionUser } from './userProvisioning'
 
 const app = express()
 
@@ -48,13 +49,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '1.1.0',
+    version: '1.2.0',
     environment: 'firebase-functions',
-    providers: {
-      gemini: !!process.env.GEMINI_API_KEY,
-      openai: !!process.env.OPENAI_API_KEY,
-      deepseek: !!process.env.DEEPSEEK_API_KEY,
-    }
   })
 })
 
@@ -85,9 +81,10 @@ export const api = onRequest(
     timeoutSeconds: 60,
     minInstances: 0,
     maxInstances: 10,
+    secrets: ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'],
   },
   app
 )
 
 // ═══════ Callable functions exports ═══════
-export { syncStudentsToAuth, createStudentAuth, bulkCreateStudentAccounts }
+export { syncStudentsToAuth, createStudentAuth, bulkCreateStudentAccounts, provisionUser }

@@ -1,7 +1,7 @@
 // src/routes/ai-questions.ts
 import * as express from 'express'
 import { db } from '../config/firebase'
-import { verifyAuth, requireRole, AuthenticatedRequest } from '../middleware/auth'
+import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId } from '../middleware/auth'
 import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/tierCheck'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { validateRequest } from '../validation/validateRequest'
@@ -10,34 +10,16 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
 
 const WRITE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+const MAX_SAVE_BATCH = 50
 
 const router = express.Router()
-
-// ─── TEMPORARY: Diagnostic endpoint ───
-router.get('/debug-env', async (req, res) => {
-  res.json({
-    envVars: {
-      GEMINI_API_KEY_EXISTS: !!process.env.GEMINI_API_KEY,
-      GEMINI_API_KEY_LENGTH: process.env.GEMINI_API_KEY?.length || 0,
-      GEMINI_API_KEY_PREFIX: process.env.GEMINI_API_KEY?.substring(0, 10) || 'none',
-      OPENAI_API_KEY_EXISTS: !!process.env.OPENAI_API_KEY,
-      DEEPSEEK_API_KEY_EXISTS: !!process.env.DEEPSEEK_API_KEY,
-    },
-    providers: getAvailableProviders(),
-    geminiClientReady: !!geminiClient(),
-    openaiClientReady: !!openaiClient(),
-    deepseekClientReady: !!deepseekClient(),
-    nodeEnv: process.env.NODE_ENV,
-    cwd: process.cwd(),
-  })
-})
 
 // ─── SHARED GENERATION LOGIC ───
 async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.Response) {
   const config = req.body
   const startTime = Date.now()
   const userId = req.user!.uid
-  const collegeId = config.collegeId || req.user!.collegeId
+  const collegeId = resolveCollegeId(req)
 
   console.log('[AI Generate] Request:', JSON.stringify({
     userId,
@@ -281,6 +263,16 @@ router.post(
         res.status(400).json({ error: 'Questions array is required' })
         return
       }
+      if (questions.length > MAX_SAVE_BATCH) {
+        res.status(400).json({ error: `At most ${MAX_SAVE_BATCH} questions per request` })
+        return
+      }
+
+      const collegeId = resolveCollegeId(req)
+      if (!collegeId) {
+        res.status(400).json({ error: 'collegeId is required' })
+        return
+      }
 
       const batch = db.batch()
       const savedQuestions: any[] = []
@@ -288,27 +280,63 @@ router.post(
       const now = new Date().toISOString()
 
       for (const q of questions) {
+        if (q.collegeId && q.collegeId !== collegeId && req.user!.role !== 'superadmin') {
+          res.status(403).json({ error: 'Forbidden: cross-college save rejected' })
+          return
+        }
+
         const existingId = q.firestoreId || q.id
-        const docRef = existingId && !String(existingId).startsWith('ai-')
+        const isExisting = Boolean(existingId && !String(existingId).startsWith('ai-'))
+        const docRef = isExisting
           ? db.collection('questions').doc(String(existingId))
           : db.collection('questions').doc()
 
-        const { id: _id, firestoreId: _fid, generatedAt: _g, ...rest } = q
-        const data = {
+        if (isExisting) {
+          const existing = await docRef.get()
+          if (!existing.exists) {
+            res.status(404).json({ error: `Question ${existingId} not found` })
+            return
+          }
+          const existingCollege = existing.data()?.collegeId
+          if (existingCollege && existingCollege !== collegeId && req.user!.role !== 'superadmin') {
+            res.status(403).json({ error: 'Forbidden: cannot update another college question' })
+            return
+          }
+        }
+
+        const {
+          id: _id,
+          firestoreId: _fid,
+          generatedAt: _g,
+          createdBy: _cb,
+          createdByName: _cbn,
+          collegeId: _cid,
+          createdAt: _ca,
+          updatedBy: _ub,
+          ...rest
+        } = q
+        const data: Record<string, unknown> = {
           ...rest,
-          createdBy: rest.createdBy || userId,
-          createdByName: rest.createdByName || req.user?.name || 'Unknown',
-          collegeId: rest.collegeId || req.user!.collegeId || null,
+          updatedBy: userId,
+          collegeId,
           updatedAt: FieldValue.serverTimestamp(),
-          createdAt: rest.createdAt || now,
           searchKeywords: (rest.searchKeywords || buildSearchKeywords(rest)),
           isAIGenerated: true,
           reviewed: true,
         }
+        if (!isExisting) {
+          data.createdBy = userId
+          data.createdByName = req.user?.name || 'Unknown'
+          data.createdAt = now
+        }
 
-        batch.set(docRef, data, { merge: true })
+        if (isExisting) {
+          batch.update(docRef, data)
+        } else {
+          batch.set(docRef, data)
+        }
         savedIds.push(docRef.id)
-        savedQuestions.push({ ...data, id: docRef.id, firestoreId: docRef.id })
+        savedQuestions.push({ ...data, id: docRef.id, firestoreId: docRef.id, collegeId })
       }
 
       await batch.commit()

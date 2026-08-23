@@ -6,12 +6,183 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Baseline: any authenticated user can read and write.
-    // Roles are enforced in the app layer today; tighten these per-collection
-    // once the client-side role model (users/{uid}.role) is fully trusted.
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function claimRole() {
+      return request.auth.token.role;
+    }
+
+    function claimCollege() {
+      return request.auth.token.collegeId;
+    }
+
+    function role() {
+      return claimRole() != null ? claimRole() : userDoc().role;
+    }
+
+    function collegeId() {
+      return claimCollege() != null ? claimCollege() : userDoc().collegeId;
+    }
+
+    function isSuperadmin() {
+      return isSignedIn() && role() == 'superadmin';
+    }
+
+    function isStaff() {
+      return isSignedIn() && role() in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
+    }
+
+    function isCollegeStaff() {
+      return isStaff() && (isSuperadmin() || collegeId() != null);
+    }
+
+    function sameCollege(data) {
+      return isSuperadmin() || (collegeId() != null && data.collegeId == collegeId());
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function immutableUserFields() {
+      return request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.collegeId == resource.data.collegeId;
+    }
+
+    function noPasswordField() {
+      return !('password' in request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId)
+        || isSuperadmin()
+        || (isStaff() && sameCollege(resource.data));
+      allow create: if false;
+      allow update: if isOwner(userId)
+        && immutableUserFields()
+        && noPasswordField()
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['role', 'collegeId', 'uid', 'permissions', 'createdBy']);
+      allow delete: if isSuperadmin();
+    }
+
+    match /students/{id} {
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || resource.data.uid == request.auth.uid
+        || resource.data.userId == request.auth.uid
+        || (isStaff() && sameCollege(resource.data))
+      );
+      allow create, update, delete: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /faculty/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /admins/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow write: if isSuperadmin();
+    }
+
+    match /hods/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+    }
+
+    match /mentors/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /superadmins/{id} {
+      allow read: if isSuperadmin();
+      allow write: if isSuperadmin();
+    }
+
+    match /colleges/{collegeId} {
+      allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+      allow write: if isSuperadmin();
+
+      match /students/{id} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+    }
+
+    match /questions/{id} {
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || (isStaff() && sameCollege(resource.data))
+        || (role() == 'student' && sameCollege(resource.data) && resource.data.status in ['active', 'published'])
+      );
+      allow create: if isCollegeStaff() && sameCollege(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isCollegeStaff() && sameCollege(resource.data)
+        && request.resource.data.collegeId == resource.data.collegeId;
+      allow delete: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
+    }
+
+    match /papers/{id} {
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || (isStaff() && sameCollege(resource.data))
+        || (role() == 'student' && sameCollege(resource.data) && resource.data.status == 'published')
+      );
+      allow create: if isCollegeStaff() && sameCollege(request.resource.data);
+      allow update: if isCollegeStaff() && sameCollege(resource.data)
+        && request.resource.data.collegeId == resource.data.collegeId;
+      allow delete: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
+    }
+
+    match /attendance/{id} {
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || resource.data.studentId == request.auth.uid
+        || resource.data.uid == request.auth.uid
+        || (isStaff() && sameCollege(resource.data))
+      );
+      allow write: if isCollegeStaff() && sameCollege(request.resource.data);
+    }
+
+    match /attendanceRecords/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || (isStaff() && sameCollege(resource.data)) || resource.data.studentId == request.auth.uid);
+      allow write: if isCollegeStaff() && sameCollege(request.resource.data);
+    }
+
+    match /payments/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || resource.data.studentId == request.auth.uid || (role() in ['admin', 'hod'] && sameCollege(resource.data)));
+      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+    }
+
+    match /feeStructures/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+    }
+
+    match /logs/{id} {
+      allow read: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
+      allow create: if isStaff();
+      allow update, delete: if isSuperadmin();
+    }
+
+    match /ai_generation_logs/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /notifications/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || resource.data.userId == request.auth.uid || sameCollege(resource.data));
+      allow write: if isCollegeStaff();
+    }
+
     match /{document=**} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if false;
     }
   }
 }

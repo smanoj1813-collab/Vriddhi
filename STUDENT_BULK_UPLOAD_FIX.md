@@ -168,10 +168,11 @@ After deployment, verify:
 
 ## 🔐 Security Notes
 
-- Passwords are generated using `generateTempPassword()` (10 alphanumeric characters)
-- Passwords are stored in Firestore (necessary for credential distribution)
-- Admins should advise students to change their passwords after first login
-- The Firebase Auth REST API is used to avoid affecting the current SuperAdmin session
+- Temporary passwords are generated with `crypto.randomInt` / Web Crypto — never `Math.random`.
+- **Do not write plaintext passwords to Firestore**, logs, or persistent browser history.
+- Prefer Firebase password-reset / onboarding emails.
+- If a temporary password is required, return it **once** to an authorized admin and force a change at first login (`mustChangePassword` custom claim).
+- Client-side role assignment is forbidden; use the `provisionUser` / `bulkCreateStudentAccounts` Cloud Functions.
 
 ---
 
