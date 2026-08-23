@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Calendar, CheckCircle, XCircle, Clock, AlertCircle, TrendingUp,
-  ChevronLeft, ChevronRight, BookOpen, Percent, Users
+  Calendar, CheckCircle, XCircle, Clock, AlertCircle,
+  ChevronLeft, ChevronRight, BookOpen, Percent
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
+import { fetchAttendance, type StudentAttendanceRecord } from '../api/studentDataApi';
+import { useAuth } from '../../auth/context/AuthContext';
+import { useStudentProfile } from '../hooks/useStudentProfile';
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
@@ -16,7 +19,7 @@ interface AttendanceRecord {
   date: string;
   subject: string;
   subjectCode: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: 'present' | 'absent' | 'late' | 'leave' | 'onDuty' | 'medicalLeave' | 'excused' | string;
   checkInTime?: string;
   notes?: string;
 }
@@ -42,82 +45,15 @@ interface AttendanceSummary {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// MOCK DATA (completely self-contained - no API calls)
-// ═══════════════════════════════════════════════════════════════════
-const SUBJECTS = [
-  { name: 'Financial Accounting', code: 'BCOM101' },
-  { name: 'Business Economics', code: 'BCOM102' },
-  { name: 'Corporate Law', code: 'BCOM103' },
-  { name: 'Marketing Management', code: 'BCOM104' },
-  { name: 'Business Statistics', code: 'BCOM105' },
-  { name: 'Organizational Behavior', code: 'BCOM106' },
-];
-
-function generateMockRecords(year: number, month: number): AttendanceRecord[] {
-  const records: AttendanceRecord[] = [];
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  let idCounter = 1;
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    if (date.getDay() === 0) continue;
-    const classesToday = 2 + Math.floor(Math.random() * 3);
-    const shuffled = [...SUBJECTS].sort(() => Math.random() - 0.5);
-
-    for (let i = 0; i < classesToday; i++) {
-      const rand = Math.random();
-      let status: AttendanceRecord['status'] = 'present';
-      if (rand > 0.78) status = 'late';
-      if (rand > 0.93) status = 'absent';
-      if (rand > 0.97) status = 'excused';
-      const hours = 9 + Math.floor(Math.random() * 7);
-      const mins = Math.floor(Math.random() * 60);
-      records.push({
-        id: `att-${idCounter++}`,
-        date: date.toISOString().split('T')[0],
-        subject: shuffled[i].name,
-        subjectCode: shuffled[i].code,
-        status,
-        checkInTime: status === 'present' || status === 'late' ? `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}` : undefined,
-        notes: status === 'excused' ? 'Medical leave approved' : status === 'absent' ? 'No prior intimation' : undefined,
-      });
-    }
-  }
-  return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-}
-
-function generateMockSummary(records: AttendanceRecord[]): AttendanceSummary {
-  const present = records.filter(r => r.status === 'present').length;
-  const absent = records.filter(r => r.status === 'absent').length;
-  const late = records.filter(r => r.status === 'late').length;
-  const excused = records.filter(r => r.status === 'excused').length;
-  const total = records.length;
-  const monthlyBreakdown: MonthlyBreakdown[] = [];
-  const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const mTotal = 20 + Math.floor(Math.random() * 10);
-    const mPresent = Math.floor(mTotal * (0.75 + Math.random() * 0.2));
-    monthlyBreakdown.push({
-      month: d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      total: mTotal, present: mPresent, absent: mTotal - mPresent,
-      percentage: Math.round((mPresent / mTotal) * 100),
-    });
-  }
-  return {
-    percentage: total > 0 ? Math.round((present / total) * 100) : 0,
-    requiredPercentage: 75, totalDays: new Set(records.map(r => r.date)).size,
-    totalClasses: total, present, absent, late, excused, monthlyBreakdown,
-  };
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// STATUS CONFIG
+// STATUS CONFIG (real Firestore statuses from attendanceRecords)
 // ═══════════════════════════════════════════════════════════════════
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; bg: string; text: string; label: string }> = {
   present: { icon: CheckCircle, bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Present' },
   absent: { icon: XCircle, bg: 'bg-red-500/15', text: 'text-red-400', label: 'Absent' },
   late: { icon: Clock, bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Late' },
+  leave: { icon: AlertCircle, bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'On Leave' },
+  medicalLeave: { icon: AlertCircle, bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Medical Leave' },
+  onDuty: { icon: CheckCircle, bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'On Duty' },
   excused: { icon: AlertCircle, bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Excused' },
 };
 
@@ -128,22 +64,58 @@ const PIE_COLORS: Record<string, string> = {
 // ═══════════════════════════════════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════════
-export const AttendancePage: React.FC<{ studentId: string }> = ({ studentId }) => {
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: studentIdProp }) => {
+  const { user } = useAuth();
+  const { profile } = useStudentProfile(user?.uid);
+  const resolvedStudentId = studentIdProp || profile?.id || user?.uid || '';
+
+  const [allRecords, setAllRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
+  // Fetch all attendance records once from Firestore.
   useEffect(() => {
+    if (!resolvedStudentId) return;
+    let cancelled = false;
     setLoading(true);
-    const [year, month] = selectedMonth.split('-').map(Number);
-    const mockRecords = generateMockRecords(year, month - 1);
-    setRecords(mockRecords);
-    setSummary(generateMockSummary(mockRecords));
-    setLoading(false);
-  }, [studentId, selectedMonth]);
+    fetchAttendance(resolvedStudentId)
+      .then((data) => {
+        if (cancelled) return;
+        const mapped: AttendanceRecord[] = data.records.map((r: StudentAttendanceRecord) => ({
+          id: r.id,
+          date: r.date,
+          subject: r.subject,
+          subjectCode: r.subjectCode || '',
+          status: r.status,
+          checkInTime: r.checkInTime,
+          notes: r.notes,
+        }));
+        setAllRecords(mapped);
+        setSummary({
+          percentage: data.percentage,
+          requiredPercentage: data.requiredPercentage,
+          totalDays: new Set(mapped.map((r) => r.date)).size,
+          totalClasses: data.totalClasses,
+          present: data.present,
+          absent: data.absent,
+          late: data.late,
+          excused: data.excused,
+          monthlyBreakdown: data.monthlyBreakdown,
+        });
+      })
+      .catch((err) => console.error('[AttendancePage] load failed:', err))
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, [resolvedStudentId]);
+
+  // Records for the selected month (client-side filter)
+  const records = useMemo(
+    () => allRecords.filter((r) => r.date.startsWith(selectedMonth)),
+    [allRecords, selectedMonth]
+  );
 
   const calendarDays = useMemo(() => {
     const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
@@ -410,3 +382,4 @@ export const AttendancePage: React.FC<{ studentId: string }> = ({ studentId }) =
     </div>
   );
 };
+export default AttendancePage;

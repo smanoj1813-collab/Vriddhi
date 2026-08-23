@@ -24,6 +24,9 @@ export interface Assignment {
   attachments?: SubmissionFile[];
   createdAt?: string;
   submissionType?: string;
+  marksObtained?: number;
+  feedback?: string;
+  submittedAt?: string;
 }
 
 /* ─── Assignment Submission ─── */

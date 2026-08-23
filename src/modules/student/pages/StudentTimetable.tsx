@@ -20,6 +20,8 @@ import {
 } from '@mui/icons-material'
 import { useStudentSchedule } from '../hooks/useStudentSchedule'
 import type { DayOfWeek, ClassSchedule } from '../../../types/schedule'
+import { useStudentProfile } from '../hooks/useStudentProfile'
+import { useAuth } from '../../auth/context/AuthContext'
 
 const DAYS: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -58,29 +60,24 @@ interface StudentProfile {
   section: string;
 }
 
-function getStudentProfile(): StudentProfile | null {
-  const studentToken = localStorage.getItem('studentToken')
-  if (!studentToken) return null
-
-  try {
-    const studentData = JSON.parse(localStorage.getItem('studentData') || '{}')
-    return {
-      branch: studentData.branch || studentData.department || studentData.course || '',
-      batch: studentData.batch || studentData.yearOfAdmission || '',
-      semester: Number(studentData.semester) || Number(studentData.currentSemester) || 1,
-      division: studentData.division || '',
-      section: studentData.section || '',
-    }
-  } catch {
-    return null
-  }
-}
-
 const StudentTimetable: React.FC = () => {
-  const studentProfile = getStudentProfile()
-  const { weeklySchedule, todayClasses, isLoading } = useStudentSchedule(studentProfile)
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useStudentProfile(user?.uid);
 
-  if (isLoading) {
+  const studentProfile: StudentProfile | null = profile
+    ? {
+        branch: profile.branch || profile.department || '',
+        batch: profile.batch || '',
+        semester: Number(profile.semester) || 1,
+        division: profile.division || '',
+        section: profile.section || profile.division || '',
+      }
+    : null;
+
+  const { weeklySchedule, todayClasses, isLoading } = useStudentSchedule(studentProfile);
+  const loading = profileLoading || isLoading;
+
+  if (loading) {
     return (
       <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <Typography>Loading your timetable...</Typography>
@@ -90,9 +87,9 @@ const StudentTimetable: React.FC = () => {
 
   if (!studentProfile) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="warning">
-          Student profile not found. Please log in again.
+      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+        <Alert severity="info">
+          Your class schedule isn't available yet. Once your timetable is published it will appear here.
         </Alert>
       </Box>
     )

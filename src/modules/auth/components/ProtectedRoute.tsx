@@ -23,7 +23,7 @@ export default function ProtectedRoute({
 
   if (!isAuthenticated || !user) {
     const isStudentRoute = location.pathname.startsWith('/student');
-    return <Navigate to={isStudentRoute ? '/student-login' : '/'} replace />;
+    return <Navigate to={isStudentRoute ? '/student/login' : '/'} replace />;
   }
 
   if (!hasRole(allowedRoles)) {

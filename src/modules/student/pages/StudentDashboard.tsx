@@ -104,10 +104,9 @@ function QuickAction({ to, icon: Icon, label, color }: {
 // ─── Main Component ─────────────────────────────────────────────────
 
 export default function StudentDashboard() {
-  // TODO: Replace with actual student ID from auth context / decoded token
-  const studentId = localStorage.getItem('studentToken') || 'demo';
+  // Identity comes from Firebase Auth via useStudentData — no localStorage token.
   const { loading, profile, attendance, assessments, assignments, fees, schedule, notifications, unreadNotifications, todayDate } =
-    useStudentData(studentId);
+    useStudentData();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'notifications'>('overview');
 

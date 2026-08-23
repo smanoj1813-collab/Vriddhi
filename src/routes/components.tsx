@@ -17,10 +17,3 @@ export function RoleRoute({ children, allowedRoles }: { children: React.ReactNod
   return <>{children}</>
 }
 
-// ── Student route guard ───────────────────────────────────────────────
-export function StudentRoute({ children }: { children: React.ReactNode }) {
-  const studentToken = localStorage.getItem('studentToken')
-  const studentRole = localStorage.getItem('studentRole')
-  if (!studentToken || studentRole !== 'student') return <Navigate to="/student/login" replace />
-  return <>{children}</>
-}

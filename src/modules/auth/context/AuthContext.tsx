@@ -27,7 +27,7 @@ export interface AuthContextType {
   isLoading: boolean;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AppUser>;
   logout: () => Promise<void>;
   hasRole: (roles: UserRole[]) => boolean;
   hasPermission: (permission: string) => boolean;
@@ -82,10 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const appUser = await resolveUserData(cred.user);
       console.log('[AuthContext] resolveUserData success, role:', appUser.role);
       justLoggedIn.current = true;
-      setUser(appUser); 
+      setUser(appUser);
       setFirebaseUser(cred.user);
       console.log('[AuthContext] User state set');
-    } catch (err) { 
+      return appUser;
+    } catch (err) {
       console.error('[AuthContext] login() error:', err);
       justLoggedIn.current = false; 
       throw err; 

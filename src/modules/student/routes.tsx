@@ -3,7 +3,7 @@ import type { RouteObject } from 'react-router-dom';
 import { RoleRoute } from '@/routes/components/RoleRoute';
 import StudentLayout from './components/StudentLayout';
 
-// ── Lazy-loaded pages ────────────────────────────────────────────────
+// ── Lazy-loaded pages (all read identity from AuthContext) ────────────
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
 const StudentGrades = lazy(() => import('./pages/StudentGrades'));
 const StudentSettings = lazy(() => import('./pages/StudentSettings'));
@@ -17,62 +17,9 @@ const StudentTestDashboard = lazy(() => import('./pages/StudentTestDashboard'));
 const TestInstructionsPage = lazy(() => import('./pages/TestInstructionsPage'));
 const ActiveTestPage = lazy(() => import('./pages/ActiveTestPage'));
 const TestResultPage = lazy(() => import('./pages/TestResultPage'));
+const AttendancePage = lazy(() => import('./components/AttendancePage'));
+const StudentAssignments = lazy(() => import('./pages/StudentAssignments'));
 const Students = lazy(() => import('./pages/Students'));
-
-// ── Component wrappers (default export safe) ────────────────────────
-const SchedulingPage = lazy(() =>
-  import('./components/SchedulingPage').then((m: any) => ({
-    default: () => {
-      const Comp = m.default || m.SchedulingPage;
-      return <Comp studentId={localStorage.getItem('studentToken') || ''} />;
-    },
-  }))
-);
-
-const UpcomingAssessments = lazy(() =>
-  import('./components/UpcomingAssessments').then((m: any) => ({
-    default: () => {
-      const Comp = m.default || m.UpcomingAssessments;
-      return <Comp assessments={[]} />;
-    },
-  }))
-);
-
-const PendingAssignments = lazy(() =>
-  import('./components/PendingAssignments').then((m: any) => ({
-    default: () => {
-      const Comp = m.default || m.PendingAssignments;
-      return <Comp assignments={[]} onSubmit={(id: string) => console.log('Submit', id)} />;
-    },
-  }))
-);
-
-const AttendancePage = lazy(() =>
-  import('./components/AttendancePage').then((m: any) => ({
-    default: () => {
-      const Comp = m.default || m.AttendancePage;
-      return <Comp studentId={localStorage.getItem('studentToken') || ''} />;
-    },
-  }))
-);
-
-const FeeManagementPage = lazy(() =>
-  import('./components/FeeManagementPage').then((m: any) => ({
-    default: () => {
-      const Comp = m.default || m.FeeManagementPage;
-      return <Comp studentId={localStorage.getItem('studentToken') || ''} />;
-    },
-  }))
-);
-
-const NotificationsPanel = lazy(() =>
-  import('./components/NotificationsPanel').then((m: any) => ({
-    default: () => {
-      const Comp = m.default || m.NotificationsPanel;
-      return <Comp />;
-    },
-  }))
-);
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -85,33 +32,31 @@ export const studentRoutes: RouteObject[] = [
     children: [
       { index: true, element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
+
+      // Core pages
       { path: 'attendance', element: <AttendancePage /> },
       { path: 'assessments', element: <StudentTestDashboard /> },
-      { path: 'assignments', element: <PendingAssignments /> },
+      { path: 'assignments', element: <StudentAssignments /> },
       { path: 'grades', element: <StudentGrades /> },
+
+      // Test flow — both /assessments/:id and /test/:id styles supported
+      { path: 'assessments/:testId/instructions', element: <TestInstructionsPage /> },
+      { path: 'assessments/:testId/take', element: <ActiveTestPage /> },
+      { path: 'assessments/:testId/result', element: <TestResultPage /> },
+      { path: 'test/:testId/instructions', element: <TestInstructionsPage /> },
+      { path: 'test/:testId/take', element: <ActiveTestPage /> },
+      { path: 'test/:testId/result', element: <TestResultPage /> },
+
+      // Secondary pages
       { path: 'materials', element: <StudentMaterials /> },
       { path: 'timetable', element: <StudentTimetable /> },
-      { path: 'schedule', element: <SchedulingPage /> },
-      { path: 'fees', element: <FeeManagementPage /> },
+      { path: 'fees', element: <StudentFeePortal /> },
       { path: 'fee-portal', element: <StudentFeePortal /> },
       { path: 'library', element: <StudentLibrary /> },
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },
       { path: 'settings', element: <StudentSettings /> },
       { path: 'directory', element: <Students /> },
-
-      // Test flow
-      { path: 'tests', element: <StudentTestDashboard /> },
-      { path: 'tests/active', element: <ActiveTestPage /> },
-      { path: 'tests/instructions', element: <TestInstructionsPage /> },
-      { path: 'tests/results', element: <TestResultPage /> },
-      { path: 'test/:testId/instructions', element: <TestInstructionsPage /> },
-      { path: 'test/:testId/take', element: <ActiveTestPage /> },
-      { path: 'test/:testId/result', element: <TestResultPage /> },
-
-      // Legacy aliases
-      { path: 'upcoming-assessments', element: <UpcomingAssessments /> },
-      { path: 'notifications-panel', element: <NotificationsPanel /> },
     ],
   },
 ];
