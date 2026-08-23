@@ -285,12 +285,54 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
     clearGenerated()
   }
 
+  const applyPreset = (preset: 'midterm50' | 'final100' | 'quiz20') => {
+    if (preset === 'midterm50') {
+      setConfig(prev => ({ ...prev, totalMarks: 50, duration: 90, examType: 'midterm' }))
+      setSections([
+        { id: 'sec-a', name: 'Section A', title: 'Section A', description: 'Multiple Choice Questions', marksPerQuestion: 1, numQuestions: 10, compulsory: true, questionType: 'mcq', difficulty: 'medium', difficultyMix: { easy: 4, medium: 4, hard: 2 } },
+        { id: 'sec-b', name: 'Section B', title: 'Section B', description: 'Short Answer Questions', marksPerQuestion: 5, numQuestions: 4, compulsory: true, questionType: 'short', difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 1 } },
+        { id: 'sec-c', name: 'Section C', title: 'Section C', description: 'Long Answer Questions', marksPerQuestion: 10, numQuestions: 2, compulsory: true, questionType: 'long', difficulty: 'medium', difficultyMix: { easy: 0, medium: 1, hard: 1 } },
+      ])
+    } else if (preset === 'final100') {
+      setConfig(prev => ({ ...prev, totalMarks: 100, duration: 180, examType: 'endterm' }))
+      setSections([
+        { id: 'sec-a', name: 'Section A', title: 'Section A', description: 'Multiple Choice Questions', marksPerQuestion: 2, numQuestions: 10, compulsory: true, questionType: 'mcq', difficulty: 'medium', difficultyMix: { easy: 4, medium: 4, hard: 2 } },
+        { id: 'sec-b', name: 'Section B', title: 'Section B', description: 'Short Answer Questions', marksPerQuestion: 5, numQuestions: 6, compulsory: true, questionType: 'short', difficulty: 'medium', difficultyMix: { easy: 2, medium: 3, hard: 1 } },
+        { id: 'sec-c', name: 'Section C', title: 'Section C', description: 'Long Answer Questions', marksPerQuestion: 10, numQuestions: 5, compulsory: true, questionType: 'long', difficulty: 'medium', difficultyMix: { easy: 1, medium: 3, hard: 1 } },
+      ])
+    } else if (preset === 'quiz20') {
+      setConfig(prev => ({ ...prev, totalMarks: 20, duration: 25, examType: 'quiz' }))
+      setSections([
+        { id: 'sec-a', name: 'Section A', title: 'Section A', description: 'Quick MCQ Section', marksPerQuestion: 1, numQuestions: 10, compulsory: true, questionType: 'mcq', difficulty: 'easy', difficultyMix: { easy: 6, medium: 3, hard: 1 } },
+        { id: 'sec-b', name: 'Section B', title: 'Section B', description: 'Concept Questions', marksPerQuestion: 5, numQuestions: 2, compulsory: true, questionType: 'short', difficulty: 'medium', difficultyMix: { easy: 1, medium: 1, hard: 0 } },
+      ])
+    }
+  }
+
   // ─── Render Steps ─────────────────────────────────────
   const renderStepContent = () => {
     switch (activeStep) {
       case 0:
         return (
           <Box sx={{ mt: 3 }}>
+            {/* Quick Blueprint Presets */}
+            <Box sx={{ mb: 3, p: 2, borderRadius: 2.5, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'text.secondary', display: 'block', mb: 1 }}>
+                ⚡ Quick Exam Blueprint Presets
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                <Button size="small" variant="outlined" color="primary" onClick={() => applyPreset('midterm50')}>
+                  Midterm Exam (50 Marks · 90m)
+                </Button>
+                <Button size="small" variant="outlined" color="secondary" onClick={() => applyPreset('final100')}>
+                  Final Semester (100 Marks · 180m)
+                </Button>
+                <Button size="small" variant="outlined" color="info" onClick={() => applyPreset('quiz20')}>
+                  Quick Quiz (20 Marks · 25m)
+                </Button>
+              </Box>
+            </Box>
+
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
                 <TextField
