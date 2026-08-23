@@ -1,16 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase-admin/auth';
+import { AuthenticatedRequest } from './authTypes';
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    uid: string;
-    email?: string;
-    role?: string;
-    collegeId?: string;
-    name?: string;
-  };
-}
+export type { AuthenticatedRequest } from './authTypes';
+export { requireRole, resolveCollegeId, assertCollegeAccess } from './authz';
 
 const VALID_ROLES = ['superadmin', 'admin', 'principal', 'faculty', 'hod', 'mentor', 'student', 'parent'];
 
@@ -103,10 +97,7 @@ async function resolveUserProfile(
 
 /**
  * Authentication middleware.
- *
- * Primary path verifies a standard Firebase Authentication ID token through
- * the Admin SDK. A legacy custom `vriddhi_<uid>_<timestamp>` token is also
- * supported for older installs/clients that still store that shape.
+ * Only Firebase Authentication ID tokens verified via Admin SDK are accepted.
  */
 export const verifyAuth = async (
   req: AuthenticatedRequest,
@@ -127,67 +118,41 @@ export const verifyAuth = async (
       return;
     }
 
-    let verified: { uid: string; email?: string } | null = null;
-
-    // Firebase ID token (used by the React + Firebase Auth clients)
+    let decoded;
     try {
-      const decoded = await getAuth().verifyIdToken(token);
-      verified = { uid: decoded.uid, email: decoded.email };
+      decoded = await getAuth().verifyIdToken(token);
     } catch (firebaseErr) {
-      // Legacy custom token shape: vriddhi_<userId>_<timestamp>
-      if (token.startsWith('vriddhi_')) {
-        const parts = token.split('_');
-        if (parts.length < 3) {
-          res.status(401).json({ error: 'Unauthorized: Invalid token' });
-          return;
-        }
-        verified = { uid: parts[1] };
-      } else {
-        console.error('[auth] Firebase token verification failed:', firebaseErr);
-        res.status(401).json({ error: 'Unauthorized: Invalid Firebase token' });
-        return;
-      }
-    }
-
-    if (!verified) {
-      res.status(401).json({ error: 'Unauthorized: Invalid token' });
+      console.error('[auth] Firebase token verification failed:', firebaseErr);
+      res.status(401).json({ error: 'Unauthorized: Invalid Firebase token' });
       return;
     }
 
-    const profile = await resolveUserProfile(verified.uid, verified.email);
+    const tokenClaims = decoded as unknown as { role?: unknown; collegeId?: unknown };
+    const claimRole = normalizeRole(tokenClaims.role);
+    const claimCollegeId =
+      typeof tokenClaims.collegeId === 'string' ? tokenClaims.collegeId : undefined;
 
-    if (!profile) {
+    const profile = await resolveUserProfile(decoded.uid, decoded.email);
+
+    if (!profile && !claimRole) {
       res.status(401).json({ error: 'Unauthorized: User profile not found' });
       return;
     }
 
     req.user = {
-      uid: verified.uid,
-      email: profile.email || verified.email,
-      role: profile.role,
-      collegeId: profile.collegeId,
-      name: profile.name,
+      uid: decoded.uid,
+      email: profile?.email || decoded.email,
+      role: claimRole || profile?.role,
+      collegeId: claimCollegeId || profile?.collegeId,
+      name: profile?.name,
     };
 
     next();
-  } catch (err: any) {
-    console.error('[auth] Auth middleware error:', err?.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[auth] Auth middleware error:', message);
     res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 };
 
-export const requireRole = (...allowedRoles: string[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
 
-    if (!allowedRoles.includes(req.user.role || '')) {
-      res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
-      return;
-    }
-
-    next();
-  };
-};

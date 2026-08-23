@@ -5,28 +5,19 @@ import express from 'express'
 import puppeteer from 'puppeteer'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
-import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
+import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
 
 const router = express.Router()
 
 const PAPERS_COLLECTION = 'papers'
 const QUESTIONS_COLLECTION = 'questions'
 
-function getCollegeId(req: AuthenticatedRequest): string | undefined {
-  const fromHeader = (req.headers['x-college-id'] as string) || undefined
-  return (
-    req.body?.collegeId ||
-    (req.query?.collegeId as string | undefined) ||
-    fromHeader ||
-    req.user?.collegeId ||
-    undefined
-  )
-}
+const DRAFT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+const APPROVE_ROLES = ['superadmin', 'admin', 'hod']
+const DELETE_ROLES = ['superadmin', 'admin']
 
-function assertCollegeAccess(req: AuthenticatedRequest, collegeId?: string | null): boolean {
-  if (!collegeId) return true
-  if (req.user?.role === 'superadmin') return true
-  return req.user?.collegeId === collegeId
+function getCollegeId(req: AuthenticatedRequest): string | undefined {
+  return resolveCollegeId(req)
 }
 
 function toISO(v: unknown): string | unknown {
@@ -64,8 +55,11 @@ router.get('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
     let snap
     if (collegeId) {
       snap = await db.collection(PAPERS_COLLECTION).where('collegeId', '==', collegeId).orderBy('createdAt', 'desc').get()
-    } else {
+    } else if (req.user?.role === 'superadmin') {
       snap = await db.collection(PAPERS_COLLECTION).orderBy('createdAt', 'desc').get()
+    } else {
+      res.status(400).json({ error: 'collegeId is required' })
+      return
     }
     const papers = snap.docs.map((doc) => normalizePaperDoc(doc))
     res.json({ data: papers, total: papers.length })
@@ -102,7 +96,7 @@ router.get('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
  * POST /api/papers
  * Create a paper and link its question ids on both sides.
  */
-router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!collegeId) {
@@ -132,8 +126,8 @@ router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
       totalQuestions: questionIds.length,
       usageCount: raw.usageCount ?? 0,
       status: raw.status || 'draft',
-      createdBy: raw.createdBy || req.user?.uid,
-      createdByName: raw.createdByName || req.user?.name || 'Unknown',
+      createdBy: req.user?.uid,
+      createdByName: req.user?.name || 'Unknown',
       createdAt: raw.createdAt || now,
       updatedAt: now,
     }
@@ -160,7 +154,7 @@ router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
  * PUT /api/papers/:id
  * Update a paper.
  */
-router.put('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.put('/:id', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
     const docSnap = await docRef.get()
@@ -196,7 +190,7 @@ router.put('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
  * DELETE /api/papers/:id
  * Delete a paper and unlink its questions.
  */
-router.delete('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.delete('/:id', verifyAuth, requireRole(...DELETE_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
     const docSnap = await docRef.get()
@@ -229,7 +223,7 @@ router.delete('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
  * POST /api/papers/:id/duplicate
  * Duplicate a paper into a draft.
  */
-router.post('/:id/duplicate', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/:id/duplicate', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const sourceDoc = await db.collection(PAPERS_COLLECTION).doc(req.params.id).get()
     if (!sourceDoc.exists) {
@@ -268,7 +262,7 @@ router.post('/:id/duplicate', verifyAuth, async (req: AuthenticatedRequest, res)
  * POST /api/papers/:id/status
  * Update status (draft | published | archived).
  */
-router.post('/:id/status', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/:id/status', verifyAuth, requireRole(...APPROVE_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const status = req.body?.status
     if (!['draft', 'published', 'archived'].includes(status)) {

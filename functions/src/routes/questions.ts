@@ -6,28 +6,19 @@ import express from 'express'
 import puppeteer from 'puppeteer'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
-import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
+import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
 
 const router = express.Router()
 
 const QUESTIONS_COLLECTION = 'questions'
 const PAPERS_COLLECTION = 'papers'
 
-function getCollegeId(req: AuthenticatedRequest): string | undefined {
-  const fromHeader = (req.headers['x-college-id'] as string) || undefined
-  return (
-    req.body?.collegeId ||
-    (req.query?.collegeId as string | undefined) ||
-    fromHeader ||
-    req.user?.collegeId ||
-    undefined
-  )
-}
+const DRAFT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+const BULK_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty']
+const DELETE_ROLES = ['superadmin', 'admin']
 
-function assertCollegeAccess(req: AuthenticatedRequest, collegeId?: string | null): boolean {
-  if (!collegeId) return true
-  if (req.user?.role === 'superadmin') return true
-  return req.user?.collegeId === collegeId
+function getCollegeId(req: AuthenticatedRequest): string | undefined {
+  return resolveCollegeId(req)
 }
 
 function toISO(v: unknown): string | unknown {
@@ -67,13 +58,15 @@ function buildSearchKeywords(q: any): string[] {
     .map((v) => String(v).toLowerCase())
 }
 
-async function fetchCollegeQuestions(collegeId?: string): Promise<any[]> {
+async function fetchCollegeQuestions(collegeId?: string, isSuperadmin = false): Promise<any[]> {
   const ref = db.collection(QUESTIONS_COLLECTION)
   let snap: FirebaseFirestore.QuerySnapshot
   if (collegeId) {
     snap = await ref.where('collegeId', '==', collegeId).orderBy('createdAt', 'desc').get()
-  } else {
+  } else if (isSuperadmin) {
     snap = await ref.orderBy('createdAt', 'desc').get()
+  } else {
+    return []
   }
   return snap.docs.map((doc) => normalizeSnapshotDoc(doc))
 }
@@ -91,7 +84,7 @@ router.get('/stats', verifyAuth, async (req: AuthenticatedRequest, res) => {
       return
     }
 
-    const all = await fetchCollegeQuestions(collegeId)
+    const all = await fetchCollegeQuestions(collegeId, req.user?.role === 'superadmin')
     const stats = {
       total: 0,
       bySubject: {} as Record<string, number>,
@@ -300,7 +293,7 @@ router.get('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // POST /api/questions
-router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!collegeId) {
@@ -323,8 +316,8 @@ router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
       searchKeywords: buildSearchKeywords(raw),
       usageCount: raw.usageCount ?? 0,
       linkedPaperIds: raw.linkedPaperIds || [],
-      createdBy: raw.createdBy || req.user?.uid,
-      createdByName: raw.createdByName || req.user?.name || 'Unknown',
+      createdBy: req.user?.uid,
+      createdByName: req.user?.name || 'Unknown',
       createdAt: raw.createdAt || now,
       updatedAt: now,
     }
@@ -337,7 +330,7 @@ router.post('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // POST /api/questions/bulk
-router.post('/bulk', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/bulk', verifyAuth, requireRole(...BULK_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!collegeId) {
@@ -368,8 +361,8 @@ router.post('/bulk', verifyAuth, async (req: AuthenticatedRequest, res) => {
         searchKeywords: buildSearchKeywords(raw),
         usageCount: raw.usageCount ?? 0,
         linkedPaperIds: raw.linkedPaperIds || [],
-        createdBy: raw.createdBy || req.user?.uid,
-        createdByName: raw.createdByName || req.user?.name || 'Unknown',
+        createdBy: req.user?.uid,
+        createdByName: req.user?.name || 'Unknown',
         createdAt: raw.createdAt || now,
         updatedAt: now,
       }
@@ -393,7 +386,7 @@ router.post('/bulk', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // POST /api/questions/export/pdf
-router.post('/export/pdf', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/export/pdf', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const { questionIds, title } = req.body || {}
     if (!Array.isArray(questionIds) || questionIds.length === 0) {
@@ -463,7 +456,7 @@ router.get('/:id/papers', verifyAuth, async (req: AuthenticatedRequest, res) => 
 })
 
 // POST /api/questions/:id/link
-router.post('/:id/link', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/:id/link', verifyAuth, requireRole(...BULK_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const { paperId } = req.body || {}
     if (!paperId) {
@@ -504,7 +497,7 @@ router.post('/:id/link', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // POST /api/questions/:id/unlink
-router.post('/:id/unlink', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/:id/unlink', verifyAuth, requireRole(...BULK_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const { paperId } = req.body || {}
     if (!paperId) {
@@ -540,7 +533,7 @@ router.post('/:id/unlink', verifyAuth, async (req: AuthenticatedRequest, res) =>
 })
 
 // POST /api/questions/:id/clone
-router.post('/:id/clone', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.post('/:id/clone', verifyAuth, requireRole(...BULK_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const sourceDoc = await db.collection(QUESTIONS_COLLECTION).doc(req.params.id).get()
     if (!sourceDoc.exists) {
@@ -556,9 +549,15 @@ router.post('/:id/clone', verifyAuth, async (req: AuthenticatedRequest, res) => 
     const now = Timestamp.now()
     const docRef = db.collection(QUESTIONS_COLLECTION).doc()
     const { createdAt: _c, updatedAt: _u, usageCount: _us, linkedPaperIds: _lp, ...rest } = source
+    const overrides = { ...(req.body?.overrides || {}) }
+    delete overrides.collegeId
+    delete overrides.createdBy
     const data = {
       ...rest,
-      ...(req.body?.overrides || {}),
+      ...overrides,
+      collegeId: source.collegeId,
+      createdBy: req.user?.uid,
+      createdByName: req.user?.name || 'Unknown',
       searchKeywords: buildSearchKeywords(rest),
       linkedPaperIds: [],
       usageCount: 0,
@@ -592,7 +591,7 @@ router.get('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // PUT /api/questions/:id
-router.put('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.put('/:id', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const docRef = db.collection(QUESTIONS_COLLECTION).doc(req.params.id)
     const docSnap = await docRef.get()
@@ -624,7 +623,7 @@ router.put('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // DELETE /api/questions/:id
-router.delete('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.delete('/:id', verifyAuth, requireRole(...DELETE_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const docRef = db.collection(QUESTIONS_COLLECTION).doc(req.params.id)
     const docSnap = await docRef.get()

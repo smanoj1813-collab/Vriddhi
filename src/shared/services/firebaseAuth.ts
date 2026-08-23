@@ -1,5 +1,5 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from '@/Firebase/config';
 
 export type UserRole = 'superadmin' | 'admin' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor';
@@ -17,24 +17,17 @@ interface FirebaseUserData {
   updatedAt: string;
 }
 
-export const registerUser = async (email: string, password: string, name: string, role: UserRole, collegeId?: string) => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  const user = userCredential.user;
-
-  await updateProfile(user, { displayName: name });
-
-  const userData: FirebaseUserData = {
-    uid: user.uid,
-    email: user.email!,
-    name,
-    role,
-    collegeId,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  await setDoc(doc(db, "users", user.uid), userData);
-  return user;
+/** Privileged registration is server-only (callable provisionUser). */
+export const registerUser = async (
+  _email: string,
+  _password: string,
+  _name: string,
+  _role: UserRole,
+  _collegeId?: string
+) => {
+  throw new Error(
+    'Account provisioning must be performed by an authorized administrator via the provisionUser Cloud Function.'
+  );
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -54,6 +47,6 @@ export const getUserData = async (uid: string): Promise<FirebaseUserData | null>
   return null;
 };
 
-export const updateUserRole = async (uid: string, role: UserRole) => {
-  await updateDoc(doc(db, "users", uid), { role, updatedAt: new Date().toISOString() });
+export const updateUserRole = async (_uid: string, _role: UserRole) => {
+  throw new Error('Role changes must be performed server-side with Admin SDK custom claims.');
 };

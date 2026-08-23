@@ -215,10 +215,10 @@ $ npm run build
 ## 🔒 Security Notes
 
 ### Student Bulk Upload
-- Passwords are generated using `generateTempPassword()` (10 alphanumeric characters)
-- Passwords are stored in Firestore (necessary for credential distribution)
-- Admins should advise students to change passwords after first login
-- Firebase Auth REST API is used to avoid affecting current SuperAdmin session
+- Temporary passwords are generated with cryptographic RNG and returned once to an authorized admin.
+- Do **not** store plaintext passwords in Firestore, logs, or downloadable history.
+- Prefer Firebase password-reset emails; force change at first login.
+- Account roles and collegeId are set only by Admin SDK Cloud Functions.
 
 ### Auth Accounts
 - Uses Firebase Identity Toolkit REST API

@@ -152,7 +152,6 @@ function docToAdmin(docSnap: QueryDocumentSnapshot<DocumentData>): Admin {
     lastLogin: data.lastLogin?.toDate?.().toISOString(),
     phone: data.phone,
     department: data.department,
-    ...(data.password ? { password: data.password } : {}),
   } as Admin;
 }
 
@@ -258,12 +257,10 @@ export async function createFirebaseAuthUser(email: string, password: string): P
 }
 
 function generateTempPassword(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let password = "";
-  for (let i = 0; i < 10; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  const bytes = new Uint8Array(14);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -424,7 +421,6 @@ export async function createAdmin(input: CreateAdminInput): Promise<Admin> {
   const adminData = {
     ...stripUndefined(input),
     uid,
-    password,
     status: "active",
     createdAt: now,
   };
@@ -677,7 +673,6 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         collegeId: input.collegeId,
         collegeName,
         uid,
-        password: tempPassword,
         role: user.role,
         status: "active",
         createdAt: now,
@@ -797,7 +792,6 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
           role: "faculty",
           status: "active",
           uid,
-          password: tempPassword,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
