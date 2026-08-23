@@ -142,18 +142,18 @@ export default function StudentLibrary() {
   const totalFine = overdueBooks.reduce((sum, b) => sum + b.fine, 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-white">Library</h1>
-          <p className="text-xs md:text-sm text-slate-400">
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Library</h1>
+          <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">
             Search books, check availability, and manage issued books
           </p>
         </div>
         <button
           onClick={refresh}
-          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           title="Refresh"
         >
           <RefreshCw className="w-5 h-5" />
@@ -165,41 +165,41 @@ export default function StudentLibrary() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-3 md:p-4"
+          className="rounded-xl border border-slate-200 dark:border-slate-700/30 bg-white dark:bg-slate-800/50 p-3 md:p-4 shadow-sm"
         >
           <Library className="w-4 h-4 md:w-5 md:h-5 text-teal-400 mb-2" />
-          <p className="text-xl md:text-2xl font-bold text-white">{books.length}</p>
-          <p className="text-xs text-slate-400">Total Books</p>
+          <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{books.length}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Total Books</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-3 md:p-4"
+          className="rounded-xl border border-slate-200 dark:border-slate-700/30 bg-white dark:bg-slate-800/50 p-3 md:p-4 shadow-sm"
         >
           <BookMarked className="w-4 h-4 md:w-5 md:h-5 text-blue-400 mb-2" />
-          <p className="text-xl md:text-2xl font-bold text-white">{activeBooks.length}</p>
-          <p className="text-xs text-slate-400">Issued to You</p>
+          <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{activeBooks.length}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Issued to You</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-3 md:p-4"
+          className="rounded-xl border border-slate-200 dark:border-slate-700/30 bg-white dark:bg-slate-800/50 p-3 md:p-4 shadow-sm"
         >
           <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-red-400 mb-2" />
-          <p className="text-xl md:text-2xl font-bold text-white">{overdueBooks.length}</p>
-          <p className="text-xs text-slate-400">Overdue</p>
+          <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{overdueBooks.length}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Overdue</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-3 md:p-4"
+          className="rounded-xl border border-slate-200 dark:border-slate-700/30 bg-white dark:bg-slate-800/50 p-3 md:p-4 shadow-sm"
         >
           <Clock className="w-4 h-4 md:w-5 md:h-5 text-amber-400 mb-2" />
-          <p className="text-xl md:text-2xl font-bold text-white">&#8377;{totalFine}</p>
-          <p className="text-xs text-slate-400">Total Fine</p>
+          <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">&#8377;{totalFine}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Total Fine</p>
         </motion.div>
       </div>
 
@@ -212,7 +212,7 @@ export default function StudentLibrary() {
             className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
               activeTab === tab
                 ? 'bg-teal-500/15 text-teal-400 border border-teal-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50'
             }`}
           >
             {tab === 'catalog' ? 'Book Catalog' : 'My Issued Books'}
@@ -231,7 +231,7 @@ export default function StudentLibrary() {
                 placeholder="Search by title, author, or ISBN..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
             </div>
             <div className="relative">
@@ -239,7 +239,7 @@ export default function StudentLibrary() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="pl-10 pr-8 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-white appearance-none focus:outline-none focus:border-teal-500/50 cursor-pointer"
+                className="pl-10 pr-8 py-2.5 bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-lg text-sm text-slate-900 dark:text-white appearance-none focus:outline-none focus:border-teal-500 cursor-pointer"
               >
                 {categories.map((c) => (
                   <option key={c} value={c}>
@@ -260,16 +260,16 @@ export default function StudentLibrary() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: index * 0.05 }}
-                  className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-4 md:p-5 hover:border-slate-600/50 transition-all"
+                  className="rounded-xl border border-slate-200 dark:border-slate-700/30 bg-white dark:bg-slate-800/50 p-4 md:p-5 hover:border-slate-300 dark:hover:border-slate-600/50 transition-all shadow-sm"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-slate-800/80 flex items-center justify-center shrink-0">
-                        <BookOpen className="w-5 h-5 text-slate-400" />
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-sm font-semibold text-white truncate">{book.title}</h3>
-                        <p className="text-xs text-slate-400">{book.author}</p>
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{book.title}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{book.author}</p>
                       </div>
                     </div>
                     <span
@@ -283,7 +283,7 @@ export default function StudentLibrary() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-400 mb-3">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 mb-3">
                     <div>
                       <span className="text-slate-500">ISBN:</span> {book.isbn}
                     </div>
@@ -299,7 +299,7 @@ export default function StudentLibrary() {
                     </div>
                   </div>
 
-                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-teal-500"
                       style={{
@@ -314,9 +314,9 @@ export default function StudentLibrary() {
 
           {filteredBooks.length === 0 && !loading && (
             <div className="text-center py-12 md:py-16">
-              <BookOpen className="w-10 h-10 md:w-12 md:h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No books found</p>
-              <p className="text-sm text-slate-500">Try adjusting your search</p>
+              <BookOpen className="w-10 h-10 md:w-12 md:h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-600 dark:text-slate-400">No books found</p>
+              <p className="text-sm text-slate-500 dark:text-slate-500">Try adjusting your search</p>
             </div>
           )}
         </>
@@ -325,13 +325,13 @@ export default function StudentLibrary() {
           {loading ? (
             <div className="text-center py-12 md:py-16">
               <div className="w-8 h-8 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-slate-400">Loading your library records...</p>
+              <p className="text-slate-600 dark:text-slate-400">Loading your library records...</p>
             </div>
           ) : issuedBooks.length === 0 ? (
             <div className="text-center py-12 md:py-16">
-              <BookOpen className="w-10 h-10 md:w-12 md:h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">No books issued</p>
-              <p className="text-sm text-slate-500">Visit the catalog to issue books</p>
+              <BookOpen className="w-10 h-10 md:w-12 md:h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-600 dark:text-slate-400">No books issued</p>
+              <p className="text-sm text-slate-500 dark:text-slate-500">Visit the catalog to issue books</p>
             </div>
           ) : (
             issuedBooks.map((book, index: number) => (
@@ -343,7 +343,7 @@ export default function StudentLibrary() {
                 className={`rounded-xl border p-4 md:p-5 ${
                   book.status === 'overdue'
                     ? 'border-red-500/30 bg-red-500/5'
-                    : 'border-slate-700/30 bg-slate-800/50'
+                    : 'border-slate-200 dark:border-slate-700/30 bg-white dark:bg-slate-800/50 shadow-sm'
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -360,17 +360,17 @@ export default function StudentLibrary() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-white truncate">{book.bookTitle}</h3>
-                      <p className="text-xs text-slate-400">Book ID: {book.bookId}</p>
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{book.bookTitle}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Book ID: {book.bookId}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-3 md:gap-4 text-xs">
-                    <div className="flex items-center gap-1.5 text-slate-400">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                       <Calendar className="w-3.5 h-3.5" />
                       <span>Issued: {book.issueDate}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-400">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                       <Clock className="w-3.5 h-3.5" />
                       <span
                         className={
@@ -381,7 +381,7 @@ export default function StudentLibrary() {
                       </span>
                     </div>
                     {book.returnDate && (
-                      <div className="flex items-center gap-1.5 text-slate-400">
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span>Returned: {book.returnDate}</span>
                       </div>
@@ -405,7 +405,7 @@ export default function StudentLibrary() {
                       book.status === 'overdue'
                         ? 'bg-red-500/15 text-red-400 border-red-500/20'
                         : book.status === 'returned'
-                        ? 'bg-slate-700/50 text-slate-400 border-slate-600/30'
+                        ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600/30'
                         : 'bg-teal-500/15 text-teal-400 border-teal-500/20'
                     }`}
                   >

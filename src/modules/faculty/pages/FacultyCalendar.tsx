@@ -115,34 +115,34 @@ export default function FacultyCalendar() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <Link to="/faculty" className="p-2 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all">
-            <ChevronLeft className="w-5 h-5 text-slate-300" />
+          <Link to="/faculty" className="p-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all shadow-sm">
+            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <CalendarIcon className="w-6 h-6 text-teal-400" />
               Calendar
             </h1>
-            <p className="text-slate-400 text-sm">View schedule and manage events</p>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">View schedule and manage events</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={goToToday}
-            className="px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm font-medium hover:bg-slate-700/50 transition-all"
+            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all shadow-sm"
           >
             Today
           </button>
-          <div className="flex bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+          <div className="flex bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden shadow-sm">
             <button
               onClick={() => setViewMode('month')}
-              className={`px-3 py-2 text-sm font-medium transition-all ${viewMode === 'month' ? 'bg-teal-500/20 text-teal-400' : 'text-slate-400 hover:text-white'}`}
+              className={`px-3 py-2 text-sm font-medium transition-all ${viewMode === 'month' ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Month
             </button>
             <button
               onClick={() => setViewMode('week')}
-              className={`px-3 py-2 text-sm font-medium transition-all ${viewMode === 'week' ? 'bg-teal-500/20 text-teal-400' : 'text-slate-400 hover:text-white'}`}
+              className={`px-3 py-2 text-sm font-medium transition-all ${viewMode === 'week' ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Week
             </button>
@@ -154,18 +154,18 @@ export default function FacultyCalendar() {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigateMonth(-1)}
-          className="p-2 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all"
+          className="p-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all shadow-sm"
         >
-          <ChevronLeft className="w-5 h-5 text-slate-300" />
+          <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         </button>
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
           {MONTHS[month]} {year}
         </h2>
         <button
           onClick={() => navigateMonth(1)}
-          className="p-2 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all"
+          className="p-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all shadow-sm"
         >
-          <ChevronRight className="w-5 h-5 text-slate-300" />
+          <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         </button>
       </div>
 
@@ -173,7 +173,7 @@ export default function FacultyCalendar() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar Grid */}
           <div className="lg:col-span-2">
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4">
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4 shadow-sm">
               {/* Day Headers */}
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {DAYS.map(day => (
@@ -196,12 +196,12 @@ export default function FacultyCalendar() {
                       onClick={() => setSelectedDate(day.fullDate)}
                       className={`aspect-square rounded-xl p-1.5 flex flex-col items-center justify-start transition-all relative ${
                         day.month !== 'current'
-                          ? 'text-slate-600 hover:bg-slate-800/30'
+                          ? 'text-slate-400 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/30'
                           : isSelected
-                          ? 'bg-teal-500/20 border border-teal-500/30 text-teal-400'
+                          ? 'bg-teal-500/20 border border-teal-500/30 text-teal-600 dark:text-teal-400'
                           : isToday
-                          ? 'bg-teal-500/10 border border-teal-500/20 text-teal-400'
-                          : 'text-slate-300 hover:bg-slate-700/30'
+                          ? 'bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/30'
                       }`}
                     >
                       <span className={`text-sm font-medium ${isToday ? 'font-bold' : ''}`}>{day.date}</span>
@@ -224,7 +224,7 @@ export default function FacultyCalendar() {
               {Object.entries(eventColors).map(([type, colorClass]) => (
                 <div key={type} className="flex items-center gap-1.5">
                   <div className={`w-2.5 h-2.5 rounded-full ${eventDotColors[type]}`} />
-                  <span className="text-xs text-slate-400 capitalize">{type}</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 capitalize">{type}</span>
                 </div>
               ))}
             </div>
@@ -232,8 +232,8 @@ export default function FacultyCalendar() {
 
           {/* Selected Day Events */}
           <div>
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5">
-              <h3 className="font-semibold text-white mb-1">
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                 {selectedDate
                   ? new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                   : 'Select a date'}
@@ -247,7 +247,7 @@ export default function FacultyCalendar() {
               <div className="space-y-2">
                 {selectedEvents.length === 0 ? (
                   <div className="text-center py-8">
-                    <Sun className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                    <Sun className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">No events scheduled</p>
                   </div>
                 ) : (
@@ -269,8 +269,8 @@ export default function FacultyCalendar() {
             </div>
 
             {/* Upcoming Events Summary */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 mt-4">
-              <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 mt-4 shadow-sm">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-400" />
                 Upcoming
               </h3>
@@ -280,10 +280,10 @@ export default function FacultyCalendar() {
                   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                   .slice(0, 4)
                   .map(event => (
-                    <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700/30 transition-colors">
+                    <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors">
                       <div className={`w-1 h-8 rounded-full ${eventDotColors[event.type]}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{event.title}</p>
+                        <p className="text-sm text-slate-900 dark:text-white truncate">{event.title}</p>
                         <p className="text-xs text-slate-500">{event.date} • {event.startTime}</p>
                       </div>
                     </div>
@@ -294,14 +294,14 @@ export default function FacultyCalendar() {
         </div>
       ) : (
         /* Week View */
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 overflow-x-auto">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4 overflow-x-auto shadow-sm">
           <div className="min-w-[800px]">
             {/* Week Header */}
             <div className="grid grid-cols-7 gap-2 mb-4">
               {weekDays.map((day, i) => (
                 <div key={i} className={`text-center p-3 rounded-xl ${day.isToday ? 'bg-teal-500/10 border border-teal-500/20' : ''}`}>
                   <p className="text-xs text-slate-500">{day.dayName}</p>
-                  <p className={`text-lg font-bold ${day.isToday ? 'text-teal-400' : 'text-white'}`}>{day.date}</p>
+                  <p className={`text-lg font-bold ${day.isToday ? 'text-teal-600 dark:text-teal-400' : 'text-slate-900 dark:text-white'}`}>{day.date}</p>
                 </div>
               ))}
             </div>
@@ -311,10 +311,10 @@ export default function FacultyCalendar() {
               {weekDays.map((day, i) => {
                 const dayEvents = getEventsForDate(day.fullDate)
                 return (
-                  <div key={i} className="min-h-[300px] bg-slate-700/20 rounded-xl p-2 space-y-2">
+                  <div key={i} className="min-h-[300px] bg-slate-50 dark:bg-slate-700/20 rounded-xl p-2 space-y-2">
                     {dayEvents.length === 0 ? (
                       <div className="h-full flex items-center justify-center">
-                        <p className="text-xs text-slate-600">No events</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-600">No events</p>
                       </div>
                     ) : (
                       dayEvents.map(event => (

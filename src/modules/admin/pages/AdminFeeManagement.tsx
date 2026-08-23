@@ -10,14 +10,15 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
+import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 
 // ─── Status Config ─────────────────────────────────────
 const STATUS_CONFIG: Record<FeeStatus, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-  paid: { label: 'Paid', color: 'text-green-400', bg: 'bg-green-500/15', icon: CheckCircle },
-  pending: { label: 'Pending', color: 'text-amber-400', bg: 'bg-amber-500/15', icon: Clock },
-  overdue: { label: 'Overdue', color: 'text-red-400', bg: 'bg-red-500/15', icon: AlertTriangle },
-  partial: { label: 'Partial', color: 'text-blue-400', bg: 'bg-blue-500/15', icon: Wallet },
-  waived: { label: 'Waived', color: 'text-purple-400', bg: 'bg-purple-500/15', icon: XCircle },
+  paid: { label: 'Paid', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/15', icon: CheckCircle },
+  pending: { label: 'Pending', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', icon: Clock },
+  overdue: { label: 'Overdue', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/15', icon: AlertTriangle },
+  partial: { label: 'Partial', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/15', icon: Wallet },
+  waived: { label: 'Waived', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/15', icon: XCircle },
 }
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -69,7 +70,7 @@ function StatCard({ label, value, subtext, icon: Icon, color, trend, trendUp, lo
           <Icon className="w-5 h-5" />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`flex items-center gap-1 text-xs font-medium ${trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
             {trend}
           </div>
@@ -141,11 +142,11 @@ function CollectPaymentModal({
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-sm text-vriddhi-muted">Paid So Far</span>
-              <span className="text-sm font-medium text-green-400">₹{payment.paidAmount.toLocaleString('en-IN')}</span>
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">₹{payment.paidAmount.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-vriddhi-border">
               <span className="text-sm text-vriddhi-muted">Remaining</span>
-              <span className="text-sm font-bold text-amber-400">₹{remaining.toLocaleString('en-IN')}</span>
+              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">₹{remaining.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
@@ -231,7 +232,7 @@ function WaiveFeeModal({
       <div className="glass-card w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-vriddhi-border">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-purple-400" />
+            <XCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             Waive Fee
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
@@ -330,7 +331,7 @@ function PaymentDetailModal({ payment, onClose }: { payment: FeePayment; onClose
             </div>
             <div className="p-3 bg-vriddhi-dark/30 rounded-lg">
               <p className="text-xs text-vriddhi-muted">Paid Amount</p>
-              <p className={`text-sm font-bold ${payment.paidAmount > 0 ? 'text-green-400' : 'text-vriddhi-muted'}`}>
+              <p className={`text-sm font-bold ${payment.paidAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-vriddhi-muted'}`}>
                 ₹{payment.paidAmount.toLocaleString('en-IN')}
               </p>
             </div>
@@ -373,6 +374,9 @@ function PaymentDetailModal({ payment, onClose }: { payment: FeePayment; onClose
 
 // ─── Main Component ──────────────────────────────────────
 export default function AdminFeeManagement() {
+  const { resolvedMode } = useThemeMode()
+  const chartGrid = resolvedMode === 'dark' ? '#334155' : '#e2e8f0'
+  const chartAxis = resolvedMode === 'dark' ? '#94a3b8' : '#64748b'
   const {
     loading,
     filters,
@@ -482,7 +486,7 @@ export default function AdminFeeManagement() {
               value={`₹${summary.totalDue.toLocaleString('en-IN')}`}
               subtext="Across all students"
               icon={DollarSign}
-              color="bg-blue-500 text-blue-400"
+              color="bg-blue-500 text-blue-600 dark:text-blue-400"
               loading={loading}
             />
             <StatCard
@@ -490,7 +494,7 @@ export default function AdminFeeManagement() {
               value={`₹${summary.totalPaid.toLocaleString('en-IN')}`}
               subtext={`${collectionRate}% collection rate`}
               icon={CheckCircle}
-              color="bg-green-500 text-green-400"
+              color="bg-green-500 text-green-600 dark:text-green-400"
               trend="+8.2%"
               trendUp={true}
               loading={loading}
@@ -500,7 +504,7 @@ export default function AdminFeeManagement() {
               value={`₹${(summary.totalPending + summary.totalOverdue).toLocaleString('en-IN')}`}
               subtext={`${summary.countPending + summary.countOverdue} pending records`}
               icon={Clock}
-              color="bg-amber-500 text-amber-400"
+              color="bg-amber-500 text-amber-600 dark:text-amber-400"
               loading={loading}
             />
             <StatCard
@@ -508,7 +512,7 @@ export default function AdminFeeManagement() {
               value={`₹${summary.totalOverdue.toLocaleString('en-IN')}`}
               subtext={`${summary.countOverdue} overdue records`}
               icon={AlertTriangle}
-              color="bg-red-500 text-red-400"
+              color="bg-red-500 text-red-600 dark:text-red-400"
               trend="-2.1%"
               trendUp={false}
               loading={loading}
@@ -520,21 +524,21 @@ export default function AdminFeeManagement() {
             <div className="glass-card p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-vriddhi-muted">Paid Records</span>
-                <CheckCircle className="w-4 h-4 text-green-400" />
+                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
               </div>
               <p className="text-xl font-bold text-slate-900 dark:text-white">{summary.countPaid}</p>
             </div>
             <div className="glass-card p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-vriddhi-muted">Partial Payments</span>
-                <Wallet className="w-4 h-4 text-blue-400" />
+                <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <p className="text-xl font-bold text-slate-900 dark:text-white">{summary.countPartial}</p>
             </div>
             <div className="glass-card p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-vriddhi-muted">Waived</span>
-                <XCircle className="w-4 h-4 text-purple-400" />
+                <XCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
               <p className="text-xl font-bold text-slate-900 dark:text-white">₹{summary.totalWaived.toLocaleString('en-IN')}</p>
             </div>
@@ -560,9 +564,9 @@ export default function AdminFeeManagement() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={courseSummary} barGap={4}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                    <XAxis dataKey="course" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+                    <XAxis dataKey="course" stroke={chartAxis} fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke={chartAxis} fontSize={12} tickLine={false} axisLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Bar dataKey="totalDue" name="Total Due" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
@@ -652,7 +656,7 @@ export default function AdminFeeManagement() {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-sm font-bold text-slate-900 dark:text-white">₹{cat.totalDue.toLocaleString('en-IN')}</p>
-                          <p className="text-[10px] text-green-400">₹{cat.totalPaid.toLocaleString('en-IN')} collected</p>
+                          <p className="text-[10px] text-green-600 dark:text-green-400">₹{cat.totalPaid.toLocaleString('en-IN')} collected</p>
                         </div>
                       </div>
                     )
@@ -678,9 +682,9 @@ export default function AdminFeeManagement() {
                         <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                    <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+                    <XAxis dataKey="month" stroke={chartAxis} fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke={chartAxis} fontSize={12} tickLine={false} axisLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Area type="monotone" dataKey="collected" name="Collected" stroke={COLORS.primary} fillOpacity={1} fill="url(#colorCollected)" strokeWidth={2} />
                     <Area type="monotone" dataKey="target" name="Target" stroke={COLORS.accent} strokeDasharray="5 5" fillOpacity={0} strokeWidth={2} />
@@ -827,7 +831,7 @@ export default function AdminFeeManagement() {
                               ₹{payment.amount.toLocaleString('en-IN')}
                             </td>
                             <td className="table-cell text-right">
-                              <span className={payment.paidAmount > 0 ? 'text-green-400 font-medium' : 'text-vriddhi-muted'}>
+                              <span className={payment.paidAmount > 0 ? 'text-green-600 dark:text-green-400 font-medium' : 'text-vriddhi-muted'}>
                                 ₹{payment.paidAmount.toLocaleString('en-IN')}
                               </span>
                             </td>
@@ -855,7 +859,7 @@ export default function AdminFeeManagement() {
                                     className="p-1.5 hover:bg-green-500/20 rounded-lg transition-colors"
                                     title="Collect Payment"
                                   >
-                                    <CreditCard className="w-4 h-4 text-green-400" />
+                                    <CreditCard className="w-4 h-4 text-green-600 dark:text-green-400" />
                                   </button>
                                 )}
                                 {(payment.status === 'pending' || payment.status === 'overdue') && (
@@ -864,7 +868,7 @@ export default function AdminFeeManagement() {
                                     className="p-1.5 hover:bg-purple-500/20 rounded-lg transition-colors"
                                     title="Waive Fee"
                                   >
-                                    <XCircle className="w-4 h-4 text-purple-400" />
+                                    <XCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                   </button>
                                 )}
                                 <button
@@ -886,7 +890,7 @@ export default function AdminFeeManagement() {
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                   <div>
                                     <p className="text-[10px] text-vriddhi-muted uppercase tracking-wider">Remaining</p>
-                                    <p className="text-sm font-bold text-amber-400">₹{remaining.toLocaleString('en-IN')}</p>
+                                    <p className="text-sm font-bold text-amber-600 dark:text-amber-400">₹{remaining.toLocaleString('en-IN')}</p>
                                   </div>
                                   {payment.paidDate && (
                                     <div>
@@ -941,28 +945,28 @@ export default function AdminFeeManagement() {
               label="Overdue Count"
               value={overduePayments.length}
               icon={AlertTriangle}
-              color="bg-red-500 text-red-400"
+              color="bg-red-500 text-red-600 dark:text-red-400"
               loading={loading}
             />
             <StatCard
               label="Overdue Amount"
               value={`₹${overduePayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString('en-IN')}`}
               icon={DollarSign}
-              color="bg-red-500 text-red-400"
+              color="bg-red-500 text-red-600 dark:text-red-400"
               loading={loading}
             />
             <StatCard
               label="Students Affected"
               value={new Set(overduePayments.map(p => p.studentId)).size}
               icon={Users}
-              color="bg-amber-500 text-amber-400"
+              color="bg-amber-500 text-amber-600 dark:text-amber-400"
               loading={loading}
             />
             <StatCard
               label="Avg Overdue"
               value={`₹${overduePayments.length ? Math.round(overduePayments.reduce((sum, p) => sum + p.amount, 0) / overduePayments.length).toLocaleString('en-IN') : 0}`}
               icon={TrendingUp}
-              color="bg-blue-500 text-blue-400"
+              color="bg-blue-500 text-blue-600 dark:text-blue-400"
               loading={loading}
             />
           </div>
@@ -970,7 +974,7 @@ export default function AdminFeeManagement() {
           <div className="glass-card overflow-hidden">
             <div className="p-4 border-b border-vriddhi-border">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 Overdue Payments
               </h3>
             </div>
@@ -1001,7 +1005,7 @@ export default function AdminFeeManagement() {
                           <td className="table-cell">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                                <span className="text-xs font-bold text-red-400">
+                                <span className="text-xs font-bold text-red-600 dark:text-red-400">
                                   {payment.studentName.split(' ').map(n => n[0]).join('')}
                                 </span>
                               </div>
@@ -1017,12 +1021,12 @@ export default function AdminFeeManagement() {
                           <td className="table-cell">
                             <span className="capitalize text-vriddhi-muted">{payment.category}</span>
                           </td>
-                          <td className="table-cell text-right font-bold text-red-400">
+                          <td className="table-cell text-right font-bold text-red-600 dark:text-red-400">
                             ₹{payment.amount.toLocaleString('en-IN')}
                           </td>
                           <td className="table-cell text-center text-vriddhi-muted">{payment.dueDate}</td>
                           <td className="table-cell text-center">
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/15 text-red-400">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/15 text-red-600 dark:text-red-400">
                               {daysOverdue} days
                             </span>
                           </td>
@@ -1030,13 +1034,13 @@ export default function AdminFeeManagement() {
                             <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => { setSelectedPayment(payment); setModalMode('collect') }}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/25 transition-colors"
+                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 transition-colors"
                               >
                                 Collect
                               </button>
                               <button
                                 onClick={() => { setSelectedPayment(payment); setModalMode('waive') }}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition-colors"
+                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/15 text-purple-600 dark:text-purple-400 hover:bg-purple-500/25 transition-colors"
                               >
                                 Waive
                               </button>

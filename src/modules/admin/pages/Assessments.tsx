@@ -98,7 +98,7 @@ export default function Assessments() {
     <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, color: 'white' }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
           Assessments
         </Typography>
         <Button
@@ -118,16 +118,18 @@ export default function Assessments() {
             key={s.label}
             sx={{
               flex: '1 1 140px',
-              bgcolor: '#1e293b',
+              bgcolor: 'background.paper',
               borderRadius: 2,
               p: 2,
+              border: '1px solid',
+              borderColor: 'divider',
               borderLeft: `4px solid ${s.color}`,
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: 'white' }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
               {s.value}
             </Typography>
-            <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {s.label}
             </Typography>
           </Box>
@@ -135,7 +137,7 @@ export default function Assessments() {
       </Box>
 
       {/* Tabs */}
-      <Paper sx={{ bgcolor: '#1e293b', mb: 2 }}>
+      <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mb: 2 }}>
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
@@ -143,30 +145,30 @@ export default function Assessments() {
           indicatorColor="primary"
           sx={{ px: 2, pt: 1 }}
         >
-          <Tab label="All" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-          <Tab label="Draft" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-          <Tab label="Published" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-          <Tab label="Active" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-          <Tab label="Completed" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-          <Tab label="Archived" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
+          <Tab label="All" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+          <Tab label="Draft" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+          <Tab label="Published" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+          <Tab label="Active" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+          <Tab label="Completed" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+          <Tab label="Archived" sx={{ color: 'text.secondary', textTransform: 'none' }} />
         </Tabs>
       </Paper>
 
       {/* Table */}
-      <Paper sx={{ bgcolor: '#1e293b', p: 2 }}>
+      <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', p: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
             <CircularProgress size={32} sx={{ color: '#0d9488' }} />
           </Box>
         ) : assessments.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 6 }}>
-            <Typography sx={{ color: '#64748b' }}>No assessments found.</Typography>
+            <Typography sx={{ color: 'text.secondary' }}>No assessments found.</Typography>
           </Box>
         ) : (
           <TableContainer>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ '& th': { color: '#94a3b8', borderBottom: '1px solid #334155', fontWeight: 600 } }}>
+                <TableRow sx={{ '& th': { color: 'text.secondary', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 600 } }}>
                   <TableCell>Title</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Status</TableCell>
@@ -179,13 +181,13 @@ export default function Assessments() {
                 {assessments.map((a) => (
                   <TableRow
                     key={a.id}
-                    sx={{ '& td': { color: '#e2e8f0', borderBottom: '1px solid #334155' }, '&:hover': { bgcolor: '#253449' } }}
+                    sx={{ '& td': { color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider' }, '&:hover': { bgcolor: 'action.hover' } }}
                   >
                     <TableCell>
-                      <Typography sx={{ fontWeight: 600, color: 'white' }}>
+                      <Typography sx={{ fontWeight: 600, color: 'text.primary' }}>
                         {a.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                         {a.courseCode || a.courseName || a.subjectId}
                       </Typography>
                     </TableCell>
@@ -207,34 +209,34 @@ export default function Assessments() {
                     <TableCell align="right">
                       <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
                         <Tooltip title="View">
-                          <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={() => navigate(`/admin/assessments/${a.id}`)}>
+                          <IconButton size="small" sx={{ color: 'text.secondary' }} onClick={() => navigate(`/admin/assessments/${a.id}`)}>
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                         {a.status === 'draft' && (
                           <Tooltip title="Publish">
-                            <IconButton size="small" sx={{ color: '#38bdf8' }} onClick={() => handlePublish(a.id)}>
+                            <IconButton size="small" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#38bdf8' : '#0369a1' })} onClick={() => handlePublish(a.id)}>
                               <PlayArrowIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}
                         {a.status === 'published' && (
                           <Tooltip title="Activate">
-                            <IconButton size="small" sx={{ color: '#34d399' }} onClick={() => handleActivate(a.id)}>
+                            <IconButton size="small" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#34d399' : '#047857' })} onClick={() => handleActivate(a.id)}>
                               <PlayArrowIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}
                         {(a.status === 'draft' || a.status === 'published') && (
                           <Tooltip title="Edit">
-                            <IconButton size="small" sx={{ color: '#fbbf24' }} onClick={() => navigate(`/admin/papers/builder?edit=${a.id}`)}>
+                            <IconButton size="small" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#fbbf24' : '#b45309' })} onClick={() => navigate(`/admin/papers/builder?edit=${a.id}`)}>
                               <EditIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}
                         {a.status !== 'archived' && a.status !== 'active' && (
                           <Tooltip title="Archive">
-                            <IconButton size="small" sx={{ color: '#f87171' }} onClick={() => handleArchive(a.id)}>
+                            <IconButton size="small" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#f87171' : '#dc2626' })} onClick={() => handleArchive(a.id)}>
                               <ArchiveIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>

@@ -14,6 +14,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from 'recharts'
 import { useDashboardData } from '../../admin/hooks/useDashboardData'
+import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 
 // ─── Color Palette ─────────────────────────────────────
 const COLORS = {
@@ -77,7 +78,7 @@ function StatCard({
           <Icon className="w-5 h-5" style={{ color: 'inherit' }} />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`flex items-center gap-1 text-xs font-medium ${trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
             {trend}
           </div>
@@ -95,7 +96,16 @@ function StatCard({
 }
 
 // ─── Main Component ──────────────────────────────────────
+function useChartTheme() {
+  const { resolvedMode } = useThemeMode();
+  return {
+    grid: resolvedMode === 'dark' ? '#334155' : '#e2e8f0',
+    axis: resolvedMode === 'dark' ? '#94a3b8' : '#64748b',
+  };
+}
+
 export default function Analytics() {
+  const chartTheme = useChartTheme();
   const {
     loading,
     filters,
@@ -327,9 +337,9 @@ export default function Analytics() {
           </h1>
           <p className="text-vriddhi-muted">Comprehensive insights into academic performance, attendance, and trends</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap text-gray-400">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 bg-vriddhi-card border border-vriddhi-border rounded-xl px-3 py-2">
-            <Filter className="w-4 h-4 text-vriddhi-muted text-gray-400" />
+            <Filter className="w-4 h-4 text-vriddhi-muted" />
             <select
               value={filters.studentBranch}
               onChange={(e) => updateFilters({ studentBranch: e.target.value })}
@@ -357,7 +367,7 @@ export default function Analytics() {
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-vriddhi-accent text-slate-900 dark:text-white rounded-xl text-sm hover:bg-teal-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-vriddhi-accent text-white rounded-xl text-sm hover:bg-teal-600 transition-colors"
           >
             <Download size={16} />
             Export
@@ -413,9 +423,9 @@ export default function Analytics() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={computedData.coursePerformance} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="course" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+                <XAxis dataKey="course" stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 <Bar dataKey="avg" name="Average" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
@@ -479,9 +489,9 @@ export default function Analytics() {
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={computedData.monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[60, 100]} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+                <XAxis dataKey="month" stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} domain={[60, 100]} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 {Object.keys(computedData.monthlyTrend[0] || {}).filter(k => k !== 'month').map((key, i) => (
@@ -509,9 +519,9 @@ export default function Analytics() {
             <>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={weeklyAttendance}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+                  <XAxis dataKey="day" stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                   <Bar dataKey="present" name="Present" fill={COLORS.success} radius={[4, 4, 0, 0]} stackId="a" />
@@ -523,7 +533,7 @@ export default function Analytics() {
                   <div key={branch} className="text-center">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white">{branch}</p>
                     <p className="text-xs text-vriddhi-muted mt-1">{data.totalPresent} present / {data.totalAbsent} absent</p>
-                    <p className="text-xs text-green-400 mt-1 font-medium">{data.totalStudents > 0 ? ((data.totalPresent / data.totalStudents) * 100).toFixed(1) : 0}%</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">{data.totalStudents > 0 ? ((data.totalPresent / data.totalStudents) * 100).toFixed(1) : 0}%</p>
                   </div>
                 ))}
               </div>
@@ -548,9 +558,9 @@ export default function Analytics() {
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={computedData.batchPerformance} layout="vertical" barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
-                <XAxis type="number" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
-                <YAxis dataKey="batch" type="category" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} width={50} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} horizontal={false} />
+                <XAxis type="number" stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} />
+                <YAxis dataKey="batch" type="category" stroke={chartTheme.axis} fontSize={12} tickLine={false} axisLine={false} width={50} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 <Bar dataKey="avg" name="Avg Score" fill={COLORS.primary} radius={[0, 4, 4, 0]} />
@@ -715,7 +725,7 @@ export default function Analytics() {
                     <td className="table-cell text-center">{mentor.students}</td>
                     <td className="table-cell text-center">{mentor.classes}</td>
                     <td className="table-cell text-center">
-                      <span className={`font-semibold ${mentor.avg >= 80 ? 'text-green-400' : mentor.avg >= 60 ? 'text-amber-400' : 'text-red-400'}`}>{mentor.avg}%</span>
+                      <span className={`font-semibold ${mentor.avg >= 80 ? 'text-green-600 dark:text-green-400' : mentor.avg >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>{mentor.avg}%</span>
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center justify-center gap-2">
@@ -729,9 +739,9 @@ export default function Analytics() {
                     </td>
                     <td className="table-cell text-center">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                        mentor.avg >= 80 ? 'bg-green-500/15 text-green-400 ring-1 ring-green-500/20' :
+                        mentor.avg >= 80 ? 'bg-green-500/15 text-green-600 dark:text-green-400 ring-1 ring-green-500/20' :
                         mentor.avg >= 60 ? 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/20' :
-                        'bg-red-500/15 text-red-400 ring-1 ring-red-500/20'
+                        'bg-red-500/15 text-red-600 dark:text-red-400 ring-1 ring-red-500/20'
                       }`}>
                         {mentor.avg >= 80 ? 'Excellent' : mentor.avg >= 60 ? 'Good' : 'Needs Improvement'}
                       </span>

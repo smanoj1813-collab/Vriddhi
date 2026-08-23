@@ -103,10 +103,10 @@ const CreateCollege: React.FC = () => {
   }
 
   const inputClasses = (fieldName: keyof FormData) =>
-    `w-full px-4 py-2.5 bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
+    `w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
      focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
-     placeholder-slate-500
-     ${errors[fieldName] ? 'border-red-500 bg-red-500/10' : 'border-slate-700 hover:border-slate-600'}`
+     placeholder-slate-400 dark:placeholder-slate-500
+     ${errors[fieldName] ? 'border-red-500 bg-red-500/10' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'}`
 
   const labelClasses = 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'
   const requiredMark = <span className="text-red-600 dark:text-red-400">*</span>
@@ -181,11 +181,11 @@ const CreateCollege: React.FC = () => {
                 onChange={handleChange}
                 className={`${inputClasses('plan')} appearance-none`}
               >
-                <option value="basic" className="bg-slate-800">Basic</option>
-                <option value="standard" className="bg-slate-800">Standard</option>
-                <option value="premium" className="bg-slate-800">Premium</option>
-                <option value="enterprise" className="bg-slate-800">Enterprise</option>
-                <option value="pro" className="bg-slate-800">Pro</option>
+                <option value="basic">Basic</option>
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
+                <option value="pro">Pro</option>
               </select>
             </div>
           </div>

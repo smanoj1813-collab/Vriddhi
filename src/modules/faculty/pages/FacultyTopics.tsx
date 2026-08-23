@@ -20,9 +20,9 @@ interface StatusConfigItem {
 const statusConfig: Record<StatusFilter, StatusConfigItem> = {
   all: {
     label: 'All',
-    color: 'text-slate-300',
-    bg: 'bg-slate-700/10',
-    border: 'border-slate-700/20',
+    color: 'text-slate-700 dark:text-slate-300',
+    bg: 'bg-slate-500/10 dark:bg-slate-700/10',
+    border: 'border-slate-300 dark:border-slate-700/20',
     icon: BookOpen
   },
   planned: {
@@ -229,7 +229,7 @@ export default function FacultyTopics() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
+          className="p-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all shadow-sm"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
@@ -247,7 +247,7 @@ export default function FacultyTopics() {
           </div>
           <button
             onClick={refresh}
-            className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
+            className="p-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all shadow-sm"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -264,7 +264,7 @@ export default function FacultyTopics() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <div className="p-4 rounded-xl glass-card/50">
+        <div className="p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Topics</p>
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
         </div>
@@ -316,7 +316,7 @@ export default function FacultyTopics() {
               placeholder="Search topics..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
             />
           </div>
           <button
@@ -346,11 +346,11 @@ export default function FacultyTopics() {
           return (
             <div
               key={topic.id}
-              className={`rounded-xl bg-slate-800/50 border transition-all ${
+              className={`rounded-xl bg-white dark:bg-slate-800/50 border shadow-sm transition-all ${
                 topic.status === 'delayed' ? 'border-rose-500/20' :
                 topic.status === 'completed' ? 'border-emerald-500/20' :
                 topic.status === 'in-progress' ? 'border-amber-500/20' :
-                'border-slate-700/50'
+                'border-slate-200 dark:border-slate-700/50'
               }`}
             >
               {/* Topic Header */}
@@ -397,7 +397,7 @@ export default function FacultyTopics() {
 
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-slate-700/50 pt-4">
+                <div className="px-4 pb-4 border-t border-slate-200 dark:border-slate-700/50 pt-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
@@ -466,7 +466,7 @@ export default function FacultyTopics() {
                           <span className="text-xs text-slate-600 dark:text-slate-400">Progress</span>
                           <span className={`text-xs font-medium ${config.color}`}>{config.label}</span>
                         </div>
-                        <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${
                               topic.status === 'completed' ? 'bg-emerald-500 w-full' :
@@ -507,7 +507,7 @@ export default function FacultyTopics() {
         })}
 
         {!loading && topics.length === 0 && (
-          <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
+          <div className="p-12 text-center rounded-xl bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed">
             <BookOpen className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-slate-600 dark:text-slate-400">No topics found</p>
             <button
@@ -635,7 +635,7 @@ function TopicFormModal({
               placeholder="e.g., Binary Search Trees"
               value={formData.title}
               onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
             />
           </div>
 
@@ -646,7 +646,7 @@ function TopicFormModal({
               placeholder="Brief description of the topic..."
               value={formData.description}
               onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 resize-none"
             />
           </div>
 
@@ -657,7 +657,7 @@ function TopicFormModal({
                 type="text"
                 value={formData.subject}
                 onChange={e => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
             </div>
             <div>
@@ -665,7 +665,7 @@ function TopicFormModal({
               <select
                 value={formData.course}
                 onChange={e => setFormData(prev => ({ ...prev, course: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               >
                 <option>BCom</option>
                 <option>BA</option>
@@ -682,7 +682,7 @@ function TopicFormModal({
               <select
                 value={formData.batch}
                 onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               >
                 <option>2023-2024</option>
                 <option>2024-2025</option>
@@ -694,7 +694,7 @@ function TopicFormModal({
               <select
                 value={formData.division}
                 onChange={e => setFormData(prev => ({ ...prev, division: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               >
                 <option>A</option>
                 <option>B</option>
@@ -710,7 +710,7 @@ function TopicFormModal({
                 type="date"
                 value={formData.plannedDate}
                 onChange={e => setFormData(prev => ({ ...prev, plannedDate: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
             </div>
             <div>
@@ -721,7 +721,7 @@ function TopicFormModal({
                 max={300}
                 value={formData.duration}
                 onChange={e => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
-                className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
             </div>
           </div>
@@ -731,7 +731,7 @@ function TopicFormModal({
             <select
               value={formData.status}
               onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as TopicStatus }))}
-              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
             >
               <option value="planned">Planned</option>
               <option value="in-progress">In Progress</option>
@@ -750,7 +750,7 @@ function TopicFormModal({
                 value={resourceInput}
                 onChange={e => setResourceInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onAddResource(); } }}
-                className="flex-1 px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+                className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               />
               <button
                 onClick={onAddResource}
@@ -778,7 +778,7 @@ function TopicFormModal({
               placeholder="Faculty notes..."
               value={formData.notes}
               onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg glass-card/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 resize-none"
             />
           </div>
 
