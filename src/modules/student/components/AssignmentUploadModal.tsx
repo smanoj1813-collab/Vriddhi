@@ -1,16 +1,16 @@
 // src/modules/student/components/AssignmentUploadModal.tsx
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, File, Image, Loader2, CheckCircle2, AlertTriangle, Eye, FileText } from 'lucide-react';
+import { X, Upload, File, Image as ImageIcon, Loader2, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
 import type { Assignment } from '../types/student';
 import {
   submitAssignmentWithFiles,
   validateFile,
   formatFileSize,
-  getAllowedFileTypes,
   isImageFile,
-  type ParsedImageContent,
-} from '../services/studentService';
+} from '../services/assignmentService';
+import { useAuth } from '../../auth/context/AuthContext';
+import { useStudentProfile } from '../hooks/useStudentProfile';
 
 interface AssignmentUploadModalProps {
   assignment: Assignment;
@@ -20,17 +20,24 @@ interface AssignmentUploadModalProps {
 }
 
 export default function AssignmentUploadModal({ assignment, isOpen, onClose, onSubmit }: AssignmentUploadModalProps) {
+  const { user } = useAuth();
+  const { profile } = useStudentProfile(user?.uid);
+  const studentId = profile?.id || user?.uid || '';
+
   const [files, setFiles] = useState<File[]>([]);
   const [comment, setComment] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [parsedImages, setParsedImages] = useState<Map<string, ParsedImageContent>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const allowedTypes = getAllowedFileTypes(assignment.submissionType);
+  const allowedTypes = [
+    '.pdf', '.doc', '.docx', '.txt',
+    '.jpg', '.jpeg', '.png', '.gif', '.webp',
+    '.zip', '.ppt', '.pptx', '.xls', '.xlsx',
+  ];
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -55,7 +62,7 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
     const validFiles: File[] = [];
 
     for (const file of newFiles) {
-      const validation = validateFile(file, allowedTypes);
+      const validation = validateFile(file);
       if (validation.valid) {
         validFiles.push(file);
       } else {
@@ -70,13 +77,13 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleImageParsed = (fileName: string, content: ParsedImageContent) => {
-    setParsedImages(prev => new Map(prev).set(fileName, content));
-  };
-
   const handleSubmit = async () => {
     if (files.length === 0) {
       setError('Please select at least one file');
+      return;
+    }
+    if (!studentId) {
+      setError('Your profile is still loading. Please try again in a moment.');
       return;
     }
 
@@ -84,17 +91,15 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
     setError(null);
 
     try {
-      await submitAssignmentWithFiles(assignment.id, files, comment, {
-        parseImages: true,
+      await submitAssignmentWithFiles(assignment.id, studentId, files, comment, {
         onProgress: setUploadProgress,
-        onImageParsed: handleImageParsed,
       });
 
       setSuccess(true);
       setTimeout(() => {
         onSubmit(assignment.id);
         onClose();
-      }, 1500);
+      }, 1200);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -108,7 +113,6 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
     setError(null);
     setSuccess(false);
     setUploadProgress(0);
-    setParsedImages(new Map());
   };
 
   if (!isOpen) return null;
@@ -202,17 +206,12 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
                         className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/30"
                       >
                         <div className="p-2 rounded-lg bg-slate-700/50">
-                          {isImageFile(file.name) ? <Image size={16} className="text-purple-400" /> : <File size={16} className="text-blue-400" />}
+                          {isImageFile(file.name) ? <ImageIcon size={16} className="text-purple-400" /> : <File size={16} className="text-blue-400" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white truncate">{file.name}</p>
                           <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
                         </div>
-                        {parsedImages.has(file.name) && (
-                          <span className="flex items-center gap-1 text-xs text-emerald-400">
-                            <Eye size={12} /> OCR Ready
-                          </span>
-                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); removeFile(index); }}
                           className="p-1 rounded hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
@@ -220,23 +219,6 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
                           <X size={14} />
                         </button>
                       </motion.div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Parsed Image Content Preview */}
-                {parsedImages.size > 0 && (
-                  <div className="mt-4 p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                    <h5 className="text-sm font-medium text-emerald-400 mb-2 flex items-center gap-2">
-                      <Eye size={14} /> Parsed Image Content (OCR)
-                    </h5>
-                    {Array.from(parsedImages.entries()).map(([fileName, content]) => (
-                      <div key={fileName} className="mb-2 last:mb-0">
-                        <p className="text-xs text-slate-400 mb-1">{fileName} (Confidence: {(content.confidence * 100).toFixed(1)}%)</p>
-                        <div className="p-2 rounded bg-slate-800/50 text-xs text-slate-300 max-h-24 overflow-y-auto">
-                          {content.text}
-                        </div>
-                      </div>
                     ))}
                   </div>
                 )}

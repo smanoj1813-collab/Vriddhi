@@ -48,8 +48,7 @@ export default function StudentSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const studentId = localStorage.getItem('studentToken') || '';
-  const { profile, unreadNotifications, loading } = useStudentData(studentId);
+  const { profile, unreadNotifications } = useStudentData();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -63,9 +62,7 @@ export default function StudentSidebar() {
 
   const handleLogout = async () => {
     await logout();
-    localStorage.removeItem('studentToken');
-    localStorage.removeItem('studentRole');
-    navigate('/student/login');
+    navigate('/student/login', { replace: true });
   };
 
   const sidebarWidth = isCollapsed ? 'md:w-20' : 'md:w-72';

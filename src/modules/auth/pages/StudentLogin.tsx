@@ -10,7 +10,7 @@ export default function StudentLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
 
-  const { login, isLoading } = useAuth();
+  const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,7 +18,14 @@ export default function StudentLogin() {
     setLocalError('');
 
     try {
-      await login(email, password);
+      const appUser = await login(email, password);
+      // Enforce that this account is a student. Non-student accounts are
+      // signed out immediately and shown an error.
+      if (appUser.role !== 'student') {
+        await logout();
+        setLocalError('This account does not have student access. Use the Staff Login instead.');
+        return;
+      }
       navigate('/student/dashboard', { replace: true });
     } catch (err: any) {
       const msg = err?.message || '';

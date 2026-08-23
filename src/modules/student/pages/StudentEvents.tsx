@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, ChevronRight, Star, Filter, Search, PartyPopper } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ChevronRight, Star, Search, PartyPopper, Loader2 } from 'lucide-react';
+import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { db } from '@/Firebase/config';
+import { useAuth } from '../../auth/context/AuthContext';
+import { useStudentProfile } from '../hooks/useStudentProfile';
 
 interface Event {
   id: string;
@@ -17,86 +21,6 @@ interface Event {
   image?: string;
 }
 
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Hackathon 2026 - CodeFest',
-    description: '24-hour coding competition. Build innovative solutions to real-world problems. Prizes worth ₹1,00,000!',
-    date: '2026-07-15',
-    time: '09:00 AM',
-    venue: 'Main Auditorium',
-    category: 'technical',
-    organizer: 'CSI Student Chapter',
-    registered: true,
-    maxSeats: 200,
-    registeredCount: 156,
-  },
-  {
-    id: '2',
-    title: 'Guest Lecture: AI in Healthcare',
-    description: 'Dr. Rajesh Kumar from IIT Delhi will discuss the latest advancements in AI-driven healthcare solutions.',
-    date: '2026-07-10',
-    time: '02:00 PM',
-    venue: 'Seminar Hall B',
-    category: 'academic',
-    organizer: 'CSE Department',
-    registered: false,
-    maxSeats: 150,
-    registeredCount: 89,
-  },
-  {
-    id: '3',
-    title: 'Annual Cultural Fest - Utsav',
-    description: 'Three days of music, dance, drama, and fun. Featuring performances by popular artists.',
-    date: '2026-08-20',
-    time: '10:00 AM',
-    venue: 'College Ground',
-    category: 'cultural',
-    organizer: 'Cultural Committee',
-    registered: false,
-    maxSeats: 2000,
-    registeredCount: 1245,
-  },
-  {
-    id: '4',
-    title: 'Inter-College Cricket Tournament',
-    description: 'Annual sports meet featuring cricket matches between different colleges.',
-    date: '2026-07-25',
-    time: '08:00 AM',
-    venue: 'Sports Ground',
-    category: 'sports',
-    organizer: 'Sports Club',
-    registered: true,
-    maxSeats: 500,
-    registeredCount: 320,
-  },
-  {
-    id: '5',
-    title: 'Workshop: React & Next.js Masterclass',
-    description: 'Hands-on workshop covering advanced React patterns, Next.js 15, and server components.',
-    date: '2026-07-05',
-    time: '10:00 AM',
-    venue: 'Lab Complex - L3',
-    category: 'workshop',
-    organizer: 'Developer Student Club',
-    registered: false,
-    maxSeats: 80,
-    registeredCount: 72,
-  },
-  {
-    id: '6',
-    title: 'Project Exhibition 2026',
-    description: 'Showcase your final year projects to industry experts and recruiters.',
-    date: '2026-08-05',
-    time: '11:00 AM',
-    venue: 'Exhibition Hall',
-    category: 'academic',
-    organizer: 'Project Committee',
-    registered: false,
-    maxSeats: 300,
-    registeredCount: 45,
-  },
-];
 
 const categoryColors: Record<string, string> = {
   academic: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
@@ -117,19 +41,87 @@ const categoryIcons: Record<string, string> = {
 const categories = ['All', 'academic', 'cultural', 'sports', 'technical', 'workshop'];
 
 export default function StudentEvents() {
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useStudentProfile(user?.uid);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
 
-  const filtered = mockEvents.filter(e => {
+  useEffect(() => {
+    if (!profile?.collegeId) {
+      if (!profileLoading) setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+
+    (async () => {
+      try {
+        // Events are stored per-college at colleges/{collegeId}/events.
+        const baseQuery = query(
+          collection(db, 'colleges', profile.collegeId!, 'events'),
+          where('status', '==', 'published'),
+          orderBy('date', 'desc'),
+          limit(200)
+        );
+        const snap = await getDocs(baseQuery).catch(async () => {
+          // Fallback without orderBy if index missing
+          const fallback = query(
+            collection(db, 'colleges', profile.collegeId!, 'events'),
+            limit(200)
+          );
+          return getDocs(fallback);
+        });
+        if (cancelled) return;
+        const items: Event[] = snap.docs.map((d) => {
+          const data = d.data() as Record<string, any>;
+          const dateStr = data.date || data.startDate || data.eventDate || '';
+          return {
+            id: d.id,
+            title: data.title || '',
+            description: data.description || '',
+            date: typeof dateStr === 'string' ? dateStr.slice(0, 10) : '',
+            time: data.time || data.startTime || '',
+            venue: data.venue || data.location || '',
+            category: (data.category || 'academic') as Event['category'],
+            organizer: data.organizer || '',
+            registered: Boolean(data.registered),
+            maxSeats: Number(data.maxSeats || data.capacity || 0),
+            registeredCount: Number(data.registeredCount || 0),
+            image: data.imageUrl || data.image,
+          } as Event;
+        });
+        setEvents(items);
+      } catch (err) {
+        console.error('[StudentEvents] load failed:', err);
+        setEvents([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [profile?.collegeId, profileLoading]);
+
+  const filtered = useMemo(() => events.filter((e) => {
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          e.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || e.category === selectedCategory;
     return matchesSearch && matchesCategory;
-  });
+  }), [events, searchQuery, selectedCategory]);
 
   const upcoming = filtered.filter(e => new Date(e.date) >= new Date());
   const past = filtered.filter(e => new Date(e.date) < new Date());
+
+  if (profileLoading || loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+      </div>
+    );
+  }
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { db } from '@/Firebase/config';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { useAuth } from '../../auth/context/AuthContext';
+import { useStudentProfile } from '../hooks/useStudentProfile';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -107,7 +109,9 @@ function useLibraryData(studentId: string) {
 // ─── Page Component ─────────────────────────────────────────────────
 
 export default function StudentLibrary() {
-  const studentId = localStorage.getItem('studentToken') || '';
+  const { user } = useAuth();
+  const { profile } = useStudentProfile(user?.uid);
+  const studentId = profile?.id || user?.uid || '';
   const { loading, books, issuedBooks, refresh } = useLibraryData(studentId);
 
   const [searchQuery, setSearchQuery] = useState('');

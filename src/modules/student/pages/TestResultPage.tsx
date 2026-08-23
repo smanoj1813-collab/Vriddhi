@@ -12,6 +12,7 @@ import {
   NavigateNext, NavigateBefore, Assessment,
 } from "@mui/icons-material";
 import { MathRenderer } from '../components/MathRenderer';
+import { useStudentData } from '../hooks/useStudentData';
 
 interface TabPanelProps { children?: React.ReactNode; index: number; value: number; }
 
@@ -21,118 +22,63 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </Box>
 );
 
-// ═══════════════════════════════════════════════════════════════
-// DEMO RESULT DATA — Remove after connecting real API
-// ═══════════════════════════════════════════════════════════════
-const DEMO_RESULT = {
-  testTitle: "Operating Systems — End Semester",
-  subject: "OS",
-  completedAt: new Date().toISOString(),
-  score: 85,
-  totalMarks: 100,
-  passingPercentage: 60,
-  rank: 12,
-  percentile: 78.5,
-  timeTaken: 7200, // seconds
-  correctCount: 18,
-  incorrectCount: 2,
-  unattemptedCount: 0,
-  flaggedCount: 1,
-  totalQuestions: 20,
-  sectionScores: [
-    { sectionName: "Process Management", total: 8, correct: 7, incorrect: 1, score: 35, totalMarks: 40, percentage: 87.5, timeTaken: 180, accuracy: 87.5 },
-    { sectionName: "Memory Management", total: 6, correct: 6, incorrect: 0, score: 30, totalMarks: 30, percentage: 100, timeTaken: 150, accuracy: 100 },
-    { sectionName: "File Systems", total: 6, correct: 5, incorrect: 1, score: 20, totalMarks: 30, percentage: 66.7, timeTaken: 120, accuracy: 83.3 },
-  ],
-  questionResults: [
-    {
-      questionId: "q1", questionText: "What is the primary purpose of a process scheduler?",
-      options: ["Memory allocation", "CPU allocation", "Disk I/O", "Network management"],
-      correctAnswer: "CPU allocation", studentAnswer: "CPU allocation",
-      isCorrect: true, isAttempted: true, marks: 5,
-      explanation: "The process scheduler decides which process runs on the CPU at any given time.",
-    },
-    {
-      questionId: "q2", questionText: "Which algorithm suffers from starvation?",
-      options: ["Round Robin", "FCFS", "Priority Scheduling", "SJF"],
-      correctAnswer: "Priority Scheduling", studentAnswer: "Priority Scheduling",
-      isCorrect: true, isAttempted: true, marks: 5,
-      explanation: "Low priority processes may never execute if high priority processes keep arriving.",
-    },
-    {
-      questionId: "q3", questionText: "Virtual memory allows execution of processes that are:",
-      options: ["Not entirely in memory", "Only in cache", "On disk only", "In registers"],
-      correctAnswer: "Not entirely in memory", studentAnswer: "On disk only",
-      isCorrect: false, isAttempted: true, marks: 5,
-      explanation: "Virtual memory enables partial loading of processes, allowing execution without full memory residence.",
-    },
-    {
-      questionId: "q4", questionText: "Thrashing occurs when:",
-      options: ["CPU is idle", "System spends more time paging than executing", "Memory is full", "Disk is corrupted"],
-      correctAnswer: "System spends more time paging than executing", studentAnswer: "System spends more time paging than executing",
-      isCorrect: true, isAttempted: true, marks: 5,
-      explanation: "Thrashing happens when excessive paging/swapping dominates actual computation.",
-    },
-    {
-      questionId: "q5", questionText: "Which page replacement algorithm uses the principle of locality?",
-      options: ["FIFO", "LRU", "Optimal", "Random"],
-      correctAnswer: "LRU", studentAnswer: "LRU",
-      isCorrect: true, isAttempted: true, marks: 5,
-      explanation: "LRU (Least Recently Used) leverages temporal locality by replacing least recently accessed pages.",
-    },
-  ],
-  leaderboard: [
-    { studentId: "s1", studentName: "Rahul Sharma", rank: 1, score: 98, totalMarks: 100, percentage: 98, timeTaken: 6500, isPassed: true, isCurrentUser: false },
-    { studentId: "s2", studentName: "Priya Patel", rank: 2, score: 94, totalMarks: 100, percentage: 94, timeTaken: 7000, isPassed: true, isCurrentUser: false },
-    { studentId: "s3", studentName: "Amit Kumar", rank: 3, score: 91, totalMarks: 100, percentage: 91, timeTaken: 6800, isPassed: true, isCurrentUser: false },
-    { studentId: "s4", studentName: "Sneha Gupta", rank: 4, score: 88, totalMarks: 100, percentage: 88, timeTaken: 7100, isPassed: true, isCurrentUser: false },
-    { studentId: "s5", studentName: "Vikram Rao", rank: 5, score: 85, totalMarks: 100, percentage: 85, timeTaken: 7200, isPassed: true, isCurrentUser: false },
-    { studentId: "s6", studentName: "Ananya Iyer", rank: 6, score: 82, totalMarks: 100, percentage: 82, timeTaken: 7300, isPassed: true, isCurrentUser: false },
-    { studentId: "s7", studentName: "Arjun Nair", rank: 7, score: 79, totalMarks: 100, percentage: 79, timeTaken: 6900, isPassed: true, isCurrentUser: false },
-    { studentId: "s8", studentName: "Divya Menon", rank: 8, score: 76, totalMarks: 100, percentage: 76, timeTaken: 7500, isPassed: true, isCurrentUser: false },
-    { studentId: "s9", studentName: "Karan Shah", rank: 9, score: 73, totalMarks: 100, percentage: 73, timeTaken: 7400, isPassed: true, isCurrentUser: false },
-    { studentId: "s10", studentName: "Meera Joshi", rank: 10, score: 70, totalMarks: 100, percentage: 70, timeTaken: 7600, isPassed: true, isCurrentUser: false },
-    { studentId: "s11", studentName: "You", rank: 12, score: 85, totalMarks: 100, percentage: 85, timeTaken: 7200, isPassed: true, isCurrentUser: true },
-  ],
-};
-// ═══════════════════════════════════════════════════════════════
-// END DEMO DATA
-// ═══════════════════════════════════════════════════════════════
-
 const TestResultPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
+  const { tests, loading } = useStudentData();
 
-  // Use navigation state if available (from ActiveTestPage), else demo data
+  const test = tests.find((t) => t.id === testId || t.assessmentId === testId);
   const navState = (location.state as any) || {};
-  const result = navState.score !== undefined
-    ? {
-        ...DEMO_RESULT,
-        score: navState.correct * (DEMO_RESULT.totalMarks / DEMO_RESULT.totalQuestions),
-        correctCount: navState.correct,
-        incorrectCount: DEMO_RESULT.totalQuestions - navState.correct,
-        unattemptedCount: 0,
-      }
-    : DEMO_RESULT;
 
-  const loading = false;
-  const error = null;
+  // Build a minimal real result object. Detailed question review / leaderboard
+  // are only shown when that data is available (e.g. passed via nav state).
+  const totalMarks = test?.totalMarks || navState.totalMarks || 0;
+  const obtained = test?.marksObtained ?? navState.score ?? 0;
+  const result = test || navState.score !== undefined ? {
+    testTitle: test?.title || navState.title || 'Assessment',
+    subject: test?.subject || navState.subject || '',
+    completedAt: test?.submittedAt || navState.completedAt || new Date().toISOString(),
+    score: obtained,
+    totalMarks,
+    passingPercentage: 40,
+    rank: navState.rank ?? '—',
+    percentile: navState.percentile ?? 0,
+    timeTaken: test?.timeSpent || navState.timeTaken || 0,
+    correctCount: navState.correct ?? 0,
+    incorrectCount: navState.incorrect ?? 0,
+    unattemptedCount: navState.unattempted ?? 0,
+    flaggedCount: 0,
+    totalQuestions: test?.totalQuestions || navState.totalQuestions || 0,
+    grade: test?.grade,
+    sectionScores: navState.sectionScores || [],
+    questionResults: navState.questionResults || [],
+    leaderboard: navState.leaderboard || [],
+  } : null;
 
   if (loading) return <ResultSkeleton />;
-  if (error || !result) {
+  if (!result) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error">{error || "Result not found"}</Alert>
+      <Box sx={{ p: 4, maxWidth: 600, mx: 'auto' }}>
+        <Alert severity="info">
+          This result is not available yet. Results appear once your submission has been graded.
+        </Alert>
+        <Box sx={{ mt: 2 }}>
+          <Button variant="outlined" onClick={() => navigate('/student/assessments')}>
+            Back to Assessments
+          </Button>
+        </Box>
       </Box>
     );
   }
 
-  const percentage = Math.round(((result as any).score / (result as any).totalMarks) * 100);
+  const percentage = (result as any).totalMarks
+    ? Math.round(((result as any).score / (result as any).totalMarks) * 100)
+    : Math.round((result as any).test?.percentage || (test?.percentage ?? 0));
   const isPassed = percentage >= (result as any).passingPercentage;
-  const grade = getGrade(percentage);
+  const grade = (result as any).grade || getGrade(percentage);
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: "auto", pb: 8 }}>
@@ -178,11 +124,13 @@ const TestResultPage: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Actions */}
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Button variant="outlined" startIcon={<Download />} size="small">Download PDF</Button>
-              <Button variant="outlined" startIcon={<Share />} size="small">Share Result</Button>
-            </Box>
+            {/* Actions: detailed analysis actions only when question data is available */}
+            {((result as any).questionResults || []).length > 0 && (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Button variant="outlined" startIcon={<Download />} size="small">Download PDF</Button>
+                <Button variant="outlined" startIcon={<Share />} size="small">Share Result</Button>
+              </Box>
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -192,9 +140,15 @@ const TestResultPage: React.FC = () => {
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto"
           sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
           <Tab label="Overview" icon={<BarChart fontSize="small" />} iconPosition="start" />
-          <Tab label="Section Analysis" icon={<TrendingUp fontSize="small" />} iconPosition="start" />
-          <Tab label="Question-wise" icon={<Visibility fontSize="small" />} iconPosition="start" />
-          <Tab label="Leaderboard" icon={<EmojiEvents fontSize="small" />} iconPosition="start" />
+          {((result as any).sectionScores || []).length > 0 && (
+            <Tab label="Section Analysis" icon={<TrendingUp fontSize="small" />} iconPosition="start" />
+          )}
+          {((result as any).questionResults || []).length > 0 && (
+            <Tab label="Question-wise" icon={<Visibility fontSize="small" />} iconPosition="start" />
+          )}
+          {((result as any).leaderboard || []).length > 0 && (
+            <Tab label="Leaderboard" icon={<EmojiEvents fontSize="small" />} iconPosition="start" />
+          )}
         </Tabs>
 
         {/* Tab 0: Overview */}

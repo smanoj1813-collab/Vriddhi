@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Button, Card, CardContent, Chip, List, ListItem,
   ListItemIcon, ListItemText, Checkbox, FormControlLabel, Alert,
-  AlertTitle, Stepper, Step, StepLabel, Paper,
+  AlertTitle, Stepper, Step, StepLabel, Paper, CircularProgress,
 } from '@mui/material';
 import {
   Fullscreen, ContentCopy, CameraAlt, Mic, Timer, CheckCircle,
   Error as ErrorIcon, Info, PlayArrow, Security, DesktopAccessDisabled,
   ArrowForward, Keyboard, Mouse,
 } from '@mui/icons-material';
+import { useStudentData } from '../hooks/useStudentData';
 
 const STEPS = ['Read Instructions', 'System Check', 'Proctoring Setup', 'Start Test'];
 
@@ -18,24 +19,31 @@ const TestInstructionsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [agreed, setAgreed] = useState(false);
+  const { tests, loading } = useStudentData();
 
-  const testInfo = {
-    title: testId?.includes('demo-003')
-      ? 'Operating Systems — End Semester'
-      : testId?.includes('demo-001')
-        ? 'Data Structures & Algorithms — Mid Term'
-        : testId?.includes('demo-002')
-          ? 'Database Management Systems — Quiz 3'
-          : 'Assessment',
-    totalQuestions: testId?.includes('demo-003') ? 80 : testId?.includes('demo-001') ? 50 : 30,
-    duration: testId?.includes('demo-003') ? 180 : testId?.includes('demo-001') ? 120 : 60,
-    totalMarks: testId?.includes('demo-003') ? 100 : testId?.includes('demo-001') ? 100 : 20,
-  };
+  const testInfo = useMemo(() => {
+    const t = tests.find((x) => x.id === testId || x.assessmentId === testId);
+    return {
+      title: t?.title || 'Assessment',
+      subject: t?.subject || '',
+      totalQuestions: t?.totalQuestions || 0,
+      duration: t?.duration || 60,
+      totalMarks: t?.totalMarks || 0,
+    };
+  }, [tests, testId]);
 
   const handleStartTest = () => {
     if (!agreed || !testId) return;
-    navigate(`/student/assessments/${testId}/take`);
+    navigate(`/student/test/${testId}/take`);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900, mx: 'auto', minHeight: '100vh' }}>

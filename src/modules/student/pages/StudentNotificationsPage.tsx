@@ -1,9 +1,16 @@
 // src/pages/student/StudentNotificationsPage.tsx
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCheck, ArrowLeft, BookOpen, DollarSign, Info, AlertCircle, Check } from 'lucide-react';
+import { Bell, CheckCheck, ArrowLeft, BookOpen, DollarSign, Info, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Notification } from './../types/student';
+import { useStudentData } from '../hooks/useStudentData';
+import {
+  fetchNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  type StudentNotificationData,
+} from '../api/studentDataApi';
 
 const typeConfig: Record<string, { icon: typeof Info; color: string; bg: string; label: string }> = {
   academic: { icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Academic' },
@@ -30,55 +37,54 @@ function getTypeConfig(type: string) {
   return typeConfig[type] ?? typeConfig.general;
 }
 
+function toNotification(n: StudentNotificationData): Notification {
+  return {
+    id: n.id,
+    title: n.title,
+    message: n.message,
+    type: n.type,
+    timestamp: n.timestamp,
+    read: n.read,
+    priority: n.priority,
+  };
+}
+
 export default function StudentNotificationsPage() {
   const navigate = useNavigate();
+  const { studentId, loading: dataLoading } = useStudentData();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 'NOT001',
-      title: 'Mid-Term Exam Schedule',
-      message: 'Mid-term exams for Semester 4 will start from July 15, 2026.',
-      type: 'academic',
-      timestamp: '2026-07-01T09:00:00Z',
-      read: false,
-      priority: 'high',
-    },
-    {
-      id: 'NOT002',
-      title: 'Fee Payment Reminder',
-      message: 'Please pay the pending installment of ₹37,500 before July 15.',
-      type: 'fee',
-      timestamp: '2026-07-02T10:00:00Z',
-      read: false,
-      priority: 'high',
-    },
-    {
-      id: 'NOT003',
-      title: 'Assignment Deadline Extended',
-      message: 'The case study deadline has been extended to July 10.',
-      type: 'academic',
-      timestamp: '2026-07-01T14:00:00Z',
-      read: false,
-      priority: 'medium',
-    },
-    {
-      id: 'NOT004',
-      title: 'College Fest Registration',
-      message: 'Register for the annual cultural fest "Utsav 2026" by July 5.',
-      type: 'general',
-      timestamp: '2026-06-28T11:00:00Z',
-      read: true,
-      priority: 'low',
-    },
-  ]);
+  const load = useCallback(async () => {
+    if (!studentId) {
+      if (!dataLoading) setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await fetchNotifications(studentId);
+      setNotifications(data.map(toNotification));
+    } catch (err) {
+      console.error('[Notifications] load failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [studentId, dataLoading]);
 
-  const handleMarkRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleMarkRead = async (id: string) => {
+    // Optimistically mark read, persist to Firestore.
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+    await markNotificationRead(id);
   };
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (studentId) await markAllNotificationsRead(studentId);
   };
 
   const filtered = filter === 'unread' ? notifications.filter(n => !n.read) : notifications;
@@ -132,14 +138,18 @@ export default function StudentNotificationsPage() {
 
         {/* Notifications List */}
         <div className="space-y-3">
-          {filtered.length === 0 && (
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={32} className="text-teal-400 animate-spin" />
+            </div>
+          ) : filtered.length === 0 && (
             <div className="text-center py-12">
               <Bell size={48} className="text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400">No notifications</p>
             </div>
           )}
 
-          {filtered.map((notification) => {
+          {!loading && filtered.map((notification) => {
             const config = getTypeConfig(notification.type);
             const Icon = config.icon;
             const priorityClass = getPriorityClass(notification.priority);
