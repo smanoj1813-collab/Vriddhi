@@ -153,7 +153,7 @@ export default function Attendance() {
     <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, color: 'white' }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
           Attendance
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -161,7 +161,7 @@ export default function Attendance() {
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={fetchData}
-            sx={{ color: '#94a3b8', borderColor: '#334155', '&:hover': { borderColor: '#475569' } }}
+            sx={{ color: 'text.secondary', borderColor: 'divider', '&:hover': { borderColor: 'text.secondary' } }}
           >
             Refresh
           </Button>
@@ -182,16 +182,18 @@ export default function Attendance() {
             key={s.label}
             sx={{
               flex: '1 1 140px',
-              bgcolor: '#1e293b',
+              bgcolor: 'background.paper',
               borderRadius: 2,
               p: 2,
+              border: '1px solid',
+              borderColor: 'divider',
               borderLeft: `4px solid ${s.color}`,
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: 'white' }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
               {s.value}
             </Typography>
-            <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {s.label}
             </Typography>
           </Box>
@@ -199,7 +201,7 @@ export default function Attendance() {
       </Box>
 
       {/* Filters + Tabs */}
-      <Paper sx={{ bgcolor: '#1e293b', mb: 2 }}>
+      <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mb: 2 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2, px: 2, pt: 2 }}>
           <Tabs
             value={tab}
@@ -207,9 +209,9 @@ export default function Attendance() {
             textColor="primary"
             indicatorColor="primary"
           >
-            <Tab label="Class Sessions" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-            <Tab label="Student Summary" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
-            <Tab label="Daily Report" sx={{ color: '#cbd5e1', textTransform: 'none' }} />
+            <Tab label="Class Sessions" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+            <Tab label="Student Summary" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+            <Tab label="Daily Report" sx={{ color: 'text.secondary', textTransform: 'none' }} />
           </Tabs>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
@@ -221,19 +223,19 @@ export default function Attendance() {
               size="small"
               sx={{
                 width: 150,
-                input: { color: 'white' },
-                label: { color: '#94a3b8' },
-                '& .MuiOutlinedInput-root': { bgcolor: '#0f172a', borderRadius: 1 },
+                input: { color: 'text.primary' },
+                label: { color: 'text.secondary' },
+                '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: 1 },
               }}
               slotProps={{ inputLabel: { shrink: true } }}
             />
             <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel sx={{ color: '#94a3b8' }}>Branch</InputLabel>
+              <InputLabel sx={{ color: 'text.secondary' }}>Branch</InputLabel>
               <Select
                 value={branch}
                 label="Branch"
                 onChange={handleBranchChange}
-                sx={{ color: 'white', bgcolor: '#0f172a', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' } }}
+                sx={{ color: 'text.primary', bgcolor: 'background.paper', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' } }}
               >
                 <MenuItem value="all">All Branches</MenuItem>
                 {branches.map((b) => (
@@ -242,12 +244,12 @@ export default function Attendance() {
               </Select>
             </FormControl>
             <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel sx={{ color: '#94a3b8' }}>Batch</InputLabel>
+              <InputLabel sx={{ color: 'text.secondary' }}>Batch</InputLabel>
               <Select
                 value={batch}
                 label="Batch"
                 onChange={handleBatchChange}
-                sx={{ color: 'white', bgcolor: '#0f172a', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#334155' } }
+                sx={{ color: 'text.primary', bgcolor: 'background.paper', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' } }
               }
               >
                 <MenuItem value="all">All Batches</MenuItem>
@@ -270,7 +272,7 @@ export default function Attendance() {
                 <>
                   {sessions.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
-                      <Typography sx={{ color: '#64748b' }}>
+                      <Typography sx={{ color: 'text.secondary' }}>
                         No sessions found{date ? ` for ${date}` : ''}.
                       </Typography>
                     </Box>
@@ -278,7 +280,7 @@ export default function Attendance() {
                     <TableContainer>
                       <Table size="small">
                         <TableHead>
-                          <TableRow sx={{ '& th': { color: '#94a3b8', borderBottom: '1px solid #334155', fontWeight: 600 } }}>
+                          <TableRow sx={{ '& th': { color: 'text.secondary', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 600 } }}>
                             <TableCell>Subject</TableCell>
                             <TableCell>Topic</TableCell>
                             <TableCell>Time</TableCell>
@@ -293,10 +295,10 @@ export default function Attendance() {
                           {sessions.map((s) => (
                             <TableRow
                               key={s.id}
-                              sx={{ '& td': { color: '#e2e8f0', borderBottom: '1px solid #334155' }, '&:hover': { bgcolor: '#253449' } }}
+                              sx={{ '& td': { color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider' }, '&:hover': { bgcolor: 'action.hover' } }}
                             >
                               <TableCell>
-                                <Typography sx={{ fontWeight: 600, color: 'white' }}>{s.subject}</Typography>
+                                <Typography sx={{ fontWeight: 600, color: 'text.primary' }}>{s.subject}</Typography>
                               </TableCell>
                               <TableCell>{s.topic || '-'}</TableCell>
                               <TableCell>{s.startTime} – {s.endTime}</TableCell>
@@ -306,31 +308,31 @@ export default function Attendance() {
                                 <Chip
                                   label={s.status}
                                   size="small"
-                                  sx={{
+                                  sx={(theme) => ({
                                     textTransform: 'capitalize',
                                     bgcolor:
-                                      s.status === 'completed' ? '#064e3b' :
-                                      s.status === 'ongoing' ? '#78350f' :
-                                      s.status === 'cancelled' ? '#450a0a' : '#1e293b',
+                                      s.status === 'completed' ? (theme.palette.mode === 'dark' ? '#064e3b' : '#d1fae5') :
+                                      s.status === 'ongoing' ? (theme.palette.mode === 'dark' ? '#78350f' : '#fef3c7') :
+                                      s.status === 'cancelled' ? (theme.palette.mode === 'dark' ? '#450a0a' : '#fee2e2') : (theme.palette.mode === 'dark' ? '#1e293b' : '#f1f5f9'),
                                     color:
-                                      s.status === 'completed' ? '#34d399' :
-                                      s.status === 'ongoing' ? '#fbbf24' :
-                                      s.status === 'cancelled' ? '#f87171' : '#94a3b8',
+                                      s.status === 'completed' ? (theme.palette.mode === 'dark' ? '#34d399' : '#047857') :
+                                      s.status === 'ongoing' ? (theme.palette.mode === 'dark' ? '#fbbf24' : '#b45309') :
+                                      s.status === 'cancelled' ? (theme.palette.mode === 'dark' ? '#f87171' : '#b91c1c') : 'text.secondary',
                                     fontWeight: 500,
-                                  }}
+                                  })}
                                 />
                               </TableCell>
                               <TableCell>
                                 {s.attendanceMarked ? (
-                                  <Chip label="Marked" size="small" sx={{ bgcolor: '#064e3b', color: '#34d399', fontWeight: 500 }} />
+                                  <Chip label="Marked" size="small" sx={(theme) => ({ bgcolor: theme.palette.mode === 'dark' ? '#064e3b' : '#d1fae5', color: theme.palette.mode === 'dark' ? '#34d399' : '#047857', fontWeight: 500 })} />
                                 ) : (
-                                  <Chip label="Pending" size="small" sx={{ bgcolor: '#451a03', color: '#fbbf24', fontWeight: 500 }} />
+                                  <Chip label="Pending" size="small" sx={(theme) => ({ bgcolor: theme.palette.mode === 'dark' ? '#451a03' : '#fef3c7', color: theme.palette.mode === 'dark' ? '#fbbf24' : '#b45309', fontWeight: 500 })} />
                                 )}
                               </TableCell>
                               <TableCell align="right">
                                 <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
                                   <Tooltip title="Edit">
-                                    <IconButton size="small" sx={{ color: '#94a3b8' }}>
+                                    <IconButton size="small" sx={{ color: 'text.secondary' }}>
                                       <EditIcon fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
@@ -349,13 +351,13 @@ export default function Attendance() {
                 <>
                   {summary.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
-                      <Typography sx={{ color: '#64748b' }}>No student attendance data available.</Typography>
+                      <Typography sx={{ color: 'text.secondary' }}>No student attendance data available.</Typography>
                     </Box>
                   ) : (
                     <TableContainer>
                       <Table size="small">
                         <TableHead>
-                          <TableRow sx={{ '& th': { color: '#94a3b8', borderBottom: '1px solid #334155', fontWeight: 600 } }}>
+                          <TableRow sx={{ '& th': { color: 'text.secondary', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 600 } }}>
                             <TableCell>Student</TableCell>
                             <TableCell>Reg No</TableCell>
                             <TableCell align="center">Total</TableCell>
@@ -370,19 +372,19 @@ export default function Attendance() {
                           {summary.map((s) => (
                             <TableRow
                               key={s.studentId}
-                              sx={{ '& td': { color: '#e2e8f0', borderBottom: '1px solid #334155' }, '&:hover': { bgcolor: '#253449' } }}
+                              sx={{ '& td': { color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider' }, '&:hover': { bgcolor: 'action.hover' } }}
                             >
                               <TableCell>
-                                <Typography sx={{ fontWeight: 600, color: 'white' }}>{s.studentName}</Typography>
+                                <Typography sx={{ fontWeight: 600, color: 'text.primary' }}>{s.studentName}</Typography>
                               </TableCell>
                               <TableCell>{s.regNo}</TableCell>
                               <TableCell align="center">{s.totalClasses}</TableCell>
-                              <TableCell align="center" sx={{ color: '#34d399' }}>{s.present}</TableCell>
-                              <TableCell align="center" sx={{ color: '#f87171' }}>{s.absent}</TableCell>
-                              <TableCell align="center" sx={{ color: '#fbbf24' }}>{s.late}</TableCell>
-                              <TableCell align="center" sx={{ color: '#38bdf8' }}>{s.leave + s.medicalLeave}</TableCell>
+                              <TableCell align="center" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#34d399' : '#047857' })}>{s.present}</TableCell>
+                              <TableCell align="center" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#f87171' : '#dc2626' })}>{s.absent}</TableCell>
+                              <TableCell align="center" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#fbbf24' : '#b45309' })}>{s.late}</TableCell>
+                              <TableCell align="center" sx={(theme) => ({ color: theme.palette.mode === 'dark' ? '#38bdf8' : '#0369a1' })}>{s.leave + s.medicalLeave}</TableCell>
                               <TableCell align="right">
-                                <Typography sx={{ fontWeight: 700, color: s.percentage >= 75 ? '#34d399' : s.percentage >= 60 ? '#fbbf24' : '#f87171' }}>
+                                <Typography sx={(theme) => ({ fontWeight: 700, color: s.percentage >= 75 ? (theme.palette.mode === 'dark' ? '#34d399' : '#047857') : s.percentage >= 60 ? (theme.palette.mode === 'dark' ? '#fbbf24' : '#b45309') : (theme.palette.mode === 'dark' ? '#f87171' : '#dc2626') })}>
                                   {s.percentage.toFixed(1)}%
                                 </Typography>
                               </TableCell>
@@ -397,7 +399,7 @@ export default function Attendance() {
 
               {tab === 2 && (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
-                  <Typography sx={{ color: '#64748b' }}>Daily report view coming soon.</Typography>
+                  <Typography sx={{ color: 'text.secondary' }}>Daily report view coming soon.</Typography>
                 </Box>
               )}
             </>

@@ -156,7 +156,7 @@ const FacultyImport: React.FC = () => {
         <select
           value={selectedCollege}
           onChange={e => handleCollegeChange(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
         >
           <option value="">{collegesLoading ? 'Loading colleges...' : 'Select a college...'}</option>
           {colleges.map((college: College) => (
@@ -171,7 +171,7 @@ const FacultyImport: React.FC = () => {
       {/* File Upload */}
       <div className="glass-card p-5 mb-6">
         <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">Upload CSV File</label>
-        <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-amber-500 transition-colors">
+        <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center hover:border-amber-500 transition-colors">
           <FileSpreadsheet className="w-10 h-10 text-slate-500 mx-auto mb-3" />
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Drag and drop or click to upload</p>
           <p className="text-xs text-slate-500 mb-3">
@@ -226,7 +226,7 @@ const FacultyImport: React.FC = () => {
       {/* Preview */}
       {previewData.length > 0 && (
         <div className="glass-card overflow-hidden mb-6">
-          <div className="p-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-3">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Preview ({previewData.length} rows)</h2>
             <div className="flex items-center gap-3">
               {validationErrors.length > 0 && (
@@ -235,7 +235,7 @@ const FacultyImport: React.FC = () => {
               <button
                 onClick={handleImport}
                 disabled={isProcessing || !selectedCollege || validationErrors.length === previewData.length}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 dark:text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg transition-colors"
               >
                 {isProcessing ? 'Importing...' : 'Import Faculty'}
               </button>
@@ -243,8 +243,8 @@ const FacultyImport: React.FC = () => {
           </div>
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-slate-800">
-                <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
+              <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800">
+                <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                   <th className="text-left px-4 py-3 font-medium">Faculty ID</th>
                   <th className="text-left px-4 py-3 font-medium">Name</th>
                   <th className="text-left px-4 py-3 font-medium">Email</th>

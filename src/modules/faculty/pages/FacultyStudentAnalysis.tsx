@@ -90,7 +90,7 @@ export default function FacultyStudentAnalysis() {
   })) || []
 
   const statusConfig: Record<string, { color: string; bg: string; border: string; label: string }> = {
-    all: { color: 'text-slate-300', bg: 'bg-slate-700/10', border: 'border-slate-700/20', label: 'All' },
+    all: { color: 'text-slate-700 dark:text-slate-300', bg: 'bg-slate-500/10 dark:bg-slate-700/10', border: 'border-slate-300 dark:border-slate-700/20', label: 'All' },
     good: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Good' },
     average: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', label: 'Average' },
     weak: { color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', label: 'Weak' },
@@ -102,7 +102,7 @@ export default function FacultyStudentAnalysis() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
+          className="p-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
@@ -114,7 +114,7 @@ export default function FacultyStudentAnalysis() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <div className="p-4 rounded-xl glass-card/50">
+        <div className="p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Students</p>
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
         </div>
@@ -143,7 +143,7 @@ export default function FacultyStudentAnalysis() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Attendance Distribution */}
-        <div className="p-5 rounded-xl glass-card/50">
+        <div className="p-5 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Attendance Distribution
@@ -169,7 +169,7 @@ export default function FacultyStudentAnalysis() {
         </div>
 
         {/* Score Distribution */}
-        <div className="p-5 rounded-xl glass-card/50">
+        <div className="p-5 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Award className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Score Distribution
@@ -195,7 +195,7 @@ export default function FacultyStudentAnalysis() {
         </div>
 
         {/* Assessment Trend */}
-        <div className="p-5 rounded-xl glass-card/50">
+        <div className="p-5 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Assessment Trend
@@ -242,7 +242,7 @@ export default function FacultyStudentAnalysis() {
             placeholder="Search student..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
           />
         </div>
       </div>
@@ -256,10 +256,10 @@ export default function FacultyStudentAnalysis() {
           return (
             <div
               key={student.id}
-              className={`rounded-xl bg-slate-800/50 border transition-all ${
+              className={`rounded-xl bg-white dark:bg-slate-800/50 border shadow-sm transition-all ${
                 student.status === 'weak' ? 'border-rose-500/20' :
                 student.status === 'good' ? 'border-emerald-500/20' :
-                'border-slate-700/50'
+                'border-slate-200 dark:border-slate-700/50'
               }`}
             >
               {/* Student Row Header */}
@@ -304,7 +304,7 @@ export default function FacultyStudentAnalysis() {
 
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-slate-700/50 pt-4">
+                <div className="px-4 pb-4 border-t border-slate-200 dark:border-slate-700/50 pt-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Left Column - Info & Assessments */}
                     <div className="space-y-4">
@@ -357,7 +357,7 @@ export default function FacultyStudentAnalysis() {
                           {student.assessmentScores.map((score: AssessmentScore, i: number) => (
                             <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
                               <span className="text-xs text-slate-600 dark:text-slate-400 w-20">{score.assessment}</span>
-                              <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${score.score >= 80 ? 'bg-emerald-500' : score.score >= 60 ? 'bg-amber-500' : 'bg-rose-500'}`}
                                   style={{ width: `${score.score}%` }}
@@ -437,7 +437,7 @@ export default function FacultyStudentAnalysis() {
         })}
 
         {filteredStudents.length === 0 && (
-          <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
+          <div className="p-12 text-center rounded-xl bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed">
             <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-slate-600 dark:text-slate-400">No students found</p>
           </div>

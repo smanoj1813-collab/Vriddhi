@@ -65,7 +65,7 @@ const SuperAdminColleges: React.FC = () => {
         </div>
         <button
           onClick={() => navigate('/superadmin/colleges/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white rounded-lg transition-colors text-sm font-semibold shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm"
         >
           <Plus className="w-4 h-4" /> Add College
         </button>
@@ -100,7 +100,7 @@ const SuperAdminColleges: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search colleges..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
           />
         </div>
         <div className="relative">
@@ -108,7 +108,7 @@ const SuperAdminColleges: React.FC = () => {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none appearance-none"
+            className="pl-10 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 appearance-none"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -121,7 +121,7 @@ const SuperAdminColleges: React.FC = () => {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {colleges.map((college: College) => (
-          <div key={college.id} className="glass-card p-5 hover:border-slate-600 transition-colors">
+          <div key={college.id} className="glass-card p-5 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -167,7 +167,7 @@ const SuperAdminColleges: React.FC = () => {
                 : 'No subscription'}
             </div>
 
-            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-700/50">
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
               <button onClick={() => navigate(`/superadmin/colleges/${college.id}`)} className="flex-1 py-1.5 text-xs font-medium text-teal-600 dark:text-teal-400 bg-teal-500/10 hover:bg-teal-100 dark:bg-teal-900/30 rounded-lg transition-colors">
                 View Details
               </button>

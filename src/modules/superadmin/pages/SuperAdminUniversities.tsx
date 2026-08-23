@@ -172,7 +172,7 @@ const SuperAdminUniversities: React.FC = () => {
 
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 bg-slate-700/50 rounded-lg text-emerald-400">
+            <div className="p-2 bg-emerald-500/10 dark:bg-slate-700/50 rounded-lg text-emerald-500 dark:text-emerald-400">
               <Target size={20} />
             </div>
           </div>
@@ -216,8 +216,8 @@ const SuperAdminUniversities: React.FC = () => {
                   : tier.priority === 3
                   ? "bg-indigo-950/30 border-indigo-800/50"
                   : tier.priority === 4
-                  ? "bg-slate-800/50 border-slate-700"
-                  : "bg-slate-800/30 border-slate-700/50"
+                  ? "bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  : "bg-slate-100/70 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/50"
               }`}
             >
               <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{tier.label}</p>
@@ -248,7 +248,7 @@ const SuperAdminUniversities: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex-1">
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           r.percentageComplete >= 80
@@ -286,13 +286,13 @@ const SuperAdminUniversities: React.FC = () => {
             placeholder="Search university..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
+            className="pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 w-64"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive" | "pending")}
-          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-400"
+          className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -302,7 +302,7 @@ const SuperAdminUniversities: React.FC = () => {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-400"
+          className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
         >
           <option value="all">All Priorities</option>
           <option value="1">Phase 1</option>
@@ -331,7 +331,7 @@ const SuperAdminUniversities: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700">
+                <tr className="border-b border-slate-200 dark:border-slate-700">
                   <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     University
                   </th>
@@ -396,7 +396,7 @@ const SuperAdminUniversities: React.FC = () => {
                               ? "bg-indigo-500/20 text-indigo-400"
                               : u.priority === 4
                               ? "bg-slate-500/20 text-slate-400"
-                              : "bg-slate-700/30 text-slate-500"
+                              : "bg-slate-200 dark:bg-slate-700/30 text-slate-600 dark:text-slate-500"
                           }`}
                         >
                           {u.priority ? `P${u.priority}` : "—"}
@@ -418,7 +418,7 @@ const SuperAdminUniversities: React.FC = () => {
                           {coursesArr.map((c, idx) => (
                             <span
                               key={`${getCourseCode(c)}-${idx}`}
-                              className="px-1.5 py-0.5 bg-slate-700/50 rounded text-xs text-slate-400"
+                              className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700/50 rounded text-xs text-slate-600 dark:text-slate-400"
                             >
                               {getCourseCode(c)}
                             </span>
@@ -468,7 +468,7 @@ const SuperAdminUniversities: React.FC = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
               This will populate Firestore with all Karnataka government universities.
             </p>
-            <div className="bg-slate-900 rounded-lg p-3 mb-4">
+            <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-3 mb-4">
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Universities to seed:{" "}
                 {prioritySummary.reduce((s, t) => s + t.universities, 0)}

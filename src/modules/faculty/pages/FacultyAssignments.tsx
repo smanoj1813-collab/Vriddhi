@@ -164,7 +164,7 @@ export default function FacultyAssignments() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <Link to="/faculty" className="p-2 rounded-xl glass-card/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all">
+          <Link to="/faculty" className="p-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all shadow-sm">
             <ChevronLeft className="w-5 h-5 text-slate-300" />
           </Link>
           <div>
@@ -187,7 +187,7 @@ export default function FacultyAssignments() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, i) => (
-          <div key={i} className="glass-card/50 rounded-2xl p-4">
+          <div key={i} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4 shadow-sm">
             <p className="text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
           </div>
@@ -203,13 +203,13 @@ export default function FacultyAssignments() {
             placeholder="Search assignments..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full glass-card/50 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 text-sm"
+            className="w-full bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
           />
         </div>
         <select
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value as AssignmentStatus | 'all')}
-          className="glass-card/50 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500/50"
+          className="bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
         >
           <option value="all">All Status</option>
           <option value="draft">Draft</option>
@@ -223,7 +223,7 @@ export default function FacultyAssignments() {
       {/* Assignments List */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="bg-slate-800/30 border border-slate-700/30 rounded-2xl p-12 text-center">
+          <div className="bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 rounded-2xl p-12 text-center">
             <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
             <p className="text-slate-600 dark:text-slate-400">No assignments found</p>
           </div>
@@ -238,7 +238,7 @@ export default function FacultyAssignments() {
               : '-'
 
             return (
-              <div key={item.id} className="glass-card/50 rounded-2xl p-5 hover:border-slate-600 transition-all">
+              <div key={item.id} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm">
                 <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -261,7 +261,7 @@ export default function FacultyAssignments() {
                       <div className="mt-3 flex items-center gap-4">
                         <div className="flex items-center gap-2 text-xs">
                           <span className="text-slate-600 dark:text-slate-400">Submissions:</span>
-                          <div className="w-24 bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
+                          <div className="w-24 bg-slate-100 dark:bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
                             <div className="h-full rounded-full bg-teal-500" style={{ width: `${submissionRate}%` }} />
                           </div>
                           <span className="text-slate-700 dark:text-slate-300">{submissionRate}%</span>
@@ -330,7 +330,7 @@ export default function FacultyAssignments() {
                   value={createTitle}
                   onChange={e => setCreateTitle(e.target.value)}
                   placeholder="e.g., Assignment 4: Graph Algorithms"
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm"
+                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                 />
               </div>
               <div>
@@ -340,7 +340,7 @@ export default function FacultyAssignments() {
                   onChange={e => setCreateDescription(e.target.value)}
                   rows={3}
                   placeholder="Describe the assignment requirements..."
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm resize-none"
+                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -349,7 +349,7 @@ export default function FacultyAssignments() {
                   <select
                     value={createTopic}
                     onChange={e => setCreateTopic(e.target.value)}
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm"
+                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                   >
                     <option value="">Select topic...</option>
                     {facultyTopics.map(t => (
@@ -365,7 +365,7 @@ export default function FacultyAssignments() {
                     onChange={e => setCreateMaxScore(parseInt(e.target.value) || 0)}
                     min={1}
                     max={100}
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm"
+                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                   />
                 </div>
               </div>
@@ -376,7 +376,7 @@ export default function FacultyAssignments() {
                     type="date"
                     value={createDeadline}
                     onChange={e => setCreateDeadline(e.target.value)}
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm"
+                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                   />
                 </div>
                 <div>
@@ -384,7 +384,7 @@ export default function FacultyAssignments() {
                   <select
                     value={createBatch}
                     onChange={e => setCreateBatch(e.target.value)}
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm"
+                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                   >
                     {batchOptions.map(b => (
                       <option key={b} value={b}>{b}</option>
@@ -438,7 +438,7 @@ export default function FacultyAssignments() {
                 { label: 'Missing', value: showDetail.submissions.filter(s => s.status === 'missing').length, color: 'text-rose-400' },
                 { label: 'Avg Score', value: showDetail.submissions.filter(s => s.score !== undefined).length > 0 ? (showDetail.submissions.filter(s => s.score !== undefined).reduce((acc, s) => acc + (s.score || 0), 0) / showDetail.submissions.filter(s => s.score !== undefined).length).toFixed(1) : '-', color: 'text-amber-400' },
               ].map((s, i) => (
-                <div key={i} className="bg-slate-700/30 rounded-xl p-3 text-center border border-slate-700/50">
+                <div key={i} className="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-3 text-center border border-slate-200 dark:border-slate-700/50">
                   <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
                   <p className="text-xs text-slate-600 dark:text-slate-400">{s.label}</p>
                 </div>
@@ -454,7 +454,7 @@ export default function FacultyAssignments() {
                 showDetail.submissions.map(sub => {
                   const ssConfig = subStatusConfig[sub.status]
                   return (
-                    <div key={sub.studentId} className="flex items-center gap-4 p-3 rounded-xl bg-slate-700/30 border border-slate-700/50">
+                    <div key={sub.studentId} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-700/50">
                       <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">
                         {sub.studentName.charAt(0)}
                       </div>
@@ -500,7 +500,7 @@ export default function FacultyAssignments() {
               </button>
             </div>
 
-            <div className="mb-4 p-3 bg-slate-700/30 rounded-xl border border-slate-700/50">
+            <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-200 dark:border-slate-700/50">
               <p className="text-sm text-slate-700 dark:text-slate-300"><span className="text-slate-500 dark:text-slate-400">Student:</span> {showGradeModal.studentName}</p>
               <p className="text-sm text-slate-700 dark:text-slate-300"><span className="text-slate-500 dark:text-slate-400">Roll No:</span> {showGradeModal.rollNo}</p>
               <p className="text-sm text-slate-700 dark:text-slate-300"><span className="text-slate-500 dark:text-slate-400">Max Score:</span> {showGradeModal.maxScore}</p>
@@ -516,7 +516,7 @@ export default function FacultyAssignments() {
                   min={0}
                   max={showGradeModal.maxScore}
                   placeholder={`0 - ${showGradeModal.maxScore}`}
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm"
+                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                 />
               </div>
               <div>
@@ -526,7 +526,7 @@ export default function FacultyAssignments() {
                   onChange={e => setGradeRemarks(e.target.value)}
                   rows={2}
                   placeholder="Optional feedback..."
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm resize-none"
+                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm resize-none"
                 />
               </div>
             </div>

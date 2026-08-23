@@ -240,7 +240,7 @@ const SuperAdminFaculty: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by name, email, ID, department..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
           />
         </div>
         <div className="relative">
@@ -248,7 +248,7 @@ const SuperAdminFaculty: React.FC = () => {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none appearance-none"
+            className="pl-10 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 appearance-none"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -260,7 +260,7 @@ const SuperAdminFaculty: React.FC = () => {
           <select
             value={collegeFilter}
             onChange={e => setCollegeFilter(e.target.value)}
-            className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none appearance-none"
+            className="pl-10 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 appearance-none"
           >
             <option value="all">All Colleges</option>
             {colleges.map((c: any) => (
@@ -274,7 +274,7 @@ const SuperAdminFaculty: React.FC = () => {
             <select
               value={departmentFilter}
               onChange={e => setDepartmentFilter(e.target.value)}
-              className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none appearance-none"
+              className="pl-10 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 appearance-none"
             >
               <option value="all">All Departments</option>
               {departments.map((d: string) => (
@@ -290,7 +290,7 @@ const SuperAdminFaculty: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-700">
+              <tr className="border-b border-slate-200 dark:border-slate-700">
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Faculty</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Contact</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Department</th>
@@ -415,10 +415,10 @@ const SuperAdminFaculty: React.FC = () => {
                 <p className="text-sm text-slate-600 dark:text-slate-400">{resetFacultyName}</p>
               </div>
             </div>
-            <div className="bg-slate-900 rounded-lg p-4 mb-4">
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 mb-4 border border-slate-200 dark:border-transparent">
               <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">New Temporary Password</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-lg font-mono text-teal-400 bg-slate-800 px-3 py-2 rounded">
+                <code className="flex-1 text-lg font-mono text-teal-600 dark:text-teal-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-transparent px-3 py-2 rounded">
                   {resetPassword}
                 </code>
                 <button

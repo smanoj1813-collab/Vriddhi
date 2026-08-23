@@ -126,10 +126,10 @@ const CreateCollegeAdmin: React.FC = () => {
   };
 
   const inputClasses = (fieldName: keyof AdminFormData) =>
-    `w-full px-4 py-2.5 bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
+    `w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
      focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
-     placeholder-slate-500
-     ${errors[fieldName] ? 'border-red-500 bg-red-500/10' : 'border-slate-700 hover:border-slate-600'}`;
+     placeholder-slate-400 dark:placeholder-slate-500
+     ${errors[fieldName] ? 'border-red-500 bg-red-500/10' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'}`;
 
   const labelClasses = "block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5";
   const requiredMark = <span className="text-red-600 dark:text-red-400">*</span>;
@@ -262,7 +262,7 @@ const CreateCollegeAdmin: React.FC = () => {
                     {collegesLoading ? 'Loading colleges...' : 'Select a college'}
                   </option>
                   {colleges.map((college: College) => (
-                    <option key={college.id} value={college.id} className="bg-slate-800">
+                    <option key={college.id} value={college.id}>
                       {college.name} ({college.code})
                     </option>
                   ))}
@@ -284,12 +284,12 @@ const CreateCollegeAdmin: React.FC = () => {
                   onChange={handleChange}
                   className={`${inputClasses('role')} appearance-none pr-10`}
                 >
-                  <option value="admin" className="bg-slate-800">College Admin</option>
-                  <option value="principal" className="bg-slate-800">Principal</option>
-                  <option value="hod" className="bg-slate-800">Head of Department</option>
-                  <option value="mentor" className="bg-slate-800">Mentor</option>
-                  <option value="coordinator" className="bg-slate-800">Coordinator</option>
-                  <option value="department_head" className="bg-slate-800">Department Head</option>
+                  <option value="admin">College Admin</option>
+                  <option value="principal">Principal</option>
+                  <option value="hod">Head of Department</option>
+                  <option value="mentor">Mentor</option>
+                  <option value="coordinator">Coordinator</option>
+                  <option value="department_head">Department Head</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
               </div>
@@ -372,7 +372,7 @@ const CreateCollegeAdmin: React.FC = () => {
               name="isActive"
               checked={formData.isActive}
               onChange={handleChange}
-              className="w-4 h-4 text-teal-600 bg-slate-800 border-slate-600 rounded focus:ring-teal-500"
+              className="w-4 h-4 text-teal-600 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-teal-500 accent-teal-600"
             />
             <span className="text-sm text-slate-700 dark:text-slate-300">Activate account immediately</span>
           </label>

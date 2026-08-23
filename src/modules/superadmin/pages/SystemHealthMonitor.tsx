@@ -26,17 +26,17 @@ interface StatusConfig {
 }
 
 const STATUS_CONFIG: Record<string, StatusConfig> = {
-  operational: { icon: CheckCircle2, color: "text-green-400", bg: "bg-green-500/10", label: "Operational" },
-  degraded: { icon: AlertTriangle, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Degraded" },
-  down: { icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", label: "Down" },
-  critical: { icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", label: "Critical" },
+  operational: { icon: CheckCircle2, color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10", label: "Operational" },
+  degraded: { icon: AlertTriangle, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-500/10", label: "Degraded" },
+  down: { icon: XCircle, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", label: "Down" },
+  critical: { icon: XCircle, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", label: "Critical" },
 };
 
 const SEVERITY_CONFIG: Record<string, { color: string; bg: string }> = {
-  critical: { color: "text-red-400", bg: "bg-red-500/10" },
-  high: { color: "text-orange-400", bg: "bg-orange-500/10" },
-  medium: { color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  low: { color: "text-blue-400", bg: "bg-blue-500/10" },
+  critical: { color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+  high: { color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
+  medium: { color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-500/10" },
+  low: { color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
 };
 
 const ServiceCard: React.FC<{ service: ServiceHealth }> = ({ service }) => {
@@ -44,15 +44,15 @@ const ServiceCard: React.FC<{ service: ServiceHealth }> = ({ service }) => {
   const Icon = config.icon;
 
   return (
-    <div className={`bg-slate-800/50 border rounded-xl p-4 transition-colors ${
+    <div className={`bg-white dark:bg-slate-800/50 border rounded-xl p-4 transition-colors shadow-sm ${
       service.status === "down" ? "border-red-500/50 animate-pulse" :
       service.status === "degraded" ? "border-yellow-500/50" :
-      "border-slate-700"
+      "border-slate-200 dark:border-slate-700"
     }`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Server className="w-4 h-4 text-slate-400" />
-          <span className="text-white font-medium text-sm">{service.name}</span>
+          <Server className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+          <span className="text-slate-900 dark:text-white font-medium text-sm">{service.name}</span>
         </div>
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.color}`}>
           <Icon className="w-3 h-3" />
@@ -62,19 +62,19 @@ const ServiceCard: React.FC<{ service: ServiceHealth }> = ({ service }) => {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
           <p className="text-slate-500">Uptime</p>
-          <p className="text-white font-medium">{service.uptime.toFixed(2)}%</p>
+          <p className="text-slate-900 dark:text-white font-medium">{service.uptime.toFixed(2)}%</p>
         </div>
         <div>
           <p className="text-slate-500">Response</p>
-          <p className="text-white font-medium">{service.responseTime}ms</p>
+          <p className="text-slate-900 dark:text-white font-medium">{service.responseTime}ms</p>
         </div>
         <div>
           <p className="text-slate-500">Error Rate</p>
-          <p className="text-white font-medium">{service.errorRate.toFixed(2)}%</p>
+          <p className="text-slate-900 dark:text-white font-medium">{service.errorRate.toFixed(2)}%</p>
         </div>
         <div>
           <p className="text-slate-500">Req/min</p>
-          <p className="text-white font-medium">{service.requestsPerMinute}</p>
+          <p className="text-slate-900 dark:text-white font-medium">{service.requestsPerMinute}</p>
         </div>
       </div>
     </div>
@@ -115,30 +115,30 @@ const SystemHealthMonitor: React.FC = () => {
 
   if (healthLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
       </div>
     );
   }
 
   const overallStatus = health?.overallStatus || "healthy";
-  const statusColor = overallStatus === "healthy" ? "text-green-400" : overallStatus === "degraded" ? "text-yellow-400" : "text-red-400";
+  const statusColor = overallStatus === "healthy" ? "text-green-600 dark:text-green-400" : overallStatus === "degraded" ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400";
   const statusBg = overallStatus === "healthy" ? "bg-green-500/10" : overallStatus === "degraded" ? "bg-yellow-500/10" : "bg-red-500/10";
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
             <ArrowLeft className="w-5 h-5 text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
               <Activity className="w-6 h-6 text-emerald-400" />
-              <h1 className="text-2xl font-bold text-white">System Health Monitor</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">System Health Monitor</h1>
             </div>
-            <p className="text-slate-400 text-sm">Monitor system performance and health metrics</p>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Monitor system performance and health metrics</p>
           </div>
         </div>
         <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${statusBg}`}>
@@ -149,26 +149,26 @@ const SystemHealthMonitor: React.FC = () => {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Uptime (24h)</p>
-          <p className="text-2xl font-bold text-white">{health?.uptime24h?.toFixed(2) || "99.99"}%</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health?.uptime24h?.toFixed(2) || "99.99"}%</p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Error Rate (24h)</p>
-          <p className="text-2xl font-bold text-white">{health?.errorRate24h?.toFixed(2) || "0.02"}%</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health?.errorRate24h?.toFixed(2) || "0.02"}%</p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Avg Response</p>
-          <p className="text-2xl font-bold text-white">{health?.avgResponseTime || "85"}ms</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health?.avgResponseTime || "85"}ms</p>
         </div>
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Total Requests</p>
-          <p className="text-2xl font-bold text-white">{(health?.totalRequests24h || 0).toLocaleString()}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{(health?.totalRequests24h || 0).toLocaleString()}</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-800/50 border border-slate-700 rounded-xl p-1 mb-6 w-fit">
+      <div className="flex gap-1 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-1 mb-6 w-fit shadow-sm">
         {([
           { key: "overview", label: "Overview", icon: Activity },
           { key: "queries", label: "Slow Queries", icon: Database },
@@ -179,7 +179,7 @@ const SystemHealthMonitor: React.FC = () => {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === tab.key ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
+              activeTab === tab.key ? "bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -191,7 +191,7 @@ const SystemHealthMonitor: React.FC = () => {
       {/* Overview Tab */}
       {activeTab === "overview" && (
         <div>
-          <h2 className="text-lg font-bold text-white mb-4">Services Status</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Services Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {health?.services?.map((service: ServiceHealth) => (
               <ServiceCard key={service.name} service={service} />
@@ -201,25 +201,25 @@ const SystemHealthMonitor: React.FC = () => {
           {/* Alerts */}
           {health?.alerts && health.alerts.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-lg font-bold text-white mb-4">Active Alerts</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Active Alerts</h2>
               <div className="space-y-2">
                 {health.alerts.map((alert: HealthAlert) => {
                   const severityConfig = SEVERITY_CONFIG[alert.severity] || SEVERITY_CONFIG.medium;
                   return (
-                    <div key={alert.id} className={`flex items-center justify-between bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 ${
+                    <div key={alert.id} className={`flex items-center justify-between bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm ${
                       alert.severity === "critical" ? "border-red-500/30" : alert.severity === "warning" ? "border-yellow-500/30" : ""
                     }`}>
                       <div className="flex items-center gap-3">
                         <Bell className={`w-5 h-5 ${severityConfig.color}`} />
                         <div>
-                          <p className="text-sm text-white font-medium">{alert.message}</p>
+                          <p className="text-sm text-slate-900 dark:text-white font-medium">{alert.message}</p>
                           <p className="text-xs text-slate-500">{alert.service} • {new Date(alert.timestamp).toLocaleString()}</p>
                         </div>
                       </div>
                       {!alert.acknowledged && (
                         <button
                           onClick={() => handleAcknowledgeAlert(alert.id)}
-                          className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
                         >
                           Acknowledge
                         </button>
@@ -235,10 +235,10 @@ const SystemHealthMonitor: React.FC = () => {
 
       {/* Slow Queries Tab */}
       {activeTab === "queries" && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-700">
+              <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-transparent">
                 <th className="text-left px-4 py-3 font-medium">Query</th>
                 <th className="text-left px-4 py-3 font-medium">Endpoint</th>
                 <th className="text-right px-4 py-3 font-medium">Duration</th>
@@ -250,16 +250,16 @@ const SystemHealthMonitor: React.FC = () => {
               {slowQueries?.map((query: SlowQuery) => {
                 const severityConfig = SEVERITY_CONFIG[query.severity] || SEVERITY_CONFIG.medium;
                 return (
-                  <tr key={query.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                    <td className="px-4 py-3 text-slate-300 font-mono text-xs max-w-md truncate">{query.query}</td>
-                    <td className="px-4 py-3 text-slate-400">{query.endpoint}</td>
-                    <td className="px-4 py-3 text-right text-white font-medium">{query.duration}ms</td>
+                  <tr key={query.id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-mono text-xs max-w-md truncate">{query.query}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{query.endpoint}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white font-medium">{query.duration}ms</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${severityConfig.bg} ${severityConfig.color}`}>
                         {query.severity}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-400 text-xs">{new Date(query.timestamp).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-400 text-xs">{new Date(query.timestamp).toLocaleString()}</td>
                   </tr>
                 );
               })}
@@ -276,10 +276,10 @@ const SystemHealthMonitor: React.FC = () => {
 
       {/* Error Logs Tab */}
       {activeTab === "errors" && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-700">
+              <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-transparent">
                 <th className="text-left px-4 py-3 font-medium">Message</th>
                 <th className="text-left px-4 py-3 font-medium">Endpoint</th>
                 <th className="text-center px-4 py-3 font-medium">Status</th>
@@ -290,25 +290,25 @@ const SystemHealthMonitor: React.FC = () => {
             </thead>
             <tbody>
               {errorLogs?.items?.map((error: ErrorLog) => (
-                <tr key={error.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                  <td className="px-4 py-3 text-slate-300 text-xs max-w-xs truncate">{error.message}</td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">{error.endpoint}</td>
+                <tr key={error.id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300 text-xs max-w-xs truncate">{error.message}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">{error.endpoint}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      error.statusCode >= 500 ? "bg-red-500/10 text-red-400" :
-                      error.statusCode >= 400 ? "bg-yellow-500/10 text-yellow-400" :
-                      "bg-green-500/10 text-green-400"
+                      error.statusCode >= 500 ? "bg-red-500/10 text-red-600 dark:text-red-400" :
+                      error.statusCode >= 400 ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400" :
+                      "bg-green-500/10 text-green-600 dark:text-green-400"
                     }`}>
                       {error.statusCode}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-white font-medium">{error.count}</td>
-                  <td className="px-4 py-3 text-center text-slate-400 text-xs">{new Date(error.lastSeen).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-center text-slate-900 dark:text-white font-medium">{error.count}</td>
+                  <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-400 text-xs">{new Date(error.lastSeen).toLocaleString()}</td>
                   <td className="px-4 py-3 text-center">
                     {!error.resolved && (
                       <button
                         onClick={() => handleResolveError(error.id)}
-                        className="px-2 py-1 text-xs font-medium text-green-400 bg-green-500/10 hover:bg-green-500/20 rounded transition-colors"
+                        className="px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/10 hover:bg-green-500/20 rounded transition-colors"
                       >
                         Resolve
                       </button>
@@ -331,8 +331,8 @@ const SystemHealthMonitor: React.FC = () => {
       {activeTab === "performance" && (
         <div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-white mb-3">Response Time Trend</h3>
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
+              <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-3">Response Time Trend</h3>
               <div className="h-48 flex items-end gap-1">
                 {performance?.map((metric: PerformanceMetric, i: number) => (
                   <div
@@ -344,8 +344,8 @@ const SystemHealthMonitor: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-white mb-3">Error Rate Trend</h3>
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
+              <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-3">Error Rate Trend</h3>
               <div className="h-48 flex items-end gap-1">
                 {performance?.map((metric: PerformanceMetric, i: number) => (
                   <div
@@ -358,10 +358,10 @@ const SystemHealthMonitor: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-slate-400 border-b border-slate-700">
+                <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-transparent">
                   <th className="text-left px-4 py-3 font-medium">Time</th>
                   <th className="text-right px-4 py-3 font-medium">Response Time</th>
                   <th className="text-right px-4 py-3 font-medium">Req/min</th>
@@ -372,13 +372,13 @@ const SystemHealthMonitor: React.FC = () => {
               </thead>
               <tbody>
                 {performance?.map((metric: PerformanceMetric, i: number) => (
-                  <tr key={i} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                    <td className="px-4 py-3 text-slate-400 text-xs">{new Date(metric.timestamp).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-right text-white">{metric.responseTime.toFixed(0)}ms</td>
-                    <td className="px-4 py-3 text-right text-white">{metric.requestsPerMinute.toFixed(0)}</td>
-                    <td className="px-4 py-3 text-right text-white">{(metric.errorRate * 100).toFixed(2)}%</td>
-                    <td className="px-4 py-3 text-right text-white">{metric.cpuUsage.toFixed(1)}%</td>
-                    <td className="px-4 py-3 text-right text-white">{metric.memoryUsage.toFixed(1)}%</td>
+                  <tr key={i} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">{new Date(metric.timestamp).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{metric.responseTime.toFixed(0)}ms</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{metric.requestsPerMinute.toFixed(0)}</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{(metric.errorRate * 100).toFixed(2)}%</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{metric.cpuUsage.toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{metric.memoryUsage.toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>
