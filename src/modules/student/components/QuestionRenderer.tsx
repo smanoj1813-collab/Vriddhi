@@ -12,6 +12,7 @@ import {
   TextField,
   Chip,
   Paper,
+  Checkbox,
 } from '@mui/material';
 import {
   Flag as FlagIcon,
@@ -163,6 +164,13 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
         <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
           {question.text}
         </Typography>
+        {question.caseText && (
+          <Paper variant="outlined" sx={{ p: 2, mt: 2, bgcolor: 'action.hover' }}>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+              {question.caseText}
+            </Typography>
+          </Paper>
+        )}
         {question.hasImage && question.imageUrl && (
           <Box
             component="img"
@@ -215,6 +223,45 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                 );
               })}
             </RadioGroup>
+          </FormControl>
+        )}
+
+        {question.type === 'multi_select' && (
+          <FormControl component="fieldset" sx={{ width: '100%' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Select all correct options
+            </Typography>
+            {question.options?.map((opt) => {
+              const checked = answer?.selectedOptionIds?.includes(opt.id);
+              return (
+                <Paper
+                  key={opt.id}
+                  elevation={0}
+                  sx={{
+                    mb: 1,
+                    p: 1.5,
+                    border: 1,
+                    borderColor: checked ? 'primary.main' : 'divider',
+                    bgcolor: checked ? 'primary.light' : 'background.paper',
+                    borderRadius: 2,
+                    transition: 'all 0.2s',
+                    '&:hover': !showResult ? { borderColor: 'primary.main', bgcolor: 'action.hover' } : {},
+                  }}
+                >
+                  <FormControlLabel
+                    checked={!!checked}
+                    onChange={(e) => handleMultiSelectChange(opt.id, (e.target as HTMLInputElement).checked)}
+                    control={<Checkbox disabled={showResult} />}
+                    label={
+                      <Typography sx={{ fontSize: '1rem' }}>
+                        <strong>{opt.id}.</strong> {opt.text}
+                      </Typography>
+                    }
+                    sx={{ width: '100%', m: 0 }}
+                  />
+                </Paper>
+              );
+            })}
           </FormControl>
         )}
 
