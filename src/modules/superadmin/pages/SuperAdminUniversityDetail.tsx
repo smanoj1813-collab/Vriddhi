@@ -68,7 +68,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
   // ── Loading ────────────────────────────────────────────────────────
   if (uniLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-teal-400 animate-spin" />
       </div>
     );
@@ -76,13 +76,13 @@ const SuperAdminUniversityDetail: React.FC = () => {
 
   if (!university) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <Building2 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 text-lg">University not found</p>
+          <p className="text-slate-600 dark:text-slate-400 text-lg">University not found</p>
           <button
             onClick={() => navigate("/superadmin/universities")}
-            className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors"
+            className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-slate-900 dark:text-white rounded-lg transition-colors"
           >
             Back to Universities
           </button>
@@ -97,13 +97,13 @@ const SuperAdminUniversityDetail: React.FC = () => {
 
   // ── Render ─────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* HEADER */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-2">
           <button
             onClick={() => navigate("/superadmin/universities")}
-            className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-slate-400" />
           </button>
@@ -118,8 +118,8 @@ const SuperAdminUniversityDetail: React.FC = () => {
               {university.shortName}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">{university.name}</h1>
-              <p className="text-slate-400 text-sm">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{university.name}</h1>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
                 {university.code} • {university.location} • Est. {university.establishedYear}
               </p>
             </div>
@@ -128,18 +128,18 @@ const SuperAdminUniversityDetail: React.FC = () => {
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${
                 university.priority === 1
-                  ? "bg-teal-500/20 text-teal-400 border border-teal-500/30"
+                  ? "bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30"
                   : university.priority === 2
-                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-400 border border-blue-500/30"
                   : university.priority === 3
                   ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                  : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
+                  : "bg-slate-500/20 text-slate-600 dark:text-slate-400 border border-slate-500/30"
               }`}
             >
               {/* FIX: priority may be null — default to 0 */}
               {getPriorityLabel(university.priority ?? 0)}
             </span>
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-500/20 text-slate-300 border border-slate-500/30 capitalize">
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-500/20 text-slate-700 dark:text-slate-300 border border-slate-500/30 capitalize">
               {university.managementType}
             </span>
             {university.isWomensUniversity && (
@@ -154,26 +154,26 @@ const SuperAdminUniversityDetail: React.FC = () => {
       {/* STATS ROW */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          icon={<Building2 className="w-5 h-5 text-teal-400" />}
+          icon={<Building2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />}
           label="Affiliated Colleges"
           value={`${onboardedCount} / ${targetCount}`}
           subtext={`${progressPct}% onboarded`}
         />
         <StatCard
-          icon={<MapPin className="w-5 h-5 text-blue-400" />}
+          icon={<MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
           label="Districts Covered"
           value={university.districts?.length ?? 0}
           subtext={university.districts?.join(", ")}
         />
         <StatCard
-          icon={<BookOpen className="w-5 h-5 text-amber-400" />}
+          icon={<BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
           label="UG Courses"
           value={university.courses.length}
           // FIX: courses is string[] (course codes), not object array
           subtext={university.courses.join(", ")}
         />
         <StatCard
-          icon={<Users className="w-5 h-5 text-purple-400" />}
+          icon={<Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
           label="Onboarded"
           value={university.onboardedColleges || 0}
           subtext={`${university.activeColleges || 0} active`}
@@ -181,13 +181,13 @@ const SuperAdminUniversityDetail: React.FC = () => {
       </div>
 
       {/* PROGRESS BAR */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
+      <div className="glass-card p-6 mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-white flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-teal-400" />
+          <h3 className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Onboarding Progress
           </h3>
-          <span className="text-sm text-slate-400">{progressPct}% complete</span>
+          <span className="text-sm text-slate-600 dark:text-slate-400">{progressPct}% complete</span>
         </div>
         <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
           <div
@@ -203,7 +203,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
             style={{ width: `${Math.max(2, progressPct)}%` }}
           />
         </div>
-        <div className="flex justify-between mt-2 text-xs text-slate-500">
+        <div className="flex justify-between mt-2 text-xs text-slate-500 dark:text-slate-400">
           <span>0</span>
           <span>{Math.round(targetCount / 2)}</span>
           <span>{targetCount} target</span>
@@ -223,14 +223,14 @@ const SuperAdminUniversityDetail: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-teal-400 text-teal-400"
-                  : "border-transparent text-slate-400 hover:text-slate-300"
+                  ? "border-teal-400 text-teal-600 dark:text-teal-400"
+                  : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-300"
               }`}
             >
               {tab.icon}
               {tab.label}
               {tab.count !== undefined && (
-                <span className="ml-1 px-1.5 py-0.5 bg-slate-800 rounded text-xs text-slate-300">
+                <span className="ml-1 px-1.5 py-0.5 bg-slate-800 rounded text-xs text-slate-700 dark:text-slate-300">
                   {tab.count}
                 </span>
               )}
@@ -245,8 +245,8 @@ const SuperAdminUniversityDetail: React.FC = () => {
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* University Info */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">University Details</h3>
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">University Details</h3>
               <div className="space-y-4">
                 <InfoRow icon={<Building2 className="w-4 h-4" />} label="Full Name" value={university.name} />
                 <InfoRow icon={<Globe className="w-4 h-4" />} label="Short Name" value={university.shortName} />
@@ -261,8 +261,8 @@ const SuperAdminUniversityDetail: React.FC = () => {
             </div>
 
             {/* Courses Offered */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">UG Courses Offered</h3>
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">UG Courses Offered</h3>
               <div className="grid grid-cols-2 gap-3">
                 {/* FIX: courses is string[] — use course code directly */}
                 {university.courses.map((course) => (
@@ -270,26 +270,26 @@ const SuperAdminUniversityDetail: React.FC = () => {
                     key={course}
                     className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-teal-400" />
+                    <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-white font-medium">{course}</p>
-                      <p className="text-xs text-slate-500">{course}</p>
+                      <p className="text-sm text-slate-900 dark:text-white font-medium">{course}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{course}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 p-3 bg-slate-900/50 rounded-lg">
-                <p className="text-xs text-slate-500">
+              <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   <span className="text-teal-400 font-medium">{university.courses.length}</span> courses available for question bank and paper generation
                 </p>
               </div>
             </div>
 
             {/* District Coverage */}
-            <div className="lg:col-span-2 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">District Coverage</h3>
+            <div className="lg:col-span-2 glass-card p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">District Coverage</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {districtMappings.map((m: DistrictUniversityMapping) => (
                   <div
@@ -298,7 +298,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
                   >
                     <MapPin className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm text-white">{m.district}</p>
+                      <p className="text-sm text-slate-900 dark:text-white">{m.district}</p>
                       {m.notes && <p className="text-xs text-slate-500 mt-0.5">{m.notes}</p>}
                     </div>
                   </div>
@@ -310,9 +310,9 @@ const SuperAdminUniversityDetail: React.FC = () => {
 
         {/* ── COLLEGES ───────────────────────────────────────────────── */}
         {activeTab === "colleges" && (
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+          <div className="glass-card overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-slate-700">
-              <h3 className="text-lg font-semibold text-white">Affiliated Colleges</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Affiliated Colleges</h3>
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -320,7 +320,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
                   placeholder="Search colleges..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
+                  className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
                 />
               </div>
             </div>
@@ -332,7 +332,7 @@ const SuperAdminUniversityDetail: React.FC = () => {
             ) : filteredColleges.length === 0 ? (
               <div className="p-12 text-center">
                 <GraduationCap className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400">
+                <p className="text-slate-600 dark:text-slate-400">
                   {colleges && colleges.length === 0
                     ? "No colleges onboarded yet for this university."
                     : "No colleges match your search."}
@@ -346,10 +346,10 @@ const SuperAdminUniversityDetail: React.FC = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-700">
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">College</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Code</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">District</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">College</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">Code</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">District</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
                       <th className="w-10" />
                     </tr>
                   </thead>
@@ -358,18 +358,18 @@ const SuperAdminUniversityDetail: React.FC = () => {
                       <tr
                         key={c.id}
                         onClick={() => navigate(`/superadmin/colleges/${c.id}`)}
-                        className="border-b border-slate-700/50 hover:bg-slate-700/30 cursor-pointer transition-colors"
+                        className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/30 cursor-pointer transition-colors"
                       >
-                        <td className="px-4 py-3 text-sm text-white">{c.name}</td>
-                        <td className="px-4 py-3 text-sm text-slate-300 font-mono">{c.code}</td>
-                        <td className="px-4 py-3 text-sm text-slate-300">{c.district || "—"}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{c.name}</td>
+                        <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 font-mono">{c.code}</td>
+                        <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">{c.district || "—"}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center gap-1 text-xs ${
                               c.status === "active"
                                 ? "text-emerald-400"
                                 : c.status === "onboarding"
-                                ? "text-amber-400"
+                                ? "text-amber-600 dark:text-amber-400"
                                 : "text-slate-400"
                             }`}
                           >
@@ -397,17 +397,17 @@ const SuperAdminUniversityDetail: React.FC = () => {
 
         {/* ── DISTRICTS ──────────────────────────────────────────────── */}
         {activeTab === "districts" && (
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">District Coverage Map</h3>
+          <div className="glass-card p-6">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">District Coverage Map</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {districtMappings.map((m: DistrictUniversityMapping) => (
                 <div key={m.district} className="p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-teal-500/20 flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5 text-teal-400" />
+                    <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0">
+                      <MapPin className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white font-medium truncate">{m.district}</p>
+                      <p className="text-sm text-slate-900 dark:text-white font-medium truncate">{m.district}</p>
                       <p className="text-xs text-slate-500 mt-1">
                         {m.courses.length} courses offered
                       </p>
@@ -456,12 +456,12 @@ function StatCard({
   subtext?: string;
 }) {
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="p-2 bg-slate-700/50 rounded-lg">{icon}</div>
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-sm text-slate-400 mt-1">{label}</p>
+      <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{label}</p>
       {subtext && <p className="text-xs text-slate-500 mt-0.5 truncate">{subtext}</p>}
     </div>
   );
@@ -481,7 +481,7 @@ function InfoRow({
   if (!value) return null;
   return (
     <div className="flex items-start gap-3">
-      <div className="mt-0.5 text-slate-500">{icon}</div>
+      <div className="mt-0.5 text-slate-500 dark:text-slate-400">{icon}</div>
       <div>
         <p className="text-xs text-slate-500 uppercase tracking-wide">{label}</p>
         {isLink ? (
@@ -494,7 +494,7 @@ function InfoRow({
             {value}
           </a>
         ) : (
-          <p className="text-sm text-white">{value}</p>
+          <p className="text-sm text-slate-900 dark:text-white">{value}</p>
         )}
       </div>
     </div>

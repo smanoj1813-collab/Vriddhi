@@ -153,8 +153,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
   // ── Loading state ──────────────────────────────────────────────────
   if (collegeLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 dark:border-teal-400" />
       </div>
     );
   }
@@ -162,13 +162,13 @@ const SuperAdminCollegeDetail: React.FC = () => {
   // ── Error / Not Found ──────────────────────────────────────────────
   if (collegeError || !college) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <Building2 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 text-lg">College not found</p>
+          <p className="text-slate-600 dark:text-slate-400 text-lg">College not found</p>
           <button
             onClick={() => navigate("/superadmin/colleges")}
-            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white rounded-lg transition-colors"
           >
             Back to Colleges
           </button>
@@ -180,22 +180,22 @@ const SuperAdminCollegeDetail: React.FC = () => {
   // ── Status badge color ─────────────────────────────────────────────
   const statusColors: Record<string, string> = {
     active: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    inactive: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+    inactive: "bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30",
     suspended: "bg-red-500/20 text-red-400 border-red-500/30",
-    trial: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    trial: "bg-amber-100 dark:bg-amber-900/30 text-amber-400 border-amber-500/30",
   };
 
   // ── Plan badge color ───────────────────────────────────────────────
   const planColors: Record<string, string> = {
     basic: "bg-slate-500/20 text-slate-300",
-    standard: "bg-blue-500/20 text-blue-300",
+    standard: "bg-blue-100 dark:bg-blue-900/30 text-blue-300",
     premium: "bg-purple-500/20 text-purple-300",
-    enterprise: "bg-amber-500/20 text-amber-300",
-    pro: "bg-teal-500/20 text-teal-300",
+    enterprise: "bg-amber-100 dark:bg-amber-900/30 text-amber-300",
+    pro: "bg-teal-100 dark:bg-teal-900/30 text-teal-300",
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* RESET CONFIRMATION DIALOG                                     */}
       {/* ═══════════════════════════════════════════════════════════════ */}
@@ -206,10 +206,10 @@ const SuperAdminCollegeDetail: React.FC = () => {
             <div className="bg-red-950/30 px-6 py-4 border-b border-red-900/30">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-red-500/20 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-red-400">Reset College Data</h3>
+                  <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Reset College Data</h3>
                   <p className="text-xs text-red-300/70">This action cannot be undone</p>
                 </div>
               </div>
@@ -221,15 +221,15 @@ const SuperAdminCollegeDetail: React.FC = () => {
                 <div className="text-center py-4">
                   <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
                   <p className="text-emerald-400 font-medium">College data reset successfully!</p>
-                  <p className="text-slate-400 text-sm mt-1">All students, faculty, and admins have been deleted.</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">All students, faculty, and admins have been deleted.</p>
                 </div>
               ) : (
                 <>
                   <div className="bg-red-950/20 border border-red-900/30 rounded-lg p-4">
-                    <p className="text-sm text-slate-300 mb-2">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
                       You are about to permanently delete all data for:
                     </p>
-                    <p className="text-white font-semibold">{college.name}</p>
+                    <p className="text-slate-900 dark:text-white font-semibold">{college.name}</p>
                     <div className="mt-3 space-y-1 text-sm">
                       <p className="text-red-300">• {college.studentCount || students.length} Students</p>
                       <p className="text-red-300">• {college.facultyCount || faculty.length} Faculty members</p>
@@ -239,8 +239,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
-                      Type the college code <span className="text-white font-mono bg-slate-700 px-1.5 py-0.5 rounded">{college.code}</span> to confirm:
+                    <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">
+                      Type the college code <span className="text-slate-900 dark:text-white font-mono bg-slate-700 px-1.5 py-0.5 rounded">{college.code}</span> to confirm:
                     </label>
                     <input
                       type="text"
@@ -250,7 +250,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
                         setResetError(null);
                       }}
                       placeholder={`Type ${college.code}`}
-                      className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-red-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-red-500 transition-colors"
                       disabled={isResetting}
                       autoFocus
                     />
@@ -272,14 +272,14 @@ const SuperAdminCollegeDetail: React.FC = () => {
                 <button
                   onClick={closeResetDialog}
                   disabled={isResetting}
-                  className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-sm disabled:opacity-50"
+                  className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleReset}
                   disabled={isResetting || confirmCode.trim() !== college.code}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-900/50 disabled:text-red-400/50 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-900/50 disabled:text-red-400/50 text-slate-900 dark:text-white rounded-lg transition-colors text-sm flex items-center gap-2"
                 >
                   {isResetting ? (
                     <>
@@ -306,7 +306,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
         <div className="flex items-center gap-4 mb-2">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-slate-400" />
           </button>
@@ -318,13 +318,13 @@ const SuperAdminCollegeDetail: React.FC = () => {
                 className="w-10 h-10 rounded-lg object-cover"
               />
             ) : (
-              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-blue-400" />
+              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-white">{college.name}</h1>
-              <p className="text-slate-400 text-sm">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{college.name}</h1>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
                 {college.code} &bull; {college.city || college.location || "—"}
               </p>
             </div>
@@ -347,7 +347,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
             </span>
             <button
               onClick={() => navigate(`/superadmin/colleges/edit/${id}`)}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-white"
               title="Edit College"
             >
               <Pencil className="w-4 h-4" />
@@ -361,7 +361,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          icon={<Users className="w-5 h-5 text-blue-400" />}
+          icon={<Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
           label="Total Students"
           value={studentsLoading ? "..." : (studentsData?.total ?? college.studentCount ?? 0)}
           subtext={studentsLoading ? "Loading..." : `${studentsData?.items?.filter((s: any) => s.status === "active").length || 0} active`}
@@ -373,12 +373,12 @@ const SuperAdminCollegeDetail: React.FC = () => {
           subtext={facultyLoading ? "Loading..." : `${facultyData?.items?.filter((f: any) => f.status === "active").length || 0} active`}
         />
         <StatCard
-          icon={<UserCog className="w-5 h-5 text-purple-400" />}
+          icon={<UserCog className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
           label="Admins"
           value={adminsLoading ? "..." : (adminsData?.total ?? college.adminCount ?? 0)}
         />
         <StatCard
-          icon={<BookOpen className="w-5 h-5 text-amber-400" />}
+          icon={<BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
           label="Courses"
           value={college.courses || 0}
         />
@@ -395,14 +395,14 @@ const SuperAdminCollegeDetail: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-teal-400 text-teal-400"
-                  : "border-transparent text-slate-400 hover:text-slate-300"
+                  ? "border-teal-400 text-teal-600 dark:text-teal-400"
+                  : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-300"
               }`}
             >
               {tab.icon}
               {tab.label}
               {tab.count !== undefined && (
-                <span className="ml-1 px-1.5 py-0.5 bg-slate-800 rounded text-xs text-slate-300">
+                <span className="ml-1 px-1.5 py-0.5 bg-slate-800 rounded text-xs text-slate-700 dark:text-slate-300">
                   {tab.count}
                 </span>
               )}
@@ -419,8 +419,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* College Info Card */}
-            <div className="lg:col-span-2 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">
+            <div className="lg:col-span-2 glass-card p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 College Information
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -450,8 +450,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
             {/* Quick Actions + Danger Zone */}
             <div className="space-y-6">
               {/* Quick Actions */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
                 <div className="space-y-2">
                   <ActionButton
                     label="Manage Students"
@@ -489,8 +489,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
               {/* Danger Zone */}
               <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
-                  <h3 className="text-lg font-semibold text-red-400">Danger Zone</h3>
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
                 </div>
                 <p className="text-sm text-red-300/70 mb-4">
                   Permanently delete all students, faculty, and admins for this college.
@@ -524,7 +524,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
               { key: "employmentType", label: "Type", render: (f) => (
                 <span className={`px-2 py-0.5 rounded text-xs ${
                   f.employmentType === "FULL_TIME" ? "bg-emerald-500/20 text-emerald-400" :
-                  f.employmentType === "PART_TIME" ? "bg-amber-500/20 text-amber-400" :
+                  f.employmentType === "PART_TIME" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" :
                   "bg-slate-500/20 text-slate-400"
                 }`}>
                   {f.employmentType?.replace("_", " ")}
@@ -532,7 +532,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
               )},
               { key: "status", label: "Status", render: (f) => (
                 <span className={`inline-flex items-center gap-1 text-xs ${
-                  f.status === "active" ? "text-emerald-400" : "text-red-400"
+                  f.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
                 }`}>
                   {f.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                   {f.status}
@@ -561,7 +561,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
               { key: "mentor", label: "Mentor" },
               { key: "status", label: "Status", render: (s) => (
                 <span className={`inline-flex items-center gap-1 text-xs ${
-                  s.status === "active" ? "text-emerald-400" : "text-red-400"
+                  s.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
                 }`}>
                   {s.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                   {s.status}
@@ -584,7 +584,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
               { key: "name", label: "Name" },
               { key: "email", label: "Email" },
               { key: "role", label: "Role", render: (a) => (
-                <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs capitalize">
+                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-300 rounded text-xs capitalize">
                   {a.role}
                 </span>
               )},
@@ -592,7 +592,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
               { key: "phone", label: "Phone" },
               { key: "status", label: "Status", render: (a) => (
                 <span className={`inline-flex items-center gap-1 text-xs ${
-                  a.status === "active" ? "text-emerald-400" : "text-red-400"
+                  a.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
                 }`}>
                   {a.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                   {a.status}
@@ -606,11 +606,11 @@ const SuperAdminCollegeDetail: React.FC = () => {
         {/* ── SUBSCRIPTION TAB ───────────────────────────────────────── */}
         {activeTab === "subscription" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Current Plan</h3>
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Current Plan</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Plan</span>
+                  <span className="text-slate-600 dark:text-slate-400">Plan</span>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     planColors[college.plan] || planColors.standard
                   }`}>
@@ -618,21 +618,21 @@ const SuperAdminCollegeDetail: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Billing Cycle</span>
-                  <span className="text-white capitalize">{college.billingCycle}</span>
+                  <span className="text-slate-600 dark:text-slate-400">Billing Cycle</span>
+                  <span className="text-slate-900 dark:text-white capitalize">{college.billingCycle}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Status</span>
+                  <span className="text-slate-600 dark:text-slate-400">Status</span>
                   <span className={`px-2 py-0.5 rounded text-xs ${
-                    college.status === "active" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                    college.status === "active" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-600 dark:text-red-400"
                   }`}>
                     {college.status}
                   </span>
                 </div>
                 {college.subscriptionEnd && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Subscription Ends</span>
-                    <span className="text-white">
+                    <span className="text-slate-600 dark:text-slate-400">Subscription Ends</span>
+                    <span className="text-slate-900 dark:text-white">
                       {new Date(college.subscriptionEnd).toLocaleDateString()}
                     </span>
                   </div>
@@ -640,8 +640,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Usage</h3>
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Usage</h3>
               <div className="space-y-4">
                 <UsageBar label="Students" used={college.studentCount || 0} limit={college.currentStudents || 500} />
                 <UsageBar label="Faculty" used={college.facultyCount || 0} limit={college.currentFaculty || 50} />
@@ -671,12 +671,12 @@ function StatCard({
   subtext?: string;
 }) {
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="p-2 bg-slate-700/50 rounded-lg">{icon}</div>
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-sm text-slate-400 mt-1">{label}</p>
+      <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{label}</p>
       {subtext && <p className="text-xs text-slate-500 mt-0.5">{subtext}</p>}
     </div>
   );
@@ -696,7 +696,7 @@ function InfoRow({
   if (!value) return null;
   return (
     <div className="flex items-start gap-3">
-      <div className="mt-0.5 text-slate-500">{icon}</div>
+      <div className="mt-0.5 text-slate-500 dark:text-slate-400">{icon}</div>
       <div>
         <p className="text-xs text-slate-500 uppercase tracking-wide">{label}</p>
         {isLink ? (
@@ -704,7 +704,7 @@ function InfoRow({
             {value}
           </a>
         ) : (
-          <p className="text-sm text-white">{value}</p>
+          <p className="text-sm text-slate-900 dark:text-white">{value}</p>
         )}
       </div>
     </div>
@@ -723,10 +723,10 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3 bg-slate-700/30 hover:bg-slate-700/50 border border-slate-700/50 rounded-lg transition-colors text-left group"
+      className="w-full flex items-center gap-3 px-4 py-3 bg-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-slate-700/50 rounded-lg transition-colors text-left group"
     >
-      <span className="text-slate-400 group-hover:text-teal-400 transition-colors">{icon}</span>
-      <span className="text-sm text-slate-300 group-hover:text-white flex-1">{label}</span>
+      <span className="text-slate-600 dark:text-slate-400 group-hover:text-teal-400 transition-colors">{icon}</span>
+      <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:text-white flex-1">{label}</span>
       <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
     </button>
   );
@@ -737,8 +737,8 @@ function UsageBar({ label, used, limit }: { label: string; used: number; limit: 
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-slate-400">{label}</span>
-        <span className="text-white">
+        <span className="text-slate-600 dark:text-slate-400">{label}</span>
+        <span className="text-slate-900 dark:text-white">
           {used} / {limit}
         </span>
       </div>
@@ -789,10 +789,10 @@ function DataTable<T extends Record<string, any>>({
     : data;
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+    <div className="glass-card overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -801,7 +801,7 @@ function DataTable<T extends Record<string, any>>({
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
+              className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
             />
           </div>
         </div>
@@ -810,11 +810,11 @@ function DataTable<T extends Record<string, any>>({
       {/* Table */}
       {isLoading ? (
         <div className="p-12 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 dark:border-teal-400" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="p-12 text-center">
-          <p className="text-slate-500">{emptyMessage}</p>
+          <p className="text-slate-500 dark:text-slate-400">{emptyMessage}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -824,7 +824,7 @@ function DataTable<T extends Record<string, any>>({
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider"
+                    className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider"
                   >
                     {col.label}
                   </th>
@@ -837,12 +837,12 @@ function DataTable<T extends Record<string, any>>({
                 <tr
                   key={item.id || idx}
                   onClick={() => onRowClick?.(item)}
-                  className={`border-b border-slate-700/50 ${
-                    onRowClick ? "hover:bg-slate-700/30 cursor-pointer" : ""
+                  className={`border-b border-slate-100 dark:border-slate-800 ${
+                    onRowClick ? "hover:bg-slate-100 dark:hover:bg-slate-700/30 cursor-pointer" : ""
                   } transition-colors`}
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3 text-sm text-white">
+                    <td key={col.key} className="px-4 py-3 text-sm text-slate-900 dark:text-white">
                       {col.render ? col.render(item) : item[col.key]}
                     </td>
                   ))}

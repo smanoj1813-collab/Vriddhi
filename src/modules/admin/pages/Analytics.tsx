@@ -41,12 +41,12 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xl">
-      <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2">{label}</p>
+      <p className="text-sm font-semibold text-slate-900 dark:text-slate-900 dark:text-white mb-2">{label}</p>
       {payload.map((entry: any, idx: number) => (
         <div key={idx} className="flex items-center gap-2 text-xs">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-slate-500">{entry.name}:</span>
-          <span className="text-slate-900 dark:text-white font-medium">
+          <span className="text-slate-500 dark:text-slate-400">{entry.name}:</span>
+          <span className="text-slate-900 dark:text-slate-900 dark:text-white font-medium">
             {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
             {entry.unit || ''}
           </span>
@@ -86,7 +86,7 @@ function StatCard({
       {loading ? (
         <Loader2 className="w-7 h-7 animate-spin text-vriddhi-muted" />
       ) : (
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
       )}
       <p className="text-xs text-vriddhi-muted mt-1">{label}</p>
       {subtext && <p className="text-[10px] text-vriddhi-muted/60 mt-0.5">{subtext}</p>}
@@ -357,7 +357,7 @@ export default function Analytics() {
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-vriddhi-accent text-white rounded-xl text-sm hover:bg-teal-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-vriddhi-accent text-slate-900 dark:text-white rounded-xl text-sm hover:bg-teal-600 transition-colors"
           >
             <Download size={16} />
             Export
@@ -367,32 +367,32 @@ export default function Analytics() {
 
       {/* KPI Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Students" value={computedData.totalStudents} subtext="Active enrolled" icon={Users} color="bg-blue-500 text-blue-400" trend="+12%" trendUp={true} loading={loading} />
-        <StatCard label="Overall Average" value={`${overallAvg}%`} subtext="Across all assessments" icon={Target} color="bg-vriddhi-accent text-teal-400" trend="+3.2%" trendUp={true} loading={loading} />
-        <StatCard label="Avg Attendance" value={`${attendanceRate}%`} subtext="Daily attendance rate" icon={ClipboardCheck} color="bg-green-500 text-green-400" trend="-1.5%" trendUp={false} loading={loading} />
-        <StatCard label="Pass Rate" value={`${passRate}%`} subtext="Students scoring ≥ 40%" icon={GraduationCap} color="bg-amber-500 text-amber-400" trend="+5.1%" trendUp={true} loading={loading} />
+        <StatCard label="Total Students" value={computedData.totalStudents} subtext="Active enrolled" icon={Users} color="bg-blue-500 text-blue-600 dark:text-blue-400" trend="+12%" trendUp={true} loading={loading} />
+        <StatCard label="Overall Average" value={`${overallAvg}%`} subtext="Across all assessments" icon={Target} color="bg-vriddhi-accent text-teal-600 dark:text-teal-400" trend="+3.2%" trendUp={true} loading={loading} />
+        <StatCard label="Avg Attendance" value={`${attendanceRate}%`} subtext="Daily attendance rate" icon={ClipboardCheck} color="bg-green-500 text-emerald-600 dark:text-emerald-400" trend="-1.5%" trendUp={false} loading={loading} />
+        <StatCard label="Pass Rate" value={`${passRate}%`} subtext="Students scoring ≥ 40%" icon={GraduationCap} color="bg-amber-500 text-amber-600 dark:text-amber-400" trend="+5.1%" trendUp={true} loading={loading} />
       </div>
 
       {/* Secondary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2"><span className="text-xs text-vriddhi-muted">Active Assessments</span><Activity className="w-4 h-4 text-vriddhi-accent" /></div>
-          <p className="text-xl font-bold text-white">{activeAssessments}</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-white">{activeAssessments}</p>
           <p className="text-[10px] text-vriddhi-muted/60 mt-1">Currently scheduled</p>
         </div>
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2"><span className="text-xs text-vriddhi-muted">Total Assessments</span><BookOpen className="w-4 h-4 text-vriddhi-accent" /></div>
-          <p className="text-xl font-bold text-white">{computedData.totalAssessments}</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-white">{computedData.totalAssessments}</p>
           <p className="text-[10px] text-vriddhi-muted/60 mt-1">All time</p>
         </div>
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2"><span className="text-xs text-vriddhi-muted">Total Scores</span><BarChart2 className="w-4 h-4 text-vriddhi-accent" /></div>
-          <p className="text-xl font-bold text-white">{computedData.totalScores}</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-white">{computedData.totalScores}</p>
           <p className="text-[10px] text-vriddhi-muted/60 mt-1">Records tracked</p>
         </div>
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2"><span className="text-xs text-vriddhi-muted">Top Course</span><TrendingUp className="w-4 h-4 text-vriddhi-accent" /></div>
-          <p className="text-xl font-bold text-white">{computedData.coursePerformance[0]?.course || 'N/A'}</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-white">{computedData.coursePerformance[0]?.course || 'N/A'}</p>
           <p className="text-[10px] text-vriddhi-muted/60 mt-1">{computedData.coursePerformance[0]?.avg || 0}% avg</p>
         </div>
       </div>
@@ -402,7 +402,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><BarChart3 className="w-5 h-5 text-vriddhi-accent" />Course Performance</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><BarChart3 className="w-5 h-5 text-vriddhi-accent" />Course Performance</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Average, highest & lowest scores by course</p>
             </div>
           </div>
@@ -429,7 +429,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><PieChartIcon className="w-5 h-5 text-vriddhi-accent" />Grade Distribution</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><PieChartIcon className="w-5 h-5 text-vriddhi-accent" />Grade Distribution</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Student grade breakdown from all assessments</p>
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function Analytics() {
                   <div key={item.name} className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-[11px] text-vriddhi-muted">{item.name}</span>
-                    <span className="text-[11px] text-white font-medium">({item.value})</span>
+                    <span className="text-[11px] text-slate-900 dark:text-white font-medium">({item.value})</span>
                   </div>
                 ))}
               </div>
@@ -468,7 +468,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><TrendingUp className="w-5 h-5 text-vriddhi-accent" />Monthly Performance Trend</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><TrendingUp className="w-5 h-5 text-vriddhi-accent" />Monthly Performance Trend</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Average scores per course over time</p>
             </div>
           </div>
@@ -497,7 +497,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Calendar className="w-5 h-5 text-vriddhi-accent" />Weekly Attendance</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><Calendar className="w-5 h-5 text-vriddhi-accent" />Weekly Attendance</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Present vs Absent by day</p>
             </div>
           </div>
@@ -521,7 +521,7 @@ export default function Analytics() {
               <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-vriddhi-border">
                 {Object.entries(branchTotals).map(([branch, data]) => (
                   <div key={branch} className="text-center">
-                    <p className="text-sm font-semibold text-white">{branch}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{branch}</p>
                     <p className="text-xs text-vriddhi-muted mt-1">{data.totalPresent} present / {data.totalAbsent} absent</p>
                     <p className="text-xs text-green-400 mt-1 font-medium">{data.totalStudents > 0 ? ((data.totalPresent / data.totalStudents) * 100).toFixed(1) : 0}%</p>
                   </div>
@@ -537,7 +537,7 @@ export default function Analytics() {
         <div className="glass-card p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Layers className="w-5 h-5 text-vriddhi-accent" />Batch-wise Performance</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><Layers className="w-5 h-5 text-vriddhi-accent" />Batch-wise Performance</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Average scores and student count by admission batch</p>
             </div>
           </div>
@@ -563,7 +563,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Activity className="w-5 h-5 text-vriddhi-accent" />Assessment Status</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><Activity className="w-5 h-5 text-vriddhi-accent" />Assessment Status</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Breakdown by status</p>
             </div>
           </div>
@@ -590,7 +590,7 @@ export default function Analytics() {
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                       <span className="text-xs text-vriddhi-muted">{item.name}</span>
                     </div>
-                    <span className="text-xs text-white font-medium">{item.value}</span>
+                    <span className="text-xs text-slate-900 dark:text-white font-medium">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -604,7 +604,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><BookOpen className="w-5 h-5 text-vriddhi-accent" />Subject-wise Performance</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><BookOpen className="w-5 h-5 text-vriddhi-accent" />Subject-wise Performance</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Top performing subjects by average score</p>
             </div>
           </div>
@@ -617,7 +617,7 @@ export default function Analytics() {
               {computedData.subjectPerformance.map((subject) => (
                 <div key={subject.subject} className="flex items-center gap-4">
                   <div className="w-32 flex-shrink-0">
-                    <p className="text-sm text-white font-medium truncate">{subject.subject}</p>
+                    <p className="text-sm text-slate-900 dark:text-white font-medium truncate">{subject.subject}</p>
                     <p className="text-[10px] text-vriddhi-muted">{subject.count} scores</p>
                   </div>
                   <div className="flex-1">
@@ -627,7 +627,7 @@ export default function Analytics() {
                           style={{ width: `${Math.min(subject.avg, 100)}%`, backgroundColor: subject.avg >= 80 ? COLORS.success : subject.avg >= 60 ? COLORS.warning : COLORS.danger }}
                         />
                       </div>
-                      <span className="text-sm font-semibold text-white w-12 text-right">{subject.avg}%</span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white w-12 text-right">{subject.avg}%</span>
                     </div>
                   </div>
                 </div>
@@ -639,7 +639,7 @@ export default function Analytics() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Award className="w-5 h-5 text-amber-400" />Top Performers</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />Top Performers</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Highest average scores across all assessments</p>
             </div>
           </div>
@@ -652,19 +652,19 @@ export default function Analytics() {
               {topPerformers.map((student, i) => (
                 <div key={student.regNo} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors group">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
-                    ${i === 0 ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30' :
-                      i === 1 ? 'bg-slate-400/20 text-slate-400 ring-1 ring-slate-400/30' :
+                    ${i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400 ring-1 ring-amber-500/30' :
+                      i === 1 ? 'bg-slate-400/20 text-slate-600 dark:text-slate-400 ring-1 ring-slate-400/30' :
                       i === 2 ? 'bg-orange-600/20 text-orange-400 ring-1 ring-orange-600/30' :
                       'bg-vriddhi-border/30 text-vriddhi-muted'}`}>
                     {student.rank}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{student.name}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{student.name}</p>
                     <p className="text-xs text-vriddhi-muted">{student.regNo} · {student.course}</p>
                     <p className="text-[10px] text-vriddhi-muted/60">{student.assessmentsTaken}/{student.totalAssessments} assessments taken</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-green-400">{student.avg}%</p>
+                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{student.avg}%</p>
                     <p className="text-[10px] text-vriddhi-muted">avg</p>
                   </div>
                 </div>
@@ -679,7 +679,7 @@ export default function Analytics() {
         <div className="p-6 border-b border-vriddhi-border">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Users className="w-5 h-5 text-vriddhi-accent" />Mentor Performance</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2"><Users className="w-5 h-5 text-vriddhi-accent" />Mentor Performance</h3>
               <p className="text-xs text-vriddhi-muted mt-1">Attendance marking and student performance by mentor</p>
             </div>
           </div>
@@ -709,7 +709,7 @@ export default function Analytics() {
                         <div className="w-8 h-8 rounded-full bg-vriddhi-accent/20 flex items-center justify-center">
                           <span className="text-xs font-bold text-vriddhi-accent">{mentor.name.split(' ').map(n => n[0]).join('')}</span>
                         </div>
-                        <span className="font-medium text-white">{mentor.name}</span>
+                        <span className="font-medium text-slate-900 dark:text-white">{mentor.name}</span>
                       </div>
                     </td>
                     <td className="table-cell text-center">{mentor.students}</td>

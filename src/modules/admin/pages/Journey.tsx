@@ -18,9 +18,9 @@ type MilestoneStatus = 'completed' | 'active' | 'upcoming' | 'warning'
 
 const StatusBadge = ({ status }: { status: MilestoneStatus }) => {
   const styles = {
-    completed: 'bg-green-500/20 text-green-400 border-green-500/30',
-    active: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    upcoming: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+    completed: 'bg-emerald-100 dark:bg-emerald-900/30 text-green-400 border-green-500/30',
+    active: 'bg-amber-100 dark:bg-amber-900/30 text-amber-400 border-amber-500/30',
+    upcoming: 'bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30',
     warning: 'bg-red-500/20 text-red-400 border-red-500/30',
   }
   const labels = { completed: 'Completed', active: 'In Progress', upcoming: 'Upcoming', warning: 'At Risk' }
@@ -29,8 +29,8 @@ const StatusBadge = ({ status }: { status: MilestoneStatus }) => {
 
 const StatusIcon = ({ status }: { status: MilestoneStatus }) => {
   const styles = {
-    completed: 'bg-green-500/20 border-green-500 text-green-400',
-    active: 'bg-amber-500/20 border-amber-500 text-amber-400',
+    completed: 'bg-emerald-100 dark:bg-emerald-900/30 border-green-500 text-green-400',
+    active: 'bg-amber-100 dark:bg-amber-900/30 border-amber-500 text-amber-400',
     upcoming: 'bg-slate-700 border-slate-600 text-slate-400',
     warning: 'bg-red-500/20 border-red-500 text-red-400',
   }
@@ -45,8 +45,8 @@ const StatusIcon = ({ status }: { status: MilestoneStatus }) => {
 }
 
 const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
-  if (trend === 'up') return <TrendingUp className="w-4 h-4 text-green-400" />
-  if (trend === 'down') return <TrendingDown className="w-4 h-4 text-red-400" />
+  if (trend === 'up') return <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+  if (trend === 'down') return <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />
   return <Minus className="w-4 h-4 text-slate-400" />
 }
 
@@ -64,9 +64,9 @@ const SuggestionCard = ({ suggestion }: { suggestion: Suggestion }) => {
     opportunity: 'border-amber-500/30 bg-amber-500/5',
   }
   const icons = {
-    strength: <Zap className="w-5 h-5 text-green-400" />,
-    warning: <AlertTriangle className="w-5 h-5 text-red-400" />,
-    opportunity: <Target className="w-5 h-5 text-amber-400" />,
+    strength: <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+    warning: <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />,
+    opportunity: <Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />,
   }
   const labels = { strength: 'Strength', warning: 'Warning', opportunity: 'Opportunity' }
 
@@ -80,10 +80,10 @@ const SuggestionCard = ({ suggestion }: { suggestion: Suggestion }) => {
             suggestion.type === 'warning' ? 'text-red-400' : 'text-amber-400'
           }`}>{labels[suggestion.type]}</span>
         </div>
-        <h4 className="font-semibold text-white text-sm mb-1">{suggestion.title}</h4>
-        <p className="text-sm text-slate-400 mb-2">{suggestion.description}</p>
+        <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">{suggestion.title}</h4>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{suggestion.description}</p>
         {suggestion.action && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800/50 px-2.5 py-1.5 rounded-lg w-fit">
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-800/50 px-2.5 py-1.5 rounded-lg w-fit">
             <ArrowRight className="w-3 h-3" /><span>{suggestion.action}</span>
           </div>
         )}
@@ -108,12 +108,12 @@ const Timeline = ({ milestones }: { milestones: Milestone[] }) => (
       {milestones.map((m) => (
         <div key={m.id} className="relative flex items-start gap-4 pl-12">
           <StatusIcon status={m.status} />
-          <div className="flex-1 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <div className="flex-1 p-4 rounded-xl glass-card/50">
             <div className="flex items-center justify-between mb-1">
-              <h4 className="font-semibold text-white">{m.title}</h4>
+              <h4 className="font-semibold text-slate-900 dark:text-white">{m.title}</h4>
               <StatusBadge status={m.status} />
             </div>
-            <p className="text-sm text-slate-400 mb-1">{m.description}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">{m.description}</p>
             <div className="flex items-center gap-4">
               <span className="text-xs text-slate-500 flex items-center gap-1"><Calendar className="w-3 h-3" /> {m.date}</span>
               {m.metric && <span className="text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">{m.metric}</span>}
@@ -129,9 +129,9 @@ const StatCard = ({ label, value, icon, color }: { label: string; value: string 
   <div className="glass-card p-4">
     <div className="flex items-center gap-3 mb-2">
       <div className={color}>{icon}</div>
-      <span className="text-slate-400 text-sm">{label}</span>
+      <span className="text-slate-600 dark:text-slate-400 text-sm">{label}</span>
     </div>
-    <p className="text-2xl font-bold text-white">{value}</p>
+    <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
   </div>
 )
 
@@ -159,7 +159,7 @@ const CollegeJourney = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-blue-400" />Institutional Timeline</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />Institutional Timeline</h3>
           {milestonesLoading ? (
             <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
           ) : milestones.length === 0 ? (
@@ -171,11 +171,11 @@ const CollegeJourney = () => {
 
         <div className="space-y-6">
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-400" />Current Standing</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />Current Standing</h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-500 mb-1">Total Students</p><p className="text-white font-medium">{students.length}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-500 mb-1">Top Performer</p><p className="text-white font-medium">{topPerformers[0]?.name || 'N/A'}</p><p className="text-xs text-blue-400">{topPerformers[0]?.avg || 0}% avg</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-500 mb-1">Programs Offered</p><p className="text-white font-medium">{Array.from(new Set(students.map(s => s.course))).join(', ') || 'N/A'}</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Students</p><p className="text-slate-900 dark:text-white font-medium">{students.length}</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Top Performer</p><p className="text-slate-900 dark:text-white font-medium">{topPerformers[0]?.name || 'N/A'}</p><p className="text-xs text-blue-600 dark:text-blue-400">{topPerformers[0]?.avg || 0}% avg</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Programs Offered</p><p className="text-slate-900 dark:text-white font-medium">{Array.from(new Set(students.map(s => s.course))).join(', ') || 'N/A'}</p></div>
               <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                 <p className="text-xs text-green-400 mb-1">Weekly Attendance</p>
                 <div className="flex items-end gap-1 h-16 mt-2">
@@ -184,7 +184,7 @@ const CollegeJourney = () => {
                       <div className="w-full bg-slate-700 rounded-t overflow-hidden relative" style={{ height: `${(d.present / maxAttendance) * 100}%` }}>
                         <div className="absolute bottom-0 w-full bg-green-500 rounded-t" style={{ height: `${d.total > 0 ? (d.present / d.total) * 100 : 0}%` }} />
                       </div>
-                      <span className="text-[10px] text-slate-500">{days[i]}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">{days[i]}</span>
                     </div>
                   ))}
                 </div>
@@ -193,14 +193,14 @@ const CollegeJourney = () => {
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-amber-400" />Key Achievements</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />Key Achievements</h3>
             <div className="space-y-3">
               {milestones.filter(m => m.status === 'completed').slice(0, 4).map((m, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                  <div className="w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 text-amber-400"><Award className="w-5 h-5" /></div>
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg glass-card/30">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 text-amber-600 dark:text-amber-400"><Award className="w-5 h-5" /></div>
                   <div>
-                    <p className="font-medium text-white text-sm">{m.title}</p>
-                    <p className="text-xs text-slate-400">{m.description}</p>
+                    <p className="font-medium text-slate-900 dark:text-white text-sm">{m.title}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{m.description}</p>
                     <span className="text-xs text-slate-500 mt-0.5">{m.date}</span>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ const FacultyJourney = () => {
   }
 
   if (!data) {
-    return <div className="glass-card p-8 text-center"><p className="text-slate-400">No faculty data available. Please check your profile settings.</p></div>
+    return <div className="glass-card p-8 text-center"><p className="text-slate-600 dark:text-slate-400">No faculty data available. Please check your profile settings.</p></div>
   }
 
   const stats = [
@@ -254,10 +254,10 @@ const FacultyJourney = () => {
     <div className="space-y-6">
       <div className="glass-card p-6">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center"><User className="w-7 h-7 text-purple-400" /></div>
+          <div className="w-14 h-14 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center"><User className="w-7 h-7 text-purple-600 dark:text-purple-400" /></div>
           <div>
-            <h2 className="text-xl font-bold text-white">{data.faculty.title} {data.faculty.name}</h2>
-            <p className="text-slate-400 text-sm">{data.faculty.department} Department · {data.yearsOfService} years of service</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{data.faculty.title} {data.faculty.name}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">{data.faculty.department} Department · {data.yearsOfService} years of service</p>
           </div>
         </div>
       </div>
@@ -268,13 +268,13 @@ const FacultyJourney = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-purple-400" />Career Timeline</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />Career Timeline</h3>
           <p className="text-slate-500 text-center py-10">Faculty timeline data coming soon</p>
         </div>
 
         <div className="space-y-6">
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-purple-400" />Student Performance</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />Student Performance</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden flex">
@@ -287,25 +287,25 @@ const FacultyJourney = () => {
                 {pieData.map((d, i) => (
                   <div key={i} className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full ${d.color}`} />
-                    <span className="text-slate-400">{d.label}: <span className="text-white">{d.value}</span></span>
+                    <span className="text-slate-600 dark:text-slate-400">{d.label}: <span className="text-slate-900 dark:text-white">{d.value}</span></span>
                   </div>
                 ))}
               </div>
               <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="p-2 rounded-lg bg-green-500/10 text-center"><p className="text-lg font-bold text-green-400">{data.goodStudentsCount}</p><p className="text-[10px] text-slate-400">Good</p></div>
-                <div className="p-2 rounded-lg bg-amber-500/10 text-center"><p className="text-lg font-bold text-amber-400">{data.studentPerformanceDistribution.average}</p><p className="text-[10px] text-slate-400">Average</p></div>
-                <div className="p-2 rounded-lg bg-red-500/10 text-center"><p className="text-lg font-bold text-red-400">{data.weakStudentsCount}</p><p className="text-[10px] text-slate-400">Weak</p></div>
+                <div className="p-2 rounded-lg bg-green-500/10 text-center"><p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{data.goodStudentsCount}</p><p className="text-[10px] text-slate-600 dark:text-slate-400">Good</p></div>
+                <div className="p-2 rounded-lg bg-amber-500/10 text-center"><p className="text-lg font-bold text-amber-600 dark:text-amber-400">{data.studentPerformanceDistribution.average}</p><p className="text-[10px] text-slate-600 dark:text-slate-400">Average</p></div>
+                <div className="p-2 rounded-lg bg-red-500/10 text-center"><p className="text-lg font-bold text-red-600 dark:text-red-400">{data.weakStudentsCount}</p><p className="text-[10px] text-slate-600 dark:text-slate-400">Weak</p></div>
               </div>
             </div>
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-400" />Career Forecast</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Career Forecast</h3>
             <div className="space-y-3">
               {predictions.map((p, i) => (
-                <div key={i} className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                  <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-400">{p.label}</span><TrendIcon trend={p.trend} /></div>
-                  <p className="text-white font-medium text-sm">{p.value}</p>
+                <div key={i} className="p-3 rounded-lg glass-card/30">
+                  <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">{p.label}</span><TrendIcon trend={p.trend} /></div>
+                  <p className="text-slate-900 dark:text-white font-medium text-sm">{p.value}</p>
                   <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mt-2"><div className="h-full bg-amber-400 rounded-full" style={{ width: `${p.confidence}%` }} /></div>
                   <p className="text-xs text-slate-500 mt-1">{p.confidence}% confidence</p>
                 </div>
@@ -314,18 +314,18 @@ const FacultyJourney = () => {
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Layers className="w-5 h-5 text-emerald-400" />Teaching Progress</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Layers className="w-5 h-5 text-emerald-400" />Teaching Progress</h3>
             <div className="space-y-3">
               <div className="p-3 rounded-lg bg-slate-800/50">
-                <div className="flex justify-between mb-1"><span className="text-xs text-slate-400">Topics Covered</span><span className="text-xs text-emerald-400">{data.topicsCovered}/{data.topicsCovered + data.topicsPending}</span></div>
+                <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Topics Covered</span><span className="text-xs text-emerald-400">{data.topicsCovered}/{data.topicsCovered + data.topicsPending}</span></div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(data.topicsCovered + data.topicsPending) > 0 ? (data.topicsCovered / (data.topicsCovered + data.topicsPending)) * 100 : 0}%` }} /></div>
               </div>
               <div className="p-3 rounded-lg bg-slate-800/50">
-                <div className="flex justify-between mb-1"><span className="text-xs text-slate-400">Papers Uploaded</span><span className="text-xs text-blue-400">{data.papersUploaded}</span></div>
+                <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Papers Uploaded</span><span className="text-xs text-blue-600 dark:text-blue-400">{data.papersUploaded}</span></div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(data.papersUploaded * 20, 100)}%` }} /></div>
               </div>
               <div className="p-3 rounded-lg bg-slate-800/50">
-                <div className="flex justify-between mb-1"><span className="text-xs text-slate-400">Avg Attendance</span><span className="text-xs text-purple-400">{data.avgAttendance}%</span></div>
+                <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Avg Attendance</span><span className="text-xs text-purple-600 dark:text-purple-400">{data.avgAttendance}%</span></div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${data.avgAttendance}%` }} /></div>
               </div>
             </div>
@@ -354,7 +354,7 @@ const StudentJourney = () => {
   }
 
   if (!studentData) {
-    return <div className="glass-card p-8 text-center"><p className="text-slate-400">No student data available. Please check the data source.</p></div>
+    return <div className="glass-card p-8 text-center"><p className="text-slate-600 dark:text-slate-400">No student data available. Please check the data source.</p></div>
   }
 
   const stats = [
@@ -408,13 +408,13 @@ const StudentJourney = () => {
       <div className="glass-card p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-white">{studentData.student.name}</h2>
-            <p className="text-slate-400 text-sm">Reg No: {studentData.student.regNo} · {studentData.student.course} · Batch {studentData.student.batch}</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{studentData.student.name}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Reg No: {studentData.student.regNo} · {studentData.student.course} · Batch {studentData.student.batch}</p>
           </div>
           <select
             value={selectedStudentId}
             onChange={(e) => setSelectedStudentId(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="bg-slate-800 border border-slate-700 text-slate-900 dark:text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
           >
             {allStudents.map(s => <option key={s.id} value={s.id}>{s.name} ({s.regNo})</option>)}
           </select>
@@ -424,40 +424,40 @@ const StudentJourney = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
           <div key={i} className="glass-card p-4">
-            <div className="flex items-center gap-3 mb-2"><div className={stat.color}>{stat.icon}</div><span className="text-slate-400 text-sm">{stat.label}</span></div>
-            <p className="text-2xl font-bold text-white">{stat.value}<span className="text-sm text-slate-500 ml-1">{stat.suffix}</span></p>
+            <div className="flex items-center gap-3 mb-2"><div className={stat.color}>{stat.icon}</div><span className="text-slate-600 dark:text-slate-400 text-sm">{stat.label}</span></div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}<span className="text-sm text-slate-500 ml-1">{stat.suffix}</span></p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-emerald-400" />Academic Timeline</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-emerald-400" />Academic Timeline</h3>
           <p className="text-slate-500 text-center py-10">Student timeline data coming soon</p>
         </div>
 
         <div className="space-y-6">
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-emerald-400" />Current Status</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-emerald-400" />Current Status</h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-500 mb-1">Program</p><p className="text-white font-medium">{studentData.student.course} - Batch {studentData.student.batch}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-500 mb-1">Branch</p><p className="text-white font-medium">{studentData.student.branch}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-500 mb-1">CGPA</p><p className="text-2xl font-bold text-amber-400">{studentData.cgpa}</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Program</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.course} - Batch {studentData.student.batch}</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Branch</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.branch}</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">CGPA</p><p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{studentData.cgpa}</p></div>
               <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <p className="text-xs text-emerald-400 mb-1">Assessments</p>
-                <p className="text-white font-medium">{studentData.assessmentsTaken} / {studentData.totalAssessments} completed</p>
+                <p className="text-slate-900 dark:text-white font-medium">{studentData.assessmentsTaken} / {studentData.totalAssessments} completed</p>
                 <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${studentData.totalAssessments > 0 ? (studentData.assessmentsTaken / studentData.totalAssessments) * 100 : 0}%` }} /></div>
               </div>
             </div>
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-400" />Future Predictions</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Future Predictions</h3>
             <div className="space-y-3">
               {predictions.map((p, i) => (
-                <div key={i} className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                  <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-400">{p.label}</span><TrendIcon trend={p.trend} /></div>
-                  <p className="text-white font-medium text-sm">{p.value}</p>
+                <div key={i} className="p-3 rounded-lg glass-card/30">
+                  <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">{p.label}</span><TrendIcon trend={p.trend} /></div>
+                  <p className="text-slate-900 dark:text-white font-medium text-sm">{p.value}</p>
                   <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mt-2"><div className="h-full bg-amber-400 rounded-full" style={{ width: `${p.confidence}%` }} /></div>
                   <p className="text-xs text-slate-500 mt-1">{p.confidence}% confidence</p>
                 </div>
@@ -466,14 +466,14 @@ const StudentJourney = () => {
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-amber-400" />Achievements</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-amber-600 dark:text-amber-400" />Achievements</h3>
             <div className="space-y-3">
               {achievements.map((a, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                  <div className="w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 text-amber-400"><Award className="w-5 h-5" /></div>
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg glass-card/30">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 text-amber-600 dark:text-amber-400"><Award className="w-5 h-5" /></div>
                   <div>
-                    <p className="font-medium text-white text-sm">{a.title}</p>
-                    <p className="text-xs text-slate-400">{a.description}</p>
+                    <p className="font-medium text-slate-900 dark:text-white text-sm">{a.title}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{a.description}</p>
                     <span className="text-xs text-slate-500 mt-0.5">{a.date}</span>
                   </div>
                 </div>
@@ -485,15 +485,15 @@ const StudentJourney = () => {
 
       {studentData.scoreTrend.length > 1 && (
         <div className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-400" />Performance Trend</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />Performance Trend</h3>
           <div className="flex items-end gap-2 h-32">
             {studentData.scoreTrend.map((score, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full bg-slate-700 rounded-t overflow-hidden relative" style={{ height: '100%' }}>
                   <div className={`absolute bottom-0 w-full rounded-t ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ height: `${score}%` }} />
                 </div>
-                <span className="text-[10px] text-slate-500">T{i + 1}</span>
-                <span className="text-[10px] text-slate-400">{score}%</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">T{i + 1}</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400">{score}%</span>
               </div>
             ))}
           </div>
@@ -501,28 +501,28 @@ const StudentJourney = () => {
       )}
 
       <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2"><Lightbulb className="w-5 h-5 text-amber-400" />AI-Powered Insights & Path Forward</h3>
-        <p className="text-sm text-slate-400 mb-6">Based on assessment scores, attendance, and overall metrics — here's where you stand and where you can reach.</p>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2"><Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400" />AI-Powered Insights & Path Forward</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">Based on assessment scores, attendance, and overall metrics — here's where you stand and where you can reach.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {suggestions.map((s, i) => <SuggestionCard key={i} suggestion={s} />)}
         </div>
         <div className="mt-6 p-6 rounded-xl bg-gradient-to-r from-slate-800/80 to-slate-800/40 border border-slate-700/50">
-          <h4 className="text-white font-semibold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-emerald-400" />Your End Goal & Path</h4>
+          <h4 className="text-slate-900 dark:text-white font-semibold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-emerald-400" />Your End Goal & Path</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/30">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Current Standing</p>
-              <p className="text-white font-medium">{endGoal.standing}</p>
+              <p className="text-slate-900 dark:text-white font-medium">{endGoal.standing}</p>
               <div className="mt-2 flex items-center gap-2"><div className={`w-2 h-2 rounded-full bg-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>GPA: {studentData.currentGPA} | Rank: #{studentData.rank}/{studentData.totalStudents}</span></div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/30">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Projected Outcome</p>
-              <p className="text-white font-medium">{endGoal.outcome}</p>
+              <p className="text-slate-900 dark:text-white font-medium">{endGoal.outcome}</p>
               <div className="mt-2 flex items-center gap-2"><TrendingUp className={`w-4 h-4 text-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>{studentData.currentGPA >= 7 ? 'On track for honors' : 'Recovery possible with effort'}</span></div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/30">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Next Path</p>
-              <p className="text-white font-medium">{endGoal.path}</p>
-              <div className="mt-2 flex items-center gap-2"><ArrowRight className="w-4 h-4 text-blue-400" /><span className="text-xs text-blue-400">{studentData.currentGPA >= 8 ? 'Apply for summer internships' : studentData.currentGPA >= 6 ? 'Focus on weak subjects' : 'Meet mentor immediately'}</span></div>
+              <p className="text-slate-900 dark:text-white font-medium">{endGoal.path}</p>
+              <div className="mt-2 flex items-center gap-2"><ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-blue-600 dark:text-blue-400">{studentData.currentGPA >= 8 ? 'Apply for summer internships' : studentData.currentGPA >= 6 ? 'Focus on weak subjects' : 'Meet mentor immediately'}</span></div>
             </div>
           </div>
         </div>
@@ -545,8 +545,8 @@ export default function Journey() {
   return (
     <div className="page-container">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Journey</h1>
-        <p className="text-slate-400">Track progress, predict outcomes, and plan the path ahead</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Journey</h1>
+        <p className="text-slate-600 dark:text-slate-400">Track progress, predict outcomes, and plan the path ahead</p>
       </div>
 
       <div className="flex gap-2 mb-6">
@@ -556,8 +556,8 @@ export default function Journey() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-500/10'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-500/10'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 border border-transparent'
             }`}
           >
             {tab.icon}

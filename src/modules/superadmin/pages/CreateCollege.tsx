@@ -103,37 +103,37 @@ const CreateCollege: React.FC = () => {
   }
 
   const inputClasses = (fieldName: keyof FormData) =>
-    `w-full px-4 py-2.5 bg-slate-800 border rounded-lg text-sm text-white transition-colors
+    `w-full px-4 py-2.5 bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
      focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
      placeholder-slate-500
      ${errors[fieldName] ? 'border-red-500 bg-red-500/10' : 'border-slate-700 hover:border-slate-600'}`
 
-  const labelClasses = 'block text-sm font-medium text-slate-300 mb-1.5'
-  const requiredMark = <span className="text-red-400">*</span>
+  const labelClasses = 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5'
+  const requiredMark = <span className="text-red-600 dark:text-red-400">*</span>
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-slate-400" />
         </button>
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Building2 className="w-6 h-6 text-blue-400" />
-            <h1 className="text-2xl font-bold text-white">Create College</h1>
+            <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create College</h1>
           </div>
-          <p className="text-slate-400 text-sm">Register a new college in the system</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Register a new college in the system</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
         {/* Basic Information */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-5">Basic Information</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-5">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
               <label className={labelClasses}>College Name {requiredMark}</label>
@@ -145,7 +145,7 @@ const CreateCollege: React.FC = () => {
                 className={inputClasses('name')}
                 placeholder="e.g., Vriddhi Academics Demo College"
               />
-              {errors.name && <p className="mt-1.5 text-xs text-red-400">{errors.name}</p>}
+              {errors.name && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
             </div>
 
             <div>
@@ -158,7 +158,7 @@ const CreateCollege: React.FC = () => {
                 className={inputClasses('code')}
                 placeholder="e.g., VA-001"
               />
-              {errors.code && <p className="mt-1.5 text-xs text-red-400">{errors.code}</p>}
+              {errors.code && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.code}</p>}
             </div>
 
             <div>
@@ -192,8 +192,8 @@ const CreateCollege: React.FC = () => {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-5">Contact Information</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-5">Contact Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className={labelClasses}>
@@ -208,7 +208,7 @@ const CreateCollege: React.FC = () => {
                 className={inputClasses('email')}
                 placeholder="college@example.edu"
               />
-              {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email}</p>}
+              {errors.email && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
             </div>
 
             <div>
@@ -224,7 +224,7 @@ const CreateCollege: React.FC = () => {
                 className={inputClasses('phone')}
                 placeholder="10-digit phone number"
               />
-              {errors.phone && <p className="mt-1.5 text-xs text-red-400">{errors.phone}</p>}
+              {errors.phone && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{errors.phone}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -245,8 +245,8 @@ const CreateCollege: React.FC = () => {
         </div>
 
         {/* Location */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-5">Location</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-5">Location</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
               <label className={labelClasses}>
@@ -313,8 +313,8 @@ const CreateCollege: React.FC = () => {
         </div>
 
         {/* Initial Counts */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-5">Initial Counts (Optional)</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-5">Initial Counts (Optional)</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className={labelClasses}>Current Students</label>
@@ -363,14 +363,14 @@ const CreateCollege: React.FC = () => {
               setFormData(initialFormData)
               setErrors({})
             }}
-            className="px-6 py-2.5 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors"
+            className="px-6 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             Reset
           </button>
           <button
             type="submit"
             disabled={createCollege.isPending}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-slate-900 dark:text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {createCollege.isPending ? (
               <>

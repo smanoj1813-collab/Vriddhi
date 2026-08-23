@@ -132,8 +132,8 @@ export default function StudentSettings() {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Account Settings</h1>
-        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage personal profile, notifications, password and app preferences</p>
+        <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">Account Settings</h1>
+        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-0.5">Manage personal profile, notifications, password and app preferences</p>
       </div>
 
       {/* Settings Grid */}
@@ -149,8 +149,8 @@ export default function StudentSettings() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all text-left ${
                   active
-                    ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
-                    : 'bg-white dark:bg-[#131b2e] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800'
+                    ? 'bg-teal-600 text-slate-900 dark:text-white shadow-sm shadow-teal-600/20'
+                    : 'bg-white dark:bg-[#131b2e] text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800'
                 }`}
               >
                 <Icon size={16} />
@@ -164,13 +164,13 @@ export default function StudentSettings() {
         <div className="md:col-span-3 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-sm">
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="space-y-5">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
                 Personal Information
               </h2>
 
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
                     Full Name
                   </label>
                   <div className="relative">
@@ -179,13 +179,13 @@ export default function StudentSettings() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
                     Contact Phone
                   </label>
                   <div className="relative">
@@ -195,13 +195,13 @@ export default function StudentSettings() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+91 9876543210"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
                     Email Address
                   </label>
                   <div className="relative">
@@ -213,7 +213,7 @@ export default function StudentSettings() {
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 text-sm font-medium cursor-not-allowed"
                     />
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1 block">Email is managed by college administration.</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 block">Email is managed by college administration.</span>
                 </div>
               </div>
 
@@ -226,7 +226,7 @@ export default function StudentSettings() {
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
               >
                 {savingProfile ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 Save Changes
@@ -236,7 +236,7 @@ export default function StudentSettings() {
 
           {activeTab === 'notifications' && (
             <div className="space-y-5">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
                 Notification Preferences
               </h2>
 
@@ -249,8 +249,8 @@ export default function StudentSettings() {
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
                     <div>
-                      <p className="text-xs md:text-sm font-bold text-slate-900 dark:text-white">{item.label}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{item.desc}</p>
+                      <p className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white">{item.label}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-0.5">{item.desc}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -266,7 +266,7 @@ export default function StudentSettings() {
                 <button
                   type="button"
                   onClick={handleSavePrefs}
-                  className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
                 >
                   <Save size={16} /> Save Notification Preferences
                 </button>
@@ -281,13 +281,13 @@ export default function StudentSettings() {
 
           {activeTab === 'privacy' && (
             <form onSubmit={handleUpdatePassword} className="space-y-5">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
                 Security &amp; Password
               </h2>
 
               <div className="space-y-4 max-w-md">
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
                     New Password
                   </label>
                   <div className="relative">
@@ -298,13 +298,13 @@ export default function StudentSettings() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Minimum 6 characters"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
                     Confirm New Password
                   </label>
                   <div className="relative">
@@ -315,7 +315,7 @@ export default function StudentSettings() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter password"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500"
                     />
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export default function StudentSettings() {
               <button
                 type="submit"
                 disabled={savingPassword}
-                className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
               >
                 {savingPassword ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                 Update Password
@@ -340,11 +340,11 @@ export default function StudentSettings() {
 
           {activeTab === 'appearance' && (
             <div className="space-y-5">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800">
                 Interface Appearance
               </h2>
 
-              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">
                 Vriddhi defaults to a clean light academic palette. You can toggle dark theme for low-light study sessions.
               </p>
 
@@ -352,11 +352,11 @@ export default function StudentSettings() {
                 <button
                   type="button"
                   onClick={toggleMode}
-                  className="px-5 py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs md:text-sm shadow-sm flex items-center gap-2"
+                  className="px-5 py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white font-bold text-xs md:text-sm shadow-sm flex items-center gap-2"
                 >
                   <Palette size={16} /> Switch to {resolvedMode === 'dark' ? 'Light Theme' : 'Dark Theme'}
                 </button>
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-700 dark:text-slate-300">
                   Currently active: <span className="font-bold uppercase text-teal-600">{resolvedMode} mode</span>
                 </span>
               </div>

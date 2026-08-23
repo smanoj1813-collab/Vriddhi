@@ -37,9 +37,9 @@ import {
 
 function getMgmtClasses(type: string): { bg: string; text: string } {
   const t = type.toLowerCase();
-  if (t.includes("government")) return { bg: "bg-blue-500/20", text: "text-blue-400" };
-  if (t.includes("private")) return { bg: "bg-purple-500/20", text: "text-purple-400" };
-  if (t.includes("aided")) return { bg: "bg-green-500/20", text: "text-green-400" };
+  if (t.includes("government")) return { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400" };
+  if (t.includes("private")) return { bg: "bg-purple-500/20", text: "text-purple-600 dark:text-purple-400" };
+  if (t.includes("aided")) return { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400" };
   if (t.includes("autonomous")) return { bg: "bg-orange-500/20", text: "text-orange-400" };
   if (t.includes("deemed")) return { bg: "bg-pink-500/20", text: "text-pink-400" };
   return { bg: "bg-slate-500/20", text: "text-slate-400" };
@@ -114,13 +114,13 @@ const SuperAdminUniversities: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
+    <div className="page-container">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">University Master</h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">University Master</h1>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
               Karnataka Government Universities — {universities.length} loaded, ~
               {totalMin.toLocaleString()}–{totalMax.toLocaleString()} colleges
             </p>
@@ -142,67 +142,67 @@ const SuperAdminUniversities: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 bg-slate-700/50 rounded-lg text-teal-400">
+            <div className="p-2 bg-slate-700/50 rounded-lg text-teal-600 dark:text-teal-400">
               <Building2 size={20} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
             {statsLoading ? "..." : stats?.totalUniversities ?? 0}
           </p>
-          <p className="text-sm text-slate-400 mt-1">Total Universities</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Total Universities</p>
           <p className="text-xs text-slate-500 mt-0.5">Government + Aided</p>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 bg-slate-700/50 rounded-lg text-blue-400">
+            <div className="p-2 bg-slate-700/50 rounded-lg text-blue-600 dark:text-blue-400">
               <GraduationCap size={20} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
             {statsLoading ? "..." : stats?.onboardedColleges ?? 0}
           </p>
-          <p className="text-sm text-slate-400 mt-1">Onboarded Colleges</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Onboarded Colleges</p>
           <p className="text-xs text-slate-500 mt-0.5">
             {statsLoading ? "" : `of ~${totalMax.toLocaleString()} estimated`}
           </p>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="p-2 bg-slate-700/50 rounded-lg text-emerald-400">
               <Target size={20} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
             {statsLoading ? "..." : stats?.activeColleges ?? 0}
           </p>
-          <p className="text-sm text-slate-400 mt-1">Active Colleges</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Active Colleges</p>
           <p className="text-xs text-slate-500 mt-0.5">Fully operational</p>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 bg-slate-700/50 rounded-lg text-amber-400">
+            <div className="p-2 bg-slate-700/50 rounded-lg text-amber-600 dark:text-amber-400">
               <TrendingUp size={20} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
             {statsLoading
               ? "..."
               : `${(stats?.coveragePercentage ?? 0).toFixed(1)}%`}
           </p>
-          <p className="text-sm text-slate-400 mt-1">Coverage</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Coverage</p>
           <p className="text-xs text-slate-500 mt-0.5">Onboarded / Estimated</p>
         </div>
       </div>
 
       {/* Rollout Priority Tiers */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <span className="text-teal-400"><Layers size={20} /></span> Rollout Priority Tiers
+      <div className="glass-card p-6 mb-8">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <span className="text-teal-600 dark:text-teal-400"><Layers size={20} /></span> Rollout Priority Tiers
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {prioritySummary.map((tier) => (
@@ -220,8 +220,8 @@ const SuperAdminUniversities: React.FC = () => {
                   : "bg-slate-800/30 border-slate-700/50"
               }`}
             >
-              <p className="text-xs text-slate-400 mb-1">{tier.label}</p>
-              <p className="text-2xl font-bold text-white">{tier.universities}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{tier.label}</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{tier.universities}</p>
               <p className="text-xs text-slate-500 mt-1">
                 {tier.collegesMin.toLocaleString()}–{tier.collegesMax.toLocaleString()} colleges
               </p>
@@ -232,9 +232,9 @@ const SuperAdminUniversities: React.FC = () => {
 
       {/* Onboarding Progress */}
       {!rolloutLoading && rollout && rollout.length > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <span className="text-teal-400"><BarChart3 size={20} /></span> Onboarding Progress
+        <div className="glass-card p-6 mb-8">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <span className="text-teal-600 dark:text-teal-400"><BarChart3 size={20} /></span> Onboarding Progress
           </h3>
           <div className="space-y-3">
             {[...rollout]
@@ -242,8 +242,8 @@ const SuperAdminUniversities: React.FC = () => {
               .map((r) => (
                 <div key={r.universityId} className="flex items-center gap-4">
                   <div className="w-48 shrink-0">
-                    <p className="text-sm text-white truncate">{r.universityName}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-sm text-slate-900 dark:text-white truncate">{r.universityName}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       P{r.priority} • Target: {r.targetColleges}
                     </p>
                   </div>
@@ -264,10 +264,10 @@ const SuperAdminUniversities: React.FC = () => {
                     </div>
                   </div>
                   <div className="w-24 text-right shrink-0">
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-slate-900 dark:text-white">
                       {r.onboardedColleges} / {r.targetColleges}
                     </p>
-                    <p className="text-xs text-slate-500">{r.percentageComplete}%</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{r.percentageComplete}%</p>
                   </div>
                 </div>
               ))}
@@ -278,7 +278,7 @@ const SuperAdminUniversities: React.FC = () => {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400">
             <Search size={16} />
           </span>
           <input
@@ -286,13 +286,13 @@ const SuperAdminUniversities: React.FC = () => {
             placeholder="Search university..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
+            className="pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-400 w-64"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive" | "pending")}
-          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-teal-400"
+          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-400"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -302,7 +302,7 @@ const SuperAdminUniversities: React.FC = () => {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-teal-400"
+          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-400"
         >
           <option value="all">All Priorities</option>
           <option value="1">Phase 1</option>
@@ -315,7 +315,7 @@ const SuperAdminUniversities: React.FC = () => {
       </div>
 
       {/* Universities Table */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+      <div className="glass-card overflow-hidden">
         {unisLoading ? (
           <div className="p-12 flex items-center justify-center">
             <span className="text-teal-400 animate-spin"><Loader2 size={32} /></span>
@@ -325,32 +325,32 @@ const SuperAdminUniversities: React.FC = () => {
             <div className="text-slate-600 mx-auto mb-3 flex justify-center">
               <Building2 size={48} />
             </div>
-            <p className="text-slate-400">No universities found</p>
+            <p className="text-slate-600 dark:text-slate-400">No universities found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-700">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     University
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     Code
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     Priority
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     Districts
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     Colleges
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     Courses
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
                     Status
                   </th>
                   <th className="w-10" />
@@ -365,7 +365,7 @@ const SuperAdminUniversities: React.FC = () => {
                     <tr
                       key={u.id}
                       onClick={() => navigate(`/superadmin/universities/${u.id}`)}
-                      className="border-b border-slate-700/50 hover:bg-slate-700/30 cursor-pointer transition-colors"
+                      className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/30 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -375,23 +375,23 @@ const SuperAdminUniversities: React.FC = () => {
                             {u.shortName || u.code}
                           </div>
                           <div>
-                            <p className="text-sm text-white font-medium">{u.name}</p>
+                            <p className="text-sm text-slate-900 dark:text-white font-medium">{u.name}</p>
                             {u.isWomensUniversity && (
                               <span className="text-xs text-pink-400">Women&apos;s University</span>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-300 font-mono">
+                      <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 font-mono">
                         {u.code}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`px-2 py-0.5 rounded text-xs font-medium ${
                             u.priority === 1
-                              ? "bg-teal-500/20 text-teal-400"
+                              ? "bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400"
                               : u.priority === 2
-                              ? "bg-blue-500/20 text-blue-400"
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                               : u.priority === 3
                               ? "bg-indigo-500/20 text-indigo-400"
                               : u.priority === 4
@@ -403,13 +403,13 @@ const SuperAdminUniversities: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 text-sm text-slate-300">
-                          <span className="text-slate-500"><MapPin size={12} /></span>
+                        <div className="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
+                          <span className="text-slate-500 dark:text-slate-400"><MapPin size={12} /></span>
                           {safeLength(u.districts)} district
                           {safeLength(u.districts) !== 1 ? "s" : ""}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-300">
+                      <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
                         {u.collegeCountMin.toLocaleString()}–
                         {u.collegeCountMax.toLocaleString()}
                       </td>
@@ -424,7 +424,7 @@ const SuperAdminUniversities: React.FC = () => {
                             </span>
                           ))}
                           {coursesTotal > 4 && (
-                            <span className="px-1.5 py-0.5 text-xs text-slate-500">
+                            <span className="px-1.5 py-0.5 text-xs text-slate-500 dark:text-slate-400">
                               +{coursesTotal - 4}
                             </span>
                           )}
@@ -436,8 +436,8 @@ const SuperAdminUniversities: React.FC = () => {
                             u.status === "active"
                               ? "text-emerald-400"
                               : u.status === "pending"
-                              ? "text-amber-400"
-                              : "text-red-400"
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-red-600 dark:text-red-400"
                           }`}
                         >
                           {u.status === "active" ? (
@@ -463,31 +463,31 @@ const SuperAdminUniversities: React.FC = () => {
       {/* Seed Confirm Modal */}
       {showSeedConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-2">Seed Universities</h3>
-            <p className="text-slate-400 text-sm mb-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Seed Universities</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
               This will populate Firestore with all Karnataka government universities.
             </p>
             <div className="bg-slate-900 rounded-lg p-3 mb-4">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Universities to seed:{" "}
                 {prioritySummary.reduce((s, t) => s + t.universities, 0)}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Estimated colleges: {totalMin.toLocaleString()}–{totalMax.toLocaleString()}
               </p>
             </div>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowSeedConfirm(false)}
-                className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors text-sm"
+                className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSeed}
                 disabled={seedMutation.isPending}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 disabled:bg-teal-900/50 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 disabled:bg-teal-900/50 text-slate-900 dark:text-white rounded-lg transition-colors text-sm flex items-center gap-2"
               >
                 {seedMutation.isPending && (
                   <span className="animate-spin"><Loader2 size={16} /></span>

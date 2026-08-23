@@ -102,21 +102,21 @@ export default function FacultyStudentAnalysis() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-teal-500/30 text-slate-400 hover:text-teal-400 transition-all"
+          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Student Analysis</h1>
-          <p className="text-slate-400">{currentFaculty.subject} • Assigned students performance overview</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Student Analysis</h1>
+          <p className="text-slate-600 dark:text-slate-400">{currentFaculty.subject} • Assigned students performance overview</p>
         </div>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-          <p className="text-xs text-slate-400 mb-1">Total Students</p>
-          <p className="text-2xl font-bold text-white">{stats.total}</p>
+        <div className="p-4 rounded-xl glass-card/50">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Students</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
           <p className="text-xs text-emerald-400 mb-1">Good</p>
@@ -124,7 +124,7 @@ export default function FacultyStudentAnalysis() {
         </div>
         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <p className="text-xs text-amber-400 mb-1">Average</p>
-          <p className="text-2xl font-bold text-amber-400">{stats.average}</p>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.average}</p>
         </div>
         <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20">
           <p className="text-xs text-rose-400 mb-1">Weak</p>
@@ -132,20 +132,20 @@ export default function FacultyStudentAnalysis() {
         </div>
         <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-400 mb-1">Avg Attendance</p>
-          <p className="text-2xl font-bold text-blue-400">{stats.avgAttendance}%</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.avgAttendance}%</p>
         </div>
         <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
           <p className="text-xs text-purple-400 mb-1">Avg Score</p>
-          <p className="text-2xl font-bold text-purple-400">{stats.avgScore}%</p>
+          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.avgScore}%</p>
         </div>
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Attendance Distribution */}
-        <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50">
-          <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-teal-400" />
+        <div className="p-5 rounded-xl glass-card/50">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Attendance Distribution
           </h3>
           <ResponsiveContainer width="100%" height={200}>
@@ -162,16 +162,16 @@ export default function FacultyStudentAnalysis() {
             {attendanceDistribution.map((item) => (
               <div key={item.name} className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-slate-400">{item.name}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400">{item.name}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Score Distribution */}
-        <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50">
-          <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Award className="w-4 h-4 text-teal-400" />
+        <div className="p-5 rounded-xl glass-card/50">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <Award className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Score Distribution
           </h3>
           <ResponsiveContainer width="100%" height={200}>
@@ -188,16 +188,16 @@ export default function FacultyStudentAnalysis() {
             {scoreDistribution.map((item) => (
               <div key={item.name} className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-slate-400">{item.name}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400">{item.name}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Assessment Trend */}
-        <div className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50">
-          <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-teal-400" />
+        <div className="p-5 rounded-xl glass-card/50">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             Assessment Trend
           </h3>
           <ResponsiveContainer width="100%" height={200}>
@@ -226,7 +226,7 @@ export default function FacultyStudentAnalysis() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
                   filterStatus === status
                     ? `${config.bg} ${config.color} border ${config.border}`
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {config.label}
@@ -242,7 +242,7 @@ export default function FacultyStudentAnalysis() {
             placeholder="Search student..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg glass-card/50 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
           />
         </div>
       </div>
@@ -267,37 +267,37 @@ export default function FacultyStudentAnalysis() {
                 className="p-4 flex items-center gap-4 cursor-pointer"
                 onClick={() => setExpandedStudent(isExpanded ? null : student.id)}
               >
-                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-300">
+                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {student.avatar}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-white">{student.name}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{student.name}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${config.bg} ${config.color} ${config.border}`}>
                       {config.label}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">{student.rollNo} • {student.division} • {student.mentor}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">{student.rollNo} • {student.division} • {student.mentor}</p>
                 </div>
                 <div className="flex items-center gap-6 text-sm">
                   <div className="text-center">
                     <p className={`font-semibold ${student.attendancePercentage >= 85 ? 'text-emerald-400' : student.attendancePercentage >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
                       {student.attendancePercentage}%
                     </p>
-                    <p className="text-xs text-slate-500">Attendance</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Attendance</p>
                   </div>
                   <div className="text-center">
                     <p className={`font-semibold ${student.avgScore >= 80 ? 'text-emerald-400' : student.avgScore >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
                       {student.avgScore}%
                     </p>
-                    <p className="text-xs text-slate-500">Avg Score</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Avg Score</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-white font-semibold">{student.assessmentScores.length}</p>
-                    <p className="text-xs text-slate-500">Assessments</p>
+                    <p className="text-slate-900 dark:text-white font-semibold">{student.assessmentScores.length}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Assessments</p>
                   </div>
                 </div>
-                <button className="p-1 text-slate-400 hover:text-white transition-colors">
+                <button className="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
@@ -310,13 +310,13 @@ export default function FacultyStudentAnalysis() {
                     <div className="space-y-4">
                       {/* Contact Info */}
                       <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1">Email</p>
-                          <p className="text-slate-300">{student.email}</p>
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Email</p>
+                          <p className="text-slate-700 dark:text-slate-300">{student.email}</p>
                         </div>
-                        <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                          <p className="text-xs text-slate-500 mb-1">Phone</p>
-                          <p className="text-slate-300">{student.phone}</p>
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Phone</p>
+                          <p className="text-slate-700 dark:text-slate-300">{student.phone}</p>
                         </div>
                       </div>
 
@@ -350,13 +350,13 @@ export default function FacultyStudentAnalysis() {
 
                       {/* Assessment Scores */}
                       <div>
-                        <h4 className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                        <h4 className="text-xs text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1">
                           <BookOpen className="w-3 h-3" /> Assessment Scores
                         </h4>
                         <div className="space-y-2">
                           {student.assessmentScores.map((score: AssessmentScore, i: number) => (
-                            <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                              <span className="text-xs text-slate-400 w-20">{score.assessment}</span>
+                            <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                              <span className="text-xs text-slate-600 dark:text-slate-400 w-20">{score.assessment}</span>
                               <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${score.score >= 80 ? 'bg-emerald-500' : score.score >= 60 ? 'bg-amber-500' : 'bg-rose-500'}`}
@@ -376,7 +376,7 @@ export default function FacultyStudentAnalysis() {
                     <div className="space-y-4">
                       {/* Attendance History */}
                       <div>
-                        <h4 className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                        <h4 className="text-xs text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1">
                           <Calendar className="w-3 h-3" /> Recent Attendance
                         </h4>
                         <div className="grid grid-cols-6 gap-1">
@@ -385,8 +385,8 @@ export default function FacultyStudentAnalysis() {
                               <div className={`w-8 h-8 rounded-lg mx-auto flex items-center justify-center text-xs ${
                                 record.status === 'present' ? 'bg-emerald-500/20 text-emerald-400' :
                                 record.status === 'absent' ? 'bg-rose-500/20 text-rose-400' :
-                                record.status === 'late' ? 'bg-amber-500/20 text-amber-400' :
-                                'bg-blue-500/20 text-blue-400'
+                                record.status === 'late' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400' :
+                                'bg-blue-100 dark:bg-blue-900/30 text-blue-400'
                               }`}>
                                 {record.status === 'present' ? 'P' : record.status === 'absent' ? 'A' : record.status === 'late' ? 'L' : 'OD'}
                               </div>
@@ -397,8 +397,8 @@ export default function FacultyStudentAnalysis() {
                       </div>
 
                       {/* Mini Chart */}
-                      <div className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                        <p className="text-xs text-slate-400 mb-2">Score Trend</p>
+                      <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">Score Trend</p>
                         <ResponsiveContainer width="100%" height={120}>
                           <AreaChart data={student.assessmentScores.map((s: AssessmentScore) => ({ name: s.assessment, score: s.score }))}>
                             <defs>
@@ -420,11 +420,11 @@ export default function FacultyStudentAnalysis() {
                       <div className="flex gap-2">
                         <Link
                           to={`/faculty/attendance`}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-all text-center"
+                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all text-center"
                         >
                           Mark Attendance
                         </Link>
-                        <button className="flex-1 px-3 py-2 rounded-lg text-xs bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700 transition-all">
+                        <button className="flex-1 px-3 py-2 rounded-lg text-xs bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
                           View Full Report
                         </button>
                       </div>
@@ -439,7 +439,7 @@ export default function FacultyStudentAnalysis() {
         {filteredStudents.length === 0 && (
           <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
             <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No students found</p>
+            <p className="text-slate-600 dark:text-slate-400">No students found</p>
           </div>
         )}
       </div>

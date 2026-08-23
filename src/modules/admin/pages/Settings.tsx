@@ -38,7 +38,7 @@ function SettingsInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-300
-        bg-slate-50 dark:bg-slate-900/50
+        bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50
         border-slate-200 dark:border-slate-700/50
         text-slate-800 dark:text-white
         placeholder-slate-400 dark:placeholder-slate-500
@@ -55,7 +55,7 @@ function SettingsSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
     <select
       {...props}
       className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-300
-        bg-slate-50 dark:bg-slate-900/50
+        bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50
         border-slate-200 dark:border-slate-700/50
         text-slate-800 dark:text-white
         focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500
@@ -67,7 +67,7 @@ function SettingsSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 // Section Title
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">
+    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">
       {children}
     </h3>
   )
@@ -76,7 +76,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 // Section Description
 function SectionDesc({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+    <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-6">
       {children}
     </p>
   )
@@ -85,7 +85,7 @@ function SectionDesc({ children }: { children: React.ReactNode }) {
 // Label
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">
+    <label className="block text-sm font-medium text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-2">
       {children}
     </label>
   )
@@ -163,8 +163,8 @@ export default function Settings() {
     <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">Settings</h1>
-        <p className="text-slate-500 dark:text-slate-400">Manage your application preferences</p>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Settings</h1>
+        <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Manage your application preferences</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl">
@@ -181,8 +181,8 @@ export default function Settings() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
                       ${isActive
-                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                        ? 'bg-teal-500 text-slate-900 dark:text-white shadow-md shadow-teal-500/20'
+                        : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-700/50'
                       }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -195,7 +195,7 @@ export default function Settings() {
 
           {/* Current Theme Indicator */}
           <div className="mt-4 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/30">
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
               {resolvedMode === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
               Currently in {resolvedMode} mode
             </div>
@@ -260,14 +260,14 @@ export default function Settings() {
                       min="0"
                       max="100"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 text-sm">%</span>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
                     onClick={() => handleSave('General')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30"
                   >
                     <Save className="w-4 h-4" />
                     Save Changes
@@ -286,15 +286,15 @@ export default function Settings() {
               <div className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-5">
-                  <div className="w-20 h-20 rounded-2xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center text-3xl font-bold text-teal-600 dark:text-teal-400 border-2 border-teal-500/20">
+                  <div className="w-20 h-20 rounded-2xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-3xl font-bold text-teal-600 dark:text-teal-400 border-2 border-teal-500/20">
                     {fullName.charAt(0).toUpperCase()}
                   </div>
                   <div className="space-y-2">
-                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                       <Upload className="w-4 h-4" />
                       Change Avatar
                     </button>
-                    <p className="text-xs text-slate-400">JPG, PNG or GIF. Max 2MB.</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">JPG, PNG or GIF. Max 2MB.</p>
                   </div>
                 </div>
 
@@ -330,13 +330,13 @@ export default function Settings() {
                 <div>
                   <Label>Role</Label>
                   <SettingsInput type="text" value="Administrator" disabled />
-                  <p className="text-xs text-slate-400 mt-1">Contact super admin to change your role</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Contact super admin to change your role</p>
                 </div>
 
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
                     onClick={() => handleSave('Profile')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
                     <Save className="w-4 h-4" />
                     Update Profile
@@ -356,12 +356,12 @@ export default function Settings() {
                 {/* Push Notifications Master Toggle */}
                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center">
-                      <Smartphone className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                      <Smartphone className="w-5 h-5 text-teal-600 dark:text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800 dark:text-white">Push Notifications</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Enable push notifications on this device</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-900 dark:text-white">Push Notifications</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Enable push notifications on this device</p>
                     </div>
                   </div>
                   <ToggleSwitch
@@ -386,7 +386,7 @@ export default function Settings() {
                         <item.icon className="w-4 h-4 text-slate-400" />
                         <div>
                           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{item.label}</p>
-                          <p className="text-xs text-slate-400">{item.desc}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400">{item.desc}</p>
                         </div>
                       </div>
                       <ToggleSwitch
@@ -400,7 +400,7 @@ export default function Settings() {
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
                     onClick={() => handleSave('Notification')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
                     <Save className="w-4 h-4" />
                     Save Preferences
@@ -432,7 +432,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      className="absolute right-4 top-8 text-slate-600 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -479,7 +479,7 @@ export default function Settings() {
 
                   <button
                     onClick={() => handleSave('Password')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
                     <Lock className="w-4 h-4" />
                     Update Password
@@ -490,12 +490,12 @@ export default function Settings() {
                   {/* Two-Factor Authentication */}
                   <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-teal-600 dark:text-teal-600 dark:text-teal-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-800 dark:text-white">Two-Factor Authentication</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Add an extra layer of security to your account</p>
+                        <p className="text-sm font-medium text-slate-800 dark:text-slate-900 dark:text-white">Two-Factor Authentication</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Add an extra layer of security to your account</p>
                       </div>
                     </div>
                     <ToggleSwitch
@@ -519,7 +519,7 @@ export default function Settings() {
                             {session.device}
                             {session.current && <span className="ml-2 text-xs bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full">Current</span>}
                           </p>
-                          <p className="text-xs text-slate-400">{session.location} · {session.time}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400">{session.location} · {session.time}</p>
                         </div>
                         {!session.current && (
                           <button className="text-xs text-red-500 hover:text-red-600 font-medium">
@@ -566,7 +566,7 @@ export default function Settings() {
                           <span className={`text-sm font-medium ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
                             {theme.label}
                           </span>
-                          <span className="text-xs text-slate-400">{theme.desc}</span>
+                          <span className="text-xs text-slate-600 dark:text-slate-400">{theme.desc}</span>
                         </button>
                       )
                     })}
@@ -590,7 +590,7 @@ export default function Settings() {
                         title={item.name}
                       >
                         {accentColor === item.color && (
-                          <Check className="w-5 h-5 text-white absolute inset-0 m-auto drop-shadow-md" />
+                          <Check className="w-5 h-5 text-slate-900 dark:text-white absolute inset-0 m-auto drop-shadow-md" />
                         )}
                       </button>
                     ))}
@@ -615,7 +615,7 @@ export default function Settings() {
                   <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Compact Mode</p>
-                      <p className="text-xs text-slate-400">Reduce spacing for denser layout</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Reduce spacing for denser layout</p>
                     </div>
                     <ToggleSwitch checked={compactMode} onChange={setCompactMode} />
                   </div>
@@ -623,7 +623,7 @@ export default function Settings() {
                   <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Animations</p>
-                      <p className="text-xs text-slate-400">Enable smooth transitions and animations</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Enable smooth transitions and animations</p>
                     </div>
                     <ToggleSwitch checked={animationsEnabled} onChange={setAnimationsEnabled} />
                   </div>
@@ -632,7 +632,7 @@ export default function Settings() {
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
                     onClick={() => handleSave('Appearance')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
                     <Save className="w-4 h-4" />
                     Save Preferences
@@ -652,20 +652,20 @@ export default function Settings() {
                 {/* Export */}
                 <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center flex-shrink-0">
-                      <Download className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center flex-shrink-0">
+                      <Download className="w-5 h-5 text-teal-600 dark:text-teal-600 dark:text-teal-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Export All Data</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Export All Data</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-4">
                         Download a complete backup of all student records, assessments, attendance, and fee data.
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                           <FileText className="w-4 h-4" />
                           Export as Excel
                         </button>
-                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                           <Download className="w-4 h-4" />
                           Export as JSON
                         </button>
@@ -681,11 +681,11 @@ export default function Settings() {
                       <Upload className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Import Data</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Import Data</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-4">
                         Import student records, faculty data, or attendance from CSV or Excel files.
                       </p>
-                      <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                      <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                         <Upload className="w-4 h-4" />
                         Choose File
                       </button>
@@ -696,12 +696,12 @@ export default function Settings() {
                 {/* Auto Backup */}
                 <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                      <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-600 dark:text-amber-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Automatic Backups</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Automatic Backups</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-4">
                         Schedule automatic backups to cloud storage.
                       </p>
                       <SettingsSelect defaultValue="weekly">
@@ -718,7 +718,7 @@ export default function Settings() {
                 <div className="p-5 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-600 dark:text-red-400" />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Danger Zone</h4>
