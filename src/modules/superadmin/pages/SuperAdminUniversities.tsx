@@ -6,6 +6,7 @@ import {
   useRolloutProgress,
   useSeedUniversities,
 } from "../../admin/hooks/useUniversities";
+import { useNotification } from "../../../shared/providers/NotificationProvider";
 import {
   getTotalEstimatedColleges,
   getPrioritySummary,
@@ -65,6 +66,7 @@ function safeSlice<T>(arr: unknown, start: number, end?: number): T[] {
 
 const SuperAdminUniversities: React.FC = () => {
   const navigate = useNavigate();
+  const { showSuccess, showWarning, showError } = useNotification();
   const [searchQuery, setSearchQuery] = useState("");
   // EXPLICIT UNION — avoids type mismatch between src/types and src/modules/superadmin/types
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
@@ -104,12 +106,14 @@ const SuperAdminUniversities: React.FC = () => {
       const created = result?.created ?? result?.seeded ?? 0;
       const updated = result?.updated ?? 0;
       const errors: string[] = result?.errors ?? [];
-      alert(
-        `Seed complete! ${created} created, ${updated} updated.` +
-          (errors.length > 0 ? `\n${errors.length} errors.` : "")
-      );
+      const summary = `Seed complete! ${created} created, ${updated} updated.`;
+      if (errors.length > 0) {
+        showWarning(`${summary} ${errors.length} errors.`);
+      } else {
+        showSuccess(summary);
+      }
     } catch (err) {
-      alert("Seed failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      showError("Seed failed: " + (err instanceof Error ? err.message : "Unknown error"));
     }
   };
 
