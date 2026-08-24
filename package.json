@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:dead-code": "node scripts/check-dead-code.cjs"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
