@@ -133,7 +133,7 @@ export function computeCollegeData(
 
 export function getCollegeMilestones(): Milestone[] {
   return [
-    { id: 1, title: 'Institution Established', date: '2010-06-15', status: 'completed', description: 'KGIS Institute of Technology founded with 3 programs', metric: '3 UG Programs' },
+    { id: 1, title: 'Institution Established', date: '2010-06-15', status: 'completed', description: 'College founded with 3 programs', metric: '3 UG Programs' },
     { id: 2, title: 'First Graduating Batch', date: '2014-05-20', status: 'completed', description: 'First batch of 120 students graduated', metric: '120 Graduates' },
     { id: 3, title: 'NAAC Accreditation', date: '2016-11-10', status: 'completed', description: 'Achieved NAAC B++ grade', metric: 'B++ Grade' },
     { id: 4, title: 'Program Expansion', date: '2018-07-01', status: 'completed', description: 'Added BCom, BA, and BSc programs', metric: '6 Programs' },
@@ -295,7 +295,7 @@ export function computeStudentData(
 
 export function getStudentMilestones(data: StudentJourneyData): Milestone[] {
   const milestones: Milestone[] = [
-    { id: 1, title: 'Admission', date: '2024-06-15', status: 'completed', description: `Joined KGIS Institute of Technology, ${data.student.course} Batch ${data.student.batch}`, metric: `${data.student.course}` },
+    { id: 1, title: 'Admission', date: '2024-06-15', status: 'completed', description: `Joined college, ${data.student.course} Batch ${data.student.batch}`, metric: `${data.student.course}` },
     { id: 2, title: 'Orientation', date: '2024-06-20', status: 'completed', description: 'College orientation and campus tour completed', metric: 'Done' },
   ]
 

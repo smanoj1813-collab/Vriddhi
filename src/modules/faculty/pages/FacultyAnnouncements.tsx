@@ -8,7 +8,7 @@ import {
 // TODO: Fetch from Firebase
 const facultyStudents: any[] = []
 const classSessions: any[] = []
-const currentFaculty = { name: 'Faculty', department: 'CSE' }
+const currentFaculty = { name: 'Faculty', department: 'General' }
 
 type Priority = 'high' | 'normal' | 'low'
 type TargetAudience = 'all' | 'batch' | 'weak' | 'good'

@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckSquare, Square, Eye, Printer, Download,
   Send, CheckCircle, Clock, AlertTriangle, X, Sparkles, Plus, Trash2,
-  Loader2, BookOpen, Calendar, Award, ChevronRight, Save
+  Loader2, BookOpen, Calendar, Award, ChevronRight, Save, Pencil, FileUp, RotateCcw
 } from 'lucide-react'
 import { useAuth } from '../../auth/context/AuthContext'
-import { getQuestions, linkQuestionToPaper } from '../../admin/api/questionBankApi'
+import { DEFAULT_DEPARTMENT } from '@/shared/constants/academicPrograms'
+import { getQuestions, linkQuestionToPaper, updateQuestion, getBatchBranchConfig } from '../../admin/api/questionBankApi'
+import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor'
 import { createPaper } from '../../admin/api/paperApi'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
@@ -72,11 +74,19 @@ export default function FacultyPaperGenerator() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [showToast, setShowToast] = useState('')
   const [activeTab, setActiveTab] = useState<'generate' | 'my-papers'>('generate')
+  // ── Edit-before-submit: per-question overrides applied to this paper ──
+  const [questionEdits, setQuestionEdits] = useState<Record<string, { questionText: string; marks: number }>>({})
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState<{ questionText: string; marks: number }>({ questionText: '', marks: 1 })
+  const [syncEditsToBank, setSyncEditsToBank] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [branches, setBranches] = useState<string[]>([])
+  const [batches, setBatches] = useState<string[]>([])
 
   const currentFaculty = useMemo(() => ({
     name: user?.name || 'Faculty',
-    department: user?.department || 'CSE',
-    subject: user?.department || 'Data Structures',
+    department: user?.department || DEFAULT_DEPARTMENT,
+    subject: user?.department || 'General',
   }), [user])
 
   const loadData = useCallback(async () => {
@@ -130,11 +140,52 @@ export default function FacultyPaperGenerator() {
     loadData()
   }, [loadData])
 
-  const totalSelectedMarks = useMemo(() => 
+  useEffect(() => {
+    if (!collegeId) return
+    getBatchBranchConfig(collegeId)
+      .then((cfg) => {
+        setBranches(cfg.branches || [])
+        setBatches(cfg.batches || [])
+      })
+      .catch(() => undefined)
+  }, [collegeId])
+
+  /** Applies any unsaved edits made in this session on top of the bank question. */
+  const withEdits = useCallback((q: FacultyQuestion): FacultyQuestion => {
+    const edit = questionEdits[q.id]
+    return edit ? { ...q, questionText: edit.questionText, marks: edit.marks } : q
+  }, [questionEdits])
+
+  const totalSelectedMarks = useMemo(() =>
     availableQuestions
       .filter(q => selectedQuestions.includes(q.id))
-      .reduce((sum, q) => sum + q.marks, 0),
-  [availableQuestions, selectedQuestions])
+      .reduce((sum, q) => sum + withEdits(q).marks, 0),
+  [availableQuestions, selectedQuestions, withEdits])
+
+  const openQuestionEditor = (q: FacultyQuestion) => {
+    const merged = withEdits(q)
+    setEditDraft({ questionText: merged.questionText, marks: merged.marks })
+    setEditingQuestionId(q.id)
+  }
+
+  const saveQuestionEdit = () => {
+    if (!editingQuestionId) return
+    setQuestionEdits(prev => ({
+      ...prev,
+      [editingQuestionId]: { questionText: editDraft.questionText, marks: Number(editDraft.marks) || 1 },
+    }))
+    setEditingQuestionId(null)
+    setShowToast('Question updated for this paper')
+    setTimeout(() => setShowToast(''), 2500)
+  }
+
+  const resetQuestionEdit = (id: string) => {
+    setQuestionEdits(prev => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
 
   const expectedMarks = assessmentType === 'C3' ? 80 : assessmentType === 'C2' ? 50 : 20
 
@@ -155,7 +206,7 @@ export default function FacultyPaperGenerator() {
   }
 
   const generatePreviewHTML = () => {
-    const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id))
+    const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
     const sections = assessmentType === 'C3' 
       ? [
           { name: 'Section A (5 marks each)', questions: selected.filter(q => q.marks === 5) },
@@ -166,9 +217,9 @@ export default function FacultyPaperGenerator() {
     let html = `
       <div style="font-family: 'Times New Roman', serif; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-size: 18px; margin-bottom: 5px;">Vriddhi Institute of Technology</h1>
+          <h1 style="font-size: 18px; margin-bottom: 5px;">${(user as any)?.collegeName || 'Question Paper'}</h1>
           <h2 style="font-size: 16px; margin-bottom: 5px;">${paperTitle || 'Untitled Paper'}</h2>
-          <p style="font-size: 12px; color: #666;">Subject: Data Structures | Duration: ${duration} min | Max Marks: ${totalSelectedMarks}</p>
+          <p style="font-size: 12px; color: #666;">Subject: ${currentFaculty.subject} | Duration: ${duration} min | Max Marks: ${totalSelectedMarks}</p>
           ${customInstructions ? `<p style="font-size: 12px; color: #666; margin-top: 10px;"><strong>Instructions:</strong> ${customInstructions}</p>` : ''}
         </div>
     `
@@ -208,10 +259,26 @@ export default function FacultyPaperGenerator() {
       return
     }
 
-    const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id))
+    const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
     const questionIds = selected.map(q => q.id)
 
     try {
+      const sections = [
+        {
+          id: 'section-a',
+          name: 'Section A',
+          questions: selected.map((q, i) => ({
+            number: i + 1,
+            text: q.questionText,
+            type: q.questionType,
+            marks: q.marks,
+            topic: q.topic,
+            questionId: q.id,
+            edited: Boolean(questionEdits[q.id]),
+          })),
+        },
+      ] as any
+
       const saved = await createPaper(
         collegeId,
         {
@@ -225,8 +292,21 @@ export default function FacultyPaperGenerator() {
         questionIds,
         user?.id || user?.uid || '',
         user?.name || user?.email || 'Unknown',
-        true
+        true,
+        sections
       )
+
+      // Optionally push the edits back into the shared question bank
+      if (syncEditsToBank) {
+        for (const [qid, edit] of Object.entries(questionEdits)) {
+          if (!questionIds.includes(qid)) continue
+          try {
+            await updateQuestion(qid, { text: edit.questionText, marks: edit.marks })
+          } catch {
+            // Non-fatal: the paper still carries the edited version.
+          }
+        }
+      }
 
       for (const qid of questionIds) {
         await linkQuestionToPaper(qid, saved.id)
@@ -265,6 +345,7 @@ export default function FacultyPaperGenerator() {
       setSelectedQuestions([])
       setPaperTitle('')
       setCustomInstructions('')
+      setQuestionEdits({})
       setActiveTab('my-papers')
     } catch (err) {
       setShowToast(err instanceof Error ? err.message : 'Failed to submit paper')
@@ -364,7 +445,7 @@ export default function FacultyPaperGenerator() {
                   <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Paper Title *</label>
                   <input
                     type="text"
-                    placeholder="e.g., End Semester - Data Structures"
+                    placeholder="e.g., End Semester - Financial Accounting"
                     value={paperTitle}
                     onChange={(e) => setPaperTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
@@ -411,12 +492,20 @@ export default function FacultyPaperGenerator() {
                   <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   Select Questions ({availableQuestions.length} available)
                 </h3>
-                <button
-                  onClick={selectAll}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all"
-                >
-                  {selectedQuestions.length === availableQuestions.length ? 'Deselect All' : 'Select All'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setUploadOpen(true)}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/20 hover:bg-slate-500/20 transition-all flex items-center gap-1.5"
+                  >
+                    <FileUp className="w-3.5 h-3.5" /> Upload a ready paper
+                  </button>
+                  <button
+                    onClick={selectAll}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all"
+                  >
+                    {selectedQuestions.length === availableQuestions.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
               </div>
               <div className="max-h-[500px] overflow-y-auto">
                 {availableQuestions.length === 0 ? (
@@ -442,10 +531,13 @@ export default function FacultyPaperGenerator() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-slate-900 dark:text-white line-clamp-2">{q.questionText}</p>
+                          <p className="text-sm text-slate-900 dark:text-white line-clamp-2">{withEdits(q).questionText}</p>
                           <div className="flex flex-wrap gap-1.5 mt-1">
+                            {questionEdits[q.id] && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-500 border border-teal-500/20">edited</span>
+                            )}
                             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-500/20">{q.questionType}</span>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">{q.marks}m</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">{withEdits(q).marks}m</span>
                             <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-500/20">{q.topic}</span>
                             <span className={`text-xs px-2 py-0.5 rounded-full border ${
                               q.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
@@ -453,6 +545,24 @@ export default function FacultyPaperGenerator() {
                               'bg-rose-500/10 text-rose-400 border-rose-500/20'
                             }`}>{q.difficulty}</span>
                           </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openQuestionEditor(q) }}
+                            title="Edit this question for the paper"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-teal-500 hover:bg-teal-500/10 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          {questionEdits[q.id] && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); resetQuestionEdit(q.id) }}
+                              title="Revert to the original question"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -671,6 +781,18 @@ export default function FacultyPaperGenerator() {
               <p className="text-slate-600 dark:text-slate-400">Total Marks: <span className="text-slate-900 dark:text-white">{totalSelectedMarks}</span></p>
               <p className="text-slate-600 dark:text-slate-400">Duration: <span className="text-slate-900 dark:text-white">{duration} min</span></p>
             </div>
+            {Object.keys(questionEdits).length > 0 && (
+              <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={syncEditsToBank}
+                  onChange={(e) => setSyncEditsToBank(e.target.checked)}
+                  className="mt-0.5"
+                />
+                Also save my {Object.keys(questionEdits).length} edited question(s) back to the question bank
+                (otherwise the edits only apply to this paper).
+              </label>
+            )}
             <p className="text-xs text-amber-400 mb-4 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
               Once submitted, you cannot edit the paper until reviewed.
@@ -687,6 +809,72 @@ export default function FacultyPaperGenerator() {
           </div>
         </div>
       )}
+
+      {/* Edit a question before it goes into the paper */}
+      {editingQuestionId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-teal-500/10">
+                <Pencil className="w-5 h-5 text-teal-500" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Edit Question</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Changes apply to this paper. You can also push them back to the bank when you submit.
+                </p>
+              </div>
+            </div>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Question text</label>
+            <textarea
+              rows={5}
+              value={editDraft.questionText}
+              onChange={(e) => setEditDraft(prev => ({ ...prev, questionText: e.target.value }))}
+              className="w-full px-3 py-2 mb-3 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/60"
+            />
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Marks</label>
+            <input
+              type="number"
+              min={1}
+              value={editDraft.marks}
+              onChange={(e) => setEditDraft(prev => ({ ...prev, marks: Number(e.target.value) }))}
+              className="w-full px-3 py-2 mb-5 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/60"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditingQuestionId(null)}
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveQuestionEdit}
+                disabled={!editDraft.questionText.trim()}
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-teal-500 text-white font-medium hover:bg-teal-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" /> Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload a ready-made paper */}
+      <PaperUploadEditor
+        open={uploadOpen}
+        collegeId={collegeId}
+        userId={user?.id || user?.uid || ''}
+        userName={user?.name || ''}
+        branches={branches}
+        batches={batches}
+        canPublishDirectly={user?.role === 'hod'}
+        onClose={() => setUploadOpen(false)}
+        onSaved={async (_id, action) => {
+          setShowToast(action === 'draft' ? 'Paper saved as draft' : action === 'published' ? 'Paper published' : 'Paper submitted for approval')
+          setTimeout(() => setShowToast(''), 3000)
+          await loadData()
+        }}
+      />
 
       {/* Toast */}
       {showToast && (

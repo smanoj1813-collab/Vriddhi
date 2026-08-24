@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 // TODO: Fetch from Firebase
 const classSessions: any[] = []
-const currentFaculty = { name: 'Faculty', department: 'CSE' }
+const currentFaculty = { name: 'Faculty', department: 'General' }
 
 interface CalendarEvent {
   id: string

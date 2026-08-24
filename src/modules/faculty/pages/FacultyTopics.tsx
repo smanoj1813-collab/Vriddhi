@@ -102,7 +102,7 @@ export default function FacultyTopics() {
     status: 'planned',
     resources: [],
     notes: '',
-    subject: 'Data Structures',
+    subject: '',
   })
 
   const [resourceInput, setResourceInput] = useState('')
@@ -119,7 +119,7 @@ export default function FacultyTopics() {
       status: 'planned',
       resources: [],
       notes: '',
-      subject: 'Data Structures',
+      subject: '',
     })
     setResourceInput('')
     setFormError(null)

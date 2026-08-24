@@ -2,26 +2,13 @@
 // Admin Question Bank page — AI generation, CRUD and paper building.
 
 import React, { useEffect, useState } from 'react';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, Button, CircularProgress, Typography, Alert, Snackbar } from '@mui/material';
+import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import QuestionUploadEditor from '@/shared/components/question-paper/QuestionUploadEditor';
 import { useAuth } from '../../auth/context/AuthContext';
 import QuestionBankManager from '../components/question-bank/QuestionBankManager';
 import { getBatchBranchConfig, getQuestionStats } from '../api/questionBankApi';
-
-const DEFAULT_SUBJECTS = [
-  'Mathematics',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'Computer Science',
-  'Data Structures',
-  'Algorithms',
-  'Database Management',
-  'Operating Systems',
-  'English',
-  'Accounting',
-  'Economics',
-  'Statistics',
-];
+import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
 
 export default function QuestionBank() {
   const { user } = useAuth();
@@ -31,6 +18,9 @@ export default function QuestionBank() {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [toast, setToast] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!collegeId) {
@@ -73,7 +63,28 @@ export default function QuestionBank() {
   return (
     <Box sx={{ p: 3 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <QuestionBankManager batches={batches} branches={branches} subjects={subjects} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadOpen(true)}>
+          Upload Questions
+        </Button>
+      </Box>
+      <QuestionBankManager key={reloadKey} batches={batches} branches={branches} subjects={subjects} />
+      <QuestionUploadEditor
+        open={uploadOpen}
+        collegeId={collegeId}
+        createdBy={user?.id || user?.uid || ''}
+        createdByName={user?.name || ''}
+        subjects={subjects}
+        batches={batches}
+        branches={branches}
+        canPublishDirectly
+        onClose={() => setUploadOpen(false)}
+        onSaved={(count, status) => {
+          setToast(status === 'draft' ? `${count} question(s) saved as draft` : `${count} question(s) published to the bank`);
+          setReloadKey((k) => k + 1);
+        }}
+      />
+      <Snackbar open={Boolean(toast)} autoHideDuration={4000} onClose={() => setToast('')} message={toast} />
     </Box>
   );
 }

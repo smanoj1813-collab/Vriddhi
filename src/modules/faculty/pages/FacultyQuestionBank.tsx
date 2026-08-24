@@ -77,6 +77,7 @@ import { getPapers } from '../../admin/services/paperAPI';
 import FacultyQuestionForm from '../../components/question-bank/FacultyQuestionForm';
 import FacultyBulkImport from '../../components/question-bank/FacultyBulkImport';
 import FacultyPaperLinker from '../../components/question-bank/FacultyPaperLinker';
+import QuestionUploadEditor from '@/shared/components/question-paper/QuestionUploadEditor';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -131,6 +132,7 @@ const FacultyQuestionBank: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [uploadEditorOpen, setUploadEditorOpen] = useState(false);
   const [linkerOpen, setLinkerOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -393,7 +395,8 @@ const FacultyQuestionBank: React.FC = () => {
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="outlined" startIcon={<AssessmentIcon />} onClick={loadStats}>Analytics</Button>
-          <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setImportOpen(true)}>Import</Button>
+          <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadEditorOpen(true)}>Upload Questions</Button>
+          <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setImportOpen(true)}>Paste Import</Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingQuestion(null); setFormOpen(true); }}>Add Question</Button>
         </Box>
       </Box>
@@ -807,6 +810,27 @@ const FacultyQuestionBank: React.FC = () => {
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
         <Alert severity={snackbar.severity} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>{snackbar.message}</Alert>
       </Snackbar>
+      <QuestionUploadEditor
+        open={uploadEditorOpen}
+        collegeId={collegeId}
+        createdBy={facultyId}
+        createdByName={user?.name || ''}
+        subjects={subjects}
+        batches={batches}
+        branches={branches}
+        onClose={() => setUploadEditorOpen(false)}
+        onSaved={(count, status) => {
+          showSnackbar(
+            status === 'draft'
+              ? `${count} question(s) saved as draft`
+              : `${count} question(s) added to the question bank`,
+            'success'
+          );
+          loadQuestions(true);
+          loadSubjects();
+        }}
+      />
+
     </Box>
   );
 };
