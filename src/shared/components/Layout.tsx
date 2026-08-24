@@ -57,6 +57,7 @@ import {
   NotificationsNone,
   SwapHoriz,
   ExpandMore,
+  RateReview,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
@@ -97,6 +98,7 @@ const navItems: NavItem[] = [
   { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
   { label: "Assessments", path: "/admin/assessments", icon: <Assignment fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
   { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
+  { label: "Question Review", path: "/admin/review-queue", icon: <RateReview fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
