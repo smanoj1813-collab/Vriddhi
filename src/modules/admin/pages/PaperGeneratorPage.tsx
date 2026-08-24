@@ -80,7 +80,15 @@ export default function PaperGeneratorPage() {
         canPublishDirectly
         onClose={() => setUploadOpen(false)}
         onSaved={(_id, action) => {
-          setToast(action === 'draft' ? 'Paper saved as draft' : action === 'published' ? 'Paper published' : 'Paper submitted for approval');
+          setToast(
+            action === 'draft'
+              ? 'Paper saved as draft'
+              : action === 'save'
+                ? 'Paper saved and ready to use'
+                : action === 'published'
+                  ? 'Paper approved and published'
+                  : 'Paper submitted for HOD approval'
+          );
           setReloadKey((k) => k + 1);
         }}
       />

@@ -9,7 +9,7 @@ import { useAuth } from '../../auth/context/AuthContext'
 import { DEFAULT_DEPARTMENT } from '@/shared/constants/academicPrograms'
 import { getQuestions, linkQuestionToPaper, updateQuestion, getBatchBranchConfig } from '../../admin/api/questionBankApi'
 import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor'
-import { createPaper } from '../../admin/api/paperApi'
+import { createPaper, updatePaper } from '../../admin/api/paperApi'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Question as BankQuestion } from '../../admin/types/questionBank'
@@ -80,6 +80,9 @@ export default function FacultyPaperGenerator() {
   const [editDraft, setEditDraft] = useState<{ questionText: string; marks: number }>({ questionText: '', marks: 1 })
   const [syncEditsToBank, setSyncEditsToBank] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+  // HOD approval is optional — only pre-selected for mid/end semester papers.
+  const [requiresApproval, setRequiresApproval] = useState(true)
+  const [approvalTouched, setApprovalTouched] = useState(false)
   const [branches, setBranches] = useState<string[]>([])
   const [batches, setBatches] = useState<string[]>([])
 
@@ -189,6 +192,13 @@ export default function FacultyPaperGenerator() {
 
   const expectedMarks = assessmentType === 'C3' ? 80 : assessmentType === 'C2' ? 50 : 20
 
+  /** Class tests (C1) don't need sign-off; mid (C2) and end semester (C3) do. */
+  const approvalDefault = assessmentType !== 'C1'
+
+  useEffect(() => {
+    if (!approvalTouched) setRequiresApproval(approvalDefault)
+  }, [approvalDefault, approvalTouched])
+
   const toggleQuestion = (id: string) => {
     setSelectedQuestions(prev => 
       prev.includes(id) ? prev.filter(q => q !== id) : [...prev, id]
@@ -296,6 +306,18 @@ export default function FacultyPaperGenerator() {
         sections
       )
 
+      // Approval is optional: papers that don't need it are immediately usable.
+      try {
+        await updatePaper(saved.id, {
+          ...(requiresApproval
+            ? { verificationStatus: 'submitted-for-approval', status: 'draft', submittedAt: new Date().toISOString() }
+            : { verificationStatus: 'not-required', status: 'published', finalisedAt: new Date().toISOString() }),
+          requiresApproval,
+        } as any)
+      } catch {
+        // Non-fatal: the paper is saved, only its review state may lag.
+      }
+
       // Optionally push the edits back into the shared question bank
       if (syncEditsToBank) {
         for (const [qid, edit] of Object.entries(questionEdits)) {
@@ -321,7 +343,7 @@ export default function FacultyPaperGenerator() {
         totalMarks: totalSelectedMarks,
         duration,
         fileName: `${paperTitle.replace(/\s+/g, '_')}.pdf`,
-        verificationStatus: 'submitted-for-approval',
+        verificationStatus: requiresApproval ? 'submitted-for-approval' : 'not-required',
         questions: selected.map((q, i) => ({
           number: i + 1,
           topic: q.topic,
@@ -338,7 +360,7 @@ export default function FacultyPaperGenerator() {
       setLastSavedPaperId(saved.id)
       setPapers(prev => [newPaper, ...prev])
       setShowSubmitConfirm(false)
-      setShowToast('Paper submitted for HOD approval!')
+      setShowToast(requiresApproval ? 'Paper submitted for HOD approval!' : 'Paper saved and ready to use')
       setTimeout(() => setShowToast(''), 3000)
 
       // Reset form
@@ -627,7 +649,7 @@ export default function FacultyPaperGenerator() {
                   className="w-full px-4 py-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  Submit for HOD Approval
+                  {requiresApproval ? 'Submit for HOD Approval' : 'Save Paper'}
                 </button>
               </div>
             </div>
@@ -642,7 +664,7 @@ export default function FacultyPaperGenerator() {
                 <li>Select approved questions from the bank</li>
                 <li>Ensure total marks match expected ({expectedMarks})</li>
                 <li>Preview the paper before submitting</li>
-                <li>Submit for HOD approval</li>
+                <li>Submit for HOD approval (only if needed)</li>
                 <li>Track status in "My Papers" tab</li>
               </ol>
             </div>
@@ -771,10 +793,16 @@ export default function FacultyPaperGenerator() {
               <div className="p-2 rounded-xl bg-teal-500/10">
                 <Send className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Submit for Approval</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                {requiresApproval ? 'Submit for Approval' : 'Save Paper'}
+              </h2>
             </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-              You are about to submit <strong className="text-slate-900 dark:text-white">{paperTitle}</strong> for HOD approval.
+              {requiresApproval ? (
+                <>You are about to submit <strong className="text-slate-900 dark:text-white">{paperTitle}</strong> for HOD approval.</>
+              ) : (
+                <>You are about to save <strong className="text-slate-900 dark:text-white">{paperTitle}</strong>. It will be ready to use straight away.</>
+              )}
             </p>
             <div className="p-3 rounded-lg glass-card/50 space-y-1 text-sm mb-4">
               <p className="text-slate-600 dark:text-slate-400">Questions: <span className="text-slate-900 dark:text-white">{selectedQuestions.length}</span></p>
@@ -793,17 +821,29 @@ export default function FacultyPaperGenerator() {
                 (otherwise the edits only apply to this paper).
               </label>
             )}
-            <p className="text-xs text-amber-400 mb-4 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              Once submitted, you cannot edit the paper until reviewed.
-            </p>
+            <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={requiresApproval}
+                onChange={(e) => { setApprovalTouched(true); setRequiresApproval(e.target.checked) }}
+                className="mt-0.5"
+              />
+              Send this paper to the HOD for approval — normally only needed for mid-semester and
+              semester-end exams. Class tests and practice papers can be saved directly.
+            </label>
+            {requiresApproval && (
+              <p className="text-xs text-amber-400 mb-4 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Once submitted, you cannot edit the paper until reviewed.
+              </p>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 Cancel
               </button>
               <button onClick={handleSubmitForApproval} className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all font-medium flex items-center justify-center gap-2">
-                <Send className="w-4 h-4" />
-                Confirm Submit
+                {requiresApproval ? <Send className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                {requiresApproval ? 'Confirm Submit' : 'Confirm Save'}
               </button>
             </div>
           </div>
@@ -870,7 +910,15 @@ export default function FacultyPaperGenerator() {
         canPublishDirectly={user?.role === 'hod'}
         onClose={() => setUploadOpen(false)}
         onSaved={async (_id, action) => {
-          setShowToast(action === 'draft' ? 'Paper saved as draft' : action === 'published' ? 'Paper published' : 'Paper submitted for approval')
+          setShowToast(
+            action === 'draft'
+              ? 'Paper saved as draft'
+              : action === 'save'
+                ? 'Paper saved and ready to use'
+                : action === 'published'
+                  ? 'Paper approved and published'
+                  : 'Paper submitted for HOD approval'
+          )
           setTimeout(() => setShowToast(''), 3000)
           await loadData()
         }}

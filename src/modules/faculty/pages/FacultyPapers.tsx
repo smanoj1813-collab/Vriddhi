@@ -46,6 +46,7 @@ interface TestPaper {
   instructions?: string
   fileUrl?: string
   answerKeyName?: string
+  requiresApproval?: boolean
 }
 interface PaperVerificationRequest {
   id: string
@@ -318,6 +319,7 @@ export default function FacultyPapers() {
           date: (p as any).date || '',
           instructions: typeof (p as any).instructions === 'string' ? (p as any).instructions : ((p as any).instructions || []).join('\n'),
           fileUrl: (p as any).fileUrl || '',
+          requiresApproval: (p as any).requiresApproval ?? false,
           createdBy: p.createdByName || p.createdBy || '',
           createdAt: p.createdAt || '',
           submittedAt: p.updatedAt || '',
@@ -456,6 +458,7 @@ export default function FacultyPapers() {
       instructions: paper.instructions || '',
       fileName: paper.fileName,
       fileUrl: paper.fileUrl,
+      requiresApproval: paper.requiresApproval,
       questions: paper.questions.map((q) => ({
         rowId: `q_${q.number}`,
         text: q.text || '',
@@ -467,9 +470,19 @@ export default function FacultyPapers() {
     setEditorOpen(true)
   }
 
+  const pendingCount = papers.filter(
+    (p) => p.verificationStatus === 'pending-verification' || p.verificationStatus === 'submitted-for-approval'
+  ).length
+
   const filteredPapers = papers.filter(p => {
-    if (activeTab === 'pending') return p.verificationStatus === 'pending-verification'
-    if (activeTab === 'verified') return p.verificationStatus === 'verified' || p.verificationStatus === 'approved-by-hod'
+    if (activeTab === 'pending')
+      return p.verificationStatus === 'pending-verification' || p.verificationStatus === 'submitted-for-approval'
+    if (activeTab === 'verified')
+      return (
+        p.verificationStatus === 'verified' ||
+        p.verificationStatus === 'approved-by-hod' ||
+        p.verificationStatus === 'not-required'
+      )
     return true
   })
 
@@ -481,7 +494,9 @@ export default function FacultyPapers() {
     'submitted-for-approval': { label: 'Submitted for Approval', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
     'approved-by-hod': { label: 'Approved by HOD', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
     'rejected-by-hod': { label: 'Rejected by HOD', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+    'not-required': { label: 'Ready to use', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   }
+  const fallbackStatus = { label: 'Ready to use', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' }
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -503,8 +518,8 @@ export default function FacultyPapers() {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {[
           { id: 'all', label: 'All Papers' },
-          { id: 'pending', label: 'Pending Verification' },
-          { id: 'verified', label: 'Verified' },
+          { id: 'pending', label: 'Awaiting Approval' },
+          { id: 'verified', label: 'Ready / Verified' },
           { id: 'requests', label: 'My Requests' },
         ].map((tab) => (
           <button
@@ -517,9 +532,9 @@ export default function FacultyPapers() {
             }`}
           >
             {tab.label}
-            {tab.id === 'pending' && papers.filter(p => p.verificationStatus === 'pending-verification').length > 0 && (
+            {tab.id === 'pending' && pendingCount > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-400 text-xs">
-                {papers.filter(p => p.verificationStatus === 'pending-verification').length}
+                {pendingCount}
               </span>
             )}
           </button>
@@ -530,7 +545,7 @@ export default function FacultyPapers() {
       {activeTab !== 'requests' ? (
         <div className="space-y-4">
           {filteredPapers.map(paper => {
-            const status = statusConfig[paper.verificationStatus]
+            const status = statusConfig[paper.verificationStatus] || fallbackStatus
             return (
               <div
                 key={paper.id}
@@ -564,7 +579,8 @@ export default function FacultyPapers() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {paper.verificationStatus === 'pending-verification' && (
+                  {(paper.verificationStatus === 'pending-verification' ||
+                    paper.verificationStatus === 'submitted-for-approval') && (
                     <button
                       onClick={() => setSelectedPaper(paper)}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all text-sm font-medium"
@@ -573,10 +589,16 @@ export default function FacultyPapers() {
                       Review & Verify
                     </button>
                   )}
-                  {paper.verificationStatus === 'verified' && (
+                  {(paper.verificationStatus === 'verified' || paper.verificationStatus === 'approved-by-hod') && (
                     <span className="flex items-center gap-2 text-sm text-emerald-400">
                       <CheckCircle className="w-4 h-4" />
-                      Verified by you
+                      Approved
+                    </span>
+                  )}
+                  {paper.verificationStatus === 'not-required' && (
+                    <span className="flex items-center gap-2 text-sm text-emerald-400">
+                      <CheckCircle className="w-4 h-4" />
+                      Ready to use — no approval needed
                     </span>
                   )}
                   {paper.verificationStatus === 'modification-requested' && (
@@ -690,9 +712,11 @@ export default function FacultyPapers() {
           setShowToast(
             action === 'draft'
               ? 'Paper saved as draft — you can keep editing it'
-              : action === 'published'
-                ? 'Paper published'
-                : 'Paper submitted for approval'
+              : action === 'save'
+                ? 'Paper saved and ready to use (no approval needed)'
+                : action === 'published'
+                  ? 'Paper approved and published'
+                  : 'Paper submitted for HOD approval'
           )
           setTimeout(() => setShowToast(''), 3000)
           await loadData()

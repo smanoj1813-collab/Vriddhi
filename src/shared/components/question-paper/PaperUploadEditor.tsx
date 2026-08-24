@@ -7,7 +7,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   X, UploadCloud, FileText, Plus, Trash2, ArrowUp, ArrowDown, Loader2,
-  AlertTriangle, Save, Send, Paperclip, CheckCircle2,
+  AlertTriangle, Save, Send, Paperclip, CheckCircle2, ShieldCheck,
 } from 'lucide-react';
 import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -41,6 +41,8 @@ export interface EditablePaper {
   filePath?: string;
   answerKeyUrl?: string;
   answerKeyName?: string;
+  /** Optional HOD sign-off — only exam papers normally need it. */
+  requiresApproval?: boolean;
 }
 
 export interface PaperUploadEditorProps {
@@ -56,10 +58,21 @@ export interface PaperUploadEditorProps {
   /** Admin / HOD can publish straight away. */
   canPublishDirectly?: boolean;
   onClose: () => void;
-  onSaved?: (paperId: string, action: 'draft' | 'submitted' | 'published') => void;
+  onSaved?: (paperId: string, action: 'draft' | 'save' | 'submitted' | 'published') => void;
 }
 
-const EXAM_TYPES = ['Internal Assessment 1', 'Internal Assessment 2', 'Mid Semester', 'Semester End', 'Model Exam', 'Assignment', 'Other'];
+const EXAM_TYPES = ['Internal Assessment 1', 'Internal Assessment 2', 'Mid Semester', 'Semester End', 'Model Exam', 'Assignment', 'Class Test', 'Practice / Revision', 'Other'];
+
+/**
+ * HOD approval is OPTIONAL. Only high-stakes papers (semester / mid-sem / model
+ * exams) are pre-ticked for approval — day-to-day class tests, assignments and
+ * practice papers are saved and ready to use immediately.
+ */
+const EXAM_TYPES_NEEDING_APPROVAL = ['Mid Semester', 'Semester End', 'Model Exam'];
+
+export function approvalDefaultFor(examType: string): boolean {
+  return EXAM_TYPES_NEEDING_APPROVAL.includes(examType);
+}
 
 const inputCls =
   'w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500/60';
@@ -88,6 +101,7 @@ function blankPaper(): EditablePaper {
     totalMarks: 0,
     instructions: 'Answer all questions. Figures to the right indicate full marks.',
     questions: [],
+    requiresApproval: approvalDefaultFor(EXAM_TYPES[0]),
   };
 }
 
@@ -108,6 +122,8 @@ export default function PaperUploadEditor({
   const branchList = branches?.length ? branches : DEFAULT_PROGRAMS;
 
   const [form, setForm] = useState<EditablePaper>(blankPaper());
+  /** True once the user manually toggles approval — we then stop auto-syncing it. */
+  const [approvalTouched, setApprovalTouched] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [answerKey, setAnswerKey] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -123,11 +139,14 @@ export default function PaperUploadEditor({
     setError('');
     setFile(null);
     setAnswerKey(null);
+    setApprovalTouched(Boolean(paper?.id));
+    const base = { ...blankPaper(), ...(paper || {}) } as EditablePaper;
     setForm({
-      ...blankPaper(),
-      ...(paper || {}),
+      ...base,
+      requiresApproval:
+        paper?.requiresApproval !== undefined ? paper.requiresApproval : approvalDefaultFor(base.examType),
       questions: (paper?.questions || []).map((q) => newQ(q)),
-    } as EditablePaper);
+    });
   }, [open, paper]);
 
   const computedMarks = useMemo(
@@ -163,7 +182,7 @@ export default function PaperUploadEditor({
     return { url, path, name: f.name };
   };
 
-  const persist = async (action: 'draft' | 'submitted' | 'published') => {
+  const persist = async (action: 'draft' | 'save' | 'submitted' | 'published') => {
     if (!collegeId) {
       setError('Missing college — please sign in again.');
       return;
@@ -177,7 +196,7 @@ export default function PaperUploadEditor({
       return;
     }
     if (action !== 'draft' && !file && !form.fileUrl && form.questions.length === 0) {
-      setError('Add at least one question or attach a paper file before submitting.');
+      setError('Add at least one question or attach a paper file before saving.');
       return;
     }
     setBusy(true);
@@ -186,8 +205,15 @@ export default function PaperUploadEditor({
       const uploaded = await uploadIfNeeded(file, 'papers');
       const uploadedKey = await uploadIfNeeded(answerKey, 'answer-keys');
 
+      // Approval is OPTIONAL: papers saved without it are immediately usable.
       const verificationStatus =
-        action === 'draft' ? 'draft' : action === 'published' ? 'approved-by-hod' : 'submitted-for-approval';
+        action === 'draft'
+          ? 'draft'
+          : action === 'submitted'
+            ? 'submitted-for-approval'
+            : action === 'published'
+              ? 'approved-by-hod'
+              : 'not-required';
 
       const payload: Record<string, any> = {
         title: form.title.trim(),
@@ -216,8 +242,10 @@ export default function PaperUploadEditor({
             ]
           : [],
         totalQuestions: form.questions.length,
-        status: action === 'published' ? 'published' : 'draft',
+        status: action === 'published' || action === 'save' ? 'published' : 'draft',
         verificationStatus,
+        requiresApproval: action === 'submitted' ? true : action === 'draft' ? Boolean(form.requiresApproval) : false,
+        approvalRequired: action === 'submitted',
         collegeId,
         updatedAt: new Date().toISOString(),
         updatedBy: userId,
@@ -233,7 +261,8 @@ export default function PaperUploadEditor({
         payload.answerKeyUrl = uploadedKey.url;
         payload.answerKeyName = uploadedKey.name;
       }
-      if (action !== 'draft') payload.submittedAt = new Date().toISOString();
+      if (action === 'submitted') payload.submittedAt = new Date().toISOString();
+      if (action === 'save') payload.finalisedAt = new Date().toISOString();
 
       let paperId = form.id || '';
       if (isEdit && paperId) {
@@ -419,7 +448,16 @@ export default function PaperUploadEditor({
               </div>
               <div>
                 <label className={labelCls}>Exam type</label>
-                <select value={form.examType} onChange={(e) => set({ examType: e.target.value })} className={inputCls}>
+                <select
+                  value={form.examType}
+                  onChange={(e) =>
+                    set({
+                      examType: e.target.value,
+                      ...(approvalTouched ? {} : { requiresApproval: approvalDefaultFor(e.target.value) }),
+                    })
+                  }
+                  className={inputCls}
+                >
                   {EXAM_TYPES.map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -461,6 +499,37 @@ export default function PaperUploadEditor({
                   className={inputCls}
                 />
               </div>
+            </div>
+
+            {/* Optional HOD approval */}
+            <div
+              className={`mt-4 rounded-xl border p-4 transition-colors ${
+                form.requiresApproval
+                  ? 'border-teal-500/40 bg-teal-500/5'
+                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40'
+              }`}
+            >
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.requiresApproval)}
+                  onChange={(e) => {
+                    setApprovalTouched(true);
+                    set({ requiresApproval: e.target.checked });
+                  }}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+                    <ShieldCheck className="w-4 h-4 text-teal-500" />
+                    Needs HOD approval before use
+                  </span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Approval is optional. It is pre-ticked only for semester, mid-semester and model exams —
+                    class tests, assignments and practice papers can be saved and used straight away.
+                  </span>
+                </span>
+              </label>
             </div>
           </div>
 
@@ -571,23 +640,34 @@ export default function PaperUploadEditor({
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save draft
           </button>
-          {canPublishDirectly && (
+          {canPublishDirectly && form.requiresApproval && (
             <button
               onClick={() => persist('published')}
               disabled={busy}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-40"
             >
-              <CheckCircle2 className="w-4 h-4" /> Publish
+              <CheckCircle2 className="w-4 h-4" /> Approve &amp; publish
             </button>
           )}
-          <button
-            onClick={() => persist('submitted')}
-            disabled={busy}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-40"
-          >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            Submit for approval
-          </button>
+          {form.requiresApproval ? (
+            <button
+              onClick={() => persist('submitted')}
+              disabled={busy}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-40"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              Submit for approval
+            </button>
+          ) : (
+            <button
+              onClick={() => persist('save')}
+              disabled={busy}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-40"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              Save paper
+            </button>
+          )}
         </div>
       </div>
     </div>
