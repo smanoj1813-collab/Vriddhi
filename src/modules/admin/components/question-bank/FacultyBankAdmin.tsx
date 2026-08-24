@@ -74,6 +74,7 @@ import {
 import FacultyQuestionForm from './FacultyQuestionForm';
 import FacultyBulkImport from './FacultyBulkImport';
 import FacultyPaperLinker from './FacultyPaperLinker';
+import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -164,13 +165,7 @@ const FacultyQuestionBank: React.FC = () => {
   const loadSubjects = async () => {
     // In a real app, fetch from API. For now, using common subjects
     setSubjects([
-      'Mathematics I', 'Mathematics II', 'Mathematics III',
-      'Physics', 'Chemistry',
-      'Computer Science', 'Data Structures', 'Algorithms',
-      'Database Management', 'Operating Systems',
-      'Electronics', 'Digital Logic',
-      'Mechanics', 'Thermodynamics',
-      'English', 'Communication Skills'
+      ...DEFAULT_SUBJECTS,
     ]);
   };
 

@@ -418,7 +418,7 @@ export default function AIQuestionGenerator({ subjects, onQuestionsSaved }: AIQu
                     type="text"
                     value={config.branch || ''}
                     onChange={(e) => handleChange('branch', e.target.value)}
-                    placeholder="e.g., CSE"
+                    placeholder="e.g., B.Com"
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>

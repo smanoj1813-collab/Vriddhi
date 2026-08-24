@@ -8,7 +8,7 @@ import {
 // TODO: Fetch from Firebase
 const facultyStudents: any[] = []
 const facultyTopics: any[] = []
-const currentFaculty = { name: 'Faculty', department: 'CSE', subject: 'Data Structures' }
+const currentFaculty = { name: 'Faculty', department: 'General', subject: 'General' }
 
 type AssignmentStatus = 'draft' | 'published' | 'ongoing' | 'closed' | 'graded'
 type SubmissionStatus = 'submitted' | 'late' | 'missing' | 'graded'
@@ -329,7 +329,7 @@ export default function FacultyAssignments() {
                   type="text"
                   value={createTitle}
                   onChange={e => setCreateTitle(e.target.value)}
-                  placeholder="e.g., Assignment 4: Graph Algorithms"
+                  placeholder="e.g., Assignment 4: Ratio Analysis"
                   className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                 />
               </div>

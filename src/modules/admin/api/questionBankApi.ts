@@ -17,6 +17,12 @@ import {
   arrayRemove,
 } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
+import {
+  DEFAULT_BATCHES,
+  DEFAULT_PROGRAMS,
+  DEFAULT_ACADEMIC_YEARS,
+  withoutTechBranches,
+} from '@/shared/constants/academicPrograms';
 import { Question, QuestionFilters, PaginatedResult, BulkImportResult } from '../../admin/types/questionBank';
 import { Paper } from '../../admin/types/questionBank';
 
@@ -56,12 +62,19 @@ export interface BatchBranchConfig {
 export const getBatchBranchConfig = async (collegeId: string): Promise<BatchBranchConfig> => {
   const configDoc = await getDoc(doc(db, 'colleges', collegeId, 'config', 'batchBranch'));
   if (configDoc.exists()) {
-    return configDoc.data() as BatchBranchConfig;
+    const cfg = configDoc.data() as BatchBranchConfig;
+    // Legacy colleges may still have engineering branch codes stored — strip them.
+    const branches = withoutTechBranches(cfg.branches);
+    return {
+      batches: cfg.batches?.length ? cfg.batches : DEFAULT_BATCHES,
+      branches: branches.length ? branches : DEFAULT_PROGRAMS,
+      academicYears: cfg.academicYears?.length ? cfg.academicYears : DEFAULT_ACADEMIC_YEARS,
+    };
   }
   return {
-    batches: ['2021-22', '2022-23', '2023-24', '2024-25'],
-    branches: ['CSE', 'ECE', 'ME', 'CE', 'IT', 'EEE'],
-    academicYears: ['1st Year', '2nd Year', '3rd Year', '4th Year']
+    batches: [...DEFAULT_BATCHES],
+    branches: [...DEFAULT_PROGRAMS],
+    academicYears: [...DEFAULT_ACADEMIC_YEARS],
   };
 };
 

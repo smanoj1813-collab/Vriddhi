@@ -42,18 +42,7 @@ import {
   mapToGeneratedQuestions,
 } from '../../api/aiQuestionApi';
 import type { QuestionType, DifficultyLevel, GeneratedQuestion } from '../../types/questionBank';
-
-// ─── Predefined subjects ───────────────────────────────────────────────
-const DEFAULT_SUBJECTS = [
-  'Mathematics I', 'Mathematics II', 'Mathematics III',
-  'Physics', 'Chemistry',
-  'Computer Science', 'Data Structures', 'Algorithms',
-  'Database Management', 'Operating Systems',
-  'Electronics', 'Digital Logic',
-  'Mechanics', 'Thermodynamics',
-  'English', 'Communication Skills',
-  'Accounting', 'Economics', 'Statistics',
-];
+import { DEFAULT_SUBJECTS, DEFAULT_PROGRAMS } from '@/shared/constants/academicPrograms';
 
 const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
   { value: 'mcq', label: 'Multiple Choice (MCQ)' },
@@ -85,7 +74,7 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
   defaultSubject,
   subjects: propSubjects,
   batches = ['2024', '2025', '2026', '2027'],
-  branches = ['B.Com', 'BBA', 'BCA', 'B.Sc', 'B.Tech'],
+  branches = DEFAULT_PROGRAMS,
 }) => {
   const { user } = useAuth();
   const {

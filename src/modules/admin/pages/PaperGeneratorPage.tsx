@@ -2,26 +2,13 @@
 // Admin Paper Generator page — configure sections and generate a paper from the bank.
 
 import React, { useEffect, useState } from 'react';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, Button, CircularProgress, Typography, Alert, Snackbar } from '@mui/material';
+import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor';
 import { useAuth } from '../../auth/context/AuthContext';
 import PaperGenerator from '../components/question-bank/PaperGenerator';
 import { getBatchBranchConfig, getQuestionStats } from '../api/questionBankApi';
-
-const DEFAULT_SUBJECTS = [
-  'Mathematics',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'Computer Science',
-  'Data Structures',
-  'Algorithms',
-  'Database Management',
-  'Operating Systems',
-  'English',
-  'Accounting',
-  'Economics',
-  'Statistics',
-];
+import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
 
 export default function PaperGeneratorPage() {
   const { user } = useAuth();
@@ -31,6 +18,9 @@ export default function PaperGeneratorPage() {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [toast, setToast] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!collegeId) {
@@ -73,7 +63,36 @@ export default function PaperGeneratorPage() {
   return (
     <Box sx={{ p: 3 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <PaperGenerator batches={batches} branches={branches} subjects={subjects} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadOpen(true)}>
+          Upload Question Paper
+        </Button>
+      </Box>
+      <PaperGenerator key={reloadKey} batches={batches} branches={branches} subjects={subjects} />
+      <PaperUploadEditor
+        open={uploadOpen}
+        collegeId={collegeId}
+        userId={user?.id || user?.uid || ''}
+        userName={user?.name || ''}
+        subjects={subjects}
+        batches={batches}
+        branches={branches}
+        canPublishDirectly
+        onClose={() => setUploadOpen(false)}
+        onSaved={(_id, action) => {
+          setToast(
+            action === 'draft'
+              ? 'Paper saved as draft'
+              : action === 'save'
+                ? 'Paper saved and ready to use'
+                : action === 'published'
+                  ? 'Paper approved and published'
+                  : 'Paper submitted for HOD approval'
+          );
+          setReloadKey((k) => k + 1);
+        }}
+      />
+      <Snackbar open={Boolean(toast)} autoHideDuration={4000} onClose={() => setToast('')} message={toast} />
     </Box>
   );
 }

@@ -27,7 +27,7 @@ interface ClassSession {
 }
 const facultyStudents: FacultyStudent[] = []
 const classSessions: ClassSession[] = []
-const currentFaculty = { name: 'Faculty', department: 'CSE' }
+const currentFaculty = { name: 'Faculty', department: 'General' }
 
 interface ScheduleItem {
   id: string

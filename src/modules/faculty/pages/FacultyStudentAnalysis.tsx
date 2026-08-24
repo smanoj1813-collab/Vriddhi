@@ -35,7 +35,7 @@ interface FacultyStudent {
 }
 const facultyStudents: FacultyStudent[] = []
 const facultyTopics: any[] = []
-const currentFaculty = { name: 'Faculty', department: 'CSE', subject: 'Data Structures' }
+const currentFaculty = { name: 'Faculty', department: 'General', subject: 'General' }
 
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,

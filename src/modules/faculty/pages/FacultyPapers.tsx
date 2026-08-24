@@ -13,11 +13,14 @@ import { getPapers } from '../../admin/services/paperAPI'
 import { getPaperQuestions } from '../../admin/api/paperApi'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Paper as BankPaper } from '../../admin/types/questionBank'
+import PaperUploadEditor, { type EditablePaper } from '@/shared/components/question-paper/PaperUploadEditor'
+import { getBatchBranchConfig } from '../../admin/api/questionBankApi'
 interface PaperQuestion {
   number: number
   topic: string
   type: string
   marks: number
+  text?: string
 }
 interface TestPaper {
   id: string
@@ -35,6 +38,15 @@ interface TestPaper {
   submittedAt: string
   aiGenerated: boolean
   approvalRemarks?: string
+  branch?: string
+  batch?: string
+  semester?: string
+  examType?: string
+  date?: string
+  instructions?: string
+  fileUrl?: string
+  answerKeyName?: string
+  requiresApproval?: boolean
 }
 interface PaperVerificationRequest {
   id: string
@@ -268,7 +280,10 @@ export default function FacultyPapers() {
   const [verificationRequests, setVerificationRequests] = useState<PaperVerificationRequest[]>([])
   const [selectedPaper, setSelectedPaper] = useState<TestPaper | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'verified' | 'requests'>('all')
-  const [uploadMode, setUploadMode] = useState<'question' | 'answer'>('question')
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingPaper, setEditingPaper] = useState<Partial<EditablePaper> | null>(null)
+  const [branches, setBranches] = useState<string[]>([])
+  const [batches, setBatches] = useState<string[]>([])
   const [showToast, setShowToast] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -291,11 +306,20 @@ export default function FacultyPapers() {
           fileName: `${(p.title || 'paper').replace(/\s+/g, '_')}.pdf`,
           verificationStatus: (p as any).verificationStatus || (p.status === 'published' ? 'approved-by-hod' : p.status || 'draft'),
           questions: (p.sections || []).flatMap((s: any) => (s.questions || []).map((q: any, i: number) => ({
-            number: i + 1,
+            number: q.number || i + 1,
             topic: q.topic || q.chapter || '',
-            type: q.type || 'long',
+            type: q.type || 'long_answer',
             marks: q.marks || s.marksPerQuestion || 1,
+            text: q.text || q.questionText || '',
           }))),
+          branch: (p as any).branch || '',
+          batch: (p as any).batch || '',
+          semester: (p as any).semester || '',
+          examType: (p as any).examType || '',
+          date: (p as any).date || '',
+          instructions: typeof (p as any).instructions === 'string' ? (p as any).instructions : ((p as any).instructions || []).join('\n'),
+          fileUrl: (p as any).fileUrl || '',
+          requiresApproval: (p as any).requiresApproval ?? false,
           createdBy: p.createdByName || p.createdBy || '',
           createdAt: p.createdAt || '',
           submittedAt: p.updatedAt || '',
@@ -333,6 +357,16 @@ export default function FacultyPapers() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useEffect(() => {
+    if (!collegeId) return
+    getBatchBranchConfig(collegeId)
+      .then((cfg) => {
+        setBranches(cfg.branches || [])
+        setBatches(cfg.batches || [])
+      })
+      .catch(() => undefined)
+  }, [collegeId])
 
   const handleVerify = async (paperId: string) => {
     try {
@@ -404,49 +438,51 @@ export default function FacultyPapers() {
     }
   }
 
-  const handleUploadFile = async (file: File) => {
-    if (!collegeId || !file) return
-    try {
-      const path = `papers/${collegeId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-      const storageRef = ref(storage, path)
-      await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(storageRef)
-      const docRef = await addDoc(collection(db, 'papers'), {
-        title: file.name.replace(/\.[^.]+$/, ''),
-        subject: user?.department || 'General',
-        batch: '',
-        branch: '',
-        totalMarks: 0,
-        duration: 0,
-        sections: [],
-        questionIds: [],
-        linkedQuestionIds: [],
-        status: 'draft',
-        verificationStatus: 'pending-verification',
-        fileUrl: url,
-        fileName: file.name,
-        filePath: path,
-        fileType: 'upload',
-        collegeId,
-        createdBy: user?.id || user?.uid || '',
-        createdByName: user?.name || 'Unknown',
-        totalQuestions: 0,
-        usageCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
-      setShowToast(`Uploaded: ${file.name}`)
-      setTimeout(() => setShowToast(''), 3000)
-      if (docRef) await loadData()
-    } catch (err) {
-      setShowToast(err instanceof Error ? err.message : 'Upload failed')
-      setTimeout(() => setShowToast(''), 3000)
-    }
+  const openNewPaper = () => {
+    setEditingPaper(null)
+    setEditorOpen(true)
   }
 
+  const openEditPaper = (paper: TestPaper) => {
+    setEditingPaper({
+      id: paper.id,
+      title: paper.title,
+      subject: paper.subject,
+      branch: paper.branch || '',
+      batch: paper.batch || paper.className || '',
+      semester: paper.semester || '',
+      examType: paper.examType || 'Internal Assessment 1',
+      date: paper.date || new Date().toISOString().split('T')[0],
+      duration: paper.duration || 90,
+      totalMarks: paper.totalMarks || 0,
+      instructions: paper.instructions || '',
+      fileName: paper.fileName,
+      fileUrl: paper.fileUrl,
+      requiresApproval: paper.requiresApproval,
+      questions: paper.questions.map((q) => ({
+        rowId: `q_${q.number}`,
+        text: q.text || '',
+        type: q.type || 'long_answer',
+        marks: q.marks || 0,
+        topic: q.topic || '',
+      })),
+    })
+    setEditorOpen(true)
+  }
+
+  const pendingCount = papers.filter(
+    (p) => p.verificationStatus === 'pending-verification' || p.verificationStatus === 'submitted-for-approval'
+  ).length
+
   const filteredPapers = papers.filter(p => {
-    if (activeTab === 'pending') return p.verificationStatus === 'pending-verification'
-    if (activeTab === 'verified') return p.verificationStatus === 'verified' || p.verificationStatus === 'approved-by-hod'
+    if (activeTab === 'pending')
+      return p.verificationStatus === 'pending-verification' || p.verificationStatus === 'submitted-for-approval'
+    if (activeTab === 'verified')
+      return (
+        p.verificationStatus === 'verified' ||
+        p.verificationStatus === 'approved-by-hod' ||
+        p.verificationStatus === 'not-required'
+      )
     return true
   })
 
@@ -458,7 +494,9 @@ export default function FacultyPapers() {
     'submitted-for-approval': { label: 'Submitted for Approval', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
     'approved-by-hod': { label: 'Approved by HOD', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
     'rejected-by-hod': { label: 'Rejected by HOD', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+    'not-required': { label: 'Ready to use', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   }
+  const fallbackStatus = { label: 'Ready to use', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' }
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -480,8 +518,8 @@ export default function FacultyPapers() {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {[
           { id: 'all', label: 'All Papers' },
-          { id: 'pending', label: 'Pending Verification' },
-          { id: 'verified', label: 'Verified' },
+          { id: 'pending', label: 'Awaiting Approval' },
+          { id: 'verified', label: 'Ready / Verified' },
           { id: 'requests', label: 'My Requests' },
         ].map((tab) => (
           <button
@@ -494,9 +532,9 @@ export default function FacultyPapers() {
             }`}
           >
             {tab.label}
-            {tab.id === 'pending' && papers.filter(p => p.verificationStatus === 'pending-verification').length > 0 && (
+            {tab.id === 'pending' && pendingCount > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-400 text-xs">
-                {papers.filter(p => p.verificationStatus === 'pending-verification').length}
+                {pendingCount}
               </span>
             )}
           </button>
@@ -507,7 +545,7 @@ export default function FacultyPapers() {
       {activeTab !== 'requests' ? (
         <div className="space-y-4">
           {filteredPapers.map(paper => {
-            const status = statusConfig[paper.verificationStatus]
+            const status = statusConfig[paper.verificationStatus] || fallbackStatus
             return (
               <div
                 key={paper.id}
@@ -541,7 +579,8 @@ export default function FacultyPapers() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {paper.verificationStatus === 'pending-verification' && (
+                  {(paper.verificationStatus === 'pending-verification' ||
+                    paper.verificationStatus === 'submitted-for-approval') && (
                     <button
                       onClick={() => setSelectedPaper(paper)}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all text-sm font-medium"
@@ -550,10 +589,16 @@ export default function FacultyPapers() {
                       Review & Verify
                     </button>
                   )}
-                  {paper.verificationStatus === 'verified' && (
+                  {(paper.verificationStatus === 'verified' || paper.verificationStatus === 'approved-by-hod') && (
                     <span className="flex items-center gap-2 text-sm text-emerald-400">
                       <CheckCircle className="w-4 h-4" />
-                      Verified by you
+                      Approved
+                    </span>
+                  )}
+                  {paper.verificationStatus === 'not-required' && (
+                    <span className="flex items-center gap-2 text-sm text-emerald-400">
+                      <CheckCircle className="w-4 h-4" />
+                      Ready to use — no approval needed
                     </span>
                   )}
                   {paper.verificationStatus === 'modification-requested' && (
@@ -563,8 +608,14 @@ export default function FacultyPapers() {
                     </span>
                   )}
                   <button
-                    onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
+                    onClick={() => openEditPaper(paper)}
                     className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors ml-auto"
+                  >
+                    <FileUp className="w-4 h-4" /> Edit
+                  </button>
+                  <button
+                    onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
+                    className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors"
                   >
                     <Download className="w-4 h-4" /> Download
                   </button>
@@ -624,59 +675,53 @@ export default function FacultyPapers() {
         </div>
       )}
 
-      {/* Upload Section */}
+      {/* Upload / Create Section */}
       <div className="mt-8 pt-6 border-t border-slate-700/50">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
           <Upload className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-          Upload Papers
+          Upload a Question Paper
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Question Paper Upload */}
-          <div className="p-5 rounded-xl glass-card/50 border-dashed hover:border-teal-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-teal-500/10">
-                <FileUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-              </div>
-              <div>
-                <h3 className="font-medium text-slate-900 dark:text-white">Question Paper</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Upload test question paper</p>
-              </div>
-            </div>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handleUploadFile(file)
-              }}
-              className="block w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-teal-100 dark:bg-teal-900/30 file:text-teal-400 hover:file:bg-teal-500/30 cursor-pointer"
-            />
-            <p className="text-xs text-slate-500 mt-2">Supported: PDF, DOC, DOCX, JPG, PNG</p>
-          </div>
-          {/* Answer Key Upload */}
-          <div className="p-5 rounded-xl glass-card/50 border-dashed hover:border-violet-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-violet-500/10">
-                <FileUp className="w-5 h-5 text-violet-400" />
-              </div>
-              <div>
-                <h3 className="font-medium text-slate-900 dark:text-white">Answer Key</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Upload answer key or solution</p>
-              </div>
-            </div>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handleUploadFile(file)
-              }}
-              className="block w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-violet-500/20 file:text-violet-400 hover:file:bg-violet-500/30 cursor-pointer"
-            />
-            <p className="text-xs text-slate-500 mt-2">Supported: PDF, DOC, DOCX, JPG, PNG</p>
-          </div>
-        </div>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          Attach a ready PDF/DOC/image or type the questions in. You can review and edit every detail — title,
+          program, marks, instructions and each question — before saving as a draft or submitting for approval.
+        </p>
+        <button
+          onClick={openNewPaper}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-500 text-white text-sm font-semibold hover:bg-teal-600 transition-all"
+        >
+          <FileUp className="w-4 h-4" />
+          Upload / Create Paper
+        </button>
       </div>
+
+      {/* Upload & edit modal */}
+      <PaperUploadEditor
+        open={editorOpen}
+        collegeId={collegeId}
+        userId={user?.id || user?.uid || ''}
+        userName={user?.name || ''}
+        branches={branches}
+        batches={batches}
+        paper={editingPaper}
+        canPublishDirectly={user?.role === 'hod'}
+        onClose={() => {
+          setEditorOpen(false)
+          setEditingPaper(null)
+        }}
+        onSaved={async (_id, action) => {
+          setShowToast(
+            action === 'draft'
+              ? 'Paper saved as draft — you can keep editing it'
+              : action === 'save'
+                ? 'Paper saved and ready to use (no approval needed)'
+                : action === 'published'
+                  ? 'Paper approved and published'
+                  : 'Paper submitted for HOD approval'
+          )
+          setTimeout(() => setShowToast(''), 3000)
+          await loadData()
+        }}
+      />
 
       {/* Verification Modal */}
       {selectedPaper && (

@@ -42,7 +42,7 @@ const mockBooks: LibraryBook[] = []
 // TODO: Fetch from Firebase
 const mockIssued: IssuedBook[] = []
 
-const categories = ['Computer Science', 'Mathematics', 'Electronics', 'Physics', 'Chemistry', 'Mechanical', 'Civil', 'General']
+const categories = ['Commerce', 'Management', 'Computer Applications', 'Science', 'Arts & Humanities', 'Languages', 'Education', 'General']
 
 export default function FacultyLibrary() {
   const [books, setBooks] = useState<LibraryBook[]>(mockBooks)

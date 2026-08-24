@@ -48,7 +48,7 @@ export const DEFAULT_CONFIG: ParserConfig = {
   projectKeywords: ['project', 'internship', 'survey', 'dissertation', 'thesis', 'practical', 'lab', 'viva'],
   courseNameCleanRegex: /^\s*\[HOURS\s*\d+\]\s*/i,
   ignoredModuleNames: ['credits', 'hours', 'total', 'grand total', 'scheme', ''],
-  branchRegex: /(?:BACHELOR\s+OF\s+(?:COMMERCE|BUSINESS|SCIENCE|ARTS|TECHNOLOGY|ENGINEERING)|B\.?Com|B\.?BA|B\.?Sc|B\.?Tech|B\.?E|MBA|M\.?Com|MCA)/i,
+  branchRegex: /(?:(?:BACHELOR|MASTER)\s+OF\s+(?:COMMERCE|BUSINESS|SCIENCE|ARTS|COMPUTER\s+APPLICATIONS|EDUCATION)|B\.?Com|B\.?BA|B\.?Sc|B\.?A|B\.?C\.?A|B\.?Ed|MBA|M\.?Com|M\.?Sc|M\.?A|MCA)/i,
   moduleHoursRegex: /\b(\d{1,3})\s*(?:hrs?|hours?|h)\b/i,
   moduleMarksRegex: /\b(\d{1,3})\s*(?:marks?|m)\b/i,
 };

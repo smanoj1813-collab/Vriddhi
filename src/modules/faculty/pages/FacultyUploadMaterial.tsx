@@ -46,9 +46,8 @@ const typeLabelColors: Record<MaterialType, string> = {
 
 const BATCH_OPTIONS = ['All Batches', 'CTD 1', 'CTD 2', 'CTD 3', '2023-2024', '2024-2025', '2025-2026']
 const TOPIC_OPTIONS = [
-  'General', 'Binary Search Trees', 'Tree Traversal', 'Graphs', 'Sorting',
-  'Dynamic Programming', 'Arrays', 'Linked Lists', 'Stacks', 'Queues',
-  'Hash Tables', 'AVL Trees', 'Greedy Algorithms', 'Backtracking'
+  'General', 'Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5',
+  'Revision', 'Previous Year Questions', 'Case Studies', 'Practicals'
 ]
 
 type FilterType = MaterialType | 'all'
@@ -103,7 +102,7 @@ export default function FacultyUploadMaterial() {
   const [uploadType, setUploadType] = useState<MaterialType>('pdf')
   const [uploadBatch, setUploadBatch] = useState('All Batches')
   const [uploadUrl, setUploadUrl] = useState('')
-  const [uploadSubject, setUploadSubject] = useState('Data Structures')
+  const [uploadSubject, setUploadSubject] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const handleFileDrop = (e: React.DragEvent) => {
@@ -187,7 +186,7 @@ export default function FacultyUploadMaterial() {
     setUploadTitle('')
     setUploadTopic('General')
     setUploadUrl('')
-    setUploadSubject('Data Structures')
+    setUploadSubject('')
     setSelectedFile(null)
     setUploadType('pdf')
     setUploadBatch('All Batches')
@@ -490,7 +489,7 @@ export default function FacultyUploadMaterial() {
                   type="text"
                   value={uploadSubject}
                   onChange={e => setUploadSubject(e.target.value)}
-                  placeholder="e.g., Data Structures"
+                  placeholder="e.g., Financial Accounting"
                   className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
                 />
               </div>

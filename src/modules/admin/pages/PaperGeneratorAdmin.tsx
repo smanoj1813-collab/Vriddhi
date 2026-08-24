@@ -74,6 +74,7 @@ import {
 import FacultyQuestionForm from './../components/question-bank/FacultyQuestionForm';
 import FacultyBulkImport from './../components/question-bank/FacultyBulkImport';
 import FacultyPaperLinker from './../components/question-bank/FacultyPaperLinker';
+import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -153,13 +154,7 @@ const PaperGeneratorAdmin: React.FC = () => {
 
   const loadSubjects = async () => {
     setSubjects([
-      'Mathematics I', 'Mathematics II', 'Mathematics III',
-      'Physics', 'Chemistry',
-      'Computer Science', 'Data Structures', 'Algorithms',
-      'Database Management', 'Operating Systems',
-      'Electronics', 'Digital Logic',
-      'Mechanics', 'Thermodynamics',
-      'English', 'Communication Skills'
+      ...DEFAULT_SUBJECTS,
     ]);
   };
 
