@@ -41,6 +41,7 @@ import {
   CalendarToday as CalendarIcon,
 } from '@mui/icons-material'
 import { useAdminSchedule } from '../hooks/useAdminSchedule'
+import { useAuth } from '../../auth/context/AuthContext'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -95,7 +96,8 @@ Financial Accounting,FAC101,faculty_id_here,Dr. Jones,B.Com,2024,4,A,A,302,monda
 Computer Applications,CAP101,faculty_id_here,Dr. Lee,BCA,2024,4,B,B,303,tuesday,09:00,10:00,lab`
 
 const AdminClassSchedule: React.FC = () => {
-  const collegeId = localStorage.getItem('vriddhi_college_id') || ''
+  const { user } = useAuth()
+  const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || ''
   const {
     weeklySchedule,
     facultyList,
@@ -291,6 +293,18 @@ const AdminClassSchedule: React.FC = () => {
     }
   }
 
+  if (!collegeId) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', gap: 2 }}>
+        <Typography variant="h6" color="warning.main">⚠ College ID not found</Typography>
+        <Typography color="text.secondary" sx={{ textAlign: 'center', maxWidth: 480 }}>
+          Your account does not have a college ID linked. Please log out and log back in,
+          or contact your administrator to link your account to a college.
+        </Typography>
+      </Box>
+    )
+  }
+
   if (isLoading) {
     return (
       <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -329,6 +343,15 @@ const AdminClassSchedule: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* Empty-data banners */}
+      {facultyList.length === 0 && (
+        <Box sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: 'warning.main', color: 'warning.contrastText' }}>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            ⚠ No faculty found for this college. Add faculty members before creating schedules.
+          </Typography>
+        </Box>
+      )}
 
       {/* Day Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>

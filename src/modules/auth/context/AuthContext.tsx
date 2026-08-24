@@ -56,6 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       collegeId: data.collegeId, department: data.department,
       avatar: data.avatar, phone: data.phone,
     };
+    // Persist collegeId to localStorage for APIs that read it directly
+    if (appUser.collegeId) {
+      localStorage.setItem('vriddhi_college_id', appUser.collegeId);
+    }
     console.log('[AuthContext] Resolved user:', appUser.name, '| role:', appUser.role);
     return appUser;
   }, []);

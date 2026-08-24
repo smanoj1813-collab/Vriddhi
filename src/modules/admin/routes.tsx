@@ -4,6 +4,7 @@ import { RoleRoute } from '@/routes/components/RoleRoute';
 import Layout from '@/shared/components/Layout';
 
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
+const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
 const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -98,6 +99,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'settings', element: <LazyPage><Settings /></LazyPage> },
       { path: 'hod-dashboard', element: <LazyPage><HODDashboard /></LazyPage> },
       { path: 'ai-agent', element: <LazyPage><AIAgentPage /></LazyPage> },
+      { path: 'ai-questions', element: <LazyPage><AIQuestionsPage /></LazyPage> },
       { path: 'onboarding', element: <LazyPage><CollegeOnboarding /></LazyPage> },
       { path: 'papers/builder', element: <LazyPage><PaperBuilder /></LazyPage> },
       { path: 'papers/generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
