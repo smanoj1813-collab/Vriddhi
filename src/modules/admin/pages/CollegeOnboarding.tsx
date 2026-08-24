@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useNotification } from '../../../shared/providers/NotificationProvider';
 import {
   Upload,
   Download,
@@ -40,6 +41,7 @@ const TABS = [
 ];
 
 export default function CollegeOnboarding() {
+  const { showInfo } = useNotification();
   const [activeTab, setActiveTab] = useState('students');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parseResult, setParseResult] = useState<ParseResult<Record<string, string>> | null>(null);
@@ -70,7 +72,7 @@ export default function CollegeOnboarding() {
   const handleProcessUpload = async () => {
     if (!parseResult?.valid) return;
     // TODO: Call API to bulk upload
-    alert(`Processing ${parseResult.data.length} ${currentTab.label.toLowerCase()}...`);
+    showInfo(`Processing ${parseResult.data.length} ${currentTab.label.toLowerCase()}...`);
   };
 
   return (

@@ -9,6 +9,7 @@ import {
   Sun, Moon, Monitor, Check, Upload, Trash2, AlertTriangle,
   Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info
 } from 'lucide-react'
+import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
@@ -107,6 +108,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
   const { mode, resolvedMode, setMode } = useThemeMode()
   const { user } = useAuth()
+  const { showSuccess, showWarning, showError } = useNotification()
 
   // Loading states
   const [initialLoading, setInitialLoading] = useState(true)
@@ -475,7 +477,7 @@ export default function Settings() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (e: any) {
-      alert(`Export failed: ${e.message}`)
+      showError(`Export failed: ${e.message}`)
     }
   }
 
@@ -491,7 +493,7 @@ export default function Settings() {
       } catch { }
 
       if (students.length === 0) {
-        alert('No students found to export')
+        showWarning('No students found to export')
         return
       }
       const headers = ['id', 'name', 'email', 'department', 'course', 'batch', 'regNo']
@@ -505,7 +507,7 @@ export default function Settings() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (e: any) {
-      alert(`Export failed: ${e.message}`)
+      showError(`Export failed: ${e.message}`)
     }
   }
 
@@ -1098,7 +1100,7 @@ export default function Settings() {
                         <button onClick={() => {
                           if (confirm('Clear all local cached data? This will remove theme, notification prefs, etc.')) {
                             localStorage.clear()
-                            alert('Local data cleared. Please refresh.')
+                            showSuccess('Local data cleared. Please refresh.')
                           }
                         }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors">
                           <Trash2 className="w-4 h-4" />
@@ -1116,7 +1118,7 @@ export default function Settings() {
                             localStorage.removeItem('vriddhi_compact_mode')
                             localStorage.removeItem('vriddhi_animations')
                             document.documentElement.style.fontSize = '16px'
-                            alert('Appearance reset to defaults')
+                            showSuccess('Appearance reset to defaults')
                           }
                         }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-50 transition-colors">
                           Reset Appearance

@@ -1,0 +1,23 @@
+# Files under src/ that are known to be unreachable from src/main.tsx.
+# Each entry is deliberate: either standalone tooling or a component that is
+# compiled and typechecked but not yet mounted on a route.
+# Regenerate with: node scripts/check-dead-code.cjs --write
+src/api/studentIndexApi.ts
+src/hooks/useAssessment.ts
+src/modules/admin/components/QuestionSubmissionForm.tsx
+src/modules/admin/components/TemplateSelector.tsx
+src/modules/admin/components/question-bank/BulkImportModal.tsx
+src/modules/admin/components/question-bank/FacultyBankAdmin.tsx
+src/modules/admin/components/question-bank/FacultyBulkImport.tsx
+src/modules/admin/components/question-bank/FacultyPaperLinker.tsx
+src/modules/admin/components/question-bank/FacultyQuestionForm.tsx
+src/modules/admin/components/question-bank/PaperLinkageModal.tsx
+src/modules/admin/components/question-bank/PaperPDFPreview.tsx
+src/modules/admin/components/question-bank/QuestionPDFExport.tsx
+src/modules/admin/services/questionBankAPI.ts
+src/modules/faculty/components/PaperBuilder.tsx
+src/modules/faculty/components/QuestionManager.tsx
+src/modules/faculty/components/TestScheduler.tsx
+src/shared/utils/pdfGenerator.ts
+src/types/assessment.ts
+src/types/students.ts

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useMaterials } from '../../../hooks/useMaterials'
 import type { MaterialType } from '../../../api/materialApi'
+import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 const TYPE_LABELS: Record<MaterialType, string> = {
   pdf: 'PDF',
@@ -91,6 +92,8 @@ export default function FacultyUploadMaterial() {
     addMaterial, removeMaterial, trackView, trackDownload,
   } = useMaterials() as unknown as MaterialsHookReturn
 
+  const { showError } = useNotification()
+
   const [showModal, setShowModal] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
@@ -168,7 +171,7 @@ export default function FacultyUploadMaterial() {
     try {
       await removeMaterial(id)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Delete failed')
+      showError(err instanceof Error ? err.message : 'Delete failed')
     }
   }
 

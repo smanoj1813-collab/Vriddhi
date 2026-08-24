@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useTopics } from '../../../hooks/useTopics'
 import type { TopicStatus, StatusFilter, Topic, TopicStats, ReadStats } from '../../../hooks/useTopics'
+import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 interface StatusConfigItem {
   label: string;
@@ -73,6 +74,7 @@ type TopicFormData = Omit<Topic, 'id'>;
 
 export default function FacultyTopics() {
   const { user } = useAuth()
+  const { showError } = useNotification()
   const facultyId = user?.id || user?.uid || ''
 
   const {
@@ -211,7 +213,7 @@ export default function FacultyTopics() {
       await removeTopic(showDeleteConfirm)
       setShowDeleteConfirm(null)
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Delete failed')
+      showError(err instanceof Error ? err.message : 'Delete failed')
     }
   }
 
