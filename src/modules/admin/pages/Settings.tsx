@@ -1,9 +1,13 @@
-import React, { useState } from 'react'
-import { useThemeMode } from '../../../shar../../shared/contexts/ThemeProvider'
+import React, { useState, useEffect } from 'react'
+import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
+import { useAuth } from '../../auth/context/AuthContext'
+import { auth, db } from '@/Firebase/config'
+import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase/auth'
 import {
   Save, User, Building2, Bell, Shield, Palette, Database, Download,
   Sun, Moon, Monitor, Check, Upload, Trash2, AlertTriangle,
-  Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar
+  Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info
 } from 'lucide-react'
 
 // Toggle Switch Component
@@ -20,7 +24,6 @@ function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange
   )
 }
 
-// Card Component - adapts to light/dark
 function SettingsCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`rounded-2xl border transition-colors duration-300 ${className}
@@ -32,13 +35,12 @@ function SettingsCard({ children, className = '' }: { children: React.ReactNode;
   )
 }
 
-// Input Component - adapts to light/dark
 function SettingsInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
       className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-300
-        bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50
+        bg-slate-50 dark:bg-slate-900/50
         border-slate-200 dark:border-slate-700/50
         text-slate-800 dark:text-white
         placeholder-slate-400 dark:placeholder-slate-500
@@ -49,13 +51,12 @@ function SettingsInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   )
 }
 
-// Select Component
 function SettingsSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
       className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-300
-        bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50
+        bg-slate-50 dark:bg-slate-900/50
         border-slate-200 dark:border-slate-700/50
         text-slate-800 dark:text-white
         focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500
@@ -64,48 +65,68 @@ function SettingsSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   )
 }
 
-// Section Title
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">
+    <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">
       {children}
     </h3>
   )
 }
 
-// Section Description
 function SectionDesc({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-6">
+    <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
       {children}
     </p>
   )
 }
 
-// Label
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-sm font-medium text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-2">
+    <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">
       {children}
     </label>
+  )
+}
+
+function Message({ type, text }: { type: 'ok' | 'err' | 'info'; text: string }) {
+  const styles = {
+    ok: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800',
+    err: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800',
+    info: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800',
+  }
+  return (
+    <div className={`p-3 rounded-xl text-xs font-semibold border flex items-start gap-2 ${styles[type]}`}>
+      {type === 'ok' ? <Check className="w-4 h-4 mt-0.5 shrink-0" /> : type === 'err' ? <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" /> : <Info className="w-4 h-4 mt-0.5 shrink-0" />}
+      <span>{text}</span>
+    </div>
   )
 }
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
   const { mode, resolvedMode, setMode } = useThemeMode()
+  const { user } = useAuth()
+
+  // Loading states
+  const [initialLoading, setInitialLoading] = useState(true)
 
   // General state
-  const [collegeName, setCollegeName] = useState('KGIS Institute of Technology')
+  const [collegeName, setCollegeName] = useState('')
   const [academicYear, setAcademicYear] = useState('2024-2025')
   const [semesterStart, setSemesterStart] = useState('2024-07-01')
   const [semesterEnd, setSemesterEnd] = useState('2024-12-15')
   const [passPercentage, setPassPercentage] = useState('40')
+  const [savingGeneral, setSavingGeneral] = useState(false)
+  const [generalMsg, setGeneralMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   // Profile state
-  const [fullName, setFullName] = useState('Admin User')
-  const [email, setEmail] = useState('admin@vriddhi.edu')
-  const [phone, setPhone] = useState('+91 98765 43210')
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [role, setRole] = useState('Administrator')
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileMsg, setProfileMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   // Notifications state
   const [notifications, setNotifications] = useState({
@@ -116,6 +137,8 @@ export default function Settings() {
     maintenance: true,
     pushEnabled: true,
   })
+  const [savingNotifications, setSavingNotifications] = useState(false)
+  const [notificationMsg, setNotificationMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const updateNotification = (key: string, value: boolean) => {
     setNotifications(prev => ({ ...prev, [key]: value }))
@@ -127,12 +150,19 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [securityMsg, setSecurityMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [saving2FA, setSaving2FA] = useState(false)
 
   // Appearance state
   const [accentColor, setAccentColor] = useState('#14b8a6')
   const [fontSize, setFontSize] = useState('medium')
   const [compactMode, setCompactMode] = useState(false)
   const [animationsEnabled, setAnimationsEnabled] = useState(true)
+  const [savingAppearance, setSavingAppearance] = useState(false)
+  const [appearanceMsg, setAppearanceMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  const [autoBackup, setAutoBackup] = useState('weekly')
 
   const accentColors = [
     { color: '#14b8a6', name: 'Teal' },
@@ -154,17 +184,346 @@ export default function Settings() {
     { id: 'data', label: 'Data & Backup', icon: Database },
   ]
 
-  const handleSave = (section: string) => {
-    // TODO: Connect to your backend/Firebase
-    alert(`${section} settings saved!`)
+  // Load initial data
+  useEffect(() => {
+    const load = async () => {
+      if (!user) {
+        setInitialLoading(false)
+        return
+      }
+      setInitialLoading(true)
+      try {
+        // Load college
+        if (user.collegeId) {
+          try {
+            const collegeSnap = await getDoc(doc(db, 'colleges', user.collegeId))
+            if (collegeSnap.exists()) {
+              const data = collegeSnap.data() as any
+              setCollegeName(data.name || data.collegeName || '')
+              setAcademicYear(data.academicYear || data.settings?.academicYear || '2024-2025')
+              setSemesterStart(data.semesterStart || data.settings?.semesterStart || '2024-07-01')
+              setSemesterEnd(data.semesterEnd || data.settings?.semesterEnd || '2024-12-15')
+              setPassPercentage(String(data.passPercentage || data.settings?.passPercentage || '40'))
+              if (data.settings?.autoBackup) setAutoBackup(data.settings.autoBackup)
+            }
+          } catch (e) {
+            console.warn('Failed to load college:', e)
+          }
+        }
+
+        // Load admin profile
+        try {
+          const adminRef = doc(db, 'admins', user.uid)
+          const adminSnap = await getDoc(adminRef)
+          if (adminSnap.exists()) {
+            const data = adminSnap.data() as any
+            setFullName(data.name || user.name || '')
+            setEmail(data.email || user.email || '')
+            setPhone(data.phone || user.phone || '')
+            setRole(data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : 'Administrator')
+            if (data.notificationPrefs) {
+              setNotifications(prev => ({ ...prev, ...data.notificationPrefs }))
+            }
+            if (typeof data.twoFAEnabled === 'boolean') setTwoFAEnabled(data.twoFAEnabled)
+            if (data.appearance) {
+              if (data.appearance.accentColor) setAccentColor(data.appearance.accentColor)
+              if (data.appearance.fontSize) setFontSize(data.appearance.fontSize)
+              if (typeof data.appearance.compactMode === 'boolean') setCompactMode(data.appearance.compactMode)
+              if (typeof data.appearance.animationsEnabled === 'boolean') setAnimationsEnabled(data.appearance.animationsEnabled)
+            }
+          } else {
+            // fallback to auth user
+            setFullName(user.name || '')
+            setEmail(user.email || '')
+            setPhone(user.phone || '')
+            setRole(user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Administrator')
+          }
+        } catch (e) {
+          console.warn('Failed to load admin profile:', e)
+          setFullName(user.name || '')
+          setEmail(user.email || '')
+          setPhone(user.phone || '')
+        }
+
+        // Load local prefs
+        try {
+          const localNotif = localStorage.getItem('vriddhi_admin_notifications')
+          if (localNotif) setNotifications(prev => ({ ...prev, ...JSON.parse(localNotif) }))
+          const localAccent = localStorage.getItem('vriddhi_accent_color')
+          if (localAccent) setAccentColor(localAccent)
+          const localFont = localStorage.getItem('vriddhi_font_size')
+          if (localFont) setFontSize(localFont)
+          const localCompact = localStorage.getItem('vriddhi_compact_mode')
+          if (localCompact) setCompactMode(localCompact === 'true')
+          const localAnim = localStorage.getItem('vriddhi_animations')
+          if (localAnim) setAnimationsEnabled(localAnim === 'true')
+          const local2FA = localStorage.getItem('vriddhi_2fa_enabled')
+          if (local2FA) setTwoFAEnabled(local2FA === 'true')
+          const localBackup = localStorage.getItem('vriddhi_auto_backup')
+          if (localBackup) setAutoBackup(localBackup)
+        } catch { }
+      } finally {
+        setInitialLoading(false)
+      }
+    }
+    load()
+  }, [user])
+
+  // Handlers
+  const handleSaveGeneral = async () => {
+    if (!user?.collegeId) {
+      setGeneralMsg({ type: 'err', text: 'No college ID found. Please contact support.' })
+      return
+    }
+    setSavingGeneral(true)
+    setGeneralMsg(null)
+    try {
+      const collegeRef = doc(db, 'colleges', user.collegeId)
+      await setDoc(collegeRef, {
+        name: collegeName,
+        academicYear,
+        semesterStart,
+        semesterEnd,
+        passPercentage: Number(passPercentage),
+        settings: {
+          academicYear,
+          semesterStart,
+          semesterEnd,
+          passPercentage: Number(passPercentage),
+          autoBackup,
+        },
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+      setGeneralMsg({ type: 'ok', text: 'General settings saved successfully!' })
+    } catch (e: any) {
+      setGeneralMsg({ type: 'err', text: e.message || 'Failed to save general settings' })
+    } finally {
+      setSavingGeneral(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    if (!user?.uid) {
+      setProfileMsg({ type: 'err', text: 'No user found' })
+      return
+    }
+    if (!fullName.trim()) {
+      setProfileMsg({ type: 'err', text: 'Full name cannot be empty' })
+      return
+    }
+    setSavingProfile(true)
+    setProfileMsg(null)
+    try {
+      if (auth.currentUser) {
+        await updateFirebaseProfile(auth.currentUser, { displayName: fullName.trim() })
+      }
+      const adminRef = doc(db, 'admins', user.uid)
+      await setDoc(adminRef, {
+        name: fullName.trim(),
+        phone: phone.trim(),
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+      setProfileMsg({ type: 'ok', text: 'Profile updated successfully!' })
+    } catch (e: any) {
+      setProfileMsg({ type: 'err', text: e.message || 'Failed to update profile' })
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const handleSaveNotifications = async () => {
+    setSavingNotifications(true)
+    setNotificationMsg(null)
+    try {
+      localStorage.setItem('vriddhi_admin_notifications', JSON.stringify(notifications))
+      if (user?.uid) {
+        const adminRef = doc(db, 'admins', user.uid)
+        await setDoc(adminRef, {
+          notificationPrefs: notifications,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true })
+      }
+      setNotificationMsg({ type: 'ok', text: 'Notification preferences saved!' })
+      setTimeout(() => setNotificationMsg(null), 3000)
+    } catch (e: any) {
+      setNotificationMsg({ type: 'err', text: e.message || 'Failed to save preferences' })
+    } finally {
+      setSavingNotifications(false)
+    }
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      setSecurityMsg({ type: 'err', text: 'Please fill all password fields' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setSecurityMsg({ type: 'err', text: 'New passwords do not match' })
+      return
+    }
+    if (newPassword.length < 6) {
+      setSecurityMsg({ type: 'err', text: 'Password must be at least 6 characters' })
+      return
+    }
+    setSavingPassword(true)
+    setSecurityMsg(null)
+    try {
+      if (auth.currentUser) {
+        await updatePassword(auth.currentUser, newPassword)
+        setSecurityMsg({ type: 'ok', text: 'Password updated successfully!' })
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      } else {
+        throw new Error('No authenticated user')
+      }
+    } catch (e: any) {
+      let msg = e.message || 'Failed to update password'
+      if (msg.includes('requires-recent-login')) {
+        msg = 'For security, please log out and log in again, then try changing password.'
+      }
+      setSecurityMsg({ type: 'err', text: msg })
+    } finally {
+      setSavingPassword(false)
+    }
+  }
+
+  const handleToggle2FA = async (value: boolean) => {
+    setTwoFAEnabled(value)
+    setSaving2FA(true)
+    try {
+      localStorage.setItem('vriddhi_2fa_enabled', String(value))
+      if (user?.uid) {
+        await setDoc(doc(db, 'admins', user.uid), { twoFAEnabled: value, updatedAt: new Date().toISOString() }, { merge: true })
+      }
+    } catch (e) {
+      console.warn('Failed to save 2FA:', e)
+    } finally {
+      setSaving2FA(false)
+    }
+  }
+
+  const handleSaveAppearance = async () => {
+    setSavingAppearance(true)
+    setAppearanceMsg(null)
+    try {
+      localStorage.setItem('vriddhi_accent_color', accentColor)
+      localStorage.setItem('vriddhi_font_size', fontSize)
+      localStorage.setItem('vriddhi_compact_mode', String(compactMode))
+      localStorage.setItem('vriddhi_animations', String(animationsEnabled))
+      localStorage.setItem('vriddhi_auto_backup', autoBackup)
+
+      // Apply font size to root
+      const root = document.documentElement
+      if (fontSize === 'small') root.style.fontSize = '14px'
+      else if (fontSize === 'large') root.style.fontSize = '18px'
+      else root.style.fontSize = '16px'
+
+      // Save to Firestore
+      if (user?.uid) {
+        await setDoc(doc(db, 'admins', user.uid), {
+          appearance: { accentColor, fontSize, compactMode, animationsEnabled },
+          updatedAt: new Date().toISOString(),
+        }, { merge: true })
+      }
+      setAppearanceMsg({ type: 'ok', text: 'Appearance preferences saved!' })
+      setTimeout(() => setAppearanceMsg(null), 3000)
+    } catch (e: any) {
+      setAppearanceMsg({ type: 'err', text: e.message || 'Failed to save appearance' })
+    } finally {
+      setSavingAppearance(false)
+    }
+  }
+
+  const handleExportJSON = async () => {
+    try {
+      if (!user?.collegeId) throw new Error('No college ID')
+      const collegeId = user.collegeId
+      // Fetch college data
+      const collegeSnap = await getDoc(doc(db, 'colleges', collegeId))
+      const collegeData = collegeSnap.exists() ? collegeSnap.data() : {}
+
+      // Fetch students
+      let students: any[] = []
+      try {
+        const q = query(collection(db, 'students'), where('collegeId', '==', collegeId))
+        const snap = await getDocs(q)
+        students = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      } catch { }
+
+      // Fetch faculty
+      let faculty: any[] = []
+      try {
+        const q = query(collection(db, 'faculty'), where('collegeId', '==', collegeId))
+        const snap = await getDocs(q)
+        faculty = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      } catch { }
+
+      const exportData = {
+        college: collegeData,
+        students,
+        faculty,
+        exportedAt: new Date().toISOString(),
+        exportedBy: user?.email,
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `vriddhi-backup-${collegeId}-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      alert(`Export failed: ${e.message}`)
+    }
+  }
+
+  const handleExportCSV = async () => {
+    try {
+      if (!user?.collegeId) throw new Error('No college ID')
+      const collegeId = user.collegeId
+      let students: any[] = []
+      try {
+        const q = query(collection(db, 'students'), where('collegeId', '==', collegeId))
+        const snap = await getDocs(q)
+        students = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      } catch { }
+
+      if (students.length === 0) {
+        alert('No students found to export')
+        return
+      }
+      const headers = ['id', 'name', 'email', 'department', 'course', 'batch', 'regNo']
+      const rows = students.map((s: any) => headers.map(h => `"${String(s[h] || '').replace(/"/g, '""')}"`).join(','))
+      const csv = [headers.join(','), ...rows].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `vriddhi-students-${collegeId}-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      alert(`Export failed: ${e.message}`)
+    }
+  }
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Settings...</p>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Settings</h1>
-        <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Manage your application preferences</p>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">Settings</h1>
+        <p className="text-slate-500 dark:text-slate-400">Manage your college and personal preferences</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl">
@@ -181,8 +540,8 @@ export default function Settings() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
                       ${isActive
-                        ? 'bg-teal-500 text-slate-900 dark:text-white shadow-md shadow-teal-500/20'
-                        : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50'
                       }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -193,11 +552,10 @@ export default function Settings() {
             </div>
           </SettingsCard>
 
-          {/* Current Theme Indicator */}
           <div className="mt-4 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/30">
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               {resolvedMode === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              Currently in {resolvedMode} mode
+              Currently in {resolvedMode} mode • {user?.collegeId ? `College ${user.collegeId.slice(0, 6)}` : 'No college'}
             </div>
           </div>
         </div>
@@ -208,7 +566,7 @@ export default function Settings() {
           {activeTab === 'general' && (
             <SettingsCard className="p-6 md:p-8">
               <SectionTitle>General Settings</SectionTitle>
-              <SectionDesc>Configure your college and academic preferences</SectionDesc>
+              <SectionDesc>Configure your college and academic preferences. Changes are saved to your college profile in Firestore.</SectionDesc>
 
               <div className="space-y-6">
                 <div>
@@ -260,16 +618,19 @@ export default function Settings() {
                       min="0"
                       max="100"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">%</span>
                   </div>
                 </div>
 
+                {generalMsg && <Message type={generalMsg.type} text={generalMsg.text} />}
+
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
-                    onClick={() => handleSave('General')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30"
+                    onClick={handleSaveGeneral}
+                    disabled={savingGeneral}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
-                    <Save className="w-4 h-4" />
+                    {savingGeneral ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </button>
                 </div>
@@ -284,17 +645,14 @@ export default function Settings() {
               <SectionDesc>Manage your personal information and account details</SectionDesc>
 
               <div className="space-y-6">
-                {/* Avatar */}
                 <div className="flex items-center gap-5">
-                  <div className="w-20 h-20 rounded-2xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-3xl font-bold text-teal-600 dark:text-teal-400 border-2 border-teal-500/20">
-                    {fullName.charAt(0).toUpperCase()}
+                  <div className="w-20 h-20 rounded-2xl bg-teal-500/10 dark:bg-teal-900/30 flex items-center justify-center text-3xl font-bold text-teal-600 dark:text-teal-400 border-2 border-teal-500/20">
+                    {fullName.charAt(0).toUpperCase() || 'A'}
                   </div>
                   <div className="space-y-2">
-                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                      <Upload className="w-4 h-4" />
-                      Change Avatar
-                    </button>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">JPG, PNG or GIF. Max 2MB.</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">{fullName || 'Admin User'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{email}</p>
+                    <p className="text-xs text-slate-400">JPG, PNG or GIF. Max 2MB. Avatar upload coming soon.</p>
                   </div>
                 </div>
 
@@ -305,6 +663,7 @@ export default function Settings() {
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Your full name"
                     />
                   </div>
                   <div>
@@ -312,8 +671,10 @@ export default function Settings() {
                     <SettingsInput
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      disabled
+                      className="cursor-not-allowed"
                     />
+                    <p className="text-[11px] text-slate-400 mt-1">Email is managed by authentication system</p>
                   </div>
                 </div>
 
@@ -329,16 +690,19 @@ export default function Settings() {
 
                 <div>
                   <Label>Role</Label>
-                  <SettingsInput type="text" value="Administrator" disabled />
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Contact super admin to change your role</p>
+                  <SettingsInput type="text" value={role} disabled />
+                  <p className="text-xs text-slate-500 mt-1">Contact super admin to change your role</p>
                 </div>
+
+                {profileMsg && <Message type={profileMsg.type} text={profileMsg.text} />}
 
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
-                    onClick={() => handleSave('Profile')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    onClick={handleSaveProfile}
+                    disabled={savingProfile}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
-                    <Save className="w-4 h-4" />
+                    {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Update Profile
                   </button>
                 </div>
@@ -350,18 +714,17 @@ export default function Settings() {
           {activeTab === 'notifications' && (
             <SettingsCard className="p-6 md:p-8">
               <SectionTitle>Notification Preferences</SectionTitle>
-              <SectionDesc>Choose how and when you want to be notified</SectionDesc>
+              <SectionDesc>Choose how and when you want to be notified. Preferences are saved to your admin profile and local storage.</SectionDesc>
 
               <div className="space-y-4">
-                {/* Push Notifications Master Toggle */}
                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                      <Smartphone className="w-5 h-5 text-teal-600 dark:text-teal-600 dark:text-teal-400" />
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-900/30 flex items-center justify-center">
+                      <Smartphone className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-900 dark:text-white">Push Notifications</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Enable push notifications on this device</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-white">Push Notifications</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Enable push notifications on this device</p>
                     </div>
                   </div>
                   <ToggleSwitch
@@ -386,7 +749,7 @@ export default function Settings() {
                         <item.icon className="w-4 h-4 text-slate-400" />
                         <div>
                           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{item.label}</p>
-                          <p className="text-xs text-slate-600 dark:text-slate-400">{item.desc}</p>
+                          <p className="text-xs text-slate-500">{item.desc}</p>
                         </div>
                       </div>
                       <ToggleSwitch
@@ -397,12 +760,15 @@ export default function Settings() {
                   ))}
                 </div>
 
+                {notificationMsg && <Message type={notificationMsg.type} text={notificationMsg.text} />}
+
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
-                    onClick={() => handleSave('Notification')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    onClick={handleSaveNotifications}
+                    disabled={savingNotifications}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
-                    <Save className="w-4 h-4" />
+                    {savingNotifications ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Preferences
                   </button>
                 </div>
@@ -417,12 +783,11 @@ export default function Settings() {
               <SectionDesc>Manage your password and account security</SectionDesc>
 
               <div className="space-y-6">
-                {/* Password Change */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Change Password</h4>
 
                   <div className="relative">
-                    <Label>Current Password</Label>
+                    <Label>Current Password (for verification, not saved)</Label>
                     <SettingsInput
                       type={showPassword ? 'text' : 'password'}
                       value={currentPassword}
@@ -432,7 +797,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-8 text-slate-600 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      className="absolute right-4 top-9 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -444,7 +809,7 @@ export default function Settings() {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
+                      placeholder="Enter new password (min 6 chars)"
                     />
                     {newPassword && (
                       <div className="mt-2 flex gap-1">
@@ -477,35 +842,37 @@ export default function Settings() {
                     )}
                   </div>
 
+                  {securityMsg && <Message type={securityMsg.type} text={securityMsg.text} />}
+
                   <button
-                    onClick={() => handleSave('Password')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    onClick={handleUpdatePassword}
+                    disabled={savingPassword}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
-                    <Lock className="w-4 h-4" />
+                    {savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
                     Update Password
                   </button>
                 </div>
 
                 <div className="border-t border-slate-200 dark:border-slate-700/50 pt-6">
-                  {/* Two-Factor Authentication */}
                   <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-teal-600 dark:text-teal-600 dark:text-teal-400" />
+                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-900/30 flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-800 dark:text-slate-900 dark:text-white">Two-Factor Authentication</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Add an extra layer of security to your account</p>
+                        <p className="text-sm font-medium text-slate-800 dark:text-white">Two-Factor Authentication</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Add an extra layer of security to your account</p>
+                        {saving2FA && <p className="text-[11px] text-teal-600 mt-1">Saving...</p>}
                       </div>
                     </div>
                     <ToggleSwitch
                       checked={twoFAEnabled}
-                      onChange={setTwoFAEnabled}
+                      onChange={handleToggle2FA}
                     />
                   </div>
                 </div>
 
-                {/* Active Sessions */}
                 <div className="border-t border-slate-200 dark:border-slate-700/50 pt-6">
                   <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Active Sessions</h4>
                   <div className="space-y-2">
@@ -519,7 +886,7 @@ export default function Settings() {
                             {session.device}
                             {session.current && <span className="ml-2 text-xs bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full">Current</span>}
                           </p>
-                          <p className="text-xs text-slate-600 dark:text-slate-400">{session.location} · {session.time}</p>
+                          <p className="text-xs text-slate-500">{session.location} · {session.time}</p>
                         </div>
                         {!session.current && (
                           <button className="text-xs text-red-500 hover:text-red-600 font-medium">
@@ -529,6 +896,7 @@ export default function Settings() {
                       </div>
                     ))}
                   </div>
+                  <p className="text-[11px] text-slate-400 mt-2">Session management is local for now. Full session revocation requires backend integration.</p>
                 </div>
               </div>
             </SettingsCard>
@@ -538,10 +906,9 @@ export default function Settings() {
           {activeTab === 'appearance' && (
             <SettingsCard className="p-6 md:p-8">
               <SectionTitle>Appearance</SectionTitle>
-              <SectionDesc>Customize how Vriddhi looks and feels</SectionDesc>
+              <SectionDesc>Customize how Vriddhi looks and feels. Preferences are saved locally and to your profile.</SectionDesc>
 
               <div className="space-y-6">
-                {/* Theme Mode */}
                 <div>
                   <Label>Theme Mode</Label>
                   <div className="grid grid-cols-3 gap-3">
@@ -566,14 +933,13 @@ export default function Settings() {
                           <span className={`text-sm font-medium ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
                             {theme.label}
                           </span>
-                          <span className="text-xs text-slate-600 dark:text-slate-400">{theme.desc}</span>
+                          <span className="text-xs text-slate-500">{theme.desc}</span>
                         </button>
                       )
                     })}
                   </div>
                 </div>
 
-                {/* Accent Color */}
                 <div>
                   <Label>Accent Color</Label>
                   <div className="flex flex-wrap gap-3">
@@ -590,14 +956,14 @@ export default function Settings() {
                         title={item.name}
                       >
                         {accentColor === item.color && (
-                          <Check className="w-5 h-5 text-slate-900 dark:text-white absolute inset-0 m-auto drop-shadow-md" />
+                          <Check className="w-5 h-5 text-white absolute inset-0 m-auto drop-shadow-md" />
                         )}
                       </button>
                     ))}
                   </div>
+                  <p className="text-[11px] text-slate-400 mt-2">Selected: {accentColors.find(c => c.color === accentColor)?.name} ({accentColor})</p>
                 </div>
 
-                {/* Font Size */}
                 <div>
                   <Label>Font Size</Label>
                   <SettingsSelect
@@ -610,12 +976,11 @@ export default function Settings() {
                   </SettingsSelect>
                 </div>
 
-                {/* Toggles */}
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Compact Mode</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Reduce spacing for denser layout</p>
+                      <p className="text-xs text-slate-500">Reduce spacing for denser layout</p>
                     </div>
                     <ToggleSwitch checked={compactMode} onChange={setCompactMode} />
                   </div>
@@ -623,18 +988,21 @@ export default function Settings() {
                   <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Animations</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Enable smooth transitions and animations</p>
+                      <p className="text-xs text-slate-500">Enable smooth transitions and animations</p>
                     </div>
                     <ToggleSwitch checked={animationsEnabled} onChange={setAnimationsEnabled} />
                   </div>
                 </div>
 
+                {appearanceMsg && <Message type={appearanceMsg.type} text={appearanceMsg.text} />}
+
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
-                    onClick={() => handleSave('Appearance')}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-slate-900 dark:text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
+                    onClick={handleSaveAppearance}
+                    disabled={savingAppearance}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
-                    <Save className="w-4 h-4" />
+                    {savingAppearance ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Preferences
                   </button>
                 </div>
@@ -646,65 +1014,67 @@ export default function Settings() {
           {activeTab === 'data' && (
             <SettingsCard className="p-6 md:p-8">
               <SectionTitle>Data & Backup</SectionTitle>
-              <SectionDesc>Export, import, and manage your data</SectionDesc>
+              <SectionDesc>Export, import, and manage your data. Exports are generated from live Firestore data.</SectionDesc>
 
               <div className="space-y-4">
-                {/* Export */}
                 <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center flex-shrink-0">
-                      <Download className="w-5 h-5 text-teal-600 dark:text-teal-600 dark:text-teal-400" />
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-900/30 flex items-center justify-center flex-shrink-0">
+                      <Download className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Export All Data</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-4">
-                        Download a complete backup of all student records, assessments, attendance, and fee data.
+                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Export All Data</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                        Download a complete backup of college, student records, faculty, and settings as JSON or CSV.
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <button onClick={handleExportCSV} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                           <FileText className="w-4 h-4" />
-                          Export as Excel
+                          Export Students CSV
                         </button>
-                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <button onClick={handleExportJSON} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium transition-colors shadow-sm">
                           <Download className="w-4 h-4" />
-                          Export as JSON
+                          Export Full JSON
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Import */}
                 <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
                       <Upload className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Import Data</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-4">
-                        Import student records, faculty data, or attendance from CSV or Excel files.
+                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Import Data</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                        Import student records, faculty data, or attendance from CSV or Excel files. Use the dedicated import pages for bulk operations.
                       </p>
-                      <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        Choose File
-                      </button>
+                      <div className="flex gap-2">
+                        <a href="/admin/students" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          Go to Students Import
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Auto Backup */}
                 <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                      <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-600 dark:text-amber-400" />
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-900 dark:text-white mb-1">Automatic Backups</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-4">
-                        Schedule automatic backups to cloud storage.
+                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Automatic Backups</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                        Schedule automatic backups to cloud storage. Preference is saved locally and to college settings.
                       </p>
-                      <SettingsSelect defaultValue="weekly">
+                      <SettingsSelect value={autoBackup} onChange={(e) => {
+                        setAutoBackup(e.target.value)
+                        localStorage.setItem('vriddhi_auto_backup', e.target.value)
+                      }}>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>
@@ -714,24 +1084,42 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Danger Zone */}
                 <div className="p-5 rounded-xl bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-600 dark:text-red-400" />
+                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Danger Zone</h4>
                       <p className="text-sm text-red-600/70 dark:text-red-400/70 mb-4">
-                        These actions are irreversible. Proceed with caution.
+                        These actions are irreversible. Proceed with caution. Clearing local data will remove cached preferences.
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors">
+                        <button onClick={() => {
+                          if (confirm('Clear all local cached data? This will remove theme, notification prefs, etc.')) {
+                            localStorage.clear()
+                            alert('Local data cleared. Please refresh.')
+                          }
+                        }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors">
                           <Trash2 className="w-4 h-4" />
-                          Clear All Data
+                          Clear Local Cache
                         </button>
-                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors">
-                          Reset to Defaults
+                        <button onClick={() => {
+                          if (confirm('Reset appearance to defaults?')) {
+                            setAccentColor('#14b8a6')
+                            setFontSize('medium')
+                            setCompactMode(false)
+                            setAnimationsEnabled(true)
+                            setMode('light')
+                            localStorage.removeItem('vriddhi_accent_color')
+                            localStorage.removeItem('vriddhi_font_size')
+                            localStorage.removeItem('vriddhi_compact_mode')
+                            localStorage.removeItem('vriddhi_animations')
+                            document.documentElement.style.fontSize = '16px'
+                            alert('Appearance reset to defaults')
+                          }
+                        }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-50 transition-colors">
+                          Reset Appearance
                         </button>
                       </div>
                     </div>

@@ -134,12 +134,17 @@ const navItems: NavItem[] = [
   { label: "Reschedule Class", path: "/faculty/reschedule", icon: <CalendarToday fontSize="small" />, roles: ["faculty"], section: "Schedule" },
   { label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" />, roles: ["faculty"], section: "Communication" },
   { label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" />, roles: ["faculty"], section: "Schedule" },
+  { label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" />, roles: ["faculty"], section: "Settings" },
+
+  // ─── HOD ─── additional settings
+  { label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" />, roles: ["hod"], section: "Settings" },
 
   // ─── MENTOR ───
   { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" />, roles: ["mentor"], section: "Overview" },
   { label: "Mentored Students", path: "/faculty/student-analysis", icon: <People fontSize="small" />, roles: ["mentor"], section: "Students" },
   { label: "360° View", path: "/faculty/view360", icon: <Assessment fontSize="small" />, roles: ["mentor"], section: "Students" },
   { label: "Attendance Overview", path: "/faculty/attendance", icon: <CalendarToday fontSize="small" />, roles: ["mentor"], section: "Attendance" },
+  { label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" />, roles: ["mentor"], section: "Settings" },
 ];
 
 interface LayoutProps {
@@ -555,7 +560,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               </Box>
               <Divider />
-              <MenuItem onClick={() => { setUserMenuAnchor(null); navigate(effectiveRole === 'faculty' ? '/faculty/dashboard' : '/admin/settings'); }}>
+              <MenuItem onClick={() => {
+                setUserMenuAnchor(null);
+                if (effectiveRole === 'faculty' || effectiveRole === 'mentor') navigate('/faculty/settings');
+                else if (effectiveRole === 'hod') navigate('/admin/settings');
+                else navigate('/admin/settings');
+              }}>
                 <ListItemIcon><Settings fontSize="small" /></ListItemIcon>
                 <ListItemText primary="Settings" />
               </MenuItem>
