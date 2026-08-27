@@ -84,7 +84,7 @@ export function useAIQuestionGenerator() {
         const questionData = convertToQuestionData(
           generated,
           collegeId,
-          user?.id || '',
+          (user as any)?.uid || (user as any)?.id || '',
           user?.name || user?.email || 'Unknown',
           batch,
           branch
@@ -124,7 +124,7 @@ export function useAIQuestionGenerator() {
         const { valid, invalid } = convertAllToQuestionData(
           generatedQuestions,
           collegeId,
-          user?.id || '',
+          (user as any)?.uid || (user as any)?.id || '',
           user?.name || user?.email || 'Unknown',
           batch,
           branch
