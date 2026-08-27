@@ -48,8 +48,19 @@ import {
   type DifficultyCount,
 } from '../../admin/types/universalQuestionBank';
 
+
 const QUESTIONS_COLLECTION = 'questions';
 const PAPERS_COLLECTION = 'papers';
+
+// Helper to strip undefined values — Firestore rejects undefined
+function cleanUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
+  const cleaned: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) cleaned[k] = v;
+  }
+  return cleaned;
+}
+
 
 // ==================== BATCH / BRANCH SUPPORT ====================
 
@@ -326,8 +337,9 @@ export const createQuestion = async (
     ...(questionData.tags?.map((t: string) => t.toLowerCase()) || [])
   ].filter(Boolean);
 
+  const cleanedData = cleanUndefined(questionData as any);
   const docRef = await addDoc(collection(db, QUESTIONS_COLLECTION), {
-    ...questionData,
+    ...cleanedData,
     collegeId,
     searchKeywords,
     usageCount: 0,
@@ -425,8 +437,9 @@ export const bulkImportQuestions = async (
         ].filter(Boolean);
 
         const docRef = doc(collection(db, QUESTIONS_COLLECTION));
+        const cleanedQuestionData = cleanUndefined(questionData as any);
         batch.set(docRef, {
-          ...questionData,
+          ...cleanedQuestionData,
           collegeId,
           searchKeywords,
           usageCount: 0,
