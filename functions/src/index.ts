@@ -84,6 +84,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 })
 
 // ─── Express API export (v2) ───
+// FIX: Removed secrets array to avoid overlap error "Secret env var overlaps non-secret env var"
+// GEMINI_API_KEY etc should be set via regular env vars (.env file) or Firebase env config
+// If you want to use Secret Manager, set them ONLY as secrets and remove from .env
 export const api = onRequest(
   {
     region: 'asia-south1',
@@ -91,7 +94,6 @@ export const api = onRequest(
     timeoutSeconds: 60,
     minInstances: 0,
     maxInstances: 10,
-    secrets: ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'],
   },
   app
 )
