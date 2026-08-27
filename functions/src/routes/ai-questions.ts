@@ -4,8 +4,6 @@ import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId } from '../middleware/auth'
 import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/tierCheck'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
-import { validateRequest } from '../validation/validateRequest'
-import { aiGenerateSchema } from '../validation'
 import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
 
