@@ -58,7 +58,7 @@ function cleanUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
   for (const [k, v] of Object.entries(obj)) {
     if (v !== undefined) cleaned[k] = v;
   }
-  return cleaned;
+  return cleaned as Partial<T>;
 }
 
 
