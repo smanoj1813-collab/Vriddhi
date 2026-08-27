@@ -45,21 +45,31 @@ app.options('*', cors())
 app.use(express.json({ limit: '10mb' }))
 app.use(generalLimiter)
 
-app.get('/api/health', (req, res) => {
+const healthHandler = (req: any, res: any) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     version: '1.2.0',
     environment: 'firebase-functions',
   })
-})
+}
+app.get('/api/health', healthHandler)
+app.get('/health', healthHandler)
+app.get('/', healthHandler)
 
 // ─── Mount routes ───
+// Support both /api/* and /* paths because Firebase Functions v2 strips the function name
+// from the URL. Calling https://.../api/ai/generate-questions arrives as /ai/generate-questions
 app.use('/api/ai-questions', aiQuestionsRouter)
+app.use('/ai-questions', aiQuestionsRouter)
 app.use('/api/ai', aiQuestionsRouter)
+app.use('/ai', aiQuestionsRouter)
 app.use('/api/questions', questionsRouter)
+app.use('/questions', questionsRouter)
 app.use('/api/papers', papersRouter)
+app.use('/papers', papersRouter)
 app.use('/api/config', configRouter)
+app.use('/config', configRouter)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path })
