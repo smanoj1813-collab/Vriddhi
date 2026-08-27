@@ -182,19 +182,20 @@ export default function FacultyAIQuestions() {
                 <option value="hard">Hard</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">AI Provider</label>
-              <select value={provider} onChange={e => setProvider(e.target.value as any)} className="input-field w-full">
-                <option value="gemini">Gemini (Google) — Free</option>
-                <option value="openai">OpenAI GPT-4o — High Quality</option>
-                <option value="deepseek">DeepSeek — Balanced</option>
-              </select>
-              <p className="text-[11px] text-slate-400 mt-1">
-                {provider === 'gemini' && 'Needs GEMINI_API_KEY in functions/.env'}
-                {provider === 'openai' && 'Needs OPENAI_API_KEY in functions/.env'}
-                {provider === 'deepseek' && 'Needs DEEPSEEK_API_KEY in functions/.env'}
-              </p>
-            </div>
+            {/* Provider selector — only visible to superadmin to avoid confusion, faculty auto-uses best available */}
+            {user?.role === 'superadmin' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">AI Provider (Admin)</label>
+                <select value={provider} onChange={e => setProvider(e.target.value as any)} className="input-field w-full">
+                  <option value="gemini">Gemini (Google) — Free</option>
+                  <option value="openai">OpenAI GPT-4o — High Quality</option>
+                  <option value="deepseek">DeepSeek — Balanced</option>
+                </select>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Faculty auto-uses best available. Set keys in functions/.env
+                </p>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Number of Questions</label>
               <input type="number" min={1} max={20} value={count}

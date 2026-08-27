@@ -19,7 +19,11 @@ interface SaveResult {
 
 export function useAIQuestionGenerator() {
   const { user } = useAuth();
-  const collegeId = user?.collegeId;
+  // Fallback chain for collegeId — faculty docs often missing collegeId
+  const collegeId = user?.collegeId || 
+    localStorage.getItem('vriddhi_college_id') || 
+    localStorage.getItem('collegeId') ||
+    '';
 
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -71,7 +75,8 @@ export function useAIQuestionGenerator() {
       batch: string,
       branch: string
     ): Promise<Question> => {
-      if (!collegeId) throw new Error('Not authenticated — collegeId missing');
+      const resolvedCollegeId = collegeId || localStorage.getItem('vriddhi_college_id') || '';
+      if (!resolvedCollegeId) throw new Error('Not authenticated — collegeId missing');
 
       setSaving(true);
       try {
@@ -83,7 +88,7 @@ export function useAIQuestionGenerator() {
 
         const questionData = convertToQuestionData(
           generated,
-          collegeId,
+          resolvedCollegeId,
           (user as any)?.uid || (user as any)?.id || '',
           user?.name || user?.email || 'Unknown',
           batch,
@@ -93,7 +98,7 @@ export function useAIQuestionGenerator() {
         // ═══ DEBUG: Log what's being sent ═══
         console.log('[saveQuestion] Payload:', JSON.stringify(questionData, null, 2));
 
-        const saved = await createQuestion(collegeId, questionData);
+        const saved = await createQuestion(resolvedCollegeId, questionData);
         setSavedQuestions((prev) => [...prev, saved]);
         return saved;
       } catch (err) {
@@ -114,7 +119,39 @@ export function useAIQuestionGenerator() {
       batch: string,
       branch: string
     ): Promise<Question[]> => {
-      if (!collegeId) throw new Error('Not authenticated — collegeId missing');
+      // Try to resolve collegeId with fallbacks
+      let resolvedCollegeId = collegeId;
+      if (!resolvedCollegeId) {
+        try {
+          const { db } = await import('@/Firebase/config');
+          const { doc, getDoc, collection, getDocs, query, limit } = await import('firebase/firestore');
+          // Try faculty doc directly
+          if (user) {
+            const uid = (user as any).uid || (user as any).id;
+            const facultyDoc = await getDoc(doc(db, 'faculty', uid));
+            if (facultyDoc.exists()) {
+              const data = facultyDoc.data() as any;
+              resolvedCollegeId = data.collegeId || data.college_id || '';
+              if (resolvedCollegeId) {
+                console.log('[saveAll] Found collegeId from faculty doc:', resolvedCollegeId);
+                localStorage.setItem('vriddhi_college_id', resolvedCollegeId);
+              }
+            }
+          }
+          // Fallback to first college in colleges collection
+          if (!resolvedCollegeId) {
+            const collegesSnap = await getDocs(query(collection(db, 'colleges'), limit(1)));
+            if (!collegesSnap.empty) {
+              resolvedCollegeId = collegesSnap.docs[0].id;
+              console.log('[saveAll] Fallback to first college:', resolvedCollegeId);
+            }
+          }
+        } catch (e) {
+          console.error('[saveAll] Failed to resolve collegeId:', e);
+        }
+      }
+
+      if (!resolvedCollegeId) throw new Error('Not authenticated — collegeId missing. Please ensure faculty profile has collegeId field in Firestore > faculty collection.');
 
       setSaving(true);
       setError(null);
@@ -123,7 +160,7 @@ export function useAIQuestionGenerator() {
         // Pre-validate all questions
         const { valid, invalid } = convertAllToQuestionData(
           generatedQuestions,
-          collegeId,
+          resolvedCollegeId,
           (user as any)?.uid || (user as any)?.id || '',
           user?.name || user?.email || 'Unknown',
           batch,
@@ -143,12 +180,12 @@ export function useAIQuestionGenerator() {
 
         // ═══ FIX: Use bulkImportQuestions with correct BulkImportResult shape ═══
         console.log('[saveAll] Sending bulk payload:', {
-          collegeId,
+          collegeId: resolvedCollegeId,
           questionCount: valid.length,
           firstQuestion: valid[0],
         });
 
-        const bulkResult = await bulkImportQuestions(collegeId, valid);
+        const bulkResult = await bulkImportQuestions(resolvedCollegeId, valid);
 
         console.log('[saveAll] Bulk result:', bulkResult);
 
