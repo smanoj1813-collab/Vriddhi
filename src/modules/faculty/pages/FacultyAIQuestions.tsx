@@ -80,8 +80,12 @@ export default function FacultyAIQuestions() {
       // saveAll signature is (questions, batch, branch) — we pass empty batch/branch
       // and let convertAllToQuestionData use collegeId from auth context
       const saved = await saveAll(questions, '', '');
+      if (saved.length === 0) {
+        setSaveMessage(`Saved 0/${questions.length} — check console for [saveAll] Errors. Likely Firestore rules or missing collegeId.`);
+        return;
+      }
       setSaveMessage(`Saved ${saved.length} question(s) to the question bank. Check Question Bank page.`);
-      // Clear after save
+      // Clear after save only if success
       setTimeout(() => {
         setQuestions([]);
       }, 2000);

@@ -62,19 +62,40 @@ export const getPaperById = async (paperId: string): Promise<Paper | null> => {
 };
 
 export const getPapers = async (collegeId: string): Promise<Paper[]> => {
-  const q = query(
-    collection(db, PAPERS_COLLECTION),
-    where('collegeId', '==', collegeId),
-    orderBy('createdAt', 'desc')
-  );
-
-  const snapshot = await getDocs(q);
-  const papers: Paper[] = [];
-  snapshot.forEach((doc) => {
-    papers.push({ id: doc.id, ...doc.data() } as Paper);
-  });
-
-  return papers;
+  try {
+    const q = query(
+      collection(db, PAPERS_COLLECTION),
+      where('collegeId', '==', collegeId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    const papers: Paper[] = [];
+    snapshot.forEach((doc) => {
+      papers.push({ id: doc.id, ...doc.data() } as Paper);
+    });
+    return papers;
+  } catch (err: any) {
+    // Fallback if index is still building — query without orderBy
+    if (err?.message?.includes('requires an index') || err?.code === 'failed-precondition') {
+      console.warn('[getPapers] Index missing/building, falling back to simple query:', err.message);
+      const fallbackQ = query(
+        collection(db, PAPERS_COLLECTION),
+        where('collegeId', '==', collegeId)
+      );
+      const snapshot = await getDocs(fallbackQ);
+      const papers: Paper[] = [];
+      snapshot.forEach((doc) => {
+        papers.push({ id: doc.id, ...doc.data() } as Paper);
+      });
+      // Sort in memory
+      return papers.sort((a: any, b: any) => {
+        const aTime = a.createdAt?.toDate?.()?.getTime() || new Date(a.createdAt).getTime() || 0;
+        const bTime = b.createdAt?.toDate?.()?.getTime() || new Date(b.createdAt).getTime() || 0;
+        return bTime - aTime;
+      });
+    }
+    throw err;
+  }
 };
 
 export const duplicatePaper = async (paperId: string, collegeId: string): Promise<Paper> => {

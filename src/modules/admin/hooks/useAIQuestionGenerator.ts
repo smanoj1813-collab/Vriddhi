@@ -187,7 +187,8 @@ export function useAIQuestionGenerator() {
 
         const bulkResult = await bulkImportQuestions(resolvedCollegeId, valid);
 
-        console.log('[saveAll] Bulk result:', bulkResult);
+        console.log('[saveAll] Bulk result:', JSON.stringify(bulkResult, null, 2));
+        console.log('[saveAll] Errors:', bulkResult.errors);
 
         // ═══ FIX: Use correct BulkImportResult properties ═══
         const savedCount = bulkResult.success || 0;
@@ -195,8 +196,44 @@ export function useAIQuestionGenerator() {
         const importedIds = bulkResult.importedIds || bulkResult.createdIds || [];
 
         if (failedCount > 0) {
-          console.warn(`[saveAll] ${failedCount} questions failed in bulk save`);
-          setError(`Saved ${savedCount}/${valid.length} questions. ${failedCount} failed.`);
+          console.warn(`[saveAll] ${failedCount} questions failed in bulk save`, bulkResult.errors);
+          // If bulk failed, try individual saves as fallback
+          if (savedCount === 0) {
+            console.log('[saveAll] Bulk failed completely, trying individual saves...');
+            let individualSuccess = 0;
+            const individualIds: string[] = [];
+            for (let i = 0; i < valid.length; i++) {
+              try {
+                const single = await (await import('../api/questionBankApi')).createQuestion(resolvedCollegeId, valid[i] as any);
+                individualIds.push(single.id);
+                individualSuccess++;
+                console.log(`[saveAll] Individual save ${i+1}/${valid.length} succeeded:`, single.id);
+              } catch (e: any) {
+                console.error(`[saveAll] Individual save ${i+1} failed:`, e.message);
+              }
+            }
+            if (individualSuccess > 0) {
+              // Use individual results
+              const saved: Question[] = individualIds.map((id, idx) => ({
+                id,
+                text: valid[idx]?.text || '',
+                type: valid[idx]?.type || 'mcq',
+                difficulty: valid[idx]?.difficulty || 'medium',
+                subject: valid[idx]?.subject || '',
+                marks: valid[idx]?.marks || 1,
+                tags: valid[idx]?.tags || [],
+                createdBy: valid[idx]?.createdBy || '',
+                createdByName: valid[idx]?.createdByName || '',
+                collegeId: valid[idx]?.collegeId || '',
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }));
+              setSavedQuestions((prev) => [...prev, ...saved]);
+              return saved;
+            }
+          }
+          setError(`Saved ${savedCount}/${valid.length} questions. ${failedCount} failed. Errors: ${(bulkResult.errors || []).slice(0,3).join('; ')}`);
         }
 
         // Build minimal Question objects from importedIds for state update
