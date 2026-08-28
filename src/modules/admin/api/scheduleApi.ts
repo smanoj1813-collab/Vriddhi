@@ -14,6 +14,13 @@ import type {
   DayOfWeek,
   ClassType,
 } from '../types/schedule'
+import {
+  findClashes,
+  findBatchClashes,
+  validateScheduleEntry,
+  type ScheduleEntry,
+  type Clash,
+} from '@/shared/utils/timetableConflicts'
 
 export type { ScheduleFilters }
 
@@ -772,4 +779,228 @@ export function getClassTimeStatus(startTime: string, endTime: string): 'upcomin
 export function getTodayDayOfWeek(): DayOfWeek {
   const day = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as DayOfWeek
   return day
+}
+
+// ══════════════════════════════════════════════════════════════════════════════════════
+// CLASH DETECTION — integrated from timetableConflicts
+// ══════════════════════════════════════════════════════════════════════════════════════
+
+export interface ClashCheckResult {
+  hasClashes: boolean
+  clashes: Clash[]
+  warnings: string[]
+}
+
+/**
+ * Check for clashes when creating a single weekly schedule entry.
+ * Returns all clashes found against existing schedules.
+ */
+export async function checkScheduleClashes(
+  entry: Omit<ScheduleEntry, 'id' | 'isActive'>,
+  ignoreId?: string
+): Promise<ClashCheckResult> {
+  const collegeId = entry.collegeId || getCollegeId()
+  if (!collegeId) {
+    return { hasClashes: false, clashes: [], warnings: ['No collegeId provided'] }
+  }
+
+  // Validate the entry first
+  const validation = validateScheduleEntry(entry as Partial<ScheduleEntry>)
+  if (!validation.valid) {
+    return {
+      hasClashes: false,
+      clashes: [],
+      warnings: validation.errors,
+    }
+  }
+
+  try {
+    // Fetch existing schedules for the college
+    const existing = await fetchWeeklySchedules(collegeId)
+    
+    // Convert to ScheduleEntry format for clash detection
+    const existingEntries: ScheduleEntry[] = existing
+      .filter(s => !ignoreId || s.id !== ignoreId)
+      .map(s => ({
+        id: s.id,
+        collegeId: s.collegeId,
+        subject: s.subject,
+        subjectCode: s.subjectCode || '',
+        facultyId: s.facultyId,
+        facultyName: s.facultyName,
+        branch: s.branch,
+        batch: s.batch,
+        semester: s.semester,
+        division: s.division,
+        section: s.section || '',
+        room: s.room,
+        dayOfWeek: s.dayOfWeek as DayOfWeek,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        type: (s.type || 'lecture') as ClassType,
+        isActive: s.isActive,
+      }))
+
+    const clashes = findClashes(entry as ScheduleEntry, existingEntries, ignoreId)
+
+    return {
+      hasClashes: clashes.length > 0,
+      clashes,
+      warnings: validation.warnings,
+    }
+  } catch (err) {
+    console.error('[ScheduleApi] Clash check failed:', err)
+    return {
+      hasClashes: false,
+      clashes: [],
+      warnings: ['Failed to check for clashes'],
+    }
+  }
+}
+
+/**
+ * Check for clashes in a batch of schedule entries.
+ * Useful for bulk create operations.
+ */
+export async function checkBatchScheduleClashes(
+  entries: Array<Omit<ScheduleEntry, 'id' | 'isActive'>>
+): Promise<Map<number, Clash[]>> {
+  return findBatchClashes(entries)
+}
+
+/**
+ * Block schedule creation/update if clashes exist.
+ * Throws an error with clash details if clashes are found.
+ */
+export async function createWeeklyScheduleWithClashCheck(
+  data: WeeklyScheduleFormData
+): Promise<{ schedule: WeeklyClassSchedule; warnings: string[] }> {
+  const collegeId = getCollegeId()
+  
+  const entry = {
+    collegeId,
+    subject: data.subject,
+    subjectCode: data.subjectCode,
+    facultyId: data.facultyId,
+    facultyName: '',
+    branch: data.branch,
+    batch: data.batch,
+    semester: data.semester,
+    division: data.division,
+    section: data.section || '',
+    room: data.room,
+    dayOfWeek: data.dayOfWeek,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    type: data.type || 'lecture',
+  }
+
+  const clashResult = await checkScheduleClashes(entry)
+  
+  if (clashResult.hasClashes) {
+    const messages = clashResult.clashes.map(c => c.message).join('; ')
+    throw new Error(`Schedule clash detected: ${messages}`)
+  }
+
+  const schedule = await createWeeklySchedule(data)
+  return { schedule, warnings: clashResult.warnings }
+}
+
+/**
+ * Update weekly schedule with clash check (excludes current entry).
+ */
+export async function updateWeeklyScheduleWithClashCheck(
+  id: string,
+  data: Partial<WeeklyScheduleFormData>
+): Promise<void> {
+  // Get current schedule to build the full entry
+  const existingQuery = query(
+    collection(db, WEEKLY_COLLECTION),
+    where('collegeId', '==', getCollegeId()),
+    limit(1)
+  )
+  const existingSnap = await getDocs(existingQuery)
+  
+  // Build the entry with updates applied
+  const entry: Omit<ScheduleEntry, 'id' | 'isActive'> = {
+    collegeId: getCollegeId(),
+    subject: data.subject || '',
+    subjectCode: data.subjectCode || '',
+    facultyId: data.facultyId || '',
+    facultyName: '',
+    branch: data.branch || '',
+    batch: data.batch || '',
+    semester: data.semester || 0,
+    division: data.division || '',
+    section: data.section || '',
+    room: data.room || '',
+    dayOfWeek: data.dayOfWeek || 'monday',
+    startTime: data.startTime || '09:00',
+    endTime: data.endTime || '10:00',
+    type: data.type || 'lecture',
+  }
+
+  const clashResult = await checkScheduleClashes(entry, id)
+  
+  if (clashResult.hasClashes) {
+    const messages = clashResult.clashes.map(c => c.message).join('; ')
+    throw new Error(`Schedule clash detected: ${messages}`)
+  }
+
+  await updateWeeklySchedule(id, data)
+}
+
+/**
+ * Bulk create weekly schedules with clash check for each entry.
+ * Returns list of failed entries with clash reasons.
+ */
+export async function bulkCreateWeeklySchedulesWithClashCheck(
+  items: WeeklyScheduleFormData[]
+): Promise<{ success: number; failed: Array<{ index: number; reason: string }> }> {
+  const collegeId = getCollegeId()
+  const result = { success: 0, failed: [] as Array<{ index: number; reason: string }> }
+
+  // First check for internal clashes within the batch
+  const batchEntries = items.map(item => ({
+    collegeId,
+    subject: item.subject,
+    subjectCode: item.subjectCode,
+    facultyId: item.facultyId,
+    facultyName: '',
+    branch: item.branch,
+    batch: item.batch,
+    semester: item.semester,
+    division: item.division,
+    section: item.section || '',
+    room: item.room,
+    dayOfWeek: item.dayOfWeek,
+    startTime: item.startTime,
+    endTime: item.endTime,
+    type: item.type || 'lecture',
+  }))
+
+  const internalClashes = findBatchClashes(batchEntries)
+  
+  // Check against existing schedules
+  for (let i = 0; i < items.length; i++) {
+    if (internalClashes.has(i)) {
+      result.failed.push({
+        index: i,
+        reason: `Internal clash with another entry in this batch`,
+      })
+      continue
+    }
+
+    try {
+      await createWeeklyScheduleWithClashCheck(items[i])
+      result.success++
+    } catch (err: any) {
+      result.failed.push({
+        index: i,
+        reason: err.message || 'Unknown error',
+      })
+    }
+  }
+
+  return result
 }

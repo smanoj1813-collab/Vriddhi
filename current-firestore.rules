@@ -56,11 +56,14 @@ service cloud.firestore {
       return !('password' in request.resource.data);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // USERS — client cannot create; must go through CF
+    // ══════════════════════════════════════════════════════════════
     match /users/{userId} {
       allow read: if isOwner(userId)
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
-      allow create: if false;
+      allow create: if false;  // Cloud Function only
       allow update: if isOwner(userId)
         && immutableUserFields()
         && noPasswordField()
@@ -165,6 +168,86 @@ service cloud.firestore {
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // WEEKLY SCHEDULES — weekly recurring timetable
+    // ══════════════════════════════════════════════════════════════
+    match /weeklySchedules/{scheduleId} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow create: if isCollegeStaff() && request.resource.data.collegeId == collegeId()
+        && request.resource.data.facultyId != null
+        && request.resource.data.branch != null
+        && request.resource.data.batch != null
+        && request.resource.data.dayOfWeek != null
+        && request.resource.data.startTime != null
+        && request.resource.data.endTime != null;
+      allow update: if isCollegeStaff() && sameCollege(resource.data);
+      allow delete: if isCollegeStaff() && sameCollege(resource.data);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // CLASS SESSIONS — daily session records
+    // ══════════════════════════════════════════════════════════════
+    match /classSessions/{sessionId} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow create, update: if isCollegeStaff() && sameCollege(request.resource.data);
+      allow delete: if isCollegeStaff() && sameCollege(resource.data);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // CURRICULUM FACULTY MAPPINGS
+    // ══════════════════════════════════════════════════════════════
+    match /curriculumFacultyMappings/{mappingId} {
+      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow create, update, delete: if isCollegeStaff() && sameCollege(request.resource.data);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ASSIGNMENTS — faculty create, students read/submit
+    // ══════════════════════════════════════════════════════════════
+    match /assignments/{assignmentId} {
+      // Faculty can create and manage their own assignments
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || (isStaff() && sameCollege(resource.data))
+        || (role() == 'student' && sameCollege(resource.data) && resource.data.status in ['published', 'ongoing', 'closed', 'graded'])
+      );
+      allow create: if isCollegeStaff()
+        && request.resource.data.facultyUid == request.auth.uid
+        && request.resource.data.collegeId == collegeId();
+      allow update: if isCollegeStaff() && sameCollege(resource.data);
+      allow delete: if isCollegeStaff() && sameCollege(resource.data)
+        && resource.data.facultyUid == request.auth.uid;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // SUBMISSIONS — students submit, faculty grade
+    // ══════════════════════════════════════════════════════════════
+    match /submissions/{submissionId} {
+      // Students can read/submit their own submissions
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || (isStaff() && sameCollege(resource.data))
+        || resource.data.studentUid == request.auth.uid
+      );
+      // Students create submissions for their assignments
+      allow create: if isSignedIn() && role() == 'student'
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.collegeId == collegeId()
+        && request.resource.data.assignmentId != null;
+      // Students can update their own pending/late submissions
+      allow update: if isSignedIn() && (
+        (
+          resource.data.studentUid == request.auth.uid
+          && resource.data.status != 'graded'
+        )
+        || isCollegeStaff() && sameCollege(resource.data)
+      );
+      allow delete: if false; // Submissions are immutable once graded
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // LOGS & AUDIT
+    // ══════════════════════════════════════════════════════════════
     match /logs/{id} {
       allow read: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
       allow create: if isStaff();
@@ -181,6 +264,10 @@ service cloud.firestore {
       allow write: if isCollegeStaff();
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // CATCH-ALL — deny everything else
+    // IMPORTANT: Keep this at the END, after all specific match blocks
+    // ══════════════════════════════════════════════════════════════
     match /{document=**} {
       allow read, write: if false;
     }
