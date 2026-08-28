@@ -4,8 +4,10 @@ import { Box, Container, Typography, Paper } from '@mui/material';
 import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import AIQuestionGenerator from '../components/question-bank/AIQuestionGenerator';
 import type { GeneratedQuestion } from '../types/questionBank';
+import { useTranslation } from '@/shared/contexts/LanguageProvider';
 
 export default function AIQuestionsPage() {
+  const { t } = useTranslation();
   const handleQuestionsSaved = (questions: GeneratedQuestion[]) => {
     console.log('[AIQuestionsPage] Saved', questions.length, 'questions to bank');
   };

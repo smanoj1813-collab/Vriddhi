@@ -55,7 +55,7 @@ function normalizeQuestionContent(data: any, id: string): QuestionContent {
     difficulty: data.difficulty || 'medium',
     questionType: data.questionType || 'mcq',
     marks: data.marks ?? 1,
-    language: data.language || 'English',
+    language: data.language || 'en',
     tags: data.tags || [],
     images: data.images || [],
     hasImage: !!data.hasImage || !!data.imageUrl,

@@ -10,6 +10,8 @@ import {
   Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info
 } from 'lucide-react'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
+import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock'
+import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
@@ -107,6 +109,7 @@ function Message({ type, text }: { type: 'ok' | 'err' | 'info'; text: string }) 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
   const { mode, resolvedMode, setMode } = useThemeMode()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { showSuccess, showWarning, showError } = useNotification()
 
@@ -907,12 +910,14 @@ export default function Settings() {
           {/* ===== APPEARANCE ===== */}
           {activeTab === 'appearance' && (
             <SettingsCard className="p-6 md:p-8">
-              <SectionTitle>Appearance</SectionTitle>
-              <SectionDesc>Customize how Vriddhi looks and feels. Preferences are saved locally and to your profile.</SectionDesc>
+              <SectionTitle>{t('settings.appearance')}</SectionTitle>
+              <SectionDesc>{t('settings.appearanceDesc')}</SectionDesc>
 
               <div className="space-y-6">
+                <LanguageSettingsBlock />
+
                 <div>
-                  <Label>Theme Mode</Label>
+                  <Label>{t('settings.themeMode')}</Label>
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { id: 'light', label: 'Light', icon: Sun, desc: 'Always light' },

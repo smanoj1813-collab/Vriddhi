@@ -43,6 +43,8 @@ import {
 } from '../../api/aiQuestionApi';
 import type { QuestionType, DifficultyLevel, GeneratedQuestion } from '../../types/questionBank';
 import { DEFAULT_SUBJECTS, DEFAULT_PROGRAMS } from '@/shared/constants/academicPrograms';
+import { SUPPORTED_LANGUAGES } from '@/shared/i18n/languages';
+import { useLanguage } from '@/shared/contexts/LanguageProvider';
 
 const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
   { value: 'mcq', label: 'Multiple Choice (MCQ)' },
@@ -77,6 +79,7 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
   branches = DEFAULT_PROGRAMS,
 }) => {
   const { user } = useAuth();
+  const { language: uiLanguage, t } = useLanguage();
   const {
     saving,
     error: hookError,
@@ -97,7 +100,7 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
   const [count, setCount] = useState(5);
   const [marks, setMarks] = useState(1);
   const [includeExplanation, setIncludeExplanation] = useState(true);
-  const [language, setLanguage] = useState('english');
+  const [language, setLanguage] = useState(uiLanguage);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
 
@@ -126,11 +129,11 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
 
   const handleGenerate = async () => {
     if (!effectiveSubject.trim()) {
-      showSnackbar('Please select or enter a subject', 'error');
+      showSnackbar(t('ai.selectSubject'), 'error');
       return;
     }
     if (!topic.trim()) {
-      showSnackbar('Please enter a topic', 'error');
+      showSnackbar(t('ai.enterTopic'), 'error');
       return;
     }
 
@@ -243,7 +246,7 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
       {/* ─── Configuration Panel ──────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SubjectIcon fontSize="small" /> Configuration
+          <SubjectIcon fontSize="small" /> {t('ai.configuration')}
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
@@ -390,10 +393,13 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
           {/* Language */}
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
-              <InputLabel>Language</InputLabel>
-              <Select value={language} onChange={(e) => setLanguage(e.target.value)} label="Language">
-                <MenuItem value="english">English</MenuItem>
-                <MenuItem value="hindi">Hindi</MenuItem>
+              <InputLabel>{t('ai.language')}</InputLabel>
+              <Select value={language} onChange={(e) => setLanguage(e.target.value)} label={t('ai.language')}>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <MenuItem key={lang.code} value={lang.code}>
+                    {lang.nativeName} · {lang.englishName}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -451,7 +457,7 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
             disabled={generating || !effectiveSubject.trim() || !topic.trim()}
             sx={{ minWidth: 200 }}
           >
-            {generating ? 'Generating...' : `Generate ${count} Questions`}
+            {generating ? t('ai.generating') : t('ai.generateCount', { count })}
           </Button>
           {generated.length > 0 && (
             <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleClearAll} color="secondary">

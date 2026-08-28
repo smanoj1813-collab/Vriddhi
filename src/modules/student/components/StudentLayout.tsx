@@ -3,21 +3,28 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
 import StudentSidebar from './StudentSidebar';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 
 function PageLoader() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-slate-500 font-medium">Loading content...</p>
+        <p className="text-xs text-slate-500 font-medium"><LoadingContentLabel /></p>
       </div>
     </div>
   );
 }
 
+function LoadingContentLabel() {
+  const { t } = useTranslation();
+  return <>{t('common.loadingContent')}</>;
+}
+
 export default function StudentLayout() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -36,7 +43,7 @@ export default function StudentLayout() {
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center text-slate-500 text-sm">
-        Redirecting to portal login…
+        {t('auth.redirectingLogin')}
       </div>
     );
   }
@@ -45,15 +52,15 @@ export default function StudentLayout() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-6">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md text-center shadow-md">
-          <p className="text-slate-800 dark:text-white font-bold text-lg mb-2">Student Access Required</p>
+          <p className="text-slate-800 dark:text-white font-bold text-lg mb-2">{t('auth.studentAccessRequired')}</p>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-            You are currently signed in as a <span className="font-semibold capitalize text-teal-600">{user.role}</span>.
+            {t('auth.signedInAs')} <span className="font-semibold capitalize text-teal-600">{user.role}</span>.
           </p>
           <button
             onClick={() => navigate('/admin/dashboard')}
             className="px-4 py-2 bg-teal-600 text-white rounded-xl text-sm font-medium hover:bg-teal-700 transition-colors"
           >
-            Go to Staff Dashboard
+            {t('auth.goStaffDashboard')}
           </button>
         </div>
       </div>

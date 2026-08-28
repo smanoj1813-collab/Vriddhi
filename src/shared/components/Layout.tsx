@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth, type UserRole } from '../../modules/auth/context/AuthContext';
 import { useThemeMode } from "../contexts/ThemeProvider";
+import { useTranslation } from "../contexts/LanguageProvider";
+import LanguageSwitcher from "./LanguageSwitcher";
+import type { TranslationKey } from "../i18n/translations";
 import {
   Box,
   Drawer,
@@ -73,6 +76,51 @@ interface NavItem {
   badge?: number;
   section?: string;
 }
+
+const NAV_LABEL_KEYS: Record<string, TranslationKey> = {
+  Dashboard: "nav.dashboard",
+  Colleges: "nav.colleges",
+  Universities: "nav.universities",
+  "Create College": "nav.createCollege",
+  Admins: "nav.admins",
+  "Create Admin": "nav.createAdmin",
+  "Manage Faculty": "nav.manageFaculty",
+  "Import Faculty": "nav.importFaculty",
+  "Manage Students": "nav.manageStudents",
+  "Import Students": "nav.importStudents",
+  Curriculum: "nav.curriculum",
+  Comparison: "nav.comparison",
+  Billing: "nav.billing",
+  "System Health": "nav.systemHealth",
+  Students: "nav.students",
+  "360° View": "nav.view360",
+  Attendance: "nav.attendance",
+  Assessments: "nav.assessments",
+  "Question Bank": "nav.questionBank",
+  "Question Review": "nav.questionReview",
+  "AI Question Generator": "nav.aiQuestionGenerator",
+  "Paper Generator": "nav.paperGenerator",
+  "Class Schedule": "nav.classSchedule",
+  "Fee Management": "nav.feeManagement",
+  Analytics: "nav.analytics",
+  Journey: "nav.journey",
+  Settings: "nav.settings",
+  "HOD Dashboard": "nav.hodDashboard",
+  "Department Students": "nav.departmentStudents",
+  "Mark Attendance": "nav.markAttendance",
+  "My Attendance": "nav.myAttendance",
+  "My Curriculum": "nav.myCurriculum",
+  Topics: "nav.topics",
+  Assignments: "nav.assignments",
+  "Upload Material": "nav.uploadMaterial",
+  "Generated Papers": "nav.generatedPapers",
+  "Student Analysis": "nav.studentAnalysis",
+  "Reschedule Class": "nav.rescheduleClass",
+  Announcements: "nav.announcements",
+  Calendar: "nav.calendar",
+  "Mentored Students": "nav.mentoredStudents",
+  "Attendance Overview": "nav.attendanceOverview",
+};
 
 const navItems: NavItem[] = [
   // ─── SUPER ADMIN ───
@@ -158,6 +206,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const { resolvedMode, toggleMode } = useThemeMode();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -253,7 +302,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 Vriddhi
               </span>
               <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wide uppercase">
-                Academic Cloud
+                {t("brand.subtitle")}
               </span>
             </div>
           )}
@@ -330,7 +379,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
-              <Tooltip title={collapsed ? item.label : ""} placement="right" arrow>
+              <Tooltip title={collapsed ? (NAV_LABEL_KEYS[item.label] ? t(NAV_LABEL_KEYS[item.label]) : item.label) : ""} placement="right" arrow>
                 <ListItemButton
                   onClick={() => { navigate(item.path); setMobileOpen(false); }}
                   selected={isActive}
@@ -380,7 +429,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             color: isActive ? "#ffffff" : "text.primary",
                           }}
                         >
-                          {item.label}
+                          {NAV_LABEL_KEYS[item.label] ? t(NAV_LABEL_KEYS[item.label]) : item.label}
                         </Typography>
                       }
                     />
@@ -414,7 +463,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItemText
               primary={
                 <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                  {resolvedMode === "dark" ? "Light Mode" : "Dark Mode"}
+                  {resolvedMode === "dark" ? t("common.lightMode") : t("common.darkMode")}
                 </Typography>
               }
             />
@@ -439,7 +488,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItemText
               primary={
                 <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                  Sign Out
+                  {t("common.signOut")}
                 </Typography>
               }
             />
@@ -483,11 +532,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Box sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5 }}>
             <div className="flex flex-col">
               <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                {currentRoleInfo.label} Portal
+                {t("role.portal", { role: currentRoleInfo.label })}
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
-                  {collegeName || "Vriddhi Academic Management"}
+                  {collegeName || t("brand.academicManagement")}
                 </span>
               </div>
             </div>
@@ -495,8 +544,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Right Header Utilities */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <LanguageSwitcher compact showLabel={false} className="hidden sm:inline-flex" />
             {/* Theme toggle */}
-            <Tooltip title={resolvedMode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+            <Tooltip title={resolvedMode === "dark" ? t("common.lightMode") : t("common.darkMode")}>
               <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1 }}>
                 {resolvedMode === "dark" ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
               </IconButton>
@@ -508,7 +558,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800 transition-colors"
             >
               <School fontSize="inherit" />
-              Student View
+              {t("nav.studentView")}
             </Link>
 
             {/* User Profile avatar menu */}
@@ -575,7 +625,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </MenuItem>
               <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
                 <ListItemIcon sx={{ color: "error.main" }}><ExitToApp fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Sign Out" />
+                <ListItemText primary={t("common.signOut")} />
               </MenuItem>
             </Menu>
           </Box>

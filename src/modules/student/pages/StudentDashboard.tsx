@@ -7,6 +7,7 @@ import {
   GraduationCap, Sparkles, User, CalendarDays
 } from 'lucide-react';
 import type { Assessment, ClassSchedule } from '../types/student';
+import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 
 // ─── Sub-components ─────────────────────────────────────────────────
 
@@ -129,6 +130,7 @@ function QuickAction({ to, icon: Icon, label, color }: {
 // ─── Main Component ─────────────────────────────────────────────────
 
 export default function StudentDashboard() {
+  const { t } = useTranslation();
   const { loading, profile, attendance, assessments, assignments, fees, schedule, notifications, unreadNotifications, todayDate } =
     useStudentData();
 
@@ -144,7 +146,7 @@ export default function StudentDashboard() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
-        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Dashboard...</p>
+        <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('common.loadingDashboard')}</p>
       </div>
     );
   }
@@ -161,10 +163,10 @@ export default function StudentDashboard() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold uppercase tracking-wider text-teal-100 mb-1">
                 <GraduationCap size={13} />
-                Student Portal
+                {t('student.studentPortal')}
               </div>
               <h1 className="text-xl md:text-3xl font-extrabold tracking-tight">
-                Welcome back, {profile?.name?.split(' ')[0] || 'Student'}!
+                {t('student.welcomeBack', { name: profile?.name?.split(' ')[0] || t('role.student') })}
               </h1>
               <p className="text-xs md:text-sm text-teal-100 font-medium mt-0.5">
                 {profile?.regNo || 'Reg. ID'} &bull; {profile?.course || 'Undergraduate'} &bull; {profile?.batch || '2024–2028'}
@@ -177,7 +179,7 @@ export default function StudentDashboard() {
               className="px-4 py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
             >
               <BookOpen size={16} />
-              Take Tests
+              {t('student.takeTests')}
             </Link>
           </div>
         </div>
@@ -187,30 +189,30 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
         <StatCard
           icon={Calendar}
-          label="Attendance Rate"
+          label={t('student.attendanceRate')}
           value={`${attendance?.percentage ?? 0}%`}
-          subtext={`${attendance?.presentClasses ?? 0}/${attendance?.totalClasses ?? 0} sessions attended`}
+          subtext={t('student.sessionsAttended', { present: attendance?.presentClasses ?? 0, total: attendance?.totalClasses ?? 0 })}
           color="teal"
         />
         <StatCard
           icon={BookOpen}
-          label="Active Tests"
+          label={t('student.activeTests')}
           value={String(assessments?.length ?? 0)}
-          subtext="Available assessments"
+          subtext={t('student.availableAssessmentsSub')}
           color="blue"
         />
         <StatCard
           icon={FileText}
-          label="Assignments"
+          label={t('student.assignments')}
           value={String(assignments?.length ?? 0)}
-          subtext="Pending submissions"
+          subtext={t('student.pendingSubmissions')}
           color="amber"
         />
         <StatCard
           icon={CreditCard}
-          label="Fee Balance"
+          label={t('student.feeBalance')}
           value={`₹${pendingFees.toLocaleString()}`}
-          subtext={pendingFees > 0 ? 'Pending payment' : 'Fully cleared'}
+          subtext={pendingFees > 0 ? t('student.pendingPayment') : t('student.fullyCleared')}
           color={pendingFees > 0 ? 'rose' : 'emerald'}
         />
       </div>
@@ -219,29 +221,29 @@ export default function StudentDashboard() {
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-teal-600" />
-          Quick Navigation
+          {t('student.quickNav')}
         </h2>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3">
-          <QuickAction to="/student/attendance" icon={Calendar} label="Attendance" color="teal" />
-          <QuickAction to="/student/assessments" icon={BookOpen} label="Assessments" color="blue" />
-          <QuickAction to="/student/assignments" icon={FileText} label="Assignments" color="amber" />
-          <QuickAction to="/student/grades" icon={TrendingUp} label="Grades & GPA" color="emerald" />
-          <QuickAction to="/student/materials" icon={Library} label="Study Notes" color="violet" />
-          <QuickAction to="/student/timetable" icon={Clock} label="Timetable" color="rose" />
-          <QuickAction to="/student/fees" icon={CreditCard} label="Fee Portal" color="teal" />
-          <QuickAction to="/student/library" icon={BookOpen} label="E-Library" color="blue" />
-          <QuickAction to="/student/events" icon={CalendarDays} label="Campus Events" color="amber" />
-          <QuickAction to="/student/notifications" icon={Bell} label="Alerts" color="violet" />
-          <QuickAction to="/student/settings" icon={Settings} label="Preferences" color="teal" />
+          <QuickAction to="/student/attendance" icon={Calendar} label={t('nav.attendance')} color="teal" />
+          <QuickAction to="/student/assessments" icon={BookOpen} label={t('nav.assessments')} color="blue" />
+          <QuickAction to="/student/assignments" icon={FileText} label={t('nav.assignments')} color="amber" />
+          <QuickAction to="/student/grades" icon={TrendingUp} label={t('student.gradesGpa')} color="emerald" />
+          <QuickAction to="/student/materials" icon={Library} label={t('student.studyNotes')} color="violet" />
+          <QuickAction to="/student/timetable" icon={Clock} label={t('nav.timetable')} color="rose" />
+          <QuickAction to="/student/fees" icon={CreditCard} label={t('student.feePortal')} color="teal" />
+          <QuickAction to="/student/library" icon={BookOpen} label={t('student.eLibrary')} color="blue" />
+          <QuickAction to="/student/events" icon={CalendarDays} label={t('student.campusEvents')} color="amber" />
+          <QuickAction to="/student/notifications" icon={Bell} label={t('student.alerts')} color="violet" />
+          <QuickAction to="/student/settings" icon={Settings} label={t('student.preferences')} color="teal" />
         </div>
       </div>
 
       {/* Main Tabs */}
       <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {[
-          { id: 'overview', label: 'Academic Overview' },
-          { id: 'schedule', label: "Today's Schedule" },
-          { id: 'notifications', label: `Notifications ${unreadNotifications > 0 ? `(${unreadNotifications})` : ''}` },
+          { id: 'overview', label: t('student.overview') },
+          { id: 'schedule', label: t('student.todaySchedule') },
+          { id: 'notifications', label: `${t('nav.notifications')}${unreadNotifications > 0 ? ` (${unreadNotifications})` : ''}` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -266,7 +268,7 @@ export default function StudentDashboard() {
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-teal-600" /> Available Assessments & Tests
+                  <BookOpen className="w-5 h-5 text-teal-600" /> {t('student.availableAssessments')}
                 </h2>
                 <Link to="/student/assessments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
                   View All <ChevronRight className="w-3.5 h-3.5" />
@@ -293,7 +295,7 @@ export default function StudentDashboard() {
                         to={`/student/test/${a.id}/instructions`}
                         className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white text-xs font-bold shadow-xs shrink-0"
                       >
-                        Start Test
+                        {t('student.startTest')}
                       </Link>
                     </div>
                   ))}
@@ -301,7 +303,7 @@ export default function StudentDashboard() {
               ) : (
                 <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No pending assessments</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t('student.noPendingAssessments')}</p>
                   <p className="text-xs text-slate-500 mt-0.5">You're all caught up with your online evaluations.</p>
                 </div>
               )}
@@ -311,7 +313,7 @@ export default function StudentDashboard() {
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-amber-600" /> Pending Assignments
+                  <FileText className="w-5 h-5 text-amber-600" /> {t('student.pendingAssignments')}
                 </h2>
                 <Link to="/student/assignments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
                   View All <ChevronRight className="w-3.5 h-3.5" />
@@ -343,7 +345,7 @@ export default function StudentDashboard() {
               ) : (
                 <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No pending assignments</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t('student.noPendingAssignments')}</p>
                   <p className="text-xs text-slate-500 mt-0.5">Great job! All assigned submissions are completed.</p>
                 </div>
               )}
@@ -355,7 +357,7 @@ export default function StudentDashboard() {
             {/* Fee Status Card */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <h3 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-base">
-                <CreditCard className="w-5 h-5 text-teal-600" /> Fee Summary
+                <CreditCard className="w-5 h-5 text-teal-600" /> {t('student.feeSummary')}
               </h3>
               <div className="space-y-3.5">
                 <div>
@@ -383,14 +385,14 @@ export default function StudentDashboard() {
                 to="/student/fees"
                 className="mt-5 block w-full py-2.5 rounded-xl text-center bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/50 dark:hover:bg-teal-900/50 text-teal-700 dark:text-teal-300 font-bold text-xs border border-teal-200/80 dark:border-teal-800/80 transition-colors"
               >
-                Go to Fee Portal →
+                {t('student.goFeePortal')}
               </Link>
             </div>
 
             {/* Recent Notifications */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <h3 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-base">
-                <Bell className="w-5 h-5 text-teal-600" /> Recent Alerts
+                <Bell className="w-5 h-5 text-teal-600" /> {t('student.recentAlerts')}
               </h3>
               <div className="space-y-2.5">
                 {notifications.slice(0, 3).map((n) => (

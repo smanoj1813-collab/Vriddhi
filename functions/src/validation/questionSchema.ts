@@ -56,7 +56,7 @@ const aiGenerateSchema = z.object({
   subject: z.string().min(1).max(200),
   topic: z.string().min(1).max(200),
   marks: z.number().min(0.5).max(100).default(1),
-  language: z.string().min(1).max(50).default('english'),
+  language: z.string().min(1).max(50).default('en'),
   chapter: z.string().optional(),
   unit: z.string().optional(),
   tags: z.array(z.string()).optional(),

@@ -5,6 +5,8 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/Firebase/config'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
+import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock'
+import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 
 type TabId = 'profile' | 'notifications' | 'security' | 'appearance'
 
@@ -41,6 +43,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 export default function FacultySettings() {
   const { user } = useAuth()
   const { resolvedMode, toggleMode, mode, setMode } = useThemeMode()
+  const { t } = useTranslation()
 
   const [activeTab, setActiveTab] = useState<TabId>('profile')
   const [loading, setLoading] = useState(true)

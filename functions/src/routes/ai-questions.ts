@@ -6,6 +6,7 @@ import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/t
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
+import { buildLanguagePromptBlock, getLanguageDefinition, normalizeLanguage } from '../services/languages'
 
 const WRITE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
 const MAX_SAVE_BATCH = 50
@@ -55,7 +56,7 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
       moduleId: config.moduleId || '',
       moduleName: config.moduleName || '',
       moduleNo: config.moduleNo || 0,
-      language: config.language || 'English',
+      language: normalizeLanguage(config.language),
       branch: config.branch || '',
       batch: config.batch || '',
       chapter: config.chapter || '',
@@ -407,13 +408,17 @@ function buildPrompt(config: any): string {
     ? `Topics: ${config.topics.join(', ')}`
     : ''
 
+  const lang = getLanguageDefinition(config.language)
+  const languageBlock = buildLanguagePromptBlock(config.language)
+
   return `Generate ${config.numQuestions} ${config.difficulty} ${aiType} questions for ${config.course} ${config.branch}, Subject: ${config.subject}, Topic: ${config.topic || config.topics?.[0] || ''}.
 ${moduleInfo}
 ${chapterUnitInfo}
 ${topicsInfo}
 ${learningOutcomesInfo}
 
-Language: ${config.language}
+${languageBlock}
+Output language: ${lang.promptName}
 Marks per question: ${config.marks}
 
 Respond ONLY with a JSON array of questions in this exact format:
@@ -498,6 +503,7 @@ function normalizeQuestion(q: any, config: any): any {
     moduleNo: config.moduleNo || 0,
     learningOutcomes: config.learningOutcomes || [],
     bloomLevel: q.bloomLevel || config.bloomLevel || '',
+    language: normalizeLanguage(config.language || q.language),
     status: 'active',
   }
 }

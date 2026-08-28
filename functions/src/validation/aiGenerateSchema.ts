@@ -28,7 +28,7 @@ export const aiGenerateSchema = z.object({
   moduleId: z.string().optional(),
   moduleName: z.string().optional(),
   moduleNo: z.number().optional(),
-  language: z.string().optional(),
+  language: z.enum(['en', 'hi', 'kn', 'ta', 'te', 'ml', 'english', 'hindi', 'kannada', 'tamil', 'telugu', 'malayalam', 'English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam']).optional(),
   tags: z.array(z.string()).optional(),
   provider: z.enum(['gemini', 'openai', 'deepseek']).optional(),
   collegeId: z.string().optional(),

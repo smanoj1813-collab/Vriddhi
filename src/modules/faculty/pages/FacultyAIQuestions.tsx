@@ -8,6 +8,8 @@ import {
 import { useAIQuestionGenerator } from '../../admin/hooks/useAIQuestionGenerator';
 import { useAuth } from '../../auth/context/AuthContext';
 import type { GeneratedQuestion, QuestionType, DifficultyLevel } from '../../admin/types/questionBank';
+import { SUPPORTED_LANGUAGES } from '@/shared/i18n/languages';
+import { useLanguage } from '@/shared/contexts/LanguageProvider';
 
 function blankQuestion(subject: string): GeneratedQuestion {
   return {
@@ -29,9 +31,11 @@ function blankQuestion(subject: string): GeneratedQuestion {
 
 export default function FacultyAIQuestions() {
   const { user } = useAuth();
+  const { language: uiLanguage, t } = useLanguage();
   const { generate, saveAll, generating, saving, error } = useAIQuestionGenerator();
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
+  const [language, setLanguage] = useState(uiLanguage);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [count, setCount] = useState(5);
   const [provider, setProvider] = useState<'gemini' | 'openai' | 'deepseek'>('gemini');
@@ -57,7 +61,7 @@ export default function FacultyAIQuestions() {
         difficulty,
         count,
         marks: 1,
-        language: 'English',
+        language,
         includeExplanation: true,
         batch: '',
         branch: '',
@@ -151,9 +155,9 @@ export default function FacultyAIQuestions() {
             <Sparkles size={22} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">AI Question Generator</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('ai.title')}</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Generate questions with AI, edit before saving, or add manually
+              {t('ai.facultySubtitle')}
             </p>
           </div>
         </div>
@@ -165,26 +169,37 @@ export default function FacultyAIQuestions() {
         <div className="glass-card p-6 lg:col-span-1">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Wand2 size={18} className="text-violet-400" />
-            Configuration
+            {t('ai.configuration')}
           </h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subject</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('ai.subject')}</label>
               <input type="text" value={subject} onChange={e => setSubject(e.target.value)}
                 placeholder="e.g. Financial Accounting" className="input-field w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Topic</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('ai.topic')}</label>
               <input type="text" value={topic} onChange={e => setTopic(e.target.value)}
                 placeholder="e.g. Double Entry Bookkeeping" className="input-field w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Difficulty</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('ai.difficulty')}</label>
               <select value={difficulty} onChange={e => setDifficulty(e.target.value as DifficultyLevel)} className="input-field w-full">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
+                <option value="easy">{t('ai.easy')}</option>
+                <option value="medium">{t('ai.medium')}</option>
+                <option value="hard">{t('ai.hard')}</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('ai.language')}</label>
+              <select value={language} onChange={e => setLanguage(e.target.value as typeof language)} className="input-field w-full">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.nativeName} · {lang.englishName}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1">{t('ai.languageHint')}</p>
             </div>
             {/* Provider selector — only visible to superadmin to avoid confusion, faculty auto-uses best available */}
             {user?.role === 'superadmin' && (
@@ -201,28 +216,28 @@ export default function FacultyAIQuestions() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Number of Questions</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('ai.count')}</label>
               <input type="number" min={1} max={20} value={count}
                 onChange={e => setCount(Number(e.target.value))} className="input-field w-full" />
             </div>
             <button onClick={generateQuestions} disabled={loading || !topic.trim()}
               className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-              {loading ? 'Generating...' : 'Generate Questions'}
+              {loading ? t('ai.generating') : t('ai.generate')}
             </button>
 
             {/* ─── Manual Add Button ─── */}
             <button onClick={() => { setShowManualForm(true); setManualQ(blankQuestion(subject)); }}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-violet-400/40 text-violet-400 hover:bg-violet-500/10 transition-colors text-sm font-medium">
               <Plus size={16} />
-              Add Question Manually
+              {t('ai.addManually')}
             </button>
 
             {questions.length > 0 && (
               <button onClick={saveGenerated} disabled={saving}
                 className="btn-primary w-full flex items-center justify-center gap-2 bg-teal-500 disabled:opacity-50">
                 <Save size={16} />
-                {saving ? 'Saving...' : `Save All (${questions.length}) to Bank`}
+                {saving ? t('ai.saving') : t('ai.saveAllToBank', { count: questions.length })}
               </button>
             )}
             {saveMessage && <p className="text-xs text-teal-400">{saveMessage}</p>}
@@ -347,8 +362,8 @@ export default function FacultyAIQuestions() {
             {questions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-500">
                 <AlertCircle size={32} className="mb-3 opacity-50" />
-                <p>No questions yet</p>
-                <p className="text-sm">Generate with AI or add manually</p>
+                <p>{t('ai.noQuestions')}</p>
+                <p className="text-sm">{t('ai.noQuestionsHint')}</p>
               </div>
             ) : (
               <div className="space-y-3">

@@ -43,6 +43,8 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Analytics & "View 360"** student insights, plus a superadmin multi-college comparison.
 - **Multi-college / multi-university** support managed at the superadmin level, including
   subscription billing and a system health monitor.
+- **South Indian language support** — Kannada, Tamil, Telugu, and Malayalam (plus English and
+  Hindi) for the UI and for AI question generation in native Unicode scripts.
 
 ## Roles
 
@@ -215,6 +217,13 @@ The backend is an Express app exported as a Firebase **v2 HTTPS function** named
 
 The API is protected by authentication middleware, rate limiting, and tier checks, with request
 bodies validated by Zod schemas in `functions/src/validation/`.
+
+AI generation accepts a `language` field (`en`, `hi`, `kn`, `ta`, `te`, `ml`, or the English
+names). Prompts instruct the model to write question text, options, and explanations in the
+chosen script while keeping JSON keys in English.
+
+Interface language is stored in `localStorage` (`vriddhi_language`) and can be changed from the
+header switcher or Settings → Appearance.
 
 ## AI / LLM providers
 
