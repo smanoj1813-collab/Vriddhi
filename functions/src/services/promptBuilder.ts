@@ -1,5 +1,7 @@
 // src/services/promptBuilder.ts
 
+import { buildLanguagePromptBlock, getLanguageDefinition } from './languages'
+
 export interface AIQuestionConfig {
   subject: string
   topic: string
@@ -68,8 +70,10 @@ const difficultyInstructions: Record<string, string> = {
 
 export function buildSystemPrompt(config: AIQuestionConfig): string {
   const { subject, topic, branch, course, semester, questionType, difficulty, marks, unit, numQuestions, language } = config
+  const languageBlock = buildLanguagePromptBlock(language)
+  const lang = getLanguageDefinition(language)
 
-  return `You are an expert academic question generator for Indian higher education.
+  return `You are an expert academic question generator for Indian higher education, including South Indian universities and colleges.
 
 ## CONTEXT
 - Course: ${course} (${branch})
@@ -83,6 +87,7 @@ ${marks ? `- Marks: ${marks}` : ''}
 
 ## ROLE
 Generate high-quality, curriculum-aligned academic questions suitable for ${course} level students in India.
+Target language: ${lang.promptName}.
 
 ## DIFFICULTY RULES
 ${difficultyInstructions[difficulty] || difficultyInstructions.medium}
@@ -96,7 +101,7 @@ ${typeInstructions[questionType] || typeInstructions.mcq}
 - No trick questions or misleading wording
 - Use realistic values and scenarios
 - Language must be academic and precise
-${language === 'hindi' ? '- Generate questions in Hindi language' : ''}
+${languageBlock}
 
 ## OUTPUT FORMAT (STRICT JSON)
 Respond ONLY with a valid JSON array. No markdown, no explanations outside JSON.

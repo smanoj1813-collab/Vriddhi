@@ -61,7 +61,7 @@ const lightTheme = createTheme({
     divider: '#e2e8f0',
   },
   typography: {
-    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: 'var(--vriddhi-font-family, "Inter", "Noto Sans", "Noto Sans Kannada", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Devanagari", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
   },
   shape: {
     borderRadius: 12,

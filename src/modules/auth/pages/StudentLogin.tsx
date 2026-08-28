@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { School, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from '../../../shared/contexts/LanguageProvider';
+import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 
 export default function StudentLogin() {
   const [email, setEmail] = useState('');
@@ -12,6 +14,7 @@ export default function StudentLogin() {
 
   const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,30 +24,33 @@ export default function StudentLogin() {
       const appUser = await login(email, password);
       if (appUser.role !== 'student') {
         await logout();
-        setLocalError('This account does not have student access. Please use Staff Login instead.');
+        setLocalError(t('auth.notStudent'));
         return;
       }
       navigate('/student/dashboard', { replace: true });
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('ACCOUNT_NOT_FOUND')) {
-        setLocalError('Student account not found in system. Contact your administrator.');
+        setLocalError(t('auth.studentNotFound'));
       } else if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
-        setLocalError('Invalid email address or password.');
+        setLocalError(t('auth.invalidCredentials'));
       } else if (msg.includes('auth/user-not-found')) {
-        setLocalError('No account found with this email.');
+        setLocalError(t('auth.noAccountEmail'));
       } else if (msg.includes('auth/invalid-email')) {
-        setLocalError('Please enter a valid email address.');
+        setLocalError(t('auth.invalidEmail'));
       } else if (msg.includes('auth/too-many-requests')) {
-        setLocalError('Too many failed attempts. Please try again later.');
+        setLocalError(t('auth.tooManyAttempts'));
       } else {
-        setLocalError(msg || 'Login failed. Please try again.');
+        setLocalError(msg || t('auth.loginFailed'));
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-4 transition-colors duration-200">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher compact showLabel={false} />
+      </div>
       <div className="w-full max-w-md">
         {/* Brand Header */}
         <motion.div
@@ -56,10 +62,10 @@ export default function StudentLogin() {
             <School size={34} className="text-white" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">
-            Student Portal
+            {t('auth.studentPortal')}
           </h1>
           <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-1 text-sm font-medium">
-            Sign in to view classes, tests, attendance & grades
+            {t('auth.studentSubtitle')}
           </p>
         </motion.div>
 
@@ -77,21 +83,21 @@ export default function StudentLogin() {
               className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white transition-all flex items-center justify-center gap-1.5"
             >
               <Users size={14} />
-              Staff & Faculty
+              {t('auth.staffFaculty')}
             </Link>
             <button
               type="button"
               className="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-sm flex items-center justify-center gap-1.5"
             >
               <BookOpen size={14} />
-              Student Portal
+              {t('auth.studentPortal')}
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
-                Student Email / Reg. Email
+                {t('auth.studentEmail')}
               </label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -110,10 +116,10 @@ export default function StudentLogin() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300">
-                  Password
+                  {t('auth.password')}
                 </label>
                 <a href="#" className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium">
-                  Forgot?
+                  {t('auth.forgot')}
                 </a>
               </div>
               <div className="relative">
@@ -165,9 +171,9 @@ export default function StudentLogin() {
           {/* Bottom link */}
           <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
             <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
-              Need to access the faculty dashboard?{' '}
+              {t('auth.staffHint')}{' '}
               <Link to="/login" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">
-                Staff Login →
+                {t('auth.staffLoginLink')}
               </Link>
             </p>
           </div>

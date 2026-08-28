@@ -53,6 +53,8 @@ export interface Question {
   linkedPaperIds?: string[];
   usageCount?: number;
   bloomLevel?: string;
+  /** BCP-47-style app language code: en | hi | kn | ta | te | ml */
+  language?: string;
   createdBy: string;
   createdByName?: string;
   collegeId: string;
@@ -98,6 +100,7 @@ export interface GeneratedQuestion {
   examYear?: string;
   examName?: string;
   bloomLevel?: string;
+  language?: string;
   generatedAt?: string;
   createdBy?: string;
   collegeId?: string;

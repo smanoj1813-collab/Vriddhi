@@ -51,6 +51,7 @@
   
   body {
     @apply bg-slate-50 text-slate-800 font-sans antialiased dark:bg-[#0b0f19] dark:text-slate-100;
+    font-family: var(--vriddhi-font-family, Inter, "Noto Sans", "Noto Sans Kannada", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Devanagari", system-ui, sans-serif);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 

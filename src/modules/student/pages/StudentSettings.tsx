@@ -6,6 +6,8 @@ import { auth, db } from '@/Firebase/config';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
+import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock';
+import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 
 type TabId = 'profile' | 'notifications' | 'privacy' | 'appearance';
 
@@ -31,6 +33,7 @@ export default function StudentSettings() {
   const { user } = useAuth();
   const { profile, loading, refresh } = useStudentProfile(user?.uid);
   const { resolvedMode, toggleMode } = useThemeMode();
+  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [name, setName] = useState('');
@@ -470,9 +473,10 @@ export default function StudentSettings() {
           {activeTab === 'appearance' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white pb-1">Interface Appearance</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Customize how Vriddhi looks for your study sessions.</p>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white pb-1">{t('settings.appearance')}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t('settings.appearanceDesc')}</p>
               </div>
+              <LanguageSettingsBlock />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">

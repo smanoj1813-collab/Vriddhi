@@ -3,6 +3,9 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentData } from '../hooks/useStudentData';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
+import { useTranslation } from '../../../shared/contexts/LanguageProvider';
+import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
+import type { TranslationKey } from '../../../shared/i18n';
 import {
   LayoutDashboard,
   Calendar,
@@ -49,12 +52,28 @@ const navItems: NavItem[] = [
   { id: 'settings', label: 'Settings', path: '/student/settings', icon: Settings },
 ];
 
+const STUDENT_NAV_KEYS: Record<string, TranslationKey> = {
+  dashboard: 'nav.dashboard',
+  attendance: 'nav.attendance',
+  assessments: 'nav.assessments',
+  assignments: 'nav.assignments',
+  grades: 'nav.grades',
+  materials: 'nav.materials',
+  timetable: 'nav.timetable',
+  fees: 'nav.fees',
+  library: 'nav.library',
+  events: 'nav.events',
+  notifications: 'nav.notifications',
+  settings: 'nav.settings',
+};
+
 export default function StudentSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { profile, unreadNotifications } = useStudentData();
   const { resolvedMode, toggleMode } = useThemeMode();
+  const { t } = useTranslation();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -91,7 +110,7 @@ export default function StudentSidebar() {
           </div>
           <div>
             <h1 className="text-slate-900 dark:text-white font-bold text-sm leading-tight">Vriddhi</h1>
-            <p className="text-teal-600 dark:text-teal-400 text-[10px] font-semibold uppercase tracking-wider">Student Portal</p>
+            <p className="text-teal-600 dark:text-teal-400 text-[10px] font-semibold uppercase tracking-wider">{t('nav.studentPortal')}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -138,7 +157,7 @@ export default function StudentSidebar() {
                   Vriddhi
                 </span>
                 <span className="text-[10px] font-semibold text-teal-600 dark:text-teal-400 tracking-wider uppercase">
-                  Student Portal
+                  {t('nav.studentPortal')}
                 </span>
               </div>
             )}
@@ -189,12 +208,13 @@ export default function StudentSidebar() {
             const active = isActive(item.path);
             const Icon = item.icon;
             const badge = item.id === 'notifications' ? unreadNotifications : undefined;
+            const translatedLabel = STUDENT_NAV_KEYS[item.id] ? t(STUDENT_NAV_KEYS[item.id]) : item.label;
             return (
               <Link
                 key={item.id}
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
-                title={isCollapsed ? item.label : undefined}
+                title={isCollapsed ? translatedLabel : undefined}
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-150 group
                   ${active
                     ? 'bg-teal-600 text-white font-semibold shadow-sm shadow-teal-600/20'
@@ -212,7 +232,7 @@ export default function StudentSidebar() {
                   )}
                 </div>
                 {!isCollapsed && (
-                  <span className="truncate text-[13px]">{item.label}</span>
+                  <span className="truncate text-[13px]">{translatedLabel}</span>
                 )}
               </Link>
             );
@@ -221,6 +241,11 @@ export default function StudentSidebar() {
 
         {/* Bottom Controls */}
         <div className="p-2 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-1 bg-white dark:bg-[#131b2e]">
+          {!isCollapsed && (
+            <div className="px-1 pb-1">
+              <LanguageSwitcher compact showLabel={false} className="w-full" />
+            </div>
+          )}
           {/* Theme Toggle */}
           <button
             onClick={toggleMode}
@@ -229,7 +254,7 @@ export default function StudentSidebar() {
             `}
           >
             {resolvedMode === 'dark' ? <Sun className="w-4 h-4 shrink-0 text-amber-400" /> : <Moon className="w-4 h-4 shrink-0 text-slate-500" />}
-            {!isCollapsed && <span>{resolvedMode === 'dark' ? 'Light Theme' : 'Dark Theme'}</span>}
+            {!isCollapsed && <span>{resolvedMode === 'dark' ? t('common.lightMode') : t('common.darkMode')}</span>}
           </button>
 
           {/* Logout */}
@@ -240,7 +265,7 @@ export default function StudentSidebar() {
             `}
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            {!isCollapsed && <span>Sign Out</span>}
+            {!isCollapsed && <span>{t('common.signOut')}</span>}
           </button>
         </div>
       </aside>
