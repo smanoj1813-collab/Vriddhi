@@ -4,7 +4,7 @@ import { useAuth, type UserRole } from '../../modules/auth/context/AuthContext';
 import { useThemeMode } from "../contexts/ThemeProvider";
 import { useTranslation } from "../contexts/LanguageProvider";
 import LanguageSwitcher from "./LanguageSwitcher";
-import type { TranslationKey } from "../i18n/translations";
+import type { TranslationKey } from "../i18n";
 import {
   Box,
   Drawer,
@@ -264,12 +264,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "superadmin": return { bg: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300", label: "Super Admin" };
-      case "admin": return { bg: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300", label: "Administrator" };
-      case "principal": return { bg: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", label: "Principal" };
-      case "hod": return { bg: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300", label: "Head of Dept" };
-      case "mentor": return { bg: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", label: "Mentor" };
-      case "faculty": return { bg: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", label: "Faculty" };
+      case "superadmin": return { bg: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300", label: t("role.superadmin") };
+      case "admin": return { bg: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300", label: t("role.admin") };
+      case "principal": return { bg: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", label: t("role.principal") };
+      case "hod": return { bg: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300", label: t("role.hod") };
+      case "mentor": return { bg: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", label: t("role.mentor") };
+      case "faculty": return { bg: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", label: t("role.faculty") };
       default: return { bg: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200", label: role };
     }
   };

@@ -1,4 +1,4 @@
-import { SUPPORTED_LANGUAGES } from '../i18n/languages';
+import { SUPPORTED_LANGUAGES } from '../i18n';
 import { useLanguage } from '../contexts/LanguageProvider';
 
 export default function LanguageSettingsBlock() {

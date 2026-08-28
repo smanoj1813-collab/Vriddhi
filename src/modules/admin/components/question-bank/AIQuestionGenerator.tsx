@@ -43,7 +43,7 @@ import {
 } from '../../api/aiQuestionApi';
 import type { QuestionType, DifficultyLevel, GeneratedQuestion } from '../../types/questionBank';
 import { DEFAULT_SUBJECTS, DEFAULT_PROGRAMS } from '@/shared/constants/academicPrograms';
-import { SUPPORTED_LANGUAGES } from '@/shared/i18n/languages';
+import { SUPPORTED_LANGUAGES } from '@/shared/i18n';
 import { useLanguage } from '@/shared/contexts/LanguageProvider';
 
 const QUESTION_TYPES: { value: QuestionType; label: string }[] = [

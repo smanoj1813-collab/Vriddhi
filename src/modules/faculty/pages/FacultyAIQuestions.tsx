@@ -8,7 +8,7 @@ import {
 import { useAIQuestionGenerator } from '../../admin/hooks/useAIQuestionGenerator';
 import { useAuth } from '../../auth/context/AuthContext';
 import type { GeneratedQuestion, QuestionType, DifficultyLevel } from '../../admin/types/questionBank';
-import { SUPPORTED_LANGUAGES } from '@/shared/i18n/languages';
+import { SUPPORTED_LANGUAGES } from '@/shared/i18n';
 import { useLanguage } from '@/shared/contexts/LanguageProvider';
 
 function blankQuestion(subject: string): GeneratedQuestion {

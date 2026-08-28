@@ -6,10 +6,11 @@ import {
   getLanguageDefinition,
   isAppLanguage,
   normalizeLanguage,
+  translate,
   type AppLanguage,
   type LanguageDefinition,
-} from '../i18n/languages';
-import { translate, type TranslationKey } from '../i18n/translations';
+  type TranslationKey,
+} from '../i18n';
 
 interface LanguageContextValue {
   language: AppLanguage;

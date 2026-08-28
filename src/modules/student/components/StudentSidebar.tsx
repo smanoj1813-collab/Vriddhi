@@ -5,7 +5,7 @@ import { useStudentData } from '../hooks/useStudentData';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
-import type { TranslationKey } from '../../../shared/i18n/translations';
+import type { TranslationKey } from '../../../shared/i18n';
 import {
   LayoutDashboard,
   Calendar,
