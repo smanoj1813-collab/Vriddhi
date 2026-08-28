@@ -378,9 +378,31 @@ router.get('/history', verifyAuth, async (req: AuthenticatedRequest, res) => {
   }
 })
 
+function getLanguageInstruction(langValue: string): string {
+  const l = (langValue || 'english').toLowerCase();
+  const map: Record<string, string> = {
+    english: 'Generate questions in English language.',
+    hindi: 'Generate questions in Hindi language (हिन्दी). The question text, options, and explanations should all be in Hindi. Keep technical terms in English with Hindi explanation if needed.',
+    kannada: 'Generate questions in Kannada language (ಕನ್ನಡ). The question text, options, and explanations should all be in Kannada. Keep technical terms in English with Kannada explanation if needed. Use proper Kannada academic style.',
+    tamil: 'Generate questions in Tamil language (தமிழ்). The question text, options, and explanations should all be in Tamil. Keep technical terms in English with Tamil explanation if needed.',
+    telugu: 'Generate questions in Telugu language (తెలుగు). The question text, options, and explanations should all be in Telugu.',
+    malayalam: 'Generate questions in Malayalam language (മലയാളം). The question text, options, and explanations should all be in Malayalam.',
+    marathi: 'Generate questions in Marathi language (मराठी). The question text, options, and explanations should all be in Marathi.',
+    bengali: 'Generate questions in Bengali language (বাংলা). The question text, options, and explanations should all be in Bengali.',
+    gujarati: 'Generate questions in Gujarati language (ગુજરાતી). The question text, options, and explanations should all be in Gujarati.',
+    punjabi: 'Generate questions in Punjabi language (ਪੰਜਾਬੀ). The question text, options, and explanations should all be in Punjabi.',
+    urdu: 'Generate questions in Urdu language (اردو). The question text, options, and explanations should all be in Urdu.',
+    odia: 'Generate questions in Odia language (ଓଡ଼ିଆ). The question text, options, and explanations should all be in Odia.',
+    assamese: 'Generate questions in Assamese language (অসমীয়া). The question text, options, and explanations should all be in Assamese.',
+    sanskrit: 'Generate questions in Sanskrit language (संस्कृतम्). The question text, options, and explanations should all be in Sanskrit.',
+  };
+  return map[l] || map['english'];
+}
+
 function buildPrompt(config: any): string {
   // Map to prompt-friendly type
   const aiType = config.questionType || 'mcq'
+  const languageInstruction = getLanguageInstruction(config.language);
 
   const optionFormat =
     aiType === 'mcq'
@@ -407,13 +429,14 @@ function buildPrompt(config: any): string {
     ? `Topics: ${config.topics.join(', ')}`
     : ''
 
-  return `Generate ${config.numQuestions} ${config.difficulty} ${aiType} questions for ${config.course} ${config.branch}, Subject: ${config.subject}, Topic: ${config.topic || config.topics?.[0] || ''}.
+  return `${languageInstruction}
+Generate ${config.numQuestions} ${config.difficulty} ${aiType} questions for ${config.course} ${config.branch}, Subject: ${config.subject}, Topic: ${config.topic || config.topics?.[0] || ''}.
 ${moduleInfo}
 ${chapterUnitInfo}
 ${topicsInfo}
 ${learningOutcomesInfo}
 
-Language: ${config.language}
+Original Language Field: ${config.language}
 Marks per question: ${config.marks}
 
 Respond ONLY with a JSON array of questions in this exact format:

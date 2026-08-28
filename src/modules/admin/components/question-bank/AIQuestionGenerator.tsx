@@ -43,6 +43,7 @@ import {
 } from '../../api/aiQuestionApi';
 import type { QuestionType, DifficultyLevel, GeneratedQuestion } from '../../types/questionBank';
 import { DEFAULT_SUBJECTS, DEFAULT_PROGRAMS } from '@/shared/constants/academicPrograms';
+import { SUPPORTED_LANGUAGES } from '@/shared/constants/languages';
 
 const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
   { value: 'mcq', label: 'Multiple Choice (MCQ)' },
@@ -387,13 +388,16 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
             />
           </Grid>
 
-          {/* Language */}
+          {/* Language — now with all regional languages */}
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
               <InputLabel>Language</InputLabel>
               <Select value={language} onChange={(e) => setLanguage(e.target.value)} label="Language">
-                <MenuItem value="english">English</MenuItem>
-                <MenuItem value="hindi">Hindi</MenuItem>
+                {SUPPORTED_LANGUAGES.map(l => (
+                  <MenuItem key={l.value} value={l.value}>
+                    {l.flag} {l.label} — {l.nativeLabel}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAIQuestionGenerator } from '../../admin/hooks/useAIQuestionGenerator';
 import { useAuth } from '../../auth/context/AuthContext';
+import { SUPPORTED_LANGUAGES } from '@/shared/constants/languages';
 import type { GeneratedQuestion, QuestionType, DifficultyLevel } from '../../admin/types/questionBank';
 
 function blankQuestion(subject: string): GeneratedQuestion {
@@ -35,6 +36,7 @@ export default function FacultyAIQuestions() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [count, setCount] = useState(5);
   const [provider, setProvider] = useState<'gemini' | 'openai' | 'deepseek'>('gemini');
+  const [language, setLanguage] = useState('english');
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
@@ -57,7 +59,7 @@ export default function FacultyAIQuestions() {
         difficulty,
         count,
         marks: 1,
-        language: 'English',
+        language,
         includeExplanation: true,
         batch: '',
         branch: '',
@@ -185,6 +187,19 @@ export default function FacultyAIQuestions() {
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Question Language</label>
+              <select value={language} onChange={e => setLanguage(e.target.value)} className="input-field w-full">
+                {SUPPORTED_LANGUAGES.map(l => (
+                  <option key={l.value} value={l.value}>
+                    {l.flag} {l.label} — {l.nativeLabel}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1">
+                AI will generate questions in selected language
+              </p>
             </div>
             {/* Provider selector — only visible to superadmin to avoid confusion, faculty auto-uses best available */}
             {user?.role === 'superadmin' && (

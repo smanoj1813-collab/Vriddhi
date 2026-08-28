@@ -61,6 +61,7 @@ import {
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 const DRAWER_EXPANDED_WIDTH = 260;
 const DRAWER_COLLAPSED_WIDTH = 76;
@@ -495,6 +496,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Right Header Utilities */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* Language switcher — Kannada, Hindi, Tamil etc */}
+            <LanguageSwitcher />
             {/* Theme toggle */}
             <Tooltip title={resolvedMode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
               <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1 }}>

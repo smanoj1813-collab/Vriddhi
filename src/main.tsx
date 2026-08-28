@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import { AuthProvider } from './modules/auth/context/AuthContext'
 import { AppThemeProvider } from './shared/contexts/ThemeProvider'
+import { LanguageProvider } from './shared/contexts/LanguageProvider'
 import { NotificationProvider } from './shared/providers/NotificationProvider'
 import './index.css'
 
@@ -25,9 +26,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>                       {/* ← ONLY AuthProvider in entire app */}
           <AppThemeProvider>
-            <NotificationProvider>
-              <App />
-            </NotificationProvider>
+            <LanguageProvider>
+              <NotificationProvider>
+                <App />
+              </NotificationProvider>
+            </LanguageProvider>
           </AppThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
