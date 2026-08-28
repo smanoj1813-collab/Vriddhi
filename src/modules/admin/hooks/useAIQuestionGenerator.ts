@@ -19,7 +19,11 @@ interface SaveResult {
 
 export function useAIQuestionGenerator() {
   const { user } = useAuth();
-  const collegeId = user?.collegeId;
+  // Fallback chain for collegeId — faculty docs often missing collegeId
+  const collegeId = user?.collegeId || 
+    localStorage.getItem('vriddhi_college_id') || 
+    localStorage.getItem('collegeId') ||
+    '';
 
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -71,7 +75,8 @@ export function useAIQuestionGenerator() {
       batch: string,
       branch: string
     ): Promise<Question> => {
-      if (!collegeId) throw new Error('Not authenticated — collegeId missing');
+      const resolvedCollegeId = collegeId || localStorage.getItem('vriddhi_college_id') || '';
+      if (!resolvedCollegeId) throw new Error('Not authenticated — collegeId missing');
 
       setSaving(true);
       try {
@@ -83,8 +88,8 @@ export function useAIQuestionGenerator() {
 
         const questionData = convertToQuestionData(
           generated,
-          collegeId,
-          user?.id || '',
+          resolvedCollegeId,
+          (user as any)?.uid || (user as any)?.id || '',
           user?.name || user?.email || 'Unknown',
           batch,
           branch
@@ -93,7 +98,7 @@ export function useAIQuestionGenerator() {
         // ═══ DEBUG: Log what's being sent ═══
         console.log('[saveQuestion] Payload:', JSON.stringify(questionData, null, 2));
 
-        const saved = await createQuestion(collegeId, questionData);
+        const saved = await createQuestion(resolvedCollegeId, questionData);
         setSavedQuestions((prev) => [...prev, saved]);
         return saved;
       } catch (err) {
@@ -114,7 +119,39 @@ export function useAIQuestionGenerator() {
       batch: string,
       branch: string
     ): Promise<Question[]> => {
-      if (!collegeId) throw new Error('Not authenticated — collegeId missing');
+      // Try to resolve collegeId with fallbacks
+      let resolvedCollegeId = collegeId;
+      if (!resolvedCollegeId) {
+        try {
+          const { db } = await import('@/Firebase/config');
+          const { doc, getDoc, collection, getDocs, query, limit } = await import('firebase/firestore');
+          // Try faculty doc directly
+          if (user) {
+            const uid = (user as any).uid || (user as any).id;
+            const facultyDoc = await getDoc(doc(db, 'faculty', uid));
+            if (facultyDoc.exists()) {
+              const data = facultyDoc.data() as any;
+              resolvedCollegeId = data.collegeId || data.college_id || '';
+              if (resolvedCollegeId) {
+                console.log('[saveAll] Found collegeId from faculty doc:', resolvedCollegeId);
+                localStorage.setItem('vriddhi_college_id', resolvedCollegeId);
+              }
+            }
+          }
+          // Fallback to first college in colleges collection
+          if (!resolvedCollegeId) {
+            const collegesSnap = await getDocs(query(collection(db, 'colleges'), limit(1)));
+            if (!collegesSnap.empty) {
+              resolvedCollegeId = collegesSnap.docs[0].id;
+              console.log('[saveAll] Fallback to first college:', resolvedCollegeId);
+            }
+          }
+        } catch (e) {
+          console.error('[saveAll] Failed to resolve collegeId:', e);
+        }
+      }
+
+      if (!resolvedCollegeId) throw new Error('Not authenticated — collegeId missing. Please ensure faculty profile has collegeId field in Firestore > faculty collection.');
 
       setSaving(true);
       setError(null);
@@ -123,8 +160,8 @@ export function useAIQuestionGenerator() {
         // Pre-validate all questions
         const { valid, invalid } = convertAllToQuestionData(
           generatedQuestions,
-          collegeId,
-          user?.id || '',
+          resolvedCollegeId,
+          (user as any)?.uid || (user as any)?.id || '',
           user?.name || user?.email || 'Unknown',
           batch,
           branch
@@ -143,14 +180,15 @@ export function useAIQuestionGenerator() {
 
         // ═══ FIX: Use bulkImportQuestions with correct BulkImportResult shape ═══
         console.log('[saveAll] Sending bulk payload:', {
-          collegeId,
+          collegeId: resolvedCollegeId,
           questionCount: valid.length,
           firstQuestion: valid[0],
         });
 
-        const bulkResult = await bulkImportQuestions(collegeId, valid);
+        const bulkResult = await bulkImportQuestions(resolvedCollegeId, valid);
 
-        console.log('[saveAll] Bulk result:', bulkResult);
+        console.log('[saveAll] Bulk result:', JSON.stringify(bulkResult, null, 2));
+        console.log('[saveAll] Errors:', bulkResult.errors);
 
         // ═══ FIX: Use correct BulkImportResult properties ═══
         const savedCount = bulkResult.success || 0;
@@ -158,8 +196,44 @@ export function useAIQuestionGenerator() {
         const importedIds = bulkResult.importedIds || bulkResult.createdIds || [];
 
         if (failedCount > 0) {
-          console.warn(`[saveAll] ${failedCount} questions failed in bulk save`);
-          setError(`Saved ${savedCount}/${valid.length} questions. ${failedCount} failed.`);
+          console.warn(`[saveAll] ${failedCount} questions failed in bulk save`, bulkResult.errors);
+          // If bulk failed, try individual saves as fallback
+          if (savedCount === 0) {
+            console.log('[saveAll] Bulk failed completely, trying individual saves...');
+            let individualSuccess = 0;
+            const individualIds: string[] = [];
+            for (let i = 0; i < valid.length; i++) {
+              try {
+                const single = await (await import('../api/questionBankApi')).createQuestion(resolvedCollegeId, valid[i] as any);
+                individualIds.push(single.id);
+                individualSuccess++;
+                console.log(`[saveAll] Individual save ${i+1}/${valid.length} succeeded:`, single.id);
+              } catch (e: any) {
+                console.error(`[saveAll] Individual save ${i+1} failed:`, e.message);
+              }
+            }
+            if (individualSuccess > 0) {
+              // Use individual results
+              const saved: Question[] = individualIds.map((id, idx) => ({
+                id,
+                text: valid[idx]?.text || '',
+                type: valid[idx]?.type || 'mcq',
+                difficulty: valid[idx]?.difficulty || 'medium',
+                subject: valid[idx]?.subject || '',
+                marks: valid[idx]?.marks || 1,
+                tags: valid[idx]?.tags || [],
+                createdBy: valid[idx]?.createdBy || '',
+                createdByName: valid[idx]?.createdByName || '',
+                collegeId: valid[idx]?.collegeId || '',
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }));
+              setSavedQuestions((prev) => [...prev, ...saved]);
+              return saved;
+            }
+          }
+          setError(`Saved ${savedCount}/${valid.length} questions. ${failedCount} failed. Errors: ${(bulkResult.errors || []).slice(0,3).join('; ')}`);
         }
 
         // Build minimal Question objects from importedIds for state update

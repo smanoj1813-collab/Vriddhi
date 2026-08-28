@@ -50,21 +50,8 @@ export const providerCosts = {
 export const TIER_CONFIG = {
   basic: {
     name: 'Basic',
-    dailyQuestionLimit: 10,
-    providers: ['gemini'] as const,
-    features: {
-      mcqOnly: true,
-      manualTopic: true,
-      uploadMaterial: false,
-      topicSearch: false,
-      curriculumRoadmap: false,
-      examPattern: false,
-    },
-  },
-  premium: {
-    name: 'Premium',
     dailyQuestionLimit: 100,
-    providers: ['gemini', 'deepseek', 'openai'] as const,
+    providers: ['gemini', 'openai', 'deepseek'] as const,
     features: {
       mcqOnly: false,
       manualTopic: true,
@@ -74,9 +61,22 @@ export const TIER_CONFIG = {
       examPattern: false,
     },
   },
+  premium: {
+    name: 'Premium',
+    dailyQuestionLimit: 500,
+    providers: ['gemini', 'deepseek', 'openai'] as const,
+    features: {
+      mcqOnly: false,
+      manualTopic: true,
+      uploadMaterial: true,
+      topicSearch: true,
+      curriculumRoadmap: true,
+      examPattern: false,
+    },
+  },
   advanced: {
     name: 'Advanced',
-    dailyQuestionLimit: 500,
+    dailyQuestionLimit: 1000,
     providers: ['gemini', 'deepseek', 'openai'] as const,
     features: {
       mcqOnly: false,

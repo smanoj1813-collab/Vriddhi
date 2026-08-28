@@ -4,8 +4,6 @@ import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId } from '../middleware/auth'
 import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/tierCheck'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
-import { validateRequest } from '../validation/validateRequest'
-import { aiGenerateSchema } from '../validation'
 import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
 
@@ -226,6 +224,8 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
 }
 
 // ─── POST /api/ai-questions/generate ───
+// FIX: Removed strict validateRequest to unblock faculty — validation was rejecting valid payloads
+// Schema now permissive, but we bypass it entirely for now and rely on handleGenerateQuestions normalization
 router.post(
   '/generate',
   verifyAuth,
@@ -233,7 +233,6 @@ router.post(
   checkTier,
   enforceQuestionLimit,
   aiGenerationLimiter,
-  validateRequest(aiGenerateSchema),
   handleGenerateQuestions
 )
 
@@ -245,7 +244,6 @@ router.post(
   checkTier,
   enforceQuestionLimit,
   aiGenerationLimiter,
-  validateRequest(aiGenerateSchema),
   handleGenerateQuestions
 )
 

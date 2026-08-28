@@ -48,8 +48,19 @@ import {
   type DifficultyCount,
 } from '../../admin/types/universalQuestionBank';
 
+
 const QUESTIONS_COLLECTION = 'questions';
 const PAPERS_COLLECTION = 'papers';
+
+// Helper to strip undefined values — Firestore rejects undefined
+function cleanUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
+  const cleaned: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) cleaned[k] = v;
+  }
+  return cleaned as Partial<T>;
+}
+
 
 // ==================== BATCH / BRANCH SUPPORT ====================
 
@@ -140,8 +151,69 @@ export const getQuestions = async (
   }
   constraints.push(limit(pageSize));
 
-  const q = query(collection(db, QUESTIONS_COLLECTION), ...constraints);
-  const snapshot = await getDocs(q);
+  let snapshot;
+  try {
+    const q = query(collection(db, QUESTIONS_COLLECTION), ...constraints);
+    snapshot = await getDocs(q);
+  } catch (err: any) {
+    if (err?.message?.includes('requires an index') || err?.code === 'failed-precondition') {
+      console.warn('[getQuestions] Index missing/building, falling back to simple collegeId query:', err.message);
+      const fallbackQ = query(collection(db, QUESTIONS_COLLECTION), where('collegeId', '==', collegeId), limit(100));
+      snapshot = await getDocs(fallbackQ);
+      let filteredDocs = snapshot.docs.filter(docSnap => {
+        const data = docSnap.data() as any;
+        if (filters.subject?.trim() && data.subject !== filters.subject.trim()) return false;
+        if (filters.difficulty && data.difficulty !== filters.difficulty) return false;
+        if (filters.type && data.type !== filters.type) return false;
+        if (filters.batch?.trim() && data.batch !== filters.batch.trim()) return false;
+        if (filters.branch?.trim() && data.branch !== filters.branch.trim()) return false;
+        if (filters.status?.trim() && data.status !== filters.status.trim()) return false;
+        if (filters.createdBy?.trim() && data.createdBy !== filters.createdBy.trim()) return false;
+        if (filters.isPYQ !== undefined && data.isPYQ !== filters.isPYQ) return false;
+        const searchTerm = (filters.searchQuery || filters.search || '').trim().toLowerCase();
+        if (searchTerm) {
+          const keywords = (data.searchKeywords || []).map((k: string) => k.toLowerCase());
+          const text = (data.text || '').toLowerCase();
+          if (!keywords.includes(searchTerm) && !text.includes(searchTerm)) return false;
+        }
+        return true;
+      });
+      filteredDocs = filteredDocs.sort((a, b) => {
+        const aData = a.data() as any;
+        const bData = b.data() as any;
+        const aTime = aData.createdAt?.toDate?.()?.getTime() || new Date(aData.createdAt).getTime() || 0;
+        const bTime = bData.createdAt?.toDate?.()?.getTime() || new Date(bData.createdAt).getTime() || 0;
+        return bTime - aTime;
+      });
+      const paged = filteredDocs.slice(0, pageSize);
+      const questions: Question[] = paged.map(docSnap => {
+        const data = docSnap.data();
+        return {
+          ...data,
+          id: docSnap.id,
+          createdBy: (data as any).createdBy || (data as any).generatedBy || (data as any).facultyId || 'unknown',
+          createdByName: (data as any).createdByName || (data as any).generatedByName || (data as any).facultyName || 'Unknown',
+          status: (data as any).status || 'active',
+          text: (data as any).text || (data as any).questionText || (data as any).content || '',
+          type: (data as any).type || (data as any).questionType || 'mcq',
+          marks: (data as any).marks ?? (data as any).marksPerQuestion ?? 1,
+          tags: (data as any).tags || (data as any).tagList || [],
+          subject: (data as any).subject || (data as any).course || '',
+          difficulty: (data as any).difficulty || 'medium',
+        } as Question;
+      });
+      return {
+        data: questions,
+        total: filteredDocs.length,
+        page: 1,
+        limit: pageSize,
+        totalPages: Math.ceil(filteredDocs.length / pageSize) || 1,
+        lastDoc: paged[paged.length - 1] || null,
+        hasMore: filteredDocs.length > pageSize
+      };
+    }
+    throw err;
+  }
 
   const questions: Question[] = [];
   snapshot.forEach((docSnap) => {
@@ -177,30 +249,54 @@ export const getAllQuestions = async (
   collegeId: string,
   pageSize: number = 100
 ): Promise<Question[]> => {
-  const q = query(
-    collection(db, QUESTIONS_COLLECTION),
-    where('collegeId', '==', collegeId),
-    orderBy('createdAt', 'desc'),
-    limit(pageSize)
-  );
-  const snapshot = await getDocs(q);
-
-  return snapshot.docs.map((docSnap) => {
-    const data = docSnap.data();
-    return {
-      ...data,
-      id: docSnap.id,
-      createdBy: data.createdBy || data.generatedBy || 'unknown',
-      createdByName: data.createdByName || data.generatedByName || 'Unknown',
-      status: data.status || 'active',
-      text: data.text || data.questionText || data.content || '',
-      type: data.type || data.questionType || 'mcq',
-      marks: data.marks ?? data.marksPerQuestion ?? 1,
-      tags: data.tags || data.tagList || [],
-      subject: data.subject || data.course || '',
-      difficulty: data.difficulty || 'medium',
-    } as Question;
-  });
+  try {
+    const q = query(
+      collection(db, QUESTIONS_COLLECTION),
+      where('collegeId', '==', collegeId),
+      orderBy('createdAt', 'desc'),
+      limit(pageSize)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((docSnap) => {
+      const data = docSnap.data();
+      return {
+        ...data,
+        id: docSnap.id,
+        createdBy: data.createdBy || data.generatedBy || 'unknown',
+        createdByName: data.createdByName || data.generatedByName || 'Unknown',
+        status: data.status || 'active',
+        text: data.text || data.questionText || data.content || '',
+        type: data.type || data.questionType || 'mcq',
+        marks: data.marks ?? data.marksPerQuestion ?? 1,
+        tags: data.tags || data.tagList || [],
+        subject: data.subject || data.course || '',
+        difficulty: data.difficulty || 'medium',
+      } as Question;
+    });
+  } catch (err: any) {
+    if (err?.message?.includes('requires an index') || err?.code === 'failed-precondition') {
+      console.warn('[getAllQuestions] Index missing, fallback');
+      const fallbackQ = query(collection(db, QUESTIONS_COLLECTION), where('collegeId', '==', collegeId), limit(pageSize));
+      const snapshot = await getDocs(fallbackQ);
+      return snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          ...data,
+          id: docSnap.id,
+          createdBy: data.createdBy || data.generatedBy || 'unknown',
+          createdByName: data.createdByName || data.generatedByName || 'Unknown',
+          status: data.status || 'active',
+          text: data.text || data.questionText || data.content || '',
+          type: data.type || data.questionType || 'mcq',
+          marks: data.marks ?? data.marksPerQuestion ?? 1,
+          tags: data.tags || data.tagList || [],
+          subject: data.subject || data.course || '',
+          difficulty: data.difficulty || 'medium',
+        } as Question;
+      });
+    }
+    throw err;
+  }
 };
 
 export const getQuestionById = async (questionId: string): Promise<Question | null> => {
@@ -241,8 +337,9 @@ export const createQuestion = async (
     ...(questionData.tags?.map((t: string) => t.toLowerCase()) || [])
   ].filter(Boolean);
 
+  const cleanedData = cleanUndefined(questionData as any);
   const docRef = await addDoc(collection(db, QUESTIONS_COLLECTION), {
-    ...questionData,
+    ...cleanedData,
     collegeId,
     searchKeywords,
     usageCount: 0,
@@ -340,8 +437,9 @@ export const bulkImportQuestions = async (
         ].filter(Boolean);
 
         const docRef = doc(collection(db, QUESTIONS_COLLECTION));
+        const cleanedQuestionData = cleanUndefined(questionData as any);
         batch.set(docRef, {
-          ...questionData,
+          ...cleanedQuestionData,
           collegeId,
           searchKeywords,
           usageCount: 0,
