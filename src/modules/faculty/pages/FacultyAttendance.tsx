@@ -7,8 +7,10 @@ import {
 } from 'lucide-react'
 import { useFacultyAttendance } from '../hooks/useFacultyAttendance'
 import { useAttendanceExport } from '../hooks/useAttendanceExport'
+import { DateRangeSelector } from '../../../components/shared/DateRangeSelector'
 import { ExportButton } from '../../../components/shared/ExportButton'
 import type { AttendanceStatus, FacultyExportRow, FacultyStudent, FacultyClassSession } from '../types/attendance'
+import type { DateRangeType } from '../hooks/useAttendanceExport'
 
 const statusConfig: Record<AttendanceStatus, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
   Present: {
@@ -79,7 +81,17 @@ export default function FacultyAttendance() {
     handleSave,
   } = useFacultyAttendance();
 
-  const { exportFacultyAttendance, exporting } = useAttendanceExport();
+  const { 
+    exportFacultyAttendance, 
+    exporting,
+    selectedRangeType,
+    setSelectedRangeType,
+    customStartDate,
+    setCustomStartDate,
+    customEndDate,
+    setCustomEndDate,
+    currentRange,
+  } = useAttendanceExport();
 
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<AttendanceStatus | 'all'>('all')
@@ -350,6 +362,19 @@ export default function FacultyAttendance() {
             exporting={exporting}
             hasData={hasAttendanceData}
             label="Export"
+          />
+        </div>
+        
+        {/* Date Range Selector for Reports */}
+        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <DateRangeSelector
+            selectedType={selectedRangeType}
+            onTypeChange={setSelectedRangeType as (type: DateRangeType) => void}
+            customStartDate={customStartDate}
+            onCustomStartChange={setCustomStartDate}
+            customEndDate={customEndDate}
+            onCustomEndChange={setCustomEndDate}
+            currentRange={currentRange}
           />
         </div>
       </div>
