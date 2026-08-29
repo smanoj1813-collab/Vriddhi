@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback, useContext, use
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/Firebase/config';
 import { getUserData, type FirebaseUserData, type UserRole } from './auth';
+import { roleHasPermission } from '../permissions';
 
 export { UserRole };
 export type { FirebaseUserData };
@@ -56,9 +57,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       collegeId: data.collegeId, department: data.department,
       avatar: data.avatar, phone: data.phone,
     };
-    // Persist collegeId to localStorage for APIs that read it directly
+    // Persist collegeId to localStorage for APIs that read it directly.
+    // This is a *path selector only* — never an authorization boundary — and
+    // must not leak across accounts: set it when present, remove it when not.
     if (appUser.collegeId) {
       localStorage.setItem('vriddhi_college_id', appUser.collegeId);
+    } else {
+      localStorage.removeItem('vriddhi_college_id');
     }
     console.log('[AuthContext] Resolved user:', appUser.name, '| role:', appUser.role);
     return appUser;
@@ -71,7 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (fbUser) {
         try { setUser(await resolveUserData(fbUser)); }
         catch (err: any) { console.error('Failed to resolve user data:', err); setUser(null); }
-      } else { setUser(null); }
+      } else {
+        setUser(null);
+        // Defense-in-depth: any sign-out path (explicit logout, token expiry,
+        // account deletion) must not leave the previous user's college id.
+        localStorage.removeItem('vriddhi_college_id');
+      }
       setIsLoading(false);
     });
     return () => unsubscribe();
@@ -102,6 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [resolveUserData]);
 
   const logout = useCallback(async () => {
+    // Clear the collegeId path selector so a later session on a shared browser
+    // cannot observe (or act on) the previous user's college.
+    localStorage.removeItem('vriddhi_college_id');
     await signOut(auth); setUser(null); setFirebaseUser(null);
   }, []);
 
@@ -116,7 +129,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return allowed;
   }, [user]);
 
-  const hasPermission = useCallback((_permission: string) => true, []);
+  // FIX: Permissions must be deny-by-default. `hasPermission` previously
+  // returned `true` for every input, which would have silently authorised any
+  // future caller. It now resolves against the role matrix (superadmin bypass,
+  // unknown permissions denied). This is a UX hint only — Firestore rules and
+  // Cloud Functions remain the trusted enforcement boundary.
+  const hasPermission = useCallback(
+    (permission: string) => roleHasPermission(user?.role, permission),
+    [user?.role]
+  );
 
   const value = useMemo<AuthContextType>(() => ({
     user, firebaseUser, isLoading, loading: isLoading, isAuthenticated: !!user,
