@@ -14,26 +14,46 @@ import {
 } from '@mui/icons-material';
 import { useQuestions, useQuestion } from '../../../hooks/useAssessment';
 import { useAuth } from '../../../hooks/useAuth';
+import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../../../Firebase/config';
 import {
   CreateQuestionInput, QuestionType, QuestionDifficulty, QuestionStatus, AssessmentQuestion,
 } from '../../../types/assessment';
 
-// Stub API functions — TODO: replace with actual API imports
 const createQuestionApi = async (
-  _collegeId: string,
-  _input: CreateQuestionInput
+  collegeId: string,
+  input: CreateQuestionInput
 ): Promise<AssessmentQuestion> => {
-  console.warn('TODO: wire createQuestionApi to actual backend');
-  return {} as AssessmentQuestion;
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error('Sign in before creating a question.');
+  const data = {
+    ...input,
+    collegeId,
+    questionText: input.content,
+    questionType: input.type,
+    text: input.content,
+    status: 'pending',
+    createdBy: currentUser.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  const created = await addDoc(collection(db, 'questions'), data);
+  return { id: created.id, ...data, marks: Number(input.marks) || 1 } as unknown as AssessmentQuestion;
 };
 
 const updateQuestionApi = async (
-  _collegeId: string,
-  _questionId: string,
-  _data: Partial<AssessmentQuestion>
+  collegeId: string,
+  questionId: string,
+  data: Partial<AssessmentQuestion>
 ): Promise<AssessmentQuestion> => {
-  console.warn('TODO: wire updateQuestionApi to actual backend');
-  return {} as AssessmentQuestion;
+  if (!questionId || !collegeId) throw new Error('Question and college context are required.');
+  await updateDoc(doc(db, 'questions', questionId), {
+    ...data,
+    ...(data.questionText ? { text: data.questionText, content: data.questionText } : {}),
+    collegeId,
+    updatedAt: serverTimestamp(),
+  });
+  return { id: questionId, ...data, marks: Number(data.marks) || 1 } as AssessmentQuestion;
 };
 
 const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
@@ -81,18 +101,30 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({ collegeId, subjectId 
 
   const handleDelete = async (questionId: string) => {
     if (!window.confirm('Are you sure you want to delete this question?')) return;
-    refresh();
+    try {
+      await deleteDoc(doc(db, 'questions', questionId));
+      refresh();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Question could not be deleted.');
+    }
   };
 
-  const handleApprove = async (questionId: string) => {
-    void questionId;
-    refresh();
+  const setReviewStatus = async (questionId: string, status: 'approved' | 'rejected') => {
+    try {
+      await updateDoc(doc(db, 'questions', questionId), {
+        status,
+        reviewedBy: user?.uid || '',
+        reviewedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      refresh();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : `Question could not be ${status}.`);
+    }
   };
 
-  const handleReject = async (questionId: string) => {
-    void questionId;
-    refresh();
-  };
+  const handleApprove = (questionId: string) => setReviewStatus(questionId, 'approved');
+  const handleReject = (questionId: string) => setReviewStatus(questionId, 'rejected');
 
   const filteredQuestions = ((questions as any[]) || []).filter((q: any) => {
     if (filterStatus && q.status !== filterStatus) return false;
@@ -286,7 +318,9 @@ const CreateQuestionDialog: React.FC<{
         options: options.filter((o) => o.text.trim()).map((o) => ({ id: o.id, text: o.text, isCorrect: o.isCorrect })),
         correctAnswer: questionType === 'MCQ'
           ? (options.find((o) => o.isCorrect)?.text || '')
-          : options.filter((o) => o.isCorrect).map((o) => o.text),
+          : ['MSQ', 'TrueFalse'].includes(questionType)
+            ? options.filter((o) => o.isCorrect).map((o) => o.text)
+            : (modelAnswer || undefined),
         modelAnswer: modelAnswer || undefined,
         subject: subjectId || '',
         topic: topic || '',

@@ -14,9 +14,11 @@ const Assessments = lazy(() => import('./pages/Assessments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const CollegeOnboarding = lazy(() => import('./pages/CollegeOnboarding'));
 const HODDashboard = lazy(() => import('./pages/HODDashboard'));
+const GradeRecords = lazy(() => import('./pages/GradeRecords'));
 const Journey = lazy(() => import('./pages/Journey'));
 const PaperBuilder = lazy(() => import('./pages/PaperBuilder'));
 const PaperGeneratorAdmin = lazy(() => import('./pages/PaperGeneratorPage'));
+const PaperReview = lazy(() => import('../faculty/pages/FacultyPapers'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const ReviewQueuePage = lazy(() => import('./pages/ReviewQueuePage'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -90,9 +92,11 @@ export const adminRoutes: RouteObject[] = [
       { path: 'view360', element: <LazyPage><View360 /></LazyPage> },
       { path: 'attendance', element: <LazyPage><Attendance /></LazyPage> },
       { path: 'assessments', element: <LazyPage><Assessments /></LazyPage> },
+      { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
       { path: 'question-bank', element: <LazyPage><QuestionBank /></LazyPage> },
       { path: 'review-queue', element: <LazyPage><ReviewQueuePage /></LazyPage> },
+      { path: 'paper-review', element: <LazyPage><PaperReview /></LazyPage> },
       { path: 'paper-generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
       { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },
       { path: 'curriculum', element: <LazyPage><AdminCurriculum /></LazyPage> },

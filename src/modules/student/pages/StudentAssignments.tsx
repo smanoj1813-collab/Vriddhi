@@ -16,7 +16,7 @@ const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: stri
 };
 
 export default function StudentAssignments() {
-  const { assignments, loading, refresh } = useStudentData();
+  const { assignments, loading, error, warnings, refresh } = useStudentData();
   const [filter, setFilter] = useState<FilterKey>('pending');
   const [selected, setSelected] = useState<Assignment | null>(null);
 
@@ -56,8 +56,22 @@ export default function StudentAssignments() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {warnings.map((warning) => (
+        <div key={warning} className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100" role="status">
+          {warning}
+        </div>
+      ))}
+
       {/* Header */}
       <div>
         <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Course Assignments</h1>

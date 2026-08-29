@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, GraduationCap, Building2, Hash, BookOpen } from 'lucide-react';
-import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase/auth';
-import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/Firebase/config';
+import { updatePassword } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '@/Firebase/config';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
@@ -20,6 +20,11 @@ interface Prefs {
 
 const DEFAULT_PREFS: Prefs = { exams: true, fees: true, assignments: true, events: true };
 
+const updateStudentProfile = httpsCallable<
+  { name?: string; notificationPrefs?: Prefs },
+  { success: boolean; name: string; notificationPrefs: Prefs | null }
+>(functions, 'updateMyStudentProfile');
+
 function loadPrefs(): Prefs {
   try {
     const raw = localStorage.getItem('vriddhi_notification_prefs');
@@ -31,7 +36,7 @@ function loadPrefs(): Prefs {
 
 export default function StudentSettings() {
   const { user } = useAuth();
-  const { profile, loading, refresh } = useStudentProfile(user?.uid);
+  const { profile, loading, error, refresh } = useStudentProfile(user?.uid);
   const { resolvedMode, toggleMode } = useThemeMode();
   const { t } = useTranslation();
 
@@ -42,6 +47,7 @@ export default function StudentSettings() {
 
   const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
   const [prefsSaved, setPrefsSaved] = useState(false);
+  const [prefsError, setPrefsError] = useState<string | null>(null);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [newPassword, setNewPassword] = useState('');
@@ -52,6 +58,8 @@ export default function StudentSettings() {
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
+      const storedPrefs = profile.notificationPrefs as Partial<Prefs> | undefined;
+      if (storedPrefs) setPrefs({ ...DEFAULT_PREFS, ...storedPrefs });
     }
   }, [profile]);
 
@@ -65,51 +73,6 @@ export default function StudentSettings() {
     []
   );
 
-  // Helper: try multiple doc locations to update student name
-  const updateStudentDoc = async (updates: Record<string, any>) => {
-    const uid = user?.uid;
-    if (!uid || !profile) throw new Error('Missing user or profile');
-    const collegeId = profile.collegeId as string | undefined;
-    const profileId = profile.id;
-
-    const candidates: string[][] = [];
-    // top-level students collection
-    if (profileId) candidates.push(['students', profileId]);
-    if (uid) candidates.push(['students', uid]);
-    // nested under college
-    if (collegeId && profileId) candidates.push(['colleges', collegeId, 'students', profileId]);
-    if (collegeId && uid) candidates.push(['colleges', collegeId, 'students', uid]);
-
-    let updated = false;
-    let lastError: any = null;
-    for (const path of candidates) {
-      try {
-        const ref = path.length === 2 ? doc(db, path[0], path[1]) : doc(db, path[0], path[1], path[2], path[3]);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          await updateDoc(ref, { ...updates, updatedAt: new Date().toISOString() });
-          updated = true;
-          // also try to keep the other location in sync if exists
-          continue;
-        }
-      } catch (e) {
-        lastError = e;
-      }
-    }
-    // If none existed, create in top-level students/{uid}
-    if (!updated) {
-      try {
-        if (uid) {
-          await setDoc(doc(db, 'students', uid), { ...updates, updatedAt: new Date().toISOString() }, { merge: true });
-          updated = true;
-        }
-      } catch (e) {
-        lastError = e;
-      }
-    }
-    if (!updated && lastError) throw lastError;
-  };
-
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -119,10 +82,7 @@ export default function StudentSettings() {
     setSavingProfile(true);
     setProfileMsg(null);
     try {
-      if (auth.currentUser) {
-        await updateFirebaseProfile(auth.currentUser, { displayName: name.trim() });
-      }
-      await updateStudentDoc({ name: name.trim() });
+      await updateStudentProfile({ name: name.trim() });
       setProfileMsg({ type: 'ok', text: 'Profile updated successfully.' });
       refresh();
     } catch (err: any) {
@@ -134,16 +94,16 @@ export default function StudentSettings() {
 
   const handleSavePrefs = async () => {
     setSavingPrefs(true);
+    setPrefsSaved(false);
+    setPrefsError(null);
     try {
+      await updateStudentProfile({ notificationPrefs: prefs });
+      // Keep a local copy only as an offline UI cache; Firestore is canonical.
       localStorage.setItem('vriddhi_notification_prefs', JSON.stringify(prefs));
-      // also persist to Firestore if possible
-      try {
-        await updateStudentDoc({ notificationPrefs: prefs });
-      } catch {
-        // ignore firestore failure, localStorage is primary
-      }
       setPrefsSaved(true);
       setTimeout(() => setPrefsSaved(false), 2500);
+    } catch (err: any) {
+      setPrefsError(err.message || 'Failed to save notification preferences.');
     } finally {
       setSavingPrefs(false);
     }
@@ -186,6 +146,14 @@ export default function StudentSettings() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
         <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Preferences...</p>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
+        {error || 'Your account is not linked to a student profile. Contact your college administrator.'}
       </div>
     );
   }
@@ -395,6 +363,11 @@ export default function StudentSettings() {
                 {prefsSaved && (
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 animate-in fade-in">
                     <Check size={14} /> Saved!
+                  </span>
+                )}
+                {prefsError && (
+                  <span className="text-xs font-bold text-rose-600" role="alert">
+                    {prefsError}
                   </span>
                 )}
               </div>

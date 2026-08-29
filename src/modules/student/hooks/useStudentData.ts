@@ -3,7 +3,7 @@
 // Aggregates all real Firestore data for the student dashboard.
 // Identity comes from useCurrentStudent() → no localStorage tokens.
 // ------------------------------------------------------------------
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type {
   Assignment,
   Notification,
@@ -48,11 +48,14 @@ export interface UseStudentDataReturn {
   todayDate: string;
   loading: boolean;
   error: string | null;
+  warnings: string[];
   refresh: () => void;
   /** The resolved Firestore student document id (used by other pages). */
   studentId: string;
   collegeId: string;
 }
+
+const StudentDataContext = createContext<UseStudentDataReturn | null>(null);
 
 function mapProfile(p: StudentProfileData | null): StudentProfile | null {
   if (!p) return null;
@@ -134,6 +137,7 @@ function mapSchedule(items: StudentClassSession[]): ClassSchedule[] {
     teacher: s.facultyName,
     type: s.type,
     topic: s.topic,
+    status: s.status,
   }));
 }
 
@@ -160,7 +164,7 @@ function deriveType(title: string): string {
   return 'assessment';
 }
 
-export const useStudentData = (explicitStudentId?: string): UseStudentDataReturn => {
+const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn => {
   const { user } = useAuth();
 
   const [studentDocId, setStudentDocId] = useState<string>('');
@@ -176,6 +180,7 @@ export const useStudentData = (explicitStudentId?: string): UseStudentDataReturn
   const [tests, setTests] = useState<StudentTestCardData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const todayDate = new Date().toLocaleDateString('en-IN', {
@@ -194,12 +199,14 @@ export const useStudentData = (explicitStudentId?: string): UseStudentDataReturn
     try {
       setLoading(true);
       setError(null);
+      setWarnings([]);
 
       const profileData = await fetchProfile(uid, user?.email || undefined);
       if (!profileData) {
         setProfile(null);
-        setLoading(false);
-        return;
+        throw new Error(
+          'Your account is not linked to a student profile. Contact your college administrator.'
+        );
       }
 
       setStudentDocId(profileData.id);
@@ -210,28 +217,52 @@ export const useStudentData = (explicitStudentId?: string): UseStudentDataReturn
 
       const today = new Date().toISOString().split('T')[0];
 
-      const [attendanceData, assignmentData, feeData, scheduleData, notificationData, testData] =
-        await Promise.all([
-          fetchAttendance(profileData.id),
-          fetchAssignments(profileData.id),
-          fetchFees(profileData.id),
-          fetchTodaySchedule(
-            {
-              branch: profileData.branch,
-              batch: profileData.batch,
-              semester: profileData.semester,
-              division: profileData.division,
-              section: profileData.section,
-            },
-            today
-          ),
-          fetchNotifications(profileData.id),
-          fetchStudentTests(profileData.collegeId || user?.collegeId, profileData.id),
+      const results = await Promise.allSettled([
+        fetchAttendance(profileData.id, profileData.collegeId || user?.collegeId || ''),
+        fetchAssignments(profileData.id),
+        fetchFees(profileData.id),
+        fetchTodaySchedule(
+          {
+            collegeId: profileData.collegeId || user?.collegeId || '',
+            branch: profileData.branch,
+            batch: profileData.batch,
+            semester: profileData.semester,
+            division: profileData.division,
+            section: profileData.section,
+          },
+          today
+        ),
+        fetchNotifications(profileData.id),
+        fetchStudentTests(profileData.collegeId || user?.collegeId, profileData.id),
+      ] as const);
+
+      const serviceNames = [
+        'attendance',
+        'assignments',
+        'fees',
+        'timetable',
+        'notifications',
+        'assessments',
+      ];
+      const failedServices = results
+        .map((result, index) => result.status === 'rejected' ? serviceNames[index] : '')
+        .filter(Boolean);
+      if (failedServices.length) {
+        setWarnings([
+          `Some portal data could not be loaded: ${failedServices.join(', ')}. Empty values are not authoritative.`,
         ]);
+      }
+
+      const attendanceData = results[0].status === 'fulfilled' ? results[0].value : null;
+      const assignmentData = results[1].status === 'fulfilled' ? results[1].value : [];
+      const feeData = results[2].status === 'fulfilled' ? results[2].value : null;
+      const scheduleData = results[3].status === 'fulfilled' ? results[3].value : [];
+      const notificationData = results[4].status === 'fulfilled' ? results[4].value : [];
+      const testData = results[5].status === 'fulfilled' ? results[5].value : [];
 
       setAttendance(mapAttendance(attendanceData));
       setAssignments(mapAssignments(assignmentData));
-      setFeeSummary(mapFees(feeData));
+      setFeeSummary(feeData ? mapFees(feeData) : null);
       setSchedule(mapSchedule(scheduleData));
       setNotifications(mapNotifications(notificationData));
       setTests(testData);
@@ -245,19 +276,32 @@ export const useStudentData = (explicitStudentId?: string): UseStudentDataReturn
       ).length;
 
       setStats({
-        attendancePercentage: attendanceData.percentage,
+        attendancePercentage: attendanceData?.percentage,
         pendingAssignments,
         upcomingTests,
         upcomingAssessments: upcomingTests,
         upcomingClasses: scheduleData.length,
-        feeDue: feeData.pendingFees,
+        feeDue: feeData?.pendingFees,
         newNotifications: notificationData.filter((n) => !n.read).length,
         overdueAssignments: assignmentData.filter((a) => a.status === 'overdue').length,
-        lowAttendanceSubjects: attendanceData.percentage < attendanceData.requiredPercentage ? 1 : 0,
+        lowAttendanceSubjects: attendanceData
+          ? attendanceData.percentage < attendanceData.requiredPercentage ? 1 : 0
+          : undefined,
         cgpa: profileData.cgpa,
       });
     } catch (err) {
       console.error('[useStudentData] Fetch error:', err);
+      setProfile(null);
+      setStudentDocId('');
+      setCollegeId('');
+      setAttendance(null);
+      setAssignments([]);
+      setNotifications([]);
+      setFeeSummary(null);
+      setStats(null);
+      setAssessments([]);
+      setSchedule([]);
+      setTests([]);
       setError(err instanceof Error ? err.message : 'Failed to load student data');
     } finally {
       setLoading(false);
@@ -284,10 +328,29 @@ export const useStudentData = (explicitStudentId?: string): UseStudentDataReturn
     todayDate,
     loading,
     error,
+    warnings,
     refresh: () => setRefreshKey((k) => k + 1),
     studentId: studentDocId,
     collegeId,
   };
 };
+
+/**
+ * One shared academic-data load for the entire student route tree. The sidebar
+ * and active page consume the same snapshot instead of issuing duplicate
+ * profile plus six-domain requests on every navigation.
+ */
+export function StudentDataProvider({ children }: { children: ReactNode }) {
+  const value = useStudentDataSource();
+  return createElement(StudentDataContext.Provider, { value }, children);
+}
+
+export function useStudentData(): UseStudentDataReturn {
+  const value = useContext(StudentDataContext);
+  if (!value) {
+    throw new Error('useStudentData must be used within StudentDataProvider');
+  }
+  return value;
+}
 
 export default useStudentData;

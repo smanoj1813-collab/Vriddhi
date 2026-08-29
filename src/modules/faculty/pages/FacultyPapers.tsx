@@ -5,9 +5,8 @@ import {
   Eye, Upload, Clock, ChevronRight, Download, Send,
   FileUp, BookOpen, Calendar
 } from 'lucide-react'
-import { doc, updateDoc, collection, addDoc } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '@/Firebase/config'
+import { httpsCallable } from 'firebase/functions'
+import { functions } from '@/Firebase/config'
 import { useAuth } from '../../auth/context/AuthContext'
 import { getPapers } from '../../admin/services/paperAPI'
 import { getPaperQuestions } from '../../admin/api/paperApi'
@@ -34,6 +33,7 @@ interface TestPaper {
   verificationStatus: string
   questions: PaperQuestion[]
   createdBy: string
+  createdByUid: string
   createdAt: string
   submittedAt: string
   aiGenerated: boolean
@@ -45,7 +45,10 @@ interface TestPaper {
   date?: string
   instructions?: string
   fileUrl?: string
+  filePath?: string
+  answerKeyUrl?: string
   answerKeyName?: string
+  answerKeyPath?: string
   requiresApproval?: boolean
 }
 interface PaperVerificationRequest {
@@ -64,9 +67,10 @@ interface VerificationModalProps {
   onClose: () => void
   onVerify: (paperId: string) => void
   onRequestModify: (paperId: string, data: { topic: string; questionNumbers: string; remarks: string }) => void
+  onDownload: (paperId: string) => void
 }
 
-function VerificationModal({ paper, onClose, onVerify, onRequestModify }: VerificationModalProps) {
+function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownload }: VerificationModalProps) {
   const [mode, setMode] = useState<'view' | 'verify' | 'modify'>('view')
   const [topic, setTopic] = useState('')
   const [questionNumbers, setQuestionNumbers] = useState('')
@@ -158,9 +162,16 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify }: Verifi
             <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-sm text-slate-500 mb-2">PDF Preview</p>
             <p className="text-xs text-slate-600">{paper.fileName}</p>
-            <button className="mt-3 inline-flex items-center gap-1.5 text-sm text-teal-400 hover:text-teal-300">
-              <Download className="w-4 h-4" /> Download PDF
-            </button>
+            {paper.filePath ? (
+              <button
+                onClick={() => onDownload(paper.id)}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm text-teal-400 hover:text-teal-300"
+              >
+                <Download className="w-4 h-4" /> Download original file
+              </button>
+            ) : (
+              <p className="mt-3 text-xs text-slate-500">No original file attached; review the structured questions above.</p>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -286,6 +297,7 @@ export default function FacultyPapers() {
   const [batches, setBatches] = useState<string[]>([])
   const [showToast, setShowToast] = useState('')
   const [loading, setLoading] = useState(false)
+  const canReview = ['superadmin', 'admin', 'principal', 'hod'].includes(user?.role || '')
 
   const loadData = useCallback(async () => {
     if (!collegeId) return
@@ -319,8 +331,13 @@ export default function FacultyPapers() {
           date: (p as any).date || '',
           instructions: typeof (p as any).instructions === 'string' ? (p as any).instructions : ((p as any).instructions || []).join('\n'),
           fileUrl: (p as any).fileUrl || '',
+          filePath: (p as any).filePath || '',
+          answerKeyUrl: (p as any).answerKeyUrl || '',
+          answerKeyName: (p as any).answerKeyName || '',
+          answerKeyPath: (p as any).answerKeyPath || '',
           requiresApproval: (p as any).requiresApproval ?? false,
           createdBy: p.createdByName || p.createdBy || '',
+          createdByUid: p.createdBy || '',
           createdAt: p.createdAt || '',
           submittedAt: p.updatedAt || '',
           aiGenerated: (p as any).isAIGenerated === true || (p as any).source === 'ai',
@@ -368,33 +385,36 @@ export default function FacultyPapers() {
       .catch(() => undefined)
   }, [collegeId])
 
+  const reviewPaper = httpsCallable<
+    { paperId: string; action: 'approve' | 'request_modification'; topic?: string; questionNumbers?: string; remarks?: string },
+    { success: boolean }
+  >(functions, 'reviewPaper')
+
+  const handlePaperFileDownload = async (paperId: string) => {
+    try {
+      const getDownload = httpsCallable<
+        { paperId: string; kind: 'paper' },
+        { url: string; fileName: string }
+      >(functions, 'getPaperFileDownload')
+      const response = await getDownload({ paperId, kind: 'paper' })
+      const anchor = document.createElement('a')
+      anchor.href = response.data.url
+      anchor.download = response.data.fileName
+      anchor.target = '_blank'
+      anchor.rel = 'noopener noreferrer'
+      anchor.click()
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Paper file could not be downloaded')
+      setTimeout(() => setShowToast(''), 3000)
+    }
+  }
+
   const handleVerify = async (paperId: string) => {
     try {
-      await updateDoc(doc(db, 'papers', paperId), {
-        verificationStatus: 'approved-by-hod',
-        status: 'published',
-        verifiedBy: user?.name || 'HOD',
-        verifiedAt: new Date().toISOString(),
-        reviewedAt: new Date().toISOString(),
-      })
-      setPapers(prev => prev.map(p =>
-        p.id === paperId ? { ...p, verificationStatus: 'approved-by-hod' } : p
-      ))
-      const paper = papers.find(p => p.id === paperId)
-      if (paper) {
-        const request: PaperVerificationRequest = {
-          id: `vr-${Date.now()}`,
-          paperId,
-          paperTitle: paper.title,
-          subject: paper.subject,
-          className: paper.className,
-          verifiedBy: user?.name || 'HOD',
-          status: 'verified',
-          submittedAt: new Date().toISOString(),
-        }
-        setVerificationRequests(prev => [request, ...prev])
-      }
+      await reviewPaper({ paperId, action: 'approve' })
       setShowToast('Paper verified and published')
+      setSelectedPaper(null)
+      await loadData()
       setTimeout(() => setShowToast(''), 3000)
     } catch (err) {
       setShowToast(err instanceof Error ? err.message : 'Failed to verify paper')
@@ -404,33 +424,10 @@ export default function FacultyPapers() {
 
   const handleRequestModify = async (paperId: string, data: { topic: string; questionNumbers: string; remarks: string }) => {
     try {
-      await updateDoc(doc(db, 'papers', paperId), {
-        verificationStatus: 'modification-requested',
-        approvalRemarks: data.remarks,
-        requestedChanges: data,
-        reviewedBy: user?.name || 'HOD',
-        reviewedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
-      setPapers(prev => prev.map(p =>
-        p.id === paperId ? { ...p, verificationStatus: 'modification-requested', approvalRemarks: data.remarks } : p
-      ))
-      const paper = papers.find(p => p.id === paperId)
-      if (paper) {
-        const request: PaperVerificationRequest = {
-          id: `vr-${Date.now()}`,
-          paperId,
-          paperTitle: paper.title,
-          subject: paper.subject,
-          className: paper.className,
-          verifiedBy: user?.name || 'HOD',
-          status: 'modification-requested',
-          requestedChanges: data,
-          submittedAt: new Date().toISOString(),
-        }
-        setVerificationRequests(prev => [request, ...prev])
-      }
+      await reviewPaper({ paperId, action: 'request_modification', ...data })
       setShowToast('Modification request sent')
+      setSelectedPaper(null)
+      await loadData()
       setTimeout(() => setShowToast(''), 3000)
     } catch (err) {
       setShowToast(err instanceof Error ? err.message : 'Failed to submit request')
@@ -458,6 +455,10 @@ export default function FacultyPapers() {
       instructions: paper.instructions || '',
       fileName: paper.fileName,
       fileUrl: paper.fileUrl,
+      filePath: paper.filePath,
+      answerKeyUrl: paper.answerKeyUrl,
+      answerKeyName: paper.answerKeyName,
+      answerKeyPath: paper.answerKeyPath,
       requiresApproval: paper.requiresApproval,
       questions: paper.questions.map((q) => ({
         rowId: `q_${q.number}`,
@@ -579,7 +580,7 @@ export default function FacultyPapers() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {(paper.verificationStatus === 'pending-verification' ||
+                  {canReview && (paper.verificationStatus === 'pending-verification' ||
                     paper.verificationStatus === 'submitted-for-approval') && (
                     <button
                       onClick={() => setSelectedPaper(paper)}
@@ -588,6 +589,11 @@ export default function FacultyPapers() {
                       <Eye className="w-4 h-4" />
                       Review & Verify
                     </button>
+                  )}
+                  {!canReview && (paper.verificationStatus === 'pending-verification' || paper.verificationStatus === 'submitted-for-approval') && (
+                    <span className="flex items-center gap-2 text-sm text-amber-500">
+                      <Clock className="w-4 h-4" /> Awaiting authorized review
+                    </span>
                   )}
                   {(paper.verificationStatus === 'verified' || paper.verificationStatus === 'approved-by-hod') && (
                     <span className="flex items-center gap-2 text-sm text-emerald-400">
@@ -607,14 +613,19 @@ export default function FacultyPapers() {
                       Changes requested
                     </span>
                   )}
+                  {(canReview || paper.createdByUid === (user?.uid || user?.id))
+                    && ['draft', 'modification-requested', 'rejected-by-hod'].includes(paper.verificationStatus) && (
+                    <button
+                      onClick={() => openEditPaper(paper)}
+                      className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors ml-auto"
+                    >
+                      <FileUp className="w-4 h-4" /> Edit
+                    </button>
+                  )}
                   <button
-                    onClick={() => openEditPaper(paper)}
-                    className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors ml-auto"
-                  >
-                    <FileUp className="w-4 h-4" /> Edit
-                  </button>
-                  <button
-                    onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
+                    onClick={() => paper.filePath
+                      ? void handlePaperFileDownload(paper.id)
+                      : void downloadPaperPDF(paper.id, paper.title || 'paper')}
                     className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors"
                   >
                     <Download className="w-4 h-4" /> Download
@@ -703,7 +714,7 @@ export default function FacultyPapers() {
         branches={branches}
         batches={batches}
         paper={editingPaper}
-        canPublishDirectly={user?.role === 'hod'}
+        canPublishDirectly={canReview}
         onClose={() => {
           setEditorOpen(false)
           setEditingPaper(null)
@@ -730,6 +741,7 @@ export default function FacultyPapers() {
           onClose={() => setSelectedPaper(null)}
           onVerify={handleVerify}
           onRequestModify={handleRequestModify}
+          onDownload={handlePaperFileDownload}
         />
       )}
 

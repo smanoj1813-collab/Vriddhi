@@ -4,7 +4,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { getDatabase } from "firebase/database";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions"; // ← ADD THIS
 
@@ -23,8 +22,9 @@ const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app); // ← ADD THIS
+// All callable functions in this repository are deployed in asia-south1.
+// Using the SDK default (us-central1) makes valid callables look unavailable.
+export const functions = getFunctions(app, 'asia-south1'); // ← ADD THIS
 
 export default app;

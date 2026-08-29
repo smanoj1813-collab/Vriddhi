@@ -1,53 +1,77 @@
 // src/modules/student/services/assignmentService.ts
-// Real Firestore + Storage implementation for student assignment submissions.
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  serverTimestamp,
-  orderBy,
-  limit,
-} from 'firebase/firestore';
-import { db, storage } from '@/Firebase/config';
-import type { Assignment, AssignmentSubmission, SubmissionFile } from '../types/student';
-
-export interface CreateAssignmentData {
-  title: string;
-  description: string;
-  subject: string;
-  dueDate: string;
-  totalMarks: number;
-  facultyId: string;
-}
+// Server-authorized assignment submission with tracked Storage upload sessions.
+import { deleteObject, ref, uploadBytes } from 'firebase/storage';
+import { httpsCallable } from 'firebase/functions';
+import { functions, storage } from '@/Firebase/config';
+import type { AssignmentSubmission, SubmissionFile } from '../types/student';
 
 export interface SubmitAssignmentOptions {
-  parseImages?: boolean;
   onProgress?: (progress: number) => void;
   signal?: AbortSignal;
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+interface UploadedSubmissionFile {
+  name: string;
+  storagePath: string;
+  contentType: string;
+  size: number;
+}
+
+interface BeginSubmissionResponse {
+  sessionId: string;
+  studentId: string;
+  uploadBase: string;
+  expiresAt: string;
+}
+
+interface FinalizeSubmissionResponse {
+  id: string;
+  assignmentId: string;
+  studentId: string;
+  status: string;
+  submittedAt: string;
+  files: UploadedSubmissionFile[];
+  remarks: string;
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILES = 10;
 const ALLOWED_EXTENSIONS = [
   '.pdf', '.doc', '.docx', '.txt',
   '.jpg', '.jpeg', '.png', '.gif', '.webp',
-  '.zip', '.rar', '.ppt', '.pptx', '.xls', '.xlsx',
 ];
+const ALLOWED_CONTENT_TYPES = /^(application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|text\/plain|image\/.*)$/;
 
-// ─── Validators / helpers ───────────────────────────────────────────
+const beginSubmission = httpsCallable<
+  { assignmentId: string },
+  BeginSubmissionResponse
+>(functions, 'beginMyAssignmentSubmission');
+
+const finalizeSubmission = httpsCallable<
+  {
+    assignmentId: string;
+    sessionId: string;
+    remarks: string;
+    files: UploadedSubmissionFile[];
+  },
+  FinalizeSubmissionResponse
+>(functions, 'finalizeMyAssignmentSubmission');
+
+const cancelSubmission = httpsCallable<
+  { sessionId: string },
+  { success: boolean }
+>(functions, 'cancelMyAssignmentSubmission');
 
 export function validateFile(file: File): { valid: boolean; error?: string } {
+  if (file.size < 1) {
+    return { valid: false, error: `"${file.name}" is empty.` };
+  }
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: `"${file.name}" exceeds the 50 MB limit.` };
+    return { valid: false, error: `"${file.name}" exceeds the 10 MB limit.` };
   }
   const lower = file.name.toLowerCase();
-  const allowed = ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext));
-  if (!allowed) {
+  const allowedExtension = ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext));
+  if (!allowedExtension || !ALLOWED_CONTENT_TYPES.test(file.type)) {
     return { valid: false, error: `"${file.name}" is not an allowed file type.` };
   }
   return { valid: true };
@@ -58,7 +82,7 @@ export function formatFileSize(bytes: number): string {
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 export function getAllowedFileTypes(): string[] {
@@ -69,79 +93,10 @@ export function isImageFile(fileName: string): boolean {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
 }
 
-// ─── Read operations ────────────────────────────────────────────────
-
 /**
- * Fetch a single assignment by id.
- */
-export async function getAssignmentById(id: string): Promise<Assignment | null> {
-  const snap = await getDoc(doc(db, 'assignments', id));
-  if (!snap.exists()) return null;
-  const data = snap.data() as Record<string, any>;
-  return {
-    id: snap.id,
-    title: data.title || '',
-    subject: data.subject || '',
-    subjectCode: data.subjectCode,
-    description: data.description || '',
-    dueDate: data.dueDate || '',
-    dueTime: data.dueTime,
-    maxMarks: data.maxMarks ?? data.totalMarks,
-    totalMarks: data.totalMarks ?? data.maxMarks,
-    status: data.status || 'pending',
-    submissionType: data.submissionType,
-    attachments: data.attachments,
-    createdAt: data.createdAt?.toDate?.().toISOString() || data.createdAt || '',
-  } as Assignment;
-}
-
-/**
- * Fetch the student's submission for a given assignment (if any).
- */
-export async function getAssignmentSubmission(
-  assignmentId: string,
-  studentId: string
-): Promise<AssignmentSubmission | null> {
-  const q = query(
-    collection(db, 'submissions'),
-    where('assignmentId', '==', assignmentId),
-    where('studentId', '==', studentId),
-    orderBy('submittedAt', 'desc'),
-    limit(1)
-  );
-  const snap = await getDocs(q).catch(async () => {
-    // Fallback without orderBy if a composite index is missing.
-    const fallback = query(
-      collection(db, 'submissions'),
-      where('assignmentId', '==', assignmentId),
-      where('studentId', '==', studentId),
-      limit(1)
-    );
-    return getDocs(fallback);
-  });
-  if (snap.empty) return null;
-  const d = snap.docs[0];
-  const data = d.data() as Record<string, any>;
-  return {
-    id: d.id,
-    assignmentId: data.assignmentId,
-    studentId: data.studentId,
-    files: (data.files || []) as SubmissionFile[],
-    remarks: data.remarks || data.comment || '',
-    status: data.status || 'submitted',
-    submittedAt: data.submittedAt?.toDate?.().toISOString() || data.submittedAt || '',
-    marksObtained: data.marksObtained,
-    feedback: data.feedback,
-    gradedAt: data.gradedAt?.toDate?.().toISOString() || data.gradedAt || '',
-  } as AssignmentSubmission;
-}
-
-// ─── Write operations ───────────────────────────────────────────────
-
-/**
- * Submit an assignment: upload each file to Cloud Storage under
- * `assignments/{assignmentId}/students/{studentId}/{timestamp}_{filename}`,
- * then write a `submissions` document.
+ * Creates an expiring server-side upload session, uploads each validated file,
+ * and asks the server to verify Storage metadata and transactionally finalize
+ * exactly one submission. Failed sessions are cancelled and cleaned up.
  */
 export async function submitAssignmentWithFiles(
   assignmentId: string,
@@ -151,77 +106,89 @@ export async function submitAssignmentWithFiles(
   options: SubmitAssignmentOptions = {}
 ): Promise<AssignmentSubmission> {
   if (!assignmentId || !studentId) {
-    throw new Error('Missing assignment or student id.');
+    throw new Error('Missing assignment or student profile.');
   }
-  if (files.length === 0) {
-    throw new Error('Please attach at least one file.');
+  if (files.length < 1 || files.length > MAX_FILES) {
+    throw new Error(`Attach between 1 and ${MAX_FILES} files.`);
   }
-
-  // Validate all files up-front
-  for (const file of files) {
+  if (remarks.length > 2000) {
+    throw new Error('Comments cannot exceed 2,000 characters.');
+  }
+  files.forEach((file) => {
     const result = validateFile(file);
     if (!result.valid) throw new Error(result.error);
-  }
+  });
 
-  const uploaded: SubmissionFile[] = [];
-  const total = files.length;
+  let sessionId = '';
+  const uploadedPaths: string[] = [];
 
-  for (let i = 0; i < total; i++) {
-    if (options.signal?.aborted) throw new Error('Upload cancelled.');
-    const file = files[i];
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const path = `assignments/${assignmentId}/students/${studentId}/${Date.now()}_${safeName}`;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file, { contentType: file.type });
-    const url = await getDownloadURL(storageRef);
-    uploaded.push({
-      id: `${i}-${safeName}`,
-      name: file.name,
-      url,
-      type: file.type,
-      size: file.size,
-    });
-    options.onProgress?.(Math.round(((i + 1) / total) * 100));
-  }
-
-  const submissionData = {
-    assignmentId,
-    studentId,
-    files: uploaded,
-    remarks,
-    comment: remarks,
-    status: 'submitted',
-    submittedAt: serverTimestamp(),
-    createdAt: serverTimestamp(),
-  };
-
-  const docRef = await addDoc(collection(db, 'submissions'), submissionData);
-
-  // Best-effort: mark the assignment doc's student entry as submitted when
-  // it tracks submissions as a map.
   try {
-    await updateDoc(doc(db, 'assignments', assignmentId), {
-      [`submissions.${studentId}`]: { submissionId: docRef.id, submittedAt: new Date().toISOString() },
-      updatedAt: serverTimestamp(),
-    });
-  } catch {
-    // assignments doc may not have a submissions map — ignore.
-  }
+    if (options.signal?.aborted) throw new Error('Upload cancelled.');
+    const session = (await beginSubmission({ assignmentId })).data;
+    sessionId = session.sessionId;
+    if (session.studentId !== studentId) {
+      throw new Error('Your student profile changed. Refresh the page and try again.');
+    }
 
-  return {
-    id: docRef.id,
-    assignmentId,
-    studentId,
-    files: uploaded,
-    remarks,
-    status: 'submitted',
-    submittedAt: new Date().toISOString(),
-  } as AssignmentSubmission;
+    const uploaded: UploadedSubmissionFile[] = [];
+    for (let index = 0; index < files.length; index++) {
+      if (options.signal?.aborted) throw new Error('Upload cancelled.');
+      const file = files[index];
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${session.uploadBase}/${Date.now()}_${index}_${safeName}`;
+      await uploadBytes(ref(storage, storagePath), file, { contentType: file.type });
+      uploadedPaths.push(storagePath);
+      uploaded.push({
+        name: file.name,
+        storagePath,
+        contentType: file.type,
+        size: file.size,
+      });
+      options.onProgress?.(Math.round(((index + 1) / files.length) * 90));
+    }
+
+    const finalized = (await finalizeSubmission({
+      assignmentId,
+      sessionId,
+      remarks: remarks.trim(),
+      files: uploaded,
+    })).data;
+    options.onProgress?.(100);
+
+    const submissionFiles: SubmissionFile[] = finalized.files.map((file, index) => ({
+      id: `${index}-${file.storagePath}`,
+      name: file.name,
+      url: '',
+      type: file.contentType,
+      size: file.size,
+      storagePath: file.storagePath,
+    }));
+
+    return {
+      id: finalized.id,
+      assignmentId: finalized.assignmentId,
+      studentId: finalized.studentId,
+      files: submissionFiles,
+      remarks: finalized.remarks,
+      status: finalized.status,
+      submittedAt: finalized.submittedAt,
+    };
+  } catch (error) {
+    // The server-side session cleanup is canonical. Direct deletes are a
+    // fallback for a transient callable failure while Storage is reachable.
+    if (sessionId) {
+      try {
+        await cancelSubmission({ sessionId });
+      } catch {
+        await Promise.allSettled(
+          uploadedPaths.map((path) => deleteObject(ref(storage, path)))
+        );
+      }
+    }
+    throw error;
+  }
 }
 
-/**
- * Backwards-compatible signature used by older components.
- */
 export async function submitAssignment(
   assignmentId: string,
   studentId: string,

@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { RoleRoute } from '@/routes/components/RoleRoute';
 import StudentLayout from './components/StudentLayout';
+import { StudentDataProvider } from './hooks/useStudentData';
 
 // ── Lazy-loaded pages (all read identity from AuthContext) ────────────
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
@@ -19,14 +20,15 @@ const ActiveTestPage = lazy(() => import('./pages/ActiveTestPage'));
 const TestResultPage = lazy(() => import('./pages/TestResultPage'));
 const AttendancePage = lazy(() => import('./components/AttendancePage'));
 const StudentAssignments = lazy(() => import('./pages/StudentAssignments'));
-const Students = lazy(() => import('./pages/Students'));
 
 export const studentRoutes: RouteObject[] = [
   {
     path: '/student',
     element: (
       <RoleRoute allowedRoles={['student']}>
-        <StudentLayout />
+        <StudentDataProvider>
+          <StudentLayout />
+        </StudentDataProvider>
       </RoleRoute>
     ),
     children: [
@@ -56,7 +58,6 @@ export const studentRoutes: RouteObject[] = [
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },
       { path: 'settings', element: <StudentSettings /> },
-      { path: 'directory', element: <Students /> },
     ],
   },
 ];

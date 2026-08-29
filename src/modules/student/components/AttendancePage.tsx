@@ -63,22 +63,33 @@ const PIE_COLORS: Record<string, string> = {
 
 export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: studentIdProp }) => {
   const { user } = useAuth();
-  const { profile } = useStudentProfile(user?.uid);
-  const resolvedStudentId = studentIdProp || profile?.id || user?.uid || '';
+  const {
+    profile,
+    loading: profileLoading,
+    error: profileError,
+  } = useStudentProfile(user?.uid);
+  const resolvedStudentId = studentIdProp || profile?.id || '';
+  const collegeId = profile?.collegeId || user?.collegeId || '';
 
   const [allRecords, setAllRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
-    if (!resolvedStudentId) return;
+    if (profileLoading) return;
+    if (!resolvedStudentId || !collegeId) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
+    setLoadError(null);
 
-    fetchAttendance(resolvedStudentId)
+    fetchAttendance(resolvedStudentId, collegeId)
       .then((data) => {
         if (cancelled) return;
         const mapped: AttendanceRecord[] = data.records.map((r) => ({
@@ -103,10 +114,15 @@ export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: st
           monthlyBreakdown: data.monthlyBreakdown,
         });
       })
-      .catch((err) => console.error('[AttendancePage] load failed:', err))
+      .catch((err) => {
+        console.error('[AttendancePage] load failed:', err);
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : 'Failed to load attendance records');
+        }
+      })
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [resolvedStudentId, profile?.collegeId, user?.collegeId]);
+  }, [resolvedStudentId, collegeId, profileLoading]);
 
   const records = useMemo(
     () => allRecords.filter((r) => r.date.startsWith(selectedMonth)),
@@ -157,11 +173,20 @@ export const AttendancePage: React.FC<{ studentId?: string }> = ({ studentId: st
     month: m.month.split(' ')[0], rate: m.percentage, present: m.present, absent: m.absent,
   })) || [];
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
         <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Attendance Records...</p>
+      </div>
+    );
+  }
+
+  const error = profileError || loadError;
+  if (error || !resolvedStudentId || !collegeId) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
+        {error || 'Your account is not linked to a complete student profile. Contact your college administrator.'}
       </div>
     );
   }

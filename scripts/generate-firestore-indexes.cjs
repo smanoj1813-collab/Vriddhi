@@ -34,6 +34,7 @@ const KNOWN_INDEXES = [
   { collectionGroup: 'students', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
   { collectionGroup: 'students', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'batch', order: 'ASCENDING' }] },
   { collectionGroup: 'students', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'department', order: 'ASCENDING' }] },
+  { collectionGroup: 'students', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'regNo', order: 'ASCENDING' }] },
   { collectionGroup: 'students', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
 
   // ─── Faculty ───
@@ -57,16 +58,36 @@ const KNOWN_INDEXES = [
   { collectionGroup: 'curriculum', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
   { collectionGroup: 'curriculum', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
 
+  // ─── Scheduled Tests ───
+  { collectionGroup: 'scheduledTests', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
+  { collectionGroup: 'scheduledTests', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'scheduledTests', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'facultyId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+
   // ─── Student Assessments ───
   { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'studentId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
   { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'studentId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
+  { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
   { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'testId', order: 'ASCENDING' }, { fieldPath: 'studentId', order: 'ASCENDING' }] },
   { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'testId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'marksObtained', order: 'DESCENDING' }] },
+  { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'autoSubmitAt', order: 'ASCENDING' }] },
+  { collectionGroup: 'studentAssessments', fields: [{ fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'endsAt', order: 'ASCENDING' }] },
 
   // ─── Attendance ───
   { collectionGroup: 'attendance', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'date', order: 'DESCENDING' }] },
   { collectionGroup: 'attendance', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'studentId', order: 'ASCENDING' }, { fieldPath: 'date', order: 'DESCENDING' }] },
   { collectionGroup: 'attendanceRecords', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'date', order: 'DESCENDING' }] },
+  { collectionGroup: 'attendanceRecords', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'studentId', order: 'ASCENDING' }, { fieldPath: 'date', order: 'DESCENDING' }] },
+
+  // ─── Student schedules ───
+  { collectionGroup: 'weeklySchedules', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'branch', order: 'ASCENDING' }] },
+  { collectionGroup: 'classSessions', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'date', order: 'ASCENDING' }] },
+
+  // ─── Assignments and submissions ───
+  { collectionGroup: 'assignments', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
+  { collectionGroup: 'assignments', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'facultyUid', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'submissions', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'assignmentId', order: 'ASCENDING' }, { fieldPath: 'submittedAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'assignmentSubmissionDrafts', fields: [{ fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'expiresAt', order: 'ASCENDING' }] },
+  { collectionGroup: 'gradeRecords', fields: [{ fieldPath: 'collegeId', order: 'ASCENDING' }, { fieldPath: 'studentId', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'semester', order: 'DESCENDING' }] },
 
   // ─── Papers Universal ───
   { collectionGroup: 'papers_universal', fields: [{ fieldPath: 'createdAt', order: 'DESCENDING' }] },

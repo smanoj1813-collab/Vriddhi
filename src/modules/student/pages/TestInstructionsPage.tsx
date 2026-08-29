@@ -56,7 +56,9 @@ const TestInstructionsPage: React.FC = () => {
         if (!d) setLoadError('This test is not available.');
         else setData(d);
       })
-      .catch(() => !cancelled && setLoadError('Could not load this test.'))
+      .catch((err) => !cancelled && setLoadError(
+        err instanceof Error ? err.message : 'Could not load this test.'
+      ))
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [testId, collegeId, studentId]);
@@ -140,10 +142,14 @@ const TestInstructionsPage: React.FC = () => {
       {isFinished && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <AlertTitle>
-            {data.studentStatus === 'graded' ? 'Already graded' : 'Submitted — awaiting grading'}
+            {data.studentStatus === 'graded'
+              ? data.resultReleased ? 'Result released' : 'Graded — release pending'
+              : 'Submitted — awaiting grading'}
           </AlertTitle>
           {data.studentStatus === 'graded'
-            ? `You scored ${data.marksObtained ?? 0}/${data.totalMarks} (Grade ${data.grade || '—'}).`
+            ? data.resultReleased
+              ? `You scored ${data.marksObtained ?? 0}/${data.totalMarks} (Grade ${data.grade || '—'}).`
+              : 'Your test has been graded. The score and answer review will appear on the scheduled result date.'
             : 'Your submission has been received. Results appear once grading is complete.'}
         </Alert>
       )}
@@ -322,8 +328,14 @@ const TestInstructionsPage: React.FC = () => {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
               <Button variant="outlined" onClick={() => setActiveStep(1)}>Back</Button>
               {isFinished ? (
-                <Button variant="contained" color="primary" startIcon={<Visibility />} onClick={handleViewResult}>
-                  View Result
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<Visibility />}
+                  onClick={handleViewResult}
+                  disabled={data.studentStatus === 'graded' && !data.resultReleased}
+                >
+                  {data.studentStatus === 'graded' && !data.resultReleased ? 'Result not released' : 'View Result'}
                 </Button>
               ) : isInProgress ? (
                 <Button

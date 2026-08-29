@@ -1,7 +1,7 @@
 // src/modules/student/hooks/useStudentProfile.ts
 // ------------------------------------------------------------------
 // Fetches the student's Firestore profile document.
-// Looks up by document id first, then by `uid`, then by `email`.
+// Resolves the canonical `userId` ownership field first, then legacy UID forms.
 // ------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
 import { doc, getDoc, query, collection, where, getDocs, limit } from 'firebase/firestore';
@@ -10,6 +10,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 
 export interface FirestoreStudentProfile {
   id: string;
+  userId?: string;
   uid?: string;
   name: string;
   email: string;
@@ -47,7 +48,6 @@ export function useStudentProfile(studentId?: string): UseStudentProfileReturn {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const uid = studentId || user?.uid;
-  const email = user?.email || undefined;
 
   const load = useCallback(async () => {
     if (!uid) {
@@ -58,38 +58,38 @@ export function useStudentProfile(studentId?: string): UseStudentProfileReturn {
     setLoading(true);
     setError(undefined);
     try {
-      // 1) Lookup by document id
+      // 1) Canonical lookup. Provisioning creates a generated domain document
+      // ID and links it to Firebase Auth through `userId`.
+      const userIdSnap = await getDocs(
+        query(collection(db, 'students'), where('userId', '==', uid), limit(1))
+      );
+      if (!userIdSnap.empty) {
+        const d = userIdSnap.docs[0];
+        setProfile({ id: d.id, ...(d.data() as Record<string, unknown>) } as FirestoreStudentProfile);
+        return;
+      }
+
+      // 2) Legacy lookup by document ID.
       const byId = await getDoc(doc(db, 'students', uid));
       if (byId.exists()) {
         setProfile({ id: byId.id, ...(byId.data() as Record<string, unknown>) } as FirestoreStudentProfile);
         return;
       }
 
-      // 2) Lookup by `uid` field
-      if (uid) {
-        const uidSnap = await getDocs(
-          query(collection(db, 'students'), where('uid', '==', uid), limit(1))
-        );
-        if (!uidSnap.empty) {
-          const d = uidSnap.docs[0];
-          setProfile({ id: d.id, ...(d.data() as Record<string, unknown>) } as FirestoreStudentProfile);
-          return;
-        }
-      }
-
-      // 3) Lookup by `email` field
-      if (email) {
-        const emailSnap = await getDocs(
-          query(collection(db, 'students'), where('email', '==', email), limit(1))
-        );
-        if (!emailSnap.empty) {
-          const d = emailSnap.docs[0];
-          setProfile({ id: d.id, ...(d.data() as Record<string, unknown>) } as FirestoreStudentProfile);
-          return;
-        }
+      // 3) Legacy lookup by `uid` field. Email is deliberately not used as an
+      // ownership key because addresses can change and list rules cannot safely
+      // authorize arbitrary email queries.
+      const uidSnap = await getDocs(
+        query(collection(db, 'students'), where('uid', '==', uid), limit(1))
+      );
+      if (!uidSnap.empty) {
+        const d = uidSnap.docs[0];
+        setProfile({ id: d.id, ...(d.data() as Record<string, unknown>) } as FirestoreStudentProfile);
+        return;
       }
 
       setProfile(null);
+      setError('Your account is not linked to a student profile. Contact your college administrator.');
     } catch (err) {
       console.error('[useStudentProfile] Failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to load student profile');
@@ -97,7 +97,7 @@ export function useStudentProfile(studentId?: string): UseStudentProfileReturn {
     } finally {
       setLoading(false);
     }
-  }, [uid, email]);
+  }, [uid]);
 
   useEffect(() => {
     load();

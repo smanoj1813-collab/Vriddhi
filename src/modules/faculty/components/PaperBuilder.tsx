@@ -20,6 +20,8 @@ import {
   PaperType, QuestionType, QuestionDifficulty,
 } from '../../../types/assessment';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { db } from '../../../Firebase/config';
 
 const PAPER_TYPES: { value: PaperType; label: string }[] = [
   { value: 'quiz', label: 'Quiz' },
@@ -40,7 +42,13 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
   const { questions: approvedQuestions } = useQuestions(collegeId, {
     subjectId, status: 'approved'
   });
-  const { create: createPaper } = usePapers(collegeId);
+  const {
+    papers,
+    create: createPaper,
+    loading: papersLoading,
+    error: papersError,
+    refresh: refreshPapers,
+  } = usePapers(collegeId);
 
   const [showBuilder, setShowBuilder] = useState(false);
   const [paperTitle, setPaperTitle] = useState('');
@@ -115,9 +123,17 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
       questionText: question.questionText,
       questionType: question.questionType,
       marks: question.marks,
-      options: question.options?.map((o: { id: string; text: string }) => ({ id: o.id, text: o.text })),
+      options: question.options?.map((o: { id: string; text: string; isCorrect?: boolean }) => ({
+        id: o.id,
+        text: o.text,
+        isCorrect: Boolean(o.isCorrect),
+      })),
       order: 0,
-      // extra fields stored for UI / savePaper — not in PaperQuestion type but needed at runtime
+      // Answer metadata remains in the staff-only paper. Student delivery strips
+      // it in the assessment callable before returning any question payload.
+      correctAnswer: (question as any).correctAnswer ?? question.answer,
+      explanation: question.explanation,
+      tolerance: (question as any).tolerance,
       difficulty: question.difficulty,
       negativeMarks: question.negativeMarks,
       sectionId,
@@ -178,6 +194,7 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
         title: paperTitle,
         description: description || undefined,
         paperType,
+        subject: subjectId || '',
         subjectId: subjectId || '',
         courseId: '',
         semester: 1,
@@ -195,6 +212,9 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
             marks: q.marks,
             negativeMarks: q.negativeMarks,
             options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+            tolerance: q.tolerance,
             order: idx,
             sectionId: q.sectionId,
           })),
@@ -237,6 +257,24 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
     setError(null);
   };
 
+  const updatePaperStatus = async (paperId: string, status: 'pending' | 'approved' | 'rejected') => {
+    try {
+      setError(null);
+      await updateDoc(doc(db, 'papers', paperId), {
+        status,
+        ...(status === 'pending'
+          ? { submittedForReviewAt: serverTimestamp() }
+          : { reviewedAt: serverTimestamp(), reviewedBy: user?.uid || '' }),
+        updatedAt: serverTimestamp(),
+      });
+      refreshPapers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Paper status could not be updated.');
+    }
+  };
+
+  const canReview = ['admin', 'superadmin', 'hod', 'principal'].includes(String((user as any)?.role || ''));
+
   return (
     <Box sx={{ p: 3, height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {!showBuilder ? (
@@ -252,7 +290,46 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
               Create New Paper
             </Button>
           </Box>
-          <Alert severity="info">Paper list will be displayed here</Alert>
+          {(error || papersError) && <Alert severity="error" sx={{ mb: 2 }}>{error || papersError}</Alert>}
+          {papersLoading && <Alert severity="info">Loading papers…</Alert>}
+          {!papersLoading && papers.length === 0 && (
+            <Alert severity="info">No papers yet. Create a paper from approved questions.</Alert>
+          )}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {papers.map((paper: any) => (
+              <Card key={paper.id} variant="outlined" sx={{ flex: '1 1 320px', maxWidth: 480 }}>
+                <CardContent>
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h6">{paper.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">{paper.description || 'No description'}</Typography>
+                    </Box>
+                    <Chip size="small" label={paper.status || 'draft'} color={
+                      paper.status === 'approved' ? 'success' : paper.status === 'rejected' ? 'error' : 'default'
+                    } />
+                  </Stack>
+                  <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
+                    <Chip size="small" label={`${paper.totalMarks || 0} marks`} />
+                    <Chip size="small" label={`${paper.duration || paper.durationMinutes || 0} min`} />
+                    <Chip size="small" label={`${paper.totalQuestions || paper.sections?.reduce((sum: number, section: any) => sum + (section.questions?.length || 0), 0) || 0} questions`} />
+                  </Stack>
+                  <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                    {paper.status === 'draft' && (
+                      <Button size="small" variant="outlined" onClick={() => void updatePaperStatus(paper.id, 'pending')}>
+                        Submit for review
+                      </Button>
+                    )}
+                    {canReview && paper.status === 'pending' && (
+                      <>
+                        <Button size="small" color="success" variant="contained" onClick={() => void updatePaperStatus(paper.id, 'approved')}>Approve</Button>
+                        <Button size="small" color="error" onClick={() => void updatePaperStatus(paper.id, 'rejected')}>Reject</Button>
+                      </>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
         </Box>
       ) : (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

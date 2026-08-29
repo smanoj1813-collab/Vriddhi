@@ -1,21 +1,17 @@
 // src/modules/faculty/api/assignmentApi.ts
 // Firestore CRUD for Faculty Assignments
 
-import { db } from '@/Firebase/config'
+import { db, functions } from '@/Firebase/config'
+import { httpsCallable } from 'firebase/functions'
 import {
   collection,
   query,
   where,
   getDocs,
-  addDoc,
-  updateDoc,
   doc,
-  deleteDoc,
   orderBy,
   limit,
   getDoc,
-  writeBatch,
-  serverTimestamp,
 } from 'firebase/firestore'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,8 +70,10 @@ export interface Submission {
   content?: string
   attachments?: Array<{
     name: string
-    url: string
-    type: string
+    url?: string
+    storagePath?: string
+    type?: string
+    contentType?: string
     size: number
   }>
   
@@ -171,6 +169,7 @@ export async function fetchFacultyAssignments(
   try {
     const q = query(
       collection(db, ASSIGNMENTS_COLLECTION),
+      where('collegeId', '==', cid),
       where('facultyUid', '==', facultyUid),
       orderBy('createdAt', 'desc'),
       limit(100)
@@ -187,7 +186,7 @@ export async function fetchFacultyAssignments(
     return assignments
   } catch (err) {
     console.error('[AssignmentApi] fetchFacultyAssignments failed:', err)
-    return []
+    throw err
   }
 }
 
@@ -196,39 +195,15 @@ export async function fetchFacultyAssignments(
  */
 export async function fetchStudentAssignments(
   studentUid: string,
-  collegeId?: string
+  _collegeId?: string
 ): Promise<Assignment[]> {
-  const cid = collegeId || getCollegeId()
   if (!studentUid) return []
-
-  try {
-    // Query by studentIds array contains, or by cohort match
-    const q = query(
-      collection(db, ASSIGNMENTS_COLLECTION),
-      where('status', 'in', ['published', 'ongoing', 'closed', 'graded']),
-      orderBy('deadline', 'desc'),
-      limit(100)
-    )
-    const snap = await getDocs(q)
-    
-    return snap.docs
-      .map(d => docToAssignment(d.data(), d.id))
-      .filter(a => {
-        // Must match college
-        if (cid && a.collegeId !== cid) return false
-        
-        // Check if student is in target list
-        if (a.targetType === 'specific') {
-          return a.studentIds?.includes(studentUid)
-        }
-        
-        // For cohort-based, return all (actual filtering should be done server-side)
-        return true
-      })
-  } catch (err) {
-    console.error('[AssignmentApi] fetchStudentAssignments failed:', err)
-    return []
-  }
+  const getMyAssignments = httpsCallable<Record<string, never>, { assignments: Assignment[] }>(
+    functions,
+    'getMyAssignments'
+  )
+  const response = await getMyAssignments({})
+  return response.data.assignments
 }
 
 /**
@@ -255,15 +230,17 @@ export async function fetchAssignment(assignmentId: string): Promise<Assignment 
 export async function createAssignment(
   data: Omit<Assignment, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Assignment> {
-  const now = new Date().toISOString()
-  const docData = {
+  const create = httpsCallable<Record<string, unknown>, { id: string; status: AssignmentStatus }>(
+    functions,
+    'createFacultyAssignment'
+  )
+  const response = await create({
     ...data,
-    createdAt: now,
-    updatedAt: now,
-  }
-  
-  const docRef = await addDoc(collection(db, ASSIGNMENTS_COLLECTION), docData)
-  return docToAssignment(docData, docRef.id)
+    deadline: data.deadline,
+  })
+  const created = await fetchAssignment(response.data.id)
+  if (!created) throw new Error('Assignment was created but could not be reloaded.')
+  return created
 }
 
 /**
@@ -273,16 +250,38 @@ export async function updateAssignment(
   assignmentId: string,
   data: Partial<Assignment>
 ): Promise<void> {
-  const updateData: Record<string, any> = {
-    ...data,
-    updatedAt: new Date().toISOString(),
+  if (data.status) {
+    const transition = httpsCallable<
+      { assignmentId: string; status: AssignmentStatus },
+      { success: boolean }
+    >(functions, 'transitionFacultyAssignment')
+    await transition({ assignmentId, status: data.status })
+    return
   }
-  
-  if (data.status === 'published' && !data.publishedAt) {
-    updateData.publishedAt = new Date().toISOString()
+  const existing = await fetchAssignment(assignmentId)
+  if (!existing) throw new Error('Assignment not found.')
+  const update = httpsCallable<
+    { assignmentId: string; assignment: Record<string, unknown> },
+    { success: boolean }
+  >(functions, 'updateFacultyAssignment')
+  const merged = { ...existing, ...data }
+  const assignment = {
+    title: merged.title,
+    description: merged.description,
+    topic: merged.topic,
+    subject: merged.subject,
+    subjectCode: merged.subjectCode,
+    maxScore: merged.maxScore,
+    deadline: new Date(merged.deadline).toISOString(),
+    type: merged.type,
+    targetType: merged.targetType,
+    cohort: merged.cohort,
+    studentIds: merged.studentIds,
   }
-  
-  await updateDoc(doc(db, ASSIGNMENTS_COLLECTION, assignmentId), updateData)
+  await update({
+    assignmentId,
+    assignment: Object.fromEntries(Object.entries(assignment).filter(([, value]) => value !== undefined)),
+  })
 }
 
 /**
@@ -299,20 +298,11 @@ export async function publishAssignment(assignmentId: string): Promise<void> {
  * Delete an assignment (only if draft)
  */
 export async function deleteAssignment(assignmentId: string): Promise<void> {
-  // Also delete all submissions
-  const submissionsQuery = query(
-    collection(db, SUBMISSIONS_COLLECTION),
-    where('assignmentId', '==', assignmentId)
+  const remove = httpsCallable<{ assignmentId: string }, { success: boolean }>(
+    functions,
+    'deleteFacultyAssignmentDraft'
   )
-  const submissionsSnap = await getDocs(submissionsQuery)
-  
-  const batch = writeBatch(db)
-  submissionsSnap.docs.forEach(d => {
-    batch.delete(doc(db, SUBMISSIONS_COLLECTION, d.id))
-  })
-  batch.delete(doc(db, ASSIGNMENTS_COLLECTION, assignmentId))
-  
-  await batch.commit()
+  await remove({ assignmentId })
 }
 
 // ─── Submissions CRUD ─────────────────────────────────────────────────────────
@@ -321,13 +311,16 @@ export async function deleteAssignment(assignmentId: string): Promise<void> {
  * Fetch submissions for an assignment
  */
 export async function fetchAssignmentSubmissions(
-  assignmentId: string
+  assignmentId: string,
+  collegeId?: string
 ): Promise<Submission[]> {
-  if (!assignmentId) return []
+  const cid = collegeId || getCollegeId()
+  if (!assignmentId || !cid) return []
 
   try {
     const q = query(
       collection(db, SUBMISSIONS_COLLECTION),
+      where('collegeId', '==', cid),
       where('assignmentId', '==', assignmentId),
       orderBy('submittedAt', 'desc')
     )
@@ -335,7 +328,7 @@ export async function fetchAssignmentSubmissions(
     return snap.docs.map(d => docToSubmission(d.data(), d.id))
   } catch (err) {
     console.error('[AssignmentApi] fetchAssignmentSubmissions failed:', err)
-    return []
+    throw err
   }
 }
 
@@ -369,34 +362,9 @@ export async function fetchStudentSubmission(
  * Submit an assignment (student)
  */
 export async function submitAssignment(
-  data: Omit<Submission, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'submittedAt'>
+  _data: Omit<Submission, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'submittedAt'>
 ): Promise<Submission> {
-  const now = new Date().toISOString()
-  const isLate = new Date(now) > new Date(data.maxScore > 0 ? data.maxScore : 0) // Compare with deadline
-  
-  const docData = {
-    ...data,
-    status: isLate ? 'late' : 'submitted',
-    submittedAt: now,
-    createdAt: now,
-    updatedAt: now,
-  }
-  
-  // Check if submission already exists
-  const existing = await fetchStudentSubmission(data.assignmentId, data.studentUid)
-  if (existing) {
-    // Update existing submission
-    await updateDoc(doc(db, SUBMISSIONS_COLLECTION, existing.id), {
-      ...docData,
-      status: 'submitted', // Re-submission is not late
-      submittedAt: now,
-      updatedAt: now,
-    })
-      return { ...existing, ...docData, id: existing.id } as Submission
-  }
-  
-  const docRef = await addDoc(collection(db, SUBMISSIONS_COLLECTION), docData)
-  return docToSubmission(docData as any, docRef.id)
+  throw new Error('Student submissions must use the verified upload-session workflow.')
 }
 
 /**
@@ -410,14 +378,14 @@ export async function gradeSubmission(
     gradedBy: string
   }
 ): Promise<void> {
-  const now = new Date().toISOString()
-  await updateDoc(doc(db, SUBMISSIONS_COLLECTION, submissionId), {
+  const grade = httpsCallable<
+    { submissionId: string; score: number; remarks: string },
+    { success: boolean }
+  >(functions, 'gradeAssignmentSubmission')
+  await grade({
+    submissionId,
     score: data.score,
     remarks: data.remarks || '',
-    status: 'graded',
-    gradedAt: now,
-    gradedBy: data.gradedBy,
-    updatedAt: now,
   })
 }
 
@@ -432,21 +400,15 @@ export async function batchGradeSubmissions(
   }>,
   gradedBy: string
 ): Promise<void> {
-  const batch = writeBatch(db)
-  const now = new Date().toISOString()
-  
-  for (const grade of grades) {
-    batch.update(doc(db, SUBMISSIONS_COLLECTION, grade.submissionId), {
-      score: grade.score,
-      remarks: grade.remarks || '',
-      status: 'graded',
-      gradedAt: now,
-      gradedBy,
-      updatedAt: now,
-    })
-  }
-  
-  await batch.commit()
+  await Promise.all(
+    grades.map((grade) =>
+      gradeSubmission(grade.submissionId, {
+        score: grade.score,
+        remarks: grade.remarks,
+        gradedBy,
+      })
+    )
+  )
 }
 
 // ─── Stats & Helpers ──────────────────────────────────────────────────────────
@@ -500,4 +462,15 @@ export async function hasSubmitted(
 ): Promise<boolean> {
   const submission = await fetchStudentSubmission(assignmentId, studentUid)
   return submission !== null
+}
+
+export async function getSubmissionFileDownload(
+  submissionId: string,
+  storagePath: string
+): Promise<{ url: string; expiresAt: string; name: string; contentType: string }> {
+  const getDownload = httpsCallable<
+    { submissionId: string; storagePath: string },
+    { url: string; expiresAt: string; name: string; contentType: string }
+  >(functions, 'getAssignmentSubmissionDownload')
+  return (await getDownload({ submissionId, storagePath })).data
 }

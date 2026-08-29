@@ -7,6 +7,7 @@ import {
   submitAssignmentWithFiles,
   validateFile,
   formatFileSize,
+  getAllowedFileTypes,
   isImageFile,
 } from '../services/assignmentService';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -22,7 +23,7 @@ interface AssignmentUploadModalProps {
 export default function AssignmentUploadModal({ assignment, isOpen, onClose, onSubmit }: AssignmentUploadModalProps) {
   const { user } = useAuth();
   const { profile } = useStudentProfile(user?.uid);
-  const studentId = profile?.id || user?.uid || '';
+  const studentId = profile?.id || '';
 
   const [files, setFiles] = useState<File[]>([]);
   const [comment, setComment] = useState('');
@@ -33,11 +34,7 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
   const [success, setSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const allowedTypes = [
-    '.pdf', '.doc', '.docx', '.txt',
-    '.jpg', '.jpeg', '.png', '.gif', '.webp',
-    '.zip', '.ppt', '.pptx', '.xls', '.xlsx',
-  ];
+  const allowedTypes = getAllowedFileTypes();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -191,7 +188,7 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
                   <Upload size={32} className="mx-auto mb-3 text-slate-500" />
                   <p className="text-sm text-slate-300 font-medium">Drop files here or click to browse</p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Supported: {allowedTypes.join(', ')} &bull; Max 50MB per file &bull; Max 10 files
+                    Supported: {allowedTypes.join(', ')} &bull; Max 10MB per file &bull; Max 10 files
                   </p>
                 </div>
 
