@@ -58,3 +58,17 @@ jobs:
       - name: Build the functions
         working-directory: functions
         run: npm run build
+
+      - name: Lint the functions
+        working-directory: functions
+        run: npm run lint
+
+      - name: Set up Java for Firebase emulators
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run unit and security rules tests
+        working-directory: functions
+        run: npm test
