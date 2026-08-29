@@ -1,64 +1,6 @@
 {
   "rules": {
-    "users": {
-      "$uid": {
-        ".read": "auth != null && (auth.uid == $uid || root.child('users/' + auth.uid + '/role').val() == 'admin' || root.child('users/' + auth.uid + '/role').val() == 'superadmin')",
-        ".write": "auth != null && (auth.uid == $uid || root.child('users/' + auth.uid + '/role').val() == 'superadmin')"
-      }
-    },
-    "students": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users/' + auth.uid + '/role').val() == 'admin' || root.child('users/' + auth.uid + '/role').val() == 'superadmin' || root.child('users/' + auth.uid + '/role').val() == 'mentor')"
-    },
-    "attendance": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users/' + auth.uid + '/role').val() == 'admin' || root.child('users/' + auth.uid + '/role').val() == 'faculty' || root.child('users/' + auth.uid + '/role').val() == 'mentor')"
-    },
-    "assessments": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users/' + auth.uid + '/role').val() == 'admin' || root.child('users/' + auth.uid + '/role').val() == 'faculty' || root.child('users/' + auth.uid + '/role').val() == 'superadmin')"
-    },
-    "colleges": {
-      "$collegeId": {
-        ".read": "auth != null",
-        ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() == 'superadmin'",
-        "questionBank": {
-          ".read": "auth != null && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId",
-          ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() == 'admin' && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId",
-          "$questionId": {
-            ".validate": "newData.hasChildren(['question', 'options', 'correctAnswer', 'solution', 'topic', 'difficulty', 'createdAt', 'status'])"
-          }
-        },
-        "questionBankStats": {
-          ".read": "auth != null && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId",
-          ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() == 'admin' && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId"
-        },
-        "questionSets": {
-          ".read": "auth != null && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId",
-          ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() == 'admin' && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId"
-        },
-        "questionUsage": {
-          ".read": "auth != null && root.child('users/' + auth.uid + '/collegeId').val() == $collegeId"
-        }
-      }
-    },
-    "faculty": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users/' + auth.uid + '/role').val() == 'admin' || root.child('users/' + auth.uid + '/role').val() == 'superadmin')"
-    },
-    "fees": {
-      ".read": "auth != null",
-      ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() == 'admin'"
-    },
-    "notifications": {
-      "$uid": {
-        ".read": "auth != null && auth.uid == $uid",
-        ".write": "auth != null && (auth.uid == $uid || root.child('users/' + auth.uid + '/role').val() == 'admin')"
-      }
-    },
-    "schedules": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users/' + auth.uid + '/role').val() == 'admin' || root.child('users/' + auth.uid + '/role').val() == 'faculty')"
-    }
+    ".read": false,
+    ".write": false
   }
 }

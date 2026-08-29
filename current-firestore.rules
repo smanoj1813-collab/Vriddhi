@@ -46,6 +46,28 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    // Student records use generated domain document IDs. Provisioning links
+    // each record to Firebase Auth through `userId`; `uid` and a UID document
+    // ID are accepted only for legacy records.
+    function ownsStudentProfile(studentId, studentData) {
+      return isSignedIn()
+        && (
+          studentData.userId == request.auth.uid
+          || studentData.uid == request.auth.uid
+          || studentId == request.auth.uid
+        );
+    }
+
+    function ownsStudentId(studentId) {
+      return isSignedIn()
+        && studentId != null
+        && (
+          studentId == request.auth.uid
+          || get(/databases/$(database)/documents/students/$(studentId)).data.userId == request.auth.uid
+          || get(/databases/$(database)/documents/students/$(studentId)).data.uid == request.auth.uid
+        );
+    }
+
     function immutableUserFields() {
       return request.resource.data.uid == resource.data.uid
         && request.resource.data.role == resource.data.role
@@ -73,14 +95,18 @@ service cloud.firestore {
     }
 
     match /students/{id} {
-      allow read: if isSignedIn() && (
-        isSuperadmin()
-        || resource.data.uid == request.auth.uid
-        || resource.data.userId == request.auth.uid
-        || (isStaff() && sameCollege(resource.data))
-      );
-      allow create, update, delete: if isSuperadmin()
+      allow read: if ownsStudentProfile(id, resource.data)
+        || isSuperadmin()
+        || (isStaff() && sameCollege(resource.data));
+      allow create: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+      allow update: if isSuperadmin()
+        || (role() in ['admin', 'hod']
+          && sameCollege(resource.data)
+          && request.resource.data.collegeId == resource.data.collegeId
+          && request.resource.data.userId == resource.data.userId);
+      allow delete: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(resource.data));
     }
 
     match /faculty/{id} {
@@ -113,16 +139,21 @@ service cloud.firestore {
       allow write: if isSuperadmin();
 
       match /students/{id} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
-        allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+        allow read: if ownsStudentProfile(id, resource.data)
+          || isSuperadmin()
+          || (isStaff() && collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
     }
 
     match /questions/{id} {
+      // Question-authoring documents contain answer keys and explanations.
+      // Student delivery uses server-filtered assessment payloads, never this
+      // collection directly.
       allow read: if isSignedIn() && (
         isSuperadmin()
         || (isStaff() && sameCollege(resource.data))
-        || (role() == 'student' && sameCollege(resource.data) && resource.data.status in ['active', 'published'])
       );
       allow create: if isCollegeStaff() && sameCollege(request.resource.data)
         && request.resource.data.createdBy == request.auth.uid;
@@ -132,29 +163,52 @@ service cloud.firestore {
     }
 
     match /papers/{id} {
+      // Papers snapshot correct answers and are authoring-only documents.
       allow read: if isSignedIn() && (
         isSuperadmin()
         || (isStaff() && sameCollege(resource.data))
-        || (role() == 'student' && sameCollege(resource.data) && resource.data.status == 'published')
       );
-      allow create: if isCollegeStaff() && sameCollege(request.resource.data);
-      allow update: if isCollegeStaff() && sameCollege(resource.data)
-        && request.resource.data.collegeId == resource.data.collegeId;
-      allow delete: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
+      // Legacy authoring may create/edit content-only drafts. Every submission,
+      // approval and publication transition is callable-owned and audited.
+      allow create: if isCollegeStaff()
+        && sameCollege(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.status == 'draft'
+        && request.resource.data.verificationStatus == 'draft';
+      allow update: if isCollegeStaff()
+        && sameCollege(resource.data)
+        && request.resource.data.collegeId == resource.data.collegeId
+        && resource.data.status == 'draft'
+        && resource.data.verificationStatus in ['draft', 'modification-requested', 'rejected-by-hod']
+        && (resource.data.createdBy == request.auth.uid
+          || role() in ['superadmin', 'admin', 'principal', 'hod'])
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'collegeId', 'createdBy', 'createdByName', 'status',
+          'verificationStatus', 'submittedAt', 'publishedAt',
+          'reviewedBy', 'reviewedByName', 'reviewedAt', 'approvalRemarks'
+        ]);
+      allow delete: if resource.data.status == 'draft'
+        && (isSuperadmin() || (role() == 'admin' && sameCollege(resource.data)));
+    }
+
+    match /paperReviewAudit/{auditId} {
+      allow read: if isSuperadmin()
+        || (role() in ['admin', 'principal', 'hod'] && sameCollege(resource.data));
+      allow create, update, delete: if false;
     }
 
     match /attendance/{id} {
-      allow read: if isSignedIn() && (
-        isSuperadmin()
-        || resource.data.studentId == request.auth.uid
-        || resource.data.uid == request.auth.uid
-        || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if ownsStudentId(resource.data.studentId)
+        || (isSignedIn() && resource.data.uid == request.auth.uid)
+        || isSuperadmin()
+        || (isStaff() && sameCollege(resource.data));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || (isStaff() && sameCollege(resource.data)) || resource.data.studentId == request.auth.uid);
+      allow read: if ownsStudentId(resource.data.studentId)
+        || isSuperadmin()
+        || (isStaff() && sameCollege(resource.data));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -202,47 +256,116 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════════════
+    // ASSESSMENTS — authoring reads for staff; all attempt transitions,
+    // question delivery, submissions and grading are server-owned.
+    // ══════════════════════════════════════════════════════════════
+    match /assessments/{assessmentId} {
+      allow read: if isSignedIn() && (
+        isSuperadmin() || (isStaff() && sameCollege(resource.data))
+      );
+      allow create: if isCollegeStaff() && sameCollege(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isCollegeStaff() && sameCollege(resource.data)
+        && request.resource.data.collegeId == resource.data.collegeId;
+      allow delete: if isSuperadmin()
+        || (role() == 'admin' && sameCollege(resource.data));
+    }
+
+    match /scheduledTests/{testId} {
+      allow read: if isSignedIn() && (
+        isSuperadmin() || (isStaff() && sameCollege(resource.data))
+      );
+      allow write: if false;
+
+      match /assessmentQuestions/{questionId} {
+        allow read: if isSignedIn() && (
+          isSuperadmin()
+          || (isStaff()
+            && sameCollege(get(/databases/$(database)/documents/scheduledTests/$(testId)).data))
+        );
+        allow write: if false;
+      }
+    }
+
+    match /studentAssessments/{attemptId} {
+      // Students receive state/result projections from callables so unreleased
+      // scores and server grading breakdowns cannot be inspected directly.
+      allow read: if isSignedIn() && (
+        isSuperadmin() || (isStaff() && sameCollege(resource.data))
+      );
+      allow write: if false;
+    }
+
+    match /studentSubmissions/{submissionId} {
+      allow read: if isSignedIn() && (
+        isSuperadmin() || (isStaff() && sameCollege(resource.data))
+      );
+      allow write: if false;
+    }
+
+    match /proctoringLogs/{logId} {
+      allow read: if isSignedIn() && (
+        isSuperadmin() || (isStaff() && sameCollege(resource.data))
+      );
+      allow write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════════════
     // ASSIGNMENTS — faculty create, students read/submit
     // ══════════════════════════════════════════════════════════════
     match /assignments/{assignmentId} {
-      // Faculty can create and manage their own assignments
+      // Students receive only server-filtered assignment payloads. Direct
+      // documents may include targeting and internal authoring metadata.
       allow read: if isSignedIn() && (
         isSuperadmin()
         || (isStaff() && sameCollege(resource.data))
-        || (role() == 'student' && sameCollege(resource.data) && resource.data.status in ['published', 'ongoing', 'closed', 'graded'])
       );
-      allow create: if isCollegeStaff()
-        && request.resource.data.facultyUid == request.auth.uid
-        && request.resource.data.collegeId == collegeId();
-      allow update: if isCollegeStaff() && sameCollege(resource.data);
-      allow delete: if isCollegeStaff() && sameCollege(resource.data)
-        && resource.data.facultyUid == request.auth.uid;
+      // Authoring and lifecycle transitions are validated by callable
+      // functions; clients cannot publish, reopen, retarget, or delete records.
+      allow create, update, delete: if false;
     }
 
     // ══════════════════════════════════════════════════════════════
     // SUBMISSIONS — students submit, faculty grade
     // ══════════════════════════════════════════════════════════════
     match /submissions/{submissionId} {
-      // Students can read/submit their own submissions
       allow read: if isSignedIn() && (
         isSuperadmin()
         || (isStaff() && sameCollege(resource.data))
         || resource.data.studentUid == request.auth.uid
+        || ownsStudentId(resource.data.studentId)
       );
-      // Students create submissions for their assignments
-      allow create: if isSignedIn() && role() == 'student'
-        && request.resource.data.studentUid == request.auth.uid
-        && request.resource.data.collegeId == collegeId()
-        && request.resource.data.assignmentId != null;
-      // Students can update their own pending/late submissions
-      allow update: if isSignedIn() && (
-        (
-          resource.data.studentUid == request.auth.uid
-          && resource.data.status != 'graded'
+      // Submission creation/resubmission is a server transaction that validates
+      // assignment targeting, deadlines, upload metadata, and idempotency.
+      allow create: if false;
+      // Grading also runs through a server transaction that checks assignment
+      // ownership and score bounds.
+      allow update, delete: if false;
+    }
+
+    match /assignmentSubmissionDrafts/{draftId} {
+      allow read, write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // OFFICIAL GRADE RECORDS — separate from assessment attempts
+    // ══════════════════════════════════════════════════════════════
+    match /gradeRecords/{gradeId} {
+      // Draft transcript records remain registrar-only until an explicit,
+      // server-audited publish transition.
+      allow read: if (
+          ownsStudentId(resource.data.studentId)
+          && resource.data.status == 'published'
         )
-        || isCollegeStaff() && sameCollege(resource.data)
-      );
-      allow delete: if false; // Submissions are immutable once graded
+        || isSuperadmin()
+        || (role() in ['admin', 'principal', 'hod'] && sameCollege(resource.data));
+      allow create, update, delete: if false;
+    }
+
+    match /gradeRecordAudit/{auditId} {
+      allow read: if isSuperadmin()
+        || (role() in ['admin', 'principal', 'hod'] && sameCollege(resource.data));
+      allow create, update, delete: if false;
     }
 
     // ══════════════════════════════════════════════════════════════

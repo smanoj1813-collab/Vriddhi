@@ -9,12 +9,12 @@ interface GradeRecord {
   id: string;
   subject: string;
   code: string;
-  credits: number;
-  internal: number;
-  external: number;
-  total: number;
+  credits?: number;
+  internal?: number;
+  external?: number;
+  total?: number;
   grade: string;
-  gradePoint: number;
+  gradePoint?: number;
   semester: number;
 }
 
@@ -31,20 +31,31 @@ const gradeColors: Record<string, string> = {
 
 export default function StudentGrades() {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useStudentProfile(user?.uid);
+  const { profile, loading: profileLoading, error: profileError } = useStudentProfile(user?.uid);
   const [grades, setGrades] = useState<GradeRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!profile) return;
+    if (profileLoading) return;
+    if (!profile) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
+    setLoadError(null);
     fetchGrades(profile.collegeId || user?.collegeId, profile.id)
       .then((data) => !cancelled && setGrades(data))
-      .catch((err) => console.error('[StudentGrades] load failed:', err))
+      .catch((err) => {
+        console.error('[StudentGrades] load failed:', err);
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : 'Failed to load official grade records');
+        }
+      })
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
-  }, [profile, user?.collegeId]);
+  }, [profile, profileLoading, user?.collegeId]);
 
   const semesterWise = useMemo(() => {
     return grades.reduce((acc, g) => {
@@ -69,15 +80,21 @@ export default function StudentGrades() {
     if (expandedSemester == null && semesters.length) setExpandedSemester(semesters[0]);
   }, [semesters, expandedSemester]);
 
-  const totalCredits = grades.reduce((sum, g) => sum + g.credits, 0);
-  const totalGradePoints = grades.reduce((sum, g) => sum + g.gradePoint * g.credits, 0);
-  const cgpa = totalCredits ? (totalGradePoints / totalCredits).toFixed(2) : '0.00';
+  const totalCredits = grades.reduce((sum, g) => sum + (g.credits ?? 0), 0);
+  const totalGradePoints = grades.reduce(
+    (sum, g) => sum + (g.gradePoint ?? 0) * (g.credits ?? 0),
+    0
+  );
+  const cgpa = totalCredits ? (totalGradePoints / totalCredits).toFixed(2) : '—';
 
   const semesterGPA = (semester: number) => {
     const list = semesterWise[semester] || [];
-    const credits = list.reduce((s, g) => s + g.credits, 0);
-    const points = list.reduce((s, g) => s + g.gradePoint * g.credits, 0);
-    return credits ? (points / credits).toFixed(2) : '0.00';
+    const credits = list.reduce((s, g) => s + (g.credits ?? 0), 0);
+    const points = list.reduce(
+      (s, g) => s + (g.gradePoint ?? 0) * (g.credits ?? 0),
+      0
+    );
+    return credits ? (points / credits).toFixed(2) : '—';
   };
 
   if (profileLoading || loading) {
@@ -85,6 +102,15 @@ export default function StudentGrades() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
         <p className="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loading Grade Records...</p>
+      </div>
+    );
+  }
+
+  const error = profileError || loadError;
+  if (error || !profile) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
+        {error || 'Your account is not linked to a student profile. Contact your college administrator.'}
       </div>
     );
   }
@@ -115,7 +141,7 @@ export default function StudentGrades() {
                 strokeLinecap="round"
                 strokeDasharray={`${2 * Math.PI * 42}`}
                 initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
-                animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - parseFloat(cgpa) / 10) }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - (parseFloat(cgpa) || 0) / 10) }}
                 transition={{ duration: 1.2, ease: 'easeOut' }}
               />
             </svg>
@@ -223,10 +249,10 @@ export default function StudentGrades() {
                               <tr key={g.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-100 dark:hover:bg-slate-800/20">
                                 <td className="py-3 font-semibold text-slate-900 dark:text-slate-900 dark:text-white">{g.subject}</td>
                                 <td className="py-3 text-slate-500 font-mono">{g.code}</td>
-                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.credits}</td>
-                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.internal}</td>
-                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.external}</td>
-                                <td className="py-3 text-center font-bold text-slate-900 dark:text-slate-900 dark:text-white">{g.total}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.credits ?? '—'}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.internal ?? '—'}</td>
+                                <td className="py-3 text-center text-slate-600 dark:text-slate-700 dark:text-slate-300 font-medium">{g.external ?? '—'}</td>
+                                <td className="py-3 text-center font-bold text-slate-900 dark:text-slate-900 dark:text-white">{g.total ?? '—'}</td>
                                 <td className="py-3 text-center">
                                   <span className={`px-2.5 py-0.5 rounded-lg text-xs font-extrabold border ${gradeColors[g.grade] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                                     {g.grade}

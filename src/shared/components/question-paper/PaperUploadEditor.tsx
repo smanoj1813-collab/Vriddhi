@@ -9,9 +9,10 @@ import {
   X, UploadCloud, FileText, Plus, Trash2, ArrowUp, ArrowDown, Loader2,
   AlertTriangle, Save, Send, Paperclip, CheckCircle2, ShieldCheck,
 } from 'lucide-react';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/Firebase/config';
+import { collection, doc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { deleteObject, ref, uploadBytes } from 'firebase/storage';
+import { db, functions, storage } from '@/Firebase/config';
 import { DEFAULT_PROGRAMS, DEFAULT_SUBJECTS, DEFAULT_SEMESTERS } from '@/shared/constants/academicPrograms';
 import { QUESTION_TYPE_OPTIONS } from '@/shared/utils/questionFileParser';
 
@@ -41,6 +42,7 @@ export interface EditablePaper {
   filePath?: string;
   answerKeyUrl?: string;
   answerKeyName?: string;
+  answerKeyPath?: string;
   /** Optional HOD sign-off — only exam papers normally need it. */
   requiresApproval?: boolean;
 }
@@ -109,7 +111,6 @@ export default function PaperUploadEditor({
   open,
   collegeId,
   userId,
-  userName,
   subjects,
   branches,
   batches = [],
@@ -173,18 +174,27 @@ export default function PaperUploadEditor({
       return { ...prev, questions: next };
     });
 
-  const uploadIfNeeded = async (f: File | null, folder: string) => {
+  const uploadIfNeeded = async (f: File | null, paperId: string, kind: 'paper' | 'answer-key') => {
     if (!f) return null;
-    const path = `${folder}/${collegeId}/${Date.now()}_${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `paper-files/${collegeId}/${userId}/${paperId}/${kind}_${Date.now()}_${safeName}`;
     const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, f);
-    const url = await getDownloadURL(storageRef);
-    return { url, path, name: f.name };
+    const extension = safeName.split('.').pop()?.toLowerCase();
+    const contentType = f.type || ({
+      pdf: 'application/pdf',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+    } as Record<string, string>)[extension || ''];
+    await uploadBytes(storageRef, f, { contentType });
+    return { path, name: f.name };
   };
 
   const persist = async (action: 'draft' | 'save' | 'submitted' | 'published') => {
-    if (!collegeId) {
-      setError('Missing college — please sign in again.');
+    if (!collegeId || !userId) {
+      setError('Missing account or college — please sign in again.');
       return;
     }
     if (!form.title.trim()) {
@@ -195,27 +205,23 @@ export default function PaperUploadEditor({
       setError('Subject is required.');
       return;
     }
-    if (action !== 'draft' && !file && !form.fileUrl && form.questions.length === 0) {
+    if (action !== 'draft' && !file && !form.filePath && !form.fileUrl && form.questions.length === 0) {
       setError('Add at least one question or attach a paper file before saving.');
       return;
     }
     setBusy(true);
     setError('');
+    const pendingUploadPaths: string[] = [];
     try {
-      const uploaded = await uploadIfNeeded(file, 'papers');
-      const uploadedKey = await uploadIfNeeded(answerKey, 'answer-keys');
-
-      // Approval is OPTIONAL: papers saved without it are immediately usable.
-      const verificationStatus =
-        action === 'draft'
-          ? 'draft'
-          : action === 'submitted'
-            ? 'submitted-for-approval'
-            : action === 'published'
-              ? 'approved-by-hod'
-              : 'not-required';
-
-      const payload: Record<string, any> = {
+      // Generate the Firestore-shaped identifier before upload so Storage can
+      // enforce a tenant/author/paper namespace without granting Firestore
+      // write access to the browser.
+      const paperId = form.id || doc(collection(db, 'papers')).id;
+      const uploaded = await uploadIfNeeded(file, paperId, 'paper');
+      if (uploaded) pendingUploadPaths.push(uploaded.path);
+      const uploadedKey = await uploadIfNeeded(answerKey, paperId, 'answer-key');
+      if (uploadedKey) pendingUploadPaths.push(uploadedKey.path);
+      const payload: Record<string, unknown> = {
         title: form.title.trim(),
         subject: form.subject.trim(),
         branch: form.branch,
@@ -227,63 +233,37 @@ export default function PaperUploadEditor({
         totalMarks: effectiveMarks,
         instructions: form.instructions,
         sections: form.questions.length
-          ? [
-              {
-                id: 'section-a',
-                name: 'Section A',
-                questions: form.questions.map((q, i) => ({
-                  number: i + 1,
-                  text: q.text,
-                  type: q.type,
-                  marks: Number(q.marks) || 0,
-                  topic: q.topic,
-                })),
-              },
-            ]
+          ? [{
+              id: 'section-a',
+              name: 'Section A',
+              questions: form.questions.map((q, i) => ({
+                number: i + 1,
+                text: q.text,
+                type: q.type,
+                marks: Number(q.marks) || 0,
+                topic: q.topic,
+              })),
+            }]
           : [],
         totalQuestions: form.questions.length,
-        status: action === 'published' || action === 'save' ? 'published' : 'draft',
-        verificationStatus,
-        requiresApproval: action === 'submitted' ? true : action === 'draft' ? Boolean(form.requiresApproval) : false,
-        approvalRequired: action === 'submitted',
-        collegeId,
-        updatedAt: new Date().toISOString(),
-        updatedBy: userId,
+        requiresApproval: Boolean(form.requiresApproval),
+        filePath: uploaded?.path || form.filePath,
+        fileUrl: form.fileUrl,
+        fileName: uploaded?.name || form.fileName,
+        answerKeyPath: uploadedKey?.path || form.answerKeyPath,
+        answerKeyUrl: form.answerKeyUrl,
+        answerKeyName: uploadedKey?.name || form.answerKeyName,
       };
-
-      if (uploaded) {
-        payload.fileUrl = uploaded.url;
-        payload.fileName = uploaded.name;
-        payload.filePath = uploaded.path;
-        payload.fileType = 'upload';
-      }
-      if (uploadedKey) {
-        payload.answerKeyUrl = uploadedKey.url;
-        payload.answerKeyName = uploadedKey.name;
-      }
-      if (action === 'submitted') payload.submittedAt = new Date().toISOString();
-      if (action === 'save') payload.finalisedAt = new Date().toISOString();
-
-      let paperId = form.id || '';
-      if (isEdit && paperId) {
-        await updateDoc(doc(db, 'papers', paperId), payload);
-      } else {
-        const created = await addDoc(collection(db, 'papers'), {
-          ...payload,
-          questionIds: [],
-          linkedQuestionIds: [],
-          usageCount: 0,
-          isManual: true,
-          createdBy: userId,
-          createdByName: userName || '',
-          createdAt: new Date().toISOString(),
-        });
-        paperId = created.id;
-      }
+      const savePaper = httpsCallable<
+        { paperId: string; collegeId: string; action: typeof action; paper: Record<string, unknown> },
+        { id: string }
+      >(functions, 'savePaper');
+      await savePaper({ paperId, collegeId, action, paper: payload });
 
       onSaved?.(paperId, action);
       onClose();
     } catch (err) {
+      await Promise.allSettled(pendingUploadPaths.map((path) => deleteObject(ref(storage, path))));
       setError(err instanceof Error ? err.message : 'Failed to save the paper.');
     } finally {
       setBusy(false);

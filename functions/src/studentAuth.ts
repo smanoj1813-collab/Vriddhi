@@ -56,22 +56,27 @@ interface BulkResult {
 // EXISTING STUBS (preserve your current logic here)
 // ═════════════════════════════════════════════════════════════════════════════
 
-/** @deprecated — replaced by bulkCreateStudentAccounts. Keep for backward compat. */
+/** @deprecated — retained only to return an explicit migration error. */
 export const syncStudentsToAuth = onCall(
   { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 60 },
   async (request) => {
-    // TODO: migrate logic to bulkCreateStudentAccounts or keep as-is
-    logger.info('syncStudentsToAuth called', { uid: request.auth?.uid })
-    return { success: true, message: 'Use bulkCreateStudentAccounts instead' }
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication is required')
+    throw new HttpsError(
+      'failed-precondition',
+      'syncStudentsToAuth is retired. Use bulkCreateStudentAccounts.'
+    )
   }
 )
 
-/** @deprecated — replaced by bulkCreateStudentAccounts. Keep for backward compat. */
+/** @deprecated — retained only to return an explicit migration error. */
 export const createStudentAuth = onCall(
   { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 60 },
   async (request) => {
-    logger.info('createStudentAuth called', { uid: request.auth?.uid })
-    return { success: true, message: 'Use bulkCreateStudentAccounts instead' }
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication is required')
+    throw new HttpsError(
+      'failed-precondition',
+      'createStudentAuth is retired. Use bulkCreateStudentAccounts.'
+    )
   }
 )
 
@@ -144,7 +149,7 @@ export const bulkCreateStudentAccounts = onCall(
   {
     region: 'asia-south1',
     memory: '512MiB',
-    timeoutSeconds: 120,
+    timeoutSeconds: 540,
     minInstances: 0,
     maxInstances: 5,
   },
@@ -163,6 +168,34 @@ export const bulkCreateStudentAccounts = onCall(
     if (students.length > 500) {
       throw new HttpsError('invalid-argument', 'Maximum 500 students per batch')
     }
+    if (!['auto', 'default'].includes(passwordStrategy)) {
+      throw new HttpsError('invalid-argument', 'Unsupported password strategy')
+    }
+    if (passwordStrategy === 'default' && (!defaultPassword || defaultPassword.length < 12)) {
+      throw new HttpsError(
+        'invalid-argument',
+        'A default password of at least 12 characters is required'
+      )
+    }
+    students.forEach((student, index) => {
+      const required = ['regNo', 'name', 'email', 'department', 'batch', 'division'] as const
+      const missing = required.filter(
+        (field) => typeof student?.[field] !== 'string' || !student[field].trim()
+      )
+      if (missing.length > 0) {
+        throw new HttpsError(
+          'invalid-argument',
+          `Row ${index + 1} is missing valid fields: ${missing.join(', ')}`
+        )
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email.trim())) {
+        throw new HttpsError('invalid-argument', `Row ${index + 1} has an invalid email address`)
+      }
+      const semester = normalizeSemester(student.semester)
+      if (semester < 1 || semester > 12) {
+        throw new HttpsError('invalid-argument', `Row ${index + 1} has an invalid semester`)
+      }
+    })
 
     // ── Verify caller ──
     const caller = await verifyCaller(request)
@@ -178,19 +211,56 @@ export const bulkCreateStudentAccounts = onCall(
     const db = admin.firestore()
     const auth = admin.auth()
 
-    // ── Pre-check duplicates in one shot ──
+    // ── Pre-check duplicates ──
+    // Firestore `in` filters accept at most 30 values. Chunk the checks so the
+    // callable's documented 500-row limit actually works. Registration
+    // numbers are college-scoped; Auth/email ownership is global.
     const emails = students.map((s) => s.email.trim().toLowerCase())
     const regNos = students.map((s) => s.regNo.trim())
+    const chunks = <T>(values: T[], size = 30): T[][] => {
+      const result: T[][] = []
+      for (let i = 0; i < values.length; i += size) result.push(values.slice(i, i + size))
+      return result
+    }
 
-    const [existingEmailSnap, existingRegNoSnap, existingUsersSnap] = await Promise.all([
-      db.collection('students').where('email', 'in', emails).limit(500).get(),
-      db.collection('students').where('regNo', 'in', regNos).limit(500).get(),
-      db.collection('users').where('email', 'in', emails).limit(500).get(),
+    const [existingEmailSnaps, existingRegNoSnaps, existingUserSnaps] = await Promise.all([
+      Promise.all(
+        chunks(emails).map((values) =>
+          db.collection('students').where('email', 'in', values).limit(500).get()
+        )
+      ),
+      Promise.all(
+        chunks(regNos).map((values) =>
+          db
+            .collection('students')
+            .where('collegeId', '==', collegeId)
+            .where('regNo', 'in', values)
+            .limit(500)
+            .get()
+        )
+      ),
+      Promise.all(
+        chunks(emails).map((values) =>
+          db.collection('users').where('email', 'in', values).limit(500).get()
+        )
+      ),
     ])
 
-    const existingEmails = new Set(existingEmailSnap.docs.map((d) => d.data().email?.toLowerCase()))
-    const existingRegNos = new Set(existingRegNoSnap.docs.map((d) => d.data().regNo))
-    const existingUserEmails = new Set(existingUsersSnap.docs.map((d) => d.data().email?.toLowerCase()))
+    const existingEmails = new Set(
+      existingEmailSnaps.flatMap((snap) =>
+        snap.docs.map((d) => String(d.data().email || '').toLowerCase()).filter(Boolean)
+      )
+    )
+    const existingRegNos = new Set(
+      existingRegNoSnaps.flatMap((snap) =>
+        snap.docs.map((d) => String(d.data().regNo || '')).filter(Boolean)
+      )
+    )
+    const existingUserEmails = new Set(
+      existingUserSnaps.flatMap((snap) =>
+        snap.docs.map((d) => String(d.data().email || '').toLowerCase()).filter(Boolean)
+      )
+    )
 
     const results: StudentResult[] = []
     const errors: Array<{ row: number; regNo: string; message: string }> = []
@@ -224,11 +294,15 @@ export const bulkCreateStudentAccounts = onCall(
         continue
       }
 
+      // Only a UID created by this iteration is eligible for rollback. Looking
+      // up by email in a catch block can delete a pre-existing Auth-only user.
+      let createdAuthUid: string | null = null
+
       try {
         // Generate password
         const password =
           passwordStrategy === 'default'
-            ? defaultPassword || `${regNo}@123`
+            ? defaultPassword as string
             : generateRandomPassword()
 
         // 1. Create Firebase Auth user
@@ -239,8 +313,9 @@ export const bulkCreateStudentAccounts = onCall(
           phoneNumber: row.phone ? `+91${row.phone.replace(/\D/g, '').slice(-10)}` : undefined,
           disabled: false,
         })
+        createdAuthUid = userRecord.uid
 
-        // 2. Create student doc in /students
+        // 2. Prepare the canonical student doc in /students
         const studentRef = db.collection('students').doc()
         const studentData = {
           id: studentRef.id,
@@ -266,10 +341,10 @@ export const bulkCreateStudentAccounts = onCall(
           importedBy: caller.uid,
           importedAt: admin.firestore.FieldValue.serverTimestamp(),
         }
-        await studentRef.set(studentData)
 
-        // 3. Create user doc in /users (for auth context resolution)
-        await db.collection('users').doc(userRecord.uid).set({
+        // 3. Prepare the user doc in /users (for auth context resolution)
+        const userRef = db.collection('users').doc(userRecord.uid)
+        const userData = {
           uid: userRecord.uid,
           id: userRecord.uid,
           name: row.name.trim(),
@@ -285,18 +360,28 @@ export const bulkCreateStudentAccounts = onCall(
           avatar: '',
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           status: 'active',
-        })
+        }
 
-        // 4. Create college sub-collection index (for fast college-scoped queries)
-        await db
+        // 4. Write all Firestore representations atomically. If this commit
+        // fails, no orphan student/user/index document is left behind and the
+        // Auth user can be safely rolled back below.
+        const collegeStudentRef = db
           .collection('colleges')
           .doc(collegeId)
           .collection('students')
           .doc(regNo)
-          .set({
-            ...studentData,
-            studentDocId: studentRef.id,
-          })
+        const batch = db.batch()
+        batch.create(studentRef, studentData)
+        batch.create(userRef, userData)
+        batch.create(collegeStudentRef, {
+          ...studentData,
+          studentDocId: studentRef.id,
+        })
+        batch.update(db.collection('colleges').doc(collegeId), {
+          studentCount: admin.firestore.FieldValue.increment(1),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+        await batch.commit()
 
         // Track success
         existingEmails.add(email)
@@ -326,37 +411,51 @@ export const bulkCreateStudentAccounts = onCall(
         results.push({ regNo, name: row.name, email, success: false, error: message })
         logger.error(`[StudentAuth] Failed to create student ${regNo}:`, err)
 
-        // Attempt cleanup if auth was created but Firestore failed
-        try {
-          const user = await auth.getUserByEmail(email)
-          if (user) await auth.deleteUser(user.uid)
-          logger.info(`[StudentAuth] Rolled back auth user for ${email}`)
-        } catch {
-          // User might not exist, ignore
+        // Roll back only the Auth UID created by this loop iteration. If
+        // createUser itself failed (for example email-already-exists), this is
+        // null and a pre-existing user is never touched.
+        if (createdAuthUid) {
+          try {
+            await auth.deleteUser(createdAuthUid)
+            logger.info(`[StudentAuth] Rolled back auth user`, {
+              uid: createdAuthUid,
+              email,
+            })
+          } catch (rollbackError) {
+            logger.error(`[StudentAuth] Failed to roll back auth user`, {
+              uid: createdAuthUid,
+              email,
+              rollbackError,
+            })
+          }
         }
       }
     }
 
-    // ── Update college student count ──
-    if (createdCount > 0) {
-      await db.collection('colleges').doc(collegeId).update({
-        studentCount: admin.firestore.FieldValue.increment(createdCount),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    // ── Log action ──
+    // Do not report the completed import as failed solely because the
+    // diagnostic log could not be written.
+    try {
+      await db.collection('logs').add({
+        action: 'BULK_STUDENT_IMPORT',
+        collegeId,
+        performedBy: caller.uid,
+        performedByName: caller.name,
+        total: students.length,
+        created: createdCount,
+        failed: failedCount,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        elapsedMs: Date.now() - startTime,
+      })
+    } catch (logError) {
+      logger.error('[StudentAuth] Failed to write import audit log', {
+        collegeId,
+        performedBy: caller.uid,
+        created: createdCount,
+        failed: failedCount,
+        logError,
       })
     }
-
-    // ── Log action ──
-    await db.collection('logs').add({
-      action: 'BULK_STUDENT_IMPORT',
-      collegeId,
-      performedBy: caller.uid,
-      performedByName: caller.name,
-      total: students.length,
-      created: createdCount,
-      failed: failedCount,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      elapsedMs: Date.now() - startTime,
-    })
 
     return {
       success: failedCount === 0,

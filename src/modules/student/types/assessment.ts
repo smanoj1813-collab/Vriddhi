@@ -399,6 +399,7 @@ export interface TestInstructionsData {
   marksObtained?: number;
   grade?: string;
   needsManualGrading?: boolean;
+  resultReleased?: boolean;
 }
 
 export interface SubmitOutcome {

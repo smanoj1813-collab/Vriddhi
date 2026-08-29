@@ -5,9 +5,11 @@
 
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy,
-  addDoc, updateDoc, deleteDoc, Timestamp, writeBatch,
+  addDoc, updateDoc, deleteDoc, Timestamp,
   limit, startAfter, QueryConstraint,
 } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { functions as cloudFunctions } from '@/Firebase/config';
 
 // Dynamic firebase import to avoid path resolution issues
 let db: any;
@@ -150,32 +152,11 @@ export async function archiveAssessment(assessmentId: string): Promise<Assessmen
 // Student Assessments
 // ═══════════════════════════════════════════════════════════════════════
 
-export async function createStudentAssessment(assessment: Assessment, student: { id: string; name: string; regNo: string }): Promise<StudentAssessment> {
-  const now = Timestamp.now();
-  const data = {
-    assessmentId: assessment.id,
-    studentId: student.id,
-    studentName: student.name,
-    regNo: student.regNo,
-    collegeId: assessment.collegeId,
-    branch: assessment.branch || '',
-    semester: assessment.semester || 0,
-    batch: assessment.batch || '',
-    division: assessment.division || '',
-    section: assessment.section || '',
-    status: 'not_started',
-    marksObtained: 0,
-    totalMarks: assessment.totalMarks || 0,
-    percentage: 0,
-    grade: null as string | null,
-    gradePoint: 0,
-    timeSpent: 0,
-    answers: [] as StudentAnswer[],
-    createdAt: now,
-    updatedAt: now,
-  };
-  const docRef = await addDoc(collection(db, 'studentAssessments'), data);
-  return { id: docRef.id, ...data, createdAt: now.toDate().toISOString(), updatedAt: now.toDate().toISOString() } as unknown as StudentAssessment;
+export async function createStudentAssessment(
+  _assessment: Assessment,
+  _student: { id: string; name: string; regNo: string }
+): Promise<StudentAssessment> {
+  throw new Error('Student attempts are created by the secure startMyStudentTest workflow. Target students when scheduling the test instead.');
 }
 
 export async function getStudentAssessment(id: string): Promise<StudentAssessment | null> {
@@ -210,116 +191,64 @@ export async function listStudentAssessments(filters: { assessmentId?: string; s
   });
 }
 
-export async function startAssessment(studentAssessmentId: string): Promise<StudentAssessment> {
-  const docRef = doc(db, 'studentAssessments', studentAssessmentId);
-  await updateDoc(docRef, { status: 'in_progress', startedAt: new Date().toISOString(), updatedAt: Timestamp.now() });
-  const updated = await getDoc(docRef);
-  const data = updated.data()!;
-  return { id: updated.id, ...data, createdAt: data.createdAt?.toDate?.().toISOString() || '', updatedAt: data.updatedAt?.toDate?.().toISOString() || '' } as unknown as StudentAssessment;
+export async function startAssessment(_studentAssessmentId: string): Promise<StudentAssessment> {
+  throw new Error('Only the authenticated student can start an eligible test through startMyStudentTest.');
 }
 
-export async function submitAssessment(studentAssessmentId: string, answers: StudentAnswer[], timeSpent: number): Promise<StudentAssessment> {
-  const docRef = doc(db, 'studentAssessments', studentAssessmentId);
-  await updateDoc(docRef, { status: 'submitted', answers, timeSpent, submittedAt: new Date().toISOString(), updatedAt: Timestamp.now() });
-  const updated = await getDoc(docRef);
-  const data = updated.data()!;
-  return { id: updated.id, ...data, createdAt: data.createdAt?.toDate?.().toISOString() || '', updatedAt: data.updatedAt?.toDate?.().toISOString() || '' } as unknown as StudentAssessment;
+export async function submitAssessment(
+  _studentAssessmentId: string,
+  _answers: StudentAnswer[],
+  _timeSpent: number
+): Promise<StudentAssessment> {
+  throw new Error('Student submissions must use the secure submitMyStudentTest workflow.');
 }
 
 export async function gradeAssessment(
   studentAssessmentId: string,
   marksObtained: number,
-  percentage: number,
-  grade: string,
-  gradePoint: number,
+  _percentage: number,
+  _grade: string,
+  _gradePoint: number,
   feedback?: string,
   _gradedBy?: string
 ): Promise<StudentAssessment> {
-  const docRef = doc(db, 'studentAssessments', studentAssessmentId);
-  const updateData: Record<string, unknown> = { status: 'graded', marksObtained, percentage, grade, gradePoint, updatedAt: Timestamp.now() };
-  if (feedback) updateData.facultyFeedback = feedback;
-  await updateDoc(docRef, updateData);
-  const updated = await getDoc(docRef);
-  const data = updated.data()!;
-  return { id: updated.id, ...data, createdAt: data.createdAt?.toDate?.().toISOString() || '', updatedAt: data.updatedAt?.toDate?.().toISOString() || '' } as unknown as StudentAssessment;
+  const gradeSubmission = httpsCallable<
+    { studentAssessmentId: string; marksObtained: number; feedback?: string },
+    { success: boolean }
+  >(cloudFunctions, 'gradeStudentAssessmentSubmission');
+  await gradeSubmission({ studentAssessmentId, marksObtained, feedback });
+  const updated = await getStudentAssessment(studentAssessmentId);
+  if (!updated) throw new Error('The graded student assessment could not be reloaded.');
+  return updated;
 }
 
-export async function autoGradeStudentAssessment(studentAssessmentId: string, _questions: any[]): Promise<StudentAssessment> {
-  // Phase 2: real auto-grading via the shared objective grading core.
-  // Loads the submitted row, re-grades its answers against the frozen
-  // question snapshot, and grades immediately when nothing needs faculty.
-  const saSnap = await getDoc(doc(db, 'studentAssessments', studentAssessmentId));
-  if (!saSnap.exists()) throw new Error('Student assessment not found');
-  const sa = saSnap.data();
-  if (!['submitted', 'in_progress'].includes(String(sa.status))) {
-    return saSnap.data() as unknown as StudentAssessment;
-  }
-
-  const testId = String(sa.testId || sa.assessmentId || '');
-  let questions: any[] = _questions && _questions.length > 0 ? _questions : [];
-  if (questions.length === 0 && testId) {
-    const qSnap = await getDocs(collection(db, 'scheduledTests', testId, 'assessmentQuestions'));
-    questions = qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  }
-
-  const { gradePaper, deriveGradeFromPercentage } = await import('../../../shared/utils/assessmentGrading');
-  const graded = gradePaper(
-    questions.map((q: any) => ({
-      id: String(q.id || q.questionId),
-      type: String(q.type || 'mcq'),
-      marks: Number(q.marks) || 1,
-      negativeMarks: Number(q.negativeMarks) || undefined,
-      options: q.options,
-      correctAnswer: q.correctAnswer,
-      tolerance: q.tolerance,
-    })),
-    (Array.isArray(sa.answers) ? sa.answers : []) as any[]
-  );
-
-  const totalMarks = Number(sa.totalMarks) || graded.autoMax + graded.manualMax;
-  if (graded.needsManualGrading) {
-    // Persist the objective score but keep status submitted for faculty
-    await updateDoc(doc(db, 'studentAssessments', studentAssessmentId), {
-      autoScore: graded.autoScore,
-      autoMax: graded.autoMax,
-      manualMax: graded.manualMax,
-      needsManualGrading: true,
-      updatedAt: Timestamp.now(),
-    });
-    const refreshed = await getDoc(doc(db, 'studentAssessments', studentAssessmentId));
-    return { id: refreshed.id, ...refreshed.data()! } as unknown as StudentAssessment;
-  }
-
-  const marksObtained = Math.max(0, graded.autoScore);
-  const percentage = totalMarks > 0 ? Math.round((marksObtained / totalMarks) * 10000) / 100 : 0;
-  const { grade, gradePoint } = deriveGradeFromPercentage(percentage);
-  return gradeAssessment(studentAssessmentId, marksObtained, percentage, grade, gradePoint, 'Auto-graded (objective paper)');
+export async function autoGradeStudentAssessment(
+  studentAssessmentId: string,
+  _questions: any[]
+): Promise<StudentAssessment> {
+  const current = await getStudentAssessment(studentAssessmentId);
+  if (!current) throw new Error('Student assessment not found.');
+  // Objective grading is performed atomically by submitMyStudentTest. The
+  // browser is intentionally unable to re-run or overwrite that score.
+  return current;
 }
 
-export async function bulkCreateStudentAssessments(assessment: Assessment, students: Array<{ id: string; name: string; regNo: string }>): Promise<StudentAssessment[]> {
-  const results: StudentAssessment[] = [];
-  for (const student of students) {
-    const sa = await createStudentAssessment(assessment, student);
-    results.push(sa);
-  }
-  return results;
+export async function bulkCreateStudentAssessments(
+  _assessment: Assessment,
+  _students: Array<{ id: string; name: string; regNo: string }>
+): Promise<StudentAssessment[]> {
+  throw new Error('Attempts are created from server-validated schedule eligibility when each student starts the test.');
 }
 
 export async function bulkGradeAssessments(inputs: BulkGradeInput[]): Promise<void> {
-  const batch = writeBatch(db);
-  for (const input of inputs) {
-    const ref = doc(db, 'studentAssessments', input.studentAssessmentId);
-    batch.update(ref, {
-      marksObtained: input.marksObtained,
-      percentage: input.percentage,
-      grade: input.grade,
-      gradePoint: input.gradePoint,
-      facultyFeedback: input.feedback || '',
-      status: 'graded',
-      updatedAt: Timestamp.now(),
-    });
-  }
-  await batch.commit();
+  await Promise.all(inputs.map((input) => gradeAssessment(
+    input.studentAssessmentId,
+    input.marksObtained,
+    input.percentage,
+    input.grade,
+    input.gradePoint,
+    input.feedback
+  )));
 }
 
 export async function recalculateAssessmentStats(_assessmentId: string): Promise<void> {
@@ -484,133 +413,47 @@ export async function deletePaper(id: string): Promise<void> {
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function scheduleTest(input: ScheduleTestInput): Promise<ScheduledTest> {
-  const now = Timestamp.now();
-  const data = {
+  const schedule = httpsCallable<Record<string, unknown>, { id: string; status: string }>(
+    cloudFunctions,
+    'scheduleAssessmentTest'
+  );
+  const response = await schedule({
     ...input,
-    status: 'scheduled',
-    paperType: 'quiz',
-    totalRegistered: 0,
-    totalStarted: 0,
-    totalSubmitted: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
-  const docRef = await addDoc(collection(db, 'scheduledTests'), data);
-
-  // Phase 2: freeze the paper's questions into the assessmentQuestions
-  // subcollection so the student engine has one authoritative source
-  // (scheduledTests/{id}/assessmentQuestions). Non-fatal on failure —
-  // the reader falls back to inline questions / paper links.
-  try {
-    const snapshotted = await snapshotQuestionsToSchedule(docRef.id, String(input.paperId || ''));
-    if (snapshotted > 0 && !(input as unknown as Record<string, unknown>).totalQuestions) {
-      await updateDoc(doc(db, 'scheduledTests', docRef.id), { totalQuestions: snapshotted });
-    }
-  } catch (err) {
-    console.error('[scheduleTest] question snapshot failed (non-fatal):', err);
-  }
-
-  return {
-    id: docRef.id,
-    ...data,
-    startDateTime: data.startDateTime instanceof Date ? data.startDateTime.toISOString() : data.startDateTime,
-    endDateTime: data.endDateTime instanceof Date ? data.endDateTime.toISOString() : data.endDateTime,
-    createdAt: now.toDate().toISOString(),
-    updatedAt: now.toDate().toISOString(),
-  } as unknown as ScheduledTest;
-}
-
-/**
- * Copies the paper's questions into scheduledTests/{testId}/assessmentQuestions.
- * Reads questions from (in order): paper.sections[].questions (embedded),
- * paper.linkedQuestionIds → questions collection.
- * Returns the number of questions snapshotted.
- */
-async function snapshotQuestionsToSchedule(testId: string, paperId: string): Promise<number> {
-  if (!testId || !paperId) return 0;
-  const paperSnap = await getDoc(doc(db, 'papers', paperId));
-  if (!paperSnap.exists()) return 0;
-  const paper = paperSnap.data();
-
-  type SnapQuestion = Record<string, unknown>;
-  const questions: SnapQuestion[] = [];
-
-  const push = (q: any, sectionId?: string, sectionName?: string, order = questions.length + 1) => {
-    if (!q) return;
-    questions.push({
-      questionId: String(q.id || q.questionId || ''),
-      order: typeof q.order === 'number' ? q.order : order,
-      text: String(q.text || q.questionText || ''),
-      type: String(q.type || q.questionType || 'mcq'),
-      difficulty: String(q.difficulty || 'medium'),
-      marks: Number(q.marks) || 1,
-      negativeMarks: Number(q.negativeMarks) || 0,
-      options: Array.isArray(q.options)
-        ? q.options.map((o: any, i: number) =>
-            typeof o === 'string' ? { id: `opt-${i}`, text: o } : { id: String(o.id || `opt-${i}`), text: String(o.text ?? ''), isCorrect: Boolean(o.isCorrect) }
-          )
-        : undefined,
-      correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : undefined,
-      explanation: q.explanation || undefined,
-      imageUrl: q.imageUrl || undefined,
-      caseText: q.caseText || undefined,
-      matchPairs: Array.isArray(q.matchPairs) ? q.matchPairs : undefined,
-      tolerance: typeof q.tolerance === 'number' ? q.tolerance : undefined,
-      sectionId: sectionId || undefined,
-      sectionName: sectionName || undefined,
-    });
-  };
-
-  if (Array.isArray(paper.sections)) {
-    (paper.sections as any[]).forEach((s) => {
-      (Array.isArray(s.questions) ? s.questions : []).forEach((q: any) => push(q, s.id, s.name || s.title));
-    });
-  }
-  if (questions.length === 0) {
-    const qIds: string[] = (paper.linkedQuestionIds || paper.questionIds || []) as string[];
-    for (const qId of qIds) {
-      const qSnap = await getDoc(doc(db, 'questions', qId));
-      if (qSnap.exists()) push(qSnap.data());
-    }
-  }
-  if (questions.length === 0) return 0;
-
-  const batch = writeBatch(db);
-  questions.forEach((q) => {
-    const ref = doc(collection(db, 'scheduledTests', testId, 'assessmentQuestions'));
-    batch.set(ref, q);
+    startDateTime: input.startDateTime instanceof Date ? input.startDateTime.toISOString() : input.startDateTime,
+    endDateTime: input.endDateTime instanceof Date ? input.endDateTime.toISOString() : input.endDateTime,
+    resultPublishDate: input.resultPublishDate instanceof Date
+      ? input.resultPublishDate.toISOString()
+      : input.resultPublishDate,
   });
-  await batch.commit();
-  return questions.length;
+  const scheduled = (await listScheduledTests({})).find((test) => test.id === response.data.id);
+  if (!scheduled) throw new Error('The scheduled test was created but could not be reloaded.');
+  return scheduled;
 }
 
-export async function listScheduledTests(filters: { collegeId?: string; facultyId?: string; status?: string } = {}): Promise<ScheduledTest[]> {
-  const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
-  if (filters.collegeId) constraints.push(where('collegeId', '==', filters.collegeId));
-  if (filters.facultyId) constraints.push(where('facultyId', '==', filters.facultyId));
-  if (filters.status) constraints.push(where('status', '==', filters.status));
-
-  const q = query(collection(db, 'scheduledTests'), ...constraints);
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      ...data,
-      createdAt: data.createdAt?.toDate?.().toISOString() || '',
-      updatedAt: data.updatedAt?.toDate?.().toISOString() || '',
-    } as unknown as ScheduledTest;
-  });
+export async function listScheduledTests(
+  filters: { collegeId?: string; facultyId?: string; status?: string } = {}
+): Promise<ScheduledTest[]> {
+  const list = httpsCallable<
+    { collegeId?: string },
+    { tests: ScheduledTest[] }
+  >(cloudFunctions, 'listManagedAssessmentTests');
+  const response = await list({ collegeId: filters.collegeId });
+  return response.data.tests
+    .filter((test) => !filters.facultyId || (test as unknown as { facultyId?: string }).facultyId === filters.facultyId)
+    .filter((test) => !filters.status || test.status === filters.status);
 }
 
-export async function updateScheduledTest(id: string, updates: Partial<ScheduledTest>): Promise<ScheduledTest> {
-  const docRef = doc(db, 'scheduledTests', id);
-  await updateDoc(docRef, { ...updates, updatedAt: Timestamp.now() });
-  const updated = await getDoc(docRef);
-  const data = updated.data()!;
-  return { id: updated.id, ...data, createdAt: data.createdAt?.toDate?.().toISOString() || '', updatedAt: data.updatedAt?.toDate?.().toISOString() || '' } as unknown as ScheduledTest;
+export async function updateScheduledTest(
+  _id: string,
+  _updates: Partial<ScheduledTest>
+): Promise<ScheduledTest> {
+  throw new Error('Published schedule state is server-managed. Cancel the test and create a reviewed replacement schedule.');
 }
 
 export async function deleteScheduledTest(id: string): Promise<void> {
-  await deleteDoc(doc(db, 'scheduledTests', id));
+  const cancel = httpsCallable<{ testId: string; reason: string }, { success: boolean }>(
+    cloudFunctions,
+    'cancelAssessmentTest'
+  );
+  await cancel({ testId: id, reason: 'Cancelled from assessment administration' });
 }

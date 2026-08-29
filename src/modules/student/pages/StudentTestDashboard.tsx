@@ -39,7 +39,7 @@ function getTimeRemaining(iso: string): string {
 
 const StudentTestDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { tests, loading } = useStudentData();
+  const { tests, loading, error, warnings } = useStudentData();
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
 
   const results = useMemo(
@@ -71,8 +71,22 @@ const StudentTestDashboard: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {warnings.map((warning) => (
+        <div key={warning} className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100" role="status">
+          {warning}
+        </div>
+      ))}
+
       {/* Header */}
       <div>
         <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -260,6 +274,10 @@ const TestRow: React.FC<{
                   <div className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded">
                     Awaiting Faculty Grading
                   </div>
+                ) : test.studentStatus === 'graded' && !test.resultReleased ? (
+                  <div className="text-xs font-bold text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 rounded">
+                    Graded · Release Pending
+                  </div>
                 ) : (
                   <div className={`text-base font-extrabold ${(pct ?? 0) >= 40 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                     {test.marksObtained ?? '—'} / {test.totalMarks || '—'}
@@ -269,12 +287,14 @@ const TestRow: React.FC<{
                   {pct != null ? `${Math.round(pct)}% Score` : ''} {test.grade ? `&bull; Grade ${test.grade}` : ''}
                 </div>
               </div>
-              <button
-                onClick={() => onResult(test.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 text-xs font-bold transition-colors"
-              >
-                <Visibility fontSize="small" /> {test.studentStatus === 'submitted' ? 'View Submission' : 'Detailed Results'}
-              </button>
+              {!(test.studentStatus === 'graded' && !test.resultReleased) && (
+                <button
+                  onClick={() => onResult(test.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 text-xs font-bold transition-colors"
+                >
+                  <Visibility fontSize="small" /> {test.studentStatus === 'submitted' ? 'View Submission' : 'Detailed Results'}
+                </button>
+              )}
             </>
           )}
           {!isActive && !isCompleted && !isMissed && test.status !== 'upcoming' && (

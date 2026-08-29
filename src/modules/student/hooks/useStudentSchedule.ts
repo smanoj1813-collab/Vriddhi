@@ -7,6 +7,7 @@ import { db } from '@/Firebase/config';
 import type { ClassSchedule, WeeklySchedule } from '../../../types/schedule';
 
 export interface StudentScheduleProfile {
+  collegeId: string;
   branch: string;
   batch: string;
   semester: number;
@@ -25,18 +26,24 @@ export function useStudentSchedule(profile: StudentScheduleProfile | null) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!profile || !profile.branch || !profile.batch) {
+    if (!profile || !profile.collegeId || !profile.branch || !profile.batch) {
       setRows([]);
+      setError(null);
+      setIsLoading(false);
       return;
     }
     let cancelled = false;
     setIsLoading(true);
+    setError(null);
 
     (async () => {
       try {
-        // Query by branch only (composite index avoidance), filter cohort client-side.
+        // Tenant scope is mandatory; remaining cohort fields are filtered from
+        // this already-isolated result until the canonical schedule schema is
+        // migrated in the next milestone.
         const q = query(
           collection(db, 'weeklySchedules'),
+          where('collegeId', '==', profile.collegeId),
           where('branch', '==', profile.branch),
           limit(500)
         );
@@ -63,7 +70,14 @@ export function useStudentSchedule(profile: StudentScheduleProfile | null) {
     })();
 
     return () => { cancelled = true; };
-  }, [profile?.branch, profile?.batch, profile?.semester, profile?.division, profile?.section]);
+  }, [
+    profile?.collegeId,
+    profile?.branch,
+    profile?.batch,
+    profile?.semester,
+    profile?.division,
+    profile?.section,
+  ]);
 
   const schedule = useMemo<ClassSchedule[]>(() => {
     return rows.map((row) => {

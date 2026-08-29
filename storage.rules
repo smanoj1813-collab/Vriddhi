@@ -1,0 +1,112 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userData() {
+      return firestore.get(
+        /databases/(default)/documents/users/$(request.auth.uid)
+      ).data;
+    }
+
+    function isStaff() {
+      return isSignedIn()
+        && userData().role in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
+    }
+
+    function ownsStudentId(studentId) {
+      return isSignedIn()
+        && studentId != null
+        && (
+          studentId == request.auth.uid
+          || firestore.get(
+            /databases/(default)/documents/students/$(studentId)
+          ).data.userId == request.auth.uid
+          || firestore.get(
+            /databases/(default)/documents/students/$(studentId)
+          ).data.uid == request.auth.uid
+        );
+    }
+
+    function managesAssignment(assignmentId) {
+      let assignment = firestore.get(
+        /databases/(default)/documents/assignments/$(assignmentId)
+      ).data;
+      return isStaff()
+        && (
+          userData().role == 'superadmin'
+          || (
+            userData().role in ['admin', 'principal', 'hod', 'faculty']
+            && userData().collegeId != null
+            && assignment.collegeId == userData().collegeId
+            && (userData().role != 'faculty' || assignment.facultyUid == request.auth.uid)
+          )
+        );
+    }
+
+    function validAssignmentFile() {
+      return request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches(
+          'application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|text/plain|image/.*'
+        );
+    }
+
+    function isPaperManager() {
+      return isStaff()
+        && userData().role in ['superadmin', 'admin', 'principal', 'hod'];
+    }
+
+    function validPaperFile() {
+      return request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches(
+          'application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|image/jpeg|image/png'
+        );
+    }
+
+    function validSubmissionSession(studentId, assignmentId, sessionId) {
+      let draft = firestore.get(
+        /databases/(default)/documents/assignmentSubmissionDrafts/$(sessionId)
+      ).data;
+      return ownsStudentId(studentId)
+        && draft.studentUid == request.auth.uid
+        && draft.studentId == studentId
+        && draft.assignmentId == assignmentId
+        && draft.status == 'uploading'
+        && draft.expiresAt > request.time;
+    }
+
+    // A server-created, expiring upload session authorizes each object. This
+    // makes abandoned uploads discoverable and cleanable instead of creating
+    // permanent orphan objects before a submission record exists.
+    match /assignment-submissions/{studentId}/{assignmentId}/{sessionId}/{fileName} {
+      allow read: if ownsStudentId(studentId) || managesAssignment(assignmentId);
+      allow create, update: if validSubmissionSession(studentId, assignmentId, sessionId)
+        && validAssignmentFile();
+      allow delete: if ownsStudentId(studentId) || managesAssignment(assignmentId);
+    }
+
+    // Paper objects are namespaced by tenant, author and pre-generated paper
+    // ID. The callable verifies the object before referencing it in Firestore.
+    match /paper-files/{collegeId}/{ownerUid}/{paperId}/{fileName} {
+      allow read: if isStaff()
+        && (userData().role == 'superadmin' || userData().collegeId == collegeId);
+      allow create, update: if isStaff()
+        && request.auth.uid == ownerUid
+        && (userData().role == 'superadmin' || userData().collegeId == collegeId)
+        && validPaperFile();
+      allow delete: if isStaff()
+        && (request.auth.uid == ownerUid || isPaperManager())
+        && (userData().role == 'superadmin' || userData().collegeId == collegeId);
+    }
+
+    // No implicit authenticated-user access. Additional product workflows
+    // receive explicit path contracts as they are implemented.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

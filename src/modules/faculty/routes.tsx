@@ -26,6 +26,7 @@ const FacultyUploadMaterial = lazy(() => import('./pages/FacultyUploadMaterial')
 const FacultyLibrary = lazy(() => import('./pages/FacultyLibrary'));
 const FacultyAnnouncements = lazy(() => import('./pages/FacultyAnnouncements'));
 const FacultyAssignments = lazy(() => import('./pages/FacultyAssignments'));
+const FacultyAssessments = lazy(() => import('./pages/FacultyAssessments'));
 const FacultyCalendar = lazy(() => import('./pages/FacultyCalendar'));
 const FacultyCurriculum = lazy(() => import('./pages/FacultyCurriculum'));
 const FacultySchedule = lazy(() => import('./pages/FacultySchedule'));
@@ -130,6 +131,7 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'library', element: <LazyPage label="faculty/library"><FacultyLibrary /></LazyPage> },
       { path: 'announcements', element: <LazyPage label="faculty/announcements"><FacultyAnnouncements /></LazyPage> },
       { path: 'assignments', element: <LazyPage label="faculty/assignments"><FacultyAssignments /></LazyPage> },
+      { path: 'assessments', element: <LazyPage label="faculty/assessments"><FacultyAssessments /></LazyPage> },
       { path: 'calendar', element: <LazyPage label="faculty/calendar"><FacultyCalendar /></LazyPage> },
       { path: 'curriculum', element: <LazyPage label="faculty/curriculum"><FacultyCurriculum /></LazyPage> },
       { path: 'schedule', element: <LazyPage label="faculty/schedule"><FacultySchedule /></LazyPage> },

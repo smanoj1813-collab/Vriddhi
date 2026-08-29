@@ -6,9 +6,10 @@ import { Link } from 'react-router-dom'
 import {
   ChevronLeft, Plus, X, Check, Search, Calendar,
   Clock, Users, FileText, Trash2, CheckCircle2,
-  BarChart3, Send, BookOpen, Target, Loader2, AlertTriangle, Upload, Eye
+  BarChart3, Send, BookOpen, Target, Loader2, AlertTriangle, Upload, Eye, Download
 } from 'lucide-react'
 import { ExportButton } from '@/components/shared/ExportButton'
+import { useAuth } from '../../auth/context/AuthContext'
 import {
   fetchFacultyAssignments,
   createAssignment,
@@ -17,6 +18,7 @@ import {
   fetchAssignmentSubmissions,
   gradeSubmission,
   publishAssignment,
+  getSubmissionFileDownload,
   type Assignment,
   type AssignmentStatus,
   type Submission,
@@ -48,25 +50,10 @@ interface LocalAssignment extends Assignment {
   _submissions?: Submission[]
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getCurrentUser() {
-  const userData = localStorage.getItem('vriddhi_user')
-  if (!userData) return null
-  try {
-    return JSON.parse(userData)
-  } catch {
-    return null
-  }
-}
-
-function getCollegeId(): string {
-  return localStorage.getItem('vriddhi_college_id') || ''
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function FacultyAssignments() {
+  const { user } = useAuth()
   const [assignments, setAssignments] = useState<LocalAssignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -96,8 +83,7 @@ export default function FacultyAssignments() {
   const [gradeScore, setGradeScore] = useState('')
   const [gradeRemarks, setGradeRemarks] = useState('')
 
-  const user = getCurrentUser()
-  const collegeId = getCollegeId()
+  const collegeId = user?.collegeId || ''
 
   // ─── Load Assignments ──────────────────────────────────────────────────────
   
@@ -112,7 +98,8 @@ export default function FacultyAssignments() {
       setAssignments(data.map(a => ({ ...a, _loading: false, _submissions: [] })))
     } catch (err) {
       console.error('[FacultyAssignments] Load failed:', err)
-      setError('Failed to load assignments. Please try again.')
+      setAssignments([])
+      setError(err instanceof Error ? err.message : 'Failed to load assignments. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -127,15 +114,16 @@ export default function FacultyAssignments() {
   const loadSubmissions = useCallback(async (assignmentId: string) => {
     setLoadingSubmissions(true)
     try {
-      const data = await fetchAssignmentSubmissions(assignmentId)
+      const data = await fetchAssignmentSubmissions(assignmentId, collegeId)
       setSubmissions(data)
     } catch (err) {
       console.error('[FacultyAssignments] Load submissions failed:', err)
       setSubmissions([])
+      setError(err instanceof Error ? err.message : 'Failed to load submissions.')
     } finally {
       setLoadingSubmissions(false)
     }
-  }, [])
+  }, [collegeId])
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
   
@@ -146,6 +134,14 @@ export default function FacultyAssignments() {
 
   const handleCreate = async () => {
     if (!createTitle.trim() || !createDeadline || !user) return
+    if (!createSubject.trim() && !createTopic.trim()) {
+      alert('Enter a subject or topic.')
+      return
+    }
+    if (!createBranch.trim() && !createBatch.trim() && !createDivision.trim()) {
+      alert('Choose at least one cohort field: branch, batch, or division.')
+      return
+    }
     
     setSaving(true)
     try {
@@ -175,7 +171,7 @@ export default function FacultyAssignments() {
       resetCreateForm()
     } catch (err) {
       console.error('[FacultyAssignments] Create failed:', err)
-      alert('Failed to create assignment')
+      alert(err instanceof Error ? err.message : 'Failed to create assignment')
     } finally {
       setSaving(false)
     }
@@ -200,7 +196,7 @@ export default function FacultyAssignments() {
       await loadAssignments()
     } catch (err) {
       console.error('[FacultyAssignments] Publish failed:', err)
-      alert('Failed to publish assignment')
+      alert(err instanceof Error ? err.message : 'Failed to publish assignment')
     } finally {
       setSaving(false)
     }
@@ -213,6 +209,7 @@ export default function FacultyAssignments() {
       await loadAssignments()
     } catch (err) {
       console.error('[FacultyAssignments] Status change failed:', err)
+      alert(err instanceof Error ? err.message : 'Assignment status could not be changed')
     } finally {
       setSaving(false)
     }
@@ -228,7 +225,7 @@ export default function FacultyAssignments() {
       if (showDetail?.id === assignmentId) setShowDetail(null)
     } catch (err) {
       console.error('[FacultyAssignments] Delete failed:', err)
-      alert('Failed to delete assignment')
+      alert(err instanceof Error ? err.message : 'Failed to delete assignment')
     } finally {
       setSaving(false)
     }
@@ -240,11 +237,33 @@ export default function FacultyAssignments() {
     setGradeRemarks(submission.remarks || '')
   }
 
+  const handleDownloadSubmission = async (
+    submission: Submission,
+    file: { name: string; storagePath?: string }
+  ) => {
+    if (!file.storagePath) {
+      alert('This legacy file does not have a verified storage path.')
+      return
+    }
+    try {
+      const download = await getSubmissionFileDownload(submission.id, file.storagePath)
+      const link = document.createElement('a')
+      link.href = download.url
+      link.download = download.name
+      link.rel = 'noopener noreferrer'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'The submitted file could not be downloaded.')
+    }
+  }
+
   const confirmGrade = async () => {
     if (!showGradeModal || !gradeScore || !user) return
     
-    const score = parseInt(gradeScore)
-    if (score < 0 || score > showGradeModal.submission.maxScore) {
+    const score = Number(gradeScore)
+    if (!Number.isFinite(score) || score < 0 || score > showGradeModal.submission.maxScore) {
       alert('Invalid score')
       return
     }
@@ -262,7 +281,7 @@ export default function FacultyAssignments() {
       setGradeRemarks('')
     } catch (err) {
       console.error('[FacultyAssignments] Grade failed:', err)
-      alert('Failed to save grade')
+      alert(err instanceof Error ? err.message : 'Failed to save grade')
     } finally {
       setSaving(false)
     }
@@ -424,9 +443,11 @@ export default function FacultyAssignments() {
                         Close
                       </button>
                     )}
-                    <button onClick={() => handleDelete(item.id)} disabled={saving} className="p-2 rounded-xl hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-all disabled:opacity-50">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {item.status === 'draft' && (
+                      <button onClick={() => handleDelete(item.id)} disabled={saving} className="p-2 rounded-xl hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-all disabled:opacity-50" aria-label={`Delete ${item.title}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -462,7 +483,7 @@ export default function FacultyAssignments() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Subject</label>
+                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Subject *</label>
                   <input type="text" value={createSubject} onChange={e => setCreateSubject(e.target.value)} placeholder="Subject name"
                     className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 text-sm" />
                 </div>
@@ -508,7 +529,7 @@ export default function FacultyAssignments() {
                 className="flex-1 px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-all text-sm">
                 Cancel
               </button>
-              <button onClick={handleCreate} disabled={!createTitle.trim() || !createDeadline || saving}
+              <button onClick={handleCreate} disabled={!createTitle.trim() || (!createSubject.trim() && !createTopic.trim()) || !createDeadline || (!createBranch.trim() && !createBatch.trim() && !createDivision.trim()) || saving}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Save as Draft
@@ -577,6 +598,20 @@ export default function FacultyAssignments() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900 dark:text-white">{sub.studentName}</p>
                         {sub.studentRegNo && <p className="text-xs text-slate-600 dark:text-slate-400">{sub.studentRegNo}</p>}
+                        {sub.attachments?.length ? (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {sub.attachments.map((file, index) => (
+                              <button
+                                key={`${file.storagePath || file.name}-${index}`}
+                                type="button"
+                                onClick={() => void handleDownloadSubmission(sub, file)}
+                                className="inline-flex items-center gap-1 text-xs text-teal-700 dark:text-teal-300 hover:underline"
+                              >
+                                <Download className="w-3 h-3" /> {file.name}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                       {sub.submittedAt && <span className="text-xs text-slate-500 shrink-0">{new Date(sub.submittedAt).toLocaleDateString()}</span>}
                       <span className={`text-xs font-medium shrink-0 ${ssConfig.color}`}>{ssConfig.label}</span>

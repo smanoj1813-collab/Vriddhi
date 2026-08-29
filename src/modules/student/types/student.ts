@@ -5,6 +5,7 @@ export interface SubmissionFile {
   id: string;
   name: string;
   url: string;
+  storagePath?: string;
   type?: string;
   size?: number;
 }
@@ -96,6 +97,7 @@ export interface ClassSchedule {
   topic?: string;
   teacher?: string;
   facultyName?: string;
+  status?: string;
 }
 
 /* ─── Assessment (lightweight card) ─── */

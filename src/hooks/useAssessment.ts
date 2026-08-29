@@ -1,4 +1,25 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '../Firebase/config';
+import {
+  autosaveStudentAssessment,
+  fetchActiveTest,
+  fetchTestResult,
+  logProctorEvent as persistProctorEvent,
+  startStudentAssessment,
+  submitStudentAssessment,
+} from '../modules/student/api/testApi';
 import type {
   StudentTestCard,
   TestResultSummary,
@@ -12,8 +33,32 @@ import type {
   ScheduleTestInput,
 } from '../types/assessment';
 
+function dateIso(value: unknown): string {
+  if (value && typeof value === 'object' && 'toDate' in value) {
+    return (value as { toDate: () => Date }).toDate().toISOString();
+  }
+  if (value instanceof Date) return value.toISOString();
+  if (!value) return '';
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function toWireDate(value: Date | string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+async function callable<TInput, TOutput>(name: string, input: TInput): Promise<TOutput> {
+  const invoke = httpsCallable<TInput, TOutput>(functions, name);
+  return (await invoke(input)).data;
+}
+
 // ============================================================================
-// useStudentTests
+// Student assessment hooks — backed exclusively by the server-owned engine.
 // ============================================================================
 
 export interface UseStudentTestsReturn {
@@ -27,7 +72,7 @@ export interface UseStudentTestsReturn {
 }
 
 export const useStudentTests = (
-  collegeId?: string,
+  _collegeId?: string,
   studentId?: string
 ): UseStudentTestsReturn => {
   const [tests, setTests] = useState<StudentTestCard[]>([]);
@@ -36,50 +81,38 @@ export const useStudentTests = (
 
   const fetchData = useCallback(async () => {
     if (!studentId) {
+      setTests([]);
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      // TODO: Wire to Firestore — use collegeId + studentId
-      console.log('Fetching tests for', collegeId, studentId);
-      setTests([]);
+      const result = await callable<Record<string, never>, { tests: StudentTestCard[] }>(
+        'getMyStudentTests',
+        {}
+      );
+      setTests(result.tests);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setTests([]);
+      setError(errorMessage(err, 'Could not load assessments.'));
     } finally {
       setLoading(false);
     }
-  }, [collegeId, studentId]);
+  }, [studentId]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const upcomingTests = tests.filter(
-    (t) => t.status === 'upcoming' || t.status === 'scheduled'
-  );
-  const availableTests = tests.filter(
-    (t) => t.status === 'ongoing' || t.status === 'published' || t.canStart
-  );
-  const completedTests = tests.filter(
-    (t) => t.status === 'completed' || t.status === 'graded'
-  );
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
   return {
     tests,
-    upcomingTests,
-    availableTests,
-    completedTests,
+    upcomingTests: tests.filter((test) => test.status === 'upcoming'),
+    availableTests: tests.filter((test) => test.status === 'ongoing' || test.status === 'available' || test.canStart),
+    completedTests: tests.filter((test) => test.status === 'completed' || test.status === 'graded'),
     loading,
     error,
-    refresh: fetchData,
+    refresh: () => { void fetchData(); },
   };
 };
-
-// ============================================================================
-// useActiveTest
-// ============================================================================
 
 export interface UseActiveTestReturn {
   activeTest: ActiveTest | null;
@@ -91,28 +124,10 @@ export interface UseActiveTestReturn {
   loading: boolean;
   isSubmitting: boolean;
   error: string | null;
-  /** Start a test. Alias for startTest. */
-  start: (
-    testId: string,
-    studentId: string,
-    studentName?: string,
-    studentRegNo?: string,
-    sectionId?: string,
-    sectionName?: string
-  ) => Promise<void>;
-  /** Start a test. */
-  startTest: (
-    testId: string,
-    studentId: string,
-    studentName?: string,
-    studentRegNo?: string,
-    sectionId?: string,
-    sectionName?: string
-  ) => Promise<void>;
+  start: (testId: string, studentId: string, studentName?: string, studentRegNo?: string, sectionId?: string, sectionName?: string) => Promise<void>;
+  startTest: (testId: string, studentId: string, studentName?: string, studentRegNo?: string, sectionId?: string, sectionName?: string) => Promise<void>;
   saveCurrentAnswer: (questionId: string, answer: Partial<StudentAnswer>) => void;
-  /** Submit the test. Alias for submitTest. Returns true on success. */
   submit: () => Promise<boolean>;
-  /** Submit the test. Returns true on success. */
   submitTest: () => Promise<boolean>;
   navigateQuestion: (direction: 'prev' | 'next') => void;
   navigateToQuestion: (index: number) => void;
@@ -120,7 +135,7 @@ export interface UseActiveTestReturn {
   logProctorEvent: (eventType: string, details?: Record<string, unknown>) => void;
 }
 
-export const useActiveTest = (collegeId?: string): UseActiveTestReturn => {
+export const useActiveTest = (collegeId = ''): UseActiveTestReturn => {
   const [activeTest, setActiveTest] = useState<ActiveTest | null>(null);
   const [questions, setQuestions] = useState<PaperQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, Partial<StudentAnswer>>>({});
@@ -130,97 +145,154 @@ export const useActiveTest = (collegeId?: string): UseActiveTestReturn => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const attemptRef = useRef<{ id: string; testId: string; studentId: string; studentName: string; regNo: string } | null>(null);
 
-  const currentQuestion = questions[currentQuestionIndex] ?? null;
-
-  const startTest = useCallback(
-    async (
-      testId: string,
-      studentId: string,
-      _studentName?: string,
-      _studentRegNo?: string,
-      _sectionId?: string,
-      _sectionName?: string
-    ) => {
-      try {
-        setLoading(true);
-        setError(null);
-        // TODO: Wire to API — load test by testId + studentId + collegeId
-        console.log('Starting test', { collegeId, testId, studentId });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to start test');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [collegeId]
-  );
-
-  const saveCurrentAnswer = useCallback(
-    (questionId: string, answer: Partial<StudentAnswer>) => {
-      setAnswers((prev) => ({
-        ...prev,
-        [questionId]: { ...prev[questionId], ...answer },
+  const startTest = useCallback(async (
+    testId: string,
+    studentId: string,
+    studentName = '',
+    studentRegNo = ''
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const started = await startStudentAssessment(collegeId, testId, {
+        id: studentId,
+        name: studentName,
+        regNo: studentRegNo,
+      });
+      const loaded = await fetchActiveTest(collegeId, started.testId, studentId);
+      if (!loaded) throw new Error('The active test could not be loaded.');
+      const mappedQuestions: PaperQuestion[] = loaded.questions.map((question) => ({
+        questionId: question.id,
+        order: question.order,
+        content: question.text,
+        questionText: question.text,
+        type: question.type,
+        questionType: question.type,
+        marks: question.marks,
+        options: question.options?.map((option) => ({ id: option.id, text: option.text })),
+        imageUrl: question.imageUrl,
       }));
-    },
-    []
-  );
+      const mapped: ActiveTest = {
+        testId: loaded.testId,
+        studentId,
+        paperId: loaded.paperId,
+        paperTitle: loaded.title,
+        questions: mappedQuestions,
+        flaggedQuestions: loaded.flaggedQuestions,
+        currentQuestionIndex: 0,
+        answers: (loaded.answers || {}) as Record<string, Partial<StudentAnswer>>,
+        startTime: loaded.startedAt,
+        endTime: loaded.endsAt,
+        timeRemaining: Math.max(0, Math.floor((new Date(loaded.endsAt).getTime() - Date.now()) / 1000)),
+        status: 'in_progress',
+      };
+      attemptRef.current = { id: loaded.studentAssessmentId, testId: loaded.testId, studentId, studentName, regNo: studentRegNo };
+      setActiveTest(mapped);
+      setQuestions(mappedQuestions);
+      setAnswers(mapped.answers);
+      setTimeRemaining(mapped.timeRemaining);
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to start the test.'));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [collegeId]);
+
+  const saveCurrentAnswer = useCallback((questionId: string, answer: Partial<StudentAnswer>) => {
+    setAnswers((previous) => ({
+      ...previous,
+      [questionId]: { ...previous[questionId], ...answer, questionId },
+    }));
+  }, []);
 
   const submitTest = useCallback(async () => {
+    const attempt = attemptRef.current;
+    if (!attempt) {
+      setError('No active test is loaded.');
+      return false;
+    }
     try {
       setIsSubmitting(true);
-      // TODO: Wire to API
-      console.log('Submitting test', answers);
+      setError(null);
+      await submitStudentAssessment({
+        collegeId,
+        testId: attempt.testId,
+        studentAssessmentId: attempt.id,
+        student: { id: attempt.studentId, name: attempt.studentName, regNo: attempt.regNo },
+        answers: answers as never,
+        timeSpent: 0,
+        proctorEvents: [],
+      });
+      setActiveTest((previous) => previous ? { ...previous, status: 'submitted' } : previous);
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit test');
+      setError(errorMessage(err, 'Failed to submit the test.'));
       return false;
     } finally {
       setIsSubmitting(false);
     }
-  }, [answers]);
+  }, [answers, collegeId]);
 
-  const navigateQuestion = useCallback(
-    (direction: 'prev' | 'next') => {
-      setCurrentQuestionIndex((idx) => {
-        if (direction === 'prev') return Math.max(0, idx - 1);
-        return Math.min(questions.length - 1, idx + 1);
-      });
-    },
-    [questions.length]
-  );
+  const navigateQuestion = useCallback((direction: 'prev' | 'next') => {
+    setCurrentQuestionIndex((index) => direction === 'prev'
+      ? Math.max(0, index - 1)
+      : Math.min(Math.max(0, questions.length - 1), index + 1));
+  }, [questions.length]);
 
   const navigateToQuestion = useCallback((index: number) => {
-    setCurrentQuestionIndex(index);
-  }, []);
+    setCurrentQuestionIndex(Math.max(0, Math.min(Math.max(0, questions.length - 1), index)));
+  }, [questions.length]);
 
   const toggleFlagQuestion = useCallback((questionId: string) => {
-    setActiveTest((prev) => {
-      if (!prev) return prev;
-      const flagged = new Set(prev.flaggedQuestions);
+    setActiveTest((previous) => {
+      if (!previous) return previous;
+      const flagged = new Set(previous.flaggedQuestions);
       if (flagged.has(questionId)) flagged.delete(questionId);
       else flagged.add(questionId);
-      return { ...prev, flaggedQuestions: Array.from(flagged) };
+      return { ...previous, flaggedQuestions: [...flagged] };
     });
   }, []);
 
-  const logProctorEvent = useCallback(
-    (eventType: string, details?: Record<string, unknown>) => {
-      console.log('Proctor event:', eventType, details);
-    },
-    []
-  );
+  const recordProctorEvent = useCallback((eventType: string, details?: Record<string, unknown>) => {
+    const attempt = attemptRef.current;
+    if (!attempt) return;
+    void persistProctorEvent(collegeId, attempt.testId, attempt.id, attempt.studentId, {
+      type: eventType,
+      at: new Date().toISOString(),
+      details,
+    }).catch((err) => setError(errorMessage(err, 'A proctoring event could not be recorded.')));
+  }, [collegeId]);
 
-  // Timer cleanup
   useEffect(() => {
+    if (!activeTest || activeTest.status !== 'in_progress') return;
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((remaining) => Math.max(0, remaining - 1));
+    }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
     };
-  }, []);
+  }, [activeTest?.status]);
+
+  useEffect(() => {
+    const attempt = attemptRef.current;
+    if (!attempt || !activeTest || activeTest.status !== 'in_progress') return;
+    const save = setTimeout(() => {
+      const rows = Object.entries(answers).map(([questionId, answer]) => ({
+        questionId,
+        ...answer,
+      })) as never;
+      void autosaveStudentAssessment(attempt.id, rows, 0).catch(() => undefined);
+    }, 1500);
+    return () => clearTimeout(save);
+  }, [activeTest, answers]);
 
   return {
     activeTest,
-    currentQuestion,
+    currentQuestion: questions[currentQuestionIndex] || null,
     questions,
     answers,
     currentQuestionIndex,
@@ -236,13 +308,9 @@ export const useActiveTest = (collegeId?: string): UseActiveTestReturn => {
     navigateQuestion,
     navigateToQuestion,
     toggleFlagQuestion,
-    logProctorEvent,
+    logProctorEvent: recordProctorEvent,
   };
 };
-
-// ============================================================================
-// useTestResult
-// ============================================================================
 
 export interface UseTestResultReturn {
   result: TestResultSummary | null;
@@ -259,34 +327,30 @@ export const useTestResult = (
   const [result, setResult] = useState<TestResultSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const fetchData = useCallback(async () => {
     if (!testId || !studentId) {
+      setResult(null);
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      // TODO: Fetch from API using collegeId + testId + studentId
-      console.log('Fetching result for', collegeId, testId, studentId);
-      setResult(null);
+      const detail = await fetchTestResult(collegeId || '', testId, studentId);
+      setResult(detail ? detail as unknown as TestResultSummary : null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setResult(null);
+      setError(errorMessage(err, 'Could not load the result.'));
     } finally {
       setLoading(false);
     }
-  }, [collegeId, testId, studentId]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { result, loading, error, refresh: fetchData };
+  }, [collegeId, studentId, testId]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  return { result, loading, error, refresh: () => { void fetchData(); } };
 };
 
 // ============================================================================
-// useQuestions
+// Staff question/paper discovery.
 // ============================================================================
 
 export interface UseQuestionsReturn {
@@ -296,49 +360,65 @@ export interface UseQuestionsReturn {
   refresh: () => void;
 }
 
-export const useQuestions = (
-  collegeId?: string,
-  filters?: {
-    subjectId?: string;
-    status?: string;
-    topic?: string;
-    type?: string;
-    difficulty?: string;
-    search?: string;
-  }
-): UseQuestionsReturn => {
+interface QuestionFilters {
+  subjectId?: string;
+  status?: string;
+  topic?: string;
+  type?: string;
+  difficulty?: string;
+  search?: string;
+}
+
+function mapQuestion(id: string, data: Record<string, unknown>): AssessmentQuestion {
+  return {
+    id,
+    ...data,
+    marks: Number(data.marks) || 1,
+    questionText: String(data.questionText || data.text || data.content || ''),
+    questionType: String(data.questionType || data.type || 'MCQ') as AssessmentQuestion['questionType'],
+    createdAt: dateIso(data.createdAt),
+    updatedAt: dateIso(data.updatedAt),
+  } as AssessmentQuestion;
+}
+
+export const useQuestions = (collegeId?: string, filters?: QuestionFilters): UseQuestionsReturn => {
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const fetchData = useCallback(async () => {
     if (!collegeId) {
+      setQuestions([]);
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      // TODO: Wire to Firestore / question bank API — use collegeId + filters
-      console.log('Fetching questions for', collegeId, filters);
-      setQuestions([]);
+      const snapshot = await getDocs(query(
+        collection(db, 'questions'),
+        where('collegeId', '==', collegeId),
+        limit(500)
+      ));
+      const search = filters?.search?.trim().toLowerCase();
+      const rows = snapshot.docs
+        .map((item) => mapQuestion(item.id, item.data()))
+        .filter((item) => !filters?.subjectId || (item as unknown as { subjectId?: string }).subjectId === filters.subjectId)
+        .filter((item) => !filters?.status || item.status === filters.status)
+        .filter((item) => !filters?.topic || item.topic === filters.topic)
+        .filter((item) => !filters?.type || item.questionType === filters.type || item.type === filters.type)
+        .filter((item) => !filters?.difficulty || item.difficulty === filters.difficulty)
+        .filter((item) => !search || String(item.questionText || item.content || '').toLowerCase().includes(search));
+      setQuestions(rows);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setQuestions([]);
+      setError(errorMessage(err, 'Could not load the question bank.'));
     } finally {
       setLoading(false);
     }
-  }, [collegeId, filters?.subjectId, filters?.status, filters?.topic, filters?.type, filters?.difficulty, filters?.search]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { questions, loading, error, refresh: fetchData };
+  }, [collegeId, filters?.difficulty, filters?.search, filters?.status, filters?.subjectId, filters?.topic, filters?.type]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  return { questions, loading, error, refresh: () => { void fetchData(); } };
 };
-
-// ============================================================================
-// useQuestion
-// ============================================================================
 
 export interface UseQuestionReturn {
   question: AssessmentQuestion | null;
@@ -351,34 +431,27 @@ export const useQuestion = (questionId?: string): UseQuestionReturn => {
   const [question, setQuestion] = useState<AssessmentQuestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const fetchData = useCallback(async () => {
     if (!questionId) {
+      setQuestion(null);
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      // TODO: Wire to API — fetch single question by ID
-      console.log('Fetching question', questionId);
-      setQuestion(null);
+      const snapshot = await getDoc(doc(db, 'questions', questionId));
+      setQuestion(snapshot.exists() ? mapQuestion(snapshot.id, snapshot.data()) : null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setQuestion(null);
+      setError(errorMessage(err, 'Could not load the question.'));
     } finally {
       setLoading(false);
     }
   }, [questionId]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { question, loading, error, refresh: fetchData };
-}; 
-// ============================================================================
-// usePapers
-// ============================================================================
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  return { question, loading, error, refresh: () => { void fetchData(); } };
+};
 
 export interface UsePapersFilters {
   status?: string;
@@ -394,52 +467,86 @@ export interface UsePapersReturn {
   refresh: () => void;
 }
 
-export const usePapers = (
-  collegeId?: string,
-  filters?: UsePapersFilters
-): UsePapersReturn => {
-  const [papers, setPapers] = useState<AssessmentPaper[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function mapPaper(id: string, data: Record<string, unknown>): AssessmentPaper {
+  return {
+    id,
+    ...data,
+    title: String(data.title || ''),
+    subject: String(data.subject || data.subjectName || ''),
+    duration: Number(data.duration || data.durationMinutes) || 0,
+    totalMarks: Number(data.totalMarks) || 0,
+    sections: Array.isArray(data.sections) ? data.sections : [],
+    status: String(data.status || 'draft'),
+    createdBy: String(data.createdBy || ''),
+    createdAt: dateIso(data.createdAt),
+    updatedAt: dateIso(data.updatedAt),
+  } as AssessmentPaper;
+}
 
+export const usePapers = (collegeId?: string, filters?: UsePapersFilters): UsePapersReturn => {
+  const [papers, setPapers] = useState<AssessmentPaper[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const fetchData = useCallback(async () => {
-    if (!collegeId) return;
+    if (!collegeId) {
+      setPapers([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
-      // TODO: Wire to Firestore / papers API — use collegeId + filters
-      console.log('Fetching papers for', collegeId, filters);
-      setPapers([]);
+      const snapshot = await getDocs(query(
+        collection(db, 'papers'),
+        where('collegeId', '==', collegeId),
+        limit(300)
+      ));
+      const search = filters?.search?.trim().toLowerCase();
+      const rows = snapshot.docs
+        .map((item) => mapPaper(item.id, item.data()))
+        .filter((item) => !filters?.status || item.status === filters.status)
+        .filter((item) => !filters?.type || item.type === filters.type || item.paperType === filters.type)
+        .filter((item) => !search || item.title.toLowerCase().includes(search));
+      setPapers(rows);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setPapers([]);
+      setError(errorMessage(err, 'Could not load assessment papers.'));
     } finally {
       setLoading(false);
     }
-  }, [collegeId, filters?.status, filters?.type, filters?.search]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  }, [collegeId, filters?.search, filters?.status, filters?.type]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
   const create = useCallback(async (input: CreatePaperInput) => {
+    if (!collegeId || !auth.currentUser) throw new Error('A signed-in college account is required.');
     try {
       setLoading(true);
       setError(null);
-      // TODO: Wire to API — create paper using collegeId
-      console.log('Creating paper', { collegeId, input });
+      await addDoc(collection(db, 'papers'), {
+        ...input,
+        collegeId,
+        createdBy: auth.currentUser.uid,
+        duration: Number(input.duration || input.durationMinutes) || 0,
+        totalMarks: Number(input.totalMarks) || 0,
+        status: 'draft',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create paper');
-      throw err;
+      const message = errorMessage(err, 'Could not create the paper.');
+      setError(message);
+      throw new Error(message);
     } finally {
       setLoading(false);
     }
-  }, [collegeId]);
+  }, [collegeId, fetchData]);
 
-  return { papers, create, loading, error, refresh: fetchData };
+  return { papers, create, loading, error, refresh: () => { void fetchData(); } };
 };
 
 // ============================================================================
-// useScheduledTests
+// Secure scheduling hooks.
 // ============================================================================
 
 export interface UseScheduledTestsReturn {
@@ -454,71 +561,76 @@ export interface UseScheduledTestsReturn {
 
 export const useScheduledTests = (collegeId?: string): UseScheduledTestsReturn => {
   const [tests, setTests] = useState<ScheduledTest[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!collegeId) return;
+    if (!collegeId) {
+      setTests([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
-      // TODO: Wire to Firestore / scheduled tests API
-      console.log('Fetching scheduled tests for', collegeId);
-      setTests([]);
+      const result = await callable<{ collegeId: string }, { tests: ScheduledTest[] }>(
+        'listManagedAssessmentTests',
+        { collegeId }
+      );
+      setTests(result.tests);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setTests([]);
+      setError(errorMessage(err, 'Could not load scheduled tests.'));
     } finally {
       setLoading(false);
     }
   }, [collegeId]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
-  useEffect(() => {
-    fetchData();
+  const runMutation = useCallback(async (action: () => Promise<unknown>, fallback: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await action();
+      await fetchData();
+    } catch (err) {
+      const message = errorMessage(err, fallback);
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
   }, [fetchData]);
 
   const schedule = useCallback(async (input: ScheduleTestInput) => {
-    try {
-      setLoading(true);
-      setError(null);
-      // TODO: Wire to API — schedule test using collegeId
-      console.log('Scheduling test', { collegeId, input });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to schedule test');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [collegeId]);
+    if (!collegeId) throw new Error('College context is required.');
+    await runMutation(
+      () => callable('scheduleAssessmentTest', {
+        ...input,
+        collegeId,
+        startDateTime: toWireDate(input.startDateTime),
+        endDateTime: toWireDate(input.endDateTime),
+        resultPublishDate: toWireDate(input.resultPublishDate),
+      }),
+      'Could not schedule the test.'
+    );
+  }, [collegeId, runMutation]);
 
   const publish = useCallback(async (testId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      // TODO: Wire to API — publish test
-      console.log('Publishing test', { collegeId, testId });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to publish test');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [collegeId]);
+    await runMutation(
+      () => callable('publishAssessmentTest', { testId }),
+      'Could not publish the test.'
+    );
+  }, [runMutation]);
 
   const cancel = useCallback(async (testId: string, reason: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      // TODO: Wire to API — cancel test
-      console.log('Cancelling test', { collegeId, testId, reason });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel test');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [collegeId]);
+    await runMutation(
+      () => callable('cancelAssessmentTest', { testId, reason }),
+      'Could not cancel the test.'
+    );
+  }, [runMutation]);
 
-  return { tests, schedule, publish, cancel, loading, error, refresh: fetchData };
+  return { tests, schedule, publish, cancel, loading, error, refresh: () => { void fetchData(); } };
 };
 
 export default useStudentTests;

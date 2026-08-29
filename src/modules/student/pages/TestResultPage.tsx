@@ -59,7 +59,9 @@ const TestResultPage: React.FC = () => {
         setResult(r as ResultDetail);
         if (!r) setError('No submission found for this test.');
       })
-      .catch(() => !cancelled && setError('Could not load this result.'))
+      .catch((err) => !cancelled && setError(
+        err instanceof Error ? err.message : 'Could not load this result.'
+      ))
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [testId, collegeId, studentId]);

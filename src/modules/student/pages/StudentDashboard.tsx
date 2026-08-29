@@ -131,8 +131,21 @@ function QuickAction({ to, icon: Icon, label, color }: {
 
 export default function StudentDashboard() {
   const { t } = useTranslation();
-  const { loading, profile, attendance, assessments, assignments, fees, schedule, notifications, unreadNotifications, todayDate } =
-    useStudentData();
+  const {
+    loading,
+    error,
+    warnings,
+    refresh,
+    profile,
+    attendance,
+    assessments,
+    assignments,
+    fees,
+    schedule,
+    notifications,
+    unreadNotifications,
+    todayDate,
+  } = useStudentData();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'notifications'>('overview');
 
@@ -151,8 +164,38 @@ export default function StudentDashboard() {
     );
   }
 
+  if (error || !profile) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100" role="alert">
+          <h1 className="text-lg font-extrabold">Student portal unavailable</h1>
+          <p className="mt-2 text-sm">
+            {error || 'Your account is not linked to a student profile. Contact your college administrator.'}
+          </p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="mt-4 rounded-xl bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 md:space-y-8">
+      {warnings.map((warning) => (
+        <div
+          key={warning}
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+          role="status"
+        >
+          {warning}
+        </div>
+      ))}
+
       {/* Welcome Banner */}
       <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-slate-900 dark:text-white p-6 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

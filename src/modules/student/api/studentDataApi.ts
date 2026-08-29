@@ -20,9 +20,9 @@ import {
   limit,
   doc,
   getDoc,
-  documentId,
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/Firebase/config';
 
 // ─── Types returned to the UI (kept close to existing components) ──────
 
@@ -105,6 +105,7 @@ export interface StudentClassSession {
   type?: string;
   date?: string;
   topic?: string;
+  status?: string;
 }
 
 export interface StudentNotificationData {
@@ -122,12 +123,12 @@ export interface StudentGradeData {
   id: string;
   subject: string;
   code: string;
-  credits: number;
-  internal: number;
-  external: number;
-  total: number;
+  credits?: number;
+  internal?: number;
+  external?: number;
+  total?: number;
   grade: string;
-  gradePoint: number;
+  gradePoint?: number;
   semester: number;
 }
 
@@ -148,13 +149,19 @@ function monthKey(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
-function safeQuery<T>(q: FirebaseFirestoreQuery, mapper: (d: FirebaseFirestoreDoc) => T): Promise<T[]> {
-  return getDocs(q)
-    .then((snap) => snap.docs.map(mapper))
-    .catch((err) => {
-      console.error('[studentDataApi] query failed:', err);
-      return [] as T[];
-    });
+async function safeQuery<T>(
+  q: FirebaseFirestoreQuery,
+  mapper: (d: FirebaseFirestoreDoc) => T
+): Promise<T[]> {
+  try {
+    const snap = await getDocs(q);
+    return snap.docs.map(mapper);
+  } catch (err) {
+    // Callers must distinguish an empty result from an unavailable or denied
+    // backend. Log once for diagnostics, then preserve the failure for the UI.
+    console.error('[studentDataApi] query failed:', err);
+    throw err;
+  }
 }
 
 // Minimal local types so we don't need to import firebase types across the file
@@ -189,30 +196,31 @@ export async function fetchProfile(studentId: string, email?: string): Promise<S
     };
   };
 
-  // 1) By doc id
-  const byId = await getDoc(doc(db, 'students', studentId)).catch(() => null);
-  if (byId && byId.exists()) return mapDoc(byId as unknown as FirebaseFirestoreDoc);
+  // 1) Canonical link written by student provisioning.
+  const byUserId = await getDocs(
+    query(collection(db, 'students'), where('userId', '==', studentId), limit(1))
+  );
+  if (!byUserId.empty) return mapDoc(byUserId.docs[0]);
 
-  // 2) By uid
+  // 2) Legacy direct document ID.
+  const byId = await getDoc(doc(db, 'students', studentId));
+  if (byId.exists()) return mapDoc(byId as unknown as FirebaseFirestoreDoc);
+
+  // 3) Legacy `uid` field. Email is display data, not an ownership key.
   const byUid = await getDocs(
     query(collection(db, 'students'), where('uid', '==', studentId), limit(1))
-  ).catch(() => null);
-  if (byUid && !byUid.empty) return mapDoc(byUid.docs[0]);
-
-  // 3) By email
-  if (email) {
-    const byEmail = await getDocs(
-      query(collection(db, 'students'), where('email', '==', email), limit(1))
-    ).catch(() => null);
-    if (byEmail && !byEmail.empty) return mapDoc(byEmail.docs[0]);
-  }
+  );
+  if (!byUid.empty) return mapDoc(byUid.docs[0]);
 
   return null;
 }
 
 // ─── Attendance (from attendanceRecords) ───────────────────────────────
 
-export async function fetchAttendance(studentId: string): Promise<AttendanceSummaryData> {
+export async function fetchAttendance(
+  studentId: string,
+  collegeId: string
+): Promise<AttendanceSummaryData> {
   const empty: AttendanceSummaryData = {
     percentage: 0,
     requiredPercentage: 75,
@@ -224,11 +232,12 @@ export async function fetchAttendance(studentId: string): Promise<AttendanceSumm
     monthlyBreakdown: [],
     records: [],
   };
-  if (!studentId) return empty;
+  if (!studentId || !collegeId) return empty;
 
   const records = await safeQuery<StudentAttendanceRecord>(
     query(
       collection(db, 'attendanceRecords'),
+      where('collegeId', '==', collegeId),
       where('studentId', '==', studentId),
       orderBy('date', 'desc'),
       limit(500)
@@ -276,7 +285,9 @@ export async function fetchAttendance(studentId: string): Promise<AttendanceSumm
     .reverse();
 
   return {
-    percentage: total ? Math.round((present / total) * 100) : 0,
+    // Late attendance counts as attended consistently with the monthly view;
+    // it remains a separate count for the status breakdown.
+    percentage: total ? Math.round(((present + late) / total) * 100) : 0,
     requiredPercentage: 75,
     totalClasses: total,
     present,
@@ -312,26 +323,7 @@ export interface StudentTestCardData {
   submittedAt?: string;
   totalQuestions?: number;
   needsManualGrading?: boolean;
-}
-
-/** Batched doc lookup (Firestore `in` queries cap at 30 ids). */
-async function fetchDocsByIds(
-  collectionName: string,
-  ids: string[]
-): Promise<Map<string, Record<string, any>>> {
-  const unique = Array.from(new Set(ids.filter(Boolean)));
-  const out = new Map<string, Record<string, any>>();
-  for (let i = 0; i < unique.length; i += 30) {
-    const chunk = unique.slice(i, i + 30);
-    try {
-      const q = query(collection(db, collectionName), where(documentId(), 'in', chunk));
-      const snap = await getDocs(q);
-      snap.docs.forEach((d) => out.set(d.id, d.data() as Record<string, any>));
-    } catch (err) {
-      console.error(`[fetchDocsByIds:${collectionName}] chunk failed:`, err);
-    }
-  }
-  return out;
+  resultReleased?: boolean;
 }
 
 export async function fetchStudentTests(
@@ -339,171 +331,30 @@ export async function fetchStudentTests(
   studentId: string
 ): Promise<StudentTestCardData[]> {
   if (!collegeId || !studentId) return [];
-
-  const studentAssessments = await safeQuery<any>(
-    query(
-      collection(db, 'studentAssessments'),
-      where('collegeId', '==', collegeId),
-      where('studentId', '==', studentId),
-      limit(200)
-    ),
-    (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
-  );
-
-  // Resolve links: Phase 2 rows carry testId (scheduledTests); legacy rows
-  // only carry assessmentId, which may point at EITHER scheduledTests or
-  // assessments. Batch-load both collections.
-  const candidateIds = new Set<string>();
-  studentAssessments.forEach((sa) => {
-    const t = String(sa.testId || sa.assessmentId || '');
-    if (t) candidateIds.add(t);
-  });
-  const [schedMap, assessMap] = await Promise.all([
-    fetchDocsByIds('scheduledTests', Array.from(candidateIds)),
-    fetchDocsByIds('assessments', Array.from(candidateIds)),
-  ]);
-
-  const cards: StudentTestCardData[] = [];
-  for (const sa of studentAssessments) {
-    const linkId = String(sa.testId || sa.assessmentId || '');
-    const sched = schedMap.get(linkId);
-    const assess = assessMap.get(linkId);
-
-    let title = sa.title || 'Assessment';
-    let subject = sa.subject || '';
-    let totalMarks = Number(sa.totalMarks) || 0;
-    let duration = Number(sa.duration) || 0;
-    let startDateTime = toIso(sa.startDateTime);
-    let endDateTime = toIso(sa.endDateTime);
-    let totalQuestions = sa.totalQuestions || 0;
-    let schedStatus = '';
-
-    if (sched) {
-      // Authoritative: scheduledTests metadata
-      title = sched.title || sched.paperTitle || title;
-      subject = sched.subject || subject;
-      totalMarks = Number(sched.totalMarks) || totalMarks;
-      duration = Number(sched.duration) || duration;
-      startDateTime = toIso(sched.startDateTime) || startDateTime;
-      endDateTime = toIso(sched.endDateTime) || endDateTime;
-      totalQuestions = sched.totalQuestions || totalQuestions;
-      schedStatus = String(sched.status || '');
-    } else if (assess) {
-      // Legacy: assessments metadata
-      title = assess.title || title;
-      subject = assess.subject || subject;
-      totalMarks = Number(assess.totalMarks) || totalMarks;
-      duration = Number(assess.duration) || duration;
-      startDateTime = toIso(assess.startDateTime) || startDateTime;
-      endDateTime = toIso(assess.endDateTime) || endDateTime;
-      totalQuestions = assess.totalQuestions || totalQuestions;
-      schedStatus = String(assess.status || '');
-    }
-
-    const saStatus = String(sa.status || 'not_started');
-    const now = Date.now();
-    const startMs = startDateTime ? new Date(startDateTime).getTime() : 0;
-    const endMs = endDateTime
-      ? new Date(endDateTime).getTime()
-      : startMs + duration * 60_000;
-
-    // Authoritative lifecycle statuses. Timer policy = per-student duration
-    // (no hard window): students may start any time until the test is
-    // closed/cancelled, and always resume an in_progress attempt.
-    let status: StudentTestCardData['status'] = 'upcoming';
-    if (saStatus === 'graded') status = 'graded';
-    else if (saStatus === 'submitted') status = 'completed';
-    else if (saStatus === 'in_progress') status = 'ongoing';
-    else if (schedStatus === 'cancelled') status = 'missed';
-    else if (schedStatus === 'completed') status = 'missed';
-    else if (startMs && now < startMs) status = 'upcoming';
-    else status = 'available';
-
-    const canStart =
-      (status === 'available' || status === 'upcoming') && saStatus === 'not_started';
-    const canResume = saStatus === 'in_progress';
-
-    cards.push({
-      id: sa.id,
-      assessmentId: sa.assessmentId || linkId,
-      testId: sched ? linkId : '',
-      title,
-      subject,
-      totalMarks,
-      duration,
-      startDateTime,
-      endDateTime,
-      status,
-      studentStatus: saStatus,
-      canStart,
-      canResume,
-      marksObtained: sa.marksObtained,
-      percentage: sa.percentage,
-      grade: sa.grade,
-      timeSpent: sa.timeSpent,
-      submittedAt: toIso(sa.submittedAt),
-      totalQuestions,
-      needsManualGrading: Boolean(sa.needsManualGrading),
-    });
-  }
-
-  return cards.sort((a, b) => (b.startDateTime || '').localeCompare(a.startDateTime || ''));
+  // Eligibility, target matching, attempt state and result visibility are
+  // enforced by the callable. Client-supplied tenant/student IDs are never
+  // used to select another student's records.
+  const getMyStudentTests = httpsCallable<
+    Record<string, never>,
+    { tests: StudentTestCardData[] }
+  >(functions, 'getMyStudentTests');
+  const result = await getMyStudentTests({});
+  return result.data.tests;
 }
 
 // ─── Assignments ───────────────────────────────────────────────────────
 
 export async function fetchAssignments(studentId: string): Promise<StudentAssignmentData[]> {
   if (!studentId) return [];
-
-  // Assignments addressed to the student directly
-  const direct = await safeQuery<any>(
-    query(
-      collection(db, 'assignments'),
-      where('studentIds', 'array-contains', studentId),
-      limit(100)
-    ),
-    (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
-  );
-
-  // Submissions made by this student (to determine status/grade)
-  const submissions = await safeQuery<any>(
-    query(
-      collection(db, 'submissions'),
-      where('studentId', '==', studentId),
-      limit(200)
-    ),
-    (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
-  );
-  const subByAssignment = new Map<string, any>();
-  submissions.forEach((s) => {
-    if (s.assignmentId) subByAssignment.set(s.assignmentId, s);
-  });
-
-  return direct.map((a) => {
-    const sub = subByAssignment.get(a.id);
-    let status: StudentAssignmentData['status'] = 'pending';
-    if (sub) {
-      status = sub.status === 'graded' ? 'graded' : 'submitted';
-    } else if (a.dueDate && new Date(a.dueDate).getTime() < Date.now()) {
-      status = 'overdue';
-    }
-    return {
-      id: a.id,
-      title: a.title || 'Untitled',
-      subject: a.subject || '',
-      subjectCode: a.subjectCode,
-      description: a.description,
-      dueDate: a.dueDate || '',
-      dueTime: a.dueTime,
-      maxMarks: a.maxMarks || a.totalMarks,
-      status,
-      submissionType: a.submissionType,
-      marksObtained: sub?.marksObtained,
-      feedback: sub?.feedback,
-      submittedAt: toIso(sub?.submittedAt),
-      createdAt: toIso(a.createdAt),
-    };
-  });
+  // The callable resolves the authenticated student's canonical domain ID and
+  // filters cohort/specific targeting server-side. The browser cannot request
+  // assignments for another student.
+  const getMyAssignments = httpsCallable<
+    Record<string, never>,
+    { assignments: StudentAssignmentData[] }
+  >(functions, 'getMyAssignments');
+  const result = await getMyAssignments({});
+  return result.data.assignments;
 }
 
 // ─── Fees ──────────────────────────────────────────────────────────────
@@ -560,16 +411,29 @@ export async function fetchFees(studentId: string): Promise<StudentFeeData> {
 // ─── Today's Schedule (weeklySchedules + classSessions) ────────────────
 
 export async function fetchTodaySchedule(
-  student: { branch: string; batch: string; semester: number; division: string; section: string },
+  student: {
+    collegeId: string;
+    branch: string;
+    batch: string;
+    semester: number;
+    division: string;
+    section: string;
+  },
   dateStr: string
 ): Promise<StudentClassSession[]> {
-  if (!student.branch || !student.batch) return [];
+  if (!student.collegeId || !student.branch || !student.batch) return [];
 
   const dayOfWeek = new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
-  // Weekly recurring schedule filtered by cohort (client-side to avoid composite index)
+  // Weekly recurring schedule is always scoped to the student's tenant before
+  // the remaining cohort fields are matched.
   const weekly = await safeQuery<any>(
-    query(collection(db, 'weeklySchedules'), where('branch', '==', student.branch), limit(500)),
+    query(
+      collection(db, 'weeklySchedules'),
+      where('collegeId', '==', student.collegeId),
+      where('branch', '==', student.branch),
+      limit(500)
+    ),
     (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
   );
 
@@ -594,15 +458,24 @@ export async function fetchTodaySchedule(
       type: row.type,
       date: dateStr,
       topic: row.topic,
+      status: row.status || 'scheduled',
     }));
 
   // Daily overrides
   const daily = await safeQuery<any>(
-    query(collection(db, 'classSessions'), where('date', '==', dateStr), limit(200)),
+    query(
+      collection(db, 'classSessions'),
+      where('collegeId', '==', student.collegeId),
+      where('date', '==', dateStr),
+      limit(200)
+    ),
     (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
   );
-  const overrides = daily
-    .filter((row) => matchesCohort(row))
+  const matchedDaily = daily.filter((row) => matchesCohort(row));
+  const legacySlotKey = (row: any) =>
+    `${row.subjectCode || row.subject || ''}|${row.startTime || ''}`;
+  const overrides = matchedDaily
+    .filter((row) => row.status !== 'cancelled')
     .map((row) => ({
       id: row.id,
       subject: row.subject || '',
@@ -614,12 +487,24 @@ export async function fetchTodaySchedule(
       type: row.type,
       date: row.date,
       topic: (row.topicsPlanned || []).join?.(', ') || row.topic,
+      status: row.status || 'scheduled',
     }));
 
-  // Overrides supersede recurring slot with same subjectCode+startTime
-  const overrideKeys = new Set(overrides.map((o) => `${o.subjectCode}|${o.startTime}`));
-  return [...overrides, ...recurring.filter((r) => !overrideKeys.has(`${r.subjectCode}|${r.startTime}`))]
-    .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+  // Daily rows supersede the recurring slot even when the daily row is a
+  // cancellation. A linked weeklyScheduleId is preferred; legacy rows fall
+  // back to subject/start-time matching.
+  const linkedScheduleIds = new Set(
+    matchedDaily.map((row) => String(row.weeklyScheduleId || '')).filter(Boolean)
+  );
+  const legacyOverrideKeys = new Set(
+    matchedDaily.filter((row) => !row.weeklyScheduleId).map(legacySlotKey)
+  );
+  return [
+    ...overrides,
+    ...recurring.filter((row) =>
+      !linkedScheduleIds.has(row.id) && !legacyOverrideKeys.has(legacySlotKey(row))
+    ),
+  ].sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────
@@ -649,61 +534,39 @@ export async function fetchNotifications(studentId: string): Promise<StudentNoti
   );
 }
 
-// ─── Grades (graded studentAssessments) ────────────────────────────────
+// ─── Official grades ──────────────────────────────────────────────────
 
 export async function fetchGrades(collegeId: string | undefined, studentId: string): Promise<StudentGradeData[]> {
   if (!collegeId || !studentId) return [];
 
-  const graded = await safeQuery<any>(
+  // Official transcript rows are separate from test attempts. The portal must
+  // never invent credits, internal/external splits, grades, or grade points
+  // from assessment percentages.
+  return safeQuery<StudentGradeData>(
     query(
-      collection(db, 'studentAssessments'),
+      collection(db, 'gradeRecords'),
       where('collegeId', '==', collegeId),
       where('studentId', '==', studentId),
-      where('status', '==', 'graded'),
+      where('status', '==', 'published'),
+      orderBy('semester', 'desc'),
       limit(200)
     ),
-    (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
+    (d) => {
+      const grade = d.data() as Record<string, any>;
+      return {
+        id: d.id,
+        subject: String(grade.subject || grade.courseName || ''),
+        code: String(grade.code || grade.courseCode || ''),
+        credits: typeof grade.credits === 'number' ? grade.credits : undefined,
+        internal: typeof grade.internal === 'number' ? grade.internal : undefined,
+        external: typeof grade.external === 'number' ? grade.external : undefined,
+        total: typeof grade.total === 'number' ? grade.total : undefined,
+        grade: String(grade.grade || ''),
+        gradePoint: typeof grade.gradePoint === 'number' ? grade.gradePoint : undefined,
+        semester: Number(grade.semester) || 0,
+      };
+    }
   );
-
-  return graded.map((g) => {
-    const total = Number(g.totalMarks) || 0;
-    const obtained = Number(g.marksObtained) || 0;
-    // Heuristic split: 40% internal / 60% external when not otherwise provided.
-    const internal = g.internalMarks != null ? Number(g.internalMarks) : Math.round(obtained * 0.4);
-    const external = g.externalMarks != null ? Number(g.externalMarks) : obtained - internal;
-    return {
-      id: g.id,
-      subject: g.subject || 'Subject',
-      code: g.courseCode || g.subjectCode || '',
-      credits: Number(g.credits) || 3,
-      internal,
-      external,
-      total: obtained,
-      grade: g.grade || deriveGrade(total ? (obtained / total) * 100 : 0),
-      gradePoint: Number(g.gradePoint) || deriveGradePoint(total ? (obtained / total) * 100 : 0),
-      semester: Number(g.semester) || 0,
-    };
-  });
-}
-
-function deriveGrade(percentage: number): string {
-  if (percentage >= 90) return 'A+';
-  if (percentage >= 80) return 'A';
-  if (percentage >= 70) return 'B+';
-  if (percentage >= 60) return 'B';
-  if (percentage >= 50) return 'C';
-  if (percentage >= 40) return 'D';
-  return 'F';
-}
-
-function deriveGradePoint(percentage: number): number {
-  if (percentage >= 90) return 10;
-  if (percentage >= 80) return 9;
-  if (percentage >= 70) return 8;
-  if (percentage >= 60) return 7;
-  if (percentage >= 50) return 6;
-  if (percentage >= 40) return 5;
-  return 0;
 }
 
 // ─── Notifications: mark read ─────────────────────────────────────────

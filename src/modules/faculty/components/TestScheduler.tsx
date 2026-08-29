@@ -1,7 +1,7 @@
 // src/modules/faculty/components/TestScheduler.tsx
 // FIXED: usePapers and useScheduledTests imported from useAssessment (they exist there)
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Button, Stack, Card, CardContent, TextField, Select, MenuItem,
   FormControl, InputLabel, Chip, IconButton, Dialog, DialogTitle, DialogContent,
@@ -18,7 +18,8 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { usePapers, useScheduledTests } from '../../../hooks/useAssessment';
-import { useAuth } from '../../auth/context/AuthContext';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { auth, db } from '../../../Firebase/config';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,
 } from '../../../types/assessment';
@@ -26,6 +27,15 @@ import { format } from 'date-fns';
 
 interface TestSchedulerProps {
   collegeId: string;
+}
+
+interface SectionTarget {
+  id: string;
+  name: string;
+  section: string;
+  branch: string;
+  batch: string;
+  semester: number;
 }
 
 const STEPS = ['Select Paper', 'Set Schedule', 'Choose Students', 'Review & Publish'];
@@ -41,9 +51,8 @@ const toDate = (value: unknown): Date => {
 };
 
 const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
-  const { user } = useAuth();
-  const { papers } = usePapers(collegeId, { status: 'approved' } as any);
-  const { tests, schedule, publish, cancel } = useScheduledTests(collegeId) as any;
+  const { papers, loading: papersLoading, error: papersError } = usePapers(collegeId);
+  const { tests, schedule, publish, cancel, loading: testsLoading, error: testsError } = useScheduledTests(collegeId);
 
   const [showScheduler, setShowScheduler] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -57,33 +66,85 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   const [startDateTime, setStartDateTime] = useState<Date | null>(new Date());
   const [endDateTime, setEndDateTime] = useState<Date | null>(new Date(Date.now() + 3600000));
   const [durationMinutes, setDurationMinutes] = useState(30);
-  const [accessCode, setAccessCode] = useState('');
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
   const [lateSubmissionPenalty, setLateSubmissionPenalty] = useState(0);
   const [enableProctoring, setEnableProctoring] = useState(false);
-  const [requireFaceVerification, setRequireFaceVerification] = useState(false);
   const [resultPublishDate, setResultPublishDate] = useState<Date | null>(null);
 
   // Step 3: Visibility
   const [visibility, setVisibility] = useState<TestVisibility>('public');
-  const [targetSections, setTargetSections] = useState<Array<{ sectionId: string; sectionName: string }>>([]);
+  const [targetSections, setTargetSections] = useState<Array<{
+    sectionId: string;
+    sectionName: string;
+    section: string;
+    branch: string;
+    batch: string;
+    semester: number;
+  }>>([]);
   const [targetStudents, setTargetStudents] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual API calls
-  const availableSections = [
-    { id: 'sec1', name: 'Section A' },
-    { id: 'sec2', name: 'Section B' },
-    { id: 'sec3', name: 'Section C' },
-  ];
+  const [availableSections, setAvailableSections] = useState<SectionTarget[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<Array<{
+    id: string;
+    name: string;
+    regNo: string;
+    sectionId: string;
+    branch: string;
+    batch: string;
+    semester: number;
+  }>>([]);
+  const [targetsLoading, setTargetsLoading] = useState(true);
 
-  const availableStudents = [
-    { id: 'stu1', name: 'John Doe', regNo: 'REG001', sectionId: 'sec1' },
-    { id: 'stu2', name: 'Jane Smith', regNo: 'REG002', sectionId: 'sec1' },
-    { id: 'stu3', name: 'Bob Johnson', regNo: 'REG003', sectionId: 'sec2' },
-  ];
+  useEffect(() => {
+    if (!collegeId) {
+      setAvailableSections([]);
+      setAvailableStudents([]);
+      setTargetsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setTargetsLoading(true);
+    getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId), limit(500)))
+      .then((snapshot) => {
+        if (cancelled) return;
+        const students = snapshot.docs.map((student) => {
+          const data = student.data();
+          const section = String(data.section || data.division || '').trim();
+          return {
+            id: student.id,
+            name: String(data.name || 'Unnamed student'),
+            regNo: String(data.regNo || data.registrationNumber || ''),
+            sectionId: section,
+            branch: String(data.branch || data.department || ''),
+            batch: String(data.batch || data.academicYear || ''),
+            semester: Number(data.semester) || 0,
+          };
+        });
+        const sections = new Map<string, SectionTarget>();
+        students.forEach((student) => {
+          if (!student.sectionId) return;
+          const id = [student.branch, student.batch, student.semester, student.sectionId].join('|');
+          sections.set(id, {
+            id,
+            name: [student.branch, student.batch, `Semester ${student.semester}`, `Section ${student.sectionId}`].filter(Boolean).join(' · '),
+            section: student.sectionId,
+            branch: student.branch,
+            batch: student.batch,
+            semester: student.semester,
+          });
+        });
+        setAvailableStudents(students);
+        setAvailableSections([...sections.values()].sort((left, right) => left.name.localeCompare(right.name)));
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load student targets.');
+      })
+      .finally(() => { if (!cancelled) setTargetsLoading(false); });
+    return () => { cancelled = true; };
+  }, [collegeId]);
 
   const handleNext = () => {
     if (activeStep === 0 && !selectedPaper) {
@@ -105,8 +166,12 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
       }
     }
     if (activeStep === 2) {
-      if (visibility === 'selected' && targetSections.length === 0 && targetStudents.length === 0) {
-        setError('Select at least one section or student');
+      if (visibility === 'private' && targetSections.length === 0) {
+        setError('Select at least one section');
+        return;
+      }
+      if (visibility === 'selected' && targetStudents.length === 0) {
+        setError('Select at least one student');
         return;
       }
     }
@@ -141,15 +206,13 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
         ...input,
         startDateTime,
         endDateTime,
-        visibility,
-        targetSections: visibility === 'selected' ? targetSections : undefined,
+        visibility: visibility === 'public' ? 'public' : 'selected',
+        targetSections: visibility === 'private' ? targetSections : undefined,
         targetStudents: visibility === 'selected' ? targetStudents : undefined,
-        accessCode: accessCode || undefined,
         allowLateSubmission,
         lateSubmissionPenalty: allowLateSubmission ? lateSubmissionPenalty : undefined,
         enableProctoring,
         resultPublishDate: resultPublishDate || undefined,
-        requireFaceVerification,
       } as ScheduleTestInput);
 
       setShowScheduler(false);
@@ -169,11 +232,9 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     setStartDateTime(new Date());
     setEndDateTime(new Date(Date.now() + 3600000));
     setDurationMinutes(30);
-    setAccessCode('');
     setAllowLateSubmission(false);
     setLateSubmissionPenalty(0);
     setEnableProctoring(false);
-    setRequireFaceVerification(false);
     setResultPublishDate(null);
     setVisibility('public');
     setTargetSections([]);
@@ -209,11 +270,17 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   };
 
   const typedTests = (tests || []) as ScheduledTest[];
-  const typedPapers = (papers || []) as AssessmentPaper[];
+  const typedPapers = (papers || []).filter((paper: AssessmentPaper) =>
+    ['approved', 'published'].includes(String(paper.status))
+    && (!auth.currentUser || paper.createdBy === auth.currentUser.uid)
+  ) as AssessmentPaper[];
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ p: 3 }}>
+        {(papersError || testsError) && (
+          <Alert severity="error" sx={{ mb: 2 }}>{papersError || testsError}</Alert>
+        )}
         {!showScheduler ? (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -265,7 +332,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
               ))}
             </Box>
 
-            {typedTests.length === 0 && (
+            {testsLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading scheduled tests…</Alert>}
+            {!testsLoading && typedTests.length === 0 && (
               <Alert severity="info" sx={{ mt: 2 }}>No scheduled tests yet. Create your first test schedule!</Alert>
             )}
           </Box>
@@ -316,6 +384,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       </Card>
                     ))}
                   </Box>
+                  {papersLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading approved papers…</Alert>}
+                  {!papersLoading && typedPapers.length === 0 && (
+                    <Alert severity="warning" sx={{ mt: 2 }}>No approved papers are available. Approve a paper before scheduling.</Alert>
+                  )}
                   <Box sx={{ mt: 2 }}>
                     <Button variant="contained" onClick={handleNext} disabled={!selectedPaper}>
                       Next
@@ -335,18 +407,14 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <DateTimePicker label="End Date & Time" value={endDateTime} onChange={(v) => setEndDateTime(v)} sx={{ flex: '1 1 250px' }} />
                       <TextField label="Duration (minutes)" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} sx={{ flex: '1 1 150px' }} />
                     </Box>
-                    <TextField label="Access Code (optional)" value={accessCode} onChange={(e) => setAccessCode(e.target.value)} placeholder="Leave empty for no access code" fullWidth />
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                       <FormControlLabel control={<Checkbox checked={allowLateSubmission} onChange={(e) => setAllowLateSubmission(e.target.checked)} />} label="Allow Late Submission" />
                       {allowLateSubmission && (
                         <TextField label="Late Penalty (%)" type="number" value={lateSubmissionPenalty} onChange={(e) => setLateSubmissionPenalty(Number(e.target.value))} size="small" sx={{ width: 150 }} />
                       )}
-                      <FormControlLabel control={<Checkbox checked={enableProctoring} onChange={(e) => setEnableProctoring(e.target.checked)} />} label="Enable Proctoring" />
-                      <FormControlLabel control={<Checkbox checked={requireFaceVerification} onChange={(e) => setRequireFaceVerification(e.target.checked)} />} label="Require Face Verification" />
+                      <FormControlLabel control={<Checkbox checked={enableProctoring} onChange={(e) => setEnableProctoring(e.target.checked)} />} label="Enable Basic Browser Proctoring" />
                     </Box>
-                    {enableProctoring && (
-                      <DateTimePicker label="Result Publish Date" value={resultPublishDate} onChange={(v) => setResultPublishDate(v)} sx={{ flex: '1 1 250px' }} />
-                    )}
+                    <DateTimePicker label="Result Publish Date (optional)" value={resultPublishDate} onChange={(v) => setResultPublishDate(v)} sx={{ flex: '1 1 250px' }} />
                   </Stack>
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button onClick={handleBack}>Back</Button>
@@ -358,6 +426,7 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
               <Step>
                 <StepLabel>Choose Students</StepLabel>
                 <StepContent>
+                  {targetsLoading && <Alert severity="info" sx={{ mb: 2 }}>Loading sections and students…</Alert>}
                   <FormControl component="fieldset" sx={{ mb: 2 }}>
                     <FormLabel component="legend">Test Visibility</FormLabel>
                     <RadioGroup value={visibility} onChange={(e) => setVisibility(e.target.value as TestVisibility)}>
@@ -379,7 +448,14 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                               setTargetSections((prev) => {
                                 const exists = prev.find((s) => s.sectionId === section.id);
                                 if (exists) return prev.filter((s) => s.sectionId !== section.id);
-                                return [...prev, { sectionId: section.id, sectionName: section.name }];
+                                return [...prev, {
+                                  sectionId: section.id,
+                                  sectionName: section.name,
+                                  section: section.section,
+                                  branch: section.branch,
+                                  batch: section.batch,
+                                  semester: section.semester,
+                                }];
                               });
                             }}
                             color={targetSections.find((s) => s.sectionId === section.id) ? 'primary' : 'default'}
@@ -444,12 +520,6 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                         <Typography color="text.secondary">Visibility:</Typography>
                         <Typography>{(visibility || 'public').replace(/_/g, ' ')}</Typography>
                       </Box>
-                      {accessCode && (
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography color="text.secondary">Access Code:</Typography>
-                          <Typography sx={{ fontFamily: 'monospace' }}>{accessCode}</Typography>
-                        </Box>
-                      )}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography color="text.secondary">Proctoring:</Typography>
                         <Typography>{enableProctoring ? 'Enabled' : 'Disabled'}</Typography>

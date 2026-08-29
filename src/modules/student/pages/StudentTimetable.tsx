@@ -53,6 +53,7 @@ const STATUS_CONFIG = {
 }
 
 interface StudentProfile {
+  collegeId: string;
   branch: string;
   batch: string;
   semester: number;
@@ -62,10 +63,11 @@ interface StudentProfile {
 
 const StudentTimetable: React.FC = () => {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useStudentProfile(user?.uid);
+  const { profile, loading: profileLoading, error: profileError } = useStudentProfile(user?.uid);
 
   const studentProfile: StudentProfile | null = profile
     ? {
+        collegeId: profile.collegeId || user?.collegeId || '',
         branch: profile.branch || profile.department || '',
         batch: profile.batch || '',
         semester: Number(profile.semester) || 1,
@@ -74,8 +76,9 @@ const StudentTimetable: React.FC = () => {
       }
     : null;
 
-  const { weeklySchedule, todayClasses, isLoading } = useStudentSchedule(studentProfile);
+  const { weeklySchedule, todayClasses, isLoading, error: scheduleError } = useStudentSchedule(studentProfile);
   const loading = profileLoading || isLoading;
+  const error = profileError || scheduleError;
 
   if (loading) {
     return (
@@ -85,11 +88,19 @@ const StudentTimetable: React.FC = () => {
     )
   }
 
+  if (error) {
+    return (
+      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    )
+  }
+
   if (!studentProfile) {
     return (
       <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
-        <Alert severity="info">
-          Your class schedule isn't available yet. Once your timetable is published it will appear here.
+        <Alert severity="warning">
+          Your account is not linked to a complete class profile. Contact your college administrator.
         </Alert>
       </Box>
     )

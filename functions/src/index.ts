@@ -28,6 +28,44 @@ import {
   bulkCreateStudentAccounts,
 } from './studentAuth'
 import { provisionUser } from './userProvisioning'
+import {
+  beginMyAssignmentSubmission,
+  cancelMyAssignmentSubmission,
+  cleanupExpiredAssignmentSubmissionDrafts,
+  finalizeMyAssignmentSubmission,
+  getMyAssignments,
+  gradeAssignmentSubmission,
+  updateMyStudentProfile,
+  createFacultyAssignment,
+  updateFacultyAssignment,
+  transitionFacultyAssignment,
+  deleteFacultyAssignmentDraft,
+  getAssignmentSubmissionDownload,
+} from './studentPortal'
+import {
+  getMyStudentTests,
+  getMyTestInstructions,
+  startMyStudentTest,
+  getMyActiveStudentTest,
+  autosaveMyStudentTest,
+  submitMyStudentTest,
+  logMyStudentTestEvent,
+  getMyStudentTestResult,
+  listManagedAssessmentTests,
+  scheduleAssessmentTest,
+  publishAssessmentTest,
+  cancelAssessmentTest,
+  gradeStudentAssessmentSubmission,
+  listPendingAssessmentSubmissions,
+  autoSubmitExpiredStudentTests,
+} from './studentAssessments'
+import {
+  listManagedGradeRecords,
+  saveDraftGradeRecords,
+  publishGradeRecords,
+  deleteDraftGradeRecords,
+} from './gradeRecords'
+import { savePaper, reviewPaper, getPaperFileDownload } from './paperWorkflow'
 
 const app = express()
 
@@ -99,4 +137,43 @@ export const api = onRequest(
 )
 
 // ═══════ Callable functions exports ═══════
-export { syncStudentsToAuth, createStudentAuth, bulkCreateStudentAccounts, provisionUser }
+export {
+  syncStudentsToAuth,
+  createStudentAuth,
+  bulkCreateStudentAccounts,
+  provisionUser,
+  updateMyStudentProfile,
+  getMyAssignments,
+  beginMyAssignmentSubmission,
+  finalizeMyAssignmentSubmission,
+  cancelMyAssignmentSubmission,
+  gradeAssignmentSubmission,
+  cleanupExpiredAssignmentSubmissionDrafts,
+  createFacultyAssignment,
+  updateFacultyAssignment,
+  transitionFacultyAssignment,
+  deleteFacultyAssignmentDraft,
+  getAssignmentSubmissionDownload,
+  getMyStudentTests,
+  getMyTestInstructions,
+  startMyStudentTest,
+  getMyActiveStudentTest,
+  autosaveMyStudentTest,
+  submitMyStudentTest,
+  logMyStudentTestEvent,
+  getMyStudentTestResult,
+  listManagedAssessmentTests,
+  scheduleAssessmentTest,
+  publishAssessmentTest,
+  cancelAssessmentTest,
+  gradeStudentAssessmentSubmission,
+  listPendingAssessmentSubmissions,
+  autoSubmitExpiredStudentTests,
+  listManagedGradeRecords,
+  saveDraftGradeRecords,
+  publishGradeRecords,
+  deleteDraftGradeRecords,
+  savePaper,
+  reviewPaper,
+  getPaperFileDownload,
+}
