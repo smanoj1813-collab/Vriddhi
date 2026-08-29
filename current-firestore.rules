@@ -383,7 +383,17 @@ service cloud.firestore {
     }
 
     match /notifications/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || resource.data.userId == request.auth.uid || sameCollege(resource.data));
+      // Personal notifications are authorised by immutable identity only.
+      // Students may read records addressed to their own Auth UID or canonical
+      // student ID; staff retain same-college access. A shared broadcast must
+      // never rely on a college-wide student read (previously `sameCollege`
+      // leaked every same-college notification to every student).
+      allow read: if isSignedIn() && (
+        isSuperadmin()
+        || (isStaff() && sameCollege(resource.data))
+        || resource.data.userId == request.auth.uid
+        || ownsStudentId(resource.data.studentId)
+      );
       allow write: if isCollegeStaff();
     }
 

@@ -252,6 +252,23 @@ beforeEach(async () => {
         subject: 'Physics',
         grade: 'B',
       }),
+      setDoc(doc(db, 'notifications', 'notif-own'), {
+        collegeId: COLLEGE_A,
+        userId: STUDENT_UID,
+        studentId: STUDENT_ID,
+        title: 'Addressed to Student A',
+      }),
+      setDoc(doc(db, 'notifications', 'notif-other'), {
+        collegeId: COLLEGE_A,
+        userId: OTHER_UID,
+        studentId: OTHER_STUDENT_ID,
+        title: 'Addressed to Student B',
+      }),
+      setDoc(doc(db, 'notifications', 'notif-broadcast'), {
+        collegeId: COLLEGE_A,
+        title: 'College-wide announcement',
+        message: 'Visible to every student under the old sameCollege rule',
+      }),
     ])
   })
 })
@@ -416,6 +433,37 @@ describe('student academic reads', () => {
       verificationStatus: 'approved-by-hod',
       title: 'Forged publication',
     }))
+  })
+})
+
+describe('notification identity & access', () => {
+  it('lets a student read only notifications addressed to their own identity', async () => {
+    const db = studentContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'notifications', 'notif-own')))
+    await assertFails(getDoc(doc(db, 'notifications', 'notif-other')))
+    // A same-college broadcast is no longer readable by arbitrary students.
+    await assertFails(getDoc(doc(db, 'notifications', 'notif-broadcast')))
+  })
+
+  it('authorizes the student notification list query by canonical studentId', async () => {
+    const db = studentContext().firestore()
+    const result = await assertSucceeds(
+      getDocs(
+        query(
+          collection(db, 'notifications'),
+          where('studentId', '==', STUDENT_ID),
+          limit(50)
+        )
+      )
+    )
+    assert.equal(result.size, 1)
+    assert.equal(result.docs[0].id, 'notif-own')
+  })
+
+  it('keeps same-college staff able to read notifications but not students at large', async () => {
+    const db = facultyContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'notifications', 'notif-broadcast')))
+    await assertSucceeds(getDoc(doc(db, 'notifications', 'notif-own')))
   })
 })
 
