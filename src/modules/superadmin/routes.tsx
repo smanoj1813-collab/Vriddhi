@@ -20,6 +20,7 @@ const SuperAdminUniversities = lazy(() => import('./pages/SuperAdminUniversities
 const SuperAdminUniversityDetail = lazy(() => import('./pages/SuperAdminUniversityDetail'));
 const SystemHealthMonitor = lazy(() => import('./pages/SystemHealthMonitor'));
 const UserImport = lazy(() => import('./pages/UserImport'));
+const AccessControl = lazy(() => import('./pages/AccessControl'));
 
 export const superadminRoutes: RouteObject[] = [
   {
@@ -32,6 +33,7 @@ export const superadminRoutes: RouteObject[] = [
     children: [
       { index: true, element: <SuperAdminDashboard /> },
       { path: 'dashboard', element: <SuperAdminDashboard /> },
+      { path: 'access', element: <AccessControl /> },
       { path: 'colleges', element: <SuperAdminColleges /> },
       { path: 'colleges/new', element: <CreateCollege /> },
       { path: 'colleges/:id', element: <SuperAdminCollegeDetail /> },

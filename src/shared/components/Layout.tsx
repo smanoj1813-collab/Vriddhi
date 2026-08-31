@@ -130,6 +130,7 @@ const navItems: NavItem[] = [
   { label: "Create College", path: "/superadmin/colleges/new", icon: <PersonAdd fontSize="small" />, roles: ["superadmin"], section: "Institutions" },
   { label: "Admins", path: "/superadmin/admins", icon: <SupervisedUserCircle fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Create Admin", path: "/superadmin/admins/new", icon: <AdminPanelSettings fontSize="small" />, roles: ["superadmin"], section: "User Management" },
+  { label: "Access Control", path: "/superadmin/access", icon: <AdminPanelSettings fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Manage Faculty", path: "/superadmin/faculty", icon: <People fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Import Faculty", path: "/superadmin/faculty/import", icon: <UploadFile fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Manage Students", path: "/superadmin/students", icon: <ManageAccounts fontSize="small" />, roles: ["superadmin"], section: "User Management" },
