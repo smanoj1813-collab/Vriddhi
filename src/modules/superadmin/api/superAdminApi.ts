@@ -222,6 +222,46 @@ function stripUndefined(obj: object): Record<string, unknown> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// ORPHANED-ACCOUNT SELF-HEAL
+// An import that ran while the Firestore rules denied the `users/{uid}`
+// write left the Auth account alive but with no role-resolution doc —
+// such accounts could never log in (ACCOUNT_NOT_FOUND). When an import
+// meets an email that already has a profile doc, we check for (and
+// restore) the missing users doc instead of failing the row.
+// ═══════════════════════════════════════════════════════════════════════
+
+async function healMissingUserDoc(
+  profileData: DocumentData,
+  fallbackRole: 'faculty' | 'student'
+): Promise<boolean> {
+  const uid = profileData?.uid;
+  if (!uid || typeof uid !== 'string') return false;
+
+  const userDocRef = doc(db, "users", uid);
+  const userSnap = await getDoc(userDocRef);
+  if (userSnap.exists()) return false; // lookup doc present — genuinely a duplicate
+
+  const name = (profileData.name as string)
+    || `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim()
+    || (profileData.email as string);
+
+  const now = Timestamp.now();
+  await setDoc(userDocRef, stripUndefined({
+    uid,
+    email: profileData.email,
+    name,
+    role: profileData.role || fallbackRole,
+    collegeId: profileData.collegeId || "",
+    department: profileData.department || "",
+    phone: profileData.phone || "",
+    avatar: "",
+    createdAt: now,
+    updatedAt: now,
+  }));
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // FIREBASE AUTH REST API — create users without affecting current session
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -707,7 +747,21 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         query(collection(db, collectionName), where("email", "==", email))
       );
       if (!existingSnap.empty) {
-        throw new Error(`${email} already exists`);
+        // Duplicate profile — but if a previous failed import left the Auth
+        // account without its users/{uid} lookup doc, restore it so the
+        // account can log in (password from the original import still valid).
+        const healed = await healMissingUserDoc(
+          existingSnap.docs[0].data(),
+          user.role === "student" ? "student" : "faculty"
+        );
+        if (healed) {
+          imported.push({ id: existingSnap.docs[0].id, email });
+          facultyCount++;
+          errors.push(`Info: restored missing login profile for ${email} — account already existed, password unchanged`);
+        } else {
+          throw new Error(`${email} already exists`);
+        }
+        continue;
       }
 
       // Generate password and create Firebase Auth account
@@ -811,7 +865,17 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
           collection(db, "faculty"), where("email", "==", faculty.email.toLowerCase().trim())
         ));
         if (!existingSnap.empty) {
-          throw new Error(`Row ${index + 1}: Faculty with email ${faculty.email} already exists`);
+          // Duplicate — self-heal a missing users/{uid} lookup doc left by an
+          // earlier failed import instead of failing the row.
+          const healed = await healMissingUserDoc(existingSnap.docs[0].data(), "faculty");
+          if (healed) {
+            imported.push({ id: existingSnap.docs[0].id, email: faculty.email, password: "" });
+            success++;
+            errors.push(`Row ${index + 1}: Info — restored missing login profile for ${faculty.email} (account already existed, password unchanged)`);
+          } else {
+            throw new Error(`Row ${index + 1}: Faculty with email ${faculty.email} already exists`);
+          }
+          continue;
         }
 
         const facultyId = faculty.facultyId || `FAC${Date.now()}${index}`;

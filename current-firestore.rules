@@ -6,24 +6,77 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userDoc() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
+    // ── Identity resolution (must be total & null-safe) ────────────────
+    // Accounts fall into three generations:
+    //   1. Provisioned via `provisionUser` CF → custom claims + users/{uid} doc
+    //   2. Legacy → profile in superadmins/{uid}, faculty/{uid}, students/{uid}
+    //   3. Client-imported (UserImport/FacultyImport) → users/{uid} doc, no
+    //      claims (the Identity Toolkit signUp REST API cannot set claims)
+    // A missing claim or missing document must yield `null`, NEVER a rules
+    // error. An error inside role()/collegeId() denies the entire condition,
+    // which is what locked superadmins, faculty and students out of login.
 
     function claimRole() {
-      return request.auth.token.role;
+      return isSignedIn() && 'role' in request.auth.token
+        ? request.auth.token.role
+        : null;
     }
 
     function claimCollege() {
-      return request.auth.token.collegeId;
+      return isSignedIn() && 'collegeId' in request.auth.token
+        ? request.auth.token.collegeId
+        : null;
     }
 
+    function userDocExists() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return userDocExists()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+        : null;
+    }
+
+    function superadminDocExists() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/superadmins/$(request.auth.uid));
+    }
+
+    // Resolution order: custom claim → users/{uid} doc → superadmins/{uid} doc.
+    // The superadmins fallback is what lets a legacy superadmin (no users doc,
+    // no claims) prove its role and reach its own data again.
     function role() {
-      return claimRole() != null ? claimRole() : userDoc().role;
+      return claimRole() != null
+        ? claimRole()
+        : userDoc() != null
+          ? userDoc().role
+          : (superadminDocExists() ? 'superadmin' : null);
+    }
+
+    // College scoping: claim → users doc → the user's own student/faculty
+    // profile doc (doc ID == Auth UID). Repeated get() calls to the same
+    // document are cached within a single rule evaluation.
+    function linkedProfileCollegeId() {
+      return !isSignedIn() ? null
+        : exists(/databases/$(database)/documents/students/$(request.auth.uid))
+          ? ('collegeId' in get(/databases/$(database)/documents/students/$(request.auth.uid)).data
+            ? get(/databases/$(database)/documents/students/$(request.auth.uid)).data.collegeId
+            : null)
+        : exists(/databases/$(database)/documents/faculty/$(request.auth.uid))
+          ? ('collegeId' in get(/databases/$(database)/documents/faculty/$(request.auth.uid)).data
+            ? get(/databases/$(database)/documents/faculty/$(request.auth.uid)).data.collegeId
+            : null)
+        : null;
     }
 
     function collegeId() {
-      return claimCollege() != null ? claimCollege() : userDoc().collegeId;
+      return claimCollege() != null
+        ? claimCollege()
+        : userDoc() != null
+          ? userDoc().collegeId
+          : linkedProfileCollegeId();
     }
 
     function isSuperadmin() {
@@ -39,7 +92,8 @@ service cloud.firestore {
     }
 
     function sameCollege(data) {
-      return isSuperadmin() || (collegeId() != null && data.collegeId == collegeId());
+      return isSuperadmin()
+        || (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId());
     }
 
     function isOwner(uid) {
@@ -48,12 +102,14 @@ service cloud.firestore {
 
     // Student records use generated domain document IDs. Provisioning links
     // each record to Firebase Auth through `userId`; `uid` and a UID document
-    // ID are accepted only for legacy records.
+    // ID are accepted only for legacy records. Every field access is guarded
+    // — reading a missing key raises a rules error, which would deny the
+    // whole expression (and deny a legitimate owner with it).
     function ownsStudentProfile(studentId, studentData) {
       return isSignedIn()
         && (
-          studentData.userId == request.auth.uid
-          || studentData.uid == request.auth.uid
+          ('userId' in studentData && studentData.userId == request.auth.uid)
+          || ('uid' in studentData && studentData.uid == request.auth.uid)
           || studentId == request.auth.uid
         );
     }
@@ -63,8 +119,11 @@ service cloud.firestore {
         && studentId != null
         && (
           studentId == request.auth.uid
-          || get(/databases/$(database)/documents/students/$(studentId)).data.userId == request.auth.uid
-          || get(/databases/$(database)/documents/students/$(studentId)).data.uid == request.auth.uid
+          || (exists(/databases/$(database)/documents/students/$(studentId))
+            && (('userId' in get(/databases/$(database)/documents/students/$(studentId)).data
+              && get(/databases/$(database)/documents/students/$(studentId)).data.userId == request.auth.uid)
+            || ('uid' in get(/databases/$(database)/documents/students/$(studentId)).data
+              && get(/databases/$(database)/documents/students/$(studentId)).data.uid == request.auth.uid)))
         );
     }
 
@@ -85,7 +144,17 @@ service cloud.firestore {
       allow read: if isOwner(userId)
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
-      allow create: if false;  // Cloud Function only
+      // Privileged provisioning stays Cloud-Function-only for admins and
+      // staff. A *verified* superadmin may still create the identity lookup
+      // doc directly: the bulk-import UIs (UserImport / FacultyImport) create
+      // the Auth account via the Identity Toolkit REST signUp API, which
+      // cannot attach custom claims, and must persist the role-resolution
+      // doc here or the imported account can never log in.
+      allow create: if isSuperadmin()
+        && userId == request.resource.data.uid
+        && request.resource.data.role in
+          ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent']
+        && noPasswordField();
       allow update: if isOwner(userId)
         && immutableUserFields()
         && noPasswordField()
@@ -109,28 +178,46 @@ service cloud.firestore {
         || (role() in ['admin', 'hod'] && sameCollege(resource.data));
     }
 
+    // isOwner(id) is listed FIRST on every identity collection: these reads
+    // are how the client resolves a profile at login when no users doc and
+    // no custom claims exist, and later disjuncts touch resource fields that
+    // may be absent on legacy docs (a missing field errors the expression).
     match /faculty/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow read: if isSignedIn() && (isOwner(id)
+        || isSuperadmin()
+        || sameCollege(resource.data)
+        || resource.data.uid == request.auth.uid);
       allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /admins/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow read: if isSignedIn() && (isOwner(id)
+        || isSuperadmin()
+        || sameCollege(resource.data)
+        || resource.data.uid == request.auth.uid);
       allow write: if isSuperadmin();
     }
 
     match /hods/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow read: if isSignedIn() && (isOwner(id)
+        || isSuperadmin()
+        || sameCollege(resource.data)
+        || resource.data.uid == request.auth.uid);
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
     }
 
     match /mentors/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data) || resource.data.uid == request.auth.uid);
+      allow read: if isSignedIn() && (isOwner(id)
+        || isSuperadmin()
+        || sameCollege(resource.data)
+        || resource.data.uid == request.auth.uid);
       allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /superadmins/{id} {
-      allow read: if isSuperadmin();
+      // isOwner(id) lets a legacy superadmin read its own profile during
+      // login role resolution (before any claim/users-doc proof exists).
+      allow read: if isSuperadmin() || isOwner(id);
       allow write: if isSuperadmin();
     }
 
