@@ -28,6 +28,7 @@ import {
   bulkCreateStudentAccounts,
 } from './studentAuth'
 import { provisionUser } from './userProvisioning'
+import { grantUserRole, diagnoseIdentity } from './roleManagement'
 import {
   beginMyAssignmentSubmission,
   cancelMyAssignmentSubmission,
@@ -142,6 +143,8 @@ export {
   createStudentAuth,
   bulkCreateStudentAccounts,
   provisionUser,
+  grantUserRole,
+  diagnoseIdentity,
   updateMyStudentProfile,
   getMyAssignments,
   beginMyAssignmentSubmission,
