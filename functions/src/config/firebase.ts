@@ -9,5 +9,13 @@ if (!getApps().length) {
 }
 
 export const db = getFirestore();
-export const rtdb = getDatabase();
 export const auth = getAuth();
+
+// Lazy Realtime Database handle: getDatabase() throws at module load when
+// FIREBASE_CONFIG is absent (deploy code analysis / local tooling), which
+// made functions undeployable. Resolve on first use instead.
+let _rtdb: ReturnType<typeof getDatabase> | null = null;
+export function getRtdb() {
+  if (!_rtdb) _rtdb = getDatabase();
+  return _rtdb;
+}
