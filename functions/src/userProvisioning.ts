@@ -40,12 +40,22 @@ export const provisionUser = onCall(
       throw new HttpsError('unauthenticated', 'Authentication required')
     }
 
-    const callerDoc = await admin.firestore().doc(`users/${request.auth.uid}`).get()
+    let callerDoc = await admin.firestore().doc(`users/${request.auth.uid}`).get()
+    let callerIsLegacySuperadmin = false
+    if (!callerDoc.exists) {
+      // Legacy superadmins may only have a superadmins/{uid} profile doc
+      // (no users/{uid} doc and no custom claims). Accept it as proof of
+      // identity, otherwise they cannot provision anyone.
+      callerDoc = await admin.firestore().doc(`superadmins/${request.auth.uid}`).get()
+      callerIsLegacySuperadmin = callerDoc.exists
+    }
     const caller = callerDoc.data()
     if (!caller) {
       throw new HttpsError('permission-denied', 'Caller profile not found')
     }
-    const callerRole = String(caller.role || '').toLowerCase()
+    const callerRole = callerIsLegacySuperadmin
+      ? 'superadmin'
+      : String(caller.role || '').toLowerCase()
     if (!STAFF_CREATOR_ROLES.includes(callerRole)) {
       throw new HttpsError('permission-denied', 'Insufficient permissions to provision users')
     }

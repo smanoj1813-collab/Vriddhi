@@ -113,7 +113,14 @@ async function verifyCaller(
     throw new HttpsError('unauthenticated', 'User must be authenticated')
   }
   const userDoc = await admin.firestore().doc(`users/${request.auth.uid}`).get()
-  const userData = userDoc.data()
+  let userData = userDoc.data()
+  if (!userData) {
+    // Legacy superadmins may only have a superadmins/{uid} profile doc.
+    const superadminDoc = await admin.firestore().doc(`superadmins/${request.auth.uid}`).get()
+    if (superadminDoc.exists) {
+      userData = { role: 'superadmin' } as { role: string }
+    }
+  }
   if (!userData) {
     throw new HttpsError('not-found', 'User record not found')
   }
