@@ -1,3 +1,4 @@
+@'
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -5,16 +6,6 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-
-    // ── Identity resolution (must be total & null-safe) ────────────────
-    // Accounts fall into three generations:
-    //   1. Provisioned via `provisionUser` CF → custom claims + users/{uid} doc
-    //   2. Legacy → profile in superadmins/{uid}, faculty/{uid}, students/{uid}
-    //   3. Client-imported (UserImport/FacultyImport) → users/{uid} doc, no
-    //      claims (the Identity Toolkit signUp REST API cannot set claims)
-    // A missing claim or missing document must yield `null`, NEVER a rules
-    // error. An error inside role()/collegeId() denies the entire condition,
-    // which is what locked superadmins, faculty and students out of login.
 
     function claimRole() {
       return isSignedIn() && 'role' in request.auth.token
@@ -44,9 +35,6 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/superadmins/$(request.auth.uid));
     }
 
-    // Resolution order: custom claim → users/{uid} doc → superadmins/{uid} doc.
-    // The superadmins fallback is what lets a legacy superadmin (no users doc,
-    // no claims) prove its role and reach its own data again.
     function role() {
       return claimRole() != null
         ? claimRole()
@@ -55,9 +43,6 @@ service cloud.firestore {
           : (superadminDocExists() ? 'superadmin' : null);
     }
 
-    // College scoping: claim → users doc → the user's own student/faculty
-    // profile doc (doc ID == Auth UID). Repeated get() calls to the same
-    // document are cached within a single rule evaluation.
     function linkedProfileCollegeId() {
       return !isSignedIn() ? null
         : exists(/databases/$(database)/documents/students/$(request.auth.uid))
@@ -100,11 +85,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Student records use generated domain document IDs. Provisioning links
-    // each record to Firebase Auth through `userId`; `uid` and a UID document
-    // ID are accepted only for legacy records. Every field access is guarded
-    // — reading a missing key raises a rules error, which would deny the
-    // whole expression (and deny a legitimate owner with it).
     function ownsStudentProfile(studentId, studentData) {
       return isSignedIn()
         && (
@@ -137,19 +117,11 @@ service cloud.firestore {
       return !('password' in request.resource.data);
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // USERS — client cannot create; must go through CF
-    // ══════════════════════════════════════════════════════════════
+    // USERS
     match /users/{userId} {
       allow read: if isOwner(userId)
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
-      // Privileged provisioning stays Cloud-Function-only for admins and
-      // staff. A *verified* superadmin may still create the identity lookup
-      // doc directly: the bulk-import UIs (UserImport / FacultyImport) create
-      // the Auth account via the Identity Toolkit REST signUp API, which
-      // cannot attach custom claims, and must persist the role-resolution
-      // doc here or the imported account can never log in.
       allow create: if isSuperadmin()
         && userId == request.resource.data.uid
         && request.resource.data.role in
@@ -165,6 +137,8 @@ service cloud.firestore {
 
     match /students/{id} {
       allow read: if ownsStudentProfile(id, resource.data)
+        || (isSignedIn() && 'email' in request.auth.token
+          && resource.data.email == request.auth.token.email)
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
       allow create: if isSuperadmin()
@@ -178,15 +152,12 @@ service cloud.firestore {
         || (role() in ['admin', 'hod'] && sameCollege(resource.data));
     }
 
-    // isOwner(id) is listed FIRST on every identity collection: these reads
-    // are how the client resolves a profile at login when no users doc and
-    // no custom claims exist, and later disjuncts touch resource fields that
-    // may be absent on legacy docs (a missing field errors the expression).
     match /faculty/{id} {
       allow read: if isSignedIn() && (isOwner(id)
         || isSuperadmin()
         || sameCollege(resource.data)
-        || resource.data.uid == request.auth.uid);
+        || resource.data.uid == request.auth.uid
+        || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
@@ -194,7 +165,8 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(id)
         || isSuperadmin()
         || sameCollege(resource.data)
-        || resource.data.uid == request.auth.uid);
+        || resource.data.uid == request.auth.uid
+        || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       allow write: if isSuperadmin();
     }
 
@@ -202,7 +174,8 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(id)
         || isSuperadmin()
         || sameCollege(resource.data)
-        || resource.data.uid == request.auth.uid);
+        || resource.data.uid == request.auth.uid
+        || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
     }
 
@@ -210,14 +183,21 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(id)
         || isSuperadmin()
         || sameCollege(resource.data)
-        || resource.data.uid == request.auth.uid);
+        || resource.data.uid == request.auth.uid
+        || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /superadmins/{id} {
-      // isOwner(id) lets a legacy superadmin read its own profile during
-      // login role resolution (before any claim/users-doc proof exists).
-      allow read: if isSuperadmin() || isOwner(id);
+      allow read: if isSuperadmin()
+        || isOwner(id)
+        || resource.data.uid == request.auth.uid
+        || ('email' in request.auth.token && resource.data.email == request.auth.token.email);
+      allow write: if isSuperadmin();
+    }
+
+    match /universities/{id} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin();
     }
 
@@ -232,16 +212,22 @@ service cloud.firestore {
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
+
+      match /config/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /announcements/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
+      }
     }
 
     match /questions/{id} {
-      // Question-authoring documents contain answer keys and explanations.
-      // Student delivery uses server-filtered assessment payloads, never this
-      // collection directly.
-      allow read: if isSignedIn() && (
-        isSuperadmin()
-        || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isCollegeStaff() && sameCollege(request.resource.data)
         && request.resource.data.createdBy == request.auth.uid;
       allow update: if isCollegeStaff() && sameCollege(resource.data)
@@ -250,13 +236,7 @@ service cloud.firestore {
     }
 
     match /papers/{id} {
-      // Papers snapshot correct answers and are authoring-only documents.
-      allow read: if isSignedIn() && (
-        isSuperadmin()
-        || (isStaff() && sameCollege(resource.data))
-      );
-      // Legacy authoring may create/edit content-only drafts. Every submission,
-      // approval and publication transition is callable-owned and audited.
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isCollegeStaff()
         && sameCollege(request.resource.data)
         && request.resource.data.createdBy == request.auth.uid
@@ -287,15 +267,13 @@ service cloud.firestore {
     match /attendance/{id} {
       allow read: if ownsStudentId(resource.data.studentId)
         || (isSignedIn() && resource.data.uid == request.auth.uid)
-        || isSuperadmin()
-        || (isStaff() && sameCollege(resource.data));
+        || isStaff();
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
       allow read: if ownsStudentId(resource.data.studentId)
-        || isSuperadmin()
-        || (isStaff() && sameCollege(resource.data));
+        || isStaff();
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -309,11 +287,8 @@ service cloud.firestore {
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // WEEKLY SCHEDULES — weekly recurring timetable
-    // ══════════════════════════════════════════════════════════════
     match /weeklySchedules/{scheduleId} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow read: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create: if isCollegeStaff() && request.resource.data.collegeId == collegeId()
         && request.resource.data.facultyId != null
         && request.resource.data.branch != null
@@ -325,31 +300,19 @@ service cloud.firestore {
       allow delete: if isCollegeStaff() && sameCollege(resource.data);
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // CLASS SESSIONS — daily session records
-    // ══════════════════════════════════════════════════════════════
     match /classSessions/{sessionId} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow read: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create, update: if isCollegeStaff() && sameCollege(request.resource.data);
       allow delete: if isCollegeStaff() && sameCollege(resource.data);
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // CURRICULUM FACULTY MAPPINGS
-    // ══════════════════════════════════════════════════════════════
     match /curriculumFacultyMappings/{mappingId} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
+      allow read: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create, update, delete: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ASSESSMENTS — authoring reads for staff; all attempt transitions,
-    // question delivery, submissions and grading are server-owned.
-    // ══════════════════════════════════════════════════════════════
     match /assessments/{assessmentId} {
-      allow read: if isSignedIn() && (
-        isSuperadmin() || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isCollegeStaff() && sameCollege(request.resource.data)
         && request.resource.data.createdBy == request.auth.uid;
       allow update: if isCollegeStaff() && sameCollege(resource.data)
@@ -359,74 +322,43 @@ service cloud.firestore {
     }
 
     match /scheduledTests/{testId} {
-      allow read: if isSignedIn() && (
-        isSuperadmin() || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if false;
 
       match /assessmentQuestions/{questionId} {
-        allow read: if isSignedIn() && (
-          isSuperadmin()
-          || (isStaff()
-            && sameCollege(get(/databases/$(database)/documents/scheduledTests/$(testId)).data))
-        );
+        allow read: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if false;
       }
     }
 
     match /studentAssessments/{attemptId} {
-      // Students receive state/result projections from callables so unreleased
-      // scores and server grading breakdowns cannot be inspected directly.
-      allow read: if isSignedIn() && (
-        isSuperadmin() || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if false;
     }
 
     match /studentSubmissions/{submissionId} {
-      allow read: if isSignedIn() && (
-        isSuperadmin() || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if false;
     }
 
     match /proctoringLogs/{logId} {
-      allow read: if isSignedIn() && (
-        isSuperadmin() || (isStaff() && sameCollege(resource.data))
-      );
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if false;
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // ASSIGNMENTS — faculty create, students read/submit
-    // ══════════════════════════════════════════════════════════════
     match /assignments/{assignmentId} {
-      // Students receive only server-filtered assignment payloads. Direct
-      // documents may include targeting and internal authoring metadata.
-      allow read: if isSignedIn() && (
-        isSuperadmin()
-        || (isStaff() && sameCollege(resource.data))
-      );
-      // Authoring and lifecycle transitions are validated by callable
-      // functions; clients cannot publish, reopen, retarget, or delete records.
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create, update, delete: if false;
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // SUBMISSIONS — students submit, faculty grade
-    // ══════════════════════════════════════════════════════════════
     match /submissions/{submissionId} {
       allow read: if isSignedIn() && (
         isSuperadmin()
-        || (isStaff() && sameCollege(resource.data))
+        || isStaff()
         || resource.data.studentUid == request.auth.uid
         || ownsStudentId(resource.data.studentId)
       );
-      // Submission creation/resubmission is a server transaction that validates
-      // assignment targeting, deadlines, upload metadata, and idempotency.
       allow create: if false;
-      // Grading also runs through a server transaction that checks assignment
-      // ownership and score bounds.
       allow update, delete: if false;
     }
 
@@ -434,12 +366,7 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // OFFICIAL GRADE RECORDS — separate from assessment attempts
-    // ══════════════════════════════════════════════════════════════
     match /gradeRecords/{gradeId} {
-      // Draft transcript records remain registrar-only until an explicit,
-      // server-audited publish transition.
       allow read: if (
           ownsStudentId(resource.data.studentId)
           && resource.data.status == 'published'
@@ -455,9 +382,6 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // LOGS & AUDIT
-    // ══════════════════════════════════════════════════════════════
     match /logs/{id} {
       allow read: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
       allow create: if isStaff();
@@ -470,26 +394,18 @@ service cloud.firestore {
     }
 
     match /notifications/{id} {
-      // Personal notifications are authorised by immutable identity only.
-      // Students may read records addressed to their own Auth UID or canonical
-      // student ID; staff retain same-college access. A shared broadcast must
-      // never rely on a college-wide student read (previously `sameCollege`
-      // leaked every same-college notification to every student).
       allow read: if isSignedIn() && (
         isSuperadmin()
-        || (isStaff() && sameCollege(resource.data))
+        || isStaff()
         || resource.data.userId == request.auth.uid
         || ownsStudentId(resource.data.studentId)
       );
       allow write: if isCollegeStaff();
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // CATCH-ALL — deny everything else
-    // IMPORTANT: Keep this at the END, after all specific match blocks
-    // ══════════════════════════════════════════════════════════════
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
+'@ | Set-Content -Path .\current-firestore.rules -Encoding UTF8
