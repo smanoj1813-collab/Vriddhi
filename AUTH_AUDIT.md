@@ -17,6 +17,19 @@ Firebase Authentication proves the email/password identity. The application role
 
 `grantUserRole` is superadmin-only, region `asia-south1`, idempotent for existing accounts, and records an audit document in `logs`. Granting `superadmin` creates/merges `superadmins/{uid}`; granting another role removes that document as the revocation path. Staff profiles are merged by email when available and students receive both `uid` and `userId` links.
 
+## Legacy identities in Firestore rules
+
+Accounts created before the Access Control work (imported faculty, hand-written profile documents, spreadsheet uploads) may have no custom claims and no `users/{uid}` document. `current-firestore.rules` now resolves those identities itself, in the same order as the client lookup in `src/modules/auth/context/auth.ts`:
+
+1. Auth custom claim `role`.
+2. `users/{uid}.role` (also `userRole`, then `userType`).
+3. Role profile collection keyed by uid: `superadmins` → `admins` → `faculty` → `hods` → `mentors` → `students`. A profile document without a role field is read as the role the collection names.
+4. Nothing — the request is unauthenticated or has no identity, and every staff read stays denied.
+
+Role spellings are normalised before comparison (`Faculty`, `teacher`, `Head of Department`, `super admin`, ...), and the tenant is resolved from `collegeId`, `collegeID`, or `college` on the profile document.
+
+An account that can only be matched by email (no uid-keyed document anywhere) cannot be resolved by rules, because rules cannot query by email. Repair those identities once with **Superadmin → Access Control**; the grant writes `users/{uid}` and the custom claims, and the account then resolves from step 2.
+
 ## Important safety notes
 
 - Never put Firebase Admin credentials or passwords in the client.

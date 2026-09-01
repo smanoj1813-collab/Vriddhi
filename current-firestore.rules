@@ -295,6 +295,92 @@ service cloud.firestore {
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
       }
+
+      // -- Legacy dashboard collections ---------------------------------------
+      // These per-college collections feed the admin, principal, and faculty
+      // dashboards (see src/modules/admin/api/dashboardApi.ts,
+      // src/modules/admin/api/feeApi.ts, src/modules/faculty/pages/
+      // FacultyDashboard.tsx). They pre-date the collegeId hygiene work, so
+      // individual documents cannot be trusted to carry a collegeId field -
+      // the collection path itself is the tenant boundary.
+
+      match /schedules/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /attendance/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /attendanceRecords/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /assessments/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /scores/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /activities/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /milestones/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /feeStructures/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /feePayments/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /faculty/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /materials/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /events/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /notifications/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
     }
 
     match /questions/{id} {
@@ -472,6 +558,38 @@ service cloud.firestore {
         || ownsStudentId(resource.data.studentId)
       );
       allow write: if isCollegeStaff();
+    }
+
+    // -- Curriculum, topics, and test papers ----------------------------------
+    // Read by the curriculum, topics, and dashboard flows in
+    // src/modules/superadmin/api/curriculumApi.ts and
+    // src/modules/faculty/api/facultyApi.ts. Writes stay with superadmin and
+    // college administration; faculty may only read.
+
+    match /curriculum/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /syllabusExtracts/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /topics/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('facultyId' in resource.data && resource.data.facultyId == request.auth.uid));
+      allow write: if isSuperadmin();
+    }
+
+    match /testPapers/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
+      allow write: if isSuperadmin();
     }
 
     match /{document=**} {
