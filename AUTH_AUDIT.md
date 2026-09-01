@@ -30,6 +30,20 @@ Role spellings are normalised before comparison (`Faculty`, `teacher`, `Head of 
 
 An account that can only be matched by email (no uid-keyed document anywhere) cannot be resolved by rules, because rules cannot query by email. Repair those identities once with **Superadmin → Access Control**; the grant writes `users/{uid}` and the custom claims, and the account then resolves from step 2.
 
+## Tenant scoping
+
+College data is scoped by `collegeId` on the document, or by the collection path for the legacy per-college collections whose documents pre-date that field.
+
+**Scoped to the caller's college:** students, faculty, admins, hods, mentors, attendance, attendanceRecords, attendanceSummary, classSessions, weeklySchedules, studentAssessments, studentSubmissions, submissions, gradeRecords, feeStructures, payments, notifications, and every `colleges/{collegeId}/{...}` subcollection.
+
+**Shared across colleges by design:** `questions`, `papers`, `assessments`, `scheduledTests`, `curriculum`, `syllabusExtracts`, and the cloud question bank (`questionBank_meta`, `papers_universal`, `paperTemplates`, `questionReviews`). Any signed-in staff can read these. If cross-college sharing is not intended, these need a college check too.
+
+Superadmin retains the cross-college view needed for support, and callables resolve tenancy server-side regardless of these rules.
+
+## Composite indexes
+
+Queries that filter on more than one field need a composite index, and Firestore rejects them at runtime without one — several call sites catch the error and return empty data, so the gap is easy to miss. `firestore.indexes.json` is the source of truth; re-check it whenever a query gains a `where` or `orderBy`.
+
 ## Important safety notes
 
 - Never put Firebase Admin credentials or passwords in the client.
