@@ -9,21 +9,7 @@ import {
   limit, startAfter, QueryConstraint,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { functions as cloudFunctions } from '@/Firebase/config';
-
-// Dynamic firebase import to avoid path resolution issues
-let db: any;
-try {
-  const firebaseMod = require('../firebase');
-  db = firebaseMod.db;
-} catch {
-  try {
-    const firebaseMod = require('../config/firebase');
-    db = firebaseMod.db;
-  } catch {
-    console.warn('[assessmentsApi] Firebase db import failed. Ensure firebase config path is correct.');
-  }
-}
+import { db, functions as cloudFunctions } from '@/Firebase/config';
 
 import type {
   Assessment, StudentAssessment, StudentAnswer,

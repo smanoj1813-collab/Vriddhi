@@ -66,9 +66,21 @@ export const grantUserRole = onCall(
 
     const resolvedName = name || authUser.displayName || email.split('@')[0]
     const existingClaims = authUser.customClaims || {}
+    const previousRole = typeof existingClaims.role === 'string' ? existingClaims.role : null
+    const previousCollegeId = existingClaims.collegeId ?? null
+    const roleChanged = previousRole !== role || previousCollegeId !== collegeId
+
     await admin.auth().setCustomUserClaims(authUser.uid, {
       ...existingClaims, role, collegeId, mustChangePassword: created || existingClaims.mustChangePassword === true,
     })
+
+    // Rules trust the custom claim before the profile document, so without this
+    // a downgraded or moved account would keep its old privileges until the ID
+    // token expired (up to an hour). Revoking refresh tokens forces the next
+    // request to mint a token that carries the claims just written.
+    if (roleChanged) {
+      await admin.auth().revokeRefreshTokens(authUser.uid)
+    }
 
     const now = admin.firestore.FieldValue.serverTimestamp()
     const batch: admin.firestore.WriteBatch = db.batch()
@@ -99,12 +111,18 @@ export const grantUserRole = onCall(
     }
     batch.create(db.collection('logs').doc(), {
       action: 'grantUserRole', targetUid: authUser.uid, targetEmail: email, role, collegeId,
+      previousRole, previousCollegeId, revokedRefreshTokens: roleChanged,
       actorUid: request.auth.uid, createdAt: now, created,
     })
     await batch.commit()
     logger.info('[grantUserRole] identity wired', { targetUid: authUser.uid, role, actorUid: request.auth.uid })
 
-    return { success: true, uid: authUser.uid, email, role, collegeId, created, temporaryPassword: created ? generatedPassword : undefined }
+    return {
+      success: true, uid: authUser.uid, email, role, collegeId, created,
+      // The target must sign in again before the new claims and rules apply.
+      reauthenticateRequired: roleChanged,
+      temporaryPassword: created ? generatedPassword : undefined,
+    }
   }
 )
 

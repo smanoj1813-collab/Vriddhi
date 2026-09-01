@@ -1,4 +1,4 @@
-﻿rules_version = '2';
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -29,36 +29,108 @@ service cloud.firestore {
         : null;
     }
 
-    function superadminDocExists() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/superadmins/$(request.auth.uid));
+    // -- Legacy identity resolution -------------------------------------------
+    // Accounts created before the Access Control work - imported faculty,
+    // hand-written profile documents, spreadsheet uploads - often have no
+    // custom claims and no users/{uid} document, and they spell the same role
+    // in many ways ("Faculty", "teacher", "Head of Department", ...). Those
+    // users used to resolve to a null role, which silently denied every staff
+    // read. The helpers below normalise those identities. They mirror the
+    // lookup order used by the client in src/modules/auth/context/auth.ts.
+
+    function cleanRoleValue(raw) {
+      return raw is string ? raw.trim().lower() : '';
+    }
+
+    function canonicalRole(value) {
+      return value == 'teacher' || value == 'teaching staff' || value == 'teaching-staff'
+        || value == 'teaching_staff' || value == 'lecturer' || value == 'professor'
+        || value == 'assistant professor' || value == 'associate professor'
+        || value == 'instructor' || value == 'faculty member' || value == 'faculty-member'
+        ? 'faculty'
+        : value == 'head of department' || value == 'head-of-department'
+          || value == 'head_of_department' || value == 'dept head' || value == 'department head'
+          ? 'hod'
+        : value == 'administrator' || value == 'admin staff' || value == 'college admin'
+          ? 'admin'
+        : value == 'super admin' || value == 'super-admin' || value == 'super_admin'
+          || value == 'superuser' || value == 'owner'
+          ? 'superadmin'
+        : value == 'vice principal' || value == 'vice-principal' || value == 'vice_principal'
+          ? 'principal'
+        : value == 'learner' || value == 'pupil'
+          ? 'student'
+        : value == 'guardian'
+          ? 'parent'
+        : value;
+    }
+
+    // Legacy documents store the role under role, userRole, or userType.
+    function roleField(data) {
+      return 'role' in data ? cleanRoleValue(data.role)
+        : 'userRole' in data ? cleanRoleValue(data.userRole)
+        : 'userType' in data ? cleanRoleValue(data.userType)
+        : '';
+    }
+
+    // fall backRole is used when the profile document exists but carries no
+    // role field - membership of the collection is then the role statement.
+    function profileRole(collectionName, fallBackRole) {
+      return !isSignedIn() ? null
+        : !exists(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)) ? null
+        : roleField(get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data) != ''
+          ? canonicalRole(roleField(get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data))
+          : fallBackRole;
+    }
+
+    function legacyProfileRole() {
+      return !isSignedIn() ? null
+        : profileRole('superadmins', 'superadmin') != null ? profileRole('superadmins', 'superadmin')
+        : profileRole('admins', 'admin') != null ? profileRole('admins', 'admin')
+        : profileRole('faculty', 'faculty') != null ? profileRole('faculty', 'faculty')
+        : profileRole('hods', 'hod') != null ? profileRole('hods', 'hod')
+        : profileRole('mentors', 'mentor') != null ? profileRole('mentors', 'mentor')
+        : profileRole('students', 'student') != null ? profileRole('students', 'student')
+        : null;
     }
 
     function role() {
-      return claimRole() != null
-        ? claimRole()
-        : userDoc() != null
-          ? userDoc().role
-          : (superadminDocExists() ? 'superadmin' : null);
+      return canonicalRole(cleanRoleValue(claimRole())) != ''
+        ? canonicalRole(cleanRoleValue(claimRole()))
+        : userDoc() != null && roleField(userDoc()) != ''
+          ? canonicalRole(roleField(userDoc()))
+          : legacyProfileRole() != null
+            ? legacyProfileRole()
+            : null;
+    }
+
+    // Legacy profile documents name the tenant collegeId, collegeID, or college.
+    function profileCollegeId(collectionName) {
+      return !isSignedIn() ? null
+        : !exists(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)) ? null
+        : 'collegeId' in get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data
+          ? get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data.collegeId
+        : 'collegeID' in get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data
+          ? get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data.collegeID
+        : 'college' in get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data
+          ? get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data.college
+        : null;
     }
 
     function linkedProfileCollegeId() {
       return !isSignedIn() ? null
-        : exists(/databases/$(database)/documents/students/$(request.auth.uid))
-          ? ('collegeId' in get(/databases/$(database)/documents/students/$(request.auth.uid)).data
-            ? get(/databases/$(database)/documents/students/$(request.auth.uid)).data.collegeId
-            : null)
-        : exists(/databases/$(database)/documents/faculty/$(request.auth.uid))
-          ? ('collegeId' in get(/databases/$(database)/documents/faculty/$(request.auth.uid)).data
-            ? get(/databases/$(database)/documents/faculty/$(request.auth.uid)).data.collegeId
-            : null)
+        : profileCollegeId('faculty') != null ? profileCollegeId('faculty')
+        : profileCollegeId('students') != null ? profileCollegeId('students')
+        : profileCollegeId('admins') != null ? profileCollegeId('admins')
+        : profileCollegeId('hods') != null ? profileCollegeId('hods')
+        : profileCollegeId('mentors') != null ? profileCollegeId('mentors')
         : null;
     }
 
     function collegeId() {
       return claimCollege() != null
         ? claimCollege()
-        : userDoc() != null
+        : userDoc() != null && 'collegeId' in userDoc()
           ? userDoc().collegeId
           : linkedProfileCollegeId();
     }
@@ -91,6 +163,33 @@ service cloud.firestore {
           || ('uid' in studentData && studentData.uid == request.auth.uid)
           || studentId == request.auth.uid
         );
+    }
+
+    // Tenant of a student profile document, used where the accessed document
+    // itself carries no collegeId (for example fees/{studentId}).
+    function studentCollegeId(studentId) {
+      return !isSignedIn() || studentId == null ? null
+        : !exists(/databases/$(database)/documents/students/$(studentId)) ? null
+        : 'collegeId' in get(/databases/$(database)/documents/students/$(studentId)).data
+          ? get(/databases/$(database)/documents/students/$(studentId)).data.collegeId
+        : null;
+    }
+
+    // True when the signed-in user is the addressee of a notification.
+    function isRecipient(data) {
+      return isSignedIn() && data != null
+        && (('userId' in data && data.userId == request.auth.uid)
+          || ('studentId' in data
+            && (data.studentId == request.auth.uid || ownsStudentId(data.studentId))));
+    }
+
+    // assessmentQuestions inherit their tenancy from the parent test document.
+    function scheduledTestCollegeId(testId) {
+      return !isSignedIn() || testId == null ? null
+        : !exists(/databases/$(database)/documents/scheduledTests/$(testId)) ? null
+        : 'collegeId' in get(/databases/$(database)/documents/scheduledTests/$(testId)).data
+          ? get(/databases/$(database)/documents/scheduledTests/$(testId)).data.collegeId
+        : null;
     }
 
     function ownsStudentId(studentId) {
@@ -223,6 +322,102 @@ service cloud.firestore {
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
       }
+
+      // -- Legacy dashboard collections ---------------------------------------
+      // These per-college collections feed the admin, principal, and faculty
+      // dashboards (see src/modules/admin/api/dashboardApi.ts,
+      // src/modules/admin/api/feeApi.ts, src/modules/faculty/pages/
+      // FacultyDashboard.tsx). They pre-date the collegeId hygiene work, so
+      // individual documents cannot be trusted to carry a collegeId field -
+      // the collection path itself is the tenant boundary.
+
+      match /schedules/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /attendance/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /attendanceRecords/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /assessments/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /scores/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /activities/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /milestones/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /feeStructures/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /feePayments/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /faculty/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
+      match /materials/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /events/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow write: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId);
+      }
+
+      match /notifications/{docId} {
+        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow create: if isSuperadmin()
+          || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
+        // Recipients may only flip their own read flag (see
+        // src/modules/student/pages/StudentNotificationsPage.tsx). Before this,
+        // a student could never mark a college notification as read.
+        allow update: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId)
+          || (isSignedIn()
+            && isRecipient(resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']));
+        allow delete: if isSuperadmin()
+          || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
+      }
     }
 
     match /questions/{id} {
@@ -266,13 +461,13 @@ service cloud.firestore {
     match /attendance/{id} {
       allow read: if ownsStudentId(resource.data.studentId)
         || (isSignedIn() && resource.data.uid == request.auth.uid)
-        || isStaff();
+        || (isStaff() && sameCollege(resource.data));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
       allow read: if ownsStudentId(resource.data.studentId)
-        || isStaff();
+        || (isStaff() && sameCollege(resource.data));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -281,9 +476,18 @@ service cloud.firestore {
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
     }
 
+    // Top-level feeStructures holds one document per student (queried by
+    // studentId in src/modules/student/api/studentDataApi.ts), so a student
+    // reads only their own record; staff read within their own college.
     match /feeStructures/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
-      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /weeklySchedules/{scheduleId} {
@@ -321,22 +525,36 @@ service cloud.firestore {
     }
 
     match /scheduledTests/{testId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin() || (isStaff() && sameCollege(resource.data)));
       allow write: if false;
 
+      // The question rows carry no collegeId of their own; the parent test does.
       match /assessmentQuestions/{questionId} {
-        allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow read: if isSignedIn()
+          && (isSuperadmin()
+            || (isStaff() && scheduledTestCollegeId(testId) == collegeId()));
         allow write: if false;
       }
     }
 
     match /studentAssessments/{attemptId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
       allow write: if false;
     }
 
     match /studentSubmissions/{submissionId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
       allow write: if false;
     }
 
@@ -353,9 +571,9 @@ service cloud.firestore {
     match /submissions/{submissionId} {
       allow read: if isSignedIn() && (
         isSuperadmin()
-        || isStaff()
-        || resource.data.studentUid == request.auth.uid
-        || ownsStudentId(resource.data.studentId)
+        || (isStaff() && sameCollege(resource.data))
+        || ('studentUid' in resource.data && resource.data.studentUid == request.auth.uid)
+        || ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
       );
       allow create: if false;
       allow update, delete: if false;
@@ -381,9 +599,12 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Audit trail. No client writes logs - Cloud Functions do (Admin SDK
+    // bypasses rules), so client creates are closed to keep the trail
+    // unfalsifiable.
     match /logs/{id} {
       allow read: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
-      allow create: if isStaff();
+      allow create: if false;
       allow update, delete: if isSuperadmin();
     }
 
@@ -399,7 +620,120 @@ service cloud.firestore {
         || resource.data.userId == request.auth.uid
         || ownsStudentId(resource.data.studentId)
       );
-      allow write: if isCollegeStaff();
+      // Recipients may only flip their own read flag (see markNotificationRead
+      // in src/modules/student/api/studentDataApi.ts). Everything else is
+      // college staff, scoped to their own tenant.
+      allow create: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(request.resource.data));
+      allow update: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data))
+        || (isSignedIn()
+          && isRecipient(resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']));
+      allow delete: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data));
+    }
+
+    // -- Curriculum, topics, and test papers ----------------------------------
+    // Read by the curriculum, topics, and dashboard flows in
+    // src/modules/superadmin/api/curriculumApi.ts and
+    // src/modules/faculty/api/facultyApi.ts. Writes stay with superadmin and
+    // college administration; faculty may only read.
+
+    match /curriculum/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /syllabusExtracts/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+    }
+
+    match /topics/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('facultyId' in resource.data && resource.data.facultyId == request.auth.uid));
+      allow write: if isSuperadmin();
+    }
+
+    match /testPapers/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
+      allow write: if isSuperadmin();
+    }
+
+    // -- Attendance summaries --------------------------------------------------
+    // Written inside the same atomic batch as attendance and attendanceRecords
+    // (src/modules/faculty/api/facultyApi.ts markAttendance). A missing rule
+    // here failed the entire batch, so attendance could never be saved.
+    match /attendanceSummary/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(request.resource.data));
+    }
+
+    // -- Fees and library ------------------------------------------------------
+    // fees is keyed by student id, so the tenant is resolved from the student
+    // profile rather than from a field on the fee document itself.
+    match /fees/{studentId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff() || isOwner(studentId) || ownsStudentId(studentId));
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && studentCollegeId(studentId) == collegeId());
+    }
+
+    match /libraryBooks/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperadmin() || (role() in ['admin', 'hod']);
+    }
+
+    match /issuedBooks/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    // -- Shared cloud question bank --------------------------------------------
+    // Backs src/modules/admin/api/cloudStorageApi.ts. These collections are
+    // shared across colleges by design ("papers_universal"), so access is
+    // role-based rather than tenant-scoped, matching the existing questions
+    // and papers rules.
+    match /questionBank_meta/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    match /papers_universal/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    match /paperTemplates/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    match /questionReviews/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    // Written by Cloud Functions only; the admin UI reads it through
+    // src/modules/admin/api/assessmentsApi.ts.
+    match /reviewQueue/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if false;
     }
 
     match /{document=**} {
