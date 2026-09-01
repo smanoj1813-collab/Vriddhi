@@ -165,6 +165,16 @@ service cloud.firestore {
         );
     }
 
+    // Tenant of a student profile document, used where the accessed document
+    // itself carries no collegeId (for example fees/{studentId}).
+    function studentCollegeId(studentId) {
+      return !isSignedIn() || studentId == null ? null
+        : !exists(/databases/$(database)/documents/students/$(studentId)) ? null
+        : 'collegeId' in get(/databases/$(database)/documents/students/$(studentId)).data
+          ? get(/databases/$(database)/documents/students/$(studentId)).data.collegeId
+        : null;
+    }
+
     function ownsStudentId(studentId) {
       return isSignedIn()
         && studentId != null
@@ -590,6 +600,72 @@ service cloud.firestore {
         && (isSuperadmin() || isStaff()
           || ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
       allow write: if isSuperadmin();
+    }
+
+    // -- Attendance summaries --------------------------------------------------
+    // Written inside the same atomic batch as attendance and attendanceRecords
+    // (src/modules/faculty/api/facultyApi.ts markAttendance). A missing rule
+    // here failed the entire batch, so attendance could never be saved.
+    match /attendanceSummary/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(request.resource.data));
+    }
+
+    // -- Fees and library ------------------------------------------------------
+    // fees is keyed by student id, so the tenant is resolved from the student
+    // profile rather than from a field on the fee document itself.
+    match /fees/{studentId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff() || isOwner(studentId) || ownsStudentId(studentId));
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && studentCollegeId(studentId) == collegeId());
+    }
+
+    match /libraryBooks/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperadmin() || (role() in ['admin', 'hod']);
+    }
+
+    match /issuedBooks/{docId} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    // -- Shared cloud question bank --------------------------------------------
+    // Backs src/modules/admin/api/cloudStorageApi.ts. These collections are
+    // shared across colleges by design ("papers_universal"), so access is
+    // role-based rather than tenant-scoped, matching the existing questions
+    // and papers rules.
+    match /questionBank_meta/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    match /papers_universal/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    match /paperTemplates/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    match /questionReviews/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
+    // Written by Cloud Functions only; the admin UI reads it through
+    // src/modules/admin/api/assessmentsApi.ts.
+    match /reviewQueue/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if false;
     }
 
     match /{document=**} {
