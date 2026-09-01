@@ -175,6 +175,14 @@ service cloud.firestore {
         : null;
     }
 
+    // True when the signed-in user is the addressee of a notification.
+    function isRecipient(data) {
+      return isSignedIn() && data != null
+        && (('userId' in data && data.userId == request.auth.uid)
+          || ('studentId' in data
+            && (data.studentId == request.auth.uid || ownsStudentId(data.studentId))));
+    }
+
     function ownsStudentId(studentId) {
       return isSignedIn()
         && studentId != null
@@ -388,8 +396,18 @@ service cloud.firestore {
 
       match /notifications/{docId} {
         allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow create: if isSuperadmin()
+          || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
+        // Recipients may only flip their own read flag (see
+        // src/modules/student/pages/StudentNotificationsPage.tsx). Before this,
+        // a student could never mark a college notification as read.
+        allow update: if isSuperadmin()
+          || (isCollegeStaff() && collegeId() == collegeId)
+          || (isSignedIn()
+            && isRecipient(resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']));
+        allow delete: if isSuperadmin()
+          || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
       }
     }
 
@@ -449,9 +467,18 @@ service cloud.firestore {
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
     }
 
+    // Top-level feeStructures holds one document per student (queried by
+    // studentId in src/modules/student/api/studentDataApi.ts), so a student
+    // reads only their own record; staff read within their own college.
     match /feeStructures/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || sameCollege(resource.data));
-      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
+      allow write: if isSuperadmin()
+        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /weeklySchedules/{scheduleId} {
@@ -549,9 +576,12 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Audit trail. No client writes logs - Cloud Functions do (Admin SDK
+    // bypasses rules), so client creates are closed to keep the trail
+    // unfalsifiable.
     match /logs/{id} {
       allow read: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
-      allow create: if isStaff();
+      allow create: if false;
       allow update, delete: if isSuperadmin();
     }
 
@@ -567,7 +597,18 @@ service cloud.firestore {
         || resource.data.userId == request.auth.uid
         || ownsStudentId(resource.data.studentId)
       );
-      allow write: if isCollegeStaff();
+      // Recipients may only flip their own read flag (see markNotificationRead
+      // in src/modules/student/api/studentDataApi.ts). Everything else is
+      // college staff, scoped to their own tenant.
+      allow create: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(request.resource.data));
+      allow update: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data))
+        || (isSignedIn()
+          && isRecipient(resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']));
+      allow delete: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data));
     }
 
     // -- Curriculum, topics, and test papers ----------------------------------
