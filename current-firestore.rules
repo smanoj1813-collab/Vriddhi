@@ -452,13 +452,13 @@ service cloud.firestore {
     match /attendance/{id} {
       allow read: if ownsStudentId(resource.data.studentId)
         || (isSignedIn() && resource.data.uid == request.auth.uid)
-        || isStaff();
+        || (isStaff() && sameCollege(resource.data));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
       allow read: if ownsStudentId(resource.data.studentId)
-        || isStaff();
+        || (isStaff() && sameCollege(resource.data));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -526,12 +526,22 @@ service cloud.firestore {
     }
 
     match /studentAssessments/{attemptId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
       allow write: if false;
     }
 
     match /studentSubmissions/{submissionId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentId' in resource.data
+            && (resource.data.studentId == request.auth.uid
+              || ownsStudentId(resource.data.studentId))));
       allow write: if false;
     }
 
@@ -548,9 +558,9 @@ service cloud.firestore {
     match /submissions/{submissionId} {
       allow read: if isSignedIn() && (
         isSuperadmin()
-        || isStaff()
-        || resource.data.studentUid == request.auth.uid
-        || ownsStudentId(resource.data.studentId)
+        || (isStaff() && sameCollege(resource.data))
+        || ('studentUid' in resource.data && resource.data.studentUid == request.auth.uid)
+        || ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
       );
       allow create: if false;
       allow update, delete: if false;
