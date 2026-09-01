@@ -36,7 +36,12 @@ College data is scoped by `collegeId` on the document, or by the collection path
 
 **Scoped to the caller's college:** students, faculty, admins, hods, mentors, attendance, attendanceRecords, attendanceSummary, classSessions, weeklySchedules, studentAssessments, studentSubmissions, submissions, gradeRecords, feeStructures, payments, notifications, and every `colleges/{collegeId}/{...}` subcollection.
 
-**Shared across colleges by design:** `questions`, `papers`, `assessments`, `scheduledTests`, `curriculum`, `syllabusExtracts`, and the cloud question bank (`questionBank_meta`, `papers_universal`, `paperTemplates`, `questionReviews`). Any signed-in staff can read these. If cross-college sharing is not intended, these need a college check too.
+**Shared across colleges by design:** `questions`, `papers` and `assessments` — the content bank — plus the cloud question bank (`questionBank_meta`, `papers_universal`, `paperTemplates`, `questionReviews`). Any signed-in staff can read these. That is a deliberate exception, not an oversight; the cloud bank is the one remaining cross-tenant read outside the content bank.
+
+**Two scoping caveats worth knowing:**
+
+- `curriculum` and `syllabusExtracts` are mixed. The base `Curriculum` type has no `collegeId` (a curriculum is course + semester), while the assign-to-college flow writes documents that do. Documents tagged with a college are scoped to it; untagged documents stay readable by staff as shared templates. Backfilling `collegeId` is the prerequisite for scoping these strictly.
+- `scheduledTests/{testId}/assessmentQuestions` rows carry no `collegeId`. They inherit tenancy from the parent test document, which the rules read to authorise them.
 
 Superadmin retains the cross-college view needed for support, and callables resolve tenancy server-side regardless of these rules.
 

@@ -183,6 +183,15 @@ service cloud.firestore {
             && (data.studentId == request.auth.uid || ownsStudentId(data.studentId))));
     }
 
+    // assessmentQuestions inherit their tenancy from the parent test document.
+    function scheduledTestCollegeId(testId) {
+      return !isSignedIn() || testId == null ? null
+        : !exists(/databases/$(database)/documents/scheduledTests/$(testId)) ? null
+        : 'collegeId' in get(/databases/$(database)/documents/scheduledTests/$(testId)).data
+          ? get(/databases/$(database)/documents/scheduledTests/$(testId)).data.collegeId
+        : null;
+    }
+
     function ownsStudentId(studentId) {
       return isSignedIn()
         && studentId != null
@@ -516,11 +525,15 @@ service cloud.firestore {
     }
 
     match /scheduledTests/{testId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin() || (isStaff() && sameCollege(resource.data)));
       allow write: if false;
 
+      // The question rows carry no collegeId of their own; the parent test does.
       match /assessmentQuestions/{questionId} {
-        allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow read: if isSignedIn()
+          && (isSuperadmin()
+            || (isStaff() && scheduledTestCollegeId(testId) == collegeId()));
         allow write: if false;
       }
     }
@@ -628,13 +641,17 @@ service cloud.firestore {
     // college administration; faculty may only read.
 
     match /curriculum/{docId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
       allow write: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /syllabusExtracts/{docId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
       allow write: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
