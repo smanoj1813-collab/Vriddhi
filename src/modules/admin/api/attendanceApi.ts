@@ -8,19 +8,7 @@ import {
   addDoc, updateDoc, deleteDoc, Timestamp, writeBatch,
   QueryConstraint, onSnapshot, Unsubscribe,
 } from 'firebase/firestore';
-
-let db: any;
-try {
-  const firebaseMod = require('../firebase');
-  db = firebaseMod.db;
-} catch {
-  try {
-    const firebaseMod = require('../config/firebase');
-    db = firebaseMod.db;
-  } catch {
-    console.warn('[attendanceApi] Firebase db import failed.');
-  }
-}
+import { db } from '@/Firebase/config';
 
 import type {
   AttendanceRecord,
