@@ -119,3 +119,56 @@ written by a *denied* import can be healed two ways:
    enough.
 
 No manual Firebase console surgery is required.
+
+## Faculty pages: "Missing or insufficient permissions" after a successful login
+
+This is a different, rules-only failure. The log looks like the user is resolved
+(`Resolved user: Faculty`) but every faculty query on `weeklySchedules`,
+`classSessions`, `assignments`, per-college `schedules`, and similar collections
+fails with `Missing or insufficient permissions`.
+
+Two related causes, both in `current-firestore.rules`:
+
+1. **`allow read` with `resource.data` is not valid for list/query requests.**
+   A `getDocs()` request has no `resource`, so a rule like
+   `allow read: if ... sameCollege(resource.data)` cannot authorise a query even
+   when the user is a valid staff member. The fix is to split the rule:
+   - `allow get:` may use `resource.data` (single document reads).
+   - `allow list:` is role-based (`isStaff()`), because the client already
+     scopes the query by `collegeId` / `facultyId`.
+
+2. **Legacy faculty identity resolution could exceed the document-access budget.**
+   Faculty created before Access Control have no `users/{uid}` document and often
+   no custom claims, so rules resolve role/college from `faculty/{uid}`. The old
+   helpers called `exists()` + `get()` on the same profile more than once. Rules
+   allow only 10 `get()/exists()` calls per request, so `role()`/`collegeId()`
+   could error and every rule that depended on them was denied. The helpers now
+   use `let` to fetch a profile document once.
+
+### What changed
+
+- `current-firestore.rules`: refactored `profileRole()`, `role()`,
+  `profileCollegeId()` and `collegeId()` to use `let` and single-fetch lookups.
+- Split `allow read` into `allow get` / `allow list` for `students`, `faculty`,
+  per-college dashboard collections, `attendance`, `attendanceRecords`,
+  `weeklySchedules`, `classSessions`, `curriculumFacultyMappings`,
+  `submissions`, `curriculum`, `syllabusExtracts`, `topics`, `testPapers`.
+- `functions/test/firestore.rules.test.ts`: added a legacy no-claim faculty test
+  that runs the exact `weeklySchedules`, `classSessions`, and `assignments`
+  queries used by the app.
+
+### Deploy
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+Optionally run the rules suite first (needs the Firebase emulator):
+
+```bash
+cd functions && npm run test:rules
+```
+
+If a user still fails after this and their account was provisioned through the
+broken window, repair it once through **Superadmin → Access Control** so it gets
+a `users/{uid}` document and refreshed custom claims.
