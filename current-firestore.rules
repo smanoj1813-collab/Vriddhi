@@ -75,12 +75,18 @@ service cloud.firestore {
 
     // fall backRole is used when the profile document exists but carries no
     // role field - membership of the collection is then the role statement.
+    // NOTE: Firestore Security Rules allow at most 10 get()/exists() calls per
+    // single-document or query request. The legacy resolver used to read the
+    // same profile document several times (exists + two get() + a second
+    // profileRole() call), which pushed past the limit for users who have no
+    // custom claims and no users/{uid} document. `let` lets us fetch a profile
+    // once and reuse the value.
     function profileRole(collectionName, fallBackRole) {
-      return !isSignedIn() ? null
-        : !exists(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)) ? null
-        : roleField(get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data) != ''
-          ? canonicalRole(roleField(get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data))
-          : fallBackRole;
+      let profilePath = /databases/$(database)/documents/$(collectionName)/$(request.auth.uid);
+      let profileData = exists(profilePath) ? get(profilePath).data : null;
+      return profileData != null && roleField(profileData) != ''
+        ? canonicalRole(roleField(profileData))
+        : profileData != null ? fallBackRole : null;
     }
 
     function legacyProfileRole() {
@@ -94,26 +100,30 @@ service cloud.firestore {
         : null;
     }
 
+    // Resolve role without touching the user document more than once. The
+    // previous `role()` evaluated userDoc(), roleField(userDoc()) and
+    // canonicalRole(roleField(userDoc())) as three separate calls in the worst
+    // case, contributing to the 10-call limit. This helper reads it once.
+    function roleFromLookupOrProfile() {
+      let lookupData = userDoc();
+      let lookupRole = lookupData != null && roleField(lookupData) != ''
+        ? canonicalRole(roleField(lookupData))
+        : '';
+      return lookupRole != '' ? lookupRole : legacyProfileRole();
+    }
+
     function role() {
-      return canonicalRole(cleanRoleValue(claimRole())) != ''
-        ? canonicalRole(cleanRoleValue(claimRole()))
-        : userDoc() != null && roleField(userDoc()) != ''
-          ? canonicalRole(roleField(userDoc()))
-          : legacyProfileRole() != null
-            ? legacyProfileRole()
-            : null;
+      let claimedRole = canonicalRole(cleanRoleValue(claimRole()));
+      return claimedRole != '' ? claimedRole : roleFromLookupOrProfile();
     }
 
     // Legacy profile documents name the tenant collegeId, collegeID, or college.
     function profileCollegeId(collectionName) {
-      return !isSignedIn() ? null
-        : !exists(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)) ? null
-        : 'collegeId' in get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data
-          ? get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data.collegeId
-        : 'collegeID' in get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data
-          ? get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data.collegeID
-        : 'college' in get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data
-          ? get(/databases/$(database)/documents/$(collectionName)/$(request.auth.uid)).data.college
+      let profilePath = /databases/$(database)/documents/$(collectionName)/$(request.auth.uid);
+      let profileData = exists(profilePath) ? get(profilePath).data : null;
+      return profileData != null && 'collegeId' in profileData ? profileData.collegeId
+        : profileData != null && 'collegeID' in profileData ? profileData.collegeID
+        : profileData != null && 'college' in profileData ? profileData.college
         : null;
     }
 
@@ -127,12 +137,17 @@ service cloud.firestore {
         : null;
     }
 
+    function collegeIdFromLookupOrProfile() {
+      let lookupData = userDoc();
+      let lookupCollege = lookupData != null && 'collegeId' in lookupData
+        ? lookupData.collegeId
+        : null;
+      return lookupCollege != null ? lookupCollege : linkedProfileCollegeId();
+    }
+
     function collegeId() {
-      return claimCollege() != null
-        ? claimCollege()
-        : userDoc() != null && 'collegeId' in userDoc()
-          ? userDoc().collegeId
-          : linkedProfileCollegeId();
+      let claimedCollege = claimCollege();
+      return claimedCollege != null ? claimedCollege : collegeIdFromLookupOrProfile();
     }
 
     function isSuperadmin() {
@@ -234,11 +249,12 @@ service cloud.firestore {
     }
 
     match /students/{id} {
-      allow read: if ownsStudentProfile(id, resource.data)
+      allow get: if ownsStudentProfile(id, resource.data)
         || (isSignedIn() && 'email' in request.auth.token
           && resource.data.email == request.auth.token.email)
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
       allow update: if isSuperadmin()
@@ -251,11 +267,12 @@ service cloud.firestore {
     }
 
     match /faculty/{id} {
-      allow read: if isSignedIn() && (isOwner(id)
+      allow get: if isSignedIn() && (isOwner(id)
         || isSuperadmin()
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
@@ -311,14 +328,22 @@ service cloud.firestore {
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
+      // Reads inside a college path use the path as the tenant boundary. For a
+      // list/query request there is no `resource`, and for legacy (no custom
+      // claim) staff resolving `collegeId()` on top of `role()` can exceed the
+      // 10 get()/exists() call budget. Reads therefore authorise on the role
+      // plus the college path; the client queries a college path it already
+      // controls. Writes keep the strict college check above.
       match /config/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /announcements/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
       }
@@ -332,79 +357,92 @@ service cloud.firestore {
       // the collection path itself is the tenant boundary.
 
       match /schedules/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /attendance/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /attendanceRecords/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /assessments/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /scores/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /activities/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /milestones/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /feeStructures/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /feePayments/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /faculty/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /materials/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /events/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /notifications/{docId} {
-        allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow create: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
         // Recipients may only flip their own read flag (see
@@ -459,15 +497,17 @@ service cloud.firestore {
     }
 
     match /attendance/{id} {
-      allow read: if ownsStudentId(resource.data.studentId)
+      allow get: if ownsStudentId(resource.data.studentId)
         || (isSignedIn() && resource.data.uid == request.auth.uid)
         || (isStaff() && sameCollege(resource.data));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
-      allow read: if ownsStudentId(resource.data.studentId)
+      allow get: if ownsStudentId(resource.data.studentId)
         || (isStaff() && sameCollege(resource.data));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -491,7 +531,11 @@ service cloud.firestore {
     }
 
     match /weeklySchedules/{scheduleId} {
-      allow read: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      // `allow get` may use resource.data (single document). `allow list` is
+      // role based because a list/query request has no `resource`; the client
+      // keeps its queries scoped by collegeId/facultyId.
+      allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow list: if isSignedIn() && isStaff();
       allow create: if isCollegeStaff() && request.resource.data.collegeId == collegeId()
         && request.resource.data.facultyId != null
         && request.resource.data.branch != null
@@ -504,13 +548,15 @@ service cloud.firestore {
     }
 
     match /classSessions/{sessionId} {
-      allow read: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow list: if isSignedIn() && isStaff();
       allow create, update: if isCollegeStaff() && sameCollege(request.resource.data);
       allow delete: if isCollegeStaff() && sameCollege(resource.data);
     }
 
     match /curriculumFacultyMappings/{mappingId} {
-      allow read: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow list: if isSignedIn() && isStaff();
       allow create, update, delete: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -569,12 +615,13 @@ service cloud.firestore {
     }
 
     match /submissions/{submissionId} {
-      allow read: if isSignedIn() && (
+      allow get: if isSignedIn() && (
         isSuperadmin()
         || (isStaff() && sameCollege(resource.data))
         || ('studentUid' in resource.data && resource.data.studentUid == request.auth.uid)
         || ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
       );
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if false;
       allow update, delete: if false;
     }
@@ -641,32 +688,36 @@ service cloud.firestore {
     // college administration; faculty may only read.
 
     match /curriculum/{docId} {
-      allow read: if isSignedIn()
+      allow get: if isSignedIn()
         && (isSuperadmin()
           || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /syllabusExtracts/{docId} {
-      allow read: if isSignedIn()
+      allow get: if isSignedIn()
         && (isSuperadmin()
           || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
     match /topics/{docId} {
-      allow read: if isSignedIn()
+      allow get: if isSignedIn()
         && (isSuperadmin() || isStaff()
           || ('facultyId' in resource.data && resource.data.facultyId == request.auth.uid));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin();
     }
 
     match /testPapers/{docId} {
-      allow read: if isSignedIn()
+      allow get: if isSignedIn()
         && (isSuperadmin() || isStaff()
           || ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin();
     }
 

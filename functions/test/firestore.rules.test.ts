@@ -100,6 +100,16 @@ beforeEach(async () => {
         role: 'faculty',
         collegeId: COLLEGE_A,
       }),
+      // Legacy faculty: no users/{uid} document and, in the real app, no custom
+      // claims. Identity must resolve from the role profile collection alone.
+      setDoc(doc(db, 'faculty', 'legacy-faculty-a'), {
+        uid: 'legacy-faculty-a',
+        role: 'faculty',
+        collegeId: COLLEGE_A,
+        email: 'legacy-faculty@example.edu',
+        firstName: 'Legacy',
+        lastName: 'Faculty',
+      }),
       setDoc(doc(db, 'students', STUDENT_ID), {
         userId: STUDENT_UID,
         name: 'Student A',
@@ -162,6 +172,25 @@ beforeEach(async () => {
         startTime: '09:00',
         endTime: '10:00',
       }),
+      setDoc(doc(db, 'weeklySchedules', 'schedule-legacy-a'), {
+        collegeId: COLLEGE_A,
+        facultyId: 'legacy-faculty-a',
+        facultyName: 'Legacy Faculty',
+        branch: 'CSE',
+        batch: '2026',
+        semester: 1,
+        division: 'A',
+        dayOfWeek: 'monday',
+        startTime: '09:00',
+        endTime: '10:00',
+      }),
+      setDoc(doc(db, 'classSessions', 'session-legacy-a'), {
+        collegeId: COLLEGE_A,
+        facultyId: 'legacy-faculty-a',
+        facultyName: 'Legacy Faculty',
+        date: '2026-09-02',
+        timeSlot: '09:00-10:00',
+      }),
       setDoc(doc(db, 'questions', 'question-a'), {
         collegeId: COLLEGE_A,
         status: 'published',
@@ -203,6 +232,15 @@ beforeEach(async () => {
         status: 'published',
         targetType: 'specific',
         studentIds: [STUDENT_ID],
+      }),
+      setDoc(doc(db, 'assignments', 'assignment-legacy-a'), {
+        collegeId: COLLEGE_A,
+        facultyUid: 'legacy-faculty-a',
+        facultyName: 'Legacy Faculty',
+        status: 'published',
+        targetType: 'cohort',
+        title: 'Legacy Faculty Assignment',
+        createdAt: Timestamp.fromMillis(Date.now()),
       }),
       setDoc(doc(db, 'assignmentSubmissionDrafts', 'session-own'), {
         assignmentId: 'assignment-a',
@@ -432,6 +470,67 @@ describe('student academic reads', () => {
       status: 'published',
       verificationStatus: 'approved-by-hod',
       title: 'Forged publication',
+    }))
+  })
+})
+
+describe('legacy no-claim faculty reads', () => {
+  function legacyFacultyContext() {
+    // No role/collegeId claims and no users/{uid} document: the account is only
+    // a legacy faculty profile. Rules must resolve the identity from faculty/uid
+    // and stay under the 10 get()/exists() call limit.
+    return testEnv.authenticatedContext('legacy-faculty-a', {
+      email: 'legacy-faculty@example.edu',
+    })
+  }
+
+  it('resolves role and college from a legacy faculty profile for the exact faculty queries', async () => {
+    const db = legacyFacultyContext().firestore()
+
+    const weekly = await assertSucceeds(
+      getDocs(
+        query(
+          collection(db, 'weeklySchedules'),
+          where('facultyId', '==', 'legacy-faculty-a'),
+          limit(100)
+        )
+      )
+    )
+    assert.equal(weekly.size, 1)
+
+    const sessions = await assertSucceeds(
+      getDocs(
+        query(
+          collection(db, 'classSessions'),
+          where('facultyId', '==', 'legacy-faculty-a'),
+          limit(100)
+        )
+      )
+    )
+    assert.equal(sessions.size, 1)
+
+    const assignments = await assertSucceeds(
+      getDocs(
+        query(
+          collection(db, 'assignments'),
+          where('collegeId', '==', COLLEGE_A),
+          where('facultyUid', '==', 'legacy-faculty-a'),
+          orderBy('createdAt', 'desc'),
+          limit(100)
+        )
+      )
+    )
+    assert.equal(assignments.size, 1)
+  })
+
+  it('does not grant legacy faculty implicit superadmin or write access', async () => {
+    const db = legacyFacultyContext().firestore()
+    await assertFails(updateDoc(doc(db, 'assignments', 'assignment-legacy-a'), {
+      status: 'graded',
+    }))
+    await assertFails(setDoc(doc(db, 'users', 'legacy-faculty-a'), {
+      uid: 'legacy-faculty-a',
+      role: 'superadmin',
     }))
   })
 })
