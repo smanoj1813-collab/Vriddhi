@@ -671,6 +671,7 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
 
   const imported: Array<{ id: string; email: string; password?: string }> = [];
   const errors: string[] = [];
+  const failedStudents: Array<{ name: string; email: string; regNo: string; reason: string }> = [];
   let studentCount = 0;
   let facultyCount = 0;
 
@@ -701,9 +702,11 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
       });
 
       const data = result.data;
-      
-      // Process successful imports
-      for (const student of data.students) {
+
+      // The callable reports each failed row twice — once in `students` (with
+      // success:false) and once in `errors`. Use `students` as the single
+      // source of truth so the failed count isn't doubled.
+      for (const student of data.students || []) {
         if (student.success) {
           imported.push({
             id: student.uid,
@@ -712,13 +715,15 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
           });
           studentCount++;
         } else {
-          errors.push(`Row: ${student.regNo} - ${student.error || 'Unknown error'}`);
+          const reason = student.error || 'Unknown error';
+          const name = String(student.name || '');
+          const emailAddr = String(student.email || '');
+          const regNo = String(student.regNo || '');
+          failedStudents.push({ name, email: emailAddr, regNo, reason });
+          errors.push(
+            `${[name, emailAddr, regNo].filter(Boolean).join(' | ') || 'Row'} — ${reason}`
+          );
         }
-      }
-
-      // Add server-side errors
-      for (const err of data.errors || []) {
-        errors.push(`Row ${err.row}: ${err.message}`);
       }
 
       console.log('[ImportUsers] Cloud Function result:', {
@@ -836,6 +841,7 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
     failed: errors.length,
     errors,
     imported,
+    failedStudents,
   };
 }
 

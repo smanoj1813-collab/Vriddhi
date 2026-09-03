@@ -184,25 +184,9 @@ export const bulkCreateStudentAccounts = onCall(
         'A default password of at least 12 characters is required'
       )
     }
-    students.forEach((student, index) => {
-      const required = ['regNo', 'name', 'email', 'department', 'batch', 'division'] as const
-      const missing = required.filter(
-        (field) => typeof student?.[field] !== 'string' || !student[field].trim()
-      )
-      if (missing.length > 0) {
-        throw new HttpsError(
-          'invalid-argument',
-          `Row ${index + 1} is missing valid fields: ${missing.join(', ')}`
-        )
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email.trim())) {
-        throw new HttpsError('invalid-argument', `Row ${index + 1} has an invalid email address`)
-      }
-      const semester = normalizeSemester(student.semester)
-      if (semester < 1 || semester > 12) {
-        throw new HttpsError('invalid-argument', `Row ${index + 1} has an invalid semester`)
-      }
-    })
+    // Per-row validation runs inside the processing loop below, so a single bad
+    // row reports a per-row failure instead of aborting the whole batch (which
+    // is what previously turned one empty cell into "Successful: 0").
 
     // ── Verify caller ──
     const caller = await verifyCaller(request)
@@ -222,8 +206,8 @@ export const bulkCreateStudentAccounts = onCall(
     // Firestore `in` filters accept at most 30 values. Chunk the checks so the
     // callable's documented 500-row limit actually works. Registration
     // numbers are college-scoped; Auth/email ownership is global.
-    const emails = students.map((s) => s.email.trim().toLowerCase())
-    const regNos = students.map((s) => s.regNo.trim())
+    const emails = students.map((s) => String(s.email || '').trim().toLowerCase())
+    const regNos = students.map((s) => String(s.regNo || '').trim())
     const chunks = <T>(values: T[], size = 30): T[][] => {
       const result: T[][] = []
       for (let i = 0; i < values.length; i += size) result.push(values.slice(i, i + size))
@@ -278,8 +262,32 @@ export const bulkCreateStudentAccounts = onCall(
     for (let i = 0; i < students.length; i++) {
       const row = students[i]
       const rowNum = i + 1
-      const email = row.email.trim().toLowerCase()
-      const regNo = row.regNo.trim()
+      const email = String(row.email || '').trim().toLowerCase()
+      const regNo = String(row.regNo || '').trim()
+
+      // ── Per-row validation (name + email are the only hard requirements,
+      //    matching the client CSV importer). Optional fields default to ''
+      //    below so an empty department/batch/division never blocks the import.
+      const name = String(row.name || '').trim()
+      if (!name) {
+        failedCount++
+        errors.push({ row: rowNum, regNo, message: 'Missing name' })
+        results.push({ regNo, name: '', email, success: false, error: 'Missing name' })
+        continue
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        failedCount++
+        errors.push({ row: rowNum, regNo, message: 'Invalid email address' })
+        results.push({ regNo, name, email, success: false, error: 'Invalid email address' })
+        continue
+      }
+      const semester = normalizeSemester(row.semester)
+      if (semester < 1 || semester > 12) {
+        failedCount++
+        errors.push({ row: rowNum, regNo, message: 'Invalid semester' })
+        results.push({ regNo, name, email, success: false, error: 'Invalid semester' })
+        continue
+      }
 
       // Skip duplicates
       if (existingEmails.has(email)) {
@@ -327,14 +335,14 @@ export const bulkCreateStudentAccounts = onCall(
         const studentData = {
           id: studentRef.id,
           regNo,
-          name: row.name.trim(),
+          name,
           email,
           phone: row.phone || '',
           collegeId,
           collegeCode: college.code,
-          department: row.department.trim(),
-          batch: row.batch.trim(),
-          division: row.division.trim(),
+          department: String(row.department || '').trim(),
+          batch: String(row.batch || '').trim(),
+          division: String(row.division || '').trim(),
           semester: normalizeSemester(row.semester),
           mentorId: row.mentorId || '',
           dob: row.dob || '',
@@ -354,15 +362,15 @@ export const bulkCreateStudentAccounts = onCall(
         const userData = {
           uid: userRecord.uid,
           id: userRecord.uid,
-          name: row.name.trim(),
+          name,
           email,
           phone: row.phone || '',
           role: 'student',
           collegeId,
           collegeCode: college.code,
-          department: row.department.trim(),
-          batch: row.batch.trim(),
-          division: row.division.trim(),
+          department: String(row.department || '').trim(),
+          batch: String(row.batch || '').trim(),
+          division: String(row.division || '').trim(),
           regNo,
           avatar: '',
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -376,7 +384,7 @@ export const bulkCreateStudentAccounts = onCall(
           .collection('colleges')
           .doc(collegeId)
           .collection('students')
-          .doc(regNo)
+          .doc(regNo || studentRef.id)
         const batch = db.batch()
         batch.create(studentRef, studentData)
         batch.create(userRef, userData)

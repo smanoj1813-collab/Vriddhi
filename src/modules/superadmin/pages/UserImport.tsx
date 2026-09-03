@@ -283,8 +283,8 @@ const UserImport: React.FC = () => {
               <p className="text-xs text-slate-400">Failed</p>
             </div>
             <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{importResult.imported?.length || 0}</p>
-              <p className="text-xs text-slate-400">Accounts Created</p>
+              <p className="text-2xl font-bold text-blue-400">{importResult.success + importResult.failed}</p>
+              <p className="text-xs text-slate-400">Total Rows</p>
             </div>
           </div>
 
@@ -331,6 +331,9 @@ const UserImport: React.FC = () => {
                   </button>
                 </div>
               </div>
+              <p className="text-xs text-slate-500 mb-3 -mt-1">
+                Passwords are hidden for security — click “Show Passwords” to reveal them, or use “Download CSV”.
+              </p>
               <div className="overflow-x-auto rounded-lg border border-slate-700 max-h-96 overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-800 sticky top-0">
@@ -360,12 +363,63 @@ const UserImport: React.FC = () => {
 
           {importResult.errors && importResult.errors.length > 0 && (
             <div>
-              <p className="text-sm text-red-400 mb-2">Errors:</p>
-              <ul className="space-y-1">
-                {importResult.errors.map((err: string, i: number) => (
-                  <li key={i} className="text-xs text-red-400/70">{err}</li>
-                ))}
-              </ul>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-red-400 font-medium">Failed / Issues ({importResult.failed})</p>
+                {importResult.failedStudents && importResult.failedStudents.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const list = importResult.failedStudents || []
+                      const headers = ['Name', 'Email', 'Reg No', 'Reason']
+                      const rows = list.map((f) => [f.name, f.email, f.regNo, f.reason])
+                      const csv = [
+                        headers.join(','),
+                        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+                      ].join('\n')
+                      const blob = new Blob([csv], { type: 'text/csv' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = 'student-import-failures.csv'
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs px-3 py-1.5 rounded bg-red-500/10 border border-red-500/30 transition-colors"
+                  >
+                    <Download size={14} />
+                    Download Failed CSV
+                  </button>
+                )}
+              </div>
+              {importResult.failedStudents && importResult.failedStudents.length > 0 ? (
+                <div className="overflow-x-auto rounded-lg border border-red-900/50 max-h-96 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-red-950/40 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-red-300 text-xs">Name</th>
+                        <th className="px-3 py-2 text-left text-red-300 text-xs">Email</th>
+                        <th className="px-3 py-2 text-left text-red-300 text-xs">Reg No</th>
+                        <th className="px-3 py-2 text-left text-red-300 text-xs">Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-red-900/40">
+                      {importResult.failedStudents.map((f, i) => (
+                        <tr key={i} className="bg-slate-900/50">
+                          <td className="px-3 py-2 text-slate-300 text-xs">{f.name || '—'}</td>
+                          <td className="px-3 py-2 text-slate-400 text-xs">{f.email || '—'}</td>
+                          <td className="px-3 py-2 text-slate-500 text-xs font-mono">{f.regNo || '—'}</td>
+                          <td className="px-3 py-2 text-red-300/90 text-xs">{f.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <ul className="space-y-1">
+                  {importResult.errors.map((err: string, i: number) => (
+                    <li key={i} className="text-xs text-red-400/70">{err}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>
