@@ -111,11 +111,16 @@ service cloud.firestore {
     // once and reuses the data instead of re-reading it per field.
     function profileRole(collectionName, fallBackRole) {
       let profilePath = /databases/$(database)/documents/$(collectionName)/$(request.auth.uid);
-      let profileData = exists(profilePath) ? get(profilePath).data : null;
-      let resolvedRole = profileData != null ? canonicalRole(roleField(profileData)) : '';
-      return resolvedRole != ''
-        ? resolvedRole
-        : profileData != null ? fallBackRole : null;
+      return exists(profilePath)
+        ? resolvedProfileRole(get(profilePath).data, fallBackRole)
+        : null;
+    }
+
+    // Applied to an existing profile document (a map). The role field wins;
+    // otherwise membership of the collection is the fallback role statement.
+    function resolvedProfileRole(profileData, fallBackRole) {
+      let resolvedRole = canonicalRole(roleField(profileData));
+      return resolvedRole != '' ? resolvedRole : fallBackRole;
     }
 
     // The legacy cascade probes one collection per helper. The fallback call
@@ -170,9 +175,11 @@ service cloud.firestore {
     // Legacy profile documents name the tenant collegeId, collegeID, or college.
     function profileCollegeId(collectionName) {
       let profilePath = /databases/$(database)/documents/$(collectionName)/$(request.auth.uid);
-      let profileData = exists(profilePath) ? get(profilePath).data : null;
-      return profileData == null ? null
-        : profileData.get('collegeId', profileData.get('collegeID', profileData.get('college', null)));
+      return exists(profilePath) ? collegeTenantFields(get(profilePath).data) : null;
+    }
+
+    function collegeTenantFields(profileData) {
+      return profileData.get('collegeId', profileData.get('collegeID', profileData.get('college', null)));
     }
 
     // Same one-collection-per-step cascade as the legacy role resolver,
@@ -255,11 +262,15 @@ service cloud.firestore {
     // itself carries no collegeId (for example fees/{studentId}). Reads the
     // student document once.
     function studentCollegeId(studentId) {
-      let studentData = isSignedIn() && studentId != null
+      return isSignedIn() && studentId != null
         && exists(/databases/$(database)/documents/students/$(studentId))
-        ? get(/databases/$(database)/documents/students/$(studentId)).data
+        ? docCollegeId(get(/databases/$(database)/documents/students/$(studentId)).data)
         : null;
-      return studentData != null ? studentData.get('collegeId', null) : null;
+    }
+
+    // Tenant field of an already-loaded document (a map).
+    function docCollegeId(data) {
+      return data.get('collegeId', null);
     }
 
     // True when the signed-in user is the addressee of a notification.
@@ -273,11 +284,10 @@ service cloud.firestore {
     // assessmentQuestions inherit their tenancy from the parent test document.
     // Reads the test document once.
     function scheduledTestCollegeId(testId) {
-      let testData = isSignedIn() && testId != null
+      return isSignedIn() && testId != null
         && exists(/databases/$(database)/documents/scheduledTests/$(testId))
-        ? get(/databases/$(database)/documents/scheduledTests/$(testId)).data
+        ? docCollegeId(get(/databases/$(database)/documents/scheduledTests/$(testId)).data)
         : null;
-      return testData != null ? testData.get('collegeId', null) : null;
     }
 
     function ownsStudentId(studentId) {
@@ -290,10 +300,12 @@ service cloud.firestore {
     // four times), so a recipient check cannot exhaust the 10-call budget.
     function studentDocBelongsToUid(studentId) {
       let studentPath = /databases/$(database)/documents/students/$(studentId);
-      let studentData = exists(studentPath) ? get(studentPath).data : null;
-      return studentData != null
-        && (studentData.get('userId', '') == request.auth.uid
-          || studentData.get('uid', '') == request.auth.uid);
+      return exists(studentPath) && studentDocMatchesUid(get(studentPath).data);
+    }
+
+    function studentDocMatchesUid(studentData) {
+      return studentData.get('userId', '') == request.auth.uid
+        || studentData.get('uid', '') == request.auth.uid;
     }
 
     function immutableUserFields() {
