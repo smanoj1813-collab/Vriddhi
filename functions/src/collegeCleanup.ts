@@ -172,6 +172,35 @@ export const resetCollegeData = onCall(
     }
 
     // 4. Firebase Auth accounts (default on — the re-upload recreates them).
+    //
+    //    Two independent sources are merged so an account can't survive a
+    //    reset simply because its profile doc was missing:
+    //      (a) UIDs read off the Firestore docs above (steps 1-2); and
+    //      (b) every Auth account whose custom claims carry this collegeId —
+    //          this catches accounts provisioned server-side even when their
+    //          users/{uid} lookup doc never existed.
+    //    listUsers walks the whole tenant, so it only runs when Auth deletion
+    //    is enabled; accounts are deleted ONLY when their claim collegeId
+    //    matches the reset college exactly (superadmins carry no collegeId).
+    if (deleteAuthUsers) {
+      try {
+        let pageToken: string | undefined
+        do {
+          const page = await auth.listUsers(1000, pageToken)
+          for (const record of page.users) {
+            const claims = (record.customClaims || {}) as Record<string, unknown>
+            if (claims.collegeId && String(claims.collegeId) === collegeId) {
+              uids.add(record.uid)
+            }
+          }
+          pageToken = page.pageToken
+        } while (pageToken)
+      } catch (err: any) {
+        errors.push(`auth claim scan: ${err?.message || err}`)
+        logger.error('[CollegeCleanup] Failed to scan Auth users by claim', err)
+      }
+    }
+
     let authUsersDeleted = 0
     if (deleteAuthUsers && uids.size > 0) {
       const uidList = Array.from(uids)

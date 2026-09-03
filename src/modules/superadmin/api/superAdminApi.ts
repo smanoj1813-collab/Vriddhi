@@ -222,46 +222,6 @@ function stripUndefined(obj: object): Record<string, unknown> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// ORPHANED-ACCOUNT SELF-HEAL
-// An import that ran while the Firestore rules denied the `users/{uid}`
-// write left the Auth account alive but with no role-resolution doc —
-// such accounts could never log in (ACCOUNT_NOT_FOUND). When an import
-// meets an email that already has a profile doc, we check for (and
-// restore) the missing users doc instead of failing the row.
-// ═══════════════════════════════════════════════════════════════════════
-
-async function healMissingUserDoc(
-  profileData: DocumentData,
-  fallbackRole: 'faculty' | 'student'
-): Promise<boolean> {
-  const uid = profileData?.uid;
-  if (!uid || typeof uid !== 'string') return false;
-
-  const userDocRef = doc(db, "users", uid);
-  const userSnap = await getDoc(userDocRef);
-  if (userSnap.exists()) return false; // lookup doc present — genuinely a duplicate
-
-  const name = (profileData.name as string)
-    || `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim()
-    || (profileData.email as string);
-
-  const now = Timestamp.now();
-  await setDoc(userDocRef, stripUndefined({
-    uid,
-    email: profileData.email,
-    name,
-    role: profileData.role || fallbackRole,
-    collegeId: profileData.collegeId || "",
-    department: profileData.department || "",
-    phone: profileData.phone || "",
-    avatar: "",
-    createdAt: now,
-    updatedAt: now,
-  }));
-  return true;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
 // FIREBASE AUTH REST API — create users without affecting current session
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -278,19 +238,13 @@ export async function createFirebaseAuthUser(email: string, password: string): P
   );
   const data = await res.json();
   if (!res.ok) {
+    // Never silently adopt a pre-existing account: doing so returned the old
+    // uid WITHOUT resetting its password, so the temp password the importer
+    // displayed never worked. Bulk import reclaims such orphans server-side
+    // (bulkProvisionStaff / bulkCreateStudentAccounts); single-account callers
+    // must surface the conflict instead of masking it.
     if (data.error?.message === 'EMAIL_EXISTS') {
-      const lookupRes = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: [email] }),
-        }
-      );
-      const lookupData = await lookupRes.json();
-      if (lookupData.users?.[0]?.localId) {
-        return lookupData.users[0].localId;
-      }
+      throw new Error('EMAIL_EXISTS');
     }
     throw new Error(data.error?.message || 'Failed to create Firebase Auth user');
   }
@@ -737,104 +691,71 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
     }
   }
 
-  // ── Non-students (faculty, admin, etc.): direct Firestore write ───────────
-  for (const user of nonStudents) {
+  // ── Non-students (faculty / HOD / principal / admin): provision through the
+  //    Admin SDK callable so an Auth account orphaned by a college reset is
+  //    reclaimed (password reset + claims) instead of failing or being silently
+  //    re-used with a stale password. The callable also writes the profile,
+  //    the users/{uid} lookup doc and increments the college faculty counter.
+  if (nonStudents.length > 0) {
     try {
-      if (!user.email || !user.name) {
-        throw new Error(`Missing required fields (name, email)`);
-      }
-
-      const email = user.email.toLowerCase().trim();
-
-      // Check for existing user
-      const collectionName = user.role === "student" ? "students" : "faculty";
-      const existingSnap = await getDocs(
-        query(collection(db, collectionName), where("email", "==", email))
-      );
-      if (!existingSnap.empty) {
-        // Duplicate profile — but if a previous failed import left the Auth
-        // account without its users/{uid} lookup doc, restore it so the
-        // account can log in (password from the original import still valid).
-        const healed = await healMissingUserDoc(
-          existingSnap.docs[0].data(),
-          user.role === "student" ? "student" : "faculty"
-        );
-        if (healed) {
-          imported.push({ id: existingSnap.docs[0].id, email });
-          facultyCount++;
-          errors.push(`Info: restored missing login profile for ${email} — account already existed, password unchanged`);
-        } else {
-          throw new Error(`${email} already exists`);
+      const bulkProvision = httpsCallable<
+        { collegeId: string; staff: any[] },
+        {
+          created: number;
+          reclaimed: number;
+          failed: number;
+          staff: Array<{
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+            success: boolean;
+            uid?: string;
+            password?: string;
+            reclaimed?: boolean;
+            error?: string;
+          }>;
         }
-        continue;
-      }
+      >(functions, "bulkProvisionStaff");
 
-      // Generate password and create Firebase Auth account
-      const tempPassword = generateTempPassword();
-      let uid: string;
-      try {
-        uid = await createFirebaseAuthUser(email, tempPassword);
-      } catch (authErr: any) {
-        throw new Error(`Auth creation failed — ${authErr.message}`);
-      }
-
-      // Build the Firestore document
-      const now = Timestamp.now();
-      const docRef = doc(collection(db, collectionName));
-      const userDoc = stripUndefined({
-        ...user,
-        email,
+      const staffResult = await bulkProvision({
         collegeId: input.collegeId,
-        uid,
-        role: user.role,
-        status: "active",
-        createdAt: now,
-        updatedAt: now,
+        staff: nonStudents.map((u) => ({
+          name: u.name,
+          email: u.email,
+          phone: (u as any).phone,
+          department: (u as any).department || "",
+          designation: (u as any).designation,
+          role: (u as any).role,
+          isHOD: (u as any).role === "hod",
+          isPrincipal: (u as any).role === "principal",
+        })),
       });
 
-      await setDoc(docRef, userDoc);
+      for (const member of staffResult.data.staff || []) {
+        if (member.success) {
+          imported.push({
+            id: member.id || member.uid || "",
+            email: member.email,
+            password: member.password,
+          });
+          facultyCount++;
+        } else {
+          errors.push(`${member.name || member.email} — ${member.error || "Unknown error"}`);
+        }
+      }
 
-      // Create the users/ lookup document
-      await setDoc(doc(db, "users", uid), {
-        uid,
-        email,
-        name: user.name,
-        role: user.role,
-        collegeId: input.collegeId,
-        department: user.department || "",
-        phone: user.phone || "",
-        avatar: "",
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      imported.push({ id: docRef.id, email, password: tempPassword });
-      facultyCount++;
-    } catch (error) {
-      errors.push(
-        `Failed to import ${user.email}: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      const reclaimed = staffResult.data.reclaimed || 0;
+      if (reclaimed > 0) {
+        errors.push(`Info: ${reclaimed} existing account(s) were reclaimed with a new password`);
+      }
+    } catch (staffErr: any) {
+      console.error("[ImportUsers] Staff provisioning error:", staffErr);
+      errors.push(`Staff provisioning error: ${staffErr?.message || "Failed to provision staff"}`);
     }
   }
 
-  // Update college aggregate counts
-  if (studentCount > 0 || facultyCount > 0) {
-    try {
-      const collegeRef = doc(db, "colleges", input.collegeId);
-      const collegeSnap = await getDoc(collegeRef);
-      if (collegeSnap.exists()) {
-        const collegeData = collegeSnap.data();
-        const updates: Record<string, unknown> = { updatedAt: Timestamp.now() };
-        if (studentCount > 0) updates.studentCount = (collegeData.studentCount || 0) + studentCount;
-        if (facultyCount > 0) updates.facultyCount = (collegeData.facultyCount || 0) + facultyCount;
-        await updateDoc(collegeRef, updates);
-      }
-    } catch (err) {
-      console.error("Failed to update college counts:", err);
-    }
-  }
+  // College aggregate counts are maintained server-side by the callables.
 
   return {
     success: imported.length,
@@ -850,128 +771,78 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function importFaculty(payload: FacultyImportPayload): Promise<ImportResult> {
-  try {
-    const collegeRef = doc(db, "colleges", payload.collegeId);
-    const collegeSnap = await getDoc(collegeRef);
-    if (!collegeSnap.exists()) throw new Error("College not found");
-
-    const collegeData = collegeSnap.data();
-    const collegeName = collegeData.name;
-    const imported: Array<{ id: string; email: string; password: string }> = [];
-    const errors: string[] = [];
-    let success = 0;
-    let failed = 0;
-
-    for (const [index, faculty] of payload.faculty.entries()) {
-      try {
-        if (!faculty.firstName || !faculty.email || !faculty.collegeCode) {
-          throw new Error(`Row ${index + 1}: Missing required fields`);
-        }
-        const existingSnap = await getDocs(query(
-          collection(db, "faculty"), where("email", "==", faculty.email.toLowerCase().trim())
-        ));
-        if (!existingSnap.empty) {
-          // Duplicate — self-heal a missing users/{uid} lookup doc left by an
-          // earlier failed import instead of failing the row.
-          const healed = await healMissingUserDoc(existingSnap.docs[0].data(), "faculty");
-          if (healed) {
-            imported.push({ id: existingSnap.docs[0].id, email: faculty.email, password: "" });
-            success++;
-            errors.push(`Row ${index + 1}: Info — restored missing login profile for ${faculty.email} (account already existed, password unchanged)`);
-          } else {
-            throw new Error(`Row ${index + 1}: Faculty with email ${faculty.email} already exists`);
-          }
-          continue;
-        }
-
-        const facultyId = faculty.facultyId || `FAC${Date.now()}${index}`;
-        const tempPassword = generateTempPassword();
-
-        let uid: string;
-        try {
-          uid = await createFirebaseAuthUser(faculty.email.toLowerCase().trim(), tempPassword);
-        } catch (authErr: any) {
-          failed++;
-          errors.push(`Row ${index + 1}: ${authErr.message}`);
-          continue;
-        }
-
-        const facultyData = {
-          id: facultyId,
-          facultyId,
-          firstName: faculty.firstName,
-          lastName: faculty.lastName || "",
-          email: faculty.email.toLowerCase().trim(),
-          phone: faculty.phone || "",
-          gender: faculty.gender || "",
-          collegeId: payload.collegeId,
-          collegeName: faculty.collegeName || collegeName,
-          collegeCode: faculty.collegeCode,
-          department: faculty.department || "",
-          designation: faculty.designation || "Assistant Professor",
-          employmentType: faculty.employmentType || "FULL_TIME",
-          joiningDate: faculty.joiningDate || "",
-          qualification: faculty.qualification || "",
-          specialization: faculty.specialization || "",
-          subjectsUG: faculty.subjectsUG || [],
-          subjectsPG: faculty.subjectsPG || [],
-          experienceYears: faculty.experienceYears || 0,
-          isHOD: faculty.isHOD || false,
-          role: "faculty",
-          status: "active",
-          uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-
-        await setDoc(doc(db, "faculty", facultyId), facultyData);
-
-        await setDoc(doc(db, "users", uid), {
-          uid,
-          email: faculty.email.toLowerCase().trim(),
-          name: `${faculty.firstName} ${faculty.lastName || ""}`.trim(),
-          role: faculty.isHOD ? "hod" : "faculty",
-          collegeId: payload.collegeId,
-          department: faculty.department || "",
-          phone: faculty.phone || "",
-          avatar: "",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-
-        if (faculty.isHOD && faculty.department) {
-          await setDoc(doc(db, "hods", `${payload.collegeId}_${faculty.department}`), {
-            facultyId,
-            uid,
-            collegeId: payload.collegeId,
-            department: faculty.department,
-            name: `${faculty.firstName} ${faculty.lastName || ""}`.trim(),
-            email: faculty.email,
-            role: "hod",
-            assignedAt: serverTimestamp(),
-          }, { merge: true });
-        }
-
-        imported.push({ id: facultyId, email: faculty.email, password: tempPassword });
-        success++;
-      } catch (err: unknown) {
-        failed++;
-        const errorMsg = err instanceof Error ? err.message : `Row ${index + 1}: Unknown error`;
-        errors.push(errorMsg);
-      }
+  // Staff provisioning runs through the Admin SDK callable so that an Auth
+  // account orphaned by a college reset is RECLAIMED (password reset + claims
+  // re-issued) instead of either failing with "email already exists" or being
+  // silently re-used with a stale password. The callable writes the faculty
+  // profile, the users/{uid} lookup doc, the HOD doc and the college counter.
+  const bulkProvision = httpsCallable<
+    { collegeId: string; staff: any[] },
+    {
+      total: number;
+      created: number;
+      reclaimed: number;
+      failed: number;
+      errors: Array<{ row: number; email: string; message: string }>;
+      staff: Array<{
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        success: boolean;
+        uid?: string;
+        password?: string;
+        reclaimed?: boolean;
+        error?: string;
+      }>;
     }
+  >(functions, "bulkProvisionStaff");
 
-    if (success > 0) {
-      await updateDoc(collegeRef, {
-        facultyCount: (collegeData.facultyCount || 0) + success,
-        updatedAt: Timestamp.now(),
-      });
+  const result = await bulkProvision({
+    collegeId: payload.collegeId,
+    staff: payload.faculty.map((f) => ({
+      facultyId: f.facultyId,
+      firstName: f.firstName,
+      lastName: f.lastName,
+      email: f.email,
+      phone: f.phone,
+      gender: f.gender,
+      collegeName: f.collegeName,
+      collegeCode: f.collegeCode,
+      department: f.department,
+      designation: f.designation,
+      employmentType: f.employmentType,
+      joiningDate: f.joiningDate,
+      qualification: f.qualification,
+      specialization: f.specialization,
+      subjectsUG: f.subjectsUG,
+      subjectsPG: f.subjectsPG,
+      experienceYears: f.experienceYears,
+      isHOD: f.isHOD,
+    })),
+  });
+
+  const data = result.data;
+  const imported: Array<{ id: string; email: string; password?: string }> = [];
+  const errors: string[] = [];
+
+  // `staff` is the single source of truth (each failed row is also mirrored in
+  // `errors`, so we do not append those separately to avoid double-counting).
+  for (const member of data.staff || []) {
+    if (member.success) {
+      imported.push({ id: member.id || member.uid || "", email: member.email, password: member.password });
+    } else {
+      errors.push(`${member.name || member.email} — ${member.error || "Unknown error"}`);
     }
-    return { success, failed, imported, errors };
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Faculty import failed";
-    throw new Error(msg);
   }
+
+  const success = imported.length;
+  const reclaimed = data.reclaimed || 0;
+  if (reclaimed > 0) {
+    errors.push(`Info: ${reclaimed} existing account(s) were reclaimed with a new password`);
+  }
+
+  return { success, failed: data.failed, imported, errors };
 }
 
 // ═══════════════════════════════════════════════════════════════════════

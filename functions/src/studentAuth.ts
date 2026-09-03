@@ -39,6 +39,7 @@ interface StudentResult {
   success: boolean
   uid?: string
   password?: string
+  reclaimed?: boolean
   error?: string
 }
 
@@ -46,6 +47,7 @@ interface BulkResult {
   success: boolean
   total: number
   created: number
+  reclaimed: number
   failed: number
   errors: Array<{ row: number; regNo: string; message: string }>
   students: StudentResult[]
@@ -145,6 +147,19 @@ async function getCollegeData(collegeId: string) {
     code: string
     name: string
     studentCount: number
+  }
+}
+
+/**
+ * Find an existing Auth user by email. Returns null when none exists.
+ * getUserByEmail throws (not-found) when the email is unknown.
+ */
+async function findAuthStudentByEmail(email: string): Promise<admin.auth.UserRecord | null> {
+  try {
+    return await admin.auth().getUserByEmail(email)
+  } catch (err: any) {
+    if (err?.code === 'auth/user-not-found') return null
+    throw err
   }
 }
 
@@ -256,6 +271,7 @@ export const bulkCreateStudentAccounts = onCall(
     const results: StudentResult[] = []
     const errors: Array<{ row: number; regNo: string; message: string }> = []
     let createdCount = 0
+    let reclaimedCount = 0
     let failedCount = 0
 
     // ── Process each student sequentially (auth creation is not batchable) ──
@@ -302,16 +318,12 @@ export const bulkCreateStudentAccounts = onCall(
         results.push({ regNo, name: row.name, email, success: false, error: 'RegNo already exists' })
         continue
       }
-      if (existingUserEmails.has(email)) {
-        failedCount++
-        errors.push({ row: rowNum, regNo, message: `Email ${email} already has an auth account` })
-        results.push({ regNo, name: row.name, email, success: false, error: 'Auth account already exists' })
-        continue
-      }
-
       // Only a UID created by this iteration is eligible for rollback. Looking
       // up by email in a catch block can delete a pre-existing Auth-only user.
       let createdAuthUid: string | null = null
+      // Set when the row reuses a pre-existing Auth account (orphaned after a
+      // college reset). Such accounts must never be rolled back/deleted.
+      let reclaimedAuthUid: string | null = null
 
       try {
         // Generate password
@@ -320,15 +332,61 @@ export const bulkCreateStudentAccounts = onCall(
             ? defaultPassword as string
             : generateRandomPassword()
 
-        // 1. Create Firebase Auth user
-        const userRecord = await auth.createUser({
-          email,
-          password,
-          displayName: row.name.trim(),
-          phoneNumber: row.phone ? `+91${row.phone.replace(/\D/g, '').slice(-10)}` : undefined,
-          disabled: false,
-        })
-        createdAuthUid = userRecord.uid
+        // 1. Create the Firebase Auth user — or RECLAIM an orphaned one.
+        //    After a college reset the Auth account can outlive its Firestore
+        //    profile (created by an older client-side import). Re-using the
+        //    email would otherwise throw email-already-exists and block the
+        //    whole re-import. We claim the orphan, reset its password so the
+        //    credential we return works, and re-issue its claims.
+        let userRecord: admin.auth.UserRecord
+        if (existingUserEmails.has(email)) {
+          const existing = await findAuthStudentByEmail(email)
+          if (!existing) {
+            // Defensive: set membership drifted. Fall through to creation.
+            userRecord = await auth.createUser({
+              email,
+              password,
+              displayName: name,
+              phoneNumber: row.phone
+                ? `+91${row.phone.replace(/\D/g, '').slice(-10)}`
+                : undefined,
+              disabled: false,
+            })
+            createdAuthUid = userRecord.uid
+          } else {
+            const claims = (existing.customClaims || {}) as Record<string, unknown>
+            const linkedCollege = claims.collegeId ? String(claims.collegeId) : ''
+            if (linkedCollege && linkedCollege !== collegeId) {
+              throw new Error(
+                `Email ${email} already belongs to another college and cannot be reused`
+              )
+            }
+            await auth.updateUser(existing.uid, {
+              email,
+              password,
+              displayName: name,
+              phoneNumber: row.phone
+                ? `+91${row.phone.replace(/\D/g, '').slice(-10)}`
+                : undefined,
+              disabled: false,
+            })
+            userRecord = existing
+            reclaimedAuthUid = existing.uid
+          }
+        } else {
+          userRecord = await auth.createUser({
+            email,
+            password,
+            displayName: name,
+            phoneNumber: row.phone ? `+91${row.phone.replace(/\D/g, '').slice(-10)}` : undefined,
+            disabled: false,
+          })
+          createdAuthUid = userRecord.uid
+        }
+
+        // Student role/college claims drive rule checks and let the cleanup
+        // callable delete Auth accounts even when profile docs are missing.
+        await auth.setCustomUserClaims(userRecord.uid, { role: 'student', collegeId })
 
         // 2. Prepare the canonical student doc in /students
         const studentRef = db.collection('students').doc()
@@ -402,33 +460,36 @@ export const bulkCreateStudentAccounts = onCall(
         existingEmails.add(email)
         existingRegNos.add(regNo)
         existingUserEmails.add(email)
-        createdCount++
+        if (reclaimedAuthUid) reclaimedCount++
+        else createdCount++
 
         results.push({
           regNo,
-          name: row.name,
+          name,
           email,
           success: true,
           uid: userRecord.uid,
           password,
+          reclaimed: !!reclaimedAuthUid,
         })
 
-        logger.info(`[StudentAuth] Created student`, {
+        logger.info(`[StudentAuth] ${reclaimedAuthUid ? 'Reclaimed' : 'Created'} student`, {
           regNo,
           uid: userRecord.uid,
           collegeId,
+          reclaimed: !!reclaimedAuthUid,
           by: caller.uid,
         })
       } catch (err: any) {
         failedCount++
         const message = err.message || 'Unknown error'
         errors.push({ row: rowNum, regNo, message })
-        results.push({ regNo, name: row.name, email, success: false, error: message })
+        results.push({ regNo, name, email, success: false, error: message })
         logger.error(`[StudentAuth] Failed to create student ${regNo}:`, err)
 
-        // Roll back only the Auth UID created by this loop iteration. If
-        // createUser itself failed (for example email-already-exists), this is
-        // null and a pre-existing user is never touched.
+        // Roll back only the Auth UID created by this loop iteration. A
+        // reclaimed account pre-existed and is never deleted; a createUser
+        // failure (for example email-already-exists) also leaves this null.
         if (createdAuthUid) {
           try {
             await auth.deleteUser(createdAuthUid)
@@ -458,6 +519,7 @@ export const bulkCreateStudentAccounts = onCall(
         performedByName: caller.name,
         total: students.length,
         created: createdCount,
+        reclaimed: reclaimedCount,
         failed: failedCount,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         elapsedMs: Date.now() - startTime,
@@ -467,6 +529,7 @@ export const bulkCreateStudentAccounts = onCall(
         collegeId,
         performedBy: caller.uid,
         created: createdCount,
+        reclaimed: reclaimedCount,
         failed: failedCount,
         logError,
       })
@@ -476,6 +539,7 @@ export const bulkCreateStudentAccounts = onCall(
       success: failedCount === 0,
       total: students.length,
       created: createdCount,
+      reclaimed: reclaimedCount,
       failed: failedCount,
       errors,
       students: results,
