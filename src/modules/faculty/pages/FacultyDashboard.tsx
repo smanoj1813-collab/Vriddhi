@@ -5,6 +5,7 @@ import { db } from '@/Firebase/config';
 import {
   collection, query, where, getDocs, orderBy, limit,
 } from 'firebase/firestore';
+import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import {
   Box,
   Typography,
@@ -86,30 +87,38 @@ function useFacultyData(collegeId: string | undefined, facultyId: string | undef
 
     async function fetchData() {
       try {
-        // Fetch faculty schedule
-        const scheduleSnap = await getDocs(
-          query(
-            collegeRef(cid, 'schedules'),
-            where('facultyId', '==', fid),
-            where('date', '==', new Date().toISOString().split('T')[0]),
-            orderBy('startTime'),
-            limit(10)
-          )
-        );
+        // Fetch faculty schedule — read the same `weeklySchedules` collection the
+        // admin writes to (via AdminClassSchedule), then show today's classes.
+        // (Previously this read the legacy `colleges/{cid}/schedules` subcollection,
+        // which admin scheduling never wrote to, so the widget stayed empty.)
+        const weekly = await fetchFacultyWeeklySchedule(fid);
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const nowTime = `${String(new Date().getHours()).padStart(2, '0')}:${String(
+          new Date().getMinutes()
+        ).padStart(2, '0')}`;
 
-        const scheduleData: ScheduleItem[] = scheduleSnap.docs.map(d => {
-          const data = d.data();
-          return {
-            id: d.id,
-            subject: String(data.subject || 'Unknown'),
-            course: String(data.course || ''),
-            batch: String(data.batch || ''),
-            division: String(data.division || ''),
-            time: `${String(data.startTime || '--:--')} - ${String(data.endTime || '--:--')}`,
-            room: String(data.room || 'TBD'),
-            status: (data.status as ScheduleItem['status']) || 'upcoming',
-          };
-        });
+        const scheduleData: ScheduleItem[] = weekly
+          .filter((w) => String(w.dayOfWeek || '').toLowerCase() === today)
+          .map((w) => {
+            const status: ScheduleItem['status'] =
+              nowTime < (w.startTime || '99:99')
+                ? 'upcoming'
+                : nowTime > (w.endTime || '00:00')
+                  ? 'completed'
+                  : 'ongoing';
+            return {
+              id: w.id,
+              subject: String(w.subject || 'Unknown'),
+              course: String(w.branch || w.subjectCode || ''),
+              batch: String(w.batch || ''),
+              division: String(w.division || w.section || ''),
+              time: `${String(w.startTime || '--:--')} - ${String(w.endTime || '--:--')}`,
+              room: String(w.room || 'TBD'),
+              status,
+            };
+          })
+          .sort((a, b) => a.time.localeCompare(b.time))
+          .slice(0, 10);
 
         // Fetch announcements
         const announceSnap = await getDocs(

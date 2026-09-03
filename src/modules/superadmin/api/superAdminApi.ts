@@ -924,7 +924,7 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
           uid,
           email: faculty.email.toLowerCase().trim(),
           name: `${faculty.firstName} ${faculty.lastName || ""}`.trim(),
-          role: "faculty",
+          role: faculty.isHOD ? "hod" : "faculty",
           collegeId: payload.collegeId,
           department: faculty.department || "",
           phone: faculty.phone || "",
@@ -936,10 +936,12 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
         if (faculty.isHOD && faculty.department) {
           await setDoc(doc(db, "hods", `${payload.collegeId}_${faculty.department}`), {
             facultyId,
+            uid,
             collegeId: payload.collegeId,
             department: faculty.department,
             name: `${faculty.firstName} ${faculty.lastName || ""}`.trim(),
             email: faculty.email,
+            role: "hod",
             assignedAt: serverTimestamp(),
           }, { merge: true });
         }
@@ -1238,59 +1240,33 @@ export async function resolveError(errorId: string): Promise<void> {
 
 // ═══════════════════════════════════════════════════════════════════════
 // COLLEGE RESET API
+//
+// Delegated to the `resetCollegeData` Cloud Function so the reset can also
+// remove data the client cannot touch safely: `users/{uid}` lookup docs,
+// Firebase Auth accounts, hods, curriculum, curriculumFacultyMappings,
+// weeklySchedules, college-scoped syllabusExtracts and the
+// colleges/{collegeId} subcollections. The old client-side version only
+// cleared top-level students/faculty/admins and left orphans behind.
 // ═══════════════════════════════════════════════════════════════════════
 
-export async function resetCollegeData(collegeId: string): Promise<{
-  deletedStudents: number;
-  deletedFaculty: number;
-  deletedAdmins: number;
-}> {
+export interface ResetCollegeDataResult {
+  success: boolean;
+  collegeId: string;
+  totalDeleted: number;
+  authUsersDeleted: number;
+  deleted: Record<string, number>;
+  errors: string[];
+}
+
+export async function resetCollegeData(collegeId: string): Promise<ResetCollegeDataResult> {
   try {
-    const batch = writeBatch(db);
-    let deletedStudents = 0;
-    let deletedFaculty = 0;
-    let deletedAdmins = 0;
+    const resetFn = httpsCallable<
+      { collegeId: string; deleteAuthUsers?: boolean },
+      ResetCollegeDataResult
+    >(functions, "resetCollegeData");
 
-    const studentsQuery = query(collection(db, "students"), where("collegeId", "==", collegeId));
-    const studentsSnap = await getDocs(studentsQuery);
-    studentsSnap.docs.forEach((docSnap) => {
-      batch.delete(doc(db, "students", docSnap.id));
-      deletedStudents++;
-    });
-
-    const facultyQuery = query(collection(db, "faculty"), where("collegeId", "==", collegeId));
-    const facultySnap = await getDocs(facultyQuery);
-    facultySnap.docs.forEach((docSnap) => {
-      batch.delete(doc(db, "faculty", docSnap.id));
-      deletedFaculty++;
-    });
-
-    const adminsQuery = query(collection(db, "admins"), where("collegeId", "==", collegeId));
-    const adminsSnap = await getDocs(adminsQuery);
-    adminsSnap.docs.forEach((docSnap) => {
-      batch.delete(doc(db, "admins", docSnap.id));
-      deletedAdmins++;
-    });
-
-    const collegeRef = doc(db, "colleges", collegeId);
-    batch.update(collegeRef, {
-      studentCount: 0,
-      facultyCount: 0,
-      adminCount: 0,
-      currentStudents: 0,
-      currentFaculty: 0,
-      updatedAt: Timestamp.now(),
-    });
-
-    await batch.commit();
-
-    console.log(`Reset college ${collegeId}:`, {
-      deletedStudents,
-      deletedFaculty,
-      deletedAdmins,
-    });
-
-    return { deletedStudents, deletedFaculty, deletedAdmins };
+    const result = await resetFn({ collegeId, deleteAuthUsers: true });
+    return result.data;
   } catch (error) {
     console.error("Error resetting college data:", error);
     throw new SuperAdminApiError(
