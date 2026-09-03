@@ -240,6 +240,7 @@ export interface ImportResult {
   failed: number;
   errors: string[];
   imported: Array<{ id: string; email: string; password?: string }>;
+  failedStudents?: Array<{ name: string; email: string; regNo: string; reason: string }>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
