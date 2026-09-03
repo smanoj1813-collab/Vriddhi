@@ -29,6 +29,7 @@ import {
 } from './studentAuth'
 import { provisionUser } from './userProvisioning'
 import { grantUserRole, diagnoseIdentity } from './roleManagement'
+import { resetCollegeData } from './collegeCleanup'
 import {
   beginMyAssignmentSubmission,
   cancelMyAssignmentSubmission,
@@ -145,6 +146,7 @@ export {
   provisionUser,
   grantUserRole,
   diagnoseIdentity,
+  resetCollegeData,
   updateMyStudentProfile,
   getMyAssignments,
   beginMyAssignmentSubmission,

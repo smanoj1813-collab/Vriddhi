@@ -30,8 +30,6 @@ const ROLE_LABELS: Record<AdminRole, string> = {
   admin: "Principal",
   hod: "HOD",
   mentor: "Mentor",
-  coordinator: "Coordinator",
-  department_head: "Dept Head",
 };
 
 const ROLE_COLORS: Record<AdminRole, string> = {
@@ -39,8 +37,6 @@ const ROLE_COLORS: Record<AdminRole, string> = {
   admin: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   hod: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
   mentor: "bg-green-500/10 text-emerald-600 dark:text-emerald-400",
-  coordinator: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  department_head: "bg-cyan-500/10 text-cyan-400",
 };
 
 const SuperAdminAdmins: React.FC = () => {
@@ -258,8 +254,6 @@ const SuperAdminAdmins: React.FC = () => {
             <option value="admin">Principal</option>
             <option value="hod">HOD</option>
             <option value="mentor">Mentor</option>
-            <option value="coordinator">Coordinator</option>
-            <option value="department_head">Dept Head</option>
           </select>
         </div>
         <div className="relative">
@@ -434,8 +428,6 @@ const SuperAdminAdmins: React.FC = () => {
                     <option value="admin">Principal</option>
                     <option value="hod">HOD</option>
                     <option value="mentor">Mentor</option>
-                    <option value="coordinator">Coordinator</option>
-                    <option value="department_head">Dept Head</option>
                   </select>
                 </div>
                 <div>
@@ -591,8 +583,6 @@ const SuperAdminAdmins: React.FC = () => {
                     <option value="admin">Principal</option>
                     <option value="hod">HOD</option>
                     <option value="mentor">Mentor</option>
-                    <option value="coordinator">Coordinator</option>
-                    <option value="department_head">Dept Head</option>
                   </select>
                 </div>
                 <div>

@@ -13,7 +13,7 @@ const ROLE_DASHBOARD: Record<string, string> = {
   admin: '/admin/dashboard',
   principal: '/admin/dashboard',   // ← legacy admin basis
   faculty: '/faculty/dashboard',
-  hod: '/faculty/dashboard',
+  hod: '/admin/hod-dashboard',
   mentor: '/faculty/dashboard',
   student: '/student/dashboard',
 };

@@ -112,6 +112,7 @@ const AdminCurriculum: React.FC = () => {
     refreshCurriculum,
     getUnmappedCourses,
     getCurriculumMappings,
+    getFacultySubjects,
     branches,
     semesters,
     batches,
@@ -138,6 +139,31 @@ const AdminCurriculum: React.FC = () => {
   const curriculumMappings = useMemo(() =>
     selectedCurriculumData ? getCurriculumMappings(selectedCurriculumData.id) : [],
   [selectedCurriculumData, getCurriculumMappings])
+
+  // ─── Subject-guided faculty options ──────────────────────────────────
+  // Faculty are NOT pinned to a branch/batch — one person may teach across
+  // years and branches. So we don't filter by branch; we sort/suggest by the
+  // subjects each faculty listed, matching the schedule form's behaviour.
+  const selectedCourseName = useMemo(() => {
+    if (!formData.courseId) return ''
+    const curriculum = curriculumList.find(c => c.id === formData.curriculumId)
+    const course = curriculum?.courses.find(c => c.id === formData.courseId)
+    return course?.name || ''
+  }, [formData.courseId, formData.curriculumId, curriculumList])
+
+  const facultyOptions = useMemo(() => {
+    const q = selectedCourseName.trim().toLowerCase()
+    return facultyList
+      .map(f => {
+        const subjects = getFacultySubjects(f.id)
+        const matches = q.length > 0 && subjects.some(s => s.toLowerCase() === q)
+        return { ...f, subjects, matches }
+      })
+      .sort((a, b) => {
+        if (a.matches !== b.matches) return a.matches ? -1 : 1
+        return a.name.localeCompare(b.name)
+      })
+  }, [facultyList, getFacultySubjects, selectedCourseName])
 
   // ─── Handlers ────────────────────────────────────────────────────────
   const handleOpenMapping = (curriculum: CurriculumDoc, course?: ParsedCourse) => {
@@ -737,13 +763,40 @@ const AdminCurriculum: React.FC = () => {
                 onChange={e => setFormData(prev => ({ ...prev, facultyId: e.target.value }))}
                 label="Faculty *"
               >
-                {facultyList.map(f => (
+                {facultyOptions.map(f => (
                   <MenuItem key={f.id} value={f.id}>
-                    {f.name} {f.department && `(${f.department})`}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        <Typography sx={{ fontSize: 14 }}>{f.name}</Typography>
+                        {f.department && (
+                          <Typography variant="caption" color="text.secondary">({f.department})</Typography>
+                        )}
+                        {f.matches && (
+                          <Chip
+                            label="Teaches this subject"
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                            sx={{ height: 20, fontSize: 11 }}
+                          />
+                        )}
+                      </Box>
+                      {f.subjects.length > 0 && (
+                        <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.3 }}>
+                          {f.subjects.slice(0, 6).join(' · ')}
+                          {f.subjects.length > 6 ? ` +${f.subjects.length - 6} more` : ''}
+                        </Typography>
+                      )}
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            {formData.facultyId && selectedCourseName && !facultyOptions.find(f => f.id === formData.facultyId)?.matches && (
+              <Typography variant="caption" color="warning.main" sx={{ mt: -1 }}>
+                Selected faculty hasn't listed “{selectedCourseName}” in their subjects — double-check before assigning.
+              </Typography>
+            )}
 
             {/* Batch */}
             <TextField

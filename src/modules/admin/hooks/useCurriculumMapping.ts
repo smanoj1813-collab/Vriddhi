@@ -36,6 +36,10 @@ export interface FacultyOption {
   department: string;
   firstName?: string;
   lastName?: string;
+  /** Subjects the faculty can teach (UG + PG). Used to guide course mapping,
+   *  NOT to restrict — a faculty may teach across branches/batches/years. */
+  subjectsUG?: unknown[];
+  subjectsPG?: unknown[];
 }
 
 // ─── Hook: Admin Curriculum Mapping ────────────────────────────────────
@@ -78,6 +82,8 @@ export function useCurriculumMapping(collegeId: string | undefined) {
             department: data.department || 'General',
             firstName: data.firstName || '',
             lastName: data.lastName || '',
+            subjectsUG: Array.isArray(data.subjectsUG) ? data.subjectsUG : [],
+            subjectsPG: Array.isArray(data.subjectsPG) ? data.subjectsPG : [],
             status: data.status || 'active',
           } as FacultyOption & { status: string };
         })
@@ -236,6 +242,34 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     return mappings.filter(m => m.curriculumId === curriculumId && m.status === 'active');
   }, [mappings]);
 
+  // ─── Subjects a faculty can teach (normalized, de-duplicated) ────────
+  // Subject entries may be plain strings ("Financial Accounting") or objects
+  // ({ name, code }). Normalize both into a clean list of subject names.
+  const getFacultySubjects = useCallback((facultyId: string): string[] => {
+    const f = facultyList.find(x => x.id === facultyId);
+    if (!f) return [];
+
+    const normalize = (s: unknown): string => {
+      if (typeof s === 'string') return s.trim();
+      if (s && typeof s === 'object') {
+        const o = s as Record<string, unknown>;
+        return String(o.name || o.subjectName || o.code || '').trim();
+      }
+      return '';
+    };
+
+    const seen = new Set<string>();
+    const out: string[] = [];
+    [...(f.subjectsUG || []), ...(f.subjectsPG || [])].forEach(s => {
+      const name = normalize(s);
+      if (name && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        out.push(name);
+      }
+    });
+    return out;
+  }, [facultyList]);
+
   // ─── Derived options ─────────────────────────────────────────────────
   const branches = useCallback(() => {
     const set = new Set<string>();
@@ -290,6 +324,7 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     // Helpers
     getUnmappedCourses,
     getCurriculumMappings,
+    getFacultySubjects,
     branches: branches(),
     semesters: semesters(),
     batches: batches(),

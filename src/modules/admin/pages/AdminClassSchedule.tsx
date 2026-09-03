@@ -1,5 +1,6 @@
 // src/pages/AdminClassSchedule.tsx
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Box,
   Typography,
@@ -98,6 +99,15 @@ Computer Applications,CAP101,faculty_id_here,Dr. Lee,BCA,2024,4,B,B,303,tuesday,
 const AdminClassSchedule: React.FC = () => {
   const { user } = useAuth()
   const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || ''
+  const location = useLocation()
+
+  // ─── Prefill from AdminCurriculum "Schedule Class" ────────────────────
+  // AdminCurriculum navigates here with state.prefill for the selected mapping.
+  const prefill = useMemo(() => {
+    const state = location.state as { prefill?: Partial<WeeklyScheduleFormData> } | null
+    return state?.prefill ?? null
+  }, [location.state])
+
   const {
     weeklySchedule,
     facultyList,
@@ -126,6 +136,29 @@ const AdminClassSchedule: React.FC = () => {
   })
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [csvText, setCsvText] = useState('')
+
+  // ─── Apply prefill from AdminCurriculum "Schedule Class" ──────────────
+  useEffect(() => {
+    if (!prefill || !prefill.subject) return
+    setFormData({
+      ...EMPTY_FORM,
+      subject: prefill.subject || '',
+      subjectCode: prefill.subjectCode || '',
+      facultyId: prefill.facultyId || '',
+      branch: prefill.branch || '',
+      batch: prefill.batch || '',
+      semester: prefill.semester ?? 1,
+      division: prefill.division || '',
+      section: prefill.section || '',
+      dayOfWeek: 'monday',
+      startTime: '09:00',
+      endTime: '10:00',
+      type: 'lecture',
+      room: '',
+    })
+    setOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill])
 
   const daySchedules = weeklySchedule[selectedDay] || []
 
@@ -600,6 +633,9 @@ const AdminClassSchedule: React.FC = () => {
                       {s.name} {s.code && `(${s.code})`}
                     </MenuItem>
                   ))}
+                  {formData.subject && !facultySubjects.some(s => s.name === formData.subject) && (
+                    <MenuItem value={formData.subject}>{formData.subject}</MenuItem>
+                  )}
                 </Select>
               </FormControl>
             </Box>

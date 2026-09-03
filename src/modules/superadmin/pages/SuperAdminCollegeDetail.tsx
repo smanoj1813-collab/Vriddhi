@@ -221,7 +221,9 @@ const SuperAdminCollegeDetail: React.FC = () => {
                 <div className="text-center py-4">
                   <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
                   <p className="text-emerald-400 font-medium">College data reset successfully!</p>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">All students, faculty, and admins have been deleted.</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+                    All students, faculty, admins, curriculum, schedules and linked login accounts have been deleted.
+                  </p>
                 </div>
               ) : (
                 <>
@@ -234,7 +236,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
                       <p className="text-red-300">• {college.studentCount || students.length} Students</p>
                       <p className="text-red-300">• {college.facultyCount || faculty.length} Faculty members</p>
                       <p className="text-red-300">• {college.adminCount || admins.length} Admins</p>
-                      <p className="text-red-300">• All related records</p>
+                      <p className="text-red-300">• Curriculum, schedules &amp; mappings</p>
+                      <p className="text-red-300">• Firebase login accounts</p>
                     </div>
                   </div>
 
@@ -493,7 +496,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
                   <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
                 </div>
                 <p className="text-sm text-red-300/70 mb-4">
-                  Permanently delete all students, faculty, and admins for this college.
+                  Permanently delete all data for this college — students, faculty, admins,
+                  curriculum, schedules, mappings and linked login accounts.
                   The college itself will remain.
                 </p>
                 <button

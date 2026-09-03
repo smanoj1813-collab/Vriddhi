@@ -125,7 +125,7 @@ export interface ListCollegesOptions {
 // ═══════════════════════════════════════════════════════════════════════
 // ADMIN TYPES
 // ═══════════════════════════════════════════════════════════════════════
-export type AdminRole = "superadmin" | "admin" | "hod" | "mentor" | "coordinator" | "department_head";
+export type AdminRole = "superadmin" | "admin" | "hod" | "mentor";
 export type AdminStatus = "active" | "inactive";
 
 export interface Admin {

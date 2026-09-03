@@ -288,8 +288,6 @@ const CreateCollegeAdmin: React.FC = () => {
                   <option value="principal">Principal</option>
                   <option value="hod">Head of Department</option>
                   <option value="mentor">Mentor</option>
-                  <option value="coordinator">Coordinator</option>
-                  <option value="department_head">Department Head</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
               </div>

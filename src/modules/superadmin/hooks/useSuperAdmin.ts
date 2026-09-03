@@ -42,6 +42,7 @@ import {
   toggleFacultyStatus,
   resetFacultyPassword,
   SuperAdminApiError,
+  type ResetCollegeDataResult,
 } from "../api/superAdminApi";
 
 import {
@@ -585,7 +586,7 @@ export const useResetFacultyPassword = () => {
 export const useResetCollegeData = () => {
   const queryClient = useQueryClient();
   return useMutation<
-    { deletedStudents: number; deletedFaculty: number; deletedAdmins: number },
+    ResetCollegeDataResult,
     SuperAdminApiError,
     string
   >({
