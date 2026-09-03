@@ -406,48 +406,56 @@ export async function bulkUpdateCollegeStatus(
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function createAdmin(input: CreateAdminInput): Promise<Admin> {
-  const password = input.password || generateTempPassword();
+  // Privileged accounts are created server-side via grantUserRole (Admin SDK)
+  // so the Auth account is created with the correct custom CLAIMS (role +
+  // collegeId). The old client REST path could not set claims, leaving a
+  // created admin unable to perform any admin operation under the
+  // claim-authoritative rules.
+  const grant = httpsCallable<
+    {
+      email: string;
+      name: string;
+      role: string;
+      collegeId: string | null;
+      password?: string;
+    },
+    {
+      success: boolean;
+      uid: string;
+      email: string;
+      role: string;
+      collegeId: string | null;
+      created: boolean;
+      temporaryPassword?: string;
+    }
+  >(functions, "grantUserRole");
 
-  const uid = await createFirebaseAuthUser(input.email, password);
-
-  const now = Timestamp.now();
-
-  // Strip undefined for Firestore write only
-  const adminData = {
-    ...stripUndefined(input),
-    uid,
-    status: "active",
-    createdAt: now,
-  };
-
-  const docRef = await addDoc(collection(db, "admins"), adminData);
-
-  await setDoc(doc(db, "users", uid), {
-    uid,
-    email: input.email,
+  const email = input.email.trim().toLowerCase();
+  const result = await grant({
+    email,
     name: input.name,
     role: input.role,
-    collegeId: input.collegeId || "",
-    department: input.department || "",
-    phone: input.phone || "",
-    avatar: "",
-    createdAt: now,
-    updatedAt: now,
+    collegeId: input.collegeId || null,
+    ...(input.password ? { password: input.password } : {}),
   });
 
-  // Explicit return — satisfies Admin type
+  const data = result.data;
+  const now = new Date().toISOString();
+
   return {
-    id: docRef.id,
+    id: data.uid,
     name: input.name,
-    email: input.email,
-    role: input.role,
-    collegeId: input.collegeId,
+    email: data.email || email,
+    role: (data.role || input.role) as Admin["role"],
+    collegeId: data.collegeId || input.collegeId,
     status: "active",
-    createdAt: now.toDate().toISOString(),
-    uid,
+    createdAt: now,
+    uid: data.uid,
+    // The one-time credential, surfaced to the creating superadmin only.
+    ...(data.temporaryPassword ? { temporaryPassword: data.temporaryPassword } : {}),
     ...(input.phone ? { phone: input.phone } : {}),
     ...(input.department ? { department: input.department } : {}),
-  } as Admin;
+  } as Admin & { temporaryPassword?: string };
 }
 
 export async function promoteToAdmin(payload: {
@@ -459,48 +467,42 @@ export async function promoteToAdmin(payload: {
   phone?: string;
   department?: string;
 }): Promise<Admin> {
-  const now = Timestamp.now();
+  // Promotion must change the Auth custom CLAIMS (role), otherwise under the
+  // claim-authoritative rules the promoted user keeps their old privileges.
+  // grantUserRole rewires claims + the users/admins profile documents and
+  // revokes refresh tokens so the new role takes effect on next sign-in.
+  const grant = httpsCallable<
+    { email: string; name: string; role: string; collegeId: string | null },
+    {
+      success: boolean;
+      uid: string;
+      email: string;
+      role: string;
+      collegeId: string | null;
+      reauthenticateRequired: boolean;
+    }
+  >(functions, "grantUserRole");
 
-  const adminData = {
-    ...stripUndefined({
-      uid: payload.uid,
-      name: payload.name,
-      email: payload.email,
-      role: payload.role,
-      collegeId: payload.collegeId,
-      phone: payload.phone,
-      department: payload.department,
-    }),
+  const result = await grant({
+    email: payload.email.trim().toLowerCase(),
+    name: payload.name,
+    role: payload.role,
+    collegeId: payload.collegeId || null,
+  });
+  const data = result.data;
+  const now = new Date().toISOString();
+
+  return {
+    id: data.uid,
+    uid: data.uid,
+    name: payload.name,
+    email: data.email || payload.email,
+    role: (data.role || payload.role) as Admin["role"],
+    collegeId: data.collegeId || payload.collegeId,
     status: "active",
     createdAt: now,
     updatedAt: now,
-  };
-
-  const docRef = doc(db, "admins", payload.uid);
-  await setDoc(docRef, adminData, { merge: true });
-
-  await setDoc(doc(db, "users", payload.uid), {
-    uid: payload.uid,
-    email: payload.email,
-    name: payload.name,
-    role: payload.role,
-    collegeId: payload.collegeId,
-    department: payload.department || "",
-    phone: payload.phone || "",
-    avatar: "",
-    updatedAt: now,
-  }, { merge: true });
-
-  return {
-    id: payload.uid,
-    uid: payload.uid,
-    name: payload.name,
-    email: payload.email,
-    role: payload.role,
-    collegeId: payload.collegeId,
-    status: "active",
-    createdAt: now.toDate().toISOString(),
-    updatedAt: now.toDate().toISOString(),
+    reauthenticateRequired: data.reauthenticateRequired,
     ...(payload.phone ? { phone: payload.phone } : {}),
     ...(payload.department ? { department: payload.department } : {}),
   } as Admin;
@@ -1308,7 +1310,28 @@ export async function toggleFacultyStatus(facultyId: string, status: "active" | 
 }
 
 export async function resetFacultyPassword(facultyId: string): Promise<string> {
-  const newPassword = generateTempPassword();
-  await updateDoc(doc(db, "faculty", facultyId), { password: newPassword, updatedAt: Timestamp.now() });
-  return newPassword;
+  // Password reset must happen server-side (Admin SDK) — the client cannot
+  // update a Firebase Auth password for another user. The callable resets the
+  // Auth credential, revokes existing sessions and returns the one-time
+  // temporary password (never persisted to Firestore).
+  const resetFn = httpsCallable<
+    { collection: "faculty"; docId: string },
+    { success: boolean; uid: string; email: string | null; temporaryPassword: string }
+  >(functions, "resetUserPassword");
+
+  const result = await resetFn({ collection: "faculty", docId: facultyId });
+  const temp = result.data?.temporaryPassword;
+  if (!temp) throw new Error("Password reset did not return a temporary password");
+
+  // Best-effort: flag the profile so the user can be asked to change it on
+  // next login. This carries no credential — it is a UI hint only.
+  try {
+    await updateDoc(doc(db, "faculty", facultyId), {
+      passwordResetRequired: true,
+      updatedAt: Timestamp.now(),
+    });
+  } catch {
+    // Non-fatal: the Auth credential was already reset.
+  }
+  return temp;
 }

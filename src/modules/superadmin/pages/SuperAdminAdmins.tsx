@@ -121,7 +121,7 @@ const SuperAdminAdmins: React.FC = () => {
       return;
     }
     try {
-      await promoteToAdmin.mutateAsync({
+      const promoted = await promoteToAdmin.mutateAsync({
         uid: faculty.id,
         name: faculty.name,
         email: faculty.email,
@@ -130,7 +130,10 @@ const SuperAdminAdmins: React.FC = () => {
         phone: faculty.phone,
         department: faculty.department,
       });
-      showSuccess(`${faculty.name} promoted to ${ROLE_LABELS[promoteForm.role]}`);
+      showSuccess(
+        `${faculty.name} promoted to ${ROLE_LABELS[promoteForm.role]}. ` +
+          `${(promoted as any)?.reauthenticateRequired ? "They must sign out and sign in again for the new role to take effect." : ""}`
+      );
       setShowPromoteModal(false);
       setPromoteForm({ facultyId: "", role: "admin", collegeId: "" });
     } catch (err: any) {

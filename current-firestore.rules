@@ -112,9 +112,16 @@ service cloud.firestore {
       return lookupRole != '' ? lookupRole : legacyProfileRole();
     }
 
+    // AUTHORITATIVE IDENTITY. Role for authorization decisions is taken from
+    // the verified ID-token custom claim ONLY. Profile documents (users/{uid},
+    // faculty/{uid}, ...) are client-writable by design (e.g. a college admin
+    // imports staff), so reading role/collegeId out of them lets any account
+    // that can create a document forge an identity. The legacy profile fallback
+    // is therefore NOT used for authorization. A newly signed-up account with
+    // no claims has role == null and can read nothing but its own record.
     function role() {
       let claimedRole = canonicalRole(cleanRoleValue(claimRole()));
-      return claimedRole != '' ? claimedRole : roleFromLookupOrProfile();
+      return claimedRole != '' ? claimedRole : null;
     }
 
     // Legacy profile documents name the tenant collegeId, collegeID, or college.
@@ -145,13 +152,41 @@ service cloud.firestore {
       return lookupCollege != null ? lookupCollege : linkedProfileCollegeId();
     }
 
+    // Tenancy, like role, is authoritative from the claim only — never from a
+    // client-writable profile document.
     function collegeId() {
       let claimedCollege = claimCollege();
-      return claimedCollege != null ? claimedCollege : collegeIdFromLookupOrProfile();
+      return claimedCollege != null ? claimedCollege : null;
     }
 
+    // Role exactly as carried by the verified ID-token custom claim — never
+    // derived from a (client-writable) profile document. Writes use THIS, so a
+    // forged role/collegeId field on a profile doc cannot authorise anything.
+    function claimedRole() {
+      return canonicalRole(cleanRoleValue(claimRole()));
+    }
+
+    // A superadmin is proven only by (a) the superadmin custom claim, or
+    // (b) a superadmins/{uid} document — which itself is writable solely by an
+    // already-authoritative superadmin. The superadmin role is NEVER inferred
+    // from a faculty/student/admin/etc. profile doc, so it cannot be spoofed.
     function isSuperadmin() {
-      return isSignedIn() && role() == 'superadmin';
+      return isSignedIn()
+        && (claimedRole() == 'superadmin'
+          || exists(/databases/$(database)/documents/superadmins/$(request.auth.uid)));
+    }
+
+    // Authoritative tenanted write gate. For non-superadmins BOTH the manager
+    // role and the college must come from the token claim, so a caller cannot
+    // escalate or act across colleges by editing a profile document.
+    function canManageCollege(data) {
+      return isSuperadmin()
+        || (isSignedIn()
+          && claimedRole() in ['admin', 'hod', 'principal']
+          && claimCollege() != null
+          && claimCollege() != ''
+          && 'collegeId' in data
+          && data.collegeId == claimCollege());
     }
 
     function isStaff() {
@@ -230,6 +265,14 @@ service cloud.firestore {
       return !('password' in request.resource.data);
     }
 
+    // A non-admin profile collection must never be used to smuggle a
+    // privileged role. Only low-privilege roles may appear as a role field on
+    // student/faculty/hod/mentor documents.
+    function noPrivilegedRole(data) {
+      return !('role' in data)
+        || cleanRoleValue(data.role) in ['student', 'faculty', 'hod', 'mentor', 'parent'];
+    }
+
     // USERS
     match /users/{userId} {
       allow read: if isOwner(userId)
@@ -255,15 +298,13 @@ service cloud.firestore {
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
       allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-      allow create: if isSuperadmin()
-        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
-      allow update: if isSuperadmin()
-        || (role() in ['admin', 'hod']
-          && sameCollege(resource.data)
-          && request.resource.data.collegeId == resource.data.collegeId
-          && request.resource.data.userId == resource.data.userId);
-      allow delete: if isSuperadmin()
-        || (role() in ['admin', 'hod'] && sameCollege(resource.data));
+      allow create: if canManageCollege(request.resource.data)
+        && noPrivilegedRole(request.resource.data);
+      allow update: if canManageCollege(resource.data)
+        && request.resource.data.collegeId == resource.data.collegeId
+        && (!('userId' in resource.data) || request.resource.data.userId == resource.data.userId)
+        && noPrivilegedRole(request.resource.data);
+      allow delete: if canManageCollege(resource.data);
     }
 
     match /faculty/{id} {
@@ -273,7 +314,15 @@ service cloud.firestore {
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-      allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+      allow create: if canManageCollege(request.resource.data)
+        && noPrivilegedRole(request.resource.data)
+        && noPasswordField();
+      allow update: if canManageCollege(resource.data)
+        && request.resource.data.collegeId == resource.data.collegeId
+        && ('uid' in resource.data ? request.resource.data.uid == resource.data.uid : true)
+        && noPrivilegedRole(request.resource.data)
+        && noPasswordField();
+      allow delete: if canManageCollege(resource.data);
     }
 
     match /admins/{id} {
@@ -291,7 +340,8 @@ service cloud.firestore {
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+      allow create: if canManageCollege(request.resource.data) && noPrivilegedRole(request.resource.data);
+      allow update, delete: if canManageCollege(resource.data);
     }
 
     match /mentors/{id} {
@@ -300,7 +350,8 @@ service cloud.firestore {
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow write: if isSuperadmin() || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+      allow create: if canManageCollege(request.resource.data) && noPrivilegedRole(request.resource.data);
+      allow update, delete: if canManageCollege(resource.data);
     }
 
     match /superadmins/{id} {

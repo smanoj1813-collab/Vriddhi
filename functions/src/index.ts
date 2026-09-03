@@ -30,6 +30,7 @@ import {
 import { provisionUser } from './userProvisioning'
 import { grantUserRole, diagnoseIdentity } from './roleManagement'
 import { bulkProvisionStaff } from './staffAuth'
+import { resetUserPassword } from './accountManagement'
 import { resetCollegeData } from './collegeCleanup'
 import {
   beginMyAssignmentSubmission,
@@ -146,6 +147,7 @@ export {
   bulkCreateStudentAccounts,
   provisionUser,
   bulkProvisionStaff,
+  resetUserPassword,
   grantUserRole,
   diagnoseIdentity,
   resetCollegeData,

@@ -366,9 +366,6 @@ export const bulkProvisionStaff = onCall(
           role,
           status: 'active',
           uid,
-          // Temporary credential mirrored for the admin "show passwords" /
-          // reset UI. Login itself is authenticated against Firebase Auth.
-          password,
           createdAt: now,
           updatedAt: now,
         }
