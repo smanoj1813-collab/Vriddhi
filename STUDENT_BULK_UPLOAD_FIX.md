@@ -1,3 +1,21 @@
+> **SUPERSEDED (2026-09-04) — read `docs/AUTH_LOGIN_PROVISIONING_AUDIT_2026-09-04.md`.**
+> The problem statement below is accurate; the “Solution Implemented” section is the code that
+> **caused** the next round of failures and it no longer exists in the tree:
+> * `createFirebaseAuthUser(...)` called the Identity Toolkit REST API from the browser. That
+>   cannot set custom claims, so every account it created signed in and was then denied every
+>   rule-guarded read — the “students exist in Firestore but are not usable logins” state, and it
+>   also required a Web API key reachable from the client to create users.
+> * `setDoc(..., { password: tempPassword })` wrote a plaintext credential onto `students/{id}`,
+>   a document readable by same-college staff. That is why a password could only be recovered by
+>   opening Firestore; `noPasswordField()` in the rules now rejects such a write, and the
+>   provisioning callables delete any of these fields they find.
+> * The loop validated duplicates against Firestore only and short-circuited rows whose email
+>   already existed, so an orphaned Firestore row could never produce a credential. Reclaim
+>   (`onExisting: 'reset'`) and the per-row `status`/`authVerified` fields replace that behaviour.
+> Student provisioning is now: `importUsers` → `bulkCreateStudentAccounts` (Admin SDK) → Auth
+> user + claims + `users/{uid}.studentDocId` + college mirror + verified read-back → credentials
+> displayed once in `CredentialsTable` (or delivered as a reset link).
+
 # Student Bulk Upload Fix — Auth Login Creation
 
 ## 🐛 Problem Identified

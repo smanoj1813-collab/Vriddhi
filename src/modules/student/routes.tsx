@@ -25,7 +25,10 @@ export const studentRoutes: RouteObject[] = [
   {
     path: '/student',
     element: (
-      <RoleRoute allowedRoles={['student']}>
+      // `parent` is accepted only because roleRoutes lands that role here until a
+      // parent portal exists; every read is still keyed to the signed-in uid, and
+      // Firestore rules, not this guard, decide what is visible.
+      <RoleRoute allowedRoles={['student', 'parent']}>
         <StudentDataProvider>
           <StudentLayout />
         </StudentDataProvider>

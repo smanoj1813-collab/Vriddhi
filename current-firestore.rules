@@ -18,25 +18,22 @@ service cloud.firestore {
         : null;
     }
 
-    function userDocExists() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-
-    function userDoc() {
-      return userDocExists()
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
-        : null;
-    }
-
-    // -- Legacy identity resolution -------------------------------------------
-    // Accounts created before the Access Control work - imported faculty,
-    // hand-written profile documents, spreadsheet uploads - often have no
-    // custom claims and no users/{uid} document, and they spell the same role
-    // in many ways ("Faculty", "teacher", "Head of Department", ...). Those
-    // users used to resolve to a null role, which silently denied every staff
-    // read. The helpers below normalise those identities. They mirror the
-    // lookup order used by the client in src/modules/auth/context/auth.ts.
+    // -- Role normalisation ---------------------------------------------------
+    // The same role is spelled many ways across the generations of imports this
+    // database has absorbed ("Faculty", "teacher", "Head of Department",
+    // "super admin", ...), so every comparison canonicalises first.
+    //
+    // Legacy profile-based role resolution (role taken from users/{uid} or a
+    // faculty/students document) USED to live here. It is deliberately gone:
+    // those documents are client-writable, so trusting them for authorization
+    // lets an account that can create a document forge a role. The client
+    // resolver in src/modules/auth/context/auth.ts still reads them so a person
+    // can sign in; a missing claim is repaired by `syncMyIdentity` /
+    // Access Control → Identity repair, not by weakening these rules.
+    //
+    // Budget note: rules allow at most 10 get()/exists() calls per request, and
+    // a list request pays that cost per candidate document — another reason
+    // identity comes from the token and never from profile reads.
 
     function cleanRoleValue(raw) {
       return raw is string ? raw.trim().lower() : '';
@@ -65,91 +62,15 @@ service cloud.firestore {
         : value;
     }
 
-    // Legacy documents store the role under role, userRole, or userType.
-    function roleField(data) {
-      return 'role' in data ? cleanRoleValue(data.role)
-        : 'userRole' in data ? cleanRoleValue(data.userRole)
-        : 'userType' in data ? cleanRoleValue(data.userType)
-        : '';
-    }
-
-    // fall backRole is used when the profile document exists but carries no
-    // role field - membership of the collection is then the role statement.
-    // NOTE: Firestore Security Rules allow at most 10 get()/exists() calls per
-    // single-document or query request. The legacy resolver used to read the
-    // same profile document several times (exists + two get() + a second
-    // profileRole() call), which pushed past the limit for users who have no
-    // custom claims and no users/{uid} document. `let` lets us fetch a profile
-    // once and reuse the value.
-    function profileRole(collectionName, fallBackRole) {
-      let profilePath = /databases/$(database)/documents/$(collectionName)/$(request.auth.uid);
-      let profileData = exists(profilePath) ? get(profilePath).data : null;
-      return profileData != null && roleField(profileData) != ''
-        ? canonicalRole(roleField(profileData))
-        : profileData != null ? fallBackRole : null;
-    }
-
-    function legacyProfileRole() {
-      return !isSignedIn() ? null
-        : profileRole('superadmins', 'superadmin') != null ? profileRole('superadmins', 'superadmin')
-        : profileRole('admins', 'admin') != null ? profileRole('admins', 'admin')
-        : profileRole('faculty', 'faculty') != null ? profileRole('faculty', 'faculty')
-        : profileRole('hods', 'hod') != null ? profileRole('hods', 'hod')
-        : profileRole('mentors', 'mentor') != null ? profileRole('mentors', 'mentor')
-        : profileRole('students', 'student') != null ? profileRole('students', 'student')
-        : null;
-    }
-
-    // Resolve role without touching the user document more than once. The
-    // previous `role()` evaluated userDoc(), roleField(userDoc()) and
-    // canonicalRole(roleField(userDoc())) as three separate calls in the worst
-    // case, contributing to the 10-call limit. This helper reads it once.
-    function roleFromLookupOrProfile() {
-      let lookupData = userDoc();
-      let lookupRole = lookupData != null && roleField(lookupData) != ''
-        ? canonicalRole(roleField(lookupData))
-        : '';
-      return lookupRole != '' ? lookupRole : legacyProfileRole();
-    }
-
     // AUTHORITATIVE IDENTITY. Role for authorization decisions is taken from
-    // the verified ID-token custom claim ONLY. Profile documents (users/{uid},
-    // faculty/{uid}, ...) are client-writable by design (e.g. a college admin
-    // imports staff), so reading role/collegeId out of them lets any account
-    // that can create a document forge an identity. The legacy profile fallback
-    // is therefore NOT used for authorization. A newly signed-up account with
-    // no claims has role == null and can read nothing but its own record.
+    // the verified ID-token custom claim ONLY. A newly provisioned or repaired
+    // account must therefore have its claims issued AND the user must sign in
+    // again, because an ID token only carries claims that existed when it was
+    // minted. "Login works, every page is empty / permission-denied" is this
+    // one property, and it is a provisioning gap — not a data gap.
     function role() {
       let claimedRole = canonicalRole(cleanRoleValue(claimRole()));
       return claimedRole != '' ? claimedRole : null;
-    }
-
-    // Legacy profile documents name the tenant collegeId, collegeID, or college.
-    function profileCollegeId(collectionName) {
-      let profilePath = /databases/$(database)/documents/$(collectionName)/$(request.auth.uid);
-      let profileData = exists(profilePath) ? get(profilePath).data : null;
-      return profileData != null && 'collegeId' in profileData ? profileData.collegeId
-        : profileData != null && 'collegeID' in profileData ? profileData.collegeID
-        : profileData != null && 'college' in profileData ? profileData.college
-        : null;
-    }
-
-    function linkedProfileCollegeId() {
-      return !isSignedIn() ? null
-        : profileCollegeId('faculty') != null ? profileCollegeId('faculty')
-        : profileCollegeId('students') != null ? profileCollegeId('students')
-        : profileCollegeId('admins') != null ? profileCollegeId('admins')
-        : profileCollegeId('hods') != null ? profileCollegeId('hods')
-        : profileCollegeId('mentors') != null ? profileCollegeId('mentors')
-        : null;
-    }
-
-    function collegeIdFromLookupOrProfile() {
-      let lookupData = userDoc();
-      let lookupCollege = lookupData != null && 'collegeId' in lookupData
-        ? lookupData.collegeId
-        : null;
-      return lookupCollege != null ? lookupCollege : linkedProfileCollegeId();
     }
 
     // Tenancy, like role, is authoritative from the claim only — never from a
@@ -261,8 +182,16 @@ service cloud.firestore {
         && request.resource.data.collegeId == resource.data.collegeId;
     }
 
+    // Mirrors SECRET_PROFILE_FIELDS in functions/src/identityShared.ts: the
+    // write that provisions a person also deletes any of these that an earlier
+    // importer left behind, and this rule stops a new one from being written.
+    // FieldValue.delete() in an update removes the key from
+    // request.resource.data, so the cleanup path is not blocked by it.
     function noPasswordField() {
-      return !('password' in request.resource.data);
+      let d = request.resource.data;
+      return !('password' in d) && !('passwordHash' in d) && !('passwordhash' in d)
+        && !('tempPassword' in d) && !('temporaryPassword' in d) && !('defaultPassword' in d)
+        && !('pwd' in d) && !('plainPassword' in d);
     }
 
     // A non-admin profile collection must never be used to smuggle a
@@ -297,13 +226,22 @@ service cloud.firestore {
           && resource.data.email == request.auth.token.email)
         || isSuperadmin()
         || (isStaff() && sameCollege(resource.data));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      // A list is authorised per candidate document, so a query the client
+      // constrains to the caller's own row (where('userId','==',auth.uid),
+      // where('uid',…), or documentId) satisfies ownsStudentProfile and is
+      // allowed, while an unbounded sweep still fails. Without this line the
+      // student dashboard cannot resolve its own profile and reports "no
+      // student record" for a correctly provisioned account.
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+        || ownsStudentProfile(id, resource.data));
       allow create: if canManageCollege(request.resource.data)
-        && noPrivilegedRole(request.resource.data);
+        && noPrivilegedRole(request.resource.data)
+        && noPasswordField();
       allow update: if canManageCollege(resource.data)
         && request.resource.data.collegeId == resource.data.collegeId
         && (!('userId' in resource.data) || request.resource.data.userId == resource.data.userId)
-        && noPrivilegedRole(request.resource.data);
+        && noPrivilegedRole(request.resource.data)
+        && noPasswordField();
       allow delete: if canManageCollege(resource.data);
     }
 
@@ -313,7 +251,14 @@ service cloud.firestore {
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      // Same reasoning as students: sign-in identity resolution queries faculty
+      // by uid/email. A staff-only list rule locks out precisely the accounts
+      // whose claim has not been issued yet, so the self-scoped alternatives
+      // are allowed here.
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+        || isOwner(id)
+        || resource.data.uid == request.auth.uid
+        || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       allow create: if canManageCollege(request.resource.data)
         && noPrivilegedRole(request.resource.data)
         && noPasswordField();
@@ -331,7 +276,12 @@ service cloud.firestore {
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow write: if isSuperadmin();
+      // Older importers stored a plaintext `password` on staff profiles. These
+      // collections are readable by other staff of the college, so a credential
+      // there is a leak — and the reason "open Firestore and read the password"
+      // became the workflow. No profile document may carry one.
+      allow create, update: if isSuperadmin() && noPasswordField();
+      allow delete: if isSuperadmin();
     }
 
     match /hods/{id} {
@@ -340,8 +290,8 @@ service cloud.firestore {
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow create: if canManageCollege(request.resource.data) && noPrivilegedRole(request.resource.data);
-      allow update, delete: if canManageCollege(resource.data);
+      allow create: if canManageCollege(request.resource.data) && noPrivilegedRole(request.resource.data) && noPasswordField();
+      allow update, delete: if canManageCollege(resource.data) && noPasswordField();
     }
 
     match /mentors/{id} {
@@ -350,8 +300,8 @@ service cloud.firestore {
         || sameCollege(resource.data)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow create: if canManageCollege(request.resource.data) && noPrivilegedRole(request.resource.data);
-      allow update, delete: if canManageCollege(resource.data);
+      allow create: if canManageCollege(request.resource.data) && noPrivilegedRole(request.resource.data) && noPasswordField();
+      allow update, delete: if canManageCollege(resource.data) && noPasswordField();
     }
 
     match /superadmins/{id} {
@@ -359,7 +309,7 @@ service cloud.firestore {
         || isOwner(id)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email);
-      allow write: if isSuperadmin();
+      allow write: if isSuperadmin() && noPasswordField();
     }
 
     match /universities/{id} {
@@ -372,19 +322,29 @@ service cloud.firestore {
       allow write: if isSuperadmin();
 
       match /students/{id} {
-        allow read: if ownsStudentProfile(id, resource.data)
+        allow get: if ownsStudentProfile(id, resource.data)
           || isSuperadmin()
           || (isStaff() && collegeId() == collegeId);
-        allow write: if isSuperadmin()
+        // `list` may reference resource.data because rules are evaluated per
+        // candidate document; the client's query has to be constrained to rows
+        // that satisfy the rule. The student branch therefore only admits a
+        // query scoped to the caller's own record (studentDocId / userId),
+        // which is what studentRecordResolver issues.
+        allow list: if isSignedIn() && (isSuperadmin()
+          || (isStaff() && collegeId() == collegeId)
+          || ownsStudentProfile(id, resource.data));
+        allow create, update: if (isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId)) && noPasswordField();
+        allow delete: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
-      // Reads inside a college path use the path as the tenant boundary. For a
-      // list/query request there is no `resource`, and for legacy (no custom
-      // claim) staff resolving `collegeId()` on top of `role()` can exceed the
-      // 10 get()/exists() call budget. Reads therefore authorise on the role
-      // plus the college path; the client queries a college path it already
-      // controls. Writes keep the strict college check above.
+      // Reads inside a college path use the PATH as the tenant boundary, which
+      // is cheaper and stricter than reading collegeId off each document.
+      // (Rules are evaluated per candidate document for a list, so a rule may
+      // reference resource.data — but the client's query must be constrained to
+      // rows that satisfy it, otherwise the whole request fails. That is why the
+      // app's queries always carry the collegeId/documentId predicate.)
       match /config/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());

@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { httpsCallable } from 'firebase/functions'
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, MenuItem, Stack, TextField, Typography } from '@mui/material'
-import { AdminPanelSettings, Search, VerifiedUser } from '@mui/icons-material'
+import { AdminPanelSettings, Build, Search, VerifiedUser } from '@mui/icons-material'
+import CredentialsTable from '../components/CredentialsTable'
+import { runIdentityRepair, type RepairResult } from '../api/identityApi'
 import { functions } from '@/Firebase/config'
 
 type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent'
@@ -16,6 +18,11 @@ export default function AccessControl() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [auditEmail, setAuditEmail] = useState('')
   const [audit, setAudit] = useState<any>(null)
+  // Identity repair: reconciles Firestore profiles with Firebase Authentication.
+  const [repairCollege, setRepairCollege] = useState('')
+  const [repairDryRun, setRepairDryRun] = useState(true)
+  const [repairResult, setRepairResult] = useState<RepairResult | null>(null)
+  const [repairBusy, setRepairBusy] = useState(false)
 
   const change = (field: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement>) => setForm(prev => ({ ...prev, [field]: event.target.value }))
   const submit = async (event: React.FormEvent) => {
@@ -44,6 +51,24 @@ export default function AccessControl() {
     catch (error: any) { setMessage({ type: 'error', text: error?.message || 'Unable to backfill claims' }) }
     finally { setBusy(false) }
   }
+  const runRepair = async (dryRun: boolean) => {
+    if (!dryRun && !window.confirm('Apply the repair? This creates missing Auth accounts, re-issues claims and deletes plaintext password fields from profile documents. Users must sign out and back in afterwards.')) return
+    setRepairBusy(true); setMessage(null); setRepairResult(null)
+    try {
+      const data = await runIdentityRepair({
+        dryRun,
+        collegeId: repairCollege.trim() || undefined,
+        limit: 500,
+        deliveryMode: 'reset-email',
+        continueUrl: window.location.origin + '/login',
+      })
+      setRepairResult(data)
+      setMessage({ type: data.errors?.length ? 'error' : 'success', text: data.message })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error?.message || 'Unable to run identity repair' })
+    } finally { setRepairBusy(false) }
+  }
+
   return <Box sx={{ maxWidth: 1000, mx: 'auto', p: { xs: 2, md: 4 } }}>
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 1 }}><AdminPanelSettings color="primary" fontSize="large" /><Typography variant="h4" sx={{ fontWeight: 700 }}>Access Control</Typography></Stack>
     <Typography color="text.secondary" sx={{ mb: 3 }}>Create, grant, repair, or audit a user identity. Grants update Auth claims and every relevant Firestore profile in one audited operation.</Typography>
@@ -57,6 +82,52 @@ export default function AccessControl() {
         <TextField label="Password for a new account" type="password" value={form.password} onChange={change('password')} helperText="Optional; minimum 10 characters" />
         <Button type="submit" variant="contained" size="large" disabled={busy} startIcon={busy ? <CircularProgress size={18} /> : <VerifiedUser />} sx={{ alignSelf: 'center' }}>Grant identity</Button>
       </Box>
+    </CardContent></Card>
+    <Card sx={{ mb: 3 }}><CardContent>
+      <Typography variant="h6" gutterBottom>Identity repair — Firestore ↔ Firebase Authentication</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Finds profiles that have no Auth account (so the person cannot sign in at all), accounts with no role
+        claim (so every page reads “Missing or insufficient permissions”), missing users/{'{uid}'} lookup
+        documents, disabled accounts, and legacy plaintext password fields. Preview it first; applying also
+        issues password-reset links for any account it had to create.
+      </Typography>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { md: 'flex-end' } }}>
+        <TextField fullWidth label="College ID (optional)" value={repairCollege} onChange={e => setRepairCollege(e.target.value)} helperText="Leave empty to sweep every college" />
+        <Button variant="outlined" disabled={repairBusy || !repairDryRun} startIcon={repairBusy ? <CircularProgress size={18} /> : <Search />} onClick={() => runRepair(true)}>Preview</Button>
+        <Button variant="contained" color="warning" disabled={repairBusy || repairDryRun} startIcon={<Build />} onClick={() => runRepair(false)}>Apply repair</Button>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={repairDryRun} onChange={e => setRepairDryRun(e.target.checked)} />
+          <Typography variant="body2">Dry run only</Typography>
+        </label>
+      </Stack>
+      {repairResult && <Box sx={{ mt: 3 }}>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 2 }}>
+          <Chip label={`scanned ${repairResult.scanned}`} />
+          <Chip label={`needs repair ${repairResult.broken}`} color={repairResult.broken ? 'warning' : 'default'} />
+          <Chip label={`repaired ${repairResult.repaired}`} color={repairResult.repaired ? 'success' : 'default'} />
+          <Chip label={`Auth accounts created ${repairResult.authCreated}`} />
+          <Chip label={`claims issued ${repairResult.claimsIssued}`} />
+          <Chip label={`users docs ${repairResult.usersDocsCreated}`} />
+          <Chip label={`plaintext passwords deleted ${repairResult.secretsStripped}`} color={repairResult.secretsStripped ? 'error' : 'default'} />
+          {repairResult.itemsTruncated && <Chip label="list truncated — re-run per collection" color="warning" />}
+        </Stack>
+        {repairResult.credentials?.length ? <Box sx={{ mb: 2 }}>
+          <CredentialsTable
+            rows={repairResult.credentials.map(c => ({ email: c.email, password: c.password, resetLink: c.resetLink, status: 'created' as const }))}
+            filename="identity-repair-credentials"
+            title="Credentials created by this repair (shown once)"
+          />
+        </Box> : null}
+        <Box sx={{ bgcolor: 'action.hover', borderRadius: 1, p: 2, maxHeight: 320, overflow: 'auto' }}>
+          {repairResult.items.length === 0 ? <Typography variant="body2">No identities need repair in this scope.</Typography> : repairResult.items.map((item, index) => (
+            <Typography key={`${item.collection}-${item.docId}-${index}`} variant="body2" sx={{ mb: 1 }}>
+              <strong>{item.collection}/{item.docId}</strong> — {item.email || 'no email'} · {item.findings.join(', ')}
+              {item.actions?.length ? <em> → {item.actions.join('; ')}</em> : null}
+              {item.error ? <span style={{ color: 'crimson' }}> · {item.error}</span> : null}
+            </Typography>
+          ))}
+        </Box>
+      </Box>}
     </CardContent></Card>
     <Card><CardContent><Typography variant="h6" gutterBottom>Identity audit</Typography><Box component="form" onSubmit={runAudit} sx={{ display: 'flex', gap: 2, mb: 2 }}><TextField fullWidth label="Account email" type="email" required value={auditEmail} onChange={e => setAuditEmail(e.target.value)} /><Button type="submit" variant="outlined" disabled={busy} startIcon={<Search />}>Audit</Button></Box>
       {audit && <Box sx={{ bgcolor: 'action.hover', borderRadius: 1, p: 2, overflow: 'auto' }}><Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 2 }}><Chip label={audit.uid ? `UID ${audit.uid}` : 'No Auth account'} color={audit.uid ? 'success' : 'error'} />{(audit.issues || []).map((issue: string) => <Chip key={issue} label={issue} color="warning" />)}</Stack><pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: 12 }}>{JSON.stringify(audit, null, 2)}</pre></Box>}

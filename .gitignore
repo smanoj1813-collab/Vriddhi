@@ -33,7 +33,12 @@ Thumbs.db
 
 # Firebase
 .firebase/
-.firebaserc
+# .firebaserc is intentionally TRACKED: it pins the Google Cloud project that
+# the rules, functions and hosting in this repository belong to. Leaving it out
+# is what let deploys drift (a deploy without --project either fails or targets
+# whatever project the CLI remembered last), and the identity bug was partly a
+# deployment problem. It contains no secrets — only the project id.
+# .firebaserc
 
 # Project artifacts / scratch
 *.BACKUP

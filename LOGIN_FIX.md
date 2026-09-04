@@ -1,3 +1,21 @@
+> **SUPERSEDED (2026-09-04) — read `docs/AUTH_LOGIN_PROVISIONING_AUDIT_2026-09-04.md`.**
+> Diagnoses here were correct about the *symptom* (password accepted → every read denied, because
+> authorization is claim-only) but the cures described are not the shipped ones:
+> * “Null-safe identity resolution: claim → `users/{uid}` → `superadmins/{uid}`” — the
+>   `users/{uid}` fallback for **role resolution** was removed. Rules read the claim only;
+>   `isSuperadmin()` may still check `superadmins/{uid}`, because that collection is writable
+>   exclusively by an existing superadmin. A claim-less account is repaired, not trusted:
+>   `syncMyIdentity` at sign-in, `auditAndRepairIdentities` (Access Control → Identity repair)
+>   or `npm run identity:doctor -- --apply`.
+> * The client-REST provisioning path described here (Identity Toolkit `signUp` + writing
+>   `password` onto the profile document) is **gone**. Passwords are never stored; the only
+>   supported paths are `bulkCreateStudentAccounts`, `bulkProvisionStaff`, `grantUserRole`, and
+>   `deliveryMode: 'reset-email'` for handing out a credential without displaying one.
+> * §“Deploy” below lists `firebase deploy --only firestore:rules`. That is exactly the
+>   half-deploy that made this bug look unfixed: the project must deploy rules **and** functions
+>   **and** hosting together (`npm run deploy:all`), and the frontend now refuses to run an import
+>   against a backend that reports a different `apiVersion`.
+
 # Fix: Superadmin / Faculty / Student logins failing (ACCOUNT_NOT_FOUND)
 
 ## Symptoms

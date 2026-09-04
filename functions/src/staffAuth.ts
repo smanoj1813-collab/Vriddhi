@@ -18,8 +18,17 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
-import * as crypto from 'crypto'
 import * as logger from 'firebase-functions/logger'
+import {
+  findAuthUserByEmail,
+  generateRandomPassword,
+  isValidEmail,
+  normalizeEmail,
+  secretFieldDeletes,
+  verifyAuthAccount,
+  verifyCaller,
+  withApiVersion,
+} from './identityShared'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -59,6 +68,17 @@ interface BulkStaffPayload {
   collegeId: string
   staff: StaffImportRow[]
   defaultPassword?: string
+  /**
+   * What to do when a profile for the email already exists in this college:
+   *   'skip'  (default) leave the account untouched and report it as skipped —
+   *             no credential is issued, so use `sendResetEmail` instead.
+   *   'reset' reclaim it: set a new password (or mint a reset link) and re-issue
+   *             claims, which is what you want when the password is lost.
+   */
+  onExisting?: 'skip' | 'reset'
+  /** 'temp-password' returns a one-time password; 'reset-email' returns a link. */
+  deliveryMode?: 'temp-password' | 'reset-email'
+  continueUrl?: string
 }
 
 interface StaffResult {
@@ -71,6 +91,16 @@ interface StaffResult {
   password?: string
   reclaimed?: boolean
   error?: string
+  /** created | reclaimed | skipped | failed — the importer's copy of the truth. */
+  status?: 'created' | 'reclaimed' | 'skipped' | 'failed'
+  /** Faculty profile document id, stored on users/{uid} for owned-get lookups. */
+  facultyDocId?: string
+  /** True only when the Auth account was read back and matches this row. */
+  authVerified?: boolean
+  delivery?: 'temp-password' | 'reset-link' | 'none'
+  resetLink?: string
+  /** Plaintext password fields removed from the profile document. */
+  secretsStripped?: number
 }
 
 interface BulkStaffResult {
@@ -78,82 +108,26 @@ interface BulkStaffResult {
   total: number
   created: number
   reclaimed: number
+  skipped: number
   failed: number
+  authVerified: number
+  /** Plaintext credential fields removed from profile documents. */
+  secretsStripped: number
   errors: Array<{ row: number; email: string; message: string }>
   staff: StaffResult[]
   collegeId: string
+  /** Client compares this with its own expectation to detect stale deploys. */
+  apiVersion: string
+  warnings?: string[]
 }
 
 const STAFF_PROFILE_COLLECTION = 'faculty'
-const STAFF_CREATOR_ROLES = ['superadmin', 'admin', 'hod']
 // Roles that may land in the staff profile collection.
 const ALLOWED_STAFF_ROLES: StaffRole[] = ['faculty', 'hod', 'principal', 'admin']
 
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
-
-function generateRandomPassword(length = 14): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const lower = 'abcdefghijkmnopqrstuvwxyz'
-  const nums = '23456789'
-  const special = '!@#$%^&*'
-  const all = upper + lower + nums + special
-  const pick = (set: string) => set[crypto.randomInt(0, set.length)]
-  const chars = [pick(upper), pick(lower), pick(nums), pick(special)]
-  for (let i = chars.length; i < length; i++) chars.push(pick(all))
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1)
-    ;[chars[i], chars[j]] = [chars[j], chars[i]]
-  }
-  return chars.join('')
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-async function verifyCaller(
-  request: any
-): Promise<{ uid: string; role: string; collegeId?: string; name?: string }> {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated')
-  }
-  const db = admin.firestore()
-  const userDoc = await db.doc(`users/${request.auth.uid}`).get()
-  let userData = userDoc.data()
-  if (!userData) {
-    // Legacy superadmins may only have a superadmins/{uid} profile doc.
-    const superadminDoc = await db.doc(`superadmins/${request.auth.uid}`).get()
-    if (superadminDoc.exists) {
-      userData = { role: 'superadmin' } as { role: string }
-    }
-  }
-  if (!userData) {
-    throw new HttpsError('not-found', 'Caller profile not found')
-  }
-  const role = String(userData.role || '').toLowerCase()
-  if (!STAFF_CREATOR_ROLES.includes(role)) {
-    throw new HttpsError('permission-denied', 'Only admins can import staff')
-  }
-  return {
-    uid: request.auth.uid,
-    role,
-    collegeId: userData.collegeId as string | undefined,
-    name: userData.name as string | undefined,
-  }
-}
-
-/**
- * Find an existing Auth user by email. Returns null when none exists.
- * getUserByEmail throws (not-found) when the email is unknown.
- */
-async function findAuthUserByEmail(email: string): Promise<admin.auth.UserRecord | null> {
-  try {
-    return await admin.auth().getUserByEmail(email)
-  } catch (err: any) {
-    if (err?.code === 'auth/user-not-found') return null
-    throw err
-  }
-}
 
 /**
  * Make sure an Auth account exists for `email` and that it belongs to the
@@ -211,7 +185,20 @@ export const bulkProvisionStaff = onCall(
   },
   async (request): Promise<BulkStaffResult> => {
     const startTime = Date.now()
-    const { collegeId, staff, defaultPassword } = (request.data || {}) as BulkStaffPayload
+    const {
+      collegeId,
+      staff,
+      defaultPassword,
+      onExisting = 'skip',
+      deliveryMode = 'temp-password',
+      continueUrl,
+    } = (request.data || {}) as BulkStaffPayload
+    if (!['skip', 'reset'].includes(onExisting)) {
+      throw new HttpsError("invalid-argument", `onExisting must be 'skip' or 'reset'`)
+    }
+    if (!['temp-password', 'reset-email'].includes(deliveryMode)) {
+      throw new HttpsError("invalid-argument", `deliveryMode must be 'temp-password' or 'reset-email'`)
+    }
 
     // ── Validate payload ──
     if (!collegeId || typeof collegeId !== 'string') {
@@ -249,7 +236,11 @@ export const bulkProvisionStaff = onCall(
     const errors: Array<{ row: number; email: string; message: string }> = []
     let createdCount = 0
     let reclaimedCount = 0
+    let skippedCount = 0
     let failedCount = 0
+    let authVerifiedCount = 0
+    let secretsStrippedTotal = 0
+    const warnings: string[] = []
 
     // Track emails/ids we have already written in THIS batch so duplicate rows
     // inside the same CSV don't collide with one another.
@@ -260,7 +251,7 @@ export const bulkProvisionStaff = onCall(
       const row = staff[i]
       const rowNum = i + 1
 
-      const email = String(row.email || '').trim().toLowerCase()
+      const email = normalizeEmail(row.email)
       const firstName = String(row.firstName || row.name || '').trim()
       const lastName = String(row.lastName || '').trim()
       const name = `${firstName} ${lastName}`.trim() || email.split('@')[0]
@@ -274,6 +265,7 @@ export const bulkProvisionStaff = onCall(
           name,
           role: 'faculty',
           success: false,
+          status: 'failed',
           error: message,
         })
       }
@@ -283,7 +275,7 @@ export const bulkProvisionStaff = onCall(
         fail('Missing name')
         continue
       }
-      if (!EMAIL_RE.test(email)) {
+      if (!isValidEmail(email)) {
         fail('Invalid email address')
         continue
       }
@@ -309,22 +301,44 @@ export const bulkProvisionStaff = onCall(
         continue
       }
 
+      let profilePreexistedInCollege = false
       try {
-        // ── Reuse an existing profile doc for this college (genuine duplicate
-        //    that already has working credentials). We do NOT reset its
-        //    password, so we cannot hand one back — report it as skipped.
+        // ── Existing profile for this email? Decide per `onExisting`.
+        //    'skip'  → report the row as SKIPPED (not failed): the account
+        //              already works, we simply cannot hand out its password.
+        //              The importer gets a "send reset link" action instead.
+        //    'reset' → reclaim: new credential + claims re-issued.
         const existingProfile = await admin
           .firestore()
           .collection(STAFF_PROFILE_COLLECTION)
           .where('email', '==', email)
           .limit(1)
           .get()
+        let existingProfileDoc: admin.firestore.QueryDocumentSnapshot | null = null
         if (!existingProfile.empty) {
-          const doc = existingProfile.docs[0]
-          const data = doc.data()
-          if (String(data.collegeId || '') === collegeId) {
-            fail(`${email} already exists in this college — skipped (password unchanged)`)
-            continue
+          const candidate = existingProfile.docs[0]
+          if (String(candidate.data().collegeId || '') === collegeId) {
+            existingProfileDoc = candidate
+            profilePreexistedInCollege = true
+            if (onExisting === 'skip') {
+              skippedCount++
+              seenEmails.add(email)
+              seenFacultyIds.add(candidate.id)
+              results.push({
+                id: candidate.id,
+                email,
+                name,
+                role,
+                success: true,
+                status: 'skipped',
+                uid: (candidate.data().uid as string) || undefined,
+                facultyDocId: candidate.id,
+                password: undefined,
+                delivery: 'none',
+                error: undefined,
+              })
+              continue
+            }
           }
         }
 
@@ -336,6 +350,36 @@ export const bulkProvisionStaff = onCall(
           collegeId,
           role,
         })
+
+        // ── Prove the identity exists before touching Firestore. A row is only
+        //    reported as provisioned when a live, enabled Auth account carries
+        //    this role and college. That closes the "profile written, account
+        //    missing" hole for good.
+        const verification = await verifyAuthAccount({
+          uid,
+          email,
+          expectedRole: role,
+          expectedCollegeId: collegeId,
+        })
+        if (!verification.ok) {
+          throw new Error(
+            `Firebase Auth account not usable: ${verification.reason || 'verification failed'}`
+          )
+        }
+        let resetLink: string | undefined
+        if (deliveryMode === 'reset-email') {
+          try {
+            resetLink = await admin
+              .auth()
+              .generatePasswordResetLink(email, continueUrl ? { url: continueUrl } : undefined)
+          } catch (linkErr: any) {
+            logger.error('[StaffAuth] password reset link failed', {
+              email,
+              error: linkErr?.message || linkErr,
+            })
+            warnings.push(`${email}: account is ready but the reset link could not be generated`)
+          }
+        }
 
         const now = admin.firestore.FieldValue.serverTimestamp()
 
@@ -373,12 +417,27 @@ export const bulkProvisionStaff = onCall(
         const db = admin.firestore()
         const batch = db.batch()
 
-        // Profile doc keyed by the stable facultyId (matches client import).
-        batch.set(db.collection(STAFF_PROFILE_COLLECTION).doc(facultyId), profileData, {
-          merge: true,
-        })
+        // Legacy imports stored the plaintext password on the profile document.
+        // Staff can read this collection, so those fields are removed here —
+        // this is what finally deletes the "read the password in Firestore"
+        // workflow instead of reproducing it.
+        const stripFields = existingProfileDoc
+          ? secretFieldDeletes(existingProfileDoc.data() as Record<string, unknown>)
+          : {}
+        if (Object.keys(stripFields).length) secretsStrippedTotal += Object.keys(stripFields).length
 
-        // Role-resolution lookup doc keyed by the Auth uid.
+        // Profile doc keyed by the stable facultyId (matches client import).
+        batch.set(
+          db.collection(STAFF_PROFILE_COLLECTION).doc(facultyId),
+          { ...profileData, ...stripFields },
+          { merge: true }
+        )
+
+        // Role-resolution lookup doc keyed by the Auth uid. `facultyDocId` lets
+        // the app resolve the profile with an owned `get` instead of a query —
+        // rules cannot authorise a LIST for a non-staff-privileged account, and
+        // queries on `faculty` were the second permission-denied source after
+        // login for staff without a users/{uid} document.
         batch.set(
           db.collection('users').doc(uid),
           {
@@ -392,6 +451,7 @@ export const bulkProvisionStaff = onCall(
             department,
             phone: String(row.phone || '').trim(),
             avatar: String(row.profilePhotoUrl || ''),
+            facultyDocId: facultyId,
             status: 'active',
             updatedAt: now,
           },
@@ -416,15 +476,20 @@ export const bulkProvisionStaff = onCall(
           )
         }
 
+        // The college counter only moves for a genuinely new profile, otherwise
+        // every re-import of the same file inflated facultyCount.
         batch.update(collegeRef, {
-          facultyCount: admin.firestore.FieldValue.increment(1),
           updatedAt: now,
+          ...(profilePreexistedInCollege
+            ? {}
+            : { facultyCount: admin.firestore.FieldValue.increment(1) }),
         })
 
         await batch.commit()
 
         seenEmails.add(email)
         seenFacultyIds.add(facultyId)
+        authVerifiedCount++
 
         if (reclaimed) reclaimedCount++
         else createdCount++
@@ -435,9 +500,16 @@ export const bulkProvisionStaff = onCall(
           name,
           role,
           success: true,
+          status: reclaimed ? 'reclaimed' : 'created',
           uid,
-          password,
+          // Never hand out a password in reset-link mode.
+          password: deliveryMode === 'reset-email' ? undefined : password,
           reclaimed,
+          facultyDocId: facultyId,
+          authVerified: true,
+          delivery: deliveryMode === 'reset-email' ? 'reset-link' : 'temp-password',
+          resetLink,
+          secretsStripped: Object.keys(stripFields).length || undefined,
         })
 
         logger.info('[StaffAuth] provisioned staff', {
@@ -474,15 +546,30 @@ export const bulkProvisionStaff = onCall(
       logger.error('[StaffAuth] Failed to write import audit log', logError)
     }
 
-    return {
-      success: failedCount === 0,
+    if (skippedCount > 0) {
+      warnings.push(
+        `${skippedCount} account(s) already existed and were left untouched. Their passwords were NOT changed — use "Send reset link" for those rows, or re-import with "Reset existing passwords" enabled.`
+      )
+    }
+    if (authVerifiedCount < createdCount + reclaimedCount) {
+      warnings.push(
+        `${createdCount + reclaimedCount - authVerifiedCount} row(s) could not be verified against Firebase Authentication.`
+      )
+    }
+
+    return withApiVersion({
+      success: failedCount === 0 && authVerifiedCount === createdCount + reclaimedCount,
       total: staff.length,
       created: createdCount,
       reclaimed: reclaimedCount,
+      skipped: skippedCount,
       failed: failedCount,
+      authVerified: authVerifiedCount,
       errors,
       staff: results,
       collegeId,
-    }
+      secretsStripped: secretsStrippedTotal,
+      warnings,
+    }) as BulkStaffResult
   }
 )

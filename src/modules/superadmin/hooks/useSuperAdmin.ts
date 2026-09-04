@@ -43,6 +43,7 @@ import {
   resetFacultyPassword,
   SuperAdminApiError,
   type ResetCollegeDataResult,
+  type CreateAdminResult,
 } from "../api/superAdminApi";
 
 import {
@@ -205,7 +206,7 @@ export const useAdmins = (
 
 export const useCreateAdmin = () => {
   const queryClient = useQueryClient();
-  return useMutation<Admin, SuperAdminApiError, CreateAdminInput>({
+  return useMutation<CreateAdminResult, SuperAdminApiError, CreateAdminInput>({
     mutationFn: createAdmin,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.admins() });
