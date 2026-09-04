@@ -17,7 +17,12 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
-import * as crypto from 'crypto'
+import {
+  IDENTITY_API_VERSION,
+  generateRandomPassword as sharedGeneratePassword,
+  secretFieldDeletes,
+  verifyAuthAccount,
+} from './identityShared'
 import * as logger from 'firebase-functions/logger'
 
 const db = admin.firestore()
@@ -28,21 +33,7 @@ const COLLEGE_MANAGER_ROLES = ['admin', 'hod', 'principal']
 // Profile collections that map 1:1 (or near) to a person and carry a uid.
 const PROFILE_COLLECTIONS = ['faculty', 'students', 'admins', 'hods', 'mentors'] as const
 
-function generateTemporaryPassword(length = 14): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const lower = 'abcdefghijkmnopqrstuvwxyz'
-  const nums = '23456789'
-  const special = '!@#$%^&*'
-  const all = upper + lower + nums + special
-  const pick = (set: string) => set[crypto.randomInt(0, set.length)]
-  const chars = [pick(upper), pick(lower), pick(nums), pick(special)]
-  for (let i = chars.length; i < length; i++) chars.push(pick(all))
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1)
-    ;[chars[i], chars[j]] = [chars[j], chars[i]]
-  }
-  return chars.join('')
-}
+const generateTemporaryPassword = sharedGeneratePassword
 
 async function getCallerIdentity(uid: string): Promise<{ role: string; collegeId: string | null }> {
   const userDoc = await db.doc(`users/${uid}`).get()
@@ -178,11 +169,41 @@ export const resetUserPassword = onCall(
       by: request.auth.uid,
     })
 
+    // Clear any legacy plaintext password kept on the target's profile documents.
+    // After a rotation those fields are both stale and a leak: staff in the same
+    // college can read these collections, and the presence of the field is what
+    // kept the "open Firestore and copy the password" workflow alive.
+    let secretsStripped = 0
+    for (const collection of PROFILE_COLLECTIONS) {
+      try {
+        const snap = await db.collection(collection).where('uid', '==', target.uid).limit(5).get()
+        for (const doc of snap.docs) {
+          const deletes = secretFieldDeletes(doc.data() as Record<string, unknown>)
+          if (!Object.keys(deletes).length) continue
+          await doc.ref.update(deletes)
+          secretsStripped += Object.keys(deletes).length
+        }
+      } catch {
+        // Best effort: the credential itself has already been rotated.
+      }
+    }
+
+    const verification = await verifyAuthAccount({ uid: target.uid, email: target.email || '' })
+
     return {
+      apiVersion: IDENTITY_API_VERSION,
       success: true,
       uid: target.uid,
       email: target.email,
       temporaryPassword,
+      authVerified: verification.ok,
+      reauthenticateRequired: true,
+      secretsStripped,
+      // A reset link is the no-shared-secret alternative: hand this to the user
+      // instead of a password whenever the mail template is configured.
+      resetLink: target.email
+        ? await auth.generatePasswordResetLink(target.email).catch(() => null)
+        : null,
     }
   }
 )
@@ -282,6 +303,14 @@ export const syncIdentityClaims = onCall(
       logger.error('[syncIdentityClaims] failed to write audit log', logError)
     }
 
-    return { success: errors.length === 0, scanned, updated, skipped, errors }
+    return {
+      apiVersion: IDENTITY_API_VERSION,
+      success: errors.length === 0,
+      scanned,
+      updated,
+      skipped,
+      errors,
+      reauthenticateRequired: updated > 0,
+    }
   }
 )

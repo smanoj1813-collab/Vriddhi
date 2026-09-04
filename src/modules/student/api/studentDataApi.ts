@@ -23,6 +23,7 @@ import {
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/Firebase/config';
+import { resolveStudentRecord } from '../services/studentRecordResolver';
 
 // ─── Types returned to the UI (kept close to existing components) ──────
 
@@ -173,11 +174,11 @@ type FirebaseFirestoreDoc = Awaited<ReturnType<typeof getDocs>>['docs'][number];
 export async function fetchProfile(studentId: string, email?: string): Promise<StudentProfileData | null> {
   if (!studentId) return null;
 
-  const mapDoc = (d: FirebaseFirestoreDoc): StudentProfileData => {
-    const data = d.data() as Record<string, any>;
+  const mapDoc = (id: string, raw: Record<string, any>): StudentProfileData => {
+    const data = raw as Record<string, any>;
     const branch = data.branch || data.department || '';
     return {
-      id: d.id,
+      id,
       name: data.name || 'Student',
       email: data.email || email || '',
       phone: data.phone || data.mobile,
@@ -196,21 +197,20 @@ export async function fetchProfile(studentId: string, email?: string): Promise<S
     };
   };
 
-  // 1) Canonical link written by student provisioning.
-  const byUserId = await getDocs(
-    query(collection(db, 'students'), where('userId', '==', studentId), limit(1))
-  );
-  if (!byUserId.empty) return mapDoc(byUserId.docs[0]);
-
-  // 2) Legacy direct document ID.
-  const byId = await getDoc(doc(db, 'students', studentId));
-  if (byId.exists()) return mapDoc(byId as unknown as FirebaseFirestoreDoc);
-
-  // 3) Legacy `uid` field. Email is display data, not an ownership key.
-  const byUid = await getDocs(
-    query(collection(db, 'students'), where('uid', '==', studentId), limit(1))
-  );
-  if (!byUid.empty) return mapDoc(byUid.docs[0]);
+  // Owned document reads only — see student/services/studentRecordResolver.ts.
+  // A `where('userId','==',uid)` query is denied for a student by the rules
+  // (a list request has no `resource`, so ownership cannot be proven), which is
+  // why the profile used to come back empty for correctly provisioned students.
+  const { record, permissionDenied, errors } = await resolveStudentRecord(studentId, email);
+  if (record) return mapDoc(record.id, record.data);
+  if (permissionDenied) {
+    // Surface it: an empty result here means "no records", and students were
+    // being told they had no profile when the truth was a rules mismatch.
+    throw new Error(
+      'Your student record could not be read because Firestore security rules denied access. ' +
+      'Deploy the current rules and sign out and back in. Details: ' + errors.join(' | ')
+    );
+  }
 
   return null;
 }

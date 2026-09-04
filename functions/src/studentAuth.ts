@@ -3,8 +3,17 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
-import * as crypto from 'crypto'
 import * as logger from 'firebase-functions/logger'
+import {
+  findAuthUserByEmail,
+  generateRandomPassword,
+  isValidEmail,
+  normalizeEmail,
+  toPhoneE164,
+  verifyAuthAccount,
+  verifyCaller,
+  withApiVersion,
+} from './identityShared'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -30,6 +39,15 @@ interface BulkStudentPayload {
   students: StudentImportRow[]
   passwordStrategy?: 'auto' | 'default'
   defaultPassword?: string
+  /**
+   * 'temp-password' (default) generates a password per student and returns it
+   * once to the importer. 'reset-email' sets a random password the student can
+   * never learn and returns a Firebase password-reset link instead, so nobody
+   * has to read or forward a plaintext credential.
+   */
+  deliveryMode?: 'temp-password' | 'reset-email'
+  /** Absolute URL the reset link should return the student to. */
+  continueUrl?: string
 }
 
 interface StudentResult {
@@ -41,6 +59,13 @@ interface StudentResult {
   password?: string
   reclaimed?: boolean
   error?: string
+  /** Student profile document id — clients resolve it without a query. */
+  studentDocId?: string
+  /** True only when the Auth account was read back and matches this row. */
+  authVerified?: boolean
+  /** How the credential reaches the student. */
+  delivery?: 'temp-password' | 'reset-link'
+  resetLink?: string
 }
 
 interface BulkResult {
@@ -49,9 +74,14 @@ interface BulkResult {
   created: number
   reclaimed: number
   failed: number
+  /** Rows whose Firebase Auth account was verified to exist and be usable. */
+  authVerified: number
   errors: Array<{ row: number; regNo: string; message: string }>
   students: StudentResult[]
   collegeId: string
+  /** Client checks this against its own expectation to detect stale deploys. */
+  apiVersion: string
+  warnings?: string[]
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -86,56 +116,10 @@ export const createStudentAuth = onCall(
 // HELPERS
 // ═════════════════════════════════════════════════════════════════════════════
 
-function generateRandomPassword(length = 14): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const lower = 'abcdefghijkmnopqrstuvwxyz'
-  const nums = '23456789'
-  const special = '!@#$%^&*'
-  const all = upper + lower + nums + special
-  const pick = (set: string) => set[crypto.randomInt(0, set.length)]
-  const chars = [pick(upper), pick(lower), pick(nums), pick(special)]
-  for (let i = chars.length; i < length; i++) chars.push(pick(all))
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1)
-    ;[chars[i], chars[j]] = [chars[j], chars[i]]
-  }
-  return chars.join('')
-}
-
 function normalizeSemester(val: number | string | undefined): number {
   if (val === undefined || val === null) return 1
   const parsed = typeof val === 'string' ? parseInt(val, 10) : val
   return isNaN(parsed) ? 1 : parsed
-}
-
-async function verifyCaller(
-  request: any
-): Promise<{ uid: string; role: string; collegeId?: string; name?: string }> {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated')
-  }
-  const userDoc = await admin.firestore().doc(`users/${request.auth.uid}`).get()
-  let userData = userDoc.data()
-  if (!userData) {
-    // Legacy superadmins may only have a superadmins/{uid} profile doc.
-    const superadminDoc = await admin.firestore().doc(`superadmins/${request.auth.uid}`).get()
-    if (superadminDoc.exists) {
-      userData = { role: 'superadmin' } as { role: string }
-    }
-  }
-  if (!userData) {
-    throw new HttpsError('not-found', 'User record not found')
-  }
-  const role = (userData.role as string) || ''
-  if (!['superadmin', 'admin', 'hod'].includes(role)) {
-    throw new HttpsError('permission-denied', 'Only admins can import students')
-  }
-  return {
-    uid: request.auth.uid,
-    role,
-    collegeId: userData.collegeId as string | undefined,
-    name: userData.name as string | undefined,
-  }
 }
 
 async function getCollegeData(collegeId: string) {
@@ -147,19 +131,6 @@ async function getCollegeData(collegeId: string) {
     code: string
     name: string
     studentCount: number
-  }
-}
-
-/**
- * Find an existing Auth user by email. Returns null when none exists.
- * getUserByEmail throws (not-found) when the email is unknown.
- */
-async function findAuthStudentByEmail(email: string): Promise<admin.auth.UserRecord | null> {
-  try {
-    return await admin.auth().getUserByEmail(email)
-  } catch (err: any) {
-    if (err?.code === 'auth/user-not-found') return null
-    throw err
   }
 }
 
@@ -177,8 +148,17 @@ export const bulkCreateStudentAccounts = onCall(
   },
   async (request): Promise<BulkResult> => {
     const startTime = Date.now()
-    const { collegeId, students, passwordStrategy = 'auto', defaultPassword } =
-      request.data as BulkStudentPayload
+    const {
+      collegeId,
+      students,
+      passwordStrategy = 'auto',
+      defaultPassword,
+      deliveryMode = 'temp-password',
+      continueUrl,
+    } = (request.data || {}) as BulkStudentPayload
+    if (!['temp-password', 'reset-email'].includes(deliveryMode)) {
+      throw new HttpsError('invalid-argument', "deliveryMode must be 'temp-password' or 'reset-email'")
+    }
 
     // ── Validate input ──
     if (!collegeId || typeof collegeId !== 'string') {
@@ -273,12 +253,14 @@ export const bulkCreateStudentAccounts = onCall(
     let createdCount = 0
     let reclaimedCount = 0
     let failedCount = 0
+    let authVerifiedCount = 0
+    const warnings: string[] = []
 
     // ── Process each student sequentially (auth creation is not batchable) ──
     for (let i = 0; i < students.length; i++) {
       const row = students[i]
       const rowNum = i + 1
-      const email = String(row.email || '').trim().toLowerCase()
+      const email = normalizeEmail(row.email)
       const regNo = String(row.regNo || '').trim()
 
       // ── Per-row validation (name + email are the only hard requirements,
@@ -291,7 +273,7 @@ export const bulkCreateStudentAccounts = onCall(
         results.push({ regNo, name: '', email, success: false, error: 'Missing name' })
         continue
       }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!isValidEmail(email)) {
         failedCount++
         errors.push({ row: rowNum, regNo, message: 'Invalid email address' })
         results.push({ regNo, name, email, success: false, error: 'Invalid email address' })
@@ -326,11 +308,18 @@ export const bulkCreateStudentAccounts = onCall(
       let reclaimedAuthUid: string | null = null
 
       try {
-        // Generate password
+        // Password/credential handling.
+        //   temp-password: the importer receives a one-time password to hand out.
+        //   reset-email:   the account gets an unknowable random password and the
+        //                  importer receives a Firebase password-reset link, so no
+        //                  plaintext credential ever passes through an admin's
+        //                  hands (the answer to "I have to read the password out of
+        //                  Firestore" — that field should not exist at all).
         const password =
           passwordStrategy === 'default'
-            ? defaultPassword as string
+            ? (defaultPassword as string)
             : generateRandomPassword()
+        const phoneNumber = toPhoneE164(row.phone)
 
         // 1. Create the Firebase Auth user — or RECLAIM an orphaned one.
         //    After a college reset the Auth account can outlive its Firestore
@@ -340,16 +329,14 @@ export const bulkCreateStudentAccounts = onCall(
         //    credential we return works, and re-issue its claims.
         let userRecord: admin.auth.UserRecord
         if (existingUserEmails.has(email)) {
-          const existing = await findAuthStudentByEmail(email)
+          const existing = await findAuthUserByEmail(email)
           if (!existing) {
             // Defensive: set membership drifted. Fall through to creation.
             userRecord = await auth.createUser({
               email,
               password,
               displayName: name,
-              phoneNumber: row.phone
-                ? `+91${row.phone.replace(/\D/g, '').slice(-10)}`
-                : undefined,
+              phoneNumber,
               disabled: false,
             })
             createdAuthUid = userRecord.uid
@@ -365,9 +352,7 @@ export const bulkCreateStudentAccounts = onCall(
               email,
               password,
               displayName: name,
-              phoneNumber: row.phone
-                ? `+91${row.phone.replace(/\D/g, '').slice(-10)}`
-                : undefined,
+              phoneNumber,
               disabled: false,
             })
             userRecord = existing
@@ -378,7 +363,7 @@ export const bulkCreateStudentAccounts = onCall(
             email,
             password,
             displayName: name,
-            phoneNumber: row.phone ? `+91${row.phone.replace(/\D/g, '').slice(-10)}` : undefined,
+            phoneNumber,
             disabled: false,
           })
           createdAuthUid = userRecord.uid
@@ -386,7 +371,44 @@ export const bulkCreateStudentAccounts = onCall(
 
         // Student role/college claims drive rule checks and let the cleanup
         // callable delete Auth accounts even when profile docs are missing.
+        // Firestore rules take the role from the token claim ONLY, so a missing
+        // claim means an account that can sign in but read nothing.
         await auth.setCustomUserClaims(userRecord.uid, { role: 'student', collegeId })
+
+        // 1b. Prove the identity actually exists before we touch Firestore.
+        //     Without this step a failed/omitted Auth write still produced a
+        //     student document, which is precisely the "created in Firestore but
+        //     not in Authentication" state the project kept hitting.
+        const verification = await verifyAuthAccount({
+          uid: userRecord.uid,
+          email,
+          expectedRole: 'student',
+          expectedCollegeId: collegeId,
+        })
+        if (!verification.ok) {
+          throw new Error(
+            `Firebase Auth account not usable: ${verification.reason || 'verification failed'}`
+          )
+        }
+
+        // 1c. Optional credential delivery through the reset-link flow.
+        let resetLink: string | undefined
+        if (deliveryMode === 'reset-email') {
+          try {
+            resetLink = await auth.generatePasswordResetLink(
+              email,
+              continueUrl ? { url: continueUrl } : undefined
+            )
+          } catch (linkErr: any) {
+            // The account is valid; only the link could not be minted (for
+            // example an unverified continueUrl domain). Report it as a warning
+            // on the row rather than discarding a working account.
+            logger.error('[StudentAuth] password reset link failed', {
+              email,
+              error: linkErr?.message || linkErr,
+            })
+          }
+        }
 
         // 2. Prepare the canonical student doc in /students
         const studentRef = db.collection('students').doc()
@@ -415,7 +437,13 @@ export const bulkCreateStudentAccounts = onCall(
           importedAt: admin.firestore.FieldValue.serverTimestamp(),
         }
 
-        // 3. Prepare the user doc in /users (for auth context resolution)
+        // 3. Prepare the user doc in /users (for auth context resolution).
+        //    `studentDocId` is the important part: a student may only read their
+        //    OWN student profile under the rules, and rules cannot authorise a
+        //    query (LIST) for a student. Storing the document id on the caller's
+        //    own users/{uid} document lets the client resolve the profile with
+        //    two owned `get` reads — no query, no composite index, no
+        //    "Missing or insufficient permissions" on the student dashboard.
         const userRef = db.collection('users').doc(userRecord.uid)
         const userData = {
           uid: userRecord.uid,
@@ -430,6 +458,7 @@ export const bulkCreateStudentAccounts = onCall(
           batch: String(row.batch || '').trim(),
           division: String(row.division || '').trim(),
           regNo,
+          studentDocId: studentRef.id,
           avatar: '',
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           status: 'active',
@@ -445,11 +474,12 @@ export const bulkCreateStudentAccounts = onCall(
           .doc(regNo || studentRef.id)
         const batch = db.batch()
         batch.create(studentRef, studentData)
-        batch.create(userRef, userData)
-        batch.create(collegeStudentRef, {
-          ...studentData,
-          studentDocId: studentRef.id,
-        })
+        batch.set(userRef, userData, { merge: true })
+        // The per-college mirror is merged rather than created: a re-import
+        // after a partial failure must not abort the row, and legacy mirror
+        // documents written by older importers carried a plaintext `password`
+        // field, which is stripped here for good.
+        batch.set(collegeStudentRef, { ...studentData, studentDocId: studentRef.id }, { merge: true })
         batch.update(db.collection('colleges').doc(collegeId), {
           studentCount: admin.firestore.FieldValue.increment(1),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -457,6 +487,7 @@ export const bulkCreateStudentAccounts = onCall(
         await batch.commit()
 
         // Track success
+        authVerifiedCount++
         existingEmails.add(email)
         existingRegNos.add(regNo)
         existingUserEmails.add(email)
@@ -469,8 +500,13 @@ export const bulkCreateStudentAccounts = onCall(
           email,
           success: true,
           uid: userRecord.uid,
-          password,
+          // In reset-link mode the importer must not be handed a password.
+          password: deliveryMode === 'reset-email' ? undefined : password,
           reclaimed: !!reclaimedAuthUid,
+          studentDocId: studentRef.id,
+          authVerified: true,
+          delivery: deliveryMode === 'reset-email' ? 'reset-link' : 'temp-password',
+          resetLink,
         })
 
         logger.info(`[StudentAuth] ${reclaimedAuthUid ? 'Reclaimed' : 'Created'} student`, {
@@ -535,15 +571,23 @@ export const bulkCreateStudentAccounts = onCall(
       })
     }
 
-    return {
-      success: failedCount === 0,
+    if (authVerifiedCount < createdCount + reclaimedCount) {
+      warnings.push(
+        `${createdCount + reclaimedCount - authVerifiedCount} row(s) were not verified against Firebase Authentication.`
+      )
+    }
+
+    return withApiVersion({
+      success: failedCount === 0 && authVerifiedCount === createdCount + reclaimedCount,
       total: students.length,
       created: createdCount,
       reclaimed: reclaimedCount,
       failed: failedCount,
+      authVerified: authVerifiedCount,
       errors,
       students: results,
       collegeId,
-    }
+      warnings,
+    }) as BulkResult
   }
 )

@@ -5,6 +5,12 @@
 import { db, functions } from '@/Firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import {
+  DEPLOY_COMMAND,
+  describeIdentityError,
+  identityBackendMismatch,
+  type CredentialDelivery,
+} from '@/shared/services/identityBackend';
+import {
   collection,
   doc,
   getDoc,
@@ -405,7 +411,23 @@ export async function bulkUpdateCollegeStatus(
 // ADMIN API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════
 
-export async function createAdmin(input: CreateAdminInput): Promise<Admin> {
+/**
+ * `createAdmin` returns the created profile plus the one-time credential facts
+ * the caller has to surface. They live on the response only: nothing here is
+ * written to Firestore, so a password cannot outlive the screen that showed it.
+ */
+export type CreateAdminResult = Admin & {
+  /** Firebase Auth uid — equal to `id`; kept explicit because the profile
+   *  document id and the uid are the same value only for freshly granted roles. */
+  uid?: string;
+  phone?: string;
+  department?: string;
+  temporaryPassword?: string;
+  authVerified?: boolean;
+  reauthenticateRequired?: boolean;
+};
+
+export async function createAdmin(input: CreateAdminInput): Promise<CreateAdminResult> {
   // Privileged accounts are created server-side via grantUserRole (Admin SDK)
   // so the Auth account is created with the correct custom CLAIMS (role +
   // collegeId). The old client REST path could not set claims, leaving a
@@ -427,6 +449,8 @@ export async function createAdmin(input: CreateAdminInput): Promise<Admin> {
       collegeId: string | null;
       created: boolean;
       temporaryPassword?: string;
+      authVerified?: boolean;
+      reauthenticateRequired?: boolean;
     }
   >(functions, "grantUserRole");
 
@@ -455,7 +479,9 @@ export async function createAdmin(input: CreateAdminInput): Promise<Admin> {
     ...(data.temporaryPassword ? { temporaryPassword: data.temporaryPassword } : {}),
     ...(input.phone ? { phone: input.phone } : {}),
     ...(input.department ? { department: input.department } : {}),
-  } as Admin & { temporaryPassword?: string };
+    ...(data.authVerified === false ? { authVerified: false } : {}),
+    ...(data.reauthenticateRequired ? { reauthenticateRequired: true } : {}),
+  };
 }
 
 export async function promoteToAdmin(payload: {
@@ -621,26 +647,40 @@ export async function updateStudentSuperAdmin(studentId: string, updates: Update
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function importUsers(input: ImportUsersInput): Promise<ImportResult> {
-  // Separate students from other roles
+  // Separate students from other roles: students are provisioned by
+  // bulkCreateStudentAccounts, staff by bulkProvisionStaff. Both run in the
+  // Admin SDK so an Auth account, the custom claims, the users/{uid} lookup doc
+  // and the profile document are written together and then VERIFIED.
   const students = input.users.filter(u => u.role === 'student');
   const nonStudents = input.users.filter(u => u.role !== 'student');
 
-  const imported: Array<{ id: string; email: string; password?: string }> = [];
+  const imported: ImportResult["imported"] = [];
   const errors: string[] = [];
-  const failedStudents: Array<{ name: string; email: string; regNo: string; reason: string }> = [];
+  const warnings: string[] = [];
+  const failedStudents: NonNullable<ImportResult["failedStudents"]> = [];
   let studentCount = 0;
   let facultyCount = 0;
+  let skipped = 0;
+  let authVerified = 0;
+
+  if (!input.collegeId) {
+    throw new SuperAdminApiError("A college must be selected before importing users.");
+  }
 
   // ── Students: use Cloud Function (creates Auth + Firestore) ──────────────
   if (students.length > 0) {
     try {
       const bulkCreateFn = httpsCallable<
-        { collegeId: string; students: any[] },
-        { success: boolean; total: number; created: number; failed: number; errors: any[]; students: any[] }
+        { collegeId: string; students: any[]; deliveryMode?: CredentialDelivery },
+        {
+          success: boolean; total: number; created: number; reclaimed: number; failed: number;
+          authVerified?: number; errors: any[]; students: any[]; warnings?: string[]; apiVersion?: string;
+        }
       >(functions, 'bulkCreateStudentAccounts');
 
       const result = await bulkCreateFn({
         collegeId: input.collegeId,
+        deliveryMode: input.deliveryMode,
         students: students.map(s => ({
           regNo: s.regNo || '',
           name: s.name,
@@ -659,15 +699,31 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
 
       const data = result.data;
 
+      // Hard gate: if the deployed function predates the Auth-verification
+      // contract, STOP and say so. Reporting "0 failures" against a stale
+      // backend is what made this look like a rules problem for days.
+      const mismatch = identityBackendMismatch(data, 'bulkCreateStudentAccounts');
+      if (mismatch) throw new Error(mismatch.message);
+
       // The callable reports each failed row twice — once in `students` (with
       // success:false) and once in `errors`. Use `students` as the single
       // source of truth so the failed count isn't doubled.
       for (const student of data.students || []) {
         if (student.success) {
+          if (student.authVerified) authVerified++;
+          else warnings.push(`${student.email}: created but the Firebase Auth account could not be verified`);
           imported.push({
-            id: student.uid,
+            id: student.uid || student.studentDocId || '',
             email: student.email,
             password: student.password,
+            resetLink: student.resetLink,
+            name: student.name,
+            role: 'student',
+            uid: student.uid,
+            docId: student.studentDocId,
+            status: student.reclaimed ? 'reclaimed' : 'created',
+            authVerified: student.authVerified !== false,
+            delivery: student.delivery,
           });
           studentCount++;
         } else {
@@ -682,14 +738,33 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         }
       }
 
+      if (data.warnings?.length) warnings.push(...data.warnings);
+
+      // Nothing created and nothing reported as failed means the batch never
+      // ran at all (region/permissions/quota). Surface it instead of a green 0.
+      if (data.total > 0 && data.created + data.reclaimed === 0 && data.failed === 0) {
+        errors.push(
+          'The import reported no created and no failed rows — the Cloud Function did not process the batch. ' +
+          `Verify the deployment: ${DEPLOY_COMMAND}`
+        );
+      }
+      if (typeof data.authVerified === 'number' && data.authVerified < data.created + data.reclaimed) {
+        warnings.push(
+          `${data.created + data.reclaimed - data.authVerified} student(s) have a profile but no verified Auth account. ` +
+          'Run Superadmin → Access Control → Identity repair to close the gap.'
+        );
+      }
+
       console.log('[ImportUsers] Cloud Function result:', {
         total: data.total,
         created: data.created,
+        reclaimed: data.reclaimed,
+        authVerified: data.authVerified,
         failed: data.failed,
       });
     } catch (cfErr: any) {
       console.error('[ImportUsers] Cloud Function error:', cfErr);
-      errors.push(`Cloud Function error: ${cfErr.message || 'Failed to call bulkCreateStudentAccounts'}`);
+      throw new SuperAdminApiError(describeIdentityError(cfErr, 'bulkCreateStudentAccounts'));
     }
   }
 
@@ -701,11 +776,16 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
   if (nonStudents.length > 0) {
     try {
       const bulkProvision = httpsCallable<
-        { collegeId: string; staff: any[] },
+        { collegeId: string; staff: any[]; deliveryMode?: CredentialDelivery; onExisting?: 'skip' | 'reset' },
         {
           created: number;
           reclaimed: number;
+          skipped?: number;
           failed: number;
+          authVerified?: number;
+          warnings?: string[];
+          apiVersion?: string;
+          errors: any[];
           staff: Array<{
             id: string;
             email: string;
@@ -715,6 +795,11 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
             uid?: string;
             password?: string;
             reclaimed?: boolean;
+            status?: 'created' | 'reclaimed' | 'skipped' | 'failed';
+            facultyDocId?: string;
+            authVerified?: boolean;
+            delivery?: 'temp-password' | 'reset-link' | 'none';
+            resetLink?: string;
             error?: string;
           }>;
         }
@@ -722,6 +807,8 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
 
       const staffResult = await bulkProvision({
         collegeId: input.collegeId,
+        deliveryMode: input.deliveryMode,
+        onExisting: input.onExisting || 'skip',
         staff: nonStudents.map((u) => ({
           name: u.name,
           email: u.email,
@@ -734,12 +821,26 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         })),
       });
 
+      const mismatch = identityBackendMismatch(staffResult.data, 'bulkProvisionStaff');
+      if (mismatch) throw new Error(mismatch.message);
+
       for (const member of staffResult.data.staff || []) {
         if (member.success) {
+          if (member.authVerified) authVerified++;
+          if (member.status === 'skipped') skipped++;
           imported.push({
             id: member.id || member.uid || "",
             email: member.email,
             password: member.password,
+            resetLink: member.resetLink,
+            name: member.name,
+            role: member.role,
+            uid: member.uid,
+            docId: member.facultyDocId || member.id,
+            status: member.status || (member.reclaimed ? 'reclaimed' : 'created'),
+            authVerified: member.authVerified !== false,
+            delivery: member.delivery,
+            error: member.error,
           });
           facultyCount++;
         } else {
@@ -747,22 +848,26 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         }
       }
 
+      if (staffResult.data.warnings?.length) warnings.push(...staffResult.data.warnings);
       const reclaimed = staffResult.data.reclaimed || 0;
       if (reclaimed > 0) {
-        errors.push(`Info: ${reclaimed} existing account(s) were reclaimed with a new password`);
+        warnings.push(`${reclaimed} existing account(s) were reclaimed and their password was reset`);
       }
     } catch (staffErr: any) {
       console.error("[ImportUsers] Staff provisioning error:", staffErr);
-      errors.push(`Staff provisioning error: ${staffErr?.message || "Failed to provision staff"}`);
+      throw new SuperAdminApiError(describeIdentityError(staffErr, 'bulkProvisionStaff'));
     }
   }
 
   // College aggregate counts are maintained server-side by the callables.
 
   return {
-    success: imported.length,
+    success: imported.length - skipped,
+    skipped,
     failed: errors.length,
     errors,
+    warnings,
+    authVerified,
     imported,
     failedStudents,
   };
@@ -779,12 +884,17 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
   // silently re-used with a stale password. The callable writes the faculty
   // profile, the users/{uid} lookup doc, the HOD doc and the college counter.
   const bulkProvision = httpsCallable<
-    { collegeId: string; staff: any[] },
+    { collegeId: string; staff: any[]; deliveryMode?: CredentialDelivery; onExisting?: 'skip' | 'reset' },
     {
       total: number;
       created: number;
       reclaimed: number;
+      skipped?: number;
       failed: number;
+      authVerified?: number;
+      secretsStripped?: number;
+      warnings?: string[];
+      apiVersion?: string;
       errors: Array<{ row: number; email: string; message: string }>;
       staff: Array<{
         id: string;
@@ -795,56 +905,113 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
         uid?: string;
         password?: string;
         reclaimed?: boolean;
+        status?: 'created' | 'reclaimed' | 'skipped' | 'failed';
+        facultyDocId?: string;
+        authVerified?: boolean;
+        delivery?: 'temp-password' | 'reset-link' | 'none';
+        resetLink?: string;
         error?: string;
       }>;
     }
   >(functions, "bulkProvisionStaff");
 
-  const result = await bulkProvision({
-    collegeId: payload.collegeId,
-    staff: payload.faculty.map((f) => ({
-      facultyId: f.facultyId,
-      firstName: f.firstName,
-      lastName: f.lastName,
-      email: f.email,
-      phone: f.phone,
-      gender: f.gender,
-      collegeName: f.collegeName,
-      collegeCode: f.collegeCode,
-      department: f.department,
-      designation: f.designation,
-      employmentType: f.employmentType,
-      joiningDate: f.joiningDate,
-      qualification: f.qualification,
-      specialization: f.specialization,
-      subjectsUG: f.subjectsUG,
-      subjectsPG: f.subjectsPG,
-      experienceYears: f.experienceYears,
-      isHOD: f.isHOD,
-    })),
-  });
+  let result: Awaited<ReturnType<typeof bulkProvision>>;
+  try {
+    result = await bulkProvision({
+      collegeId: payload.collegeId,
+      deliveryMode: payload.deliveryMode,
+      onExisting: payload.onExisting || 'skip',
+      staff: payload.faculty.map((f) => ({
+        facultyId: f.facultyId,
+        firstName: f.firstName,
+        lastName: f.lastName,
+        email: f.email,
+        phone: f.phone,
+        gender: f.gender,
+        collegeName: f.collegeName,
+        collegeCode: f.collegeCode,
+        department: f.department,
+        designation: f.designation,
+        employmentType: f.employmentType,
+        joiningDate: f.joiningDate,
+        qualification: f.qualification,
+        specialization: f.specialization,
+        subjectsUG: f.subjectsUG,
+        subjectsPG: f.subjectsPG,
+        experienceYears: f.experienceYears,
+        isHOD: f.isHOD,
+      })),
+    });
+  } catch (err: any) {
+    // A missing/stale callable must never look like an empty-but-successful
+    // import: that is exactly how faculty ended up with profiles and no login.
+    throw new SuperAdminApiError(describeIdentityError(err, 'bulkProvisionStaff'));
+  }
 
   const data = result.data;
-  const imported: Array<{ id: string; email: string; password?: string }> = [];
+  const mismatch = identityBackendMismatch(data, 'bulkProvisionStaff');
+  if (mismatch) throw new SuperAdminApiError(mismatch.message);
+
+  const imported: ImportResult["imported"] = [];
   const errors: string[] = [];
+  const warnings: string[] = [];
+  let skipped = 0;
+  let authVerified = 0;
 
   // `staff` is the single source of truth (each failed row is also mirrored in
   // `errors`, so we do not append those separately to avoid double-counting).
   for (const member of data.staff || []) {
     if (member.success) {
-      imported.push({ id: member.id || member.uid || "", email: member.email, password: member.password });
+      if (member.authVerified) authVerified++;
+      if (member.status === 'skipped') skipped++;
+      imported.push({
+        id: member.id || member.uid || "",
+        email: member.email,
+        password: member.password,
+        resetLink: member.resetLink,
+        name: member.name,
+        role: member.role,
+        uid: member.uid,
+        docId: member.facultyDocId || member.id,
+        status: member.status || (member.reclaimed ? 'reclaimed' : 'created'),
+        authVerified: member.authVerified !== false,
+        delivery: member.delivery,
+        error: member.error,
+      });
     } else {
       errors.push(`${member.name || member.email} — ${member.error || "Unknown error"}`);
     }
   }
 
-  const success = imported.length;
+  if (data.warnings?.length) warnings.push(...data.warnings);
   const reclaimed = data.reclaimed || 0;
   if (reclaimed > 0) {
-    errors.push(`Info: ${reclaimed} existing account(s) were reclaimed with a new password`);
+    warnings.push(`${reclaimed} existing account(s) were reclaimed and their password was reset`);
+  }
+  if (data.secretsStripped) {
+    warnings.push(`${data.secretsStripped} plaintext password field(s) were deleted from profile documents`);
+  }
+  if (typeof data.authVerified === 'number' && data.authVerified < data.created + data.reclaimed) {
+    warnings.push(
+      `${data.created + data.reclaimed - data.authVerified} staff row(s) lack a verified Auth account — run Access Control → Identity repair`
+    );
+  }
+  if (data.total > 0 && data.created + data.reclaimed === 0 && data.failed === 0 && skipped === 0) {
+    errors.push(
+      'No rows were created, skipped or failed — the Cloud Function did not process the batch. ' +
+      `Verify the deployment: ${DEPLOY_COMMAND}`
+    );
   }
 
-  return { success, failed: data.failed, imported, errors };
+  return {
+    success: imported.length - skipped,
+    skipped,
+    failed: data.failed,
+    imported,
+    errors,
+    warnings,
+    authVerified,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════

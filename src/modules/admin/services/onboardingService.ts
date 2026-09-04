@@ -34,7 +34,6 @@ interface Student {
   mentorId?: string;
   mentorName?: string;
   enrollmentDate: string;
-  passwordHash: string;
   status: string;
   createdBy: string;
   createdAt: string;
@@ -57,7 +56,6 @@ interface Faculty {
   departmentName: string;
   subjects: string[];
   menteeCount: number;
-  passwordHash: string;
   status: string;
   isHOD: boolean;
   createdBy: string;
@@ -350,231 +348,29 @@ export function downloadTemplate(template: UploadTemplate) {
 }
 
 // ============================================================
-// STUDENT ONBOARDING
+// ACCOUNT PROVISIONING — NOT HERE, DELIBERATELY
 // ============================================================
-
-export { type StudentOnboardingData };
-
-/**
- * Onboard a single student
- */
-export async function onboardStudent(
-  data: StudentOnboardingData,
-  collegeId: string,
-  collegeName: string,
-  createdBy: string
-): Promise<{ success: boolean; student?: Student; error?: string }> {
-  try {
-    // Generate default password (first 4 letters of name + last 4 of regNo)
-    const defaultPassword = `${data.name.replace(/\s/g, '').slice(0, 4).toLowerCase()}${data.regNo.slice(-4)}`;
-
-    const student: Student = {
-      id: `STU_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      regNo: data.regNo,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      dateOfBirth: data.dateOfBirth || undefined,
-      gender: data.gender as any,
-      bloodGroup: data.bloodGroup || undefined,
-      collegeId,
-      collegeName,
-      courseId: data.course,
-      courseName: data.course,
-      departmentId: data.department,
-      departmentName: data.department,
-      batchId: data.batch,
-      batchName: data.batch,
-      semester: Number(data.semester),
-      division: data.division,
-      mentorId: data.mentorId || undefined,
-      mentorName: data.mentorId ? undefined : undefined, // Will be resolved
-      enrollmentDate: new Date().toISOString(),
-      passwordHash: await hashPassword(defaultPassword),
-      status: 'active',
-      createdBy,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // TODO: Save to Firebase/API
-    // await firebaseDb.collection('students').doc(student.id).set(student);
-
-    // TODO: Send welcome email with credentials
-    // await sendWelcomeEmail(student.email, student.regNo, defaultPassword);
-
-    return { success: true, student };
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-}
-
-/**
- * Bulk onboard students from CSV
- */
-export async function bulkOnboardStudents(
-  file: File,
-  collegeId: string,
-  collegeName: string,
-  createdBy: string
-): Promise<OnboardingRecord> {
-  const parseResult = await parseCSV<StudentOnboardingData>(file, STUDENT_TEMPLATE);
-
-  const record: OnboardingRecord = {
-    id: `ONB_${Date.now()}`,
-    type: 'student',
-    collegeId,
-    fileName: file.name,
-    totalRecords: parseResult.data.length + parseResult.errors.length,
-    successCount: 0,
-    errorCount: parseResult.errors.length,
-    errors: parseResult.errors,
-    status: 'processing',
-    processedBy: createdBy,
-    processedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  // Process valid records
-  for (const data of parseResult.data) {
-    const result = await onboardStudent(data, collegeId, collegeName, createdBy);
-    if (result.success) {
-      record.successCount++;
-    } else {
-      record.errorCount++;
-      record.errors.push({
-        rowNumber: 0,
-        regNoOrId: data.regNo,
-        field: 'General',
-        message: result.error || 'Failed to create student',
-      });
-    }
-  }
-
-  record.status = record.errorCount > 0 ? 'completed' : 'completed';
-  // TODO: Save record to Firebase
-  // await firebaseDb.collection('onboarding_records').doc(record.id).set(record);
-
-  return record;
-}
-
-// ============================================================
-// FACULTY ONBOARDING
-// ============================================================
-
-export { type FacultyOnboardingData };
-
-/**
- * Onboard a single faculty
- */
-export async function onboardFaculty(
-  data: FacultyOnboardingData,
-  collegeId: string,
-  collegeName: string,
-  createdBy: string
-): Promise<{ success: boolean; faculty?: Faculty; error?: string }> {
-  try {
-    const defaultPassword = `${data.name.replace(/\s/g, '').slice(0, 4).toLowerCase()}${data.facultyId.slice(-4)}`;
-
-    const faculty: Faculty = {
-      id: `FAC_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      facultyId: data.facultyId,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      designation: data.designation as any,
-      specialization: data.specialization || undefined,
-      qualification: data.qualification || undefined,
-      experience: data.experience ? Number(data.experience) : undefined,
-      collegeId,
-      collegeName,
-      departmentId: data.department,
-      departmentName: data.department,
-      subjects: data.subjects ? data.subjects.split(',').map(s => s.trim()) : [],
-      menteeCount: 0,
-      passwordHash: await hashPassword(defaultPassword),
-      status: 'active',
-      isHOD: false,
-      createdBy,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // TODO: Save to Firebase/API
-    // await firebaseDb.collection('faculty').doc(faculty.id).set(faculty);
-
-    return { success: true, faculty };
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-}
-
-/**
- * Bulk onboard faculty from CSV
- */
-export async function bulkOnboardFaculty(
-  file: File,
-  collegeId: string,
-  collegeName: string,
-  createdBy: string
-): Promise<OnboardingRecord> {
-  const parseResult = await parseCSV<FacultyOnboardingData>(file, FACULTY_TEMPLATE);
-
-  const record: OnboardingRecord = {
-    id: `ONB_${Date.now()}`,
-    type: 'faculty',
-    collegeId,
-    fileName: file.name,
-    totalRecords: parseResult.data.length + parseResult.errors.length,
-    successCount: 0,
-    errorCount: parseResult.errors.length,
-    errors: parseResult.errors,
-    status: 'processing',
-    processedBy: createdBy,
-    processedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  for (const data of parseResult.data) {
-    const result = await onboardFaculty(data, collegeId, collegeName, createdBy);
-    if (result.success) {
-      record.successCount++;
-    } else {
-      record.errorCount++;
-      record.errors.push({
-        rowNumber: 0,
-        regNoOrId: data.facultyId,
-        field: 'General',
-        message: result.error || 'Failed to create faculty',
-      });
-    }
-  }
-
-  record.status = 'completed';
-  return record;
-}
-
-// ============================================================
-// PASSWORD UTILS
-// ============================================================
-
-async function hashPassword(password: string): Promise<string> {
-  // In production, use bcrypt or Firebase Auth
-  // This is a simple hash for demo
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'vriddhi-salt');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const computed = await hashPassword(password);
-  return computed === hash;
-}
-
-export function generateDefaultPassword(name: string, id: string): string {
-  return `${name.replace(/\s/g, '').slice(0, 4).toLowerCase()}${id.slice(-4)}`;
-}
+//
+// This module used to contain `onboardStudent` / `onboardFaculty` /
+// `bulkOnboardStudents` / `bulkOnboardFaculty`, which built a student or faculty
+// object in memory with:
+//
+//   * a default password of `name.slice(0,4) + regNo.slice(-4)` — guessable by
+//     anyone who knows two things printed on a college noticeboard;
+//   * `passwordHash: hashPassword(...)` — a client-side SHA-256 over a fixed
+//     salt, i.e. a decorative value that no authentication system ever consults;
+//   * a `// TODO: Save to Firebase/API` comment where the write should have been.
+//
+// Nothing was ever persisted and no Auth account was ever created, while the
+// screen reported success. A credential that Firebase does not know about is the
+// root of the "the user exists but cannot log in" class of bug, so the path back
+// to it is closed rather than left in the tree:
+//
+//   students  -> bulkCreateStudentAccounts  (via src/modules/superadmin/api/importUsers)
+//   staff     -> bulkProvisionStaff         (via src/modules/superadmin/api/importFaculty)
+//   one admin -> grantUserRole
+//
+// Those callables create the Auth user, set the role/collegeId custom claims,
+// write users/{uid} + the profile document, read the account back to prove it,
+// and return the credential once (or a password-reset link). This file stays the
+// CSV template + validation layer it is actually used as.

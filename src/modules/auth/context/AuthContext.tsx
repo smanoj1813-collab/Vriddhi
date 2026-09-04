@@ -1,8 +1,9 @@
 import React, { createContext, useState, useEffect, useCallback, useContext, useMemo, useRef } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/Firebase/config';
-import { getUserData, type FirebaseUserData, type UserRole } from './auth';
+import { resolveIdentity, type FirebaseUserData, type UserRole } from './auth';
 import { roleHasPermission } from '../permissions';
+import { syncMyIdentity } from '@/shared/services/identityBackend';
 
 export { UserRole };
 export type { FirebaseUserData };
@@ -43,9 +44,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const justLoggedIn = useRef(false);
 
   const resolveUserData = useCallback(async (fbUser: FirebaseUser): Promise<AppUser> => {
-    const data = await getUserData(fbUser.uid, fbUser.email || undefined);
+    const resolution = await resolveIdentity(fbUser.uid, fbUser.email || undefined);
+    let data = resolution.user;
+
+    // Self-heal once: the Firestore rules take the authoritative role from the
+    // ID-token claim, while a profile document may exist without one (accounts
+    // created before the claims work, or through the Identity Toolkit REST API
+    // which cannot set claims). Those accounts sign in successfully and then see
+    // "permission denied" everywhere. `syncMyIdentity` re-issues the claim from
+    // users/{uid} — a document whose role/college fields are not self-writable —
+    // and the token is refreshed so the very next read is authorised.
+    if (data && resolution.claimMissing) {
+      try {
+        const sync = await syncMyIdentity();
+        if (sync?.updated) {
+          await fbUser.getIdToken(true);
+          const afterRepair = await resolveIdentity(fbUser.uid, fbUser.email || undefined);
+          if (afterRepair.user) data = afterRepair.user;
+        }
+      } catch (err) {
+        console.warn('[AuthContext] claim self-heal failed:', err);
+      }
+    }
+
     if (!data) {
-      console.error('[AuthContext] No user data found for uid:', fbUser.uid);
+      // Distinguish the three real causes — they need different fixes, and the
+      // old blanket ACCOUNT_NOT_FOUND sent everyone down the wrong path.
+      if (resolution.permissionDenied) {
+        console.error('[AuthContext] identity reads denied by Firestore rules', resolution.errors);
+        throw new Error(
+          'AUTHORIZATION_STALE: your profile exists but security rules refused to read it. ' +
+          'This normally means your sign-in token has no role claim, or the deployed Firestore rules ' +
+          'are not the version in this repository. Sign out and sign in again; if it persists, a ' +
+          'superadmin must run Access Control → Identity repair and redeploy the rules.'
+        );
+      }
+      console.error('[AuthContext] No user data found for uid:', fbUser.uid, resolution.errors);
       throw new Error('ACCOUNT_NOT_FOUND');
     }
     const name = data.name || fbUser.displayName;
@@ -65,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       localStorage.removeItem('vriddhi_college_id');
     }
-    console.log('[AuthContext] Resolved user:', appUser.name, '| role:', appUser.role);
+    console.log('[AuthContext] Resolved user:', appUser.name, '| role:', appUser.role, '| source:', resolution.source);
     return appUser;
   }, []);
 

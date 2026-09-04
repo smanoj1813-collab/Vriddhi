@@ -1,5 +1,5 @@
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { auth, db } from '@/Firebase/config';
 
 export type UserRole = 'superadmin' | 'admin' | 'principal' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor';
@@ -54,443 +54,237 @@ function normalizeRole(raw: any): UserRole | null {
  * Checks document ID first, then uid field, then email field.
  * Order: users → superadmins → admins → faculty → hods → mentors → students.
  */
-export const getUserData = async (uid: string, email?: string): Promise<FirebaseUserData | null> => {
-  console.log('[getUserData] START — uid:', uid, 'email:', email);
+export interface IdentityResolution {
+  user: FirebaseUserData | null
+  /**
+   * At least one identity read was refused by the Firestore rules. A profile can
+   * exist and still be unreadable, and that is a DIFFERENT problem from "no
+   * account" — it means the caller's ID token has no role claim (or the rules
+   * deployed are newer/older than the data). Reporting it as ACCOUNT_NOT_FOUND
+   * is what sent this project in circles.
+   */
+  permissionDenied: boolean;
+  /**
+   * A role was found in Firestore but the ID-token claim is missing or
+   * different. Under claim-authoritative rules such an account can sign in and
+   * then read nothing; `syncMyIdentity` repairs it.
+   */
+  claimMissing: boolean;
+  /** Where the role came from, for diagnostics in the console. */
+  source: 'claim' | 'users' | 'profile' | null;
+  resolvedRole: UserRole | null;
+  errors: string[];
+  /** Collections tried, so a failure report can show how far the search got. */
+  attempts: number;
+}
 
-  const toISO = (v: any) => v?.toDate?.().toISOString() || v || new Date().toISOString();
+const toISO = (v: any) => v?.toDate?.().toISOString() || v || new Date().toISOString();
 
-  // 1. users collection by DOCUMENT ID
+interface ProfileSpec {
+  collection: string;
+  /** Role implied by membership of the collection when the doc has none. */
+  fallbackRole: UserRole;
+  /** Project the document onto the app's user shape (timestamps added later). */
+  map: (data: any, uid: string, email?: string) => Record<string, any>;
+}
+
+const PROFILE_SPECS: ProfileSpec[] = [
+  {
+    collection: 'superadmins',
+    fallbackRole: 'superadmin',
+    map: (d, uid, email) => ({
+      uid: d.uid || uid, email: d.email || email || '', name: d.name || d.displayName || 'Superadmin',
+      role: normalizeRole(d.role) || 'superadmin', collegeId: d.collegeId, department: d.department,
+      avatar: d.avatar || '', phone: d.phone || '',
+    }),
+  },
+  {
+    collection: 'admins',
+    fallbackRole: 'admin',
+    map: (d, uid, email) => ({
+      uid: d.uid || uid, email: d.email || email || '', name: d.name || 'Admin',
+      role: normalizeRole(d.role) || 'admin', collegeId: d.collegeId, department: d.department,
+      avatar: d.avatar || '', phone: d.phone || '',
+    }),
+  },
+  {
+    collection: 'faculty',
+    fallbackRole: 'faculty',
+    map: (d, uid, email) => ({
+      uid: d.uid || uid, email: d.email || email || '',
+      name: `${d.firstName || ''} ${d.lastName || ''}`.trim() || d.name || 'Faculty',
+      role: normalizeRole(d.role) || 'faculty', collegeId: d.collegeId || d.collegeID, department: d.department,
+      avatar: d.profilePhotoUrl || d.avatar || '', phone: d.phone || '',
+    }),
+  },
+  {
+    collection: 'hods',
+    fallbackRole: 'hod',
+    map: (d, uid, email) => ({
+      uid: d.uid || uid, email: d.email || email || '',
+      name: d.name || `${d.firstName || ''} ${d.lastName || ''}`.trim() || 'HOD',
+      role: normalizeRole(d.role) || 'hod', collegeId: d.collegeId, department: d.department,
+      avatar: d.avatar || d.profilePhotoUrl || '', phone: d.phone || '',
+    }),
+  },
+  {
+    collection: 'mentors',
+    fallbackRole: 'mentor',
+    map: (d, uid, email) => ({
+      uid: d.uid || uid, email: d.email || email || '',
+      name: d.name || `${d.firstName || ''} ${d.lastName || ''}`.trim() || 'Mentor',
+      role: normalizeRole(d.role) || 'mentor', collegeId: d.collegeId, department: d.department,
+      avatar: d.avatar || d.profilePhotoUrl || '', phone: d.phone || '',
+    }),
+  },
+  {
+    // Students carry no privileged role, so the document id/email/uid link is
+    // enough: `role` is forced rather than read from the document.
+    collection: 'students',
+    fallbackRole: 'student',
+    map: (d, uid, email) => ({
+      uid: d.uid || d.userId || uid, email: d.email || email || '', name: d.name || 'Student',
+      role: 'student' as UserRole, collegeId: d.collegeId, department: d.department,
+      avatar: d.avatar || '', phone: d.phone || '',
+    }),
+  },
+];
+
+function classifyReadError(err: any): { kind: 'permission' | 'other'; text: string } {
+  const code = String(err?.code || '').toLowerCase();
+  const message = String(err?.message || err || '');
+  if (code.includes('permission-denied') || code.includes('failed-precondition') || /missing or insufficient permissions/i.test(message)) {
+    return { kind: 'permission', text: message };
+  }
+  // A missing composite index is reported per query and is a deployment issue,
+  // not a data issue — say so instead of returning "account not found".
+  if (/needs an index|failed to get document because the backend/i.test(message)) {
+    return { kind: 'other', text: `index required: ${message}` };
+  }
+  return { kind: 'other', text: message };
+}
+
+/**
+ * Resolve the app identity for a signed-in uid.
+ *
+ * Order (mirrors the documented rules behaviour):
+ *   1. users/{uid}                       — the canonical lookup document
+ *   2. superadmins/{uid}                  — legacy/privileged identities
+ *   3. every profile collection, by document id, then `uid`, then `email`
+ *
+ * Reads are sequential on purpose: the first hit wins, so a healthy account
+ * costs one document read instead of nineteen.
+ */
+export const resolveIdentity = async (uid: string, email?: string): Promise<IdentityResolution> => {
+  const outcome: IdentityResolution = {
+    user: null, permissionDenied: false, claimMissing: false, source: null,
+    resolvedRole: null, errors: [], attempts: 0,
+  };
+
+  const claimedRole = normalizeRole((await safeClaims(uid)).role);
+
+  const finish = (data: any, source: IdentityResolution['source']): FirebaseUserData => {
+    outcome.source = source;
+    const role = normalizeRole(data.role);
+    outcome.resolvedRole = role;
+    outcome.claimMissing = !role ? false : claimedRole !== role;
+    return {
+      uid: data.uid || uid,
+      email: data.email || email || '',
+      name: data.name || 'User',
+      role: role || 'student',
+      collegeId: data.collegeId,
+      department: data.department,
+      avatar: data.avatar || '',
+      phone: data.phone || '',
+      createdAt: toISO(data.createdAt),
+      updatedAt: toISO(data.updatedAt),
+    } as FirebaseUserData;
+  };
+
+  // 1. users/{uid}
   try {
-    const userDoc = await getDoc(doc(db, "users", uid));
+    outcome.attempts++;
+    const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
       const data = userDoc.data();
-      const normalizedRole = normalizeRole(data.role);
-      console.log('[getUserData] FOUND in users collection by doc ID — raw role:', data.role, 'normalized:', normalizedRole);
-
-      if (!normalizedRole) {
-        console.warn('[getUserData] WARNING: users doc has invalid/missing role ("' + data.role + '"). Continuing search...');
-        // Fall through to other collections instead of returning bad data
-      } else {
-        return {
-          uid: data.uid || uid,
-          email: data.email || email || '',
-          name: data.name || 'User',
-          role: normalizedRole,
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.avatar || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
+      const role = normalizeRole(data.role);
+      if (role) {
+        return { ...outcome, user: finish({ ...data, role }, 'users') };
       }
+      outcome.errors.push('users/' + uid + ' exists but has no valid `role` field; continuing with profile collections');
     }
-  } catch (e) { console.error('[getUserData] Error reading users:', e); }
-
-  // 2. superadmins by DOCUMENT ID
-  try {
-    const superadminDoc = await getDoc(doc(db, "superadmins", uid));
-    if (superadminDoc.exists()) {
-      const data = superadminDoc.data();
-      console.log('[getUserData] FOUND in superadmins by doc ID — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || data.displayName || 'Superadmin',
-        role: normalizeRole(data.role) || "superadmin",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error reading superadmins by doc ID:', e); }
-
-  // 3. superadmins by uid field (legacy)
-  try {
-    const superadminsQuery = query(collection(db, "superadmins"), where("uid", "==", uid));
-    const superadminsSnap = await getDocs(superadminsQuery);
-    if (!superadminsSnap.empty) {
-      const data = superadminsSnap.docs[0].data();
-      console.log('[getUserData] FOUND in superadmins by uid field — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || data.displayName || 'Superadmin',
-        role: normalizeRole(data.role) || "superadmin",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error querying superadmins by uid:', e); }
-
-  // 4. superadmins by EMAIL field
-  if (email) {
-    try {
-      const emailQuery = query(collection(db, "superadmins"), where("email", "==", email));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        const data = emailSnap.docs[0].data();
-        console.log('[getUserData] FOUND in superadmins by EMAIL fallback — role:', data.role);
-        return {
-          uid: data.uid || uid,
-          email: data.email || email,
-          name: data.name || data.displayName || 'Superadmin',
-          role: normalizeRole(data.role) || "superadmin",
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.avatar || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
-      }
-    } catch (e) { console.error('[getUserData] Error querying superadmins by email:', e); }
+  } catch (err) {
+    const { kind, text } = classifyReadError(err);
+    if (kind === 'permission') outcome.permissionDenied = true;
+    outcome.errors.push(`users: ${text}`);
   }
 
-  // 5. admins by DOCUMENT ID
-  try {
-    const adminDoc = await getDoc(doc(db, "admins", uid));
-    if (adminDoc.exists()) {
-      const data = adminDoc.data();
-      console.log('[getUserData] FOUND in admins by doc ID — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || 'Admin',
-        role: normalizeRole(data.role) || "admin",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error reading admins by doc ID:', e); }
-
-  // 6. admins by uid field (legacy)
-  try {
-    const adminsQuery = query(collection(db, "admins"), where("uid", "==", uid));
-    const adminsSnap = await getDocs(adminsQuery);
-    if (!adminsSnap.empty) {
-      const data = adminsSnap.docs[0].data();
-      console.log('[getUserData] FOUND in admins by uid field — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || 'Admin',
-        role: normalizeRole(data.role) || "admin",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error querying admins by uid:', e); }
-
-  // 7. admins by EMAIL field
-  if (email) {
+  // 2./3. profile collections
+  for (const spec of PROFILE_SPECS) {
+    // a) document id == uid
     try {
-      const emailQuery = query(collection(db, "admins"), where("email", "==", email));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        const data = emailSnap.docs[0].data();
-        console.log('[getUserData] FOUND in admins by EMAIL fallback — role:', data.role);
-        return {
-          uid: data.uid || uid,
-          email: data.email || email,
-          name: data.name || 'Admin',
-          role: normalizeRole(data.role) || "admin",
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.avatar || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
+      outcome.attempts++;
+      const byId = await getDoc(doc(db, spec.collection, uid));
+      if (byId.exists()) {
+        const projected = spec.map(byId.data(), uid, email);
+        return { ...outcome, user: finish(projected, 'profile') };
       }
-    } catch (e) { console.error('[getUserData] Error querying admins by email:', e); }
+    } catch (err) {
+      const { kind, text } = classifyReadError(err);
+      if (kind === 'permission') outcome.permissionDenied = true;
+      outcome.errors.push(`${spec.collection}(id): ${text}`);
+    }
+
+    if (!email) continue;
+
+    // b) legacy documents that store the uid in a field, or are keyed by email.
+    for (const field of ['uid', 'email'] as const) {
+      try {
+        outcome.attempts++;
+        const snap = await getDocs(query(collection(db, spec.collection), where(field, '==', field === 'email' ? email : uid), limit(1)));
+        if (!snap.empty) {
+          const projected = spec.map(snap.docs[0].data(), uid, email);
+          return { ...outcome, user: finish(projected, 'profile') };
+        }
+      } catch (err) {
+        const { kind, text } = classifyReadError(err);
+        if (kind === 'permission') outcome.permissionDenied = true;
+        outcome.errors.push(`${spec.collection}(${field}): ${text}`);
+      }
+    }
   }
 
-  // 8. faculty by DOCUMENT ID
-  try {
-    const facultyDoc = await getDoc(doc(db, "faculty", uid));
-    if (facultyDoc.exists()) {
-      const data = facultyDoc.data();
-      console.log('[getUserData] FOUND in faculty by doc ID — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'Faculty',
-        role: normalizeRole(data.role) || "faculty",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.profilePhotoUrl || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error reading faculty by doc ID:', e); }
+  return outcome;
+};
 
-  // 9. faculty by uid field (legacy)
+/** Read the caller's own ID-token claims without ever throwing. */
+async function safeClaims(uid: string): Promise<{ role?: unknown; uid?: string }> {
   try {
-    const facultyQuery = query(collection(db, "faculty"), where("uid", "==", uid));
-    const facultySnap = await getDocs(facultyQuery);
-    if (!facultySnap.empty) {
-      const data = facultySnap.docs[0].data();
-      console.log('[getUserData] FOUND in faculty by uid field — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'Faculty',
-        role: normalizeRole(data.role) || "faculty",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.profilePhotoUrl || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error querying faculty by uid:', e); }
-
-  // 10. faculty by EMAIL field
-  if (email) {
-    try {
-      const emailQuery = query(collection(db, "faculty"), where("email", "==", email));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        const data = emailSnap.docs[0].data();
-        console.log('[getUserData] FOUND in faculty by EMAIL fallback — role:', data.role);
-        return {
-          uid: data.uid || uid,
-          email: data.email || email,
-          name: `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'Faculty',
-          role: normalizeRole(data.role) || "faculty",
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.profilePhotoUrl || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
-      }
-    } catch (e) { console.error('[getUserData] Error querying faculty by email:', e); }
+    const current = auth.currentUser;
+    if (!current || current.uid !== uid) return {};
+    const token = await current.getIdTokenResult();
+    return (token.claims as Record<string, unknown>) || {};
+  } catch {
+    return {};
   }
+}
 
-  // 11. hods by DOCUMENT ID
-  try {
-    const hodDoc = await getDoc(doc(db, "hods", uid));
-    if (hodDoc.exists()) {
-      const data = hodDoc.data();
-      console.log('[getUserData] FOUND in hods by doc ID — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'HOD',
-        role: normalizeRole(data.role) || "hod",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || data.profilePhotoUrl || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error reading hods by doc ID:', e); }
-
-  // 12. hods by uid field (legacy)
-  try {
-    const hodsQuery = query(collection(db, "hods"), where("uid", "==", uid));
-    const hodsSnap = await getDocs(hodsQuery);
-    if (!hodsSnap.empty) {
-      const data = hodsSnap.docs[0].data();
-      console.log('[getUserData] FOUND in hods by uid field — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'HOD',
-        role: normalizeRole(data.role) || "hod",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || data.profilePhotoUrl || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error querying hods by uid:', e); }
-
-  // 13. hods by EMAIL field
-  if (email) {
-    try {
-      const emailQuery = query(collection(db, "hods"), where("email", "==", email));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        const data = emailSnap.docs[0].data();
-        console.log('[getUserData] FOUND in hods by EMAIL fallback — role:', data.role);
-        return {
-          uid: data.uid || uid,
-          email: data.email || email,
-          name: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'HOD',
-          role: normalizeRole(data.role) || "hod",
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.avatar || data.profilePhotoUrl || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
-      }
-    } catch (e) { console.error('[getUserData] Error querying hods by email:', e); }
+/**
+ * Resolve user data after login. Kept for compatibility with callers that only
+ * want the profile; use `resolveIdentity` when the *reason* matters.
+ */
+export const getUserData = async (uid: string, email?: string): Promise<FirebaseUserData | null> => {
+  const result = await resolveIdentity(uid, email);
+  if (!result.user) {
+    console.warn('[auth] identity could not be resolved', {
+      uid,
+      permissionDenied: result.permissionDenied,
+      errors: result.errors,
+      attempts: result.attempts,
+    });
   }
-
-  // 14. mentors by DOCUMENT ID
-  try {
-    const mentorDoc = await getDoc(doc(db, "mentors", uid));
-    if (mentorDoc.exists()) {
-      const data = mentorDoc.data();
-      console.log('[getUserData] FOUND in mentors by doc ID — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'Mentor',
-        role: normalizeRole(data.role) || "mentor",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || data.profilePhotoUrl || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error reading mentors by doc ID:', e); }
-
-  // 15. mentors by uid field (legacy)
-  try {
-    const mentorsQuery = query(collection(db, "mentors"), where("uid", "==", uid));
-    const mentorsSnap = await getDocs(mentorsQuery);
-    if (!mentorsSnap.empty) {
-      const data = mentorsSnap.docs[0].data();
-      console.log('[getUserData] FOUND in mentors by uid field — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'Mentor',
-        role: normalizeRole(data.role) || "mentor",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || data.profilePhotoUrl || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error querying mentors by uid:', e); }
-
-  // 16. mentors by EMAIL field
-  if (email) {
-    try {
-      const emailQuery = query(collection(db, "mentors"), where("email", "==", email));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        const data = emailSnap.docs[0].data();
-        console.log('[getUserData] FOUND in mentors by EMAIL fallback — role:', data.role);
-        return {
-          uid: data.uid || uid,
-          email: data.email || email,
-          name: data.name || `${data.firstName || ""} ${data.lastName || ""}`.trim() || 'Mentor',
-          role: normalizeRole(data.role) || "mentor",
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.avatar || data.profilePhotoUrl || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
-      }
-    } catch (e) { console.error('[getUserData] Error querying mentors by email:', e); }
-  }
-
-  // 17. students by DOCUMENT ID
-  try {
-    const studentDoc = await getDoc(doc(db, "students", uid));
-    if (studentDoc.exists()) {
-      const data = studentDoc.data();
-      console.log('[getUserData] FOUND in students by doc ID — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || 'Student',
-        role: "student",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error reading students by doc ID:', e); }
-
-  // 18. students by uid field (legacy)
-  try {
-    const studentsQuery = query(collection(db, "students"), where("uid", "==", uid));
-    const studentsSnap = await getDocs(studentsQuery);
-    if (!studentsSnap.empty) {
-      const data = studentsSnap.docs[0].data();
-      console.log('[getUserData] FOUND in students by uid field — role:', data.role);
-      return {
-        uid: data.uid || uid,
-        email: data.email,
-        name: data.name || 'Student',
-        role: "student",
-        collegeId: data.collegeId,
-        department: data.department,
-        avatar: data.avatar || "",
-        phone: data.phone || "",
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-      } as FirebaseUserData;
-    }
-  } catch (e) { console.error('[getUserData] Error querying students by uid:', e); }
-
-  // 19. students by EMAIL field
-  if (email) {
-    try {
-      const emailQuery = query(collection(db, "students"), where("email", "==", email));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        const data = emailSnap.docs[0].data();
-        console.log('[getUserData] FOUND in students by EMAIL fallback — role:', data.role);
-        return {
-          uid: data.uid || uid,
-          email: data.email || email,
-          name: data.name || 'Student',
-          role: "student",
-          collegeId: data.collegeId,
-          department: data.department,
-          avatar: data.avatar || "",
-          phone: data.phone || "",
-          createdAt: toISO(data.createdAt),
-          updatedAt: toISO(data.updatedAt),
-        } as FirebaseUserData;
-      }
-    } catch (e) { console.error('[getUserData] Error querying students by email:', e); }
-  }
-
-  console.log('[getUserData] NOT FOUND anywhere — returning null');
-  return null;
+  return result.user;
 };
 
 export const updateUserRole = async (_uid: string, _role: UserRole) => {

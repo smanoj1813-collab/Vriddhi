@@ -3,6 +3,13 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
+import { useAuth } from '../../auth/context/AuthContext';
+import { importUsers, importFaculty } from '../../superadmin/api/superAdminApi';
+import CredentialsTable from '../../superadmin/components/CredentialsTable';
+import {
+  describeIdentityError,
+  type CredentialRow,
+} from '@/shared/services/identityBackend';
 import {
   Upload,
   Download,
@@ -34,14 +41,14 @@ import {
 import type { UploadTemplate, OnboardingError, TemplateField } from '../types/onboarding';
 
 const TABS = [
-  { id: 'students', label: 'Students', icon: Users, template: STUDENT_TEMPLATE },
-  { id: 'faculty', label: 'Faculty', icon: GraduationCap, template: FACULTY_TEMPLATE },
-  { id: 'schedule', label: 'Class Schedule', icon: FileText, template: SCHEDULE_TEMPLATE },
-  { id: 'assessments', label: 'Assessments', icon: FileText, template: ASSESSMENT_TEMPLATE },
+  { id: 'students', label: 'Students', icon: Users, template: STUDENT_TEMPLATE, importable: true },
+  { id: 'faculty', label: 'Faculty', icon: GraduationCap, template: FACULTY_TEMPLATE, importable: true },
+  { id: 'schedule', label: 'Class Schedule', icon: FileText, template: SCHEDULE_TEMPLATE, importable: false },
+  { id: 'assessments', label: 'Assessments', icon: FileText, template: ASSESSMENT_TEMPLATE, importable: false },
 ];
 
 export default function CollegeOnboarding() {
-  const { showInfo } = useNotification();
+  const { showInfo, showSuccess } = useNotification();
   const [activeTab, setActiveTab] = useState('students');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parseResult, setParseResult] = useState<ParseResult<Record<string, string>> | null>(null);
@@ -50,6 +57,11 @@ export default function CollegeOnboarding() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentTab = TABS.find(t => t.id === activeTab)!;
+  const { user } = useAuth();
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [credentialRows, setCredentialRows] = useState<CredentialRow[]>([]);
+  const [importSummary, setImportSummary] = useState<string | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,10 +81,92 @@ export default function CollegeOnboarding() {
     downloadTemplate(currentTab.template);
   };
 
+  /**
+   * This button used to be a `showInfo(...)` toast in front of a `TODO: Call API`
+   * comment. An admin could watch "Processing 240 students..." appear, close the
+   * tab, and find nothing in Firestore and nothing in Authentication — which is
+   * indistinguishable from "the upload is broken". It is now wired to the same
+   * identity callables the superadmin importers use, so an Auth account, the
+   * role/college claims and the profile document are created together.
+   *
+   * Schedules and assessments have no bulk importer on the platform yet, so they
+   * stay a validation-only preview rather than pretending to import.
+   */
   const handleProcessUpload = async () => {
-    if (!parseResult?.valid) return;
-    // TODO: Call API to bulk upload
-    showInfo(`Processing ${parseResult.data.length} ${currentTab.label.toLowerCase()}...`);
+    if (!parseResult?.valid || !currentTab.importable) return;
+    if (!user?.collegeId) {
+      setImportError(
+        'No college is attached to your account, so nothing can be imported. Sign out and back in to ' +
+          'refresh the session, and if it persists ask a superadmin to run Access Control → Identity repair.'
+      );
+      return;
+    }
+    setImporting(true);
+    setImportError(null);
+    setCredentialRows([]);
+    setImportSummary(null);
+    try {
+      const rows = parseResult.data as Record<string, string>[];
+      const result =
+        activeTab === 'students'
+          ? await importUsers({
+              collegeId: user.collegeId,
+              // Reset links by default: the person setting up a college should not
+              // be reading passwords off a screen they might screenshot.
+              deliveryMode: 'reset-email',
+              users: rows.map(row => ({
+                name: row.name || row.fullName || '',
+                email: (row.email || '').trim().toLowerCase(),
+                regNo: row.regNo || row.registrationNumber || undefined,
+                role: 'student' as const,
+                batch: row.batch || undefined,
+                division: row.division || undefined,
+                phone: row.phone || undefined,
+                department: row.department || undefined,
+                semester: row.semester ? Number(row.semester) : undefined,
+                dob: row.dateOfBirth || undefined,
+                gender: row.gender || undefined,
+              })),
+            })
+          : await importFaculty({
+              collegeId: user.collegeId,
+              deliveryMode: 'reset-email',
+              faculty: rows.map(row => {
+                const [firstName, ...rest] = String(row.name || '').trim().split(/\s+/);
+                return {
+                  facultyId: row.facultyId || undefined,
+                  firstName: firstName || row.email,
+                  lastName: rest.join(' ') || undefined,
+                  email: (row.email || '').trim().toLowerCase(),
+                  phone: row.phone || undefined,
+                  collegeCode: row.collegeCode || '',
+                  department: row.department || undefined,
+                  designation: row.designation || undefined,
+                  specialization: row.specialization || undefined,
+                  qualification: row.qualification || undefined,
+                  experienceYears: row.experience ? Number(row.experience) : undefined,
+                  subjectsUG: row.subjects
+                    ? String(row.subjects).split(',').map(s => s.trim()).filter(Boolean)
+                    : undefined,
+                };
+              }),
+            });
+
+      setCredentialRows(result.imported as CredentialRow[]);
+      setImportSummary(
+        `${result.success} account(s) ready` +
+          (result.skipped ? `, ${result.skipped} left unchanged` : '') +
+          (result.failed ? `, ${result.failed} failed` : '')
+      );
+      if (result.failed > 0) setImportError(result.errors.join('\n'));
+      if (result.success > 0) showSuccess(`Imported ${result.success} ${currentTab.label.toLowerCase()} row(s)`);
+    } catch (error: unknown) {
+      // Raw `functions/not-found` means the backend is older than this page, not
+      // that the data is bad; describeIdentityError says so and prints the command.
+      setImportError(describeIdentityError(error, activeTab === 'students' ? 'bulkCreateStudentAccounts' : 'bulkProvisionStaff'));
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
@@ -278,14 +372,55 @@ export default function CollegeOnboarding() {
                     >
                       Clear
                     </button>
-                    <button
-                      onClick={handleProcessUpload}
-                      disabled={!parseResult.valid}
-                      className="px-6 py-2 rounded-lg text-sm font-medium bg-teal-500 hover:bg-teal-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 dark:text-white transition-colors"
-                    >
-                      Process {parseResult.data.length} {currentTab.label}
-                    </button>
+                    <div className="flex flex-col items-end gap-1.5">
+                      {!currentTab.importable && (
+                        <span className="text-xs text-amber-500">
+                          Validation only — {currentTab.label.toLowerCase()} import is not available from here yet.
+                        </span>
+                      )}
+                      <button
+                        onClick={handleProcessUpload}
+                        disabled={!parseResult.valid || !currentTab.importable || importing}
+                        title={
+                          currentTab.importable
+                            ? 'Creates Firebase Auth accounts, role claims and profile records in one step'
+                            : 'No bulk importer exists for this template'
+                        }
+                        className="px-6 py-2 rounded-lg text-sm font-medium bg-teal-500 hover:bg-teal-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 dark:text-white transition-colors inline-flex items-center gap-2"
+                      >
+                        {importing && (
+                          <span className="w-3.5 h-3.5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+                        )}
+                        {importing
+                          ? 'Provisioning…'
+                          : `Process ${parseResult.data.length} ${currentTab.label}`}
+                      </button>
+                    </div>
                   </div>
+                </motion.div>
+              )}
+
+              {(importError || importSummary || credentialRows.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-slate-700/30 bg-slate-900/40 p-4 space-y-3"
+                >
+                  {importSummary && (
+                    <p className="text-sm text-emerald-400">{importSummary}</p>
+                  )}
+                  {importError && (
+                    <pre className="text-xs text-red-400 whitespace-pre-wrap font-mono bg-red-500/10 border border-red-500/20 rounded-lg p-3 max-h-48 overflow-y-auto">
+                      {importError}
+                    </pre>
+                  )}
+                  {credentialRows.length > 0 && (
+                    <CredentialsTable
+                      rows={credentialRows}
+                      title={`${currentTab.label} — login credentials`}
+                      filename={`vriddhi-${activeTab}-credentials`}
+                    />
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

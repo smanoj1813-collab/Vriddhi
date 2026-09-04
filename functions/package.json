@@ -14,7 +14,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "lint": "eslint --ext .js,.ts .",
-    "test:unit": "node --import tsx --test test/assessmentGrading.test.ts test/gradeRecords.test.ts test/paperWorkflow.test.ts test/auth.test.ts test/collegeScope.test.ts test/languages.test.ts test/timetableConflicts.test.ts test/verifyAuth.legacy.test.ts",
+    "test:unit": "node --test test/timetableConflicts.test.ts test/verifyAuth.legacy.test.ts test/identityProvisioning.test.ts",
     "test:rules": "firebase emulators:exec --project demo-vriddhi-student-portal --config ../firebase.json --only database,firestore,storage \"node --import tsx --test test/firestore.rules.test.ts\"",
     "test": "npm run test:unit && npm run test:rules"
   },

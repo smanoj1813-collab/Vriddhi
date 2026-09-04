@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useColleges, useImportFaculty } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, GraduationCap } from 'lucide-react'
+import CredentialsTable from '../components/CredentialsTable'
 import { parseCSV, validateCSV, generateCSVTemplate, parseBoolean, normalizeEmploymentType, parseSubjects } from '../../../shared/utils/parseCSV'
 import type { College, ImportResult } from '../api/superAdminApi'
 
@@ -18,6 +19,11 @@ const FacultyImport: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [selectedCollegeName, setSelectedCollegeName] = useState('')
   const [selectedCollegeCode, setSelectedCollegeCode] = useState('')
+  // Credential delivery: 'temp-password' shows a one-time password the importer
+  // hands over; 'reset-email' shows nothing and instead emails a reset link.
+  const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
+  // What to do with faculty who already have an account in this college.
+  const [onExisting, setOnExisting] = useState<'skip' | 'reset'>('skip')
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
   const importFaculty = useImportFaculty()
@@ -107,10 +113,13 @@ const FacultyImport: React.FC = () => {
       const result = await importFaculty.mutateAsync({
         collegeId: selectedCollege,
         faculty: facultyData,
+        deliveryMode,
+        onExisting,
       })
 
       setImportResult(result)
-      showSuccess(`Successfully imported ${result.success} faculty members`)
+      const skippedNote = result.skipped ? `, ${result.skipped} already had accounts and were left unchanged` : ''
+      showSuccess(`Successfully provisioned ${result.success} faculty account(s)${skippedNote}`)
     } catch (err: any) {
       showError(err.message || 'Import failed')
     } finally {
@@ -148,6 +157,39 @@ const FacultyImport: React.FC = () => {
         <button onClick={downloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
           <Download className="w-4 h-4" /> Download Template
         </button>
+      </div>
+
+      {/* Credential delivery options */}
+      <div className="glass-card p-5 mb-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm text-slate-700 dark:text-slate-300 mb-2">Credential delivery</label>
+          <select
+            value={deliveryMode}
+            onChange={e => setDeliveryMode(e.target.value as 'temp-password' | 'reset-email')}
+            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white"
+          >
+            <option value="temp-password">Generate a one-time password (shown here once)</option>
+            <option value="reset-email">Password-reset link (no shared secret)</option>
+          </select>
+          <p className="mt-1 text-xs text-slate-500">
+            Recommended: the reset-link flow means nobody in the college has to know or store a password.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm text-slate-700 dark:text-slate-300 mb-2">If the account already exists</label>
+          <select
+            value={onExisting}
+            onChange={e => setOnExisting(e.target.value as 'skip' | 'reset')}
+            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white"
+          >
+            <option value="skip">Leave it alone (report as “already existing”)</option>
+            <option value="reset">Reset its password and re-issue claims</option>
+          </select>
+          <p className="mt-1 text-xs text-slate-500">
+            “Reset” signs that person out everywhere and hands you a fresh credential — use it when a
+            faculty member cannot log in and the old password is lost.
+          </p>
+        </div>
       </div>
 
       {/* College Selection */}
@@ -322,10 +364,10 @@ const FacultyImport: React.FC = () => {
           </div>
           {importResult.errors && importResult.errors.length > 0 && (
             <div className="mt-4">
-              <p className="text-sm text-red-400 mb-2">Errors:</p>
+              <p className="text-sm text-red-600 dark:text-red-400 mb-2">Errors:</p>
               <ul className="space-y-1">
                 {importResult.errors.map((err: string, i: number) => (
-                  <li key={i} className="text-xs text-red-400/70">{err}</li>
+                  <li key={i} className="text-xs text-red-600 dark:text-red-400/80 whitespace-pre-line">{err}</li>
                 ))}
               </ul>
             </div>
