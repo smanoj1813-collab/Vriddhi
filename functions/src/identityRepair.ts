@@ -96,6 +96,8 @@ interface RepairItem {
   created?: boolean
   password?: string
   resetLink?: string
+  /** Set when a credential is handed out for a reason other than "no account existed". */
+  credentialReason?: string
   error?: string
 }
 
@@ -163,9 +165,17 @@ export const auditAndRepairIdentities = onCall(
     let claimsIssued = 0
     let usersDocsCreated = 0
     let secretsStripped = 0
+    // Rows where a legacy plaintext credential was destroyed and a usable one
+    // had to be handed out in the same breath.
+    let secretsResetIssued = 0
     const errors: string[] = []
     // Credentials minted during this run, returned once to the caller only.
-    const credentials: Array<{ email: string; password?: string; resetLink?: string }> = []
+    const credentials: Array<{
+      email: string
+      password?: string
+      resetLink?: string
+      reason?: string
+    }> = []
 
     const bump = (finding: Finding) => {
       counts[finding] = (counts[finding] || 0) + 1
@@ -300,14 +310,26 @@ export const auditAndRepairIdentities = onCall(
         if (findings.includes('MISSING_USERS_DOC')) actions.push(`create users/{uid} lookup document`)
         if (findings.includes('MISSING_PROFILE_LINK'))
           actions.push(`write users/{uid}.${profileLinkField} = ${docSnap.id}`)
-        if (findings.includes('PLAINTEXT_SECRET'))
-          actions.push(`delete plaintext field(s): ${Object.keys(secretDeletes).join(', ')}`)
+        if (findings.includes('PLAINTEXT_SECRET')) {
+          const names = Object.keys(secretDeletes).join(', ')
+          actions.push(
+            authUser
+              ? `delete plaintext field(s): ${names} — that field was the only copy of this ` +
+                `person's credential, so also ${
+                  deliveryMode === 'temp-password'
+                    ? 'set and return a new password'
+                    : 'issue a password-reset link'
+                }`
+              : `delete plaintext field(s): ${names} (no Auth account exists, so a new credential is returned)`
+          )
+        }
         items.push(item)
         return
       }
 
       try {
         // ── 1. Auth account ────────────────────────────────────────────
+        const accountPreexisted = !!authUser
         if (!authUser) {
           const password = generateRandomPassword()
           authUser = await auth.createUser({
@@ -404,6 +426,45 @@ export const auditAndRepairIdentities = onCall(
         repaired++
         item.actions = actions
         item.uid = authUser.uid
+
+        // ── 4. Replace the credential we just destroyed ────────────────
+        // PLAINTEXT_SECRET means the profile document itself held the password —
+        // which is how this college has been reading faculty logins out of the
+        // Firestore console. Deleting it is correct and non-negotiable, but if the
+        // account already existed then that field was the ONLY copy of the secret
+        // anyone could type. Stripping it without handing something back turns a
+        // security fix into a lockout, so the same pass that disarms the document
+        // also mints a usable credential for it.
+        if (Object.keys(secretDeletes).length && accountPreexisted && email) {
+          const names = Object.keys(secretDeletes).join(', ')
+          const reason =
+            `their profile carried a plaintext password (${names}); it has been deleted, so ` +
+            'this is the only credential they can now use'
+          try {
+            if (deliveryMode === 'temp-password') {
+              const password = generateRandomPassword()
+              await auth.updateUser(authUser.uid, { password })
+              item.password = password
+              credentials.push({ email, password, reason })
+              actions.push('set a new generated password (the plaintext one was deleted)')
+            } else {
+              item.resetLink = await auth.generatePasswordResetLink(
+                email,
+                input.continueUrl ? { url: input.continueUrl } : undefined
+              )
+              credentials.push({ email, resetLink: item.resetLink, reason })
+              actions.push('issued a password-reset link (the plaintext one was deleted)')
+            }
+            item.credentialReason = reason
+            secretsResetIssued++
+          } catch (credErr: any) {
+            errors.push(
+              `${collection}/${docSnap.id}: plaintext field deleted but no replacement ` +
+                `credential could be issued — ${credErr?.message || credErr}. Use "send reset link" ` +
+                'from this screen before contacting them.'
+            )
+          }
+        }
       } catch (err: any) {
         item.error = err?.message || String(err)
         errors.push(`${collection}/${docSnap.id}: ${item.error}`)
@@ -570,6 +631,7 @@ export const auditAndRepairIdentities = onCall(
       claimsIssued,
       usersDocsCreated,
       secretsStripped,
+      secretsResetIssued,
       authOnlyCount,
       reverseSweepNote,
       partial,
@@ -591,6 +653,9 @@ export const auditAndRepairIdentities = onCall(
             ? ` — PARTIAL PASS: the ${Math.round(BUDGET_MS / 1000)}s budget ran out${stoppedAfter ? ` after ${stoppedAfter}` : ''}. Re-run scoped to one college, with fewer collections, or with a larger budgetSeconds; already-repaired rows are detected and skipped, so repeating is safe.`
             : `. Re-run with dryRun=false to apply.`)
         : `Repaired ${repaired} of ${broken} affected identities` +
+          (secretsResetIssued
+            ? `, and issued ${secretsResetIssued} replacement credential(s) for accounts whose plaintext password was deleted — hand those out before the person tries to sign in`
+            : '') +
           (partial
             ? ` — the time budget ran out, so re-run until "needs repair" is 0. Rows already fixed are detected and skipped.`
             : `. Affected users must sign out and sign in again to receive their new claims.`),

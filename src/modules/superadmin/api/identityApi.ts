@@ -51,6 +51,8 @@ export interface RepairItem {
   findings: string[]
   actions: string[]
   created?: boolean
+  /** Why a credential is being handed to this person, when it is not "no account". */
+  credentialReason?: string
   password?: string
   resetLink?: string
   error?: string
@@ -66,8 +68,15 @@ export interface RepairResult {
   claimsIssued: number
   usersDocsCreated: number
   secretsStripped: number
-  authOnlyCount: number
+  /**
+   * Accounts whose plaintext credential was deleted and for which a replacement
+   * password or reset link was minted in the same pass. These are the rows where a
+   * person will otherwise try to sign in with something that no longer exists.
+   */
+  secretsResetIssued: number
+  /** Findings found, keyed by name — independent of dry run, unlike the action counts. */
   counts: Record<string, number>
+  authOnlyCount: number
   errors: string[]
   items: RepairItem[]
   itemsTruncated: boolean
@@ -79,7 +88,7 @@ export interface RepairResult {
   budgetMs?: number
   /** Why the reverse (Auth→profile) sweep did not run, when it did not. */
   reverseSweepNote?: string | null
-  credentials: Array<{ email: string; password?: string; resetLink?: string }>
+  credentials: Array<{ email: string; password?: string; resetLink?: string; reason?: string }>
   message: string
   apiVersion: string
 }

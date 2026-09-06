@@ -164,16 +164,38 @@ export default function AccessControl() {
           <Chip label={`Auth accounts created ${repairResult.authCreated}`} />
           <Chip label={`claims issued ${repairResult.claimsIssued}`} />
           <Chip label={`users docs ${repairResult.usersDocsCreated}`} />
-          <Chip label={`plaintext passwords deleted ${repairResult.secretsStripped}`} color={repairResult.secretsStripped ? 'error' : 'default'} />
+          {/* A dry run deletes nothing, so counting only deletions made "0" look
+              like "no plaintext passwords anywhere" when the finding was sitting in
+              the list below it. Report what was *found*; the deleted count only
+              means anything after Apply. */}
+          {repairResult.dryRun
+            ? <Chip label={`plaintext password fields found ${repairResult.counts?.PLAINTEXT_SECRET || 0}`} color={repairResult.counts?.PLAINTEXT_SECRET ? 'error' : 'default'} />
+            : <Chip label={`plaintext passwords deleted ${repairResult.secretsStripped}`} color={repairResult.secretsStripped ? 'error' : 'default'} />}
+          {repairResult.counts ? Object.entries(repairResult.counts)
+            .filter(([, n]) => n > 0)
+            .map(([finding, n]) => (
+              <Chip key={finding} size="small" variant="outlined" label={`${finding} × ${n}`}
+                color={finding === 'PLAINTEXT_SECRET' || finding === 'MISSING_AUTH' || finding === 'ACCOUNT_DISABLED' ? 'error' : 'default'} />
+            )) : null}
           {repairResult.itemsTruncated && <Chip label="list truncated — re-run per collection" color="warning" />}
           {repairResult.partial && <Chip label={`partial pass — stopped after ${repairResult.stoppedAfter || 'the last collection'}`} color="warning" />}
           {repairResult.elapsedMs ? <Chip label={`${Math.round(repairResult.elapsedMs / 1000)}s of ${Math.round((repairResult.budgetMs || 0) / 1000)}s budget`} /> : null}
         </Stack>
+        {repairResult.secretsResetIssued ? (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {repairResult.secretsResetIssued} {repairResult.secretsResetIssued === 1 ? 'account was' : 'accounts were'} carrying their
+            password as a plaintext field on the profile document — the thing you have been reading out of the
+            Firestore console. That field is gone now, so {'those people'} cannot sign in with what they know. Hand out the
+            link{repairResult.secretsResetIssued === 1 ? '' : 's'} below (or use “send reset link”) before telling them to try again.
+          </Alert>
+        ) : null}
         {repairResult.credentials?.length ? <Box sx={{ mb: 2 }}>
           <CredentialsTable
             rows={repairResult.credentials.map(c => ({ email: c.email, password: c.password, resetLink: c.resetLink, status: 'created' as const }))}
             filename="identity-repair-credentials"
-            title="Credentials created by this repair (shown once)"
+            title={repairResult.secretsResetIssued
+              ? 'Credentials from this repair (shown once) — including accounts whose plaintext password was deleted'
+              : "Credentials created by this repair (shown once)"}
           />
         </Box> : null}
         <Box sx={{ bgcolor: 'action.hover', borderRadius: 1, p: 2, maxHeight: 320, overflow: 'auto' }}>
