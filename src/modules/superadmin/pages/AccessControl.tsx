@@ -181,6 +181,13 @@ export default function AccessControl() {
           {repairResult.partial && <Chip label={`partial pass — stopped after ${repairResult.stoppedAfter || 'the last collection'}`} color="warning" />}
           {repairResult.elapsedMs ? <Chip label={`${Math.round(repairResult.elapsedMs / 1000)}s of ${Math.round((repairResult.budgetMs || 0) / 1000)}s budget`} /> : null}
         </Stack>
+        {repairResult.operatorAffected ? (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            This pass included your own identity document. Applying revokes your refresh tokens, so
+            the next request you make will sign you out — that is the mechanism working, not a
+            regression. Sign back in before deciding whether the repair behaved.
+          </Alert>
+        ) : null}
         {repairResult.secretsResetIssued ? (
           <Alert severity="warning" sx={{ mb: 2 }}>
             {repairResult.secretsResetIssued} {repairResult.secretsResetIssued === 1 ? 'account was' : 'accounts were'} carrying their

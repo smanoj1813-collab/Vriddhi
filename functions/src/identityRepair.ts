@@ -23,6 +23,8 @@
 //                         every page is empty / permission-denied")
 //   WRONG_CLAIMS          role or college claim disagrees with the profile
 //   MISSING_USERS_DOC     no users/{uid} lookup document
+//   DUPLICATE_PROFILE     two profile documents describe the same email, so only
+//                         the first one in collection order may decide the claims
 //   MISSING_PROFILE_LINK  users/{uid} does not point back at the profile id,
 //                         so the client can only resolve its own profile via a
 //                         query, which the rules deny for students
@@ -43,6 +45,7 @@ import * as logger from 'firebase-functions/logger'
 import {
   COLLECTION_ROLE,
   findAuthUserByEmail,
+  groupBy,
   generateRandomPassword,
   isValidEmail,
   mapWithConcurrency,
@@ -78,6 +81,7 @@ type Finding =
   | 'MISSING_CLAIMS'
   | 'WRONG_CLAIMS'
   | 'MISSING_USERS_DOC'
+  | 'DUPLICATE_PROFILE'
   | 'MISSING_PROFILE_LINK'
   | 'ACCOUNT_DISABLED'
   | 'PLAINTEXT_SECRET'
@@ -168,6 +172,10 @@ export const auditAndRepairIdentities = onCall(
     // Rows where a legacy plaintext credential was destroyed and a usable one
     // had to be handed out in the same breath.
     let secretsResetIssued = 0
+    // Set when a row in this pass is the signed-in operator's own identity document.
+    // Applying it revokes their refresh tokens, so they must be told before they
+    // press the button, not after they are mysteriously logged out mid-audit.
+    let operatorAffected = false
     const errors: string[] = []
     // Credentials minted during this run, returned once to the caller only.
     const credentials: Array<{
@@ -191,8 +199,16 @@ export const auditAndRepairIdentities = onCall(
     const processProfileDocument = async (
       collection: string,
       defaultRole: string,
-      docSnap: admin.firestore.QueryDocumentSnapshot
+      docSnap: admin.firestore.QueryDocumentSnapshot,
+      opts: { ownsIdentity: boolean }
     ): Promise<void> => {
+      if (Date.now() > softDeadline) {
+        // Cooperative stop: the fetch phase above cannot know how long the write
+        // phase will take, so every unit checks the budget as it starts.
+        partial = true
+        stoppedAfter = `${collection}/${docSnap.id}`
+        return
+      }
       scanned++
       const data = docSnap.data() as Record<string, unknown>
       const email = normalizeEmail(data.email) || null
@@ -213,11 +229,19 @@ export const auditAndRepairIdentities = onCall(
 
       const findings: Finding[] = []
       const actions: string[] = []
+      // Findings are counted, not just listed, so the report can say "STALE_UID_LINK
+      // × 3". A finding can be reached from two branches (a uid link that no longer
+      // resolves *and* a mismatch with the account found by email), so registration is
+      // idempotent — otherwise a single row inflates the count the operator triages by.
+      const addFinding = (finding: Finding) => {
+        if (findings.includes(finding)) return
+        findings.push(finding)
+        bump(finding)
+      }
       let authUser: admin.auth.UserRecord | null = null
 
       if (!email || !isValidEmail(email)) {
-        findings.push('NO_EMAIL')
-        bump('NO_EMAIL')
+        addFinding('NO_EMAIL')
         items.push({
           collection,
           docId: docSnap.id,
@@ -241,7 +265,7 @@ export const auditAndRepairIdentities = onCall(
             authUser = await auth.getUser(linkedUid)
           } catch (err: any) {
             if (err?.code !== 'auth/user-not-found') throw err
-            findings.push('STALE_UID_LINK')
+            addFinding('STALE_UID_LINK')
           }
         }
         if (!authUser) authUser = await findAuthUserByEmail(email)
@@ -250,23 +274,27 @@ export const auditAndRepairIdentities = onCall(
         return
       }
 
+      if (!opts.ownsIdentity) addFinding('DUPLICATE_PROFILE')
+      const affectsOperator = authUser?.uid === caller.uid || (!!linkedUid && linkedUid === caller.uid)
+      if (affectsOperator) operatorAffected = true
+
       if (!authUser) {
-        findings.push('MISSING_AUTH')
+        addFinding('MISSING_AUTH')
       } else {
-        if (authUser.disabled) findings.push('ACCOUNT_DISABLED')
+        if (authUser.disabled) addFinding('ACCOUNT_DISABLED')
         const claims = (authUser.customClaims || {}) as Record<string, unknown>
         const claimRole = normalizeRole(claims.role)
         const claimCollege = claims.collegeId ? String(claims.collegeId) : null
-        if (!claimRole) findings.push('MISSING_CLAIMS')
+        if (!claimRole) addFinding('MISSING_CLAIMS')
         else if (claimRole !== role || (collegeId && claimCollege !== collegeId)) {
-          findings.push('WRONG_CLAIMS')
+          addFinding('WRONG_CLAIMS')
         }
-        if (linkedUid && authUser.uid !== linkedUid) findings.push('STALE_UID_LINK')
+        if (linkedUid && authUser.uid !== linkedUid) addFinding('STALE_UID_LINK')
       }
 
       const usersRef = authUser ? db.doc(`users/${authUser.uid}`) : null
       const usersSnap = usersRef ? await usersRef.get() : null
-      if (authUser && !usersSnap?.exists) findings.push('MISSING_USERS_DOC')
+      if (authUser && !usersSnap?.exists) addFinding('MISSING_USERS_DOC')
       const profileLinkField = profileLinkFieldFor(collection)
       if (
         authUser &&
@@ -274,10 +302,10 @@ export const auditAndRepairIdentities = onCall(
         profileLinkField &&
         (usersSnap.data() || {})[profileLinkField] !== docSnap.id
       ) {
-        findings.push('MISSING_PROFILE_LINK')
+        addFinding('MISSING_PROFILE_LINK')
       }
       const secretDeletes = secretFieldDeletes(data)
-      if (Object.keys(secretDeletes).length) findings.push('PLAINTEXT_SECRET')
+      if (Object.keys(secretDeletes).length) addFinding('PLAINTEXT_SECRET')
 
       if (!findings.length && !input.forceClaims) return
       broken++
@@ -292,6 +320,21 @@ export const auditAndRepairIdentities = onCall(
         uid: authUser?.uid || linkedUid,
         findings,
         actions,
+      }
+
+      if (affectsOperator) {
+        actions.push(
+          'this is your OWN account — applying revokes its tokens, so you will be ' +
+          'signed out on your next request; expect that and sign back in before you ' +
+          'judge whether anything broke'
+        )
+      }
+      if (!opts.ownsIdentity) {
+        actions.push(
+          'duplicate identity record: another profile for this email owns the Auth ' +
+          'account and the role claims, so this document is only linked and disarmed. ' +
+          'Merge them deliberately afterwards.'
+        )
       }
 
       if (dryRun) {
@@ -330,6 +373,24 @@ export const auditAndRepairIdentities = onCall(
       try {
         // ── 1. Auth account ────────────────────────────────────────────
         const accountPreexisted = !!authUser
+        if (!authUser && !opts.ownsIdentity) {
+          // A second document for an email that has no account: creating an account
+          // here would produce two logins for one person. Disarm the document and
+          // leave identity to the primary record, which is reported as such.
+          if (Object.keys(secretDeletes).length) {
+            await db.collection(collection).doc(docSnap.id).update({
+              ...secretDeletes,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              repairedBy: caller.uid,
+            })
+            secretsStripped += Object.keys(secretDeletes).length
+            actions.push('deleted plaintext field(s); Auth left to the primary profile')
+            item.actions = actions
+            repaired++
+          }
+          items.push(item)
+          return
+        }
         if (!authUser) {
           const password = generateRandomPassword()
           authUser = await auth.createUser({
@@ -371,7 +432,7 @@ export const auditAndRepairIdentities = onCall(
         const claimCollege = existingClaims.collegeId ? String(existingClaims.collegeId) : null
         const claimsWrong =
           !claimRole || claimRole !== role || (!!collegeId && claimCollege !== collegeId)
-        if (claimsWrong || input.forceClaims) {
+        if ((claimsWrong || input.forceClaims) && opts.ownsIdentity) {
           await auth.setCustomUserClaims(authUser.uid, {
             ...existingClaims,
             role,
@@ -382,6 +443,8 @@ export const auditAndRepairIdentities = onCall(
           await auth.revokeRefreshTokens(authUser.uid)
           claimsIssued++
           actions.push(`claims set to { role: ${role}, collegeId: ${collegeId || null} }`)
+        } else if (claimsWrong || input.forceClaims) {
+          actions.push('claims not touched here — the primary profile for this email owns them')
         }
 
         // ── 3. Firestore documents ─────────────────────────────────────
@@ -403,6 +466,16 @@ export const auditAndRepairIdentities = onCall(
           actions.push(`deleted plaintext field(s): ${Object.keys(secretDeletes).join(', ')}`)
         }
 
+        if (!opts.ownsIdentity && profileLinkField) {
+          // Only point the lookup document at this profile; writing role, name or
+          // collegeId from a duplicate would overwrite what the primary record decided.
+          batch.set(
+            db.collection('users').doc(authUser.uid),
+            { [profileLinkField]: docSnap.id, updatedAt: now, repairedBy: caller.uid },
+            { merge: true }
+          )
+          actions.push(`users/{uid}.${profileLinkField} pointed here (role left to the primary profile)`)
+        } else {
         batch.set(
           db.collection('users').doc(authUser.uid),
           {
@@ -419,8 +492,9 @@ export const auditAndRepairIdentities = onCall(
           },
           { merge: true }
         )
-        if (!usersSnap?.exists) usersDocsCreated++
-        actions.push('users/{uid} lookup document verified')
+          if (!usersSnap?.exists) usersDocsCreated++
+          actions.push('users/{uid} lookup document verified')
+        }
 
         await batch.commit()
         repaired++
@@ -435,7 +509,7 @@ export const auditAndRepairIdentities = onCall(
         // anyone could type. Stripping it without handing something back turns a
         // security fix into a lockout, so the same pass that disarms the document
         // also mints a usable credential for it.
-        if (Object.keys(secretDeletes).length && accountPreexisted && email) {
+        if (Object.keys(secretDeletes).length && accountPreexisted && email && opts.ownsIdentity) {
           const names = Object.keys(secretDeletes).join(', ')
           const reason =
             `their profile carried a plaintext password (${names}); it has been deleted, so ` +
@@ -473,6 +547,11 @@ export const auditAndRepairIdentities = onCall(
       items.push(item)
     }
 
+    const units: Array<{
+      collection: string
+      defaultRole: string
+      doc: admin.firestore.QueryDocumentSnapshot
+    }> = []
     for (const collection of collections) {
       const defaultRole = COLLECTION_ROLE[collection]
       let query: admin.firestore.Query = db.collection(collection).limit(limit)
@@ -494,10 +573,30 @@ export const auditAndRepairIdentities = onCall(
         stoppedAfter = collection
         break
       }
-      await mapWithConcurrency(snapshot.docs, CONCURRENCY, (doc) =>
-        processProfileDocument(collection, defaultRole, doc)
-      )
+      for (const doc of snapshot.docs) units.push({ collection, defaultRole, doc })
     }
+
+    // One Auth account can be described by more than one profile document — this
+    // tenant has a person who is both `faculty/FAC001` and
+    // `hods/<college>_Multi-Department`. Two lanes writing the same users/{uid}
+    // role and the same custom claims race each other, and whoever wins depends on
+    // arrival order, which is not a decision anyone would defend in a review. So
+    // documents that share an identity are handled by ONE worker, in collection
+    // order: the first owns the identity (claims, account creation, credentials)
+    // and the rest are linked, disarmed and reported as DUPLICATE_PROFILE to be
+    // merged by a human.
+    const groups = groupBy(units, (unit) => {
+      const emailKey = normalizeEmail((unit.doc.data() as Record<string, unknown>).email)
+      return emailKey || `${unit.collection}/${unit.doc.id}`
+    })
+    await mapWithConcurrency(groups, CONCURRENCY, async (group) => {
+      for (let index = 0; index < group.length; index++) {
+        const unit = group[index]
+        await processProfileDocument(unit.collection, unit.defaultRole, unit.doc, {
+          ownsIdentity: index === 0,
+        })
+      }
+    })
 
 
     // Reverse direction: an account that CAN sign in but has no documents.
@@ -632,6 +731,7 @@ export const auditAndRepairIdentities = onCall(
       usersDocsCreated,
       secretsStripped,
       secretsResetIssued,
+      operatorAffected,
       authOnlyCount,
       reverseSweepNote,
       partial,
@@ -649,10 +749,16 @@ export const auditAndRepairIdentities = onCall(
       credentials: deliveryMode === 'temp-password' ? credentials : credentials.map((c) => ({ email: c.email, resetLink: c.resetLink })),
       message: dryRun
         ? `Dry run: ${broken} identity/identities need repair` +
+          (counts.DUPLICATE_PROFILE
+            ? ` — including ${counts.DUPLICATE_PROFILE} duplicate profile document(s) sharing an email with another profile`
+            : '') +
           (partial
             ? ` — PARTIAL PASS: the ${Math.round(BUDGET_MS / 1000)}s budget ran out${stoppedAfter ? ` after ${stoppedAfter}` : ''}. Re-run scoped to one college, with fewer collections, or with a larger budgetSeconds; already-repaired rows are detected and skipped, so repeating is safe.`
             : `. Re-run with dryRun=false to apply.`)
         : `Repaired ${repaired} of ${broken} affected identities` +
+          (counts.DUPLICATE_PROFILE
+            ? `. ${counts.DUPLICATE_PROFILE} profile document(s) share an email with another profile — only the first decided the claims; review those people and merge the documents`
+            : '') +
           (secretsResetIssued
             ? `, and issued ${secretsResetIssued} replacement credential(s) for accounts whose plaintext password was deleted — hand those out before the person tries to sign in`
             : '') +

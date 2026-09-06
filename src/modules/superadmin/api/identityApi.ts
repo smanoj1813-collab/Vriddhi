@@ -74,6 +74,8 @@ export interface RepairResult {
    * person will otherwise try to sign in with something that no longer exists.
    */
   secretsResetIssued: number
+  /** True when this pass included the signed-in superadmin's own identity document. */
+  operatorAffected?: boolean
   /** Findings found, keyed by name — independent of dry run, unlike the action counts. */
   counts: Record<string, number>
   authOnlyCount: number

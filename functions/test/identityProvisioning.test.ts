@@ -7,6 +7,7 @@ import {
   IDENTITY_API_VERSION,
   SECRET_PROFILE_FIELDS,
   generateRandomPassword,
+  groupBy,
   isValidEmail,
   normalizeEmail,
   mapWithConcurrency,
@@ -97,6 +98,36 @@ describe('normalizeRole', () => {
 
   it('never trusts whitespace or case to hide a role', () => {
     assert.equal(normalizeRole('  SUPERADMIN \n'), 'superadmin')
+  })
+})
+
+describe('groupBy', () => {
+  const items = [
+    { email: 'b@x.com', id: 1 },
+    { email: 'a@x.com', id: 2 },
+    { email: 'b@x.com', id: 3 },
+    { email: 'a@x.com', id: 4 },
+  ]
+
+  it('keeps buckets and members in first-seen order', () => {
+    assert.deepEqual(
+      groupBy(items, (i) => i.email).map((g) => g.map((i) => i.id)),
+      [[1, 3], [2, 4]],
+      'a repair pass must be reproducible: the same two documents for one email have to land in the same order every run, because only the first may decide the role claims'
+    )
+  })
+
+  it('treats a missing key as its own bucket instead of merging the strays', () => {
+    const loose = [{ email: '', id: 5 }, { email: '', id: 6 }]
+    assert.deepEqual(
+      groupBy(loose, (i) => i.email || `row-${i.id}`).map((g) => g[0].id),
+      [5, 6],
+      'documents with no email must not be collapsed into one identity'
+    )
+  })
+
+  it('returns nothing for nothing', () => {
+    assert.deepEqual(groupBy([], () => 'x'), [])
   })
 })
 

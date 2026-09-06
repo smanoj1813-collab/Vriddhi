@@ -303,6 +303,28 @@ export const SECRET_PROFILE_FIELDS = [
  * actually fine. Bounding the fan-out (rather than raising the timeout) keeps the
  * Auth API happy and keeps a partial pass resumable.
  */
+/**
+ * Order-preserving bucketing: items are grouped by `keyOf`, buckets appear in
+ * first-seen order, and within a bucket input order is kept. Used by the repair
+ * pass so that several profile documents describing the SAME Auth account are
+ * handled by one worker instead of racing each other across the concurrency lanes.
+ */
+export function groupBy<T>(items: readonly T[], keyOf: (item: T) => string): T[][] {
+  const buckets = new Map<string, T[]>()
+  const order: string[] = []
+  for (const item of items) {
+    const key = keyOf(item)
+    let bucket = buckets.get(key)
+    if (!bucket) {
+      bucket = []
+      buckets.set(key, bucket)
+      order.push(key)
+    }
+    bucket.push(item)
+  }
+  return order.map((key) => buckets.get(key) as T[])
+}
+
 export async function mapWithConcurrency<T, R>(
   items: readonly T[],
   concurrency: number,
