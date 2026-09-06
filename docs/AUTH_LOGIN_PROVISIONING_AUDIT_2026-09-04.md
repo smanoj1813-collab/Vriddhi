@@ -254,6 +254,21 @@ needed repair, `MISSING_PROFILE_LINK` on essentially all of them, `MISSING_CLAIM
 deny every read. ~384 student documents were found where the seeded roster implies ~500, so if a
 bulk import was expected to land every row, the missing rows are an import-side gap, not an
 identity one.
+
+**Orphan Auth accounts are reported on their own.** The faculty-scope Preview also returned
+`AUTH_ONLY_NO_PROFILE × 4`: four accounts that sign in and own no profile document at all. That is
+the exact signature of the regression reported to me — "students were created in Auth instead of
+Firestore" — and it is the opposite failure of every other finding: `MISSING_AUTH` means "there is a
+person, no login", this means "there is a login, no person". No credential fixes it. The pass
+reports orphans in a dedicated `orphanAccounts` list (never competing with hundreds of findings for
+the response cap), and rebuilds `users/{uid}` only when the account carries a role claim to rebuild
+from; a claimless orphan is named and left alone, because choosing its college is a human decision.
+
+**Order of operations, restated because it is the whole safety of this exercise:** repair identities
+→ verify a student and a faculty login → deploy `current-firestore.rules` → everyone signs out and
+back in → then merge. The deployed ruleset today lets a profile document supply `role`/`collegeId`,
+which is why a forged `faculty/{own-uid}` with `role: "superadmin"` works; the branch ruleset closes
+that, but deploying it while half the accounts are claim-less would lock the tenant out.
 It will: create the missing Auth user, set `role`/`collegeId` claims, write/repair `users/{uid}`
 (+ `studentDocId`/`facultyDocId`), relink a stale `uid`, delete plaintext credential fields, and
 emit a reset link per created account. It will **not** change an existing role, delete an Auth
