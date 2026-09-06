@@ -325,6 +325,69 @@ export function groupBy<T>(items: readonly T[], keyOf: (item: T) => string): T[]
   return order.map((key) => buckets.get(key) as T[])
 }
 
+/**
+ * Which Auth account a profile document actually describes.
+ *
+ * The email on the profile is the anchor, because it is the identifier the person
+ * types at sign-in. A profile's `uid` field is a cache: it can be left over from a
+ * deleted account, copied from a template row, or point at somebody else entirely.
+ * Following it without checking is how a repair tool ends up writing role claims
+ * onto — and resetting the password of — the wrong human being.
+ *
+ * Pure, so the whole decision table is testable without the Admin SDK.
+ */
+export interface ProfileAccountFacts {
+  /** The profile document's email, normalized; null when it has none. */
+  profileEmail: string | null
+  /** The uid stored on the profile document (`uid`, `userId`, …), if any. */
+  linkedUid: string | null
+  /** Whether that stored uid still resolves to a live Auth account. */
+  linkedUidExists: boolean
+  /** The uid of the account found for `profileEmail`, if one exists. */
+  emailUid: string | null
+}
+
+export type ProfileAccountDecision =
+  /** Proceed with this account. `staleLinkedUid` says the document's own uid was wrong. */
+  | { kind: 'use-account'; uid: string; source: 'email' | 'uid'; staleLinkedUid: string | null }
+  /** Nothing to repair on the Auth side: no account exists for this profile at all. */
+  | { kind: 'no-account'; linkedUidDead: boolean }
+  /**
+   * The document's uid resolves to an account, but that account belongs to a
+   * DIFFERENT email, and no account exists for the profile's email. Writing claims
+   * here would grant a stranger this college's access; resetting its password
+   * would lock a real person out of their own account. Refuse and report.
+   */
+  | { kind: 'mismatch'; uidOfDocument: string; documentEmail: string | null }
+
+export function decideProfileAccount(facts: ProfileAccountFacts): ProfileAccountDecision {
+  const linked = facts.linkedUidExists ? facts.linkedUid : null
+
+  if (facts.emailUid) {
+    // The sign-in identifier resolves, so it decides. A linked uid pointing at
+    // another account is reported as stale and re-pointed, never followed.
+    return {
+      kind: 'use-account',
+      uid: facts.emailUid,
+      source: 'email',
+      staleLinkedUid: facts.linkedUid && facts.linkedUid !== facts.emailUid ? facts.linkedUid : null,
+    }
+  }
+
+  if (facts.profileEmail) {
+    // No account for the profile's email. If the document's uid still resolves, it
+    // belongs to somebody else — that is a mismatch, not a login to reclaim.
+    if (linked) {
+      return { kind: 'mismatch', uidOfDocument: linked, documentEmail: facts.profileEmail }
+    }
+    return { kind: 'no-account', linkedUidDead: Boolean(facts.linkedUid) }
+  }
+
+  // A profile with no email has nothing but its uid to go on.
+  if (linked) return { kind: 'use-account', uid: linked, source: 'uid', staleLinkedUid: null }
+  return { kind: 'no-account', linkedUidDead: false }
+}
+
 export async function mapWithConcurrency<T, R>(
   items: readonly T[],
   concurrency: number,

@@ -69,6 +69,8 @@ export interface RepairResult {
   usersDocsCreated: number
   /** Lookup links written onto existing `users/{uid}` documents. */
   usersDocsLinked: number
+  /** Rows the pass REFUSED because the profile email and its stored uid name different people. */
+  uidEmailMismatches?: number
   secretsStripped: number
   /**
    * Accounts whose plaintext credential was deleted and for which a replacement

@@ -6,6 +6,7 @@ import { describe, it } from 'node:test'
 import {
   IDENTITY_API_VERSION,
   SECRET_PROFILE_FIELDS,
+  decideProfileAccount,
   generateRandomPassword,
   groupBy,
   isValidEmail,
@@ -98,6 +99,51 @@ describe('normalizeRole', () => {
 
   it('never trusts whitespace or case to hide a role', () => {
     assert.equal(normalizeRole('  SUPERADMIN \n'), 'superadmin')
+  })
+})
+
+describe('decideProfileAccount', () => {
+  const facts = (over: Partial<Parameters<typeof decideProfileAccount>[0]>) => ({
+    profileEmail: 'supreeth@vriddhi.com',
+    linkedUid: 'uid-doc',
+    linkedUidExists: true,
+    emailUid: 'uid-doc',
+    ...over,
+  })
+
+  it('agreement between email and uid is an ordinary account to repair', () => {
+    assert.deepEqual(decideProfileAccount(facts({})), {
+      kind: 'use-account', uid: 'uid-doc', source: 'email', staleLinkedUid: null,
+    })
+  })
+
+  it('re-points a stale uid instead of following it', () => {
+    const d = decideProfileAccount(facts({ emailUid: 'uid-real' }))
+    assert.equal(d.kind, 'use-account')
+    assert.equal((d as any).uid, 'uid-real')
+    assert.equal((d as any).staleLinkedUid, 'uid-doc')
+  })
+
+  it('refuses when the stored uid belongs to somebody else', () => {
+    assert.deepEqual(
+      decideProfileAccount(facts({ emailUid: null })),
+      { kind: 'mismatch', uidOfDocument: 'uid-doc', documentEmail: 'supreeth@vriddhi.com' },
+      'setting claims on that account would hand a stranger this college, and resetting its password would lock a real person out of their own'
+    )
+  })
+
+  it('offers to create a login when the email has no account and the uid is dead', () => {
+    assert.deepEqual(
+      decideProfileAccount(facts({ emailUid: null, linkedUidExists: false })),
+      { kind: 'no-account', linkedUidDead: true }
+    )
+  })
+
+  it('falls back to the uid only when the profile has no email at all', () => {
+    assert.deepEqual(
+      decideProfileAccount(facts({ profileEmail: null, emailUid: null, linkedUidExists: true })),
+      { kind: 'use-account', uid: 'uid-doc', source: 'uid', staleLinkedUid: null }
+    )
   })
 })
 

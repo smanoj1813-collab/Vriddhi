@@ -276,6 +276,31 @@ account, or touch a document it cannot read back.
 
 ---
 
+### 7.1 Which Auth account a profile document describes
+
+The first cut of `auditAndRepairIdentities` resolved an account by trusting the profile's own
+`uid` field and falling back to the email. That order is wrong in both directions, and it was not
+hypothetical: a faculty row whose `uid` pointed at a deleted or foreign account got its role claims
+written onto *that* account, and `resetUserPassword`, which used the same field, reset the password
+of the person the `uid` named rather than the person the row is about. Read as a security property,
+"whoever can edit their own profile document can point `uid` at a colleague and be handed a fresh
+password for that account" is an escalation path, not a data-quality nit.
+
+The rule now, shared by both callables through `decideProfileAccount` in `identityShared.ts`:
+
+| Profile email resolves? | Stored `uid` resolves? | Decision |
+| --- | --- | --- |
+| yes | same account | repair that account |
+| yes | different account | repair the **email's** account, mark `STALE_UID_LINK`, re-point the field |
+| no | yes | **refuse** — `UID_EMAIL_MISMATCH`. No claims, no lookup doc, no credential; only a plaintext secret on this document is destroyed |
+| no | no | create an account for the email (the ordinary `MISSING_AUTH` path) |
+| — | yes | the email is absent, so the `uid` is the only anchor available |
+
+`resetUserPassword` mirrors it and answers with `failed-precondition` naming both emails instead of
+quietly resetting a third party. Refusals are counted (`uidEmailMismatches`), summarised in the
+message and rendered as a red block on the repair card, because a refused row is a decision the
+operator has to make, not a row that silently stayed broken.
+
 ## 8. The claim that cost the most time
 
 Earlier documents assert that a Firestore `list`/query rule "has no `resource`, so any rule

@@ -205,6 +205,14 @@ export default function AccessControl() {
             ) : null}
           </Alert>
         ) : null}
+        {repairResult.uidEmailMismatches ? (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {repairResult.uidEmailMismatches} {repairResult.uidEmailMismatches === 1 ? 'row was' : 'rows were'} refused:
+            their profile email and their stored uid name different people. Nothing was written on either account,
+            because inventing that link is how someone ends up with another college&rsquo;s access — or loses their own
+            password. Each one needs a human to decide which side is wrong.
+          </Alert>
+        ) : null}
         {repairResult.operatorAffected ? (
           <Alert severity="info" sx={{ mb: 2 }}>
             This pass included your own identity document. Applying revokes your refresh tokens, so

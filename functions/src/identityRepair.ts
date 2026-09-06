@@ -25,6 +25,8 @@
 //   MISSING_USERS_DOC     no users/{uid} lookup document
 //   DUPLICATE_PROFILE     two profile documents describe the same email, so only
 //                         the first one in collection order may decide the claims
+//   UID_EMAIL_MISMATCH    the profile's own `uid` resolves to an account for a
+//                         DIFFERENT email: the row is refused, never repaired
 //   MISSING_PROFILE_LINK  users/{uid} does not point back at the profile id,
 //                         so the client can only resolve its own profile via a
 //                         query, which the rules deny for students
@@ -44,9 +46,9 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import {
   COLLECTION_ROLE,
-  findAuthUserByEmail,
   groupBy,
   generateRandomPassword,
+  decideProfileAccount,
   isValidEmail,
   mapWithConcurrency,
   normalizeEmail,
@@ -86,6 +88,7 @@ type Finding =
   | 'ACCOUNT_DISABLED'
   | 'PLAINTEXT_SECRET'
   | 'AUTH_ONLY_NO_PROFILE'
+  | 'UID_EMAIL_MISMATCH'
 
 interface RepairItem {
   collection: string
@@ -181,6 +184,8 @@ export const auditAndRepairIdentities = onCall(
     // Applying it revokes their refresh tokens, so they must be told before they
     // press the button, not after they are mysteriously logged out mid-audit.
     let operatorAffected = false
+    // Rows whose profile email and stored uid describe different people.
+    let uidEmailMismatches = 0
     const errors: string[] = []
     // Credentials minted during this run, returned once to the caller only.
     const credentials: Array<{
@@ -263,28 +268,56 @@ export const auditAndRepairIdentities = onCall(
         return
       }
 
-      // Resolve the Auth account: trust the linked uid first, then the email.
+      // Resolve WHICH Auth account this document describes. The profile's email is
+      // the anchor, because it is what the person types at sign-in; a `uid` field is
+      // a cache that can be stale or point at somebody else entirely. The previous
+      // order here — "trust the linked uid first" — is exactly what let a password
+      // reset aimed at one faculty member land on another human being's account.
+      let emailUser: admin.auth.UserRecord | null = null
+      let uidUser: admin.auth.UserRecord | null = null
       try {
+        try {
+          emailUser = await auth.getUserByEmail(email)
+        } catch (err: any) {
+          if (err?.code !== 'auth/user-not-found') throw err
+        }
         if (linkedUid) {
           try {
-            authUser = await auth.getUser(linkedUid)
+            uidUser = await auth.getUser(linkedUid)
           } catch (err: any) {
             if (err?.code !== 'auth/user-not-found') throw err
-            addFinding('STALE_UID_LINK')
           }
         }
-        if (!authUser) authUser = await findAuthUserByEmail(email)
       } catch (err: any) {
         errors.push(`${collection}/${docSnap.id}: auth lookup failed — ${err?.message || err}`)
         return
+      }
+
+      const decision = decideProfileAccount({
+        profileEmail: email,
+        linkedUid,
+        linkedUidExists: !!uidUser,
+        emailUid: emailUser?.uid || null,
+      })
+      const refusedMismatch = decision.kind === 'mismatch'
+      if (decision.kind === 'use-account') {
+        authUser = emailUser || uidUser
+        if (decision.staleLinkedUid) addFinding('STALE_UID_LINK')
+      } else if (refusedMismatch) {
+        uidEmailMismatches++
       }
 
       if (!opts.ownsIdentity) addFinding('DUPLICATE_PROFILE')
       const affectsOperator = authUser?.uid === caller.uid || (!!linkedUid && linkedUid === caller.uid)
       if (affectsOperator) operatorAffected = true
 
-      if (!authUser) {
+      if (refusedMismatch) {
+        // No Auth-side findings at all for a refused row: which account is right is a
+        // human decision, and guessing with role claims is how access gets invented.
+        addFinding('UID_EMAIL_MISMATCH')
+      } else if (!authUser) {
         addFinding('MISSING_AUTH')
+        if (linkedUid) addFinding('STALE_UID_LINK')
       } else {
         if (authUser.disabled) addFinding('ACCOUNT_DISABLED')
         const claims = (authUser.customClaims || {}) as Record<string, unknown>
@@ -325,6 +358,30 @@ export const auditAndRepairIdentities = onCall(
         uid: authUser?.uid || linkedUid,
         findings,
         actions,
+      }
+
+      if (refusedMismatch) {
+        actions.push(
+          `refused: this document says ${email}, but its ${linkField || 'uid'} resolves to ` +
+          `${uidUser?.email || 'a different account'} (${decision.kind === 'mismatch' ? decision.uidOfDocument : ''}). ` +
+          'No claims, lookup documents or credentials were touched — set this profile\'s uid right, or ' +
+          'grant the role from Access Control, then re-run this pass.'
+        )
+        if (!dryRun && Object.keys(secretDeletes).length) {
+          // The one exception: destroying a plaintext secret on THIS document is
+          // safe regardless of which account it points at, and leaving it in place
+          // because a link looks wrong would be the worse trade.
+          await db.collection(collection).doc(docSnap.id).update({
+            ...secretDeletes,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            repairedBy: caller.uid,
+          })
+          secretsStripped += Object.keys(secretDeletes).length
+          actions.push('deleted plaintext field(s) on this document only')
+          repaired++
+        }
+        items.push(item)
+        return
       }
 
       if (affectsOperator) {
@@ -760,6 +817,7 @@ export const auditAndRepairIdentities = onCall(
       secretsStripped,
       secretsResetIssued,
       operatorAffected,
+      uidEmailMismatches,
       orphanAccounts: orphans.slice(0, 50),
       orphanAccountsTotal: orphans.length,
       authOnlyCount,
@@ -779,6 +837,9 @@ export const auditAndRepairIdentities = onCall(
       credentials: deliveryMode === 'temp-password' ? credentials : credentials.map((c) => ({ email: c.email, resetLink: c.resetLink })),
       message: dryRun
         ? `Dry run: ${broken} identity/identities need repair` +
+          (uidEmailMismatches
+            ? ` — ${uidEmailMismatches} row(s) REFUSED because their profile email and stored uid describe different people`
+            : '') +
           (counts.DUPLICATE_PROFILE
             ? ` — including ${counts.DUPLICATE_PROFILE} duplicate profile document(s) sharing an email with another profile`
             : '') +
@@ -786,6 +847,9 @@ export const auditAndRepairIdentities = onCall(
             ? ` — PARTIAL PASS: the ${Math.round(BUDGET_MS / 1000)}s budget ran out${stoppedAfter ? ` after ${stoppedAfter}` : ''}. Re-run scoped to one college, with fewer collections, or with a larger budgetSeconds; already-repaired rows are detected and skipped, so repeating is safe.`
             : `. Re-run with dryRun=false to apply.`)
         : `Repaired ${repaired} of ${broken} affected identities` +
+          (uidEmailMismatches
+            ? `. ${uidEmailMismatches} row(s) were REFUSED (profile email and stored uid disagree) and need a human`
+            : '') +
           (counts.DUPLICATE_PROFILE
             ? `. ${counts.DUPLICATE_PROFILE} profile document(s) share an email with another profile — only the first decided the claims; review those people and merge the documents`
             : '') +
