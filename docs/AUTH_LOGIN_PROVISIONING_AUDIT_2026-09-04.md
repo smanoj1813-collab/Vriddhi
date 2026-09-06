@@ -235,6 +235,25 @@ stops at its own budget — 420 s by default, below the function's 540 s ceiling
 Control card therefore exposes College, Scope (all / students / faculty / staff), Docs per
 collection and Time budget: on a large tenant, run one college at a time until `needs repair` is
 0, then the next. Repeating a pass is safe — repaired identities are detected and skipped.
+
+**Never disarm without re-arming.** `PLAINTEXT_SECRET` means the profile document itself carried
+the password — historically how a college reads a faculty login out of the Firestore console.
+Deleting that field is non-negotiable, but when the Auth account already existed, that field was
+the only copy of a credential anyone could type, so the same pass that strips it mints a
+replacement: a generated password (`deliveryMode: temp-password`) or a reset link
+(`reset-email`), returned once in the credential panel with a `reason` and counted as
+`secretsResetIssued`. A dry run lists the deletion and the handout as one action, and a failure
+to mint a credential is reported as an error row ("use send reset link first") rather than a
+silent success. This is also why a Preview's plaintext chip must report *findings*, not
+*deletions*: in a dry run nothing is deleted, so "0" there means nothing at all.
+
+**Measured on this tenant (2026-09-06, dry run, 388 documents, 12 s):** 387 of 388 profiles
+needed repair, `MISSING_PROFILE_LINK` on essentially all of them, `MISSING_CLAIMS` on about half,
+`Auth accounts created: 0`, and `PLAINTEXT_SECRET` on `faculty/FAC002`. In other words the import
+*did* create the logins; what never happened was linking and claiming them. That is why the rules
+deny every read. ~384 student documents were found where the seeded roster implies ~500, so if a
+bulk import was expected to land every row, the missing rows are an import-side gap, not an
+identity one.
 It will: create the missing Auth user, set `role`/`collegeId` claims, write/repair `users/{uid}`
 (+ `studentDocId`/`facultyDocId`), relink a stale `uid`, delete plaintext credential fields, and
 emit a reset link per created account. It will **not** change an existing role, delete an Auth
