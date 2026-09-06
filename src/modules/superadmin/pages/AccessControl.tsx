@@ -163,7 +163,8 @@ export default function AccessControl() {
           <Chip label={`repaired ${repairResult.repaired}`} color={repairResult.repaired ? 'success' : 'default'} />
           <Chip label={`Auth accounts created ${repairResult.authCreated}`} />
           <Chip label={`claims issued ${repairResult.claimsIssued}`} />
-          <Chip label={`users docs ${repairResult.usersDocsCreated}`} />
+          <Chip label={`users docs created ${repairResult.usersDocsCreated}`} />
+          <Chip label={`lookup links written ${repairResult.usersDocsLinked}`} color={repairResult.usersDocsLinked ? 'success' : 'default'} />
           {/* A dry run deletes nothing, so counting only deletions made "0" look
               like "no plaintext passwords anywhere" when the finding was sitting in
               the list below it. Report what was *found*; the deleted count only

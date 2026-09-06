@@ -168,6 +168,11 @@ export const auditAndRepairIdentities = onCall(
     let authCreated = 0
     let claimsIssued = 0
     let usersDocsCreated = 0
+    // The link field, not the document: on this tenant almost every row already had a
+    // `users/{uid}` document, so `usersDocsCreated` stayed at 0 while 388 lookup
+    // links were being written. Reporting only the creation made a successful pass
+    // look like it had done nothing.
+    let usersDocsLinked = 0
     let secretsStripped = 0
     // Rows where a legacy plaintext credential was destroyed and a usable one
     // had to be handed out in the same breath.
@@ -475,6 +480,7 @@ export const auditAndRepairIdentities = onCall(
             { merge: true }
           )
           actions.push(`users/{uid}.${profileLinkField} pointed here (role left to the primary profile)`)
+          usersDocsLinked++
         } else {
         batch.set(
           db.collection('users').doc(authUser.uid),
@@ -493,7 +499,12 @@ export const auditAndRepairIdentities = onCall(
           { merge: true }
         )
           if (!usersSnap?.exists) usersDocsCreated++
-          actions.push('users/{uid} lookup document verified')
+          actions.push(
+            profileLinkField
+              ? `users/{uid}.${profileLinkField} = ${docSnap.id} written`
+              : 'users/{uid} lookup document verified'
+          )
+          if (profileLinkField) usersDocsLinked++
         }
 
         await batch.commit()
@@ -725,6 +736,7 @@ export const auditAndRepairIdentities = onCall(
         authCreated,
         claimsIssued,
         usersDocsCreated,
+      usersDocsLinked,
         secretsStripped,
         partial,
         stoppedAfter,

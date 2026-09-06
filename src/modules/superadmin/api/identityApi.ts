@@ -67,6 +67,8 @@ export interface RepairResult {
   authCreated: number
   claimsIssued: number
   usersDocsCreated: number
+  /** Lookup links written onto existing `users/{uid}` documents. */
+  usersDocsLinked: number
   secretsStripped: number
   /**
    * Accounts whose plaintext credential was deleted and for which a replacement
