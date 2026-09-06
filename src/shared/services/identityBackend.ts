@@ -96,6 +96,18 @@ export function describeIdentityError(err: any, fnName?: string): string {
     )
   }
   if (code.includes('resource-exhausted') || code.includes('deadline-exceeded')) {
+    if (/repair/i.test(fnName || '')) {
+      // A repair sweep is bounded by the function's wall clock, not by the size of
+      // a file: the right response to running out of time is to narrow the scope,
+      // not to give up. Telling someone to "split the file into batches" here sent
+      // them looking for a CSV that does not exist in this flow.
+      return (
+        `${where}the sweep hit its time budget before covering every document. That is a scope result, ` +
+        'not a failure: pick a single college (or a single collection), lower the per-collection limit, ' +
+        'or raise the time budget, then re-run. The repair is idempotent — identities already fixed are ' +
+        'recognised and skipped, so repeating it is safe.'
+      )
+    }
     return (
       `${where}the import ran out of time or quota part-way through. Split the file into batches of ` +
       '100 rows and re-run — accounts that already exist are detected and skipped, so re-running is safe.'

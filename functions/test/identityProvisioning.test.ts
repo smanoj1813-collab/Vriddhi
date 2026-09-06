@@ -9,6 +9,7 @@ import {
   generateRandomPassword,
   isValidEmail,
   normalizeEmail,
+  mapWithConcurrency,
   normalizeRole,
   toPhoneE164,
   withApiVersion,
@@ -96,6 +97,44 @@ describe('normalizeRole', () => {
 
   it('never trusts whitespace or case to hide a role', () => {
     assert.equal(normalizeRole('  SUPERADMIN \n'), 'superadmin')
+  })
+})
+
+describe('mapWithConcurrency', () => {
+  it('preserves input order, which keeps a dry-run report diffable', async () => {
+    const out = await mapWithConcurrency([1, 2, 3, 4, 5, 6, 7], 3, async (n) => {
+      // deliberately inverse delays: the slowest job must still land in place
+      await new Promise((r) => setTimeout(r, (10 - n) * 2))
+      return n * 2
+    })
+    assert.deepEqual(out, [2, 4, 6, 8, 10, 12, 14])
+  })
+
+  it('actually bounds the number of in-flight calls', async () => {
+    let live = 0
+    let peak = 0
+    await mapWithConcurrency(Array.from({ length: 40 }, (_, i) => i), 6, async () => {
+      live++
+      peak = Math.max(peak, live)
+      await new Promise((r) => setTimeout(r, 1))
+      live--
+    })
+    assert.ok(peak > 1, 'a repair pass that never overlaps calls cannot beat the function deadline')
+    assert.ok(peak <= 6, `concurrency exceeded its bound (${peak})`)
+  })
+
+  it('lets a failure reject the whole pass instead of returning holes', async () => {
+    await assert.rejects(
+      () => mapWithConcurrency([1, 2, 3], 2, async (n) => {
+        if (n === 2) throw new Error('auth lookup failed')
+        return n
+      }),
+      /auth lookup failed/
+    )
+  })
+
+  it('handles an empty sweep (a college with no rows yet)', async () => {
+    assert.deepEqual(await mapWithConcurrency([], 8, async () => 1), [])
   })
 })
 

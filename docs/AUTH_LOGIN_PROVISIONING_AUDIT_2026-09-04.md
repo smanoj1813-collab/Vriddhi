@@ -227,6 +227,14 @@ say so in exactly those words.
 `Auth only, no profile` and `profile only, no Auth` were both produced by the old code, so
 assume a mix. `auditAndRepairIdentities` (and `identity-doctor --apply`) is idempotent,
 superadmin-gated, dry-run-by-default, `maxInstances: 1`, and logs to `logs/IDENTITY_REPAIR`.
+
+**Scale it deliberately.** A pass over six collections × 500 documents is thousands of Identity
+Platform and Firestore round trips. They run 24 at a time (`mapWithConcurrency`), and the pass
+stops at its own budget — 420 s by default, below the function's 540 s ceiling — so it reports
+`partial: true` plus `stoppedAfter` instead of dying as an opaque `deadline-exceeded`. The Access
+Control card therefore exposes College, Scope (all / students / faculty / staff), Docs per
+collection and Time budget: on a large tenant, run one college at a time until `needs repair` is
+0, then the next. Repeating a pass is safe — repaired identities are detected and skipped.
 It will: create the missing Auth user, set `role`/`collegeId` claims, write/repair `users/{uid}`
 (+ `studentDocId`/`facultyDocId`), relink a stale `uid`, delete plaintext credential fields, and
 emit a reset link per created account. It will **not** change an existing role, delete an Auth

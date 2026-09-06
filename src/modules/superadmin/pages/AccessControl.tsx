@@ -3,8 +3,17 @@ import { httpsCallable } from 'firebase/functions'
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { AdminPanelSettings, Build, Search, VerifiedUser } from '@mui/icons-material'
 import CredentialsTable from '../components/CredentialsTable'
-import { runIdentityRepair, type RepairResult } from '../api/identityApi'
+import { runIdentityRepair, type RepairInput, type RepairResult } from '../api/identityApi'
+import { useColleges } from '../hooks/useSuperAdmin'
 import { functions } from '@/Firebase/config'
+
+/** Which Firestore profile collections one pass should walk. */
+const REPAIR_SCOPES: Record<'all' | 'students' | 'faculty' | 'staff', RepairInput['collections']> = {
+  all: undefined,
+  students: ['students'],
+  faculty: ['faculty'],
+  staff: ['admins', 'hods', 'mentors', 'superadmins'],
+}
 
 type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent'
 const roles: Role[] = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent']
@@ -21,6 +30,14 @@ export default function AccessControl() {
   // Identity repair: reconciles Firestore profiles with Firebase Authentication.
   const [repairCollege, setRepairCollege] = useState('')
   const [repairDryRun, setRepairDryRun] = useState(true)
+  // Scope controls. A full sweep of six collections across every college is a few
+  // thousand Auth/Firestore round trips and can exceed the function's wall clock,
+  // so the operator has to be able to narrow it — not just retry it.
+  const [repairCollections, setRepairCollections] = useState<'all' | 'students' | 'faculty' | 'staff'>('all')
+  const [repairLimit, setRepairLimit] = useState('500')
+  const [repairBudget, setRepairBudget] = useState('420')
+  const { data: collegesData } = useColleges()
+  const collegeOptions = collegesData?.items || []
   const [repairResult, setRepairResult] = useState<RepairResult | null>(null)
   const [repairBusy, setRepairBusy] = useState(false)
 
@@ -58,7 +75,9 @@ export default function AccessControl() {
       const data = await runIdentityRepair({
         dryRun,
         collegeId: repairCollege.trim() || undefined,
-        limit: 500,
+        collections: REPAIR_SCOPES[repairCollections],
+        limit: Math.min(Math.max(Number(repairLimit) || 500, 1), 2000),
+        budgetSeconds: Math.min(Math.max(Number(repairBudget) || 420, 30), 480),
         deliveryMode: 'reset-email',
         continueUrl: window.location.origin + '/login',
       })
@@ -92,7 +111,18 @@ export default function AccessControl() {
         issues password-reset links for any account it had to create.
       </Typography>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { md: 'flex-end' } }}>
-        <TextField fullWidth label="College ID (optional)" value={repairCollege} onChange={e => setRepairCollege(e.target.value)} helperText="Leave empty to sweep every college" />
+        <TextField select fullWidth label="College" value={repairCollege} onChange={e => setRepairCollege(e.target.value)} helperText="One college per pass is the reliable way to cover a large tenant">
+          <MenuItem value="">All colleges</MenuItem>
+          {collegeOptions.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+        </TextField>
+        <TextField select label="Scope" value={repairCollections} onChange={e => setRepairCollections(e.target.value as any)}>
+          <MenuItem value="all">All profile collections</MenuItem>
+          <MenuItem value="students">Students only</MenuItem>
+          <MenuItem value="faculty">Faculty only</MenuItem>
+          <MenuItem value="staff">Admins / HODs / mentors / superadmins</MenuItem>
+        </TextField>
+        <TextField label="Docs per collection" type="number" value={repairLimit} onChange={e => setRepairLimit(e.target.value)} sx={{ width: 170 }} />
+        <TextField label="Time budget (s)" type="number" value={repairBudget} onChange={e => setRepairBudget(e.target.value)} sx={{ width: 150 }} helperText="stops early and reports a partial pass" />
         <Button variant="outlined" disabled={repairBusy || !repairDryRun} startIcon={repairBusy ? <CircularProgress size={18} /> : <Search />} onClick={() => runRepair(true)}>Preview</Button>
         <Button variant="contained" color="warning" disabled={repairBusy || repairDryRun} startIcon={<Build />} onClick={() => runRepair(false)}>Apply repair</Button>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -101,6 +131,11 @@ export default function AccessControl() {
         </label>
       </Stack>
       {repairResult && <Box sx={{ mt: 3 }}>
+        {repairResult.reverseSweepNote ? (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            Auth-directory sweep: {repairResult.reverseSweepNote}.
+          </Typography>
+        ) : null}
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 2 }}>
           <Chip label={`scanned ${repairResult.scanned}`} />
           <Chip label={`needs repair ${repairResult.broken}`} color={repairResult.broken ? 'warning' : 'default'} />
@@ -110,6 +145,8 @@ export default function AccessControl() {
           <Chip label={`users docs ${repairResult.usersDocsCreated}`} />
           <Chip label={`plaintext passwords deleted ${repairResult.secretsStripped}`} color={repairResult.secretsStripped ? 'error' : 'default'} />
           {repairResult.itemsTruncated && <Chip label="list truncated — re-run per collection" color="warning" />}
+          {repairResult.partial && <Chip label={`partial pass — stopped after ${repairResult.stoppedAfter || 'the last collection'}`} color="warning" />}
+          {repairResult.elapsedMs ? <Chip label={`${Math.round(repairResult.elapsedMs / 1000)}s of ${Math.round((repairResult.budgetMs || 0) / 1000)}s budget`} /> : null}
         </Stack>
         {repairResult.credentials?.length ? <Box sx={{ mb: 2 }}>
           <CredentialsTable

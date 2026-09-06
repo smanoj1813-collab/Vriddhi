@@ -293,6 +293,36 @@ export const SECRET_PROFILE_FIELDS = [
 ] as const
 
 /**
+ * Run `worker` over `items` with at most `concurrency` in flight, preserving the
+ * input order in the result.
+ *
+ * Provisioning and repair work is dominated by per-account round trips to the
+ * Identity Platform and Firestore APIs: a sweep of a few thousand profiles run
+ * serially cannot finish inside a Cloud Function's 540-second ceiling, which
+ * surfaces to the operator as `functions/deadline-exceeded` on a job that is
+ * actually fine. Bounding the fan-out (rather than raising the timeout) keeps the
+ * Auth API happy and keeps a partial pass resumable.
+ */
+export async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let cursor = 0
+  const laneCount = Math.max(1, Math.min(concurrency, items.length || 1))
+  const lanes = Array.from({ length: laneCount }, async () => {
+    for (;;) {
+      const index = cursor++
+      if (index >= items.length) return
+      results[index] = await worker(items[index], index)
+    }
+  })
+  await Promise.all(lanes)
+  return results
+}
+
+/**
  * Remove plaintext credentials that older importers used to persist on profile
  * documents. Profile docs are readable by other staff in the same college, so
  * a stored password is a credential leak — and it is also the reason the

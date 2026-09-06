@@ -31,6 +31,13 @@ export interface RepairInput {
   continueUrl?: string
   /** Also re-issue claims for accounts whose claims already match. */
   forceClaims?: boolean
+  /**
+   * Wall-clock budget for one pass, in seconds (server default 420, ceiling 480).
+   * A 6-collection × 500-document sweep of a large tenant is thousands of Auth and
+   * Firestore round trips; when it cannot fit the function ceiling the run reports
+   * `partial` instead of dying, and the operator narrows the scope.
+   */
+  budgetSeconds?: number
 }
 
 export interface RepairItem {
@@ -64,6 +71,14 @@ export interface RepairResult {
   errors: string[]
   items: RepairItem[]
   itemsTruncated: boolean
+  /** True when the pass stopped at its time budget: re-run with a narrower scope. */
+  partial?: boolean
+  /** Collection the pass had reached when it ran out of budget. */
+  stoppedAfter?: string | null
+  elapsedMs?: number
+  budgetMs?: number
+  /** Why the reverse (Auth→profile) sweep did not run, when it did not. */
+  reverseSweepNote?: string | null
   credentials: Array<{ email: string; password?: string; resetLink?: string }>
   message: string
   apiVersion: string
