@@ -7,6 +7,13 @@ import { runIdentityRepair, type RepairInput, type RepairResult } from '../api/i
 import { useColleges } from '../hooks/useSuperAdmin'
 import { functions } from '@/Firebase/config'
 
+/**
+ * Sentinel for "no college filter". MUI's Select treats an empty string as *no
+ * value* and renders the control blank, so an `''` option reads as an unloaded
+ * dropdown — which is exactly what the operator saw.
+ */
+const ALL_COLLEGES = '*'
+
 /** Which Firestore profile collections one pass should walk. */
 const REPAIR_SCOPES: Record<'all' | 'students' | 'faculty' | 'staff', RepairInput['collections']> = {
   all: undefined,
@@ -28,7 +35,7 @@ export default function AccessControl() {
   const [auditEmail, setAuditEmail] = useState('')
   const [audit, setAudit] = useState<any>(null)
   // Identity repair: reconciles Firestore profiles with Firebase Authentication.
-  const [repairCollege, setRepairCollege] = useState('')
+  const [repairCollege, setRepairCollege] = useState(ALL_COLLEGES)
   const [repairDryRun, setRepairDryRun] = useState(true)
   // Scope controls. A full sweep of six collections across every college is a few
   // thousand Auth/Firestore round trips and can exceed the function's wall clock,
@@ -74,7 +81,7 @@ export default function AccessControl() {
     try {
       const data = await runIdentityRepair({
         dryRun,
-        collegeId: repairCollege.trim() || undefined,
+        collegeId: repairCollege === ALL_COLLEGES ? undefined : repairCollege,
         collections: REPAIR_SCOPES[repairCollections],
         limit: Math.min(Math.max(Number(repairLimit) || 500, 1), 2000),
         budgetSeconds: Math.min(Math.max(Number(repairBudget) || 420, 30), 480),
@@ -110,25 +117,39 @@ export default function AccessControl() {
         documents, disabled accounts, and legacy plaintext password fields. Preview it first; applying also
         issues password-reset links for any account it had to create.
       </Typography>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { md: 'flex-end' } }}>
-        <TextField select fullWidth label="College" value={repairCollege} onChange={e => setRepairCollege(e.target.value)} helperText="One college per pass is the reliable way to cover a large tenant">
-          <MenuItem value="">All colleges</MenuItem>
-          {collegeOptions.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+      {/* A four-field grid, deliberately: these inputs have long labels and
+          helper text, and a wrapping flex row squeezes them into 150 px columns
+          where "Time budget (s)" renders as "Time..." and 420 as "42". */}
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' } }}>
+        <TextField select fullWidth label="College" value={repairCollege} onChange={e => setRepairCollege(e.target.value)}
+          helperText={collegeOptions.length
+            ? `${collegeOptions.length} college${collegeOptions.length === 1 ? '' : 's'} — one per pass is how you cover a large tenant safely`
+            : 'No colleges loaded yet — this pass will cover every college'}>
+          <MenuItem value={ALL_COLLEGES}>All colleges</MenuItem>
+          {collegeOptions.map(c => <MenuItem key={c.id} value={c.id}>{c.name || c.id}</MenuItem>)}
         </TextField>
-        <TextField select label="Scope" value={repairCollections} onChange={e => setRepairCollections(e.target.value as any)}>
+        <TextField select fullWidth label="Scope" value={repairCollections} onChange={e => setRepairCollections(e.target.value as any)}
+          helperText="Which profile collections the pass walks">
           <MenuItem value="all">All profile collections</MenuItem>
           <MenuItem value="students">Students only</MenuItem>
           <MenuItem value="faculty">Faculty only</MenuItem>
           <MenuItem value="staff">Admins / HODs / mentors / superadmins</MenuItem>
         </TextField>
-        <TextField label="Docs per collection" type="number" value={repairLimit} onChange={e => setRepairLimit(e.target.value)} sx={{ width: 170 }} />
-        <TextField label="Time budget (s)" type="number" value={repairBudget} onChange={e => setRepairBudget(e.target.value)} sx={{ width: 150 }} helperText="stops early and reports a partial pass" />
+        <TextField fullWidth label="Docs per collection" type="number" value={repairLimit} onChange={e => setRepairLimit(e.target.value)}
+          helperText="1–2000 per collection" />
+        <TextField fullWidth label="Time budget (seconds)" type="number" value={repairBudget} onChange={e => setRepairBudget(e.target.value)}
+          helperText="30–480. A pass that runs out stops and reports itself partial" />
+      </Box>
+      <Stack direction="row" spacing={2} sx={{ mt: 2, alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
         <Button variant="outlined" disabled={repairBusy || !repairDryRun} startIcon={repairBusy ? <CircularProgress size={18} /> : <Search />} onClick={() => runRepair(true)}>Preview</Button>
         <Button variant="contained" color="warning" disabled={repairBusy || repairDryRun} startIcon={<Build />} onClick={() => runRepair(false)}>Apply repair</Button>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input type="checkbox" checked={repairDryRun} onChange={e => setRepairDryRun(e.target.checked)} />
           <Typography variant="body2">Dry run only</Typography>
         </label>
+        <Typography variant="caption" color="text.secondary">
+          {repairCollege === ALL_COLLEGES ? 'every college' : 'one college'} · {repairCollections === 'all' ? '6 collections' : repairCollections} · up to {Math.min(Math.max(Number(repairLimit) || 500, 1), 2000)} docs each · {Math.min(Math.max(Number(repairBudget) || 420, 30), 480)}s budget
+        </Typography>
       </Stack>
       {repairResult && <Box sx={{ mt: 3 }}>
         {repairResult.reverseSweepNote ? (
