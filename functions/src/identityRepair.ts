@@ -607,6 +607,20 @@ export const auditAndRepairIdentities = onCall(
     // document from the claims when applying.
     let authOnlyCount = 0
     let reverseSweepNote: string | null = null
+    // Accounts that can sign in but own no profile document. These are the most
+    // interesting rows in the whole system — they are what an import looks like
+    // when the Auth half succeeded and the Firestore half was denied — so they get
+    // their own report field instead of competing for space in `items`, where a
+    // large college would push them past the response cap and out of sight.
+    const orphans: Array<{
+      uid: string
+      email: string | null
+      name: string | null
+      role: string | null
+      collegeId: string | null
+      action: string
+      resolved: boolean
+    }> = []
     if (input.collegeId) {
       reverseSweepNote = 'skipped: the Auth directory is not tenant-partitioned, so it is only swept in an all-college pass'
     } else if (partial) {
@@ -654,6 +668,19 @@ export const auditAndRepairIdentities = onCall(
             const claimCollege = claims.collegeId ? String(claims.collegeId) : null
             authOnlyCount++
             bump('AUTH_ONLY_NO_PROFILE')
+            orphans.push({
+              uid: record.uid,
+              email: record.email ?? null,
+              name: record.displayName ?? null,
+              role: claimRole || null,
+              collegeId: claimCollege,
+              action: claimRole
+                ? dryRun
+                  ? `a users/{uid} document will be rebuilt from its claims (${claimRole}${claimCollege ? `, college ${claimCollege}` : ''})`
+                  : 'rebuilt users/{uid} from the verified custom claims'
+                : 'has no role claim, so nothing says which college or role this person belongs to — it must be granted from Access Control before it can be linked',
+              resolved: !dryRun && !!claimRole,
+            })
             if (dryRun || !claimRole) continue
             await db
               .collection('users')
@@ -674,17 +701,6 @@ export const auditAndRepairIdentities = onCall(
               )
             usersDocsCreated++
             repaired++
-            items.push({
-              collection: 'users',
-              docId: record.uid,
-              email: record.email ?? null,
-              name: record.displayName ?? null,
-              role: claimRole,
-              collegeId: claimCollege,
-              uid: record.uid,
-              findings: ['AUTH_ONLY_NO_PROFILE'],
-              actions: ['rebuilt users/{uid} from the verified custom claims'],
-            })
             if (Date.now() > softDeadline) {
               partial = true
               break
@@ -732,6 +748,8 @@ export const auditAndRepairIdentities = onCall(
       secretsStripped,
       secretsResetIssued,
       operatorAffected,
+      orphanAccounts: orphans.slice(0, 50),
+      orphanAccountsTotal: orphans.length,
       authOnlyCount,
       reverseSweepNote,
       partial,

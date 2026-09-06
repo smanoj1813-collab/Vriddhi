@@ -181,6 +181,29 @@ export default function AccessControl() {
           {repairResult.partial && <Chip label={`partial pass — stopped after ${repairResult.stoppedAfter || 'the last collection'}`} color="warning" />}
           {repairResult.elapsedMs ? <Chip label={`${Math.round(repairResult.elapsedMs / 1000)}s of ${Math.round((repairResult.budgetMs || 0) / 1000)}s budget`} /> : null}
         </Stack>
+        {repairResult.orphanAccounts?.length ? (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {repairResult.orphanAccountsTotal} Auth account{repairResult.orphanAccountsTotal === 1 ? '' : 's'} can sign in but own
+              {repairResult.orphanAccountsTotal === 1 ? 's no profile document' : ' no profile documents'}
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              This is what an import looks like when the Authentication half succeeded and the Firestore
+              half was refused: the login works, and then nothing resolves. These are not fixed by giving
+              them a password — they need the profile side, or a role to rebuild from.
+            </Typography>
+            {repairResult.orphanAccounts.map(o => (
+              <Typography key={o.uid} variant="body2" component="div" sx={{ mb: 0.5 }}>
+                <strong>{o.email || o.uid}</strong> — {o.role ? `claim says ${o.role}` : 'no role claim'}
+                {o.collegeId ? ` · college ${o.collegeId}` : ''} · {o.action}
+                {o.resolved ? ' ✓' : ''}
+              </Typography>
+            ))}
+            {(repairResult.orphanAccountsTotal || 0) > repairResult.orphanAccounts.length ? (
+              <Typography variant="caption">first {repairResult.orphanAccounts.length} of {repairResult.orphanAccountsTotal} shown</Typography>
+            ) : null}
+          </Alert>
+        ) : null}
         {repairResult.operatorAffected ? (
           <Alert severity="info" sx={{ mb: 2 }}>
             This pass included your own identity document. Applying revokes your refresh tokens, so

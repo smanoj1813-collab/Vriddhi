@@ -88,6 +88,21 @@ export interface RepairResult {
   stoppedAfter?: string | null
   elapsedMs?: number
   budgetMs?: number
+  /**
+   * Accounts that can authenticate but own no profile document. Reported separately
+   * from `items` because they are the footprint of an import whose Firestore write
+   * was denied, and a long findings list must not be allowed to hide them.
+   */
+  orphanAccounts?: Array<{
+    uid: string
+    email: string | null
+    name: string | null
+    role: string | null
+    collegeId: string | null
+    action: string
+    resolved: boolean
+  }>
+  orphanAccountsTotal?: number
   /** Why the reverse (Auth→profile) sweep did not run, when it did not. */
   reverseSweepNote?: string | null
   credentials: Array<{ email: string; password?: string; resetLink?: string; reason?: string }>
