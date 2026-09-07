@@ -47,16 +47,6 @@
       ]
     },
     {
-      "collectionGroup": "ai_usage",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "date",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "assignments",
       "queryScope": "COLLECTION",
       "fields": [
@@ -358,16 +348,6 @@
           "fieldPath": "createdBy",
           "order": "ASCENDING"
         },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "papers_universal",
-      "queryScope": "COLLECTION",
-      "fields": [
         {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
