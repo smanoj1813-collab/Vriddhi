@@ -376,3 +376,31 @@ Verification run in the workspace: `functions` `npm run build` exit 0; widened
 `npm run test:unit` **74/74**; frontend `npm run build` (tsc + vite) exit 0.
 The rules emulator suite (`npm run test:rules`) could not run in this sandbox
 (no Java); run it locally before deploying `storage.rules`.
+
+### 10.1 Rules-suite verification follow-up (2026-09-08)
+
+Ran `npm run test:rules` on the operator's Windows machine (after installing
+JDK 21 — firebase-tools v15 requires Java ≥ 21, and its Java check uses
+`spawn("java")` with no `JAVA_HOME` fallback, so PATH must expose JDK 21).
+
+Result: **storage passes 2/2** (paper authoring + assignment submission) —
+`storage.rules` rewrite verified against the emulator. The 3 failures were all
+Firestore-rules tests that were stale relative to the claim-only rules (and
+fail identically on `main` — the branch never touched either file):
+
+1. student timetable list expected 1 row, got 2 — the legacy-faculty `weeklySchedules`
+   fixture shared `branch: 'CSE'` with the student's query, inflating the count.
+2. "denies students access to attempt scores" — the rules deliberately let a
+   student read their OWN `studentAssessments` attempt (portal results); the test
+   still asserted the old deny-everything.
+3. legacy no-claim faculty list — the claim-only rules intentionally removed
+   profile-doc role/college resolution; the test still asserted the old behavior.
+
+All three are now fixed to match the claim-only rules (own-vs-other attempt
+scoping; legacy no-claim faculty denied until claims are issued). While in the
+fixture, `branch` values were corrected from engineering codes (`CSE`/`ECE`) to
+non-technical UG/PG programs (`B.Com`, `B.Sc`) per
+`src/shared/constants/academicPrograms.ts`. Two live engineering-code leaks were
+also removed: `functions/src/routes/questions.ts` `/batch-branch` fallback
+(now non-tech programs + 3-year academic list, no 4th year) and the
+`FacultyAssignments` "e.g., CSE" placeholder (now "e.g., B.Com").

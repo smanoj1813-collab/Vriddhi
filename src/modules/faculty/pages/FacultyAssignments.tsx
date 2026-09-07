@@ -508,7 +508,7 @@ export default function FacultyAssignments() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Branch</label>
-                  <input type="text" value={createBranch} onChange={e => setCreateBranch(e.target.value)} placeholder="e.g., CSE"
+                  <input type="text" value={createBranch} onChange={e => setCreateBranch(e.target.value)} placeholder="e.g., B.Com"
                     className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 text-sm" />
                 </div>
                 <div>

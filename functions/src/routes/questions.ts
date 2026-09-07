@@ -139,9 +139,13 @@ router.get('/batch-branch', verifyAuth, requireRole(...READ_ROLES), async (req: 
     const configDoc = await db.collection('college_configs').doc(collegeId).get()
     const config = configDoc.data()
     res.json({
-      batches: config?.batches || ['2021-22', '2022-23', '2023-24', '2024-25'],
-      branches: config?.branches || ['CSE', 'ECE', 'ME', 'CE', 'IT', 'EEE'],
-      academicYears: config?.academicYears || ['1st Year', '2nd Year', '3rd Year', '4th Year'],
+      batches: config?.batches || ['2022-23', '2023-24', '2024-25', '2025-26'],
+      // Vriddhi is a NON-TECHNICAL UG/PG college (arts, commerce, science,
+      // management, computer applications). Engineering branch codes are never
+      // part of any seeded list — see src/shared/constants/academicPrograms.ts.
+      branches: config?.branches || ['B.A', 'B.Com', 'B.Sc', 'BBA', 'BCA', 'B.Ed', 'M.A', 'M.Com', 'M.Sc', 'MBA', 'MCA'],
+      // UG = 3 years, PG = 2 years; there is no 4th (engineering-style) year.
+      academicYears: config?.academicYears || ['1st Year', '2nd Year', '3rd Year'],
     })
   } catch (err: any) {
     console.error('[questions/batch-branch]', err)
