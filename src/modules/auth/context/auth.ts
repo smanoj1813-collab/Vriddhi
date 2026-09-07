@@ -210,7 +210,8 @@ export const resolveIdentity = async (uid: string, email?: string): Promise<Iden
       const data = userDoc.data();
       const role = normalizeRole(data.role);
       if (role) {
-        return { ...outcome, user: finish({ ...data, role }, 'users') };
+        outcome.user = finish({ ...data, role }, 'users');
+        return outcome;
       }
       outcome.errors.push('users/' + uid + ' exists but has no valid `role` field; continuing with profile collections');
     }
@@ -228,7 +229,8 @@ export const resolveIdentity = async (uid: string, email?: string): Promise<Iden
       const byId = await getDoc(doc(db, spec.collection, uid));
       if (byId.exists()) {
         const projected = spec.map(byId.data(), uid, email);
-        return { ...outcome, user: finish(projected, 'profile') };
+        outcome.user = finish(projected, 'profile');
+        return outcome;
       }
     } catch (err) {
       const { kind, text } = classifyReadError(err);
@@ -245,7 +247,8 @@ export const resolveIdentity = async (uid: string, email?: string): Promise<Iden
         const snap = await getDocs(query(collection(db, spec.collection), where(field, '==', field === 'email' ? email : uid), limit(1)));
         if (!snap.empty) {
           const projected = spec.map(snap.docs[0].data(), uid, email);
-          return { ...outcome, user: finish(projected, 'profile') };
+          outcome.user = finish(projected, 'profile');
+          return outcome;
         }
       } catch (err) {
         const { kind, text } = classifyReadError(err);

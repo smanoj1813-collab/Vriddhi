@@ -163,11 +163,22 @@ service cloud.firestore {
         : null;
     }
 
+    // Which student document this account vouches for, read from the users/{uid}
+    // pointer that the identity repair writes. A query gets ONE document read for
+    // the whole request, and Firestore caps a request at 10 get()/exists() calls
+    // shared across every candidate document — a per-row lookup here is how a
+    // 30-row attendance query turns into "Missing or insufficient permissions".
+    function myStudentDocId() {
+      let pointer = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return 'studentDocId' in pointer ? pointer.studentDocId : null;
+    }
+
     function ownsStudentId(studentId) {
       return isSignedIn()
         && studentId != null
         && (
           studentId == request.auth.uid
+          || myStudentDocId() == studentId
           || (exists(/databases/$(database)/documents/students/$(studentId))
             && (('userId' in get(/databases/$(database)/documents/students/$(studentId)).data
               && get(/databases/$(database)/documents/students/$(studentId)).data.userId == request.auth.uid)
@@ -353,8 +364,8 @@ service cloud.firestore {
       }
 
       match /announcements/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
       }
@@ -438,22 +449,22 @@ service cloud.firestore {
       }
 
       match /materials/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /events/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
         allow write: if isSuperadmin()
           || (isCollegeStaff() && collegeId() == collegeId);
       }
 
       match /notifications/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
         allow create: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
         // Recipients may only flip their own read flag (see
@@ -508,17 +519,23 @@ service cloud.firestore {
     }
 
     match /attendance/{id} {
-      allow get: if ownsStudentId(resource.data.studentId)
+      allow get: if ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
         || (isSignedIn() && resource.data.uid == request.auth.uid)
         || (isStaff() && sameCollege(resource.data));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+        // A list is authorised per candidate document, so a query the client scopes
+        // with where('studentId','==',own record) admits exactly those rows.
+        || ('studentId' in resource.data && ownsStudentId(resource.data.studentId)));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
-      allow get: if ownsStudentId(resource.data.studentId)
+      allow get: if ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
         || (isStaff() && sameCollege(resource.data));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+        // A list is authorised per candidate document, so a query the client scopes
+        // with where('studentId','==',own record) admits exactly those rows.
+        || ('studentId' in resource.data && ownsStudentId(resource.data.studentId)));
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
@@ -546,7 +563,10 @@ service cloud.firestore {
       // role based because a list/query request has no `resource`; the client
       // keeps its queries scoped by collegeId/facultyId.
       allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      allow list: if isSignedIn() && isStaff();
+      // The timetable of a college is reference data for its students, not a
+      // private record — which is why the collegeId claim the identity repair
+      // writes has to exist: sameCollege() reads the tenant off the token.
+      allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create: if isCollegeStaff() && request.resource.data.collegeId == collegeId()
         && request.resource.data.facultyId != null
         && request.resource.data.branch != null
@@ -560,7 +580,7 @@ service cloud.firestore {
 
     match /classSessions/{sessionId} {
       allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      allow list: if isSignedIn() && isStaff();
+      allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create, update: if isCollegeStaff() && sameCollege(request.resource.data);
       allow delete: if isCollegeStaff() && sameCollege(resource.data);
     }
@@ -643,7 +663,8 @@ service cloud.firestore {
 
     match /gradeRecords/{gradeId} {
       allow read: if (
-          ownsStudentId(resource.data.studentId)
+          'studentId' in resource.data
+          && ownsStudentId(resource.data.studentId)
           && resource.data.status == 'published'
         )
         || isSuperadmin()

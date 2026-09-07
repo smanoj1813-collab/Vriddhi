@@ -382,3 +382,61 @@ Consequences:
 | A claim-less account can heal itself | `syncMyIdentity` ← `AuthContext`, plus `auditAndRepairIdentities` for bulk |
 | One routing map for roles | `src/modules/auth/roleRoutes.ts` (login pages + `routes/index.tsx` consume it) |
 | Deployed-artifact drift is visible | version handshake + `describeIdentityError` + `identity-doctor` |
+
+---
+
+## 11. Student screens after the cohort repair (2026-09-07)
+
+Measured on the tenant, after `06b095d` + `783d18c` were deployed:
+
+```
+students Apply (Vriddhi Academics, students only)
+  pass 1  scanned 382 · needs repair 382 · repaired 363 · claims issued 228 · lookup links written 363 · 25s
+  pass 2  scanned 382 · needs repair  19 · repaired  19 · claims issued  13 · lookup links written  19 · 43s
+  MISSING_AUTH 0 · NO_EMAIL 0 · PLAINTEXT_SECRET 0 both passes
+```
+
+Pass 1 lost 19 rows to `Exceeded quota for updating account information` (24-way concurrency
+≈ 9 Auth writes/s); pass 2 at 8-way with `withAuthQuotaRetry` cleared them. A student then
+signed in with a credential handed out by the new Students → key action, reached the
+dashboard, and changed her password in Settings. Login, profile resolution and credential
+rotation are therefore proven end-to-end for a student for the first time.
+
+Every data screen behind that dashboard (attendance, timetable, materials, fees, events,
+notifications, grades) still failed with `Missing or insufficient permissions`, plus one
+`The query requires an index`. Four independent causes, all now addressed in this repo:
+
+1. **The live rules are not this file.** `firebase deploy --only firestore` has never been
+   run, so neither the rules nor the composite indexes declared in `firestore.indexes.json`
+   exist in the project. The index error is direct evidence: `notifications(studentId,
+   timestamp desc)`, `attendanceRecords(collegeId, studentId, date desc)` and
+   `gradeRecords(collegeId, studentId, status, semester desc)` were already in the file.
+2. **`allow list` was role-based where it had to be owner-based.** A list is authorised
+   *per candidate document*, so a rule like `allow list: if isStaff()` forbids a student's
+   self-scoped query even when every row is theirs. Fixed for `attendance`,
+   `attendanceRecords`, `weeklySchedules`, `classSessions` and the per-college
+   `materials`/`events`/`notifications`/`announcements` paths. `weeklySchedules` and
+   `classSessions` now admit a student via `sameCollege()`, which reads the tenant off the
+   ID-token claim — the claims this repair wrote are what make those two work.
+3. **Rules read budget.** Firestore allows 10 `get()`/`exists()` calls per query request,
+   shared across all candidate documents. `ownsStudentId()` used to spend up to three per
+   row, so any query returning four or more documents would have been denied outright.
+   It now resolves the caller's student document once, through `users/{uid}.studentDocId`,
+   and keeps the `students/{id}` lookup as a fallback. **The pointer is load-bearing for
+   the rules, not only for the client resolver** — do not treat the link repair as an
+   optimisation.
+4. **A per-document field reference with no guard.** `resource.data.studentId` on a document
+   that lacks the field aborts evaluation and presents as permission-denied; those
+   references are now behind `'studentId' in resource.data`.
+
+Also fixed while reading the login path: `resolveIdentity` returned
+`{ ...outcome, user: finish(...) }`, which snapshots `outcome` *before* `finish()` sets
+`source` and `claimMissing` on it. Every successful login therefore logged
+`source: null` (which had been read as "resolved through the legacy fallback"), and
+`claimMissing` reached `AuthContext` as `false` on every path, so the `syncMyIdentity`
+claim self-heal could never trigger. Both are now assigned onto the live object.
+
+Residual: `current-firestore.rules` is validated structurally (156/156 braces, per-block
+review) and not in the emulator, because a JVM is unavailable here. Capture the rules text
+that is actually live before deploying over it — it is the only record of what the app has
+been relying on.
