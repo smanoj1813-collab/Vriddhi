@@ -88,6 +88,13 @@ export interface FeeFilters {
   search: string
   dateFrom: string
   dateTo: string
+  /**
+   * Restrict the query itself. A student must never rely on rules to filter a
+   * college-wide read afterwards: the query is capped, so rules-based filtering
+   * can silently return an empty page whose rows sat past the cap. Push the
+   * predicate into the query and the answer is either the student's rows or none.
+   */
+  studentId?: string
 }
 
 // ─── Read Budget Tracker ────────────────────────────────
@@ -123,7 +130,12 @@ export async function fetchFeeStructures(): Promise<FeeStructure[]> {
 }
 
 export async function fetchFeePayments(filters?: Partial<FeeFilters>): Promise<FeePayment[]> {
-  const constraints: any[] = [limit(MAX_READS)]
+  const constraints: any[] = []
+
+  if (filters?.studentId) {
+    constraints.push(where('studentId', '==', filters.studentId))
+  }
+  constraints.push(limit(MAX_READS))
 
   if (filters?.course && filters.course !== 'all') {
     constraints.push(where('course', '==', filters.course))

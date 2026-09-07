@@ -428,15 +428,22 @@ service cloud.firestore {
       }
 
       match /feeStructures/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        // A student may read the fee structures of their own college: a published
+        // structure carries no studentId and is shared reference data, while one
+        // addressed to a student is theirs alone.
+        allow get, list: if isSignedIn() && (isSuperadmin() || isStaff()
+          || (role() == 'student' && collegeId() == collegeId
+            && (!('studentId' in resource.data) || ownsStudentId(resource.data.studentId))));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /feePayments/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        // Payments are personal transactions, so a student is admitted only to
+        // their own rows — never to the college ledger the admin page reads.
+        allow get, list: if isSignedIn() && (isSuperadmin() || isStaff()
+          || (role() == 'student' && collegeId() == collegeId
+            && 'studentId' in resource.data && ownsStudentId(resource.data.studentId)));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
