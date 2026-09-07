@@ -49,8 +49,13 @@ export function resetReadStats() {
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id')
   if (!id) {
-    console.warn('[ScheduleApi] No collegeId in localStorage')
-    return ''
+    // Returning '' used to mean `colleges//weeklySchedules` — a query against a path that
+    // cannot exist, so the page rendered an empty table and looked like a data problem.
+    throw new Error(
+      'This sign-in carries no college to scope queries to. Sign out and back in so the ' +
+        'token is refreshed; if it persists, an administrator must link this profile to a ' +
+        'college (Access Control → Identity repair).'
+    )
   }
   return id
 }

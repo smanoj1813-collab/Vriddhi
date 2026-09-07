@@ -11,7 +11,12 @@ const MAX_READS = 500
 
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id')
-  if (!id) throw new Error('No college ID found')
+  if (!id)
+    throw new Error(
+      'This sign-in carries no college to scope queries to. Sign out and back in so the ' +
+        'token is refreshed; if it persists, an administrator must link this profile to a ' +
+        'college (Access Control → Identity repair).'
+    )
   return id
 }
 

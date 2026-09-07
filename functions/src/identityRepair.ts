@@ -617,7 +617,16 @@ export const auditAndRepairIdentities = onCall(
           // collegeId from a duplicate would overwrite what the primary record decided.
           batch.set(
             db.collection('users').doc(authUser.uid),
-            { [profileLinkField]: docSnap.id, updatedAt: now, repairedBy: caller.uid },
+            {
+              [profileLinkField]: docSnap.id,
+              // Role and claims belong to the primary profile, but a pointer with no
+              // tenant on it is a dead end for any client that reads the college from
+              // `users/{uid}`. Fill it only when the document has nothing to say, so
+              // this can never contradict what the primary record decided.
+              ...(usersSnap?.data()?.collegeId ? {} : { collegeId: collegeId || null }),
+              updatedAt: now,
+              repairedBy: caller.uid,
+            },
             { merge: true }
           )
           actions.push(`users/{uid}.${profileLinkField} pointed here (role left to the primary profile)`)

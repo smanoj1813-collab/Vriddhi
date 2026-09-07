@@ -181,7 +181,8 @@ export const resolveIdentity = async (uid: string, email?: string): Promise<Iden
     resolvedRole: null, errors: [], attempts: 0,
   };
 
-  const claimedRole = normalizeRole((await safeClaims(uid)).role);
+  const claims = await safeClaims(uid);
+  const claimedRole = normalizeRole(claims.role);
 
   const finish = (data: any, source: IdentityResolution['source']): FirebaseUserData => {
     outcome.source = source;
@@ -193,7 +194,12 @@ export const resolveIdentity = async (uid: string, email?: string): Promise<Iden
       email: data.email || email || '',
       name: data.name || 'User',
       role: role || 'student',
-      collegeId: data.collegeId,
+      // The token claim decides the tenant, not the profile document, because that is
+      // what the rules compare every college-scoped read against. A `users/{uid}`
+      // pointer written by the duplicate-profile link carries no collegeId at all —
+      // reading it from the document alone left staff accounts resolving perfectly and
+      // then throwing 'No college ID found' inside each page's own query builder.
+      collegeId: (claims.collegeId ? String(claims.collegeId) : null) || data.collegeId || null,
       department: data.department,
       avatar: data.avatar || '',
       phone: data.phone || '',
@@ -262,7 +268,7 @@ export const resolveIdentity = async (uid: string, email?: string): Promise<Iden
 };
 
 /** Read the caller's own ID-token claims without ever throwing. */
-async function safeClaims(uid: string): Promise<{ role?: unknown; uid?: string }> {
+async function safeClaims(uid: string): Promise<{ role?: unknown; collegeId?: unknown; uid?: string }> {
   try {
     const current = auth.currentUser;
     if (!current || current.uid !== uid) return {};
