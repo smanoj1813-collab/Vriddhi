@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   ChevronLeft, BookOpen, Search, Plus, Trash2, Edit3, UserCheck,
   AlertTriangle, Clock, X, Check, BookMarked, ArrowRightLeft, DollarSign
@@ -136,6 +137,7 @@ export default function FacultyLibrary() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+      <NotConnectedBanner message="The library catalog and issue/return records are not yet read from or written to Firestore." />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">

@@ -6,10 +6,31 @@ service firebase.storage {
     }
 
     // -- Identity resolution ---------------------------------------------------
-    // Mirrors the Firestore rules and the client lookup in
-    // src/modules/auth/context/auth.ts. Legacy accounts (imported faculty,
-    // hand-written profiles) have no users/{uid} document, so reading it
-    // directly raised an error and denied every storage operation.
+    // Role and college are AUTHORITATIVE from the verified ID-token custom
+    // claim ONLY — exactly like the Firestore rules. The old profile-based
+    // resolution (role/college read from users/{uid}, faculty, students, admins,
+    // hods, mentors) is deliberately gone: those documents are client-writable,
+    // so trusting them here lets an account that can create a document forge a
+    // role or cross college boundaries. A newly provisioned or repaired account
+    // must therefore have its claims issued AND the user must sign in again —
+    // an ID token only carries claims that existed when it was minted.
+
+    function claimRole() {
+      return isSignedIn() && 'role' in request.auth.token
+        ? request.auth.token.role
+        : null;
+    }
+
+    function claimCollege() {
+      return isSignedIn() && 'collegeId' in request.auth.token
+        ? request.auth.token.collegeId
+        : null;
+    }
+
+    // -- Role normalisation ---------------------------------------------------
+    // The same role is spelled many ways across the generations of imports this
+    // database has absorbed ("Faculty", "teacher", "Head of Department", ...),
+    // so every comparison canonicalises first.
 
     function cleanRoleValue(raw) {
       return raw is string ? raw.trim().lower() : '';
@@ -38,67 +59,50 @@ service firebase.storage {
         : value;
     }
 
-    function roleField(data) {
-      return data == null ? ''
-        : 'role' in data ? cleanRoleValue(data.role)
-        : 'userRole' in data ? cleanRoleValue(data.userRole)
-        : 'userType' in data ? cleanRoleValue(data.userType)
-        : '';
+    // AUTHORITATIVE IDENTITY. Role for authorization decisions is taken from the
+    // verified ID-token custom claim ONLY — never from a client-writable profile
+    // document.
+    function role() {
+      let claimedRole = canonicalRole(cleanRoleValue(claimRole()));
+      return claimedRole != '' ? claimedRole : null;
     }
 
-    function profile(collectionName) {
-      return !isSignedIn() ? null
-        : firestore.exists(
-            /databases/(default)/documents/$(collectionName)/$(request.auth.uid)
-          )
-          ? firestore.get(
-              /databases/(default)/documents/$(collectionName)/$(request.auth.uid)
-            ).data
-          : null;
+    // Tenancy, like role, is authoritative from the claim only.
+    function tenantCollege() {
+      let claimedCollege = claimCollege();
+      return claimedCollege != null ? claimedCollege : null;
     }
 
-    // fallBackRole applies when the document exists but carries no role field.
-    function roleFrom(collectionName, fallBackRole) {
-      return profile(collectionName) == null ? null
-        : roleField(profile(collectionName)) != ''
-          ? canonicalRole(roleField(profile(collectionName)))
-          : fallBackRole;
-    }
-
-    function resolvedRole() {
-      return !isSignedIn() ? null
-        : roleFrom('users', null) != null ? roleFrom('users', null)
-        : roleFrom('superadmins', 'superadmin') != null ? roleFrom('superadmins', 'superadmin')
-        : roleFrom('admins', 'admin') != null ? roleFrom('admins', 'admin')
-        : roleFrom('faculty', 'faculty') != null ? roleFrom('faculty', 'faculty')
-        : roleFrom('hods', 'hod') != null ? roleFrom('hods', 'hod')
-        : roleFrom('mentors', 'mentor') != null ? roleFrom('mentors', 'mentor')
-        : roleFrom('students', 'student') != null ? roleFrom('students', 'student')
-        : null;
-    }
-
-    function collegeIdFrom(collectionName) {
-      return profile(collectionName) == null ? null
-        : 'collegeId' in profile(collectionName) ? profile(collectionName).collegeId
-        : 'collegeID' in profile(collectionName) ? profile(collectionName).collegeID
-        : 'college' in profile(collectionName) ? profile(collectionName).college
-        : null;
-    }
-
-    function resolvedCollegeId() {
-      return !isSignedIn() ? null
-        : collegeIdFrom('users') != null ? collegeIdFrom('users')
-        : collegeIdFrom('faculty') != null ? collegeIdFrom('faculty')
-        : collegeIdFrom('students') != null ? collegeIdFrom('students')
-        : collegeIdFrom('admins') != null ? collegeIdFrom('admins')
-        : collegeIdFrom('hods') != null ? collegeIdFrom('hods')
-        : collegeIdFrom('mentors') != null ? collegeIdFrom('mentors')
-        : null;
+    // A superadmin is proven by the superadmin custom claim, or by a
+    // superadmins/{uid} document — which itself is writable solely by an
+    // already-authoritative superadmin. It is never inferred from a
+    // faculty/student/admin/etc. profile doc.
+    function isSuperadmin() {
+      return isSignedIn()
+        && (canonicalRole(cleanRoleValue(claimRole())) == 'superadmin'
+          || firestore.exists(/databases/(default)/documents/superadmins/$(request.auth.uid)));
     }
 
     function isStaff() {
-      return resolvedRole() != null
-        && resolvedRole() in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
+      return isSignedIn()
+        && role() in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
+    }
+
+    function isPaperManager() {
+      return isSignedIn() && role() in ['superadmin', 'admin', 'principal', 'hod'];
+    }
+
+    // Which student document this account vouches for, read from the users/{uid}
+    // pointer that the identity repair writes. Read through an exists() guard so
+    // a missing pointer document falls through to the per-row checks below
+    // instead of raising a hard deny.
+    function myStudentDocId() {
+      return firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && 'studentDocId' in firestore.get(
+            /databases/(default)/documents/users/$(request.auth.uid)).data
+        ? firestore.get(
+            /databases/(default)/documents/users/$(request.auth.uid)).data.studentDocId
+        : null;
     }
 
     function ownsStudentId(studentId) {
@@ -106,6 +110,7 @@ service firebase.storage {
         && studentId != null
         && (
           studentId == request.auth.uid
+          || myStudentDocId() == studentId
           || (firestore.exists(/databases/(default)/documents/students/$(studentId))
             && (('userId' in firestore.get(
                   /databases/(default)/documents/students/$(studentId)).data
@@ -124,16 +129,16 @@ service firebase.storage {
       return isStaff()
         && firestore.exists(/databases/(default)/documents/assignments/$(assignmentId))
         && (
-          resolvedRole() == 'superadmin'
+          isSuperadmin()
           || (
-            resolvedRole() in ['admin', 'principal', 'hod', 'faculty']
-            && resolvedCollegeId() != null
+            role() in ['admin', 'principal', 'hod', 'faculty']
+            && tenantCollege() != null
             && 'collegeId' in firestore.get(
                 /databases/(default)/documents/assignments/$(assignmentId)).data
             && firestore.get(
                 /databases/(default)/documents/assignments/$(assignmentId)).data.collegeId
-                == resolvedCollegeId()
-            && (resolvedRole() != 'faculty'
+                == tenantCollege()
+            && (role() != 'faculty'
               || ('facultyUid' in firestore.get(
                     /databases/(default)/documents/assignments/$(assignmentId)).data
                 && firestore.get(
@@ -149,11 +154,6 @@ service firebase.storage {
         && request.resource.contentType.matches(
           'application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|text/plain|image/.*'
         );
-    }
-
-    function isPaperManager() {
-      return resolvedRole() != null
-        && resolvedRole() in ['superadmin', 'admin', 'principal', 'hod'];
     }
 
     function validPaperFile() {
@@ -203,14 +203,14 @@ service firebase.storage {
     // ID. The callable verifies the object before referencing it in Firestore.
     match /paper-files/{collegeId}/{ownerUid}/{paperId}/{fileName} {
       allow read: if isStaff()
-        && (resolvedRole() == 'superadmin' || resolvedCollegeId() == collegeId);
+        && (isSuperadmin() || tenantCollege() == collegeId);
       allow create, update: if isStaff()
         && request.auth.uid == ownerUid
-        && (resolvedRole() == 'superadmin' || resolvedCollegeId() == collegeId)
+        && (isSuperadmin() || tenantCollege() == collegeId)
         && validPaperFile();
       allow delete: if isStaff()
         && (request.auth.uid == ownerUid || isPaperManager())
-        && (resolvedRole() == 'superadmin' || resolvedCollegeId() == collegeId);
+        && (isSuperadmin() || tenantCollege() == collegeId);
     }
 
     // No implicit authenticated-user access. Additional product workflows

@@ -609,7 +609,10 @@ export const useResetCollegeData = () => {
     SuperAdminApiError,
     string
   >({
-    mutationFn: resetCollegeData,
+    // Auth accounts are NOT deleted by default — the mutation only takes the
+    // collegeId, and the irreversible Auth-deletion flag stays opt-in in the
+    // college detail reset dialog.
+    mutationFn: (collegeId: string) => resetCollegeData(collegeId, false),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.colleges() });
       queryClient.invalidateQueries({ queryKey: superAdminKeys.faculty() });

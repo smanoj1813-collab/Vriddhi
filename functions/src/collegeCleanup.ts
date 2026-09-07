@@ -8,6 +8,13 @@
 // hods, curriculum, curriculumFacultyMappings, weeklySchedules,
 // syllabusExtracts (college-scoped) and every colleges/{collegeId}
 // subcollection listed in firestore.rules.
+//
+// SAFETY — Auth accounts are NOT deleted by default. Deleting a Firebase Auth
+// account is irreversible and is the one action a provisioning repair must
+// never take casually (a reset that deletes logins is how a college gets locked
+// out). The caller must pass `deleteAuthUsers: true` explicitly; the default
+// leaves Auth accounts intact (they are simply re-linked or re-created on the
+// next import).
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
@@ -99,13 +106,17 @@ export const resetCollegeData = onCall(
       throw new HttpsError('permission-denied', 'Only a superadmin can reset a college')
     }
 
-    const { collegeId, deleteAuthUsers = true } = (request.data || {}) as {
+    const { collegeId, deleteAuthUsers = false } = (request.data || {}) as {
       collegeId?: string
       deleteAuthUsers?: boolean
     }
     if (!collegeId || typeof collegeId !== 'string') {
       throw new HttpsError('invalid-argument', 'collegeId is required')
     }
+
+    // Auth deletion is opt-in: the caller must pass deleteAuthUsers: true
+    // explicitly. The default (false) never takes the one irreversible action
+    // this tool performs — deleting Firebase Auth accounts.
 
     const errors: string[] = []
     const deleted: Record<string, number> = {}

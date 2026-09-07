@@ -51,6 +51,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
   // ── Reset Dialog State ─────────────────────────────────────────────
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [confirmCode, setConfirmCode] = useState("");
+  const [deleteAuth, setDeleteAuth] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
@@ -95,7 +96,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
     setResetError(null);
 
     try {
-      await resetCollegeData(id);
+      await resetCollegeData(id, deleteAuth);
       setResetSuccess(true);
       setConfirmCode("");
       // Refetch all data
@@ -222,7 +223,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
                   <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
                   <p className="text-emerald-400 font-medium">College data reset successfully!</p>
                   <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
-                    All students, faculty, admins, curriculum, schedules and linked login accounts have been deleted.
+                    All students, faculty, admins, curriculum and schedules have been deleted.
+                    {deleteAuth ? " Linked login accounts were also deleted." : " Login accounts were kept intact."}
                   </p>
                 </div>
               ) : (
@@ -237,9 +239,24 @@ const SuperAdminCollegeDetail: React.FC = () => {
                       <p className="text-red-300">• {college.facultyCount || faculty.length} Faculty members</p>
                       <p className="text-red-300">• {college.adminCount || admins.length} Admins</p>
                       <p className="text-red-300">• Curriculum, schedules &amp; mappings</p>
-                      <p className="text-red-300">• Firebase login accounts</p>
+                      {deleteAuth && <p className="text-red-300">• Firebase login accounts (deleted)</p>}
                     </div>
                   </div>
+
+                  <label className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/50 border border-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={deleteAuth}
+                      onChange={(e) => setDeleteAuth(e.target.checked)}
+                      disabled={isResetting}
+                      className="mt-1 h-4 w-4 accent-red-500"
+                    />
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      <span className="text-slate-900 dark:text-white font-medium">Also delete Firebase Auth login accounts.</span>{' '}
+                      This is irreversible — the affected people lose their sign-in. Leave unchecked to keep logins intact
+                      (a re-import recreates them). This option is OFF by default.
+                    </span>
+                  </label>
 
                   <div>
                     <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">

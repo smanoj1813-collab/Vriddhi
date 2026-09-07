@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   Calendar, Clock, MapPin, Users, ChevronLeft, X, Check, AlertCircle,
   Search, BookOpen
@@ -119,6 +120,7 @@ export default function FacultyReschedule() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+      <NotConnectedBanner message="Reschedule requests are not yet read from or written to Firestore. Changes made here are local only." />
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Link to="/faculty" className="p-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all shadow-sm">

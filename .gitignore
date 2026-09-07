@@ -12,6 +12,13 @@ build/
 coverage/
 *.tsbuildinfo
 
+# Cloud Functions build output (tsc emits to functions/lib)
+functions/lib/
+
+# Stale compiled leftovers must not be re-committed (source is TypeScript only)
+functions/src/**/*.js
+functions/src/**/*.js.map
+
 # logs
 npm-debug.log*
 yarn-debug.log*

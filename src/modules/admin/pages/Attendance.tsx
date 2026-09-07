@@ -41,30 +41,24 @@ import {
   getAttendanceStats,
   getFacultyMap,
 } from '../api/attendanceApi';
+import { useAuth } from '../../auth/context/AuthContext';
 import type { AttendanceSummary, ClassSession } from '../types/attendance';
 
-// ─── Try to get collegeId from auth context or localStorage ───
+// ─── College scoping for the attendance queries ───
+// The collegeId comes from the verified ID-token claim (user.collegeId), with a
+// fallback to the `vriddhi_college_id` key AuthContext persists. The legacy
+// `collegeId` / `user` localStorage keys are NOT written by AuthContext, so
+// reading them left filters.collegeId undefined and issued unscoped
+// classSessions / attendanceRecords queries on fresh sign-in.
 function useCollegeId(): string | undefined {
+  const { user } = useAuth();
   const [collegeId, setCollegeId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // Try localStorage first
-    const stored = localStorage.getItem('collegeId');
-    if (stored) {
-      setCollegeId(stored);
-      return;
-    }
-    // Try auth user object
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.collegeId) setCollegeId(user.collegeId);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
+    const fromClaim = user?.collegeId;
+    const fromStorage = localStorage.getItem('vriddhi_college_id');
+    setCollegeId(fromClaim || fromStorage || undefined);
+  }, [user]);
 
   return collegeId;
 }

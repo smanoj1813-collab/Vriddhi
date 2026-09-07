@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   ChevronLeft, Bell, Send, X, Check, AlertCircle, Info,
   Megaphone, Calendar, Users, Trash2, Eye, Clock,
@@ -124,6 +125,7 @@ export default function FacultyAnnouncements() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+      <NotConnectedBanner message="Announcements are not yet read from or written to Firestore. Compose, pin and stats here operate on local state only." />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
