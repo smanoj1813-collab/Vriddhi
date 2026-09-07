@@ -16,7 +16,14 @@ const SuperAdminStudents: React.FC = () => {
   // One-time credential shown in a dialog, never persisted. Deliberately not
   // closed on a timeout: the person handing it to a student needs it on screen
   // while they paste it into a message.
-  const [credential, setCredential] = useState<{ name: string; email: string; password: string; uid: string | null } | null>(null)
+  const [credential, setCredential] = useState<{
+    name: string;
+    email: string;
+    password: string;
+    uid: string | null;
+    resetLink: string | null;
+    profileEmail: string | null;
+  } | null>(null)
 
   const { data, isLoading } = useStudents({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -75,9 +82,15 @@ const SuperAdminStudents: React.FC = () => {
       const result = await resetPassword.mutateAsync(student.id)
       setCredential({
         name: student.name,
-        email: student.email || result.email || "",
+        // The account the callable changed wins over the row. They differ exactly when
+        // the profile's stored uid or email is stale — and quoting the row's address
+        // there is what makes a successful reset look like a failure, because the
+        // person is told to sign in with an address that never had the password.
+        email: result.email || student.email || "",
         password: result.temporaryPassword,
-        uid: student.uid || null,
+        uid: result.uid || student.uid || null,
+        resetLink: result.resetLink,
+        profileEmail: student.email || null,
       })
     } catch {
       showError("Could not reset this student's password")
@@ -379,6 +392,23 @@ const SuperAdminStudents: React.FC = () => {
             </p>
             {credential.uid && (
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-mono">uid {credential.uid}</p>
+            )}
+            {credential.profileEmail && credential.email !== credential.profileEmail && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                The profile row says {credential.profileEmail}, but this password belongs to {credential.email}.
+                Sign in with this address, then fix the address on the profile.
+              </p>
+            )}
+            {credential.resetLink && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(credential.resetLink || "")
+                  showSuccess("Reset link copied — it needs no shared password")
+                }}
+                className="btn-secondary w-full mt-3"
+              >
+                Copy password-reset link instead
+              </button>
             )}
             <button onClick={() => setCredential(null)} className="btn-primary w-full mt-5">Done</button>
           </div>

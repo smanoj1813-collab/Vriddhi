@@ -41,6 +41,7 @@ import {
   deleteFaculty,
   toggleFacultyStatus,
   resetFacultyPassword,
+  type CredentialResetResult,
   resetStudentPassword,
   SuperAdminApiError,
   type ResetCollegeDataResult,
@@ -88,7 +89,7 @@ import {
 export const useResetStudentPassword = () => {
   const queryClient = useQueryClient();
   return useMutation<
-    { temporaryPassword: string; email: string | null },
+    CredentialResetResult,
     SuperAdminApiError,
     string
   >({
@@ -590,7 +591,7 @@ export const useToggleFacultyStatus = () => {
 
 export const useResetFacultyPassword = () => {
   const queryClient = useQueryClient();
-  return useMutation<string, SuperAdminApiError, string>({
+  return useMutation<CredentialResetResult, SuperAdminApiError, string>({
     mutationFn: resetFacultyPassword,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.faculty() });

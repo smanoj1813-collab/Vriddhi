@@ -22,6 +22,16 @@ const SuperAdminFaculty: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [resetPassword, setResetPassword] = useState('')
   const [resetFacultyName, setResetFacultyName] = useState('')
+  // Which Auth account the rotation landed on. A name and a password are not enough to
+  // hand someone: when a profile's stored uid or email is stale, the credential is
+  // valid for an address that is not the one on the row, and the only honest way to
+  // show that is to quote the account the server actually changed.
+  const [resetAccount, setResetAccount] = useState<{
+    email: string | null;
+    uid: string;
+    profileEmail: string | null;
+    resetLink: string | null;
+  } | null>(null)
   const [fixingPasswords, setFixingPasswords] = useState(false)
   const [repairSummary, setRepairSummary] = useState<RepairResult | null>(null)
   const [resetEmailState, setResetEmailState] = useState<Record<string, 'sending' | 'sent' | 'error'>>({})
@@ -73,10 +83,16 @@ const SuperAdminFaculty: React.FC = () => {
     }
   }
 
-  const handleResetPassword = async (facultyId: string, name: string) => {
+  const handleResetPassword = async (facultyId: string, name: string, profileEmail?: string | null) => {
     try {
-      const newPassword = await resetPasswordMutation.mutateAsync(facultyId)
-      setResetPassword(newPassword)
+      const result = await resetPasswordMutation.mutateAsync(facultyId)
+      setResetPassword(result.temporaryPassword)
+      setResetAccount({
+        email: result.email,
+        uid: result.uid,
+        profileEmail: profileEmail ?? null,
+        resetLink: result.resetLink,
+      })
       setResetFacultyName(name)
       setShowPasswordModal(true)
       showSuccess(`Password reset for ${name}`)
@@ -396,7 +412,7 @@ const SuperAdminFaculty: React.FC = () => {
                         <Mail className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleResetPassword(f.id, `${f.firstName} ${f.lastName}`)}
+                        onClick={() => handleResetPassword(f.id, `${f.firstName} ${f.lastName}`, f.email)}
                         disabled={resetPasswordMutation.isPending}
                         title="Rotate the password and show a one-time credential (signs the user out everywhere)"
                         className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-yellow-400 rounded-lg transition-colors"
@@ -486,11 +502,38 @@ const SuperAdminFaculty: React.FC = () => {
                 </button>
               </div>
             </div>
+            {resetAccount?.email && (
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-mono break-all">
+                account {resetAccount.email}
+                {resetAccount.uid ? ` · uid ${resetAccount.uid.slice(0, 14)}…` : ''}
+              </p>
+            )}
+            {resetAccount?.profileEmail && resetAccount.email && resetAccount.profileEmail !== resetAccount.email && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+                This profile row says {resetAccount.profileEmail}, but the password was set on{' '}
+                {resetAccount.email}. Sign in with that address, then correct the address stored on the profile —
+                until the two agree, a reset and a login can easily be about different people.
+              </p>
+            )}
             <p className="text-xs text-slate-500 mb-4">
               Share this password securely with the faculty member. They should change it after first login.
             </p>
+            {resetAccount?.resetLink && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(resetAccount.resetLink || '')
+                  showInfo('Reset link copied — it needs no shared password')
+                }}
+                className="w-full py-2 mb-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                Copy password-reset link instead
+              </button>
+            )}
             <button
-              onClick={() => setShowPasswordModal(false)}
+              onClick={() => {
+                setShowPasswordModal(false)
+                setResetAccount(null)
+              }}
               className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
             >
               Close

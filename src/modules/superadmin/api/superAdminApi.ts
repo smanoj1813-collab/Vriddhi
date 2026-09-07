@@ -1482,12 +1482,33 @@ export async function deleteFaculty(facultyId: string): Promise<void> {
  * display and is never written to Firestore; the profile flag carries no secret, it
  * only tells the app to ask for a change on next sign-in.
  */
+/**
+ * What a credential rotation actually changed. `email` and `uid` are read back from
+ * Firebase Auth, so they name the account the new password works for — which is not
+ * always the address on the profile row, and that difference is the whole story when a
+ * reset "does nothing".
+ */
+export interface CredentialResetResult {
+  temporaryPassword: string;
+  email: string | null;
+  uid: string;
+  resetLink: string | null;
+}
+
+type ResetResponse = {
+  success: boolean;
+  uid: string;
+  email: string | null;
+  temporaryPassword: string;
+  resetLink?: string | null;
+};
+
 export async function resetStudentPassword(
   studentId: string
-): Promise<{ temporaryPassword: string; email: string | null }> {
+): Promise<CredentialResetResult> {
   const resetFn = httpsCallable<
     { collection: "students"; docId: string },
-    { success: boolean; uid: string; email: string | null; temporaryPassword: string }
+    ResetResponse
   >(functions, "resetUserPassword");
 
   const result = await resetFn({ collection: "students", docId: studentId });
@@ -1502,21 +1523,26 @@ export async function resetStudentPassword(
   } catch {
     // Non-fatal: the Auth credential was already reset.
   }
-  return { temporaryPassword: temp, email: result.data?.email ?? null };
+  return {
+    temporaryPassword: temp,
+    email: result.data?.email ?? null,
+    uid: result.data?.uid ?? "",
+    resetLink: result.data?.resetLink ?? null,
+  };
 }
 
 export async function toggleFacultyStatus(facultyId: string, status: "active" | "inactive"): Promise<void> {
   await updateDoc(doc(db, "faculty", facultyId), { status, updatedAt: Timestamp.now() });
 }
 
-export async function resetFacultyPassword(facultyId: string): Promise<string> {
+export async function resetFacultyPassword(facultyId: string): Promise<CredentialResetResult> {
   // Password reset must happen server-side (Admin SDK) — the client cannot
   // update a Firebase Auth password for another user. The callable resets the
   // Auth credential, revokes existing sessions and returns the one-time
   // temporary password (never persisted to Firestore).
   const resetFn = httpsCallable<
     { collection: "faculty"; docId: string },
-    { success: boolean; uid: string; email: string | null; temporaryPassword: string }
+    ResetResponse
   >(functions, "resetUserPassword");
 
   const result = await resetFn({ collection: "faculty", docId: facultyId });
@@ -1533,5 +1559,10 @@ export async function resetFacultyPassword(facultyId: string): Promise<string> {
   } catch {
     // Non-fatal: the Auth credential was already reset.
   }
-  return temp;
+  return {
+    temporaryPassword: temp,
+    email: result.data?.email ?? null,
+    uid: result.data?.uid ?? "",
+    resetLink: result.data?.resetLink ?? null,
+  };
 }
