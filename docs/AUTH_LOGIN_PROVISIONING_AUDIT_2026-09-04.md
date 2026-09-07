@@ -440,3 +440,47 @@ Residual: `current-firestore.rules` is validated structurally (156/156 braces, p
 review) and not in the emulator, because a JVM is unavailable here. Capture the rules text
 that is actually live before deploying over it — it is the only record of what the app has
 been relying on.
+
+## 12. Staff pass, measured (2026-09-07)
+
+Scope `All profile collections` · `All colleges` · 2000 docs per collection · 480s budget.
+Full scan, no truncation gate, so the claims-reclaim rule was eligible to speak.
+
+`scanned 388 · needs repair 2 · repaired 2` (first pass), and the second Preview showed
+each row having lost exactly the finding Apply could settle:
+
+| row | before | after |
+| --- | --- | --- |
+| `superadmins/1XEhSuU6igtL9up5c1kB` | STALE_UID_LINK, DUPLICATE_PROFILE, WRONG_CLAIMS | DUPLICATE_PROFILE, WRONG_CLAIMS |
+| `hods/dj2OY8kpMkanq54TOxBj_Multi-Department` | DUPLICATE_PROFILE, MISSING_PROFILE_LINK | DUPLICATE_PROFILE |
+
+Findings that did **not** appear, and why that is the result:
+
+- **No `STALE_CLAIMS_NO_PROFILE`.** Every account carrying a role claim has a profile
+  document vouching for it. An earlier reading of a client console log had suggested the
+  old Apply privileged an account no profile owned; that was inference, and a complete
+  six-collection scan with the reclaim live contradicts it. The claim is withdrawn.
+- **No faculty or student rows.** 388 − 382 scanned in the tenant pass = the six profiles
+  outside `dj2OY8kpMkanq54TOxBj`, and none of them needed repair either.
+- **`AUTH_ONLY_NO_PROFILE × 4`, unchanged by any Apply.** `gjrahul1@gmail.com`,
+  `supreeth@vriddhi.com`, `sushma.sidhu498@vriddhi.edu.in`, `manojs1327@gmail.com` can
+  authenticate and own nothing. Under claim-based rules they resolve to no role and read
+  almost nothing, so they are inert rather than dangerous; they are an ownership question
+  for the operator (grant a role, or disable the Auth account), not something this pass
+  can decide — it never creates a profile from an account with no document behind it.
+
+### Why `needs repair` never reached 0 (`3e64b48`)
+
+Both surviving rows carry only findings the pass deliberately refuses to act on: a
+duplicate profile does not own its account's identity, so role and claims belong to the
+primary record. Listing them as "needs repair" promised work that no Apply could do, and
+a counter that never moves is a counter people stop trusting. `DUPLICATE_PROFILE`,
+`MISSING_CLAIMS` and `WRONG_CLAIMS` on a non-primary profile are now advisory — still
+listed, still explained, excluded from the count and the write path — while stale uid,
+missing pointer and plaintext secret keep counting, because those the pass does change on
+a duplicate. The remaining option for `WRONG_CLAIMS` on the operator's stale
+`superadmins` document is a human one: set its `collegeId` to null so it stops
+contradicting the claims its own account carries, or delete it once no `users/*` pointer
+names it. Merging duplicate profiles is not implemented on purpose: choosing which of two
+documents survives is a data decision, not a repair.
+
