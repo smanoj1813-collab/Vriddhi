@@ -130,20 +130,35 @@ export const verifyAuth = async (
     const tokenClaims = decoded as unknown as { role?: unknown; collegeId?: unknown };
     const claimRole = normalizeRole(tokenClaims.role);
     const claimCollegeId =
-      typeof tokenClaims.collegeId === 'string' ? tokenClaims.collegeId : undefined;
+      typeof tokenClaims.collegeId === 'string' && tokenClaims.collegeId !== ''
+        ? tokenClaims.collegeId
+        : undefined;
 
-    const profile = await resolveUserProfile(decoded.uid, decoded.email);
-
-    if (!profile && !claimRole) {
-      res.status(401).json({ error: 'Unauthorized: User profile not found' });
+    // Authorization inputs (role and college) come from the verified ID-token
+    // custom claims ONLY. A profile document is client-writable, so reading a
+    // role or tenant out of one here would reintroduce exactly the forgery the
+    // Firestore rules were rewritten to close. A claim-less account fails
+    // closed here and self-heals through the syncMyIdentity callable (which is
+    // not one of these Express routes), then retries with a freshly minted
+    // token.
+    if (!claimRole) {
+      res.status(403).json({
+        error:
+          'Forbidden: the ID token carries no role claim. Sign out and back in; ' +
+          'if it persists, a superadmin must run Access Control → Identity repair.',
+      });
       return;
     }
+
+    // Name and email are presentation data only (used for createdByName and
+    // audit logs) and are never used to authorize a request.
+    const profile = await resolveUserProfile(decoded.uid, decoded.email);
 
     req.user = {
       uid: decoded.uid,
       email: profile?.email || decoded.email,
-      role: claimRole || profile?.role,
-      collegeId: claimCollegeId || profile?.collegeId,
+      role: claimRole,
+      collegeId: claimCollegeId,
       name: profile?.name,
     };
 
