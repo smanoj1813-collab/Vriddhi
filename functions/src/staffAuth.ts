@@ -28,7 +28,13 @@ import {
   verifyAuthAccount,
   verifyCaller,
   withApiVersion,
+  withAuthQuotaRetry,
 } from './identityShared'
+
+/** A throttle is transient and recoverable, so it gets a log line rather than a
+ * row failure the operator has to interpret. The retry policy itself lives in
+ * identityShared so every Auth write path in the product shares it. */
+const noteThrottle = (message: string) => logger.warn(`[staffAuth] ${message}`)
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -160,14 +166,31 @@ async function ensureCollegeAuthUser(opts: {
     // Same college, or an orphaned account (no college claim). Reset the
     // password so the credential we return actually works, and refresh claims.
     await Promise.all([
-      admin.auth().updateUser(existing.uid, { email, password, displayName: name, disabled: false }),
-      admin.auth().setCustomUserClaims(existing.uid, { role, collegeId }),
+      withAuthQuotaRetry(
+        `reclaim ${email}`,
+        () =>
+          admin.auth().updateUser(existing.uid, { email, password, displayName: name, disabled: false }),
+        { note: noteThrottle }
+      ),
+      withAuthQuotaRetry(
+        `claims ${email}`,
+        () => admin.auth().setCustomUserClaims(existing.uid, { role, collegeId }),
+        { note: noteThrottle }
+      ),
     ])
     return { uid: existing.uid, reclaimed: true }
   }
 
-  const created = await admin.auth().createUser({ email, password, displayName: name })
-  await admin.auth().setCustomUserClaims(created.uid, { role, collegeId })
+  const created = await withAuthQuotaRetry(
+    `create ${email}`,
+    () => admin.auth().createUser({ email, password, displayName: name }),
+    { note: noteThrottle }
+  )
+  await withAuthQuotaRetry(
+    `claims ${email}`,
+    () => admin.auth().setCustomUserClaims(created.uid, { role, collegeId }),
+    { note: noteThrottle }
+  )
   return { uid: created.uid, reclaimed: false }
 }
 

@@ -9,6 +9,7 @@ import {
   decideProfileAccount,
   generateRandomPassword,
   groupBy,
+  isAuthQuotaThrottle,
   isValidEmail,
   shouldReclaimUnsupportedClaims,
   normalizeEmail,
@@ -16,6 +17,7 @@ import {
   normalizeRole,
   toPhoneE164,
   withApiVersion,
+  withAuthQuotaRetry,
 } from '../src/identityShared.ts'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -301,5 +303,68 @@ describe('input normalisation', () => {
     assert.equal(toPhoneE164('098765 43210'), '+919876543210')
     assert.equal(toPhoneE164(''), undefined)
     assert.equal(toPhoneE164('123'), undefined, 'too short to be a real number')
+  })
+})
+
+describe('Auth API throttling', () => {
+  // A bulk identity pass at 24-way concurrency cleared ~230 rows and then the
+  // Auth API started answering "Exceeded quota for updating account
+  // information" — reported by the Admin SDK as auth/unknown, i.e. indistinguishable
+  // from a real failure unless you look at the message. Those rows stayed broken.
+  // Errors, not plain objects: the Admin SDK throws an Error subclass that
+  // carries `code` and `errorInfo`, and matching its real shape keeps a
+  // `String(err)` comparison in the assertions honest.
+  const shape = (code: string, message: string) =>
+    Object.assign(new Error(message), { code, errorInfo: { code, message } })
+
+  it('recognises the quota message the Admin SDK actually returns', () => {
+    assert.equal(isAuthQuotaThrottle(shape('auth/unknown', 'Exceeded quota for updating account information.')), true)
+    assert.equal(isAuthQuotaThrottle(shape('auth/quota-exceeded', 'too far')), true)
+    assert.equal(isAuthQuotaThrottle(shape('auth/too-many-requests', 'slow down')), true)
+    assert.equal(isAuthQuotaThrottle({ message: 'Quota per minute rate limit exceeded' }), true)
+  })
+
+  it('does not treat a genuine rejection as a throttle', () => {
+    assert.equal(isAuthQuotaThrottle(shape('auth/email-already-exists', 'Email already exists')), false)
+    assert.equal(isAuthQuotaThrottle(shape('auth/user-not-found', 'No user record')), false)
+    assert.equal(isAuthQuotaThrottle(null), false)
+    assert.equal(isAuthQuotaThrottle('permission-denied'), false)
+  })
+
+  it('retries a throttled write and returns its result', async () => {
+    let calls = 0
+    const value = await withAuthQuotaRetry(
+      'test',
+      async () => {
+        calls++
+        if (calls < 3) throw shape('auth/unknown', 'Exceeded quota for updating account information.')
+        return 'ok'
+      },
+      { attempts: 4, baseDelayMs: 1 }
+    )
+    assert.equal(value, 'ok')
+    assert.equal(calls, 3)
+  })
+
+  it('gives up without retrying a non-quota error, and never loops forever', async () => {
+    let calls = 0
+    await assert.rejects(
+      withAuthQuotaRetry('test', async () => {
+        calls++
+        throw shape('auth/email-already-exists', 'Email already exists')
+      }, { baseDelayMs: 1 }),
+      /already exists/
+    )
+    assert.equal(calls, 1)
+
+    let throttled = 0
+    await assert.rejects(
+      withAuthQuotaRetry('test', async () => {
+        throttled++
+        throw shape('auth/unknown', 'Exceeded quota for updating account information.')
+      }, { attempts: 3, baseDelayMs: 1 }),
+      /Exceeded quota/
+    )
+    assert.equal(throttled, 3)
   })
 })

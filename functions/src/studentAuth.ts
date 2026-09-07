@@ -13,7 +13,13 @@ import {
   verifyAuthAccount,
   verifyCaller,
   withApiVersion,
+  withAuthQuotaRetry,
 } from './identityShared'
+
+/** A throttle is transient and recoverable, so it gets a log line rather than a
+ * row failure the operator has to interpret. The retry policy itself lives in
+ * identityShared so every Auth write path in the product shares it. */
+const noteThrottle = (message: string) => logger.warn(`[studentAuth] ${message}`)
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -332,13 +338,18 @@ export const bulkCreateStudentAccounts = onCall(
           const existing = await findAuthUserByEmail(email)
           if (!existing) {
             // Defensive: set membership drifted. Fall through to creation.
-            userRecord = await auth.createUser({
-              email,
-              password,
-              displayName: name,
-              phoneNumber,
-              disabled: false,
-            })
+            userRecord = await withAuthQuotaRetry(
+              `create ${email}`,
+              () =>
+                auth.createUser({
+                  email,
+                  password,
+                  displayName: name,
+                  phoneNumber,
+                  disabled: false,
+                }),
+              { note: noteThrottle }
+            )
             createdAuthUid = userRecord.uid
           } else {
             const claims = (existing.customClaims || {}) as Record<string, unknown>
@@ -348,24 +359,34 @@ export const bulkCreateStudentAccounts = onCall(
                 `Email ${email} already belongs to another college and cannot be reused`
               )
             }
-            await auth.updateUser(existing.uid, {
-              email,
-              password,
-              displayName: name,
-              phoneNumber,
-              disabled: false,
-            })
+            await withAuthQuotaRetry(
+              `reclaim ${email}`,
+              () =>
+                auth.updateUser(existing.uid, {
+                  email,
+                  password,
+                  displayName: name,
+                  phoneNumber,
+                  disabled: false,
+                }),
+              { note: noteThrottle }
+            )
             userRecord = existing
             reclaimedAuthUid = existing.uid
           }
         } else {
-          userRecord = await auth.createUser({
-            email,
-            password,
-            displayName: name,
-            phoneNumber,
-            disabled: false,
-          })
+          userRecord = await withAuthQuotaRetry(
+            `create ${email}`,
+            () =>
+              auth.createUser({
+                email,
+                password,
+                displayName: name,
+                phoneNumber,
+                disabled: false,
+              }),
+            { note: noteThrottle }
+          )
           createdAuthUid = userRecord.uid
         }
 
@@ -373,7 +394,11 @@ export const bulkCreateStudentAccounts = onCall(
         // callable delete Auth accounts even when profile docs are missing.
         // Firestore rules take the role from the token claim ONLY, so a missing
         // claim means an account that can sign in but read nothing.
-        await auth.setCustomUserClaims(userRecord.uid, { role: 'student', collegeId })
+        await withAuthQuotaRetry(
+          `claims ${email}`,
+          () => auth.setCustomUserClaims(userRecord.uid, { role: 'student', collegeId }),
+          { note: noteThrottle }
+        )
 
         // 1b. Prove the identity actually exists before we touch Firestore.
         //     Without this step a failed/omitted Auth write still produced a

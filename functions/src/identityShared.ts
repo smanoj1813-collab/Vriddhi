@@ -449,6 +449,58 @@ export async function mapWithConcurrency<T, R>(
  * a stored password is a credential leak — and it is also the reason the
  * workflow "open Firestore and read the password" never went away.
  */
+// ─── Auth API throttling ───────────────────────────────────────────────────
+// Identity Platform rate-limits writes to a single account type hard enough
+// that a bulk pass trips it: repairing 380 students at 24-way concurrency got
+// through ~230 claim writes and then started failing with
+// "Exceeded quota for updating account information" (the Admin SDK reports that
+// server-side throttle as auth/unknown, not as a distinct code). Nothing in the
+// product retried it, so each throttled row stayed broken and the operator had
+// to run the pass again and hope. Throttling is transient and idempotent here,
+// so back off and try again instead of reporting a failure the operator has to
+// interpret.
+const QUOTA_MESSAGE =
+  /exceeded quota|rate.?limit|too many requests|retry.?(later|again)|resource.?(exhausted|limit)/i
+const QUOTA_CODE = /(quota|too-many-requests|resource-exhausted)/i
+
+/** True when an Admin SDK error means "you are writing too fast", not "wrong". */
+export function isAuthQuotaThrottle(error: unknown): boolean {
+  const e = error as {
+    code?: unknown
+    message?: unknown
+    errorInfo?: { code?: unknown; message?: unknown }
+  } | null
+  const code = String(e?.errorInfo?.code ?? e?.code ?? '')
+  const message = String(e?.errorInfo?.message ?? e?.message ?? '')
+  return QUOTA_CODE.test(code) || QUOTA_MESSAGE.test(message)
+}
+
+/**
+ * Run an Auth write, retrying only quota-shaped failures with jittered
+ * exponential backoff. `note` exists so callers can log through their own
+ * logger — this module is unit-tested without firebase-functions loaded.
+ */
+export async function withAuthQuotaRetry<T>(
+  label: string,
+  action: () => Promise<T>,
+  opts: { attempts?: number; baseDelayMs?: number; note?: (message: string) => void } = {}
+): Promise<T> {
+  const attempts = Math.max(1, Math.floor(opts.attempts ?? 4))
+  const base = Math.max(0, opts.baseDelayMs ?? 400)
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await action()
+    } catch (err) {
+      if (attempt >= attempts || !isAuthQuotaThrottle(err)) throw err
+      const backoffMs = base * 2 ** (attempt - 1) + Math.floor(Math.random() * (base / 2))
+      opts.note?.(
+        `${label}: Auth API throttled this project (attempt ${attempt} of ${attempts}), waiting ${backoffMs}ms`
+      )
+      await new Promise((resolve) => setTimeout(resolve, backoffMs))
+    }
+  }
+}
+
 export function secretFieldDeletes(
   data: Record<string, unknown> | undefined
 ): Record<string, admin.firestore.FieldValue> {

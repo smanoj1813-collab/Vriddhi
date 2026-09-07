@@ -60,6 +60,7 @@ import {
   secretFieldDeletes,
   verifyCaller,
   withApiVersion,
+  withAuthQuotaRetry,
 } from './identityShared'
 
 interface RepairInput {
@@ -155,7 +156,11 @@ export const auditAndRepairIdentities = onCall(
     // a large sweep answers with "partial, re-run scoped to X" instead of dying
     // as an opaque deadline error.
 
-    const CONCURRENCY = 24
+    // 24 measured badly: it cleared ~230 rows in 25s and then the Auth API began
+    // rejecting claim writes with "Exceeded quota for updating account
+    // information". Throttling costs a re-run; a half-repaired cohort costs a
+    // support conversation, so the sweep trades throughput for staying under it.
+    const CONCURRENCY = 8
     const BUDGET_MS = Math.min(
       480_000,
       Math.max(30_000, Number(input.budgetSeconds) > 0 ? Number(input.budgetSeconds) * 1000 : 420_000)
@@ -168,6 +173,7 @@ export const auditAndRepairIdentities = onCall(
     const db = admin.firestore()
     const auth = admin.auth()
 
+    const noteThrottle = (message: string) => logger.warn(`[identityRepair] ${message}`)
     const items: RepairItem[] = []
     const counts: Record<string, number> = {}
     let scanned = 0
@@ -524,14 +530,23 @@ export const auditAndRepairIdentities = onCall(
         const claimsWrong =
           !claimRole || claimRole !== role || (!!effectiveCollegeId && claimCollege !== effectiveCollegeId)
         if ((claimsWrong || input.forceClaims) && opts.ownsIdentity) {
-          await auth.setCustomUserClaims(authUser.uid, {
-            ...existingClaims,
-            role,
-            collegeId: effectiveCollegeId,
-          })
+          // Bound before the closures below: `authUser` is a reassigned `let`, so
+          // TypeScript cannot carry the null-check inside a retry callback.
+          const targetUid = authUser.uid
+          await withAuthQuotaRetry(
+            `${collection}/${docSnap.id}: claims`,
+            () =>
+              auth.setCustomUserClaims(targetUid, {
+                ...existingClaims,
+                role,
+                collegeId: effectiveCollegeId,
+              }),
+            { note: noteThrottle }
+          )
           // Force the next sign-in to mint a token carrying the new claims;
           // an hour-old token would otherwise keep the old (absent) role.
-          await auth.revokeRefreshTokens(authUser.uid)
+          await withAuthQuotaRetry(`${collection}/${docSnap.id}: token revocation`,
+            () => auth.revokeRefreshTokens(targetUid), { note: noteThrottle })
           claimsIssued++
           actions.push(`claims set to { role: ${role}, collegeId: ${effectiveCollegeId || null} }`)
         } else if (claimsWrong || input.forceClaims) {
@@ -821,8 +836,14 @@ export const auditAndRepairIdentities = onCall(
                 const rest = { ...((record.customClaims || {}) as Record<string, unknown>) }
                 delete rest.role
                 delete rest.collegeId
-                await auth.setCustomUserClaims(record.uid, rest)
-                await auth.revokeRefreshTokens(record.uid)
+                await withAuthQuotaRetry(
+                  `claims reclaim ${record.uid}`,
+                  async () => {
+                    await auth.setCustomUserClaims(record.uid, rest)
+                    await auth.revokeRefreshTokens(record.uid)
+                  },
+                  { note: noteThrottle }
+                )
                 strippedAccounts.push({
                   uid: record.uid,
                   email: record.email || null,
