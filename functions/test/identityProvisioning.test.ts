@@ -10,6 +10,7 @@ import {
   generateRandomPassword,
   groupBy,
   isAdvisoryForDuplicate,
+  shouldDeferRoleOverwrite,
   isAuthQuotaThrottle,
   isValidEmail,
   shouldReclaimUnsupportedClaims,
@@ -389,3 +390,65 @@ describe('duplicate findings the pass cannot settle', () => {
     assert.equal(isAdvisoryForDuplicate([]), false)
   })
 })
+
+describe('role claims are never traded from a partial view', () => {
+  it('fills a missing claim from any scope', () => {
+    assert.equal(
+      shouldDeferRoleOverwrite({
+        existingClaimRole: null,
+        documentRole: 'faculty',
+        scansAllProfileCollections: false,
+        forceClaims: false,
+      }),
+      false
+    )
+  })
+
+  it('refuses to replace one role with another when another collection may own it', () => {
+    // `hods/{id}` says hod, the account says faculty, and `faculty` was not scanned:
+    // the answer belongs to a document this pass cannot see.
+    assert.equal(
+      shouldDeferRoleOverwrite({
+        existingClaimRole: 'faculty',
+        documentRole: 'hod',
+        scansAllProfileCollections: false,
+        forceClaims: false,
+      }),
+      true
+    )
+  })
+
+  it('allows the overwrite on a full scan and on an explicit force', () => {
+    assert.equal(
+      shouldDeferRoleOverwrite({
+        existingClaimRole: 'faculty',
+        documentRole: 'hod',
+        scansAllProfileCollections: true,
+        forceClaims: false,
+      }),
+      false
+    )
+    assert.equal(
+      shouldDeferRoleOverwrite({
+        existingClaimRole: 'faculty',
+        documentRole: 'hod',
+        scansAllProfileCollections: false,
+        forceClaims: true,
+      }),
+      false
+    )
+  })
+
+  it('does not defer when the roles agree and only the college was wrong', () => {
+    assert.equal(
+      shouldDeferRoleOverwrite({
+        existingClaimRole: 'faculty',
+        documentRole: 'faculty',
+        scansAllProfileCollections: false,
+        forceClaims: false,
+      }),
+      false
+    )
+  })
+})
+

@@ -349,6 +349,28 @@ export const DUPLICATE_ADVISORY_FINDINGS: readonly string[] = [
  * ever bring to zero, and a counter that never moves is a counter people stop
  * reading — which is exactly how a real finding gets ignored later.
  */
+/**
+ * Should this pass refuse to replace an existing role claim with the role written on
+ * the document it happens to be scanning?
+ *
+ * Which of several documents owns an account's identity is decided by the set of
+ * collections actually scanned. A staff-only pass sees `hods/{id}` and nothing else, so
+ * it cannot know the same email also has a `faculty/{id}` saying `faculty` — and the
+ * answer would then depend on which scope the operator happened to select, which is how
+ * a person's dashboard starts flip-flopping. Filling a *missing* claim is safe from any
+ * scope, because nothing is being overwritten.
+ */
+export function shouldDeferRoleOverwrite(input: {
+  existingClaimRole: string | null
+  documentRole: string
+  scansAllProfileCollections: boolean
+  forceClaims: boolean
+}): boolean {
+  if (input.scansAllProfileCollections || input.forceClaims) return false
+  if (!input.existingClaimRole) return false
+  return input.existingClaimRole !== input.documentRole
+}
+
 export function isAdvisoryForDuplicate(findings: readonly string[]): boolean {
   return (
     findings.length > 0 &&

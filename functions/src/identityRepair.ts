@@ -53,6 +53,7 @@ import {
   generateRandomPassword,
   decideProfileAccount,
   isAdvisoryForDuplicate,
+  shouldDeferRoleOverwrite,
   isValidEmail,
   shouldReclaimUnsupportedClaims,
   mapWithConcurrency,
@@ -96,6 +97,7 @@ type Finding =
   | 'AUTH_ONLY_NO_PROFILE'
   | 'UID_EMAIL_MISMATCH'
   | 'STALE_CLAIMS_NO_PROFILE'
+  | 'DEFERRED_ROLE_OVERWRITE'
 
 interface RepairItem {
   collection: string
@@ -145,6 +147,11 @@ export const auditAndRepairIdentities = onCall(
     const dryRun = input.dryRun !== false
     const limit = Math.min(Math.max(Number(input.limit) || 500, 1), 5000)
     const deliveryMode = input.deliveryMode === 'temp-password' ? 'temp-password' : 'reset-email'
+    // A pass that cannot see every profile collection cannot know which document owns
+    // an email's identity, so it must not trade one role claim for another.
+    const scansAllProfileCollections =
+      (input.collections?.length ? input.collections : DEFAULT_COLLECTIONS).length ===
+      DEFAULT_COLLECTIONS.length
     const collections = (input.collections?.length ? input.collections : DEFAULT_COLLECTIONS)
       .map((c) => String(c).trim())
       .filter((c) => COLLECTION_ROLE[c])
@@ -191,6 +198,7 @@ export const auditAndRepairIdentities = onCall(
     // The same number, counted on a dry run: "would write N links" is the figure the
     // operator is actually approving, and a chip that reads 0 on a pass that plans
     // 384 writes is how you talk yourself into thinking nothing was needed.
+    let deferredRoleOverwrites = 0
     let linksPlanned = 0
     let secretsStripped = 0
     // Rows where a legacy plaintext credential was destroyed and a usable one
@@ -260,6 +268,7 @@ export const auditAndRepairIdentities = onCall(
 
       const findings: Finding[] = []
       const actions: string[] = []
+      let deferRoleOverwrite = false
       // Findings are counted, not just listed, so the report can say "STALE_UID_LINK
       // × 3". A finding can be reached from two branches (a uid link that no longer
       // resolves *and* a mismatch with the account found by email), so registration is
@@ -352,7 +361,18 @@ export const auditAndRepairIdentities = onCall(
         const claimCollege = claims.collegeId ? String(claims.collegeId) : null
         if (!claimRole) addFinding('MISSING_CLAIMS')
         else if (claimRole !== role || (collegeId && claimCollege !== collegeId)) {
-          addFinding('WRONG_CLAIMS')
+          deferRoleOverwrite = shouldDeferRoleOverwrite({
+            existingClaimRole: claimRole,
+            documentRole: role,
+            scansAllProfileCollections,
+            forceClaims: Boolean(input.forceClaims),
+          })
+          if (deferRoleOverwrite) {
+            deferredRoleOverwrites++
+            addFinding('DEFERRED_ROLE_OVERWRITE')
+          } else {
+            addFinding('WRONG_CLAIMS')
+          }
         }
         if (linkedUid && authUser.uid !== linkedUid) addFinding('STALE_UID_LINK')
       }
@@ -450,6 +470,13 @@ export const auditAndRepairIdentities = onCall(
         }
         if (findings.includes('STALE_UID_LINK')) actions.push(`re-point ${linkField} to ${email}'s uid`)
         if (findings.includes('ACCOUNT_DISABLED')) actions.push('re-enable the Auth account')
+        if (findings.includes('DEFERRED_ROLE_OVERWRITE')) {
+          actions.push(
+            `role claim left as '${normalizeRole(
+              ((authUser?.customClaims || {}) as Record<string, unknown>).role
+            )}' — this scope cannot see every profile collection, so it will not overwrite a role from a partial view`
+          )
+        }
         if (findings.includes('MISSING_CLAIMS') || findings.includes('WRONG_CLAIMS'))
           actions.push(
             `set claims { role: ${role}, collegeId: ${collection === 'superadmins' ? 'null (superadmin is global)' : collegeId || 'null'} } + revoke refresh tokens`
@@ -542,7 +569,7 @@ export const auditAndRepairIdentities = onCall(
         const effectiveCollegeId = collection === 'superadmins' ? null : collegeId || null
         const claimsWrong =
           !claimRole || claimRole !== role || (!!effectiveCollegeId && claimCollege !== effectiveCollegeId)
-        if ((claimsWrong || input.forceClaims) && opts.ownsIdentity) {
+        if ((claimsWrong || input.forceClaims) && opts.ownsIdentity && !deferRoleOverwrite) {
           // Bound before the closures below: `authUser` is a reassigned `let`, so
           // TypeScript cannot carry the null-check inside a retry callback.
           const targetUid = authUser.uid
@@ -957,6 +984,7 @@ export const auditAndRepairIdentities = onCall(
       usersDocsCreated,
       usersDocsLinked,
       linksPlanned,
+      deferredRoleOverwrites,
       secretsStripped,
       secretsResetIssued,
       operatorAffected,
