@@ -71,6 +71,16 @@ export interface RepairResult {
   usersDocsLinked: number
   /** Rows the pass REFUSED because the profile email and its stored uid name different people. */
   uidEmailMismatches?: number
+  /**
+   * Auth accounts whose college role claims were revoked because no profile document
+   * in the tenant vouches for them. With claim-only rules a claim is access, so a
+   * claim with no document behind it is either leftover damage or a forgery.
+   */
+  claimsStripped?: number
+  /** True when the reclaim step was skipped because a collection hit the per-collection limit. */
+  claimsStrippedOnScanTruncated?: boolean
+  strippedAccounts?: Array<{ uid: string; email: string | null; role: string | null }>
+  strippedAccountsTotal?: number
   secretsStripped: number
   /**
    * Accounts whose plaintext credential was deleted and for which a replacement

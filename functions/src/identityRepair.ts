@@ -25,6 +25,9 @@
 //   MISSING_USERS_DOC     no users/{uid} lookup document
 //   DUPLICATE_PROFILE     two profile documents describe the same email, so only
 //                         the first one in collection order may decide the claims
+//   STALE_CLAIMS_NO_PROFILE
+//                         an Auth account carries a college role that no profile
+//                         document in the tenant vouches for: claims stripped
 //   UID_EMAIL_MISMATCH    the profile's own `uid` resolves to an account for a
 //                         DIFFERENT email: the row is refused, never repaired
 //   MISSING_PROFILE_LINK  users/{uid} does not point back at the profile id,
@@ -50,6 +53,7 @@ import {
   generateRandomPassword,
   decideProfileAccount,
   isValidEmail,
+  shouldReclaimUnsupportedClaims,
   mapWithConcurrency,
   normalizeEmail,
   normalizeRole,
@@ -89,6 +93,7 @@ type Finding =
   | 'PLAINTEXT_SECRET'
   | 'AUTH_ONLY_NO_PROFILE'
   | 'UID_EMAIL_MISMATCH'
+  | 'STALE_CLAIMS_NO_PROFILE'
 
 interface RepairItem {
   collection: string
@@ -186,6 +191,11 @@ export const auditAndRepairIdentities = onCall(
     let operatorAffected = false
     // Rows whose profile email and stored uid describe different people.
     let uidEmailMismatches = 0
+    // Accounts whose college role claims were (or would be) revoked for want of a
+    // profile document. This is the cleanup for the trust-order bug: the repair
+    // once wrote claims onto whichever account a profile's stale `uid` named.
+    let claimsStripped = 0
+    const strippedAccounts: Array<{ uid: string; email: string | null; role: string | null }> = []
     const errors: string[] = []
     // Credentials minted during this run, returned once to the caller only.
     const credentials: Array<{
@@ -293,6 +303,12 @@ export const auditAndRepairIdentities = onCall(
         return
       }
 
+      if (linkedUid) profileVouchedUids.add(linkedUid)
+      if (docSnap.id && (docSnap.id.length === 28 || docSnap.id.length === 20)) {
+        // uid-shaped document ids (superadmins/{uid}, faculty/{uid}) vouch for that uid
+        profileVouchedUids.add(docSnap.id)
+      }
+
       const decision = decideProfileAccount({
         profileEmail: email,
         linkedUid,
@@ -330,6 +346,7 @@ export const auditAndRepairIdentities = onCall(
         if (linkedUid && authUser.uid !== linkedUid) addFinding('STALE_UID_LINK')
       }
 
+      if (authUser) profileVouchedUids.add(authUser.uid)
       const usersRef = authUser ? db.doc(`users/${authUser.uid}`) : null
       const usersSnap = usersRef ? await usersRef.get() : null
       if (authUser && !usersSnap?.exists) addFinding('MISSING_USERS_DOC')
@@ -615,6 +632,15 @@ export const auditAndRepairIdentities = onCall(
       items.push(item)
     }
 
+    // Every uid this pass saw a profile document vouch for — from the document's
+    // own `uid`/`userId` field, from the account resolved for it, or from the
+    // document id when the collection is keyed by uid. An Auth account outside this
+    // set is carrying claims that nothing in the tenant backs.
+    const profileVouchedUids = new Set<string>()
+    // A scan truncated by `limit` would make real accounts look unbacked, so the
+    // reclaim step is disabled for the whole pass as soon as any collection is cut.
+    let scanTruncated = false
+
     const units: Array<{
       collection: string
       defaultRole: string
@@ -641,6 +667,7 @@ export const auditAndRepairIdentities = onCall(
         stoppedAfter = collection
         break
       }
+      if (snapshot.docs.length >= limit) scanTruncated = true
       for (const doc of snapshot.docs) units.push({ collection, defaultRole, doc })
     }
 
@@ -730,6 +757,59 @@ export const auditAndRepairIdentities = onCall(
           }
 
           for (const record of page.users) {
+            const claimRoleForCheck = normalizeRole(((record.customClaims || {}) as Record<string, unknown>).role)
+            const reclaim = shouldReclaimUnsupportedClaims({
+              claimRole: claimRoleForCheck,
+              roleHasProfileCollection: Boolean(claimRoleForCheck && COLLECTION_ROLE[claimRoleForCheck]),
+              referencedByProfile: profileVouchedUids.has(record.uid),
+              isCallerAccount: record.uid === caller.uid,
+              fullTenantScan:
+                !input.collegeId &&
+                collections.length === DEFAULT_COLLECTIONS.length &&
+                !partial &&
+                !scanTruncated,
+            })
+            if (reclaim) {
+              bump('STALE_CLAIMS_NO_PROFILE')
+              claimsStripped++
+              if (dryRun) {
+                const reverseActions = [
+                  `would strip role/collegeId claims from ${record.email || record.uid}: ` +
+                  `${claimRoleForCheck} claims with no profile document in this tenant behind them`,
+                ]
+                items.push({
+                  collection: '(auth)',
+                  docId: record.uid,
+                  email: record.email || null,
+                  name: record.displayName || null,
+                  role: claimRoleForCheck,
+                  collegeId: String(((record.customClaims || {}) as Record<string, unknown>).collegeId || '') || null,
+                  uid: record.uid,
+                  findings: ['STALE_CLAIMS_NO_PROFILE'],
+                  actions: reverseActions,
+                })
+                continue
+              }
+              try {
+                const rest = { ...((record.customClaims || {}) as Record<string, unknown>) }
+                delete rest.role
+                delete rest.collegeId
+                await auth.setCustomUserClaims(record.uid, rest)
+                await auth.revokeRefreshTokens(record.uid)
+                strippedAccounts.push({
+                  uid: record.uid,
+                  email: record.email || null,
+                  role: claimRoleForCheck,
+                })
+                logger.info('[identityRepair] revoked unsupported role claims', {
+                  uid: record.uid,
+                  previousRole: claimRoleForCheck,
+                })
+              } catch (err: any) {
+                errors.push(`${record.uid}: claims not stripped — ${err?.message || err}`)
+              }
+              continue
+            }
             if (hasUsersDoc.has(record.uid) || hasProfileDoc.has(record.uid)) continue
             const claims = (record.customClaims || {}) as Record<string, unknown>
             const claimRole = normalizeRole(claims.role)
@@ -818,6 +898,10 @@ export const auditAndRepairIdentities = onCall(
       secretsResetIssued,
       operatorAffected,
       uidEmailMismatches,
+      claimsStripped,
+      claimsStrippedOnScanTruncated: scanTruncated,
+      strippedAccounts: strippedAccounts.slice(0, 50),
+      strippedAccountsTotal: strippedAccounts.length,
       orphanAccounts: orphans.slice(0, 50),
       orphanAccountsTotal: orphans.length,
       authOnlyCount,

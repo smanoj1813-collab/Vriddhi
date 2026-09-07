@@ -10,6 +10,7 @@ import {
   generateRandomPassword,
   groupBy,
   isValidEmail,
+  shouldReclaimUnsupportedClaims,
   normalizeEmail,
   mapWithConcurrency,
   normalizeRole,
@@ -144,6 +145,33 @@ describe('decideProfileAccount', () => {
       decideProfileAccount(facts({ profileEmail: null, emailUid: null, linkedUidExists: true })),
       { kind: 'use-account', uid: 'uid-doc', source: 'uid', staleLinkedUid: null }
     )
+  })
+})
+
+describe('shouldReclaimUnsupportedClaims', () => {
+  const base = {
+    claimRole: 'faculty',
+    roleHasProfileCollection: true,
+    referencedByProfile: false,
+    isCallerAccount: false,
+    fullTenantScan: true,
+  }
+  const yes = (over: Partial<typeof base> = {}) => shouldReclaimUnsupportedClaims({ ...base, ...over })
+
+  it('reclaims an unbacked college role', () => {
+    assert.equal(yes(), true)
+  })
+  it('never reclaims the operator, a backed account, or an account with no claims', () => {
+    assert.equal(yes({ isCallerAccount: true }), false)
+    assert.equal(yes({ referencedByProfile: true }), false)
+    assert.equal(yes({ claimRole: null }), false)
+  })
+  it('leaves roles with no profile collection alone (parents are not a repair target)', () => {
+    assert.equal(yes({ claimRole: 'parent', roleHasProfileCollection: false }), false)
+  })
+  it('refuses to reclaim unless the scan covered the whole tenant', () => {
+    assert.equal(yes({ fullTenantScan: false }), false,
+      'a scoped or truncated pass would strip legitimate staff whose documents it simply never read')
   })
 })
 

@@ -205,6 +205,31 @@ export default function AccessControl() {
             ) : null}
           </Alert>
         ) : null}
+        {repairResult.strippedAccounts?.length ? (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {repairResult.strippedAccountsTotal} account{repairResult.strippedAccountsTotal === 1 ? '' : 's'} carried a college role
+              that no profile document backs
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              {repairResult.dryRun
+                ? 'Applying will revoke these role claims (and sign those accounts out). With claim-based rules a claim is access, so an unbacked claim is either damage from the old link order or somebody forging their own profile.'
+                : 'These claims have been revoked and their tokens invalidated. The people keep their accounts — they simply stop being staff until a profile document vouches for them.'}
+            </Typography>
+            {repairResult.strippedAccounts.map(a => (
+              <Typography key={a.uid} variant="body2" component="div">
+                <strong>{a.email || a.uid}</strong> — claimed {a.role} · uid {a.uid}
+              </Typography>
+            ))}
+          </Alert>
+        ) : null}
+        {repairResult.claimsStrippedOnScanTruncated ? (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Claim reclaim was skipped: a collection hit the per-document limit, so this pass did not see every
+            profile and could not tell unbacked claims from unscanned ones. Raise “Docs per collection” to
+            cover the tenant before applying.
+          </Alert>
+        ) : null}
         {repairResult.uidEmailMismatches ? (
           <Alert severity="error" sx={{ mb: 2 }}>
             {repairResult.uidEmailMismatches} {repairResult.uidEmailMismatches === 1 ? 'row was' : 'rows were'} refused:

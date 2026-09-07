@@ -309,6 +309,42 @@ export const SECRET_PROFILE_FIELDS = [
  * pass so that several profile documents describing the SAME Auth account are
  * handled by one worker instead of racing each other across the concurrency lanes.
  */
+/**
+ * Should this Auth account keep the role claims it carries?
+ *
+ * With claim-only rules, a claim IS access: whatever `role` and `collegeId` an
+ * account carries is what the security rules let it read. So an account carrying a
+ * college role that no profile document in the tenant vouches for is either a
+ * leftover (the trust-order bug pointed a profile at the wrong account and the
+ * repair followed it) or a forgery (the currently deployed rules let staff write
+ * their own profile documents, and those documents used to be able to supply a
+ * role). Either way it must not survive into a claim-only ruleset.
+ *
+ * The guards are the point of this function, so they are pure and testable rather
+ * than buried in a sweep that can only be exercised against a live project:
+ *  - only roles that map to a profile collection are considered, so `parent` and
+ *    anything unknown are never touched;
+ *  - the operator's own account is never touched, because locking a superadmin out
+ *    of a tenant mid-repair is unrecoverable from inside the repair;
+ *  - the caller must assert the pass covered every profile collection for every
+ *    college, completely — a partial scan would make legitimate accounts look
+ *    unbacked and strip working people.
+ */
+export function shouldReclaimUnsupportedClaims(options: {
+  claimRole: string | null
+  roleHasProfileCollection: boolean
+  referencedByProfile: boolean
+  isCallerAccount: boolean
+  fullTenantScan: boolean
+}): boolean {
+  if (!options.claimRole) return false
+  if (!options.roleHasProfileCollection) return false
+  if (options.referencedByProfile) return false
+  if (options.isCallerAccount) return false
+  if (!options.fullTenantScan) return false
+  return true
+}
+
 export function groupBy<T>(items: readonly T[], keyOf: (item: T) => string): T[][] {
   const buckets = new Map<string, T[]>()
   const order: string[] = []

@@ -276,6 +276,29 @@ account, or touch a document it cannot read back.
 
 ---
 
+### 7.0 Claims are revoked when nothing in the tenant vouches for them
+
+Re-pointing a profile at the right account is only half of it: the claims the old order wrote onto
+the *wrong* account stay there, and under claim-only rules a claim is access. So the reverse sweep
+now checks the invariant directly — **an Auth account may carry a college role only if a profile
+document vouches for that uid** (by `uid`/`userId` field, by the account resolved for that profile,
+or by a uid-shaped document id). When it doesn't, `auditAndRepairIdentities` reports
+`STALE_CLAIMS_NO_PROFILE` in a dry run and, when applying, deletes `role` and `collegeId` from the
+account and revokes its tokens. The account is never deleted and its person keeps their login; they
+simply stop being staff until a document says otherwise.
+
+`shouldReclaimUnsupportedClaims` in `identityShared.ts` holds the guards, and they are the feature:
+
+- the claim's role must map to a profile collection, so `parent` and anything unknown are left alone;
+- the signed-in operator's own account is never touched — locking a superadmin out of a tenant from
+  inside the tenant's own repair tool is unrecoverable;
+- it runs only on an unscoped pass (`fullTenantScan`: no college filter, all six collections, not
+  `partial`, and no collection hit `limit`). A scoped or truncated scan cannot tell "no profile
+  exists" from "I never read that collection", and guessing wrong there strips working people.
+
+The card names every account that would be affected, before and after, because this is the one
+action in the repair that takes access away rather than restoring it.
+
 ### 7.1 Which Auth account a profile document describes
 
 The first cut of `auditAndRepairIdentities` resolved an account by trusting the profile's own
