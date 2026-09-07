@@ -9,6 +9,7 @@ import {
   decideProfileAccount,
   generateRandomPassword,
   groupBy,
+  isAdvisoryForDuplicate,
   isAuthQuotaThrottle,
   isValidEmail,
   shouldReclaimUnsupportedClaims,
@@ -366,5 +367,25 @@ describe('Auth API throttling', () => {
       /Exceeded quota/
     )
     assert.equal(throttled, 3)
+  })
+})
+
+describe('duplicate findings the pass cannot settle', () => {
+  it('treats claims findings on a non-primary profile as advice', () => {
+    assert.equal(isAdvisoryForDuplicate(['DUPLICATE_PROFILE', 'WRONG_CLAIMS']), true)
+    assert.equal(isAdvisoryForDuplicate(['DUPLICATE_PROFILE']), true)
+  })
+
+  it('still counts anything Apply can actually change', () => {
+    // A stale uid or a missing pointer is written even on a duplicate, so those rows
+    // must keep counting as work owed.
+    assert.equal(isAdvisoryForDuplicate(['DUPLICATE_PROFILE', 'STALE_UID_LINK']), false)
+    assert.equal(isAdvisoryForDuplicate(['DUPLICATE_PROFILE', 'MISSING_PROFILE_LINK']), false)
+    assert.equal(isAdvisoryForDuplicate(['DUPLICATE_PROFILE', 'PLAINTEXT_SECRET']), false)
+  })
+
+  it('does not call an empty finding list advisory', () => {
+    // `every` is true for an empty array, which would silently hide a clean row.
+    assert.equal(isAdvisoryForDuplicate([]), false)
   })
 })

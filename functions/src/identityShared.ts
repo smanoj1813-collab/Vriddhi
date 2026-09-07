@@ -330,6 +330,32 @@ export const SECRET_PROFILE_FIELDS = [
  *    college, completely — a partial scan would make legitimate accounts look
  *    unbacked and strip working people.
  */
+/**
+ * Findings a duplicate profile document reports but the pass cannot settle: another
+ * profile for the same email owns the account and its claims, so role and claims are
+ * deliberately left to that record. Only a human merging or deleting the documents
+ * clears them.
+ */
+export const DUPLICATE_ADVISORY_FINDINGS: readonly string[] = [
+  'DUPLICATE_PROFILE',
+  'MISSING_CLAIMS',
+  'WRONG_CLAIMS',
+]
+
+/**
+ * True when every finding on a non-primary profile is advice rather than work.
+ *
+ * Counting these as "needs repair" made every pass report a number no Apply could
+ * ever bring to zero, and a counter that never moves is a counter people stop
+ * reading — which is exactly how a real finding gets ignored later.
+ */
+export function isAdvisoryForDuplicate(findings: readonly string[]): boolean {
+  return (
+    findings.length > 0 &&
+    findings.every((finding) => DUPLICATE_ADVISORY_FINDINGS.includes(finding))
+  )
+}
+
 export function shouldReclaimUnsupportedClaims(options: {
   claimRole: string | null
   roleHasProfileCollection: boolean

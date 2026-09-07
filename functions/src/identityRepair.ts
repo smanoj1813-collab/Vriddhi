@@ -52,6 +52,7 @@ import {
   groupBy,
   generateRandomPassword,
   decideProfileAccount,
+  isAdvisoryForDuplicate,
   isValidEmail,
   shouldReclaimUnsupportedClaims,
   mapWithConcurrency,
@@ -373,7 +374,10 @@ export const auditAndRepairIdentities = onCall(
       if (Object.keys(secretDeletes).length) addFinding('PLAINTEXT_SECRET')
 
       if (!findings.length && !input.forceClaims) return
-      broken++
+      // A document that does not own its account's identity is linked and disarmed,
+      // never re-claimed. If everything left on it is advice, it is not a repair owed.
+      const advisoryOnly = !opts.ownsIdentity && isAdvisoryForDuplicate(findings)
+      if (!advisoryOnly) broken++
 
       const item: RepairItem = {
         collection,
@@ -385,6 +389,15 @@ export const auditAndRepairIdentities = onCall(
         uid: authUser?.uid || linkedUid,
         findings,
         actions,
+      }
+
+      if (advisoryOnly) {
+        actions.push(
+          'nothing to apply — another profile for this email owns the account and its role claims, ' +
+          'and this document is already linked to it. Merge these documents or delete this one.'
+        )
+        items.push(item)
+        return
       }
 
       if (refusedMismatch) {
