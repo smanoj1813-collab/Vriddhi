@@ -69,6 +69,8 @@ export interface RepairResult {
   usersDocsCreated: number
   /** Lookup links written onto existing `users/{uid}` documents. */
   usersDocsLinked: number
+  /** Links this dry run plans to write (the number you are approving). */
+  linksPlanned?: number
   /** Rows the pass REFUSED because the profile email and its stored uid name different people. */
   uidEmailMismatches?: number
   /**

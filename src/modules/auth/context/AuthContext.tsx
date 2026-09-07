@@ -157,10 +157,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hasRole = useCallback((roles: UserRole[]) => {
     if (!user) return false;
     if (user.role === 'superadmin') return true;
-    // Explicit role checks only — no inheritance
-    const allowed = roles.includes(user.role);
-    if (!allowed) console.warn('[AuthContext] hasRole REJECTED — user role:', user.role, 'allowed:', roles);
-    return allowed;
+    // Explicit role checks only — no inheritance.
+    // Deliberately silent: this is a *predicate*, used by navigation and layout
+    // code to decide what to show. Logging a rejection here produced
+    // "hasRole REJECTED" on pages that then rendered perfectly, which is the kind
+    // of misleading signal that sends someone chasing a bug that isn't there. The
+    // place that genuinely denies access — RoleRoute redirecting to /unauthorized —
+    // reports it instead.
+    return roles.includes(user.role);
   }, [user]);
 
   // FIX: Permissions must be deny-by-default. `hasPermission` previously

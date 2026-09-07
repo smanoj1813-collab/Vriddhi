@@ -181,6 +181,10 @@ export const auditAndRepairIdentities = onCall(
     // links were being written. Reporting only the creation made a successful pass
     // look like it had done nothing.
     let usersDocsLinked = 0
+    // The same number, counted on a dry run: "would write N links" is the figure the
+    // operator is actually approving, and a chip that reads 0 on a pass that plans
+    // 384 writes is how you talk yourself into thinking nothing was needed.
+    let linksPlanned = 0
     let secretsStripped = 0
     // Rows where a legacy plaintext credential was destroyed and a usable one
     // had to be handed out in the same breath.
@@ -428,10 +432,14 @@ export const auditAndRepairIdentities = onCall(
         if (findings.includes('STALE_UID_LINK')) actions.push(`re-point ${linkField} to ${email}'s uid`)
         if (findings.includes('ACCOUNT_DISABLED')) actions.push('re-enable the Auth account')
         if (findings.includes('MISSING_CLAIMS') || findings.includes('WRONG_CLAIMS'))
-          actions.push(`set claims { role: ${role}, collegeId: ${collegeId || 'null'} } + revoke refresh tokens`)
+          actions.push(
+            `set claims { role: ${role}, collegeId: ${collection === 'superadmins' ? 'null (superadmin is global)' : collegeId || 'null'} } + revoke refresh tokens`
+          )
         if (findings.includes('MISSING_USERS_DOC')) actions.push(`create users/{uid} lookup document`)
-        if (findings.includes('MISSING_PROFILE_LINK'))
+        if (findings.includes('MISSING_PROFILE_LINK')) {
           actions.push(`write users/{uid}.${profileLinkField} = ${docSnap.id}`)
+          if (profileLinkField) linksPlanned++
+        }
         if (findings.includes('PLAINTEXT_SECRET')) {
           const names = Object.keys(secretDeletes).join(', ')
           actions.push(
@@ -509,19 +517,23 @@ export const auditAndRepairIdentities = onCall(
         const existingClaims = (authUser.customClaims || {}) as Record<string, unknown>
         const claimRole = normalizeRole(existingClaims.role)
         const claimCollege = existingClaims.collegeId ? String(existingClaims.collegeId) : null
+        // A superadmin's authority is not scoped to a college, so a stale or deleted
+        // `collegeId` sitting on a superadmin document must not be laundered into the
+        // claims of the account that governs every college.
+        const effectiveCollegeId = collection === 'superadmins' ? null : collegeId || null
         const claimsWrong =
-          !claimRole || claimRole !== role || (!!collegeId && claimCollege !== collegeId)
+          !claimRole || claimRole !== role || (!!effectiveCollegeId && claimCollege !== effectiveCollegeId)
         if ((claimsWrong || input.forceClaims) && opts.ownsIdentity) {
           await auth.setCustomUserClaims(authUser.uid, {
             ...existingClaims,
             role,
-            collegeId: collegeId || null,
+            collegeId: effectiveCollegeId,
           })
           // Force the next sign-in to mint a token carrying the new claims;
           // an hour-old token would otherwise keep the old (absent) role.
           await auth.revokeRefreshTokens(authUser.uid)
           claimsIssued++
-          actions.push(`claims set to { role: ${role}, collegeId: ${collegeId || null} }`)
+          actions.push(`claims set to { role: ${role}, collegeId: ${effectiveCollegeId || null} }`)
         } else if (claimsWrong || input.forceClaims) {
           actions.push('claims not touched here — the primary profile for this email owns them')
         }
@@ -685,6 +697,21 @@ export const auditAndRepairIdentities = onCall(
       return emailKey || `${unit.collection}/${unit.doc.id}`
     })
     await mapWithConcurrency(groups, CONCURRENCY, async (group) => {
+      if (group.length > 1) {
+        // Several profile documents, one person. Where a collection is keyed by uid
+        // (superadmins/{uid}), the document whose ID is the account's uid is the one
+        // the app reads directly, so it — not whichever row Firestore happened to
+        // return first — must own the identity and the lookup pointer.
+        const emailKey = normalizeEmail((group[0].doc.data() as Record<string, unknown>).email)
+        if (emailKey) {
+          try {
+            const account = await auth.getUserByEmail(emailKey)
+            group.sort((a, b) => (b.doc.id === account.uid ? 1 : 0) - (a.doc.id === account.uid ? 1 : 0))
+          } catch {
+            // No account for the email: nothing to prefer, keep collection order.
+          }
+        }
+      }
       for (let index = 0; index < group.length; index++) {
         const unit = group[index]
         await processProfileDocument(unit.collection, unit.defaultRole, unit.doc, {
@@ -826,7 +853,7 @@ export const auditAndRepairIdentities = onCall(
                 ? dryRun
                   ? `a users/{uid} document will be rebuilt from its claims (${claimRole}${claimCollege ? `, college ${claimCollege}` : ''})`
                   : 'rebuilt users/{uid} from the verified custom claims'
-                : 'has no role claim, so nothing says which college or role this person belongs to — it must be granted from Access Control before it can be linked',
+                : 'grant it a role from Access Control, then re-run this pass to link it',
               resolved: !dryRun && !!claimRole,
             })
             if (dryRun || !claimRole) continue
@@ -873,7 +900,7 @@ export const auditAndRepairIdentities = onCall(
         authCreated,
         claimsIssued,
         usersDocsCreated,
-      usersDocsLinked,
+        usersDocsLinked,
         secretsStripped,
         partial,
         stoppedAfter,
@@ -894,6 +921,8 @@ export const auditAndRepairIdentities = onCall(
       authCreated,
       claimsIssued,
       usersDocsCreated,
+      usersDocsLinked,
+      linksPlanned,
       secretsStripped,
       secretsResetIssued,
       operatorAffected,
