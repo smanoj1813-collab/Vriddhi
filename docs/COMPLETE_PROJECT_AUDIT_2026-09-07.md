@@ -404,3 +404,30 @@ non-technical UG/PG programs (`B.Com`, `B.Sc`) per
 also removed: `functions/src/routes/questions.ts` `/batch-branch` fallback
 (now non-tech programs + 3-year academic list, no 4th year) and the
 `FacultyAssignments` "e.g., CSE" placeholder (now "e.g., B.Com").
+
+### 10.2 Non-technical domain sweep (2026-09-08)
+
+Confirmed: Vriddhi targets PG/UG non-technical colleges only (arts, commerce,
+science, management, computer applications) — never B.Tech/BE. A full sweep for
+engineering markers (`CSE/ECE/EEE`, `B.Tech`, "Computer Science", 4-year batches
+`NNNN-NNNN`, 10-semester bounds) found and removed every live leak:
+
+- `scripts/seed-phase2-assessment.mjs` — subject "Computer Science" → "Computer
+  Applications", branch `CSE` → `BCA`, batch `2024-2028` → `2024`.
+- `src/modules/admin/services/onboardingService.ts` — student + schedule upload
+  templates: batch "year range" `2024-2028` → admission year `2024`; semester
+  max 10 (5-year engineering pattern) → 6.
+- `src/shared/utils/parseCSV.ts` — student CSV template sample row: `2024-2028`
+  → `2024`, "Computer Science" → `B.Com` (faculty sample was already correct).
+- `src/modules/faculty/pages/FacultyLibrary.tsx` — default new-book category
+  "Computer Science" → "Computer Applications" (matches its own category list).
+- `functions/test/{paperWorkflow,timetableConflicts}.test.ts` — `CSE`→`BCA` /
+  `B.Com` fixture values.
+- `STUDENT_BULK_UPLOAD_FIX.md` — CSV example "Computer Science"/"Electronics" →
+  `B.Com` / `B.Sc`.
+
+`attic/` (137 dead-code files, excluded from build/typecheck) intentionally
+left untouched — it is a reference archive, not live code. The only remaining
+matches for the search patterns are the `#eee` CSS hex color (false positive)
+and the intentional `DEPRECATED_TECH_BRANCHES` denylist in
+`src/shared/constants/academicPrograms.ts`.

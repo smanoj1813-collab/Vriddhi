@@ -54,7 +54,7 @@ export default function FacultyLibrary() {
 
   // Add Book Modal
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
-  const [newBook, setNewBook] = useState<Partial<LibraryBook>>({ category: 'Computer Science', totalCopies: 1 })
+  const [newBook, setNewBook] = useState<Partial<LibraryBook>>({ category: 'Computer Applications', totalCopies: 1 })
 
   // Issue Book Modal
   const [showIssueModal, setShowIssueModal] = useState<boolean>(false)
@@ -94,7 +94,7 @@ export default function FacultyLibrary() {
     }
     setBooks((prev: LibraryBook[]) => [book, ...prev])
     setShowAddModal(false)
-    setNewBook({ category: 'Computer Science', totalCopies: 1 })
+    setNewBook({ category: 'Computer Applications', totalCopies: 1 })
   }
 
   const handleIssueBook = () => {
