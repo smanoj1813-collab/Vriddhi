@@ -7,16 +7,7 @@ import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 
-const ROLE_DASHBOARD: Record<string, string> = {
-  superadmin: '/superadmin/dashboard',
-  admin: '/admin/dashboard',
-  principal: '/admin/dashboard',
-  faculty: '/faculty/dashboard',
-  hod: '/faculty/dashboard',
-  mentor: '/faculty/dashboard',
-  student: '/student/dashboard',
-  parent: '/student/dashboard',
-};
+import { dashboardPathFor, portalForRole } from '../roleRoutes';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -36,7 +27,9 @@ export default function Login() {
     if (isAuthenticated && user) {
       hasRedirected.current = true;
       const from = (location.state as any)?.from?.pathname;
-      const target = from || ROLE_DASHBOARD[user.role] || '/admin/dashboard';
+      // One map for every entry point (see roleRoutes.ts): the previous local
+      // copy disagreed with the router about where HODs land.
+      const target = from || dashboardPathFor(user.role);
       navigate(target, { replace: true });
     }
   }, [isAuthenticated, user, navigate, location]);
@@ -46,10 +39,18 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      const appUser = await login(email, password);
+      // Sign-in worked but the account belongs behind the other door: say so,
+      // instead of leaving a staff-only route to bounce the user back here.
+      if (portalForRole(appUser.role) === 'student') {
+        navigate('/student/login', { replace: true });
+        return;
+      }
     } catch (err: any) {
       const msg = err?.message || err?.code || '';
-      if (msg === 'ACCOUNT_NOT_FOUND') {
+      if (msg.startsWith('AUTHORIZATION_STALE')) {
+        setError(t('auth.identityStale'));
+      } else if (msg === 'ACCOUNT_NOT_FOUND') {
         setError(t('auth.accountNotFound'));
       } else if (
         msg.includes('user-not-found') ||

@@ -355,6 +355,80 @@ describe('student identity and profile isolation', () => {
   })
 })
 
+describe('login provisioning paths these rules gate', () => {
+  // Each case here is a bug that was only visible as "the login is broken".
+  // They are rules-level because the app cannot fix them from the client.
+  function collegeAdminContext() {
+    return testEnv.authenticatedContext('admin-a', { role: 'admin', collegeId: COLLEGE_A })
+  }
+
+  it('allows a student-scoped list but never an unbounded one', async () => {
+    const db = studentContext().firestore()
+    const mine = await assertSucceeds(
+      getDocs(query(collection(db, 'students'), where('userId', '==', STUDENT_UID)))
+    )
+    assert.equal(mine.size, 1)
+    // A student must not be able to sweep the collection to discover ids.
+    await assertFails(getDocs(query(collection(db, 'students'), limit(10))))
+  })
+
+  it('lets an account with no role claim find its own faculty profile', async () => {
+    // Sign-in identity resolution runs a `where('uid','==',auth.uid)` query. If
+    // `faculty` list were staff-only, an imported account whose claim has not
+    // been issued yet could not even discover who it is — the exact state a
+    // half-finished import leaves behind.
+    const db = testEnv.authenticatedContext('legacy-faculty-a', {
+      email: 'legacy-faculty@example.edu',
+    }).firestore()
+    const byUid = await assertSucceeds(
+      getDocs(query(collection(db, 'faculty'), where('uid', '==', 'legacy-faculty-a')))
+    )
+    assert.equal(byUid.size, 1)
+    const byEmail = await assertSucceeds(
+      getDocs(query(collection(db, 'faculty'), where('email', '==', 'legacy-faculty@example.edu')))
+    )
+    assert.equal(byEmail.size, 1)
+    // Still no ability to list the rest of the college.
+    await assertFails(getDocs(query(collection(db, 'faculty'), limit(10))))
+  })
+
+  it('refuses to store a credential on a student profile', async () => {
+    const db = collegeAdminContext().firestore()
+    await assertFails(
+      setDoc(doc(db, 'students', 'student-with-password'), {
+        userId: 'student-auth-d',
+        name: 'Credential Carrier',
+        collegeId: COLLEGE_A,
+        regNo: 'A004',
+        password: 'Temp!1234567',
+      })
+    )
+    // The same row without credential material is the supported shape: the
+    // password belongs to Firebase Authentication, not to a readable document.
+    await assertSucceeds(
+      setDoc(doc(db, 'students', 'student-with-password'), {
+        userId: 'student-auth-d',
+        name: 'Credential Carrier',
+        collegeId: COLLEGE_A,
+        regNo: 'A004',
+      })
+    )
+  })
+
+  it('refuses a role field smuggled onto a student profile', async () => {
+    const db = collegeAdminContext().firestore()
+    await assertFails(
+      setDoc(doc(db, 'students', 'student-forged-role'), {
+        userId: 'student-auth-e',
+        name: 'Forged',
+        collegeId: COLLEGE_A,
+        regNo: 'A005',
+        role: 'superadmin',
+      })
+    )
+  })
+})
+
 describe('student academic reads', () => {
   it('reads only attendance belonging to the canonical domain student ID', async () => {
     const db = studentContext().firestore()

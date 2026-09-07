@@ -2,21 +2,12 @@ import type { RouteObject } from 'react-router-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
+import { dashboardPathFor } from '@/modules/auth/roleRoutes';
 import { authRoutes } from '@/modules/auth/routes';
 import { studentRoutes } from '@/modules/student/routes';
 import { facultyRoutes } from '@/modules/faculty/routes';
 import { adminRoutes } from '@/modules/admin/routes';
 import { superadminRoutes } from '@/modules/superadmin/routes';
-
-const ROLE_DASHBOARD: Record<string, string> = {
-  superadmin: '/superadmin/dashboard',
-  admin: '/admin/dashboard',
-  principal: '/admin/dashboard',   // ← legacy admin basis
-  faculty: '/faculty/dashboard',
-  hod: '/admin/hod-dashboard',
-  mentor: '/faculty/dashboard',
-  student: '/student/dashboard',
-};
 
 function RootRedirect() {
   const { user, isLoading } = useAuth();
@@ -33,8 +24,8 @@ function RootRedirect() {
       return;
     }
 
-    const target = ROLE_DASHBOARD[user.role];
-    if (target && location.pathname !== target) {
+    const target = dashboardPathFor(user.role);
+    if (target && location.pathname !== target && target !== '/login') {
       navigate(target, { replace: true });
     }
   }, [isLoading, user, navigate, location.pathname]);

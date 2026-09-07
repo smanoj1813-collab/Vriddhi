@@ -11,7 +11,12 @@ const MAX_READS = 500
 
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id')
-  if (!id) throw new Error('No college ID found')
+  if (!id)
+    throw new Error(
+      'This sign-in carries no college to scope queries to. Sign out and back in so the ' +
+        'token is refreshed; if it persists, an administrator must link this profile to a ' +
+        'college (Access Control → Identity repair).'
+    )
   return id
 }
 
@@ -88,6 +93,13 @@ export interface FeeFilters {
   search: string
   dateFrom: string
   dateTo: string
+  /**
+   * Restrict the query itself. A student must never rely on rules to filter a
+   * college-wide read afterwards: the query is capped, so rules-based filtering
+   * can silently return an empty page whose rows sat past the cap. Push the
+   * predicate into the query and the answer is either the student's rows or none.
+   */
+  studentId?: string
 }
 
 // ─── Read Budget Tracker ────────────────────────────────
@@ -123,7 +135,12 @@ export async function fetchFeeStructures(): Promise<FeeStructure[]> {
 }
 
 export async function fetchFeePayments(filters?: Partial<FeeFilters>): Promise<FeePayment[]> {
-  const constraints: any[] = [limit(MAX_READS)]
+  const constraints: any[] = []
+
+  if (filters?.studentId) {
+    constraints.push(where('studentId', '==', filters.studentId))
+  }
+  constraints.push(limit(MAX_READS))
 
   if (filters?.course && filters.course !== 'all') {
     constraints.push(where('course', '==', filters.course))

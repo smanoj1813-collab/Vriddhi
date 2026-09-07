@@ -8,10 +8,9 @@ import {
   CheckCircle, XCircle, Download
 } from 'lucide-react'
 import type { Faculty } from '../api/superAdminApi'
-import { collection, getDocs, updateDoc, doc, setDoc, deleteField } from 'firebase/firestore'
 import { sendPasswordResetEmail } from 'firebase/auth'
-import { db } from '@/Firebase/config'
-import { createFirebaseAuthUser } from '../api/superAdminApi'
+import { auth } from '@/Firebase/config'
+import { runIdentityRepair, type RepairResult } from '../api/identityApi'
 
 const SuperAdminFaculty: React.FC = () => {
   const navigate = useNavigate()
@@ -23,8 +22,21 @@ const SuperAdminFaculty: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [resetPassword, setResetPassword] = useState('')
   const [resetFacultyName, setResetFacultyName] = useState('')
+  // Which Auth account the rotation landed on. A name and a password are not enough to
+  // hand someone: when a profile's stored uid or email is stale, the credential is
+  // valid for an address that is not the one on the row, and the only honest way to
+  // show that is to quote the account the server actually changed.
+  const [resetAccount, setResetAccount] = useState<{
+    email: string | null;
+    uid: string;
+    profileEmail: string | null;
+    resetLink: string | null;
+  } | null>(null)
+  const [fixingPasswords, setFixingPasswords] = useState(false)
+  const [repairSummary, setRepairSummary] = useState<RepairResult | null>(null)
+  const [resetEmailState, setResetEmailState] = useState<Record<string, 'sending' | 'sent' | 'error'>>({})
 
-  const { data: facultyData, isLoading } = useFacultyList({
+  const { data: facultyData, isLoading, refetch } = useFacultyList({
     status: statusFilter,
     search: searchQuery || undefined,
   })
@@ -71,10 +83,16 @@ const SuperAdminFaculty: React.FC = () => {
     }
   }
 
-  const handleResetPassword = async (facultyId: string, name: string) => {
+  const handleResetPassword = async (facultyId: string, name: string, profileEmail?: string | null) => {
     try {
-      const newPassword = await resetPasswordMutation.mutateAsync(facultyId)
-      setResetPassword(newPassword)
+      const result = await resetPasswordMutation.mutateAsync(facultyId)
+      setResetPassword(result.temporaryPassword)
+      setResetAccount({
+        email: result.email,
+        uid: result.uid,
+        profileEmail: profileEmail ?? null,
+        resetLink: result.resetLink,
+      })
       setResetFacultyName(name)
       setShowPasswordModal(true)
       showSuccess(`Password reset for ${name}`)
@@ -83,70 +101,81 @@ const SuperAdminFaculty: React.FC = () => {
     }
   }
 
-  // FIX: Uses REST API (createFirebaseAuthUser) so it does NOT log out the current superadmin.
-  // Also checks data.uid (not data.authUid) to match the field stored by importFaculty.
+  /**
+   * Provision Firebase Auth accounts for faculty rows that have none.
+   *
+   * This used to run in the browser: build a password with Math.random(), POST
+   * to the Identity Toolkit REST endpoint, then write users/{uid} with the
+   * superadmin's own session. Three things were wrong with that — Math.random is
+   * not a CSPRNG, the REST API cannot set custom claims (so the new account
+   * could sign in while every rule-guarded read was denied), and a failed row
+   * was visible only in console.log while the import still looked successful.
+   *
+   * It now delegates to the server-side identity repair, which creates the Auth
+   * account, issues role/college claims, verifies the users/{uid} lookup
+   * document, strips legacy plaintext passwords from profile documents, and
+   * returns reset links so no shared secret is ever displayed.
+   */
   const handleFixPasswords = async () => {
-    if (!confirm('This will create Firebase Auth accounts for faculty without one. Continue?')) return
+    if (!window.confirm(
+      'Create missing Firebase Auth accounts for faculty in this college?\n\n' +
+      'Accounts that already exist are left untouched. Faculty without a login get a password-reset link, ' +
+      'so nobody has to be handed a password. Run a Preview first if you want to see the plan.'
+    )) return
+    setFixingPasswords(true)
     try {
-      const snap = await getDocs(collection(db, 'faculty'))
-      let fixed = 0
-      const newAccounts: Array<{ name: string; email: string; tempPassword: string }> = []
-
-      for (const d of snap.docs) {
-        const data = d.data()
-        // Only create auth account if they don't have one already
-        if (!data.uid) {
-          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
-          let tempPwd = ''
-          for (let i = 0; i < 12; i++) tempPwd += chars.charAt(Math.floor(Math.random() * chars.length))
-
-          // Create Firebase Auth user via REST API (does NOT affect current session)
-          let uid: string
-          try {
-            uid = await createFirebaseAuthUser(data.email, tempPwd)
-          } catch (authErr: any) {
-            console.warn(`Skipping ${data.email}: ${authErr.message}`)
-            continue
-          }
-
-          // Store ONLY the auth UID in Firestore, NEVER the password
-          await updateDoc(doc(db, 'faculty', d.id), {
-            uid,
-            passwordResetRequired: true,
-            // Remove any existing plaintext password field
-            password: deleteField(),
-          })
-
-          // Also create users doc so they can log in
-          await setDoc(doc(db, 'users', uid), {
-            uid,
-            email: data.email,
-            name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-            role: 'faculty',
-            collegeId: data.collegeId || '',
-            department: data.department || '',
-            phone: data.phone || '',
-            avatar: data.profilePhotoUrl || '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
-
-          newAccounts.push({ name: `${data.firstName} ${data.lastName}`, email: data.email, tempPassword: tempPwd })
-          fixed++
-        }
-      }
-
-      if (fixed > 0) {
-        showSuccess(`Created ${fixed} secure auth accounts`)
-        console.table(newAccounts)
-        setResetPassword(newAccounts.map(p => `${p.name}: ${p.tempPassword}`).join('\n'))
-        setResetFacultyName(`Created ${fixed} auth accounts - check console for temp passwords`)
+      const result = await runIdentityRepair({
+        dryRun: false,
+        collegeId: collegeFilter !== 'all' ? collegeFilter : undefined,
+        collections: ['faculty'],
+        limit: 500,
+        deliveryMode: 'reset-email',
+        continueUrl: window.location.origin + '/login',
+      })
+      setRepairSummary(result)
+      const issued = result.credentials || []
+      if (issued.length) {
+        setResetPassword(issued.map(c => `${c.email} — ${c.password || c.resetLink}`).join('\n'))
+        setResetFacultyName(`${issued.length} account(s) created; reset links issued`)
         setShowPasswordModal(true)
+        showSuccess(`Created ${issued.length} Auth account(s) with claims; profile documents verified`)
+      } else if (result.broken === 0) {
+        showInfo('Every faculty member in this college already has a verified Auth account')
       } else {
-        showInfo('All faculty already have auth accounts')
+        showInfo(`Repaired ${result.repaired} of ${result.broken} affected identities`)
       }
+      await refetch?.()
     } catch (err) {
-      showError('Failed to create auth accounts: ' + (err as Error).message)
+      showError(err instanceof Error ? err.message : 'Identity repair failed')
+    } finally {
+      setFixingPasswords(false)
+    }
+  }
+
+  /**
+   * Per-row "no password needed" recovery. The old flow was: open Firestore,
+   * read the plaintext password from the profile document, tell the user. That
+   * field is exactly what this app now refuses to store, so the row action
+   * sends Firebase's own reset email instead — the faculty member picks a new
+   * password and the credential never passes through anyone's hands.
+   */
+  const handleSendResetEmail = async (email: string) => {
+    if (!email) {
+      showError('This faculty record has no email address')
+      return
+    }
+    setResetEmailState(prev => ({ ...prev, [email]: 'sending' }))
+    try {
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase())
+      setResetEmailState(prev => ({ ...prev, [email]: 'sent' }))
+      showSuccess(`Password reset email sent to ${email}`)
+    } catch (err) {
+      setResetEmailState(prev => ({ ...prev, [email]: 'error' }))
+      showError(
+        err instanceof Error && err.message.includes('auth/invalid-email')
+          ? 'Firebase rejected this email address'
+          : 'Could not send the reset email — check the Auth authorised-domains setting and try again'
+      )
     }
   }
 
@@ -202,8 +231,13 @@ const SuperAdminFaculty: React.FC = () => {
           <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-colors text-sm">
             <Download className="w-4 h-4" /> Export CSV
           </button>
-          <button onClick={handleFixPasswords} className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-slate-900 dark:text-white rounded-lg transition-colors text-sm">
-            <Key className="w-4 h-4" /> Create Auth Accounts
+          <button
+            onClick={handleFixPasswords}
+            disabled={fixingPasswords}
+            title="Reconcile this college's faculty with Firebase Authentication: create missing accounts, issue role/college claims, verify users/{uid}, delete legacy plaintext passwords"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-slate-900 dark:text-white rounded-lg transition-colors text-sm"
+          >
+            <Key className="w-4 h-4" /> {fixingPasswords ? 'Reconciling…' : 'Fix Missing Logins'}
           </button>
           <button onClick={() => navigate('/superadmin/faculty/import')} className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white rounded-lg transition-colors text-sm">
             <GraduationCap className="w-4 h-4" /> Import Faculty
@@ -364,10 +398,24 @@ const SuperAdminFaculty: React.FC = () => {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleResetPassword(f.id, `${f.firstName} ${f.lastName}`)}
+                        onClick={() => handleSendResetEmail(f.email)}
+                        disabled={resetEmailState[f.email] === 'sending'}
+                        title={
+                          resetEmailState[f.email] === 'sent'
+                            ? 'Reset email sent'
+                            : resetEmailState[f.email] === 'error'
+                              ? 'Reset email failed — click to retry'
+                              : 'Send Firebase password-reset email (no password needed from you)'
+                        }
+                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-teal-400 rounded-lg transition-colors"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleResetPassword(f.id, `${f.firstName} ${f.lastName}`, f.email)}
                         disabled={resetPasswordMutation.isPending}
+                        title="Rotate the password and show a one-time credential (signs the user out everywhere)"
                         className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-yellow-400 rounded-lg transition-colors"
-                        title="Reset Password"
                       >
                         <Key className="w-4 h-4" />
                       </button>
@@ -402,6 +450,28 @@ const SuperAdminFaculty: React.FC = () => {
         )}
       </div>
 
+      {repairSummary && (
+        <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{repairSummary.message}</p>
+            <button onClick={() => setRepairSummary(null)} className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Dismiss</button>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <span>scanned {repairSummary.scanned}</span>·
+            <span>needs repair {repairSummary.broken}</span>·
+            <span>repaired {repairSummary.repaired}</span>·
+            <span>Auth accounts created {repairSummary.authCreated}</span>·
+            <span>claims issued {repairSummary.claimsIssued}</span>·
+            <span>plaintext password fields deleted {repairSummary.secretsStripped}</span>
+          </div>
+          {repairSummary.errors?.length ? (
+            <ul className="mt-2 space-y-1">
+              {repairSummary.errors.map((error, i) => <li key={i} className="text-xs text-rose-600">{error}</li>)}
+            </ul>
+          ) : null}
+        </div>
+      )}
+
       {/* Password Reset Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -432,11 +502,38 @@ const SuperAdminFaculty: React.FC = () => {
                 </button>
               </div>
             </div>
+            {resetAccount?.email && (
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-mono break-all">
+                account {resetAccount.email}
+                {resetAccount.uid ? ` · uid ${resetAccount.uid.slice(0, 14)}…` : ''}
+              </p>
+            )}
+            {resetAccount?.profileEmail && resetAccount.email && resetAccount.profileEmail !== resetAccount.email && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+                This profile row says {resetAccount.profileEmail}, but the password was set on{' '}
+                {resetAccount.email}. Sign in with that address, then correct the address stored on the profile —
+                until the two agree, a reset and a login can easily be about different people.
+              </p>
+            )}
             <p className="text-xs text-slate-500 mb-4">
               Share this password securely with the faculty member. They should change it after first login.
             </p>
+            {resetAccount?.resetLink && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(resetAccount.resetLink || '')
+                  showInfo('Reset link copied — it needs no shared password')
+                }}
+                className="w-full py-2 mb-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                Copy password-reset link instead
+              </button>
+            )}
             <button
-              onClick={() => setShowPasswordModal(false)}
+              onClick={() => {
+                setShowPasswordModal(false)
+                setResetAccount(null)
+              }}
               className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
             >
               Close

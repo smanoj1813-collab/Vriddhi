@@ -232,14 +232,45 @@ export interface ImportUserEntry {
 export interface ImportUsersInput {
   collegeId: string;
   users: ImportUserEntry[];
+  /**
+   * 'temp-password' (default) returns a one-time password per row for the
+   * importer to hand out. 'reset-email' mints a Firebase password-reset link
+   * instead, so no plaintext credential is ever shown or shared.
+   */
+  deliveryMode?: 'temp-password' | 'reset-email';
+  /** Staff rows whose account already exists: leave them or rotate credentials. */
+  onExisting?: 'skip' | 'reset';
 }
 
 export interface ImportResult {
+  /** Rows that received a new credential (excludes `skipped`). */
   success: number;
   successful?: number;
+  /** Rows left untouched because a working account already existed. */
+  skipped?: number;
   failed: number;
   errors: string[];
-  imported: Array<{ id: string; email: string; password?: string }>;
+  /** Non-fatal but important: stale backend, unverified Auth, reclaimed passwords. */
+  warnings?: string[];
+  /** Rows the backend confirmed exist in Firebase Authentication. */
+  authVerified?: number;
+  imported: Array<{
+    id: string;
+    email: string;
+    password?: string;
+    /** Password-reset URL when deliveryMode is 'reset-email'. */
+    resetLink?: string;
+    name?: string;
+    role?: string;
+    uid?: string;
+    /** Profile document id (students/{id} or faculty/{id}). */
+    docId?: string;
+    status?: 'created' | 'reclaimed' | 'skipped' | 'failed';
+    /** False when the Auth account could not be read back after provisioning. */
+    authVerified?: boolean;
+    delivery?: 'temp-password' | 'reset-link' | 'none';
+    error?: string;
+  }>;
   failedStudents?: Array<{ name: string; email: string; regNo: string; reason: string }>;
 }
 
@@ -272,6 +303,9 @@ export interface FacultyImportEntry {
 export interface FacultyImportPayload {
   collegeId: string;
   faculty: FacultyImportEntry[];
+  deliveryMode?: 'temp-password' | 'reset-email';
+  /** 'skip' leaves existing accounts alone; 'reset' rotates their password. */
+  onExisting?: 'skip' | 'reset';
 }
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -50,6 +50,9 @@ export function useFeeData(studentId?: string) {
           batch: filters.batch,
           status: filters.status,
           category: filters.category,
+          // For a student this is the scoping predicate; for admin pages it is
+          // undefined and the query stays college-wide as before.
+          ...(studentId ? { studentId } : {}),
         }),
         fetchFeeStructures(),
       ])
@@ -91,6 +94,8 @@ export function useFeeData(studentId?: string) {
 
   const studentPayments = useMemo(() => {
     if (!studentId) return []
+    // The query already asked for these rows; this keeps a document that lost its
+    // studentId from being attributed to the wrong person.
     return allPayments.filter(p => p.studentId === studentId)
   }, [allPayments, studentId])
 

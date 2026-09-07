@@ -4,6 +4,7 @@ import { useColleges, useImportUsers } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Key } from 'lucide-react'
 import { parseCSV, validateCSV, generateCSVTemplate } from '../../../shared/utils/parseCSV'
+import CredentialsTable from '../components/CredentialsTable'
 import type { College, ImportResult } from '../api/superAdminApi'
 
 const UserImport: React.FC = () => {
@@ -16,7 +17,7 @@ const UserImport: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [parseWarnings, setParseWarnings] = useState<string[]>([])
   const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [showPasswords, setShowPasswords] = useState(false)
+  const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
   const importUsers = useImportUsers()
@@ -77,6 +78,7 @@ const UserImport: React.FC = () => {
 
       const result = await importUsers.mutateAsync({
         collegeId: selectedCollege,
+        deliveryMode,
         users: validation.validRows.map((r: Record<string, string>) => ({
           name: r.name,
           email: r.email,
@@ -94,7 +96,12 @@ const UserImport: React.FC = () => {
         })),
       })
       setImportResult(result)
-      showSuccess(`Successfully imported ${result.success} users`)
+      const unverified = (result.imported || []).filter((r) => r.authVerified === false).length
+      showSuccess(
+        `Imported ${result.success} student account(s)` +
+          (result.failed ? `, ${result.failed} failed` : '') +
+          (unverified ? ` — ${unverified} NOT verified in Firebase Authentication` : '')
+      )
     } catch (err: any) {
       showError(err.message || 'Import failed')
     } finally {
@@ -150,6 +157,23 @@ const UserImport: React.FC = () => {
         {colleges.length === 0 && !collegesLoading && (
           <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">No colleges found. Please create a college first.</p>
         )}
+      </div>
+
+      {/* Credential delivery */}
+      <div className="glass-card p-5 mb-6">
+        <label className="block text-sm text-slate-700 dark:text-slate-300 mb-2">Credential delivery</label>
+        <select
+          value={deliveryMode}
+          onChange={e => setDeliveryMode(e.target.value as 'temp-password' | 'reset-email')}
+          className="input-field"
+        >
+          <option value="temp-password">Generate a one-time password (shown here once)</option>
+          <option value="reset-email">Password-reset link (recommended: no shared secret)</option>
+        </select>
+        <p className="mt-1 text-xs text-slate-500">
+          Either way the password is never written to Firestore. Rows the backend could not confirm in
+          Firebase Authentication are flagged below.
+        </p>
       </div>
 
       {/* File Upload */}
@@ -273,92 +297,58 @@ const UserImport: React.FC = () => {
             )}
             <h2 className="text-lg font-semibold text-white">Import Complete</h2>
           </div>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-green-500/10 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-green-400">{importResult.success}</p>
-              <p className="text-xs text-slate-400">Successful</p>
+              <p className="text-xs text-slate-400">Provisioned</p>
             </div>
             <div className="bg-red-500/10 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-red-400">{importResult.failed}</p>
               <p className="text-xs text-slate-400">Failed</p>
             </div>
+            <div className="bg-emerald-500/10 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-400">{importResult.authVerified ?? 0}</p>
+              <p className="text-xs text-slate-400">Verified in Auth</p>
+            </div>
             <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{importResult.success + importResult.failed}</p>
+              <p className="text-2xl font-bold text-blue-400">{(importResult.imported?.length || 0) + importResult.failed}</p>
               <p className="text-xs text-slate-400">Total Rows</p>
             </div>
           </div>
 
-          {/* Credentials Table */}
-          {importResult.imported && importResult.imported.length > 0 && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Key className="w-5 h-5 text-teal-400" />
-                  <h3 className="text-white font-medium">Login Credentials Generated</h3>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowPasswords(!showPasswords)}
-                    className="flex items-center gap-1 text-slate-400 hover:text-white text-sm px-3 py-1.5 rounded bg-slate-700/50 transition-colors"
-                  >
-                    {showPasswords ? <EyeOff size={14} /> : <Eye size={14} />}
-                    {showPasswords ? 'Hide' : 'Show'} Passwords
-                  </button>
-                  <button
-                    onClick={() => {
-                      const headers = ['Email', 'Password', 'Document ID']
-                      const rows = importResult.imported.map((item: any) => [
-                        item.email,
-                        item.password || '',
-                        item.id,
-                      ])
-                      const csv = [
-                        headers.join(','),
-                        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-                      ].join('\n')
-                      const blob = new Blob([csv], { type: 'text/csv' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = 'student-credentials.csv'
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="flex items-center gap-1 text-teal-400 hover:text-teal-300 text-sm px-3 py-1.5 rounded bg-teal-500/10 border border-teal-500/30 transition-colors"
-                  >
-                    <Download size={14} />
-                    Download CSV
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-slate-500 mb-3 -mt-1">
-                Passwords are hidden for security — click “Show Passwords” to reveal them, or use “Download CSV”.
-              </p>
-              <div className="overflow-x-auto rounded-lg border border-slate-700 max-h-96 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-800 sticky top-0">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-slate-400 text-xs">Email</th>
-                      <th className="px-3 py-2 text-left text-slate-400 text-xs">Password</th>
-                      <th className="px-3 py-2 text-left text-slate-400 text-xs">Document ID</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-700">
-                    {importResult.imported.map((item: any, i: number) => (
-                      <tr key={i} className="bg-slate-900/50">
-                        <td className="px-3 py-2 text-slate-300 text-xs">{item.email}</td>
-                        <td className="px-3 py-2 text-teal-400 font-mono text-xs">
-                          {showPasswords ? (item.password || '—') : '••••••••••'}
-                        </td>
-                        <td className="px-3 py-2 text-slate-500 text-xs font-mono truncate max-w-[200px]">
-                          {item.id}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <CredentialsTable
+            rows={(importResult.imported || []).map((row) => ({
+              email: row.email,
+              name: row.name,
+              role: row.role || 'student',
+              docId: row.docId || row.id,
+              uid: row.uid,
+              password: row.password,
+              resetLink: row.resetLink,
+              status: row.status,
+              authVerified: row.authVerified,
+              delivery: row.delivery,
+            }))}
+            filename={`student-credentials-${new Date().toISOString().slice(0, 10)}`}
+            title="Student login credentials"
+          />
+
+          {importResult.warnings && importResult.warnings.length > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-4">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">Warnings</p>
+              <ul className="space-y-1">
+                {importResult.warnings.map((warning, i) => (
+                  <li key={i} className="text-xs text-amber-700/90 dark:text-amber-300/80 whitespace-pre-line">{warning}</li>
+                ))}
+              </ul>
             </div>
+          )}
+
+          {(importResult.success ?? 0) === 0 && (importResult.failed ?? 0) === 0 && (
+            <p className="text-xs text-rose-600 dark:text-rose-400 mb-4">
+              Nothing was created and nothing failed — the provisioning function did not run. Check the
+              deployed Cloud Functions (they are deployed separately from hosting).
+            </p>
           )}
 
           {importResult.errors && importResult.errors.length > 0 && (
@@ -416,7 +406,7 @@ const UserImport: React.FC = () => {
               ) : (
                 <ul className="space-y-1">
                   {importResult.errors.map((err: string, i: number) => (
-                    <li key={i} className="text-xs text-red-400/70">{err}</li>
+                    <li key={i} className="text-xs text-red-400/90 whitespace-pre-line">{err}</li>
                   ))}
                 </ul>
               )}

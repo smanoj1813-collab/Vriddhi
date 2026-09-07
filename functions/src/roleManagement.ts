@@ -1,15 +1,14 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
-import * as crypto from 'crypto'
+import { IDENTITY_API_VERSION, generateRandomPassword, verifyAuthAccount } from './identityShared'
 
 const db = admin.firestore()
 const ALLOWED_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent'] as const
 type Role = typeof ALLOWED_ROLES[number]
 
 function password(): string {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*'
-  return Array.from({ length: 14 }, (_, i) => i < 3 ? ['A', 'a', '7'][i] : alphabet[crypto.randomInt(alphabet.length)]).join('')
+  return generateRandomPassword()
 }
 
 async function callerIsSuperadmin(uid: string): Promise<boolean> {
@@ -117,7 +116,12 @@ export const grantUserRole = onCall(
     await batch.commit()
     logger.info('[grantUserRole] identity wired', { targetUid: authUser.uid, role, actorUid: request.auth.uid })
 
+    // Read the identity back so a grant is never reported before it is real.
+    const verification = await verifyAuthAccount({ uid: authUser.uid, email, expectedRole: role })
+
     return {
+      apiVersion: IDENTITY_API_VERSION,
+      authVerified: verification.ok,
       success: true, uid: authUser.uid, email, role, collegeId, created,
       // The target must sign in again before the new claims and rules apply.
       reauthenticateRequired: roleChanged,
@@ -136,7 +140,15 @@ export const diagnoseIdentity = onCall(
     let authUser: admin.auth.UserRecord | null = null
     try { authUser = await admin.auth().getUserByEmail(email) } catch (e: any) { if (e?.code !== 'auth/user-not-found') throw e }
     const uid = authUser?.uid
-    const result: Record<string, unknown> = { email, uid: uid || null, claims: authUser?.customClaims || {} }
+    const result: Record<string, unknown> = {
+      apiVersion: IDENTITY_API_VERSION,
+      email,
+      uid: uid || null,
+      claims: authUser?.customClaims || {},
+      // The rules read the role claim only, so a diagnosis without it is a
+      // warning even when every profile document looks perfect.
+      claimBacked: Boolean(authUser?.customClaims?.role),
+    }
     const issues: string[] = []
     if (!uid) issues.push('No Firebase Auth account exists')
     if (uid) {
@@ -148,7 +160,11 @@ export const diagnoseIdentity = onCall(
       const studentDocs = await findByEmail('students', email)
       result.studentEmailMatches = studentDocs.map(d => ({ id: d.id, ...d.data() }))
       if (studentDocs.length && !studentDocs.some(d => d.data().userId === uid || d.data().uid === uid)) issues.push('Student profile exists but is not linked to this Auth uid')
-      if (!authUser?.customClaims?.role) issues.push('Auth custom claims do not contain role')
+      if (!authUser?.customClaims?.role) {
+        issues.push(
+          'Auth custom claims do not contain role — sign-in will work but every rule-guarded read is denied. Run Access Control → Identity repair, then sign out and back in.'
+        )
+      }
     }
     result.issues = issues
     return result

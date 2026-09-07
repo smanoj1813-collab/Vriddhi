@@ -17,7 +17,14 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
-import * as crypto from 'crypto'
+import {
+  IDENTITY_API_VERSION,
+  decideProfileAccount,
+  generateRandomPassword as sharedGeneratePassword,
+  normalizeEmail,
+  secretFieldDeletes,
+  verifyAuthAccount,
+} from './identityShared'
 import * as logger from 'firebase-functions/logger'
 
 const db = admin.firestore()
@@ -28,21 +35,7 @@ const COLLEGE_MANAGER_ROLES = ['admin', 'hod', 'principal']
 // Profile collections that map 1:1 (or near) to a person and carry a uid.
 const PROFILE_COLLECTIONS = ['faculty', 'students', 'admins', 'hods', 'mentors'] as const
 
-function generateTemporaryPassword(length = 14): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const lower = 'abcdefghijkmnopqrstuvwxyz'
-  const nums = '23456789'
-  const special = '!@#$%^&*'
-  const all = upper + lower + nums + special
-  const pick = (set: string) => set[crypto.randomInt(0, set.length)]
-  const chars = [pick(upper), pick(lower), pick(nums), pick(special)]
-  for (let i = chars.length; i < length; i++) chars.push(pick(all))
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1)
-    ;[chars[i], chars[j]] = [chars[j], chars[i]]
-  }
-  return chars.join('')
-}
+const generateTemporaryPassword = sharedGeneratePassword
 
 async function getCallerIdentity(uid: string): Promise<{ role: string; collegeId: string | null }> {
   const userDoc = await db.doc(`users/${uid}`).get()
@@ -105,15 +98,60 @@ async function resolveTarget(input: {
     const snap = await db.collection(collection).doc(String(input.docId)).get()
     if (!snap.exists) throw new HttpsError('not-found', 'Profile document not found')
     const data = snap.data() as Record<string, unknown>
-    const targetUid = data.uid || data.userId
-    if (typeof targetUid !== 'string' || !targetUid) {
-      throw new HttpsError('failed-precondition', 'Profile document is not linked to an Auth account')
+    // Resolve the target the way the repair pass does: the email printed on the row
+    // the operator clicked decides, and a `uid` field on the document is only ever a
+    // hint. Trusting that field alone would let anyone who can edit a profile document
+    // point it at a colleague's account and be handed a fresh password for it.
+    const docEmail = typeof data.email === 'string' ? normalizeEmail(data.email) : null
+    const docUid =
+      typeof data.uid === 'string' && data.uid
+        ? data.uid
+        : typeof data.userId === 'string' && data.userId
+          ? data.userId
+          : null
+    let emailUser: admin.auth.UserRecord | null = null
+    let uidUser: admin.auth.UserRecord | null = null
+    if (docEmail) {
+      try {
+        emailUser = await auth.getUserByEmail(docEmail)
+      } catch (err: any) {
+        if (err?.code !== 'auth/user-not-found') throw err
+      }
     }
-    const record = await auth.getUser(targetUid)
+    if (docUid) {
+      try {
+        uidUser = await auth.getUser(docUid)
+      } catch (err: any) {
+        if (err?.code !== 'auth/user-not-found') throw err
+      }
+    }
+    const decision = decideProfileAccount({
+      profileEmail: docEmail,
+      linkedUid: docUid,
+      linkedUidExists: !!uidUser,
+      emailUid: emailUser?.uid || null,
+    })
+    if (decision.kind === 'mismatch') {
+      throw new HttpsError(
+        'failed-precondition',
+        `this ${collection} profile says ${decision.documentEmail}, but its stored uid resolves to ` +
+          `${uidUser?.email || 'another account'}. Refusing to reset that account — repair the identity ` +
+          'link first (Access Control → Identity repair), then retry.'
+      )
+    }
+    if (decision.kind === 'no-account') {
+      throw new HttpsError(
+        'not-found',
+        docEmail
+          ? `no sign-in account exists for ${docEmail} yet — run Access Control → Identity repair to create it`
+          : 'Profile document is not linked to an Auth account'
+      )
+    }
+    const record = await auth.getUser(decision.kind === 'use-account' ? decision.uid : docUid!)
     const claims = (record.customClaims || {}) as Record<string, unknown>
     return {
       uid: record.uid,
-      email: record.email || (typeof data.email === 'string' ? data.email : null),
+      email: record.email || docEmail,
       collegeId: claims.collegeId
         ? String(claims.collegeId)
         : data.collegeId
@@ -178,11 +216,41 @@ export const resetUserPassword = onCall(
       by: request.auth.uid,
     })
 
+    // Clear any legacy plaintext password kept on the target's profile documents.
+    // After a rotation those fields are both stale and a leak: staff in the same
+    // college can read these collections, and the presence of the field is what
+    // kept the "open Firestore and copy the password" workflow alive.
+    let secretsStripped = 0
+    for (const collection of PROFILE_COLLECTIONS) {
+      try {
+        const snap = await db.collection(collection).where('uid', '==', target.uid).limit(5).get()
+        for (const doc of snap.docs) {
+          const deletes = secretFieldDeletes(doc.data() as Record<string, unknown>)
+          if (!Object.keys(deletes).length) continue
+          await doc.ref.update(deletes)
+          secretsStripped += Object.keys(deletes).length
+        }
+      } catch {
+        // Best effort: the credential itself has already been rotated.
+      }
+    }
+
+    const verification = await verifyAuthAccount({ uid: target.uid, email: target.email || '' })
+
     return {
+      apiVersion: IDENTITY_API_VERSION,
       success: true,
       uid: target.uid,
       email: target.email,
       temporaryPassword,
+      authVerified: verification.ok,
+      reauthenticateRequired: true,
+      secretsStripped,
+      // A reset link is the no-shared-secret alternative: hand this to the user
+      // instead of a password whenever the mail template is configured.
+      resetLink: target.email
+        ? await auth.generatePasswordResetLink(target.email).catch(() => null)
+        : null,
     }
   }
 )
@@ -282,6 +350,14 @@ export const syncIdentityClaims = onCall(
       logger.error('[syncIdentityClaims] failed to write audit log', logError)
     }
 
-    return { success: errors.length === 0, scanned, updated, skipped, errors }
+    return {
+      apiVersion: IDENTITY_API_VERSION,
+      success: errors.length === 0,
+      scanned,
+      updated,
+      skipped,
+      errors,
+      reauthenticateRequired: updated > 0,
+    }
   }
 )

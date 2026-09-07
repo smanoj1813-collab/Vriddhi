@@ -1,3 +1,15 @@
+> **SUPERSEDED (2026-09-04) — read `docs/AUTH_LOGIN_PROVISIONING_AUDIT_2026-09-04.md`.**
+> The identity model described below is still right in outline (Auth proves the person, a custom
+> claim authorises the role, callables are the only trusted provisioning path), but three things
+> have changed: (1) the profile-document role fallbacks mentioned here (`userDoc`,
+> `roleFromLookupOrProfile`, `legacyProfileRole`) are **deleted** from `current-firestore.rules`,
+> so "identity resolves from the profile collection" is no longer true of the rules — only of the
+> client's sign-in resolver; (2) `syncMyIdentity` + `auditAndRepairIdentities` + the Access
+> Control → Identity repair screen now close the claim gap this document only describes; (3) the
+> `deploy` advice here is incomplete — rules, functions and hosting are three targets and this
+> repository now ships `.firebaserc`, `npm run deploy:all` and a manual `deploy.yml`.
+> Keep this file for the Access Control SOP it documents.
+
 # Vriddhi authentication and identity audit
 
 ## Identity model

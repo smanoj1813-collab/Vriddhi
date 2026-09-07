@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStudents, useColleges, useUpdateStudent } from '../hooks/useSuperAdmin';
+import { useStudents, useColleges, useUpdateStudent, useResetStudentPassword } from '../hooks/useSuperAdmin';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
-import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2 } from "lucide-react";
+import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2, KeyRound } from "lucide-react";
 import type { Student, College } from '../types/superAdmin';
 
 const SuperAdminStudents: React.FC = () => {
@@ -12,7 +12,18 @@ const SuperAdminStudents: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [editForm, setEditForm] = useState<Partial<Student>>({});
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false)
+  // One-time credential shown in a dialog, never persisted. Deliberately not
+  // closed on a timeout: the person handing it to a student needs it on screen
+  // while they paste it into a message.
+  const [credential, setCredential] = useState<{
+    name: string;
+    email: string;
+    password: string;
+    uid: string | null;
+    resetLink: string | null;
+    profileEmail: string | null;
+  } | null>(null)
 
   const { data, isLoading } = useStudents({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -20,6 +31,7 @@ const SuperAdminStudents: React.FC = () => {
   });
   const { data: collegesData } = useColleges({ status: "active" });
   const updateStudent = useUpdateStudent();
+  const resetPassword = useResetStudentPassword();
 
   const students = data?.items || [];
   const colleges = collegesData?.items || [];
@@ -64,6 +76,26 @@ const SuperAdminStudents: React.FC = () => {
       showError("Failed to update student");
     }
   };
+
+  const handleResetPassword = async (student: Student) => {
+    try {
+      const result = await resetPassword.mutateAsync(student.id)
+      setCredential({
+        name: student.name,
+        // The account the callable changed wins over the row. They differ exactly when
+        // the profile's stored uid or email is stale — and quoting the row's address
+        // there is what makes a successful reset look like a failure, because the
+        // person is told to sign in with an address that never had the password.
+        email: result.email || student.email || "",
+        password: result.temporaryPassword,
+        uid: result.uid || student.uid || null,
+        resetLink: result.resetLink,
+        profileEmail: student.email || null,
+      })
+    } catch {
+      showError("Could not reset this student's password")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -188,6 +220,14 @@ const SuperAdminStudents: React.FC = () => {
                     </button>
                     <button onClick={() => setSelectedStudent(student)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                       <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                    </button>
+                    <button
+                      onClick={() => handleResetPassword(student)}
+                      disabled={resetPassword.isPending}
+                      title="Generate a one-time password (resets their sign-in)"
+                      className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <KeyRound className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                     </button>
                   </div>
                 </td>
@@ -321,6 +361,56 @@ const SuperAdminStudents: React.FC = () => {
             <button onClick={() => setSelectedStudent(null)} className="btn-secondary w-full mt-6">
               Close
             </button>
+          </div>
+        </div>
+      )}
+      {/* One-time credential */}
+      {credential && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">One-time password</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              {credential.name} · {credential.email}
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 font-mono text-lg tracking-wide bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white select-all">
+                {credential.password}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(credential.password)
+                  showSuccess("Copied — send it to the student and ask them to change it after signing in")
+                }}
+                className="btn-secondary whitespace-nowrap"
+              >
+                Copy
+              </button>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-4">
+              Their existing sessions were signed out. This password is not stored anywhere — if it is lost,
+              press the key icon again to issue a new one.
+            </p>
+            {credential.uid && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-mono">uid {credential.uid}</p>
+            )}
+            {credential.profileEmail && credential.email !== credential.profileEmail && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                The profile row says {credential.profileEmail}, but this password belongs to {credential.email}.
+                Sign in with this address, then fix the address on the profile.
+              </p>
+            )}
+            {credential.resetLink && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(credential.resetLink || "")
+                  showSuccess("Reset link copied — it needs no shared password")
+                }}
+                className="btn-secondary w-full mt-3"
+              >
+                Copy password-reset link instead
+              </button>
+            )}
+            <button onClick={() => setCredential(null)} className="btn-primary w-full mt-5">Done</button>
           </div>
         </div>
       )}

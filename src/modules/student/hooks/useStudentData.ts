@@ -244,12 +244,20 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
         'notifications',
         'assessments',
       ];
-      const failedServices = results
-        .map((result, index) => result.status === 'rejected' ? serviceNames[index] : '')
+      // Saying WHICH service failed is not enough: a Firestore rules denial and a
+      // Cloud Function refusing the account look identical on screen, and they need
+      // different fixes (one is a query, the other is identity). Quote the reason.
+      const failures = results
+        .map((result, index) => {
+          if (result.status === 'fulfilled') return '';
+          const reason = result.reason as { code?: string; message?: string } | undefined;
+          const detail = reason?.code || reason?.message || String(reason ?? 'unknown error');
+          return `${serviceNames[index]} (${detail})`;
+        })
         .filter(Boolean);
-      if (failedServices.length) {
+      if (failures.length) {
         setWarnings([
-          `Some portal data could not be loaded: ${failedServices.join(', ')}. Empty values are not authoritative.`,
+          `Some portal data could not be loaded: ${failures.join(', ')}. Empty values are not authoritative.`,
         ]);
       }
 

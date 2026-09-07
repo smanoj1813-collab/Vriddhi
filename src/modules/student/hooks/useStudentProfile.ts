@@ -1,12 +1,14 @@
 // src/modules/student/hooks/useStudentProfile.ts
 // ------------------------------------------------------------------
-// Fetches the student's Firestore profile document.
-// Resolves the canonical `userId` ownership field first, then legacy UID forms.
+// Fetches the student's Firestore profile document through
+// resolveStudentRecord(), which reads only documents the signed-in uid is
+// allowed to `get` (users/{uid} -> students/{studentDocId}). Queries are used
+// last and only as a legacy fallback, because the rules cannot authorise a
+// LIST for a student.
 // ------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
-import { doc, getDoc, query, collection, where, getDocs, limit } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
+import { resolveStudentRecord } from '../services/studentRecordResolver';
 
 export interface FirestoreStudentProfile {
   id: string;
@@ -58,36 +60,24 @@ export function useStudentProfile(studentId?: string): UseStudentProfileReturn {
     setLoading(true);
     setError(undefined);
     try {
-      // 1) Canonical lookup. Provisioning creates a generated domain document
-      // ID and links it to Firebase Auth through `userId`.
-      const userIdSnap = await getDocs(
-        query(collection(db, 'students'), where('userId', '==', uid), limit(1))
-      );
-      if (!userIdSnap.empty) {
-        const d = userIdSnap.docs[0];
-        setProfile({ id: d.id, ...(d.data() as Record<string, unknown>) } as FirestoreStudentProfile);
+      const { record, permissionDenied, errors } = await resolveStudentRecord(uid, user?.email || undefined);
+      if (record) {
+        setProfile({ id: record.id, ...(record.data as Record<string, unknown>) } as FirestoreStudentProfile);
         return;
       }
-
-      // 2) Legacy lookup by document ID.
-      const byId = await getDoc(doc(db, 'students', uid));
-      if (byId.exists()) {
-        setProfile({ id: byId.id, ...(byId.data() as Record<string, unknown>) } as FirestoreStudentProfile);
+      // Two different failures, two different messages. Collapsing them into
+      // "not linked to a profile" is what made a rules/deployment problem look
+      // like a data problem for days.
+      if (permissionDenied) {
+        console.error('[useStudentProfile] reads denied by Firestore rules', errors);
+        setProfile(null);
+        setError(
+          'The app could not read your student record because access was denied by Firestore security rules. ' +
+          'This is a configuration problem, not a missing profile: deploy the current rules and sign out and back in ' +
+          'so your role claim is refreshed.'
+        );
         return;
       }
-
-      // 3) Legacy lookup by `uid` field. Email is deliberately not used as an
-      // ownership key because addresses can change and list rules cannot safely
-      // authorize arbitrary email queries.
-      const uidSnap = await getDocs(
-        query(collection(db, 'students'), where('uid', '==', uid), limit(1))
-      );
-      if (!uidSnap.empty) {
-        const d = uidSnap.docs[0];
-        setProfile({ id: d.id, ...(d.data() as Record<string, unknown>) } as FirestoreStudentProfile);
-        return;
-      }
-
       setProfile(null);
       setError('Your account is not linked to a student profile. Contact your college administrator.');
     } catch (err) {

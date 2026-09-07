@@ -16,6 +16,10 @@ const SuperAdminFacultyDetail: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
+  // The Auth account the rotation actually landed on. On its own a password is not a
+  // handover: if the profile's stored uid or email is stale, the credential is valid for
+  // a different address than the one on screen.
+  const [resetAccount, setResetAccount] = useState<{ email: string | null; uid: string; resetLink: string | null } | null>(null)
 
   const { data: faculty, isLoading } = useFaculty(id || null)
   const { data: collegesData } = useColleges()
@@ -63,8 +67,9 @@ const SuperAdminFacultyDetail: React.FC = () => {
   const handleResetPassword = async () => {
     if (!id) return
     try {
-      const password = await resetPassword.mutateAsync(id)
-      setNewPassword(password)
+      const result = await resetPassword.mutateAsync(id)
+      setNewPassword(result.temporaryPassword)
+      setResetAccount({ email: result.email, uid: result.uid, resetLink: result.resetLink })
       setShowPassword(true)
       showSuccess('Password reset successfully')
     } catch {
@@ -395,9 +400,33 @@ const SuperAdminFacultyDetail: React.FC = () => {
                 </button>
               </div>
             </div>
+            {resetAccount?.email && (
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-mono break-all">
+                account {resetAccount.email}
+                {resetAccount.uid ? ` · uid ${resetAccount.uid.slice(0, 14)}…` : ''}
+              </p>
+            )}
+            {resetAccount?.email && faculty?.email && resetAccount.email !== faculty.email && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+                This profile says {faculty.email}, but the password was set on {resetAccount.email}. Sign in with
+                that address, then correct the address stored on the profile — until the two agree, a reset and a
+                login can be about different people.
+              </p>
+            )}
             <p className="text-xs text-slate-500 mb-4">
               Share this password securely. Faculty should change it after first login.
             </p>
+            {resetAccount?.resetLink && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(resetAccount.resetLink || '')
+                  showInfo('Reset link copied — it needs no shared password')
+                }}
+                className="w-full py-2 mb-3 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition-colors"
+              >
+                Copy password-reset link instead
+              </button>
+            )}
             <button
               onClick={() => setShowPassword(false)}
               className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"

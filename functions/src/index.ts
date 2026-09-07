@@ -31,6 +31,8 @@ import { provisionUser } from './userProvisioning'
 import { grantUserRole, diagnoseIdentity } from './roleManagement'
 import { bulkProvisionStaff } from './staffAuth'
 import { resetUserPassword, syncIdentityClaims } from './accountManagement'
+import { auditAndRepairIdentities } from './identityRepair'
+import { syncMyIdentity } from './selfIdentity'
 import { resetCollegeData } from './collegeCleanup'
 import {
   beginMyAssignmentSubmission,
@@ -151,6 +153,8 @@ export {
   syncIdentityClaims,
   grantUserRole,
   diagnoseIdentity,
+  auditAndRepairIdentities,
+  syncMyIdentity,
   resetCollegeData,
   updateMyStudentProfile,
   getMyAssignments,

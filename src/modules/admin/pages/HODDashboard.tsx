@@ -161,8 +161,14 @@ function DepartmentOverview() {
   const totalStudents = MOCK_STUDENTS.length
   const activeStudents = MOCK_STUDENTS.filter(s => s.status === 'active').length
   const probationStudents = MOCK_STUDENTS.filter(s => s.status === 'probation').length
-  const avgAttendance = Math.round(MOCK_STUDENTS.reduce((acc, s) => acc + s.attendance, 0) / totalStudents)
-  const avgScore = (MOCK_STUDENTS.reduce((acc, s) => acc + s.avgScore, 0) / totalStudents).toFixed(1)
+  // Dividing by an empty cohort produced `NaN%` on screen, which reads as a number a
+  // principal could act on. An absent measurement is shown as a dash instead.
+  const avgAttendance = totalStudents
+    ? `${Math.round(MOCK_STUDENTS.reduce((acc, s) => acc + s.attendance, 0) / totalStudents)}%`
+    : '—'
+  const avgScore = totalStudents
+    ? (MOCK_STUDENTS.reduce((acc, s) => acc + s.avgScore, 0) / totalStudents).toFixed(1)
+    : '—'
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -181,10 +187,19 @@ function DepartmentOverview() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Students" value={String(totalStudents)} trend="+5 this month" trendUp={true} color="teal" />
-        <StatCard icon={GraduationCap} label="Faculty" value={String(MOCK_FACULTY.length)} trend="Active" trendUp={true} color="sky" />
-        <StatCard icon={Activity} label="Avg Attendance" value={`${avgAttendance}%`} trend="+1.2% vs last month" trendUp={true} color="amber" />
-        <StatCard icon={BookOpen} label="Avg Score" value={String(avgScore)} trend="+0.8 vs last month" trendUp={true} color="violet" />
+        <StatCard icon={Users} label="Total Students" value={String(totalStudents)} color="teal" />
+        <StatCard icon={GraduationCap} label="Faculty" value={String(MOCK_FACULTY.length)} color="sky" />
+        <StatCard icon={Activity} label="Avg Attendance" value={avgAttendance} color="amber" />
+        <StatCard icon={BookOpen} label="Avg Score" value={avgScore} color="violet" />
+        {/* These panels read from empty placeholders (`MOCK_STUDENTS = [] // TODO: Fetch
+            from API`), so every figure below is structurally zero — not a finding about
+            this department. The fabricated "+1.2% vs last month" deltas are gone for the
+            same reason: an invented trend is worse than no trend. */}
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          These overview panels are not connected to a data source yet, so 0 and — both mean
+          “not measured”. Department Students, Attendance, Grade Records and the rest of the
+          sidebar read live data.
+        </p>
       </div>
 
       {/* Quick Stats Row 2 */}

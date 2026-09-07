@@ -30,8 +30,10 @@ export default function StudentLogin() {
       navigate('/student/dashboard', { replace: true });
     } catch (err: any) {
       const msg = err?.message || '';
-      if (msg.includes('ACCOUNT_NOT_FOUND')) {
-        setLocalError(t('auth.studentNotFound'));
+      if (msg.startsWith('AUTHORIZATION_STALE')) {
+        setLocalError(t('auth.identityStale'));
+      } else if (msg.includes('ACCOUNT_NOT_FOUND')) {
+        setLocalError(t('auth.noStudentProfile'));
       } else if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
         setLocalError(t('auth.invalidCredentials'));
       } else if (msg.includes('auth/user-not-found')) {

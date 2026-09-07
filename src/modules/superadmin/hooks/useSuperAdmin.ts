@@ -41,8 +41,11 @@ import {
   deleteFaculty,
   toggleFacultyStatus,
   resetFacultyPassword,
+  type CredentialResetResult,
+  resetStudentPassword,
   SuperAdminApiError,
   type ResetCollegeDataResult,
+  type CreateAdminResult,
 } from "../api/superAdminApi";
 
 import {
@@ -83,6 +86,22 @@ import {
 // ═══════════════════════════════════════════════════════════════════════
 // QUERY KEYS
 // ═══════════════════════════════════════════════════════════════════════
+export const useResetStudentPassword = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    CredentialResetResult,
+    SuperAdminApiError,
+    string
+  >({
+    mutationFn: resetStudentPassword,
+    onSuccess: (_data, studentId) => {
+      // The reset revokes the student's sessions, so any cached view of their
+      // access state is stale by definition.
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.studentDetail(studentId) });
+    },
+  });
+};
+
 export const superAdminKeys = {
   all: ["superAdmin"] as const,
   colleges: () => [...superAdminKeys.all, "colleges"] as const,
@@ -205,7 +224,7 @@ export const useAdmins = (
 
 export const useCreateAdmin = () => {
   const queryClient = useQueryClient();
-  return useMutation<Admin, SuperAdminApiError, CreateAdminInput>({
+  return useMutation<CreateAdminResult, SuperAdminApiError, CreateAdminInput>({
     mutationFn: createAdmin,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.admins() });
@@ -572,7 +591,7 @@ export const useToggleFacultyStatus = () => {
 
 export const useResetFacultyPassword = () => {
   const queryClient = useQueryClient();
-  return useMutation<string, SuperAdminApiError, string>({
+  return useMutation<CredentialResetResult, SuperAdminApiError, string>({
     mutationFn: resetFacultyPassword,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.faculty() });

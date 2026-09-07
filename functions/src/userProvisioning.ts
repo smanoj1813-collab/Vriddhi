@@ -1,8 +1,12 @@
 // Server-side account provisioning. Clients must not assign roles.
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
-import * as crypto from 'crypto'
 import * as logger from 'firebase-functions/logger'
+import {
+  generateRandomPassword,
+  verifyAuthAccount,
+  withApiVersion,
+} from './identityShared'
 
 const STAFF_CREATOR_ROLES = ['superadmin', 'admin', 'hod']
 const PRIVILEGED_ROLES = ['superadmin', 'admin', 'principal', 'hod']
@@ -17,21 +21,7 @@ const ALLOWED_ROLES = [
   'parent',
 ]
 
-function generatePassword(length = 14): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-  const lower = 'abcdefghijkmnopqrstuvwxyz'
-  const nums = '23456789'
-  const special = '!@#$%^&*'
-  const all = upper + lower + nums + special
-  const pick = (set: string) => set[crypto.randomInt(0, set.length)]
-  const chars = [pick(upper), pick(lower), pick(nums), pick(special)]
-  for (let i = chars.length; i < length; i++) chars.push(pick(all))
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = crypto.randomInt(0, i + 1)
-    ;[chars[i], chars[j]] = [chars[j], chars[i]]
-  }
-  return chars.join('')
-}
+const generatePassword = generateRandomPassword
 
 export const provisionUser = onCall(
   { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 60 },
@@ -97,6 +87,19 @@ export const provisionUser = onCall(
       displayName: String(name).trim(),
     })
 
+    // Never report a credential that does not work: read the account back.
+    const verification = await verifyAuthAccount({
+      uid: userRecord.uid,
+      email: String(email).trim().toLowerCase(),
+      expectedRole: targetRole,
+    })
+    if (!verification.ok) {
+      throw new HttpsError(
+        'internal',
+        `Auth account could not be verified: ${verification.reason || 'unknown reason'}`
+      )
+    }
+
     await admin.auth().setCustomUserClaims(userRecord.uid, {
       role: targetRole,
       collegeId: tenantCollegeId || null,
@@ -123,11 +126,13 @@ export const provisionUser = onCall(
       by: request.auth.uid,
     })
 
-    return {
+    return withApiVersion({
       success: true,
       uid: userRecord.uid,
       email: String(email).trim().toLowerCase(),
       temporaryPassword: password,
-    }
+      authVerified: true,
+      reauthenticateRequired: true,
+    })
   }
 )

@@ -24,6 +24,14 @@ export function RoleRoute({ allowedRoles, children }: RoleRouteProps) {
   }
 
   if (!hasRole(allowedRoles)) {
+    // One line, at the only point where a role actually costs someone a page:
+    // which route, who they are, and what the route accepts. Every other role
+    // question on the app is a render decision and stays quiet.
+    console.warn('[RoleRoute] access denied', {
+      path: location.pathname,
+      role: user.role,
+      allowedRoles,
+    });
     return <Navigate to="/unauthorized" replace />;
   }
 

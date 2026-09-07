@@ -7,7 +7,15 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "check:dead-code": "node scripts/check-dead-code.cjs"
+    "check:dead-code": "node scripts/check-dead-code.cjs",
+    "deploy:all": "npm run build && firebase deploy --only firestore:rules,firestore:indexes,functions,hosting --project vriddhi-academic",
+    "deploy:rules": "firebase deploy --only firestore:rules --project vriddhi-academic",
+    "deploy:functions": "npm --prefix functions run build && firebase deploy --only functions --project vriddhi-academic",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting --project vriddhi-academic",
+    "identity:doctor": "node scripts/identity-doctor.mjs",
+    "build:functions": "npm --prefix functions run build",
+    "test:functions:unit": "npm --prefix functions run test:unit",
+    "test:rules": "npm --prefix functions run test:rules"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
