@@ -484,3 +484,58 @@ contradicting the claims its own account carries, or delete it once no `users/*`
 names it. Merging duplicate profiles is not implemented on purpose: choosing which of two
 documents survives is a data decision, not a repair.
 
+## 13. The college path selector (`bbb8c0b`) — why a linked HOD saw empty pages
+
+Symptom: the HOD signs in, `role: hod` resolves through the pointer, every page renders,
+nothing loads, and **no permission error appears anywhere**. It is not a rules problem.
+
+Chain:
+
+1. Five admin API modules resolve their tenant with `getCollegeId()`, which reads
+   `localStorage.vriddhi_college_id`. That key is written once, by `AuthContext`, from the
+   resolved user's `collegeId`.
+2. `resolveIdentity.finish()` took `collegeId` from **the document it happened to resolve**.
+   A HOD whose email is shared with another profile resolves at `users/{uid}` — the pointer
+   written by the repair's *link-and-disarm* branch, which deliberately carries no role and
+   no college.
+3. `collegeId` undefined → the key removed → `getCollegeId()` threw `No college ID found`
+   (or, in `scheduleApi`, returned `''` and queried `colleges//…`, an impossible path). The
+   page caught it and showed an empty table.
+
+Fix: the **token claim** decides the tenant, with the profile document as fallback — which is
+the correct precedence, not a convenience, because `collegeId()` in the rules *is* the claim:
+a session pointed at another college would query rows the rules then refuse, and that looks
+identical to missing data. The repair's duplicate branch now fills `collegeId` on the pointer
+only when the document has nothing to say, so a linked-and-disarmed profile can never
+contradict the primary record. `No college ID found` now says what to do; `scheduleApi` no
+longer converts a broken scope into an empty result set.
+
+Regression risk to watch: any screen that relied on the *stale* localStorage value of a
+previously opened college (superadmin switcher flows) now re-derives from the claim on sign
+in. That is intended, but it means a superadmin who switches colleges must see the switcher
+write the key — check the college switcher after deploying this.
+
+### The HOD overview is not connected to data at all
+
+`src/modules/admin/pages/HODDashboard.tsx` renders from
+`MOCK_STUDENTS = [] // TODO: Fetch from API` (also `MOCK_FACULTY`, `MOCK_APPROVALS`,
+`BATCH_PERFORMANCE`). So its zeros are structural, not observations, and its
+"+5 this month" / "+1.2% vs last month" deltas were **hardcoded** — an invented trend on a
+principal's dashboard. `bbb8c0b` removed the fabricated deltas, renders `—` instead of
+`NaN%` (division by an empty cohort) and states that the panels are unconnected. The sidebar
+routes for HOD (`/admin/students`, `/admin/attendance`, `/admin/grade-records`, …) are the
+live admin pages, so this affects the overview tab only. Wiring the overview to
+`dashboardApi`/`feeApi` is a small, contained change and is deliberately not bundled into an
+authentication fix.
+
+### Also recorded: claims are never traded from a partial view (`c507ccd`)
+
+A staff-scoped Preview dropped Jayashree's `hods` row from the findings entirely: which
+document owns an email is decided from the collections in scope, so excluding `faculty` made
+her hods document the apparent owner of her identity — entitled to rewrite her role claim.
+Now a row whose only disagreement is *role* reports `DEFERRED_ROLE_OVERWRITE`, leaves the
+claim alone and says to re-run with scope **All profile collections** or force it. Filling a
+missing claim is still allowed from any scope.
+
+Unit tests 53/53 · `functions` tsc 0 · root tsc 0 · vite build ✓.
+
