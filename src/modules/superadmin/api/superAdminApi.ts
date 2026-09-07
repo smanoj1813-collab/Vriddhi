@@ -1472,6 +1472,39 @@ export async function deleteFaculty(facultyId: string): Promise<void> {
   }
 }
 
+/**
+ * Hand a working credential to a student whose Auth account already exists.
+ *
+ * The students-side twin of `resetFacultyPassword`, and its absence was half of the
+ * original complaint: a faculty password could at least be copied out of Firestore,
+ * while a student's could not be recovered at all — the import had created the Auth
+ * account and shown nobody the password. The credential is returned for one-time
+ * display and is never written to Firestore; the profile flag carries no secret, it
+ * only tells the app to ask for a change on next sign-in.
+ */
+export async function resetStudentPassword(
+  studentId: string
+): Promise<{ temporaryPassword: string; email: string | null }> {
+  const resetFn = httpsCallable<
+    { collection: "students"; docId: string },
+    { success: boolean; uid: string; email: string | null; temporaryPassword: string }
+  >(functions, "resetUserPassword");
+
+  const result = await resetFn({ collection: "students", docId: studentId });
+  const temp = result.data?.temporaryPassword;
+  if (!temp) throw new Error("Password reset did not return a temporary password");
+
+  try {
+    await updateDoc(doc(db, "students", studentId), {
+      passwordResetRequired: true,
+      updatedAt: Timestamp.now(),
+    });
+  } catch {
+    // Non-fatal: the Auth credential was already reset.
+  }
+  return { temporaryPassword: temp, email: result.data?.email ?? null };
+}
+
 export async function toggleFacultyStatus(facultyId: string, status: "active" | "inactive"): Promise<void> {
   await updateDoc(doc(db, "faculty", facultyId), { status, updatedAt: Timestamp.now() });
 }
