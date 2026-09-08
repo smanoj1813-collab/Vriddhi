@@ -431,3 +431,21 @@ left untouched — it is a reference archive, not live code. The only remaining
 matches for the search patterns are the `#eee` CSS hex color (false positive)
 and the intentional `DEPRECATED_TECH_BRANCHES` denylist in
 `src/shared/constants/academicPrograms.ts`.
+
+### 10.3 Academic years start at 2026 (2026-09-08)
+
+Per product requirement (already encoded in `attendanceBatches.ts`:
+`ATTENDANCE_MIN_BATCH_YEAR = 2026`), all hardcoded batch/admission years and
+academic-year ranges were moved to 2026 onward. Pre-2026 values are treated as
+obsolete. Changed across 27 files: batch lists (`questions.ts`, `config.ts`,
+`AIQuestionGenerator`, `DEFAULT_BATCHES`, `FacultyUploadMaterial`,
+`AdminFeeManagement` year dropdown), academic-year defaults/placeholders
+(`Settings` 2026-2027 + 2026 semester dates, `FacultyTopics`,
+`useCurriculumMapping`, `AdminCurriculum`, `AdminClassSchedule` CSV, paper
+editors), sample CSV/template rows (`onboardingService` R2026*** + batch 2026,
+`parseCSV`, `questionFileParser`, `BulkImportModal`, `FacultyBulkImport`,
+`STUDENT_BULK_UPLOAD_FIX.md`), curriculum template scheme years (`SEP 2026`,
+`SEP 2026-2027`, `syllabusParser` comment), `Journey` achievement dates,
+`StudentDashboard` batch fallback, `FacultyAssignments` batch placeholder, and
+seed `batch`/`joiningDate` (2026). DOB, phone numbers, and university
+`establishedYear` (historical facts) intentionally unchanged.

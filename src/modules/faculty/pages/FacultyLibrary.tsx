@@ -378,7 +378,7 @@ export default function FacultyLibrary() {
                   type="text"
                   value={issueData.studentId}
                   onChange={e => setIssueData((prev: typeof issueData) => ({ ...prev, studentId: e.target.value }))}
-                  placeholder="STU2024001"
+                  placeholder="STU2026001"
                   className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-teal-500/50 text-sm"
                 />
               </div>
@@ -400,7 +400,7 @@ export default function FacultyLibrary() {
                   type="text"
                   value={issueData.studentRegNo}
                   onChange={e => setIssueData((prev: typeof issueData) => ({ ...prev, studentRegNo: e.target.value }))}
-                  placeholder="R2024001"
+                  placeholder="R2026001"
                   className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-teal-500/50 text-sm"
                 />
               </div>

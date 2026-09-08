@@ -513,7 +513,7 @@ export default function FacultyAssignments() {
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Batch</label>
-                  <input type="text" value={createBatch} onChange={e => setCreateBatch(e.target.value)} placeholder="e.g., 2024"
+                  <input type="text" value={createBatch} onChange={e => setCreateBatch(e.target.value)} placeholder="e.g., 2026"
                     className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 text-sm" />
                 </div>
                 <div>

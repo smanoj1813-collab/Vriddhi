@@ -198,8 +198,8 @@ After deployment, verify:
 
 ```csv
 name,email,regNo,phone,department,batch,division,semester,dob,gender,address
-John Doe,john.doe@example.com,REG001,9876543210,B.Com,2024,A,3,2002-05-15,Male,123 Main St
-Jane Smith,jane.smith@example.com,REG002,9876543211,B.Sc,2024,B,3,2002-08-20,Female,456 Oak Ave
+John Doe,john.doe@example.com,REG001,9876543210,B.Com,2026,A,3,2002-05-15,Male,123 Main St
+Jane Smith,jane.smith@example.com,REG002,9876543211,B.Sc,2026,B,3,2002-08-20,Female,456 Oak Ave
 ```
 
 ---

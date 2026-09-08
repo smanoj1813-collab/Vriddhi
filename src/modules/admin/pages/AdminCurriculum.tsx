@@ -805,7 +805,7 @@ const AdminCurriculum: React.FC = () => {
               label="Batch *"
               value={formData.batch}
               onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))}
-              placeholder="e.g. 2024-2025"
+              placeholder="e.g. 2026-2027"
             />
 
             {/* Division */}

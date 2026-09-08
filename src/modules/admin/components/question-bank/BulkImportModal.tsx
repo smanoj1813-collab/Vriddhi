@@ -70,8 +70,8 @@ interface ParsedQuestion {
 const STEPS = ['Paste Data', 'Preview & Validate', 'Import'];
 
 const SAMPLE_CSV = `text,subject,type,difficulty,unit,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName
-"What is 2+2?","Business Statistics","mcq","easy","1",5,"2|3|4|5","C","Basic addition","statistics,basic","2024-25","B.Com",false,,
-"Explain the accounting equation","Financial Accounting","long","medium","2",10,"","","Assets = Liabilities + Capital","accounting,basics","2024-25","BBA",false,,`;
+"What is 2+2?","Business Statistics","mcq","easy","1",5,"2|3|4|5","C","Basic addition","statistics,basic","2026-27","B.Com",false,,
+"Explain the accounting equation","Financial Accounting","long","medium","2",10,"","","Assets = Liabilities + Capital","accounting,basics","2026-27","BBA",false,,`;
 
 const BulkImportModal: React.FC<BulkImportModalProps> = ({
   onImport,

@@ -22,7 +22,7 @@ const FACULTY_SEED = [
     department: 'Commerce',
     designation: 'Assistant Professor',
     employmentType: 'Full Time',
-    joiningDate: '15-06-2020',
+    joiningDate: '15-06-2026',
     qualification: 'M.Com',
     specialization: 'UGC-NET',
     subjectsUG: ['Financial Accounting'],

@@ -406,7 +406,7 @@ export default function PaperUploadEditor({
                   list="paper-batch-list"
                   value={form.batch}
                   onChange={(e) => set({ batch: e.target.value })}
-                  placeholder="e.g. 2024-25"
+                  placeholder="e.g. 2026-27"
                   className={inputCls}
                 />
                 <datalist id="paper-batch-list">

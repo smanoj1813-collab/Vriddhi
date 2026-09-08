@@ -118,9 +118,9 @@ export default function Settings() {
 
   // General state
   const [collegeName, setCollegeName] = useState('')
-  const [academicYear, setAcademicYear] = useState('2024-2025')
-  const [semesterStart, setSemesterStart] = useState('2024-07-01')
-  const [semesterEnd, setSemesterEnd] = useState('2024-12-15')
+  const [academicYear, setAcademicYear] = useState('2026-2027')
+  const [semesterStart, setSemesterStart] = useState('2026-07-01')
+  const [semesterEnd, setSemesterEnd] = useState('2026-12-15')
   const [passPercentage, setPassPercentage] = useState('40')
   const [savingGeneral, setSavingGeneral] = useState(false)
   const [generalMsg, setGeneralMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
@@ -205,9 +205,9 @@ export default function Settings() {
             if (collegeSnap.exists()) {
               const data = collegeSnap.data() as any
               setCollegeName(data.name || data.collegeName || '')
-              setAcademicYear(data.academicYear || data.settings?.academicYear || '2024-2025')
-              setSemesterStart(data.semesterStart || data.settings?.semesterStart || '2024-07-01')
-              setSemesterEnd(data.semesterEnd || data.settings?.semesterEnd || '2024-12-15')
+              setAcademicYear(data.academicYear || data.settings?.academicYear || '2026-2027')
+              setSemesterStart(data.semesterStart || data.settings?.semesterStart || '2026-07-01')
+              setSemesterEnd(data.semesterEnd || data.settings?.semesterEnd || '2026-12-15')
               setPassPercentage(String(data.passPercentage || data.settings?.passPercentage || '40'))
               if (data.settings?.autoBackup) setAutoBackup(data.settings.autoBackup)
             }
@@ -590,7 +590,7 @@ export default function Settings() {
                     type="text"
                     value={academicYear}
                     onChange={(e) => setAcademicYear(e.target.value)}
-                    placeholder="e.g., 2024-2025"
+                    placeholder="e.g., 2026-2027"
                   />
                 </div>
 

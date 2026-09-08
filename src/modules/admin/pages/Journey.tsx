@@ -398,9 +398,9 @@ const StudentJourney = () => {
   ]
 
   const achievements = [
-    { title: 'Consistent Performer', description: 'Maintained above average scores', date: '2024' },
-    ...(studentData.avgScore >= 90 ? [{ title: "Dean's List", description: 'Top 10% of the class', date: '2024' }] : []),
-    ...(studentData.attendance >= 95 ? [{ title: 'Perfect Attendance', description: '100% attendance record', date: '2024' }] : []),
+    { title: 'Consistent Performer', description: 'Maintained above average scores', date: '2026' },
+    ...(studentData.avgScore >= 90 ? [{ title: "Dean's List", description: 'Top 10% of the class', date: '2026' }] : []),
+    ...(studentData.attendance >= 95 ? [{ title: 'Perfect Attendance', description: '100% attendance record', date: '2026' }] : []),
   ]
 
   return (

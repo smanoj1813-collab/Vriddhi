@@ -19,7 +19,7 @@ router.get('/batch-branch', verifyAuth, async (req: AuthenticatedRequest, res) =
 
     res.json({
       success: true,
-      batches: config?.batches || ['2024', '2025', '2026', '2027'],
+      batches: config?.batches || ['2026', '2027', '2028', '2029'],
       branches: config?.branches || ['B.Com', 'BBA', 'BCA'],
     });
   } catch (err: any) {

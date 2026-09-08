@@ -97,7 +97,7 @@ export default function FacultyTopics() {
     title: '',
     description: '',
     course: 'BCom',
-    batch: '2024-2025',
+    batch: '2026-2027',
     division: 'A',
     plannedDate: '',
     duration: 120,
@@ -114,7 +114,7 @@ export default function FacultyTopics() {
       title: '',
       description: '',
       course: 'BCom',
-      batch: '2024-2025',
+      batch: '2026-2027',
       division: 'A',
       plannedDate: '',
       duration: 120,
@@ -686,9 +686,9 @@ function TopicFormModal({
                 onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               >
-                <option>2023-2024</option>
-                <option>2024-2025</option>
-                <option>2025-2026</option>
+                <option>2026-2027</option>
+                <option>2027-2028</option>
+                <option>2028-2029</option>
               </select>
             </div>
             <div>

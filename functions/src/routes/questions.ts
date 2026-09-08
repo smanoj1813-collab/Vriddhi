@@ -139,7 +139,7 @@ router.get('/batch-branch', verifyAuth, requireRole(...READ_ROLES), async (req: 
     const configDoc = await db.collection('college_configs').doc(collegeId).get()
     const config = configDoc.data()
     res.json({
-      batches: config?.batches || ['2022-23', '2023-24', '2024-25', '2025-26'],
+      batches: config?.batches || ['2026-27', '2027-28', '2028-29', '2029-30'],
       // Vriddhi is a NON-TECHNICAL UG/PG college (arts, commerce, science,
       // management, computer applications). Engineering branch codes are never
       // part of any seeded list — see src/shared/constants/academicPrograms.ts.

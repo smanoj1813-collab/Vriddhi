@@ -93,12 +93,12 @@ export const DEFAULT_SUBJECTS: string[] = [
   'Communication Skills',
 ];
 
-/** Default academic batches (rolling four-year window is set by the college). */
+/** Default academic batches (rolling window from the 2026 admission year). */
 export const DEFAULT_BATCHES: string[] = [
-  '2022-23',
-  '2023-24',
-  '2024-25',
-  '2025-26',
+  '2026-27',
+  '2027-28',
+  '2028-29',
+  '2029-30',
 ];
 
 /**
