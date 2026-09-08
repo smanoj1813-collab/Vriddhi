@@ -214,7 +214,12 @@ function ResultDialog({ open, onClose, result }: ResultDialogProps) {
 // MAIN COMPONENT
 // ============================================================
 
-export function TemplateSelector() {
+export interface TemplateSelectorProps {
+  onClose?: () => void;
+  onPaperGenerated?: (result: PaperGenerationResult | null) => void;
+}
+
+export function TemplateSelector({ onClose, onPaperGenerated }: TemplateSelectorProps = {}) {
   const { user } = useAuth();
   const {
     templates,
@@ -264,6 +269,7 @@ export function TemplateSelector() {
       if (result) {
         setGenerationResult(result);
         setResultOpen(true);
+        onPaperGenerated?.(result);
       } else {
         setGenerateError('Failed to generate paper. Please try again.');
       }

@@ -27,6 +27,7 @@ import {
   Moon,
   School,
   ArrowUpRight,
+  UserCheck,
 } from 'lucide-react';
 
 interface NavItem {
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
   { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen },
   { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText },
   { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp },
+  { id: 'faculty-connect', label: 'Faculty Connect', path: '/student/faculty-connect', icon: UserCheck },
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library },
   { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock },
   { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard },
@@ -58,6 +60,7 @@ const STUDENT_NAV_KEYS: Record<string, TranslationKey> = {
   assessments: 'nav.assessments',
   assignments: 'nav.assignments',
   grades: 'nav.grades',
+  'faculty-connect': 'nav.mentoredStudents' as any,
   materials: 'nav.materials',
   timetable: 'nav.timetable',
   fees: 'nav.fees',

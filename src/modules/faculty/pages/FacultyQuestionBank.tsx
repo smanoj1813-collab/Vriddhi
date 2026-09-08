@@ -74,9 +74,11 @@ import {
   unlinkQuestionFromPaper
 } from '../../../services/questionBankAPI';
 import { getPapers } from '../../admin/services/paperAPI';
-import FacultyQuestionForm from '../../components/question-bank/FacultyQuestionForm';
-import FacultyBulkImport from '../../components/question-bank/FacultyBulkImport';
-import FacultyPaperLinker from '../../components/question-bank/FacultyPaperLinker';
+import FacultyQuestionForm from '@/modules/admin/components/question-bank/FacultyQuestionForm';
+import FacultyBulkImport from '@/modules/admin/components/question-bank/FacultyBulkImport';
+import FacultyPaperLinker from '@/modules/admin/components/question-bank/FacultyPaperLinker';
+import QuestionPDFExport from '@/modules/admin/components/question-bank/QuestionPDFExport';
+import QuestionManager from '../components/QuestionManager';
 import QuestionUploadEditor from '@/shared/components/question-paper/QuestionUploadEditor';
 
 interface TabPanelProps {
@@ -128,6 +130,7 @@ const FacultyQuestionBank: React.FC = () => {
   const [pyqNames, setPyqNames] = useState<string[]>([]);
 
   const [pyqMode, setPyqMode] = useState(false);
+  const [pdfExportOpen, setPdfExportOpen] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -393,8 +396,9 @@ const FacultyQuestionBank: React.FC = () => {
             Manage and organize questions for your subjects
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button variant="outlined" startIcon={<AssessmentIcon />} onClick={loadStats}>Analytics</Button>
+          <Button variant="outlined" onClick={() => setPdfExportOpen(true)}>Export PDF</Button>
           <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadEditorOpen(true)}>Upload Questions</Button>
           <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setImportOpen(true)}>Paste Import</Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingQuestion(null); setFormOpen(true); }}>Add Question</Button>
@@ -407,6 +411,7 @@ const FacultyQuestionBank: React.FC = () => {
           <Tab label="My Questions" />
           <Tab label="PYQ Questions" />
           <Tab label="Linked Papers" />
+          <Tab label="Assessment Pool" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}></TabPanel>
@@ -418,6 +423,9 @@ const FacultyQuestionBank: React.FC = () => {
         </TabPanel>
         <TabPanel value={tabValue} index={3}>
           <Typography variant="body2" color="text.secondary">Questions linked to generated papers will appear here.</Typography>
+        </TabPanel>
+        <TabPanel value={tabValue} index={4}>
+          <QuestionManager collegeId={collegeId} />
         </TabPanel>
       </Paper>
 
@@ -624,40 +632,52 @@ const FacultyQuestionBank: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* FIXED: FacultyQuestionForm — direct call with open/onClose, subjects as {id,name}[] */}
-      <FacultyQuestionForm
-        open={formOpen}
-        onClose={() => { setFormOpen(false); setEditingQuestion(null); }}
-        onSubmit={async (data) => {
-          if (editingQuestion) {
-            await handleUpdate(editingQuestion.id, data);
-          } else {
-            await handleCreate(data);
-          }
-        }}
-        initialData={editingQuestion || undefined}
-        subjects={subjectOptions}
-      />
+      {/* FacultyQuestionForm in Dialog */}
+      <Dialog open={formOpen} onClose={() => { setFormOpen(false); setEditingQuestion(null); }} maxWidth="md" fullWidth>
+        <DialogTitle>{editingQuestion ? 'Edit Question' : 'Add Question'}</DialogTitle>
+        <DialogContent>
+          <FacultyQuestionForm
+            initialData={editingQuestion || undefined}
+            subjects={subjects}
+            onSubmit={async (data) => {
+              if (editingQuestion) {
+                await handleUpdate(editingQuestion.id, data);
+              } else {
+                await handleCreate(data);
+              }
+            }}
+            onCancel={() => { setFormOpen(false); setEditingQuestion(null); }}
+          />
+        </DialogContent>
+      </Dialog>
 
-      {/* FIXED: FacultyBulkImport — direct call with open/onClose, onImport takes File */}
-      <FacultyBulkImport
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        onImport={handleBulkImport}
-      />
+      {/* FacultyBulkImport in Dialog */}
+      <Dialog open={importOpen} onClose={() => setImportOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Bulk Import Questions</DialogTitle>
+        <DialogContent>
+          <FacultyBulkImport
+            batches={batches}
+            branches={branches}
+            subjects={subjects}
+            onImport={handleBulkImport}
+            onCancel={() => setImportOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
-      {/* FIXED: FacultyPaperLinker — direct call with open/onClose/onLink/papers/questionId */}
-      <FacultyPaperLinker
-        open={linkerOpen}
-        onClose={() => setLinkerOpen(false)}
-        onLink={async (paperId) => {
-          if (selectedQuestion) {
-            await handleLinkPaper(selectedQuestion.id, paperId);
-          }
-        }}
-        papers={availablePapers}
-        questionId={selectedQuestion?.id || ''}
-      />
+      {/* FacultyPaperLinker */}
+      {selectedQuestion && linkerOpen && (
+        <FacultyPaperLinker
+          question={selectedQuestion}
+          onLink={async (qid, pid) => {
+            await handleLinkPaper(qid, pid);
+          }}
+          onUnlink={async (qid, pid) => {
+            await handleUnlinkPaper(qid, pid);
+          }}
+          onClose={() => { setLinkerOpen(false); setSelectedQuestion(null); }}
+        />
+      )}
 
       <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Question Preview</DialogTitle>
@@ -829,6 +849,11 @@ const FacultyQuestionBank: React.FC = () => {
           loadQuestions(true);
           loadSubjects();
         }}
+      />
+
+      <QuestionPDFExport
+        questions={questions}
+        title={filters.subject || subjects[0] || 'Question Bank'}
       />
 
     </Box>

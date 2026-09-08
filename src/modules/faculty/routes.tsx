@@ -32,6 +32,7 @@ const FacultyCurriculum = lazy(() => import('./pages/FacultyCurriculum'));
 const FacultySchedule = lazy(() => import('./pages/FacultySchedule'));
 const FacultyAIQuestions = lazy(() => import('./pages/FacultyAIQuestions'));
 const FacultySettings = lazy(() => import('./pages/FacultySettings'));
+const FacultyAppointmentsPage = lazy(() => import('./pages/FacultyAppointmentsPage'));
 const View360 = lazy(() => import('../admin/pages/View360'));
 
 function FacultyAttendanceMarkingWrapper() {
@@ -126,6 +127,8 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'question-bank', element: <LazyPage label="faculty/question-bank"><FacultyQuestionBank /></LazyPage> },
       { path: 'paper-generator', element: <LazyPage label="faculty/paper-generator"><FacultyPaperGenerator /></LazyPage> },
       { path: 'student-analysis', element: <LazyPage label="faculty/student-analysis"><FacultyStudentAnalysis /></LazyPage> },
+      { path: 'appointments', element: <LazyPage label="faculty/appointments"><FacultyAppointmentsPage /></LazyPage> },
+      { path: 'student-requests', element: <LazyPage label="faculty/student-requests"><FacultyAppointmentsPage /></LazyPage> },
       { path: 'reschedule', element: <LazyPage label="faculty/reschedule"><FacultyReschedule /></LazyPage> },
       { path: 'upload-material', element: <LazyPage label="faculty/upload-material"><FacultyUploadMaterial /></LazyPage> },
       { path: 'library', element: <LazyPage label="faculty/library"><FacultyLibrary /></LazyPage> },

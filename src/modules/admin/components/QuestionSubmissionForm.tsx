@@ -45,6 +45,7 @@ import {
   Image as ImageIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
+import { createQuestion } from '../api/questionBankApi';
 import {
   type DifficultyLevel,
   type QuestionType,
@@ -457,16 +458,32 @@ export function QuestionSubmissionForm({ onClose, onSuccess }: QuestionSubmissio
     setSubmitError(null);
 
     try {
-      // For now, simulate submission since questionSubmissionApi doesn't exist yet
-      // In production, replace with actual API call
-      const mockQuestionId = `q_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      const collegeId = user.collegeId || localStorage.getItem('vriddhi_college_id') || 'default';
+      const created = await createQuestion(collegeId, {
+        text: questionText,
+        type: questionType as any,
+        difficulty: difficulty as any,
+        subject: subjectId || 'General',
+        topic: topicId || 'General',
+        chapter: subTopicId || '',
+        marks,
+        options: options.map((o) => ({
+          id: o.id,
+          text: o.text,
+          isCorrect: o.isCorrect || o.id === correctAnswer,
+        })),
+        correctAnswer: correctAnswer || options.find((o) => o.isCorrect)?.text || '',
+        explanation,
+        tags,
+        status: 'draft',
+        bloomLevel: 'understand' as any,
+        createdBy: user.uid || user.id || '',
+        createdByName: user.name || 'Faculty',
+      } as any);
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setSubmittedQuestionId(mockQuestionId);
+      setSubmittedQuestionId(created.id);
       setSuccessOpen(true);
-      if (onSuccess) onSuccess(mockQuestionId);
+      if (onSuccess) onSuccess(created.id);
     } catch (error) {
       setSubmitError((error as Error).message);
     } finally {

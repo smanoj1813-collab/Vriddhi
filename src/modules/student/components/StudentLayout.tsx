@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 import StudentSidebar from './StudentSidebar';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
+import FloatingAIChatWidget from '../../../shared/components/FloatingAIChatWidget';
 
 function PageLoader() {
   return (
@@ -77,6 +78,7 @@ export default function StudentLayout() {
           </Suspense>
         </div>
       </main>
+      <FloatingAIChatWidget />
     </div>
   );
 }

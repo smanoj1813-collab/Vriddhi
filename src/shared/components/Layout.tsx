@@ -5,6 +5,7 @@ import { useThemeMode } from "../contexts/ThemeProvider";
 import { useTranslation } from "../contexts/LanguageProvider";
 import LanguageSwitcher from "./LanguageSwitcher";
 import type { TranslationKey } from "../i18n";
+import FloatingAIChatWidget from "./FloatingAIChatWidget";
 import {
   Box,
   Drawer,
@@ -177,6 +178,7 @@ const navItems: NavItem[] = [
 
   // ─── FACULTY ───
   { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" />, roles: ["faculty"], section: "Overview" },
+  { label: "Student Requests", path: "/faculty/appointments", icon: <People fontSize="small" />, roles: ["faculty"], section: "Overview" },
   { label: "Mark Attendance", path: "/faculty/attendance-marking", icon: <CheckCircle fontSize="small" />, roles: ["faculty"], section: "Attendance" },
   { label: "My Attendance", path: "/faculty/attendance", icon: <CalendarToday fontSize="small" />, roles: ["faculty"], section: "Attendance" },
   { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" />, roles: ["faculty"], section: "Teaching" },
@@ -199,6 +201,7 @@ const navItems: NavItem[] = [
 
   // ─── MENTOR ───
   { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" />, roles: ["mentor"], section: "Overview" },
+  { label: "Student Requests", path: "/faculty/appointments", icon: <People fontSize="small" />, roles: ["mentor"], section: "Overview" },
   { label: "Mentored Students", path: "/faculty/student-analysis", icon: <People fontSize="small" />, roles: ["mentor"], section: "Students" },
   { label: "360° View", path: "/faculty/view360", icon: <Assessment fontSize="small" />, roles: ["mentor"], section: "Students" },
   { label: "Attendance Overview", path: "/faculty/attendance", icon: <CalendarToday fontSize="small" />, roles: ["mentor"], section: "Attendance" },
@@ -711,6 +714,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children || <Outlet />}
         </div>
       </Box>
+
+      {/* ─── Global Multi-Role AI Assistant ─── */}
+      <FloatingAIChatWidget />
     </Box>
   );
 };

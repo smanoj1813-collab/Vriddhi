@@ -15,6 +15,8 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, PieChart, Pie, Cell
 } from 'recharts'
+import type { StudentIndex } from '@/types/students'
+import { getStudentIndex, listStudentIndex } from '@/api/studentIndexApi'
 
 // ─── Types ──────────────────────────────────────────────
 interface Student {

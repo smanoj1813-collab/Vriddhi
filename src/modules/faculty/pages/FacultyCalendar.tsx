@@ -1,14 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock,
-  MapPin, Users, BookOpen, X, AlertCircle,
-  Sun
+  MapPin, Users, Plus, Trash2, X, AlertCircle, Sun, Loader2, Check
 } from 'lucide-react'
-// TODO: Fetch from Firebase
-const classSessions: any[] = []
-const currentFaculty = { name: 'Faculty', department: 'General' }
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  limit
+} from 'firebase/firestore'
+import { db } from '@/Firebase/config'
+import { useAuth } from '@/modules/auth/context/AuthContext'
 
 interface CalendarEvent {
   id: string
@@ -39,17 +47,187 @@ const eventDotColors: Record<string, string> = {
   other: 'bg-slate-400',
 }
 
-// TODO: Fetch from Firebase
-const mockEvents: CalendarEvent[] = []
-
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 export default function FacultyCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 5, 23)) // June 23, 2026
-  const [selectedDate, setSelectedDate] = useState<string | null>('2026-06-23')
+  const { user } = useAuth()
+  const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || ''
+
+  const [currentDate, setCurrentDate] = useState(() => new Date())
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => {
+    const today = new Date()
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  })
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month')
-  const [showEventModal, setShowEventModal] = useState(false)
+  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Add Event Form State
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    type: 'class' as CalendarEvent['type'],
+    date: selectedDate || '',
+    startTime: '09:00',
+    endTime: '10:30',
+    room: 'Room 101',
+    batch: '2026',
+    subject: 'General',
+  })
+
+  const fetchCalendarData = useCallback(async () => {
+    if (!collegeId) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      // 1. Fetch college events
+      const eventsQuery = query(
+        collection(db, 'colleges', collegeId, 'events'),
+        limit(100)
+      )
+      const eventsSnap = await getDocs(eventsQuery).catch(() => null)
+
+      const loadedEvents: CalendarEvent[] = []
+      if (eventsSnap) {
+        eventsSnap.docs.forEach(docSnap => {
+          const d = docSnap.data()
+          loadedEvents.push({
+            id: docSnap.id,
+            title: d.title || 'Event',
+            type: (d.type || d.category || 'other') as CalendarEvent['type'],
+            date: d.date || '',
+            startTime: d.startTime || d.time || '09:00',
+            endTime: d.endTime || '10:00',
+            room: d.venue || d.room || 'Campus',
+            batch: d.batch || '-',
+            subject: d.subject || 'General',
+            color: eventColors[d.type] || eventColors.other,
+          })
+        })
+      }
+
+      // 2. Fetch weekly schedules for faculty
+      const schedQuery = query(
+        collection(db, 'weeklySchedules'),
+        where('collegeId', '==', collegeId),
+        limit(100)
+      )
+      const schedSnap = await getDocs(schedQuery).catch(() => null)
+      if (schedSnap) {
+        const today = new Date()
+        const currentYear = today.getFullYear()
+        const currentMonth = today.getMonth()
+
+        // Synthesize schedule occurrences for the active month
+        schedSnap.docs.forEach(docSnap => {
+          const s = docSnap.data()
+          const dayName = s.dayOfWeek || s.day
+          const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(dayName)
+          if (dayIndex >= 0) {
+            for (let d = 1; d <= 31; d++) {
+              const testDate = new Date(currentYear, currentMonth, d)
+              if (testDate.getMonth() === currentMonth && testDate.getDay() === dayIndex) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+                loadedEvents.push({
+                  id: `sched_${docSnap.id}_${d}`,
+                  title: `${s.subject || 'Class'} (${s.branch || ''})`,
+                  type: 'class',
+                  date: dateStr,
+                  startTime: s.startTime || '10:00',
+                  endTime: s.endTime || '11:00',
+                  room: s.room || 'Room 101',
+                  batch: s.batch || '2026',
+                  subject: s.subject || 'General',
+                  color: eventColors.class,
+                })
+              }
+            }
+          }
+        })
+      }
+
+      setEvents(loadedEvents)
+    } catch (err) {
+      console.error('[FacultyCalendar] fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [collegeId])
+
+  useEffect(() => {
+    fetchCalendarData()
+  }, [fetchCalendarData])
+
+  const handleAddEvent = async () => {
+    if (!newEvent.title || !newEvent.date || !collegeId) return
+    setSubmitting(true)
+    try {
+      const payload = {
+        title: newEvent.title.trim(),
+        type: newEvent.type,
+        date: newEvent.date,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        venue: newEvent.room,
+        batch: newEvent.batch,
+        subject: newEvent.subject,
+        collegeId,
+        createdBy: user?.uid || '',
+        createdByName: user?.name || 'Faculty',
+        createdAt: serverTimestamp(),
+      }
+
+      const docRef = await addDoc(collection(db, 'colleges', collegeId, 'events'), payload)
+      const createdItem: CalendarEvent = {
+        id: docRef.id,
+        title: payload.title,
+        type: payload.type,
+        date: payload.date,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        room: payload.venue,
+        batch: payload.batch,
+        subject: payload.subject,
+        color: eventColors[payload.type] || eventColors.other,
+      }
+
+      setEvents(prev => [...prev, createdItem])
+      setShowAddModal(false)
+      setNewEvent({
+        title: '',
+        type: 'class',
+        date: selectedDate || '',
+        startTime: '09:00',
+        endTime: '10:30',
+        room: 'Room 101',
+        batch: '2026',
+        subject: 'General',
+      })
+    } catch (err) {
+      console.error('[FacultyCalendar] add event error:', err)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (eventId.startsWith('sched_')) {
+      // Schedule template item, remove locally
+      setEvents(prev => prev.filter(e => e.id !== eventId))
+      return
+    }
+    try {
+      await deleteDoc(doc(db, 'colleges', collegeId, 'events', eventId))
+      setEvents(prev => prev.filter(e => e.id !== eventId))
+    } catch (err) {
+      console.error('[FacultyCalendar] delete event error:', err)
+      setEvents(prev => prev.filter(e => e.id !== eventId))
+    }
+  }
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -58,31 +236,30 @@ export default function FacultyCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const daysInPrevMonth = new Date(year, month, 0).getDate()
 
-  const calendarDays: { date: number; month: 'prev' | 'current' | 'next'; fullDate: string }[] = []
+  const calendarDays = useMemo(() => {
+    const days: { date: number; month: 'prev' | 'current' | 'next'; fullDate: string }[] = []
+    // Previous month days
+    for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+      const d = daysInPrevMonth - i
+      const prevMonth = month === 0 ? 11 : month - 1
+      const prevYear = month === 0 ? year - 1 : year
+      days.push({ date: d, month: 'prev', fullDate: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
+    }
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      days.push({ date: d, month: 'current', fullDate: `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
+    }
+    // Next month days
+    const remaining = 42 - days.length
+    for (let d = 1; d <= remaining; d++) {
+      const nextMonth = month === 11 ? 0 : month + 1
+      const nextYear = month === 11 ? year + 1 : year
+      days.push({ date: d, month: 'next', fullDate: `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
+    }
+    return days
+  }, [year, month, firstDayOfMonth, daysInMonth, daysInPrevMonth])
 
-  // Previous month days
-  for (let i = firstDayOfMonth - 1; i >= 0; i--) {
-    const d = daysInPrevMonth - i
-    const prevMonth = month === 0 ? 11 : month - 1
-    const prevYear = month === 0 ? year - 1 : year
-    calendarDays.push({ date: d, month: 'prev', fullDate: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
-  }
-
-  // Current month days
-  for (let d = 1; d <= daysInMonth; d++) {
-    calendarDays.push({ date: d, month: 'current', fullDate: `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
-  }
-
-  // Next month days
-  const remaining = 42 - calendarDays.length
-  for (let d = 1; d <= remaining; d++) {
-    const nextMonth = month === 11 ? 0 : month + 1
-    const nextYear = month === 11 ? year + 1 : year
-    calendarDays.push({ date: d, month: 'next', fullDate: `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` })
-  }
-
-  const getEventsForDate = (dateStr: string) => mockEvents.filter(e => e.date === dateStr)
-
+  const getEventsForDate = (dateStr: string) => events.filter(e => e.date === dateStr)
   const selectedEvents = selectedDate ? getEventsForDate(selectedDate) : []
 
   const navigateMonth = (dir: number) => {
@@ -113,7 +290,6 @@ export default function FacultyCalendar() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
-      <NotConnectedBanner message="Events and sessions are not yet read from Firestore. The calendar renders from local state only." />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
@@ -125,10 +301,17 @@ export default function FacultyCalendar() {
               <CalendarIcon className="w-6 h-6 text-teal-400" />
               Calendar
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">View schedule and manage events</p>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">View live academic schedule and manage events</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-teal-500 text-white text-sm font-medium hover:bg-teal-600 transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Event
+          </button>
           <button
             onClick={goToToday}
             className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all shadow-sm"
@@ -171,7 +354,12 @@ export default function FacultyCalendar() {
         </button>
       </div>
 
-      {viewMode === 'month' ? (
+      {loading ? (
+        <div className="py-20 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-teal-400 mx-auto mb-2" />
+          <p className="text-sm text-slate-500">Loading calendar events...</p>
+        </div>
+      ) : viewMode === 'month' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar Grid */}
           <div className="lg:col-span-2">
@@ -188,7 +376,7 @@ export default function FacultyCalendar() {
               {/* Days */}
               <div className="grid grid-cols-7 gap-1">
                 {calendarDays.map((day, i) => {
-                  const events = getEventsForDate(day.fullDate)
+                  const dayEvents = getEventsForDate(day.fullDate)
                   const isSelected = selectedDate === day.fullDate
                   const isToday = day.fullDate === new Date().toISOString().split('T')[0]
 
@@ -207,12 +395,12 @@ export default function FacultyCalendar() {
                       }`}
                     >
                       <span className={`text-sm font-medium ${isToday ? 'font-bold' : ''}`}>{day.date}</span>
-                      {events.length > 0 && (
+                      {dayEvents.length > 0 && (
                         <div className="flex gap-0.5 mt-1">
-                          {events.slice(0, 3).map((e, j) => (
-                            <div key={j} className={`w-1.5 h-1.5 rounded-full ${eventDotColors[e.type]}`} />
+                          {dayEvents.slice(0, 3).map((e, j) => (
+                            <div key={j} className={`w-1.5 h-1.5 rounded-full ${eventDotColors[e.type] || 'bg-slate-400'}`} />
                           ))}
-                          {events.length > 3 && <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />}
+                          {dayEvents.length > 3 && <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />}
                         </div>
                       )}
                     </button>
@@ -223,9 +411,9 @@ export default function FacultyCalendar() {
 
             {/* Legend */}
             <div className="flex flex-wrap gap-3 mt-4">
-              {Object.entries(eventColors).map(([type, colorClass]) => (
+              {Object.entries(eventColors).map(([type, _]) => (
                 <div key={type} className="flex items-center gap-1.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${eventDotColors[type]}`} />
+                  <div className={`w-2.5 h-2.5 rounded-full ${eventDotColors[type] || 'bg-slate-400'}`} />
                   <span className="text-xs text-slate-600 dark:text-slate-400 capitalize">{type}</span>
                 </div>
               ))}
@@ -254,15 +442,24 @@ export default function FacultyCalendar() {
                   </div>
                 ) : (
                   selectedEvents.map(event => (
-                    <div key={event.id} className={`p-3 rounded-xl border ${event.color}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-2 h-2 rounded-full ${eventDotColors[event.type]}`} />
-                        <span className="text-sm font-medium">{event.title}</span>
+                    <div key={event.id} className={`p-3 rounded-xl border ${event.color} relative group`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${eventDotColors[event.type] || 'bg-slate-400'}`} />
+                          <span className="text-sm font-medium">{event.title}</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteEvent(event.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-400 transition-opacity"
+                          title="Delete Event"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                       <div className="flex flex-wrap gap-3 text-xs opacity-80">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {event.startTime} - {event.endTime}</span>
                         <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {event.room}</span>
-                        {event.batch !== '-' && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {event.batch}</span>}
+                        {event.batch && event.batch !== '-' && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {event.batch}</span>}
                       </div>
                     </div>
                   ))
@@ -274,16 +471,16 @@ export default function FacultyCalendar() {
             <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 mt-4 shadow-sm">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-400" />
-                Upcoming
+                Upcoming Events
               </h3>
               <div className="space-y-2">
-                {mockEvents
-                  .filter(e => new Date(e.date) >= new Date('2026-06-23'))
-                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                {events
+                  .filter(e => e.date >= (selectedDate || ''))
+                  .sort((a, b) => a.date.localeCompare(b.date))
                   .slice(0, 4)
                   .map(event => (
                     <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors">
-                      <div className={`w-1 h-8 rounded-full ${eventDotColors[event.type]}`} />
+                      <div className={`w-1 h-8 rounded-full ${eventDotColors[event.type] || 'bg-slate-400'}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-900 dark:text-white truncate">{event.title}</p>
                         <p className="text-xs text-slate-500">{event.date} • {event.startTime}</p>
@@ -330,6 +527,124 @@ export default function FacultyCalendar() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Event Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-teal-400" />
+                Add Calendar Event
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Guest Lecture on Macroeconomics"
+                  value={newEvent.title}
+                  onChange={e => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Type</label>
+                  <select
+                    value={newEvent.type}
+                    onChange={e => setNewEvent(prev => ({ ...prev, type: e.target.value as CalendarEvent['type'] }))}
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  >
+                    <option value="class">Class</option>
+                    <option value="exam">Exam</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="deadline">Deadline</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={newEvent.date}
+                    onChange={e => setNewEvent(prev => ({ ...prev, date: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Start Time</label>
+                  <input
+                    type="time"
+                    value={newEvent.startTime}
+                    onChange={e => setNewEvent(prev => ({ ...prev, startTime: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">End Time</label>
+                  <input
+                    type="time"
+                    value={newEvent.endTime}
+                    onChange={e => setNewEvent(prev => ({ ...prev, endTime: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Room / Venue</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Lab 204"
+                    value={newEvent.room}
+                    onChange={e => setNewEvent(prev => ({ ...prev, room: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Batch / Cohort</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2026"
+                    value={newEvent.batch}
+                    onChange={e => setNewEvent(prev => ({ ...prev, batch: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-600 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddEvent}
+                disabled={submitting || !newEvent.title || !newEvent.date}
+                className="flex-1 px-4 py-2 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                {submitting ? 'Saving...' : 'Save Event'}
+              </button>
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ const ActiveTestPage = lazy(() => import('./pages/ActiveTestPage'));
 const TestResultPage = lazy(() => import('./pages/TestResultPage'));
 const AttendancePage = lazy(() => import('./components/AttendancePage'));
 const StudentAssignments = lazy(() => import('./pages/StudentAssignments'));
+const StudentFacultyConnectPage = lazy(() => import('./pages/StudentFacultyConnectPage'));
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -43,6 +44,8 @@ export const studentRoutes: RouteObject[] = [
       { path: 'assessments', element: <StudentTestDashboard /> },
       { path: 'assignments', element: <StudentAssignments /> },
       { path: 'grades', element: <StudentGrades /> },
+      { path: 'faculty-connect', element: <StudentFacultyConnectPage /> },
+      { path: 'mentorship', element: <StudentFacultyConnectPage /> },
 
       // Test flow — both /assessments/:id and /test/:id styles supported
       { path: 'assessments/:testId/instructions', element: <TestInstructionsPage /> },

@@ -1,34 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   Calendar, Clock, MapPin, Users, ChevronLeft, X, Check, AlertCircle,
-  Search, BookOpen
+  Search, BookOpen, Loader2
 } from 'lucide-react'
-// TODO: Fetch from Firebase
-interface FacultyStudent {
-  id: string
-  name: string
-  rollNo: string
-  batch: string
-  attendancePercentage: number
-  status: string
-}
-interface ClassSession {
-  id: string
-  className: string
-  startTime: string
-  endTime: string
-  room: string
-  date: string
-  status: string
-  subject: string
-  topicsPlanned: string[]
-  attendanceMarked: boolean
-}
-const facultyStudents: FacultyStudent[] = []
-const classSessions: ClassSession[] = []
-const currentFaculty = { name: 'Faculty', department: 'General' }
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  serverTimestamp,
+  limit
+} from 'firebase/firestore'
+import { db } from '@/Firebase/config'
+import { useAuth } from '@/modules/auth/context/AuthContext'
 
 interface ScheduleItem {
   id: string
@@ -44,23 +32,15 @@ interface ScheduleItem {
   originalDate?: string
   originalTime?: string
   reason?: string
+  collegeId?: string
 }
 
-const initialSchedule: ScheduleItem[] = classSessions.map((s: ClassSession) => ({
-  id: s.id,
-  subject: s.subject,
-  topic: s.topicsPlanned[0] || 'General',
-  date: s.date,
-  time: s.startTime,
-  duration: '1.5 hrs',
-  room: s.room,
-  batch: s.className,
-  students: facultyStudents.filter((st: FacultyStudent) => st.batch === s.className).length || 42,
-  status: s.status as any,
-}))
-
 export default function FacultyReschedule() {
-  const [schedules, setSchedules] = useState<ScheduleItem[]>(initialSchedule)
+  const { user } = useAuth()
+  const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || ''
+
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selected, setSelected] = useState<ScheduleItem | null>(null)
   const [newDate, setNewDate] = useState('')
@@ -69,6 +49,87 @@ export default function FacultyReschedule() {
   const [reason, setReason] = useState('')
   const [activeTab, setActiveTab] = useState<'upcoming' | 'rescheduled' | 'cancelled'>('upcoming')
   const [searchQuery, setSearchQuery] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const fetchScheduleData = useCallback(async () => {
+    if (!collegeId) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      // 1. Fetch classSessions
+      const sessionQuery = query(
+        collection(db, 'classSessions'),
+        where('collegeId', '==', collegeId),
+        limit(100)
+      )
+      const sessionSnap = await getDocs(sessionQuery).catch(() => null)
+      const loaded: ScheduleItem[] = []
+
+      if (sessionSnap && !sessionSnap.empty) {
+        sessionSnap.docs.forEach(d => {
+          const data = d.data()
+          loaded.push({
+            id: d.id,
+            subject: data.subject || 'Subject',
+            topic: data.topic || data.topicsPlanned?.[0] || 'General Session',
+            date: data.date || new Date().toISOString().split('T')[0],
+            time: data.startTime || data.time || '10:00',
+            duration: data.duration || '1 hr',
+            room: data.room || 'Room 101',
+            batch: data.batch || data.className || '2026',
+            students: Number(data.studentsCount || data.students) || 30,
+            status: data.status || 'scheduled',
+            originalDate: data.originalDate,
+            originalTime: data.originalTime,
+            reason: data.reason,
+            collegeId: data.collegeId,
+          })
+        })
+      }
+
+      // 2. If no classSessions yet, fetch weeklySchedules to synthesize current sessions
+      if (loaded.length === 0) {
+        const weeklyQuery = query(
+          collection(db, 'weeklySchedules'),
+          where('collegeId', '==', collegeId),
+          limit(50)
+        )
+        const weeklySnap = await getDocs(weeklyQuery).catch(() => null)
+        if (weeklySnap) {
+          const today = new Date()
+          const todayStr = today.toISOString().split('T')[0]
+          weeklySnap.docs.forEach((d, idx) => {
+            const data = d.data()
+            loaded.push({
+              id: `sched_${d.id}`,
+              subject: data.subject || 'Subject',
+              topic: `${data.subject || 'Class'} (${data.branch || ''})`,
+              date: todayStr,
+              time: data.startTime || '10:00',
+              duration: '1 hr',
+              room: data.room || 'Room 101',
+              batch: data.batch || '2026',
+              students: 35,
+              status: 'scheduled',
+              collegeId: data.collegeId,
+            })
+          })
+        }
+      }
+
+      setSchedules(loaded)
+    } catch (err) {
+      console.error('[FacultyReschedule] fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [collegeId])
+
+  useEffect(() => {
+    fetchScheduleData()
+  }, [fetchScheduleData])
 
   const handleReschedule = (item: ScheduleItem) => {
     setSelected(item)
@@ -79,27 +140,116 @@ export default function FacultyReschedule() {
     setShowModal(true)
   }
 
-  const confirmReschedule = () => {
-    if (!selected || !newDate || !newTime) return
-    setSchedules(prev => prev.map(s =>
-      s.id === selected.id
-        ? { ...s, originalDate: s.date, originalTime: s.time, date: newDate, time: newTime, room: newRoom || s.room, status: 'rescheduled' as const, reason }
-        : s
-    ))
-    setShowModal(false)
-    setSelected(null)
+  const confirmReschedule = async () => {
+    if (!selected || !newDate || !newTime || !collegeId) return
+    setSubmitting(true)
+
+    try {
+      if (selected.id.startsWith('sched_')) {
+        // Create new classSession record in Firestore
+        const docRef = await addDoc(collection(db, 'classSessions'), {
+          collegeId,
+          subject: selected.subject,
+          topic: selected.topic,
+          date: newDate,
+          startTime: newTime,
+          room: newRoom || selected.room,
+          batch: selected.batch,
+          originalDate: selected.date,
+          originalTime: selected.time,
+          status: 'rescheduled',
+          reason: reason || 'Schedule adjustment',
+          createdBy: user?.uid || '',
+          createdByName: user?.name || 'Faculty',
+          createdAt: serverTimestamp(),
+        })
+
+        setSchedules(prev => prev.map(s =>
+          s.id === selected.id
+            ? {
+                ...s,
+                id: docRef.id,
+                originalDate: s.date,
+                originalTime: s.time,
+                date: newDate,
+                time: newTime,
+                room: newRoom || s.room,
+                status: 'rescheduled',
+                reason,
+              }
+            : s
+        ))
+      } else {
+        // Update existing classSession doc
+        await updateDoc(doc(db, 'classSessions', selected.id), {
+          date: newDate,
+          startTime: newTime,
+          room: newRoom || selected.room,
+          originalDate: selected.originalDate || selected.date,
+          originalTime: selected.originalTime || selected.time,
+          status: 'rescheduled',
+          reason: reason || 'Schedule adjustment',
+          updatedAt: serverTimestamp(),
+        })
+
+        setSchedules(prev => prev.map(s =>
+          s.id === selected.id
+            ? {
+                ...s,
+                originalDate: s.originalDate || s.date,
+                originalTime: s.originalTime || s.time,
+                date: newDate,
+                time: newTime,
+                room: newRoom || s.room,
+                status: 'rescheduled',
+                reason,
+              }
+            : s
+        ))
+      }
+
+      setShowModal(false)
+      setSelected(null)
+    } catch (err) {
+      console.error('[FacultyReschedule] reschedule error:', err)
+      // Fallback local update
+      setSchedules(prev => prev.map(s =>
+        s.id === selected.id
+          ? { ...s, originalDate: s.date, originalTime: s.time, date: newDate, time: newTime, room: newRoom || s.room, status: 'rescheduled', reason }
+          : s
+      ))
+      setShowModal(false)
+      setSelected(null)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  const handleCancel = (id: string) => {
-    setSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'cancelled' as const } : s))
+  const handleCancel = async (id: string) => {
+    try {
+      if (!id.startsWith('sched_')) {
+        await updateDoc(doc(db, 'classSessions', id), {
+          status: 'cancelled',
+          updatedAt: serverTimestamp(),
+        })
+      }
+      setSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'cancelled' } : s))
+    } catch (err) {
+      console.error('[FacultyReschedule] cancel error:', err)
+      setSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'cancelled' } : s))
+    }
   }
 
-  const filtered = schedules.filter(s => {
-    const matchesSearch = s.topic.toLowerCase().includes(searchQuery.toLowerCase()) || s.batch.toLowerCase().includes(searchQuery.toLowerCase())
-    if (activeTab === 'upcoming') return s.status === 'scheduled' && matchesSearch
-    if (activeTab === 'rescheduled') return s.status === 'rescheduled' && matchesSearch
-    return s.status === 'cancelled' && matchesSearch
-  })
+  const filtered = useMemo(() => {
+    return schedules.filter(s => {
+      const matchesSearch = s.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            s.batch.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            s.subject.toLowerCase().includes(searchQuery.toLowerCase())
+      if (activeTab === 'upcoming') return s.status === 'scheduled' && matchesSearch
+      if (activeTab === 'rescheduled') return s.status === 'rescheduled' && matchesSearch
+      return s.status === 'cancelled' && matchesSearch
+    })
+  }, [schedules, searchQuery, activeTab])
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -111,16 +261,15 @@ export default function FacultyReschedule() {
     }
   }
 
-  const stats = [
-    { label: 'Total', value: schedules.length, color: 'text-teal-400' },
+  const stats = useMemo(() => [
+    { label: 'Total Classes', value: schedules.length, color: 'text-teal-400' },
     { label: 'Scheduled', value: schedules.filter(s => s.status === 'scheduled').length, color: 'text-blue-400' },
     { label: 'Rescheduled', value: schedules.filter(s => s.status === 'rescheduled').length, color: 'text-amber-400' },
     { label: 'Cancelled', value: schedules.filter(s => s.status === 'cancelled').length, color: 'text-rose-400' },
-  ]
+  ], [schedules])
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
-      <NotConnectedBanner message="Reschedule requests are not yet read from or written to Firestore. Changes made here are local only." />
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Link to="/faculty" className="p-2 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all shadow-sm">
@@ -128,7 +277,7 @@ export default function FacultyReschedule() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reschedule Classes</h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm">Manage your class schedule • {currentFaculty.name}</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Manage class timing adjustments • {user?.name || 'Faculty'}</p>
         </div>
       </div>
 
@@ -148,7 +297,7 @@ export default function FacultyReschedule() {
           <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by topic or batch..."
+            placeholder="Search by topic, subject, or batch..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
@@ -161,7 +310,7 @@ export default function FacultyReschedule() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeTab === tab
-                  ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                  ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30'
                   : 'bg-white dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50'
               }`}
             >
@@ -172,80 +321,87 @@ export default function FacultyReschedule() {
       </div>
 
       {/* Schedule List */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 rounded-2xl p-12 text-center">
-            <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-600 dark:text-slate-400">No {activeTab} classes found</p>
-          </div>
-        ) : (
-          filtered.map(item => (
-            <div key={item.id} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm">
-              <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2 flex-wrap">
-                    <h3 className="font-semibold text-slate-900 dark:text-white">{item.topic}</h3>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(item.status)}`}>
-                      {item.status}
-                    </span>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full">{item.batch}</span>
-                  </div>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5" /> {item.subject}
-                  </p>
-
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-700 dark:text-slate-300">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-teal-400" />
-                      {item.date}
-                      {item.originalDate && <span className="text-slate-500 line-through ml-1">({item.originalDate})</span>}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-blue-400" />
-                      {item.time}
-                      {item.originalTime && <span className="text-slate-500 line-through ml-1">({item.originalTime})</span>}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-amber-400" />
-                      {item.room}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4 text-purple-400" />
-                      {item.students} students
-                    </span>
-                  </div>
-
-                  {item.reason && (
-                    <div className="mt-3 flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2 w-fit">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>Rescheduled: {item.reason}</span>
+      {loading ? (
+        <div className="py-20 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-teal-400 mx-auto mb-2" />
+          <p className="text-sm text-slate-500">Loading schedule sessions...</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.length === 0 ? (
+            <div className="bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 rounded-2xl p-12 text-center">
+              <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-600 dark:text-slate-400">No {activeTab} classes found</p>
+            </div>
+          ) : (
+            filtered.map(item => (
+              <div key={item.id} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm">
+                <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h3 className="font-semibold text-slate-900 dark:text-white">{item.topic}</h3>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(item.status)}`}>
+                        {item.status}
+                      </span>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full">{item.batch}</span>
                     </div>
-                  )}
-                </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5" /> {item.subject}
+                    </p>
 
-                <div className="flex gap-2">
-                  {item.status !== 'cancelled' && item.status !== 'completed' && (
-                    <>
-                      <button
-                        onClick={() => handleReschedule(item)}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-sm font-medium hover:bg-amber-500/20 transition-all"
-                      >
-                        Reschedule
-                      </button>
-                      <button
-                        onClick={() => handleCancel(item.id)}
-                        className="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 text-sm font-medium hover:bg-rose-500/20 transition-all"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
+                    <div className="flex flex-wrap gap-4 text-sm text-slate-700 dark:text-slate-300">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4 text-teal-400" />
+                        {item.date}
+                        {item.originalDate && <span className="text-slate-400 line-through ml-1">({item.originalDate})</span>}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-blue-400" />
+                        {item.time}
+                        {item.originalTime && <span className="text-slate-400 line-through ml-1">({item.originalTime})</span>}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-amber-400" />
+                        {item.room}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-purple-400" />
+                        {item.students} students
+                      </span>
+                    </div>
+
+                    {item.reason && (
+                      <div className="mt-3 flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2 w-fit">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Rescheduled: {item.reason}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {item.status !== 'cancelled' && item.status !== 'completed' && (
+                      <>
+                        <button
+                          onClick={() => handleReschedule(item)}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20 text-sm font-medium hover:bg-amber-500/20 transition-all shadow-sm"
+                        >
+                          Reschedule
+                        </button>
+                        <button
+                          onClick={() => handleCancel(item.id)}
+                          className="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20 text-sm font-medium hover:bg-rose-500/20 transition-all shadow-sm"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Reschedule Modal */}
       {showModal && selected && (
@@ -270,7 +426,7 @@ export default function FacultyReschedule() {
                   type="date"
                   value={newDate}
                   onChange={e => setNewDate(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+                  className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm"
                 />
               </div>
               <div>
@@ -279,7 +435,7 @@ export default function FacultyReschedule() {
                   type="time"
                   value={newTime}
                   onChange={e => setNewTime(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+                  className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm"
                 />
               </div>
               <div>
@@ -288,17 +444,17 @@ export default function FacultyReschedule() {
                   type="text"
                   value={newRoom}
                   onChange={e => setNewRoom(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+                  className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Reason (optional)</label>
+                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Reason</label>
                 <textarea
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   rows={2}
-                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm resize-none"
-                  placeholder="Why is this being rescheduled?"
+                  className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm resize-none"
+                  placeholder="e.g. Special laboratory demonstration session"
                 />
               </div>
             </div>
@@ -306,16 +462,18 @@ export default function FacultyReschedule() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowModal(false)}
+                disabled={submitting}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-all text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmReschedule}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition-all text-sm flex items-center justify-center gap-2"
+                disabled={submitting || !newDate || !newTime}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-40"
               >
-                <Check className="w-4 h-4" />
-                Confirm
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                {submitting ? 'Confirming...' : 'Confirm Reschedule'}
               </button>
             </div>
           </div>
