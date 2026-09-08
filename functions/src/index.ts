@@ -16,6 +16,7 @@ admin.initializeApp()
 
 // ─── Import routes ───
 import { router as aiQuestionsRouter } from './routes/ai-questions'
+import { router as aiChatRouter } from './routes/ai-chat'
 import { router as questionsRouter } from './routes/questions'
 import { router as papersRouter } from './routes/papers'
 import { router as configRouter } from './routes/config'
@@ -104,8 +105,12 @@ app.get('/', healthHandler)
 // ─── Mount routes ───
 // Support both /api/* and /* paths because Firebase Functions v2 strips the function name
 // from the URL. Calling https://.../api/ai/generate-questions arrives as /ai/generate-questions
+app.use('/api/ai-chat', aiChatRouter)
+app.use('/ai-chat', aiChatRouter)
 app.use('/api/ai-questions', aiQuestionsRouter)
 app.use('/ai-questions', aiQuestionsRouter)
+app.use('/api/ai', aiChatRouter)
+app.use('/ai', aiChatRouter)
 app.use('/api/ai', aiQuestionsRouter)
 app.use('/ai', aiQuestionsRouter)
 app.use('/api/questions', questionsRouter)
