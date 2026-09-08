@@ -136,10 +136,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // FIX: Removed secrets array to avoid overlap error "Secret env var overlaps non-secret env var"
 // GEMINI_API_KEY etc should be set via regular env vars (.env file) or Firebase env config
 // If you want to use Secret Manager, set them ONLY as secrets and remove from .env
+// Memory: the PDF routes launch headless Chrome (utils/pdfRenderer.ts); 512MiB
+// was routinely OOM-killed mid-render, so this function gets 2GiB.
 export const api = onRequest(
   {
     region: 'asia-south1',
-    memory: '512MiB',
+    memory: '2GiB',
     timeoutSeconds: 60,
     minInstances: 0,
     maxInstances: 10,

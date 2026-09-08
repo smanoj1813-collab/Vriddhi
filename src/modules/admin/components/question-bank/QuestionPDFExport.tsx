@@ -37,16 +37,19 @@ const QuestionPDFExport: React.FC<QuestionPDFExportProps> = ({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const handleOpen = () => {
     setOpen(true)
     setSelected(new Set(questions.map((q) => q.id)))
     setError(null)
+    setNotice(null)
   }
 
   const handleClose = () => {
     setOpen(false)
     setError(null)
+    setNotice(null)
   }
 
   const toggleSelect = (id: string) => {
@@ -74,10 +77,17 @@ const QuestionPDFExport: React.FC<QuestionPDFExportProps> = ({
 
     setLoading(true)
     setError(null)
+    setNotice(null)
     try {
       const selectedIds = Array.from(selected)
-      await downloadQuestionsPDF(selectedIds, title)
-      handleClose()
+      // The selected question objects are passed so the in-browser renderer
+      // can take over if the server answers 503 { fallback: 'client' }.
+      const result = await downloadQuestionsPDF(selectedIds, title, undefined, { questions })
+      if (result.renderedBy === 'client' && result.notice) {
+        setNotice(result.notice)
+      } else {
+        handleClose()
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to download PDF')
     } finally {
@@ -103,6 +113,11 @@ const QuestionPDFExport: React.FC<QuestionPDFExportProps> = ({
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
+            </Alert>
+          )}
+          {notice && (
+            <Alert severity="info" sx={{ mb: 2 }} onClose={() => setNotice(null)}>
+              {notice}
             </Alert>
           )}
 

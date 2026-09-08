@@ -3,12 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles, Send, Bot, User, Trash2,
-  Users, FileText, AlertTriangle, ShieldCheck, MessageSquare
+  Users, FileText, AlertTriangle, ShieldCheck, MessageSquare, WifiOff
 } from 'lucide-react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 import { db } from '@/Firebase/config';
 import { collection, getDocs } from 'firebase/firestore';
-import { sendAIChatMessage, type AIChatMessage } from '@/shared/services/aiChatService';
+import { sendAIChatMessage, type AIChatMessage, type AIChatReplySource } from '@/shared/services/aiChatService';
 import ChatMarkdown from '@/shared/components/chat/ChatMarkdown';
 import ChatActionPills from '@/shared/components/chat/ChatActionPills';
 import CopyMessageButton from '@/shared/components/chat/CopyMessageButton';
@@ -27,7 +27,10 @@ export default function AIAgentPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
+  /** `local` = the AI backend was unreachable and the offline composer answered. */
+  const [replySource, setReplySource] = useState<AIChatReplySource | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isOffline = replySource === 'local';
 
   // Live Stats State
   const [stats, setStats] = useState({
@@ -132,8 +135,10 @@ export default function AIAgentPage() {
         content: reply.content,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         actions: reply.actions,
+        source: reply.source,
       };
 
+      setReplySource(reply.source);
       setMessages(prev => [...prev, aiMsg]);
     } catch {
       setMessages(prev => [
@@ -168,9 +173,20 @@ export default function AIAgentPage() {
               <Sparkles className="w-6 h-6" />
             </div>
             <h1 className="text-2xl font-extrabold text-white">AI Agent Command Center</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Active v2.1
-            </span>
+            {isOffline ? (
+              <span
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                title="The AI service could not be reached — answers are composed locally from built-in guidance."
+                data-testid="ai-chat-offline-indicator"
+              >
+                <WifiOff className="w-3.5 h-3.5" />
+                Offline answers
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Active v2.1
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-300">
             Intelligent copilot for campus analytics, exam drafting, and institutional decision support.

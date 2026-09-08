@@ -30,7 +30,16 @@ Admin and faculty AI question generation, question bank CRUD/linking, paper buil
 
 ### Frontend (admin + faculty)
 - **API URL consistency**
-  - `admin/api/client`, `admin/api/aiQuestionApi`, `shared/api/client`, `pdfDownloader` now prefer `VITE_API_BASE_URL`, then `VITE_API_URL`, then the Cloud Functions URL. Previously several clients fell back to `localhost:3000/api` or `localhost:5000/api`.
+  - > **Correction (base-URL wiring fix):** an earlier revision of this note claimed that
+    > `admin/api/client`, `shared/api/client` and `pdfDownloader` shared this logic. Neither
+    > `client` module existed, and the two clients that did exist encoded *opposite*
+    > conventions (`pdfDownloader` appended `/api` to a value that already ended in `/api`,
+    > producing `…/api/api/papers/:id/pdf` → 404, while `aiChatService` used a relative URL that
+    > the SPA rewrite answered with `index.html`). No production client reached the function.
+  - All clients (`shared/services/aiChatService`, `shared/utils/pdfDownloader`,
+    `admin/api/aiQuestionApi`) now import the single normaliser `src/shared/api/apiBase.ts`,
+    which prefers `VITE_API_BASE_URL`, then `VITE_API_URL`, then the Cloud Functions URL, and
+    appends `/api` only when absent. Non-JSON "successes" are rejected by `assertJsonResponse`.
   - API clients now use Firebase `getIdToken()` when no legacy token is stored.
 - **Question bank services un-mocked**
   - `src/services/questionBankAPI.ts`, `src/modules/admin/services/questionBankAPI.ts`, `src/modules/admin/api/questions.ts`, and `src/api/questions.ts` now delegate to the real Firestore-backed `src/modules/admin/api/questionBankApi.ts` instead of in-memory mocks / stubbed HTTP endpoints.

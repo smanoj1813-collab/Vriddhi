@@ -162,11 +162,30 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
-# Backend API base URL (optional for local dev; used in production)
-VITE_API_BASE_URL=http://localhost:5001/your-project/asia-south1/api
+# Backend API base URL — the `api` Cloud Function (see "API base URL" below)
+VITE_API_BASE_URL=https://asia-south1-your-project.cloudfunctions.net/api
 ```
 
 The frontend reads these via `import.meta.env.VITE_*` in `src/Firebase/config.ts`.
+
+#### API base URL
+
+Every browser call to the Express `api` function (AI chat, AI question generation, PDF export)
+goes through **one** normaliser, `src/shared/api/apiBase.ts`. It reads `VITE_API_BASE_URL`
+(or the legacy `VITE_API_URL`), trims a trailing slash and appends `/api` only when it is
+missing, so all of these are equivalent:
+
+```
+https://asia-south1-your-project.cloudfunctions.net
+https://asia-south1-your-project.cloudfunctions.net/api
+https://asia-south1-your-project.cloudfunctions.net/api/
+```
+
+If the variable is unset the production function URL is used. Do **not** build API URLs
+anywhere else — use `apiUrl('/papers/…')` from `apiBase.ts`. Firebase Hosting has a single
+SPA rewrite (`** → /index.html`), so a relative `fetch('/api/…')` in production would receive
+`index.html` with HTTP 200; `assertJsonResponse()` turns that into a loud error instead of
+letting it masquerade as a reply.
 
 ### Run locally
 
@@ -176,6 +195,24 @@ npm run dev
 
 Vite serves the app at `http://localhost:5173`. The backend functions can be run locally with
 the Firebase emulator suite (see below).
+
+To exercise the real function from the dev server instead of the deployed one, set
+`VITE_API_BASE_URL=/api` in `.env.local` and start the Functions emulator. `vite.config.ts`
+proxies same-origin `/api/*` requests to
+`http://localhost:5001/<VITE_FIREBASE_PROJECT_ID>/asia-south1/api` (override the target with
+`VITE_DEV_API_PROXY_TARGET`). The proxy only exists in `npm run dev`; production builds always
+call the absolute function URL.
+
+```bash
+# terminal 1
+npm --prefix functions run serve        # build + firebase emulators:start --only functions
+# terminal 2
+VITE_API_BASE_URL=/api npm run dev
+```
+
+**Unit tests:** `npm run test:unit` (frontend: base-URL normaliser + PDF response contract) and
+`npm --prefix functions run test:unit` (backend, including the Puppeteer renderer). Both run on
+plain `node --test` via `tsx`.
 
 ## Firebase setup
 
@@ -239,6 +276,43 @@ Set these in the `functions/` environment (e.g. `functions/.env` for local dev, 
 `firebase functions:config:set` / Secret Manager for production). Provider availability is
 reported by `/api/health`.
 
+## PDF export (Puppeteer)
+
+`GET /api/papers/:id/pdf` and `POST /api/questions/export/pdf` render HTML to PDF with headless
+Chrome through the shared helper `functions/src/utils/pdfRenderer.ts` (the only place that
+calls `puppeteer.launch`). It resolves the browser binary in this order, checking each path
+with `fs.existsSync`:
+
+1. `CHROME_PATH`
+2. `PUPPETEER_EXECUTABLE_PATH`
+3. the Chrome downloaded by Puppeteer's `postinstall` (`puppeteer.executablePath()`; the cache
+   is pinned to `functions/node_modules/.puppeteer_cache` by `functions/.puppeteerrc.cjs` so the
+   binary ships with the deployed bundle, per the
+   [Puppeteer guidance for Cloud Functions](https://pptr.dev/troubleshooting#running-puppeteer-on-google-cloud-functions))
+4. `/usr/bin/chromium`, `/usr/bin/chromium-browser`, `/usr/bin/google-chrome`,
+   `/usr/bin/google-chrome-stable`
+
+Every render runs a single launch with hard timeouts, closes the browser in `finally`, and
+`SIGKILL`s a hung Chrome so failures never leak processes. The `api` function runs with
+`memory: '2GiB'` for this reason.
+
+**Degradation contract.** When no usable Chrome is found (or it fails to launch) the routes do
+*not* return a generic 500. They answer
+
+```json
+HTTP 503
+{ "error": "pdf_renderer_unavailable", "fallback": "client", "probed": ["…"], "message": "…" }
+```
+
+and the web app (`src/shared/utils/pdfDownloader.ts`) renders the same document in the browser
+with jsPDF + html2canvas, showing a non-blocking *"styling is approximate"* notice. Genuine
+render faults stay on 500 (`pdf_render_timeout` / `pdf_render_failed`).
+
+**Local dev / CI:** `PUPPETEER_SKIP_DOWNLOAD=true npm --prefix functions ci` (or
+`--ignore-scripts`) skips the ~150 MB Chrome download; the PDF routes then return the 503
+contract above and the browser fallback takes over. To test real server rendering locally,
+point `CHROME_PATH` at any Chrome/Chromium binary in `functions/.env`.
+
 ## Available scripts
 
 **Root (`package.json`)**
@@ -274,6 +348,15 @@ firebase deploy --only functions
 
 `firebase.json` is configured to host the `dist/` folder with SPA rewrites to `index.html`, and
 runs `npm --prefix "$RESOURCE_DIR" run build` before deploying functions.
+
+**Puppeteer / Chrome on deploy.** The Cloud Build step that installs `functions/` dependencies
+must be allowed to run Puppeteer's `postinstall` (do **not** set `PUPPETEER_SKIP_DOWNLOAD` or
+use `--ignore-scripts` for the deploy install); `functions/.puppeteerrc.cjs` keeps the
+downloaded Chrome inside `node_modules/.puppeteer_cache` so it is deployed with the code. If
+you prefer to manage the binary yourself, set `CHROME_PATH` (or `PUPPETEER_EXECUTABLE_PATH`) for
+the runtime — `functions/.env` locally, or the function's environment variables in production —
+and the renderer will use it first. Without a resolvable binary, PDF routes answer
+`503 { fallback: 'client' }` and the browser renders the PDF instead (see *PDF export*).
 
 ## Data model
 

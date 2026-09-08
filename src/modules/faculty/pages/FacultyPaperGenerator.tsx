@@ -376,20 +376,29 @@ export default function FacultyPaperGenerator() {
     }
   }
 
-  const handleExportPDF = async () => {
+  /**
+   * Downloads a saved paper. When the server PDF renderer is unavailable the
+   * helper renders it in the browser (the paper is fetched from Firestore on
+   * demand) and we surface its "approximate styling" notice instead of an error.
+   */
+  const downloadSavedPaper = async (paperId: string, title: string) => {
     try {
-      let paperId = lastSavedPaperId
-      if (!paperId) {
-        await handleSubmitForApproval()
-        return
-      }
-      await downloadPaperPDF(paperId, paperTitle || 'question_paper')
-      setShowToast('PDF downloaded')
-      setTimeout(() => setShowToast(''), 3000)
+      const result = await downloadPaperPDF(paperId, title || 'question_paper')
+      setShowToast(result.renderedBy === 'client' ? (result.notice || 'PDF generated in your browser') : 'PDF downloaded')
+      setTimeout(() => setShowToast(''), result.renderedBy === 'client' ? 6000 : 3000)
     } catch (err) {
       setShowToast(err instanceof Error ? err.message : 'Failed to download PDF')
-      setTimeout(() => setShowToast(''), 3000)
+      setTimeout(() => setShowToast(''), 4000)
     }
+  }
+
+  const handleExportPDF = async () => {
+    const paperId = lastSavedPaperId
+    if (!paperId) {
+      await handleSubmitForApproval()
+      return
+    }
+    await downloadSavedPaper(paperId, paperTitle || 'question_paper')
   }
 
   const handlePrint = () => {
@@ -762,7 +771,7 @@ export default function FacultyPaperGenerator() {
                       </button>
                       <button
                         className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors"
-                        onClick={() => downloadPaperPDF(paper.id, paper.title || 'paper')}
+                        onClick={() => void downloadSavedPaper(paper.id, paper.title || 'paper')}
                       >
                         <Download className="w-4 h-4" /> Download
                       </button>

@@ -36,6 +36,12 @@ function isStandaloneTooling(rel) {
   return rel === 'src/scripts' || rel.startsWith('src/scripts/');
 }
 
+// Unit tests are executed by `npm run test:unit` (node --test), never imported
+// by the app, so they are reachable by construction rather than orphans.
+function isUnitTest(rel) {
+  return /\.test\.tsx?$/.test(rel);
+}
+
 function walk(dir) {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -116,6 +122,7 @@ function main() {
     .map(toRel)
     .filter((rel) => !isAmbient(rel))
     .filter((rel) => !isStandaloneTooling(rel))
+    .filter((rel) => !isUnitTest(rel))
     .sort();
 
   if (write) {

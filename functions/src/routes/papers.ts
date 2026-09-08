@@ -2,10 +2,10 @@
 // Backend routes for papers + PDF generation
 
 import express from 'express'
-import puppeteer from 'puppeteer'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
+import { sendRenderedPdf } from '../utils/pdfRenderer'
 
 const router = express.Router()
 
@@ -293,6 +293,10 @@ router.post('/:id/status', verifyAuth, requireRole(...APPROVE_ROLES), async (req
  * GET /api/papers/:id/pdf
  * Generate and download a paper as proper text-based PDF
  * Requires: auth
+ *
+ * Degradation contract (see utils/pdfRenderer.ts):
+ *   503 { error: 'pdf_renderer_unavailable', fallback: 'client' } → no Chrome
+ *   500 { error: 'pdf_render_timeout' | 'pdf_render_failed' }     → render fault
  */
 router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
@@ -328,36 +332,26 @@ router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: Authe
     // Build HTML for PDF
     const html = buildPaperHTML(paper, collegeName, user)
 
-    // Generate PDF with Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    // Render via the shared Puppeteer helper; it writes the response (PDF or JSON error) itself.
+    await sendRenderedPdf(res, html, {
+      filename: `${paper.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'paper'}.pdf`,
+      logTag: 'papers/pdf',
+      // 'load' rather than 'networkidle0': the document is inline, there is no network.
+      waitUntil: 'load',
+      pdf: {
+        margin: { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' },
+        displayHeaderFooter: true,
+        headerTemplate: `<div style="font-size:9px; width:100%; text-align:center; color:#666; padding:5px 0;">${escapeHtml(collegeName)} — ${escapeHtml(paper.title || 'Paper')}</div>`,
+        footerTemplate: `<div style="font-size:9px; width:100%; text-align:center; color:#666; padding:5px 0;">Page <span class="pageNumber"></span> of <span class="totalPages"></span> | Generated via VRIDDHI</div>`,
+      },
     })
-    const page = await browser.newPage()
-
-    // FIX: Use 'load' instead of 'networkidle0' for setContent
-    await page.setContent(html, { waitUntil: 'load' })
-
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' },
-      displayHeaderFooter: true,
-      headerTemplate: `<div style="font-size:9px; width:100%; text-align:center; color:#666; padding:5px 0;">${escapeHtml(collegeName)} — ${escapeHtml(paper.title || 'Paper')}</div>`,
-      footerTemplate: `<div style="font-size:9px; width:100%; text-align:center; color:#666; padding:5px 0;">Page <span class="pageNumber"></span> of <span class="totalPages"></span> | Generated via VRIDDHI</div>`,
-    })
-
-    await browser.close()
-
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename="${paper.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'paper'}.pdf"`)
-    res.setHeader('Content-Length', pdf.length)
-    res.send(pdf)
     return
-
   } catch (error: any) {
-    console.error('[PDF Generation] Error:', error)
-    res.status(500).json({ message: error.message || 'Failed to generate PDF' })
+    // Only Firestore / HTML-building faults reach here; renderer faults are handled by sendRenderedPdf.
+    console.error('[papers/pdf] Error:', error)
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'pdf_render_failed', message: error.message || 'Failed to generate PDF' })
+    }
     return
   }
 })

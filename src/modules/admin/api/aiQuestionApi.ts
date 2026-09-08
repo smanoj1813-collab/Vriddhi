@@ -1,6 +1,7 @@
 // src/api/aiQuestionApi.ts
 // ─── AI Question Generation API — Backend Agent Integration ─────
 
+import { apiUrl, assertJsonResponse } from '@/shared/api/apiBase';
 import { createQuestion } from '../../admin/api/questionBankApi';
 
 import type {
@@ -28,12 +29,8 @@ export type {
 // ═══════════════════════════════════════════════════════════════════════
 // BACKEND API CLIENT
 // ═══════════════════════════════════════════════════════════════════════
-
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  'https://asia-south1-vriddhi-academic.cloudfunctions.net/api'
-).replace(/\/$/, '');
+// Base URL comes from the shared normaliser in src/shared/api/apiBase.ts —
+// never redefine it here.
 
 async function getBearerToken(): Promise<string | null> {
   const stored = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('vriddhi_auth_token');
@@ -49,7 +46,8 @@ async function getBearerToken(): Promise<string | null> {
 
 async function apiPost<T>(endpoint: string, body: any): Promise<T> {
   const token = await getBearerToken();
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = apiUrl(endpoint);
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -58,10 +56,9 @@ async function apiPost<T>(endpoint: string, body: any): Promise<T> {
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-  }
+  // Rejects non-2xx with the server's own message, and 2xx-but-HTML (a hosting
+  // rewrite mishit) with a loud error naming the URL.
+  await assertJsonResponse(response, url);
 
   return response.json();
 }
