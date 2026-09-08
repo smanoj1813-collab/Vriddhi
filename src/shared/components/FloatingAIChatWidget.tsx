@@ -1,79 +1,52 @@
 // src/shared/components/FloatingAIChatWidget.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  MessageSquare, X, Send, Sparkles, Bot, User, Trash2,
-  ChevronDown, ExternalLink, RefreshCw, HelpCircle, ArrowRight
-} from 'lucide-react';
+import { MessageSquare, X, Send, Sparkles, Bot, User, Trash2 } from 'lucide-react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 import { sendAIChatMessage, type AIChatMessage } from '../services/aiChatService';
+import ChatMarkdown from './chat/ChatMarkdown';
+import ChatActionPills from './chat/ChatActionPills';
+import CopyMessageButton from './chat/CopyMessageButton';
 
+/**
+ * Global floating assistant.
+ *
+ * Deliberately free-form: there is no hardcoded prompt carousel. Every role
+ * types whatever they need in natural language, and the reply carries its own
+ * action pills derived from the question and the caller's role.
+ */
 export default function FloatingAIChatWidget() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const role = user?.role || 'student';
 
-  // Role-specific suggested prompts
-  const suggestedPrompts: Record<string, string[]> = {
-    superadmin: [
-      'Summarize multi-college metrics',
-      'How do I add a new university affiliation?',
-      'Check system provisioning health',
-    ],
-    admin: [
-      'Show students with attendance below 75%',
-      'What are our total fee collection figures?',
-      'How do I create an examination paper?',
-      'Summarize department faculty ratios',
-    ],
-    principal: [
-      'Overview of institutional attendance',
-      'Check pending HOD approvals',
-      'How to export university accreditation reports',
-    ],
-    hod: [
-      'Review pending faculty reschedules',
-      'Check subject performance analytics',
-      'Identify students needing remedial sessions',
-    ],
-    faculty: [
-      'How do I generate an exam paper with Bloom levels?',
-      'How to request a lecture reschedule?',
-      'Draft 3 practice questions on Financial Accounting',
-      'Check my assigned class schedule',
-    ],
-    student: [
-      'What is my current attendance percentage?',
-      'How do I view my pending fee balance?',
-      'What are the rules for exam eligibility?',
-      'Explain the difference between Cost & Financial Accounting',
-    ],
-  };
+  const welcomeMessage = (): AIChatMessage => ({
+    id: 'welcome',
+    role: 'assistant',
+    content: `### 👋 Hi **${user?.name || 'there'}**, I'm Vriddhi AI
+Ask me anything in plain language — a concept you want explained, your attendance, fee status, an upcoming test, or booking time with a professor.
 
-  const activeSuggestions = suggestedPrompts[role] || suggestedPrompts.student;
+> ${getWelcomeHint(role)}`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  });
 
   // Initialize welcome message
   useEffect(() => {
     if (messages.length === 0) {
-      const welcome: AIChatMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: `👋 Hi **${user?.name || 'there'}**! I am **Vriddhi AI**, your multi-role campus assistant.\n\nAsk me anything about your courses, attendance, fees, schedules, or question banks!`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages([welcome]);
+      setMessages([welcomeMessage()]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.name]);
 
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      inputRef.current?.focus();
     }
   }, [messages, isOpen]);
 
@@ -99,7 +72,7 @@ export default function FloatingAIChatWidget() {
 
       history.push({ role: 'user', content: text });
 
-      const replyContent = await sendAIChatMessage({
+      const reply = await sendAIChatMessage({
         messages: history,
         context: {
           role,
@@ -109,25 +82,12 @@ export default function FloatingAIChatWidget() {
         },
       });
 
-      // Check if response contains direct action links
-      let action: { label: string; path: string } | undefined;
-      const lowerReply = replyContent.toLowerCase();
-      if (lowerReply.includes('attendance tab') || lowerReply.includes('attendance portal')) {
-        action = { label: 'Go to Attendance', path: role === 'student' ? '/student/attendance' : '/admin/attendance' };
-      } else if (lowerReply.includes('fee portal') || lowerReply.includes('fee management')) {
-        action = { label: 'Open Fees', path: role === 'student' ? '/student/fees' : '/admin/fees' };
-      } else if (lowerReply.includes('question bank') || lowerReply.includes('paper builder')) {
-        action = { label: 'Open Question Bank', path: role === 'faculty' ? '/faculty/question-bank' : '/admin/question-bank' };
-      } else if (lowerReply.includes('reschedule')) {
-        action = { label: 'Open Reschedule', path: '/faculty/reschedule' };
-      }
-
       const assistantMsg: AIChatMessage = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
-        content: replyContent,
+        content: reply.content,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        action,
+        actions: reply.actions,
       };
 
       setMessages(prev => [...prev, assistantMsg]);
@@ -135,7 +95,7 @@ export default function FloatingAIChatWidget() {
       const errorMsg: AIChatMessage = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content: '⚠️ I encountered an error processing your query. Please try again or check your internet connection.',
+        content: '### ⚠️ Something went wrong\nI could not process that query. Please try again, or check your internet connection.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -154,10 +114,9 @@ export default function FloatingAIChatWidget() {
   const clearChat = () => {
     setMessages([
       {
+        ...welcomeMessage(),
         id: `welcome-${Date.now()}`,
-        role: 'assistant',
-        content: `Chat history cleared. How can I assist you now, **${user?.name || 'friend'}**?`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        content: `### 🧹 Chat cleared\nHow can I assist you now, **${user?.name || 'friend'}**?`,
       },
     ]);
   };
@@ -252,29 +211,29 @@ export default function FloatingAIChatWidget() {
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-bl-none shadow-sm'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap font-normal">
-                    {msg.content}
-                  </div>
+                  {msg.role === 'assistant' ? (
+                    <ChatMarkdown content={msg.content} />
+                  ) : (
+                    <div className="whitespace-pre-wrap font-normal">{msg.content}</div>
+                  )}
 
-                  {msg.action && (
-                    <button
-                      onClick={() => {
-                        navigate(msg.action!.path);
-                        setIsOpen(false);
-                      }}
-                      className="mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold transition-all group"
-                    >
-                      <span>{msg.action.label}</span>
-                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
+                  {msg.role === 'assistant' && (
+                    <ChatActionPills
+                      actions={msg.actions || []}
+                      size="sm"
+                      onAfterNavigate={() => setIsOpen(false)}
+                    />
                   )}
 
                   <div
-                    className={`text-[9px] mt-1 text-right ${
+                    className={`flex items-center justify-between gap-3 mt-1.5 text-[9px] ${
                       msg.role === 'user' ? 'text-teal-100' : 'text-slate-400'
                     }`}
                   >
-                    {msg.timestamp}
+                    <span>{msg.timestamp}</span>
+                    {msg.role === 'assistant' && (
+                      <CopyMessageButton text={msg.content} size="sm" className="text-[9px]" />
+                    )}
                   </div>
                 </div>
 
@@ -298,41 +257,52 @@ export default function FloatingAIChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Prompts Carousel */}
-          <div className="px-3 py-2 bg-slate-100 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex gap-1.5 overflow-x-auto no-scrollbar">
-            {activeSuggestions.map((prompt, idx) => (
+          {/* Input Bar — open-ended by design, no suggestion chips */}
+          <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything — concepts, attendance, fees, scheduling…"
+                rows={1}
+                className="flex-1 max-h-24 resize-none rounded-xl bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-teal-500 dark:focus:border-teal-400"
+              />
+
               <button
-                key={idx}
-                onClick={() => handleSend(prompt)}
-                disabled={loading}
-                className="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-all shadow-xs"
+                onClick={() => handleSend()}
+                disabled={!input.trim() || loading}
+                className="p-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white shadow-sm transition-all shrink-0 focus:outline-none"
+                aria-label="Send message"
               >
-                {prompt}
+                <Send className="w-4 h-4" />
               </button>
-            ))}
-          </div>
-
-          {/* Input Bar */}
-          <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-end gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything or choose a suggestion..."
-              rows={1}
-              className="flex-1 max-h-24 resize-none rounded-xl bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-teal-500 dark:focus:border-teal-400"
-            />
-
-            <button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || loading}
-              className="p-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white shadow-sm transition-all shrink-0 focus:outline-none"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+            </div>
+            <p className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400">
+              <MessageSquare className="w-2.5 h-2.5" />
+              Free-form answers only — nothing is submitted to the portal from this panel.
+            </p>
           </div>
         </div>
       )}
     </div>
   );
+}
+
+function getWelcomeHint(role: string): string {
+  switch (role) {
+    case 'student':
+      return 'I explain concepts, point you to study notes and scheduled tests, and help you book office hours with a professor.';
+    case 'faculty':
+      return 'Ask about attendance, your schedule and reschedules, question papers, or managing student office-hour requests.';
+    case 'hod':
+      return 'Ask about cohort analytics, pending approvals and departmental intervention options.';
+    case 'principal':
+    case 'admin':
+    case 'superadmin':
+      return 'Ask about institution-wide attendance, fee collection, exam operations and analytics.';
+    default:
+      return 'Ask a question and I will point you to the right screen.';
+  }
 }
