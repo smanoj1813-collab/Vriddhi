@@ -752,6 +752,35 @@ service cloud.firestore {
       allow write: if isSuperadmin();
     }
 
+    // Backs the faculty topic planner in src/hooks/useTopics.ts, which reads and
+    // writes this top-level collection straight from the browser (getDocs with
+    // where('facultyId','==',uid), addDoc, updateDoc, deleteDoc). It had no
+    // match block at all, so the default-deny catch-all below rejected even the
+    // page's first query and the Topics page failed with a permission error.
+    // The hook stamps facultyId from the signed-in uid and writes no collegeId,
+    // so tenancy here is ownership by uid — not sameCollege(). Faculty may list
+    // (staff-only) and may only create/update/delete rows they own; update
+    // additionally pins facultyId so a row cannot be handed to another faculty.
+    match /facultyTopics/{docId} {
+      allow get: if isSignedIn()
+        && (isSuperadmin() || isStaff()
+          || ('facultyId' in resource.data && resource.data.facultyId == request.auth.uid));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow create: if isSuperadmin()
+        || (isStaff()
+          && 'facultyId' in request.resource.data
+          && request.resource.data.facultyId == request.auth.uid);
+      allow update: if isSuperadmin()
+        || (isStaff()
+          && 'facultyId' in resource.data
+          && resource.data.facultyId == request.auth.uid
+          && request.resource.data.facultyId == resource.data.facultyId);
+      allow delete: if isSuperadmin()
+        || (isStaff()
+          && 'facultyId' in resource.data
+          && resource.data.facultyId == request.auth.uid);
+    }
+
     match /testPapers/{docId} {
       allow get: if isSignedIn()
         && (isSuperadmin() || isStaff()
