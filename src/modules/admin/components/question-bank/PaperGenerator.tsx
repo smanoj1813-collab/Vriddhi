@@ -86,6 +86,23 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
 
   const [activeStep, setActiveStep] = useState(0)
   const [showPreview, setShowPreview] = useState(false)
+  const [downloadState, setDownloadState] = useState<{ busy: boolean; notice?: string; error?: string }>({ busy: false })
+
+  const handleDownloadPDF = async () => {
+    const paper = generatedResult?.paper
+    if (!paper) return
+    setDownloadState({ busy: true })
+    try {
+      // Falls back to the in-browser renderer when the server answers 503 { fallback: 'client' }.
+      // The generated sections (with question text) are passed so no refetch is needed.
+      const result = await downloadPaperPDF(paper.id, paper.title || 'paper', {
+        paper: { ...paper, sections: generatedResult?.sections || paper.sections || [] },
+      })
+      setDownloadState({ busy: false, notice: result.renderedBy === 'client' ? result.notice : undefined })
+    } catch (err: any) {
+      setDownloadState({ busy: false, error: err?.message || 'Failed to download PDF' })
+    }
+  }
 
   // Paper config
   const [config, setConfig] = useState<{
@@ -710,6 +727,17 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
               </Paper>
             )}
 
+            {downloadState.error && (
+              <Alert severity="error" sx={{ mb: 3 }} onClose={() => setDownloadState({ busy: false })}>
+                {downloadState.error}
+              </Alert>
+            )}
+            {downloadState.notice && (
+              <Alert severity="info" sx={{ mb: 3 }} onClose={() => setDownloadState({ busy: false })}>
+                {downloadState.notice}
+              </Alert>
+            )}
+
             {generatedResult?.sections?.map((sec, idx) => (
               <Card key={idx} variant="outlined" sx={{ mb: 2 }}>
                 <CardContent>
@@ -771,9 +799,10 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
                 <Button
                   variant="outlined"
                   startIcon={<DownloadIcon />}
-                  onClick={() => downloadPaperPDF(generatedResult.paper!.id, generatedResult.paper!.title || 'paper')}
+                  onClick={handleDownloadPDF}
+                  disabled={downloadState.busy}
                 >
-                  Download PDF
+                  {downloadState.busy ? 'Preparing PDF…' : 'Download PDF'}
                 </Button>
               )}
               {generatedResult.paper && (

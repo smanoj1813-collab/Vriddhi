@@ -3,10 +3,10 @@
 // All routes require a verified Firebase auth user.
 
 import express from 'express'
-import puppeteer from 'puppeteer'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
+import { sendRenderedPdf } from '../utils/pdfRenderer'
 
 const router = express.Router()
 
@@ -411,23 +411,21 @@ router.post('/export/pdf', verifyAuth, requireRole(...DRAFT_ROLES), async (req: 
     }
 
     const html = buildQuestionsHTML(questions, title || 'Question Export')
-    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'load' })
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' },
-    })
-    await browser.close()
 
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename="${(title || 'questions').replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`)
-    res.setHeader('Content-Length', pdf.length)
-    res.send(pdf)
+    // Render via the shared Puppeteer helper; it writes the response (PDF or JSON error) itself.
+    // 503 { error: 'pdf_renderer_unavailable', fallback: 'client' } tells the web app to render locally.
+    await sendRenderedPdf(res, html, {
+      filename: `${(title || 'questions').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+      logTag: 'questions/export/pdf',
+      waitUntil: 'load',
+      pdf: { margin: { top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' } },
+    })
   } catch (error: any) {
-    console.error('[Questions PDF] Error:', error)
-    res.status(500).json({ message: error.message || 'Failed to generate PDF' })
+    // Only Firestore / HTML-building faults reach here; renderer faults are handled by sendRenderedPdf.
+    console.error('[questions/export/pdf] Error:', error)
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'pdf_render_failed', message: error.message || 'Failed to generate PDF' })
+    }
   }
 })
 

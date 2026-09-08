@@ -409,6 +409,22 @@ export default function FacultyPapers() {
     }
   }
 
+  /**
+   * Generated (non-uploaded) papers come from the API's Puppeteer renderer; if
+   * that is unavailable the helper renders the paper in the browser and we show
+   * its "approximate styling" notice instead of a dead error toast.
+   */
+  const handleGeneratedPaperDownload = async (paperId: string, title: string) => {
+    try {
+      const result = await downloadPaperPDF(paperId, title || 'paper')
+      setShowToast(result.renderedBy === 'client' ? (result.notice || 'PDF generated in your browser') : 'PDF downloaded')
+      setTimeout(() => setShowToast(''), result.renderedBy === 'client' ? 6000 : 3000)
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to download PDF')
+      setTimeout(() => setShowToast(''), 4000)
+    }
+  }
+
   const handleVerify = async (paperId: string) => {
     try {
       await reviewPaper({ paperId, action: 'approve' })
@@ -625,7 +641,7 @@ export default function FacultyPapers() {
                   <button
                     onClick={() => paper.filePath
                       ? void handlePaperFileDownload(paper.id)
-                      : void downloadPaperPDF(paper.id, paper.title || 'paper')}
+                      : void handleGeneratedPaperDownload(paper.id, paper.title || 'paper')}
                     className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors"
                   >
                     <Download className="w-4 h-4" /> Download

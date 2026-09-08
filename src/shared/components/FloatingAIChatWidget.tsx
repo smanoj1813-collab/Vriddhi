@@ -1,8 +1,8 @@
 // src/shared/components/FloatingAIChatWidget.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, Sparkles, Bot, User, Trash2 } from 'lucide-react';
+import { MessageSquare, X, Send, Sparkles, Bot, User, Trash2, WifiOff } from 'lucide-react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
-import { sendAIChatMessage, type AIChatMessage } from '../services/aiChatService';
+import { sendAIChatMessage, type AIChatMessage, type AIChatReplySource } from '../services/aiChatService';
 import ChatMarkdown from './chat/ChatMarkdown';
 import ChatActionPills from './chat/ChatActionPills';
 import CopyMessageButton from './chat/CopyMessageButton';
@@ -20,10 +20,17 @@ export default function FloatingAIChatWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
+  /**
+   * Where the most recent answer came from. `local` flips the header badge to
+   * "Offline answers" so a broken backend is visible instead of silently
+   * answering from the canned composer.
+   */
+  const [replySource, setReplySource] = useState<AIChatReplySource | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const role = user?.role || 'student';
+  const isOffline = replySource === 'local';
 
   const welcomeMessage = (): AIChatMessage => ({
     id: 'welcome',
@@ -88,8 +95,10 @@ Ask me anything in plain language — a concept you want explained, your attenda
         content: reply.content,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         actions: reply.actions,
+        source: reply.source,
       };
 
+      setReplySource(reply.source);
       setMessages(prev => [...prev, assistantMsg]);
     } catch (err) {
       const errorMsg: AIChatMessage = {
@@ -163,9 +172,20 @@ Ask me anything in plain language — a concept you want explained, your attenda
               <div>
                 <h3 className="text-sm font-bold leading-none flex items-center gap-1.5">
                   Vriddhi AI
-                  <span className="text-[10px] uppercase tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded-full font-semibold">
-                    Live
-                  </span>
+                  {isOffline ? (
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider bg-amber-400/90 text-amber-950 px-1.5 py-0.5 rounded-full font-semibold"
+                      title="The AI service could not be reached — answers are composed locally from built-in guidance."
+                      data-testid="ai-chat-offline-indicator"
+                    >
+                      <WifiOff className="w-3 h-3" />
+                      Offline answers
+                    </span>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                      Live
+                    </span>
+                  )}
                 </h3>
                 <p className="text-[11px] text-teal-100 font-medium mt-0.5">
                   {getRoleLabel()}
@@ -279,10 +299,17 @@ Ask me anything in plain language — a concept you want explained, your attenda
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            <p className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400">
-              <MessageSquare className="w-2.5 h-2.5" />
-              Free-form answers only — nothing is submitted to the portal from this panel.
-            </p>
+            {isOffline ? (
+              <p className="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+                <WifiOff className="w-2.5 h-2.5" />
+                Offline answers — the AI service is unreachable, so replies use built-in guidance only.
+              </p>
+            ) : (
+              <p className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400">
+                <MessageSquare className="w-2.5 h-2.5" />
+                Free-form answers only — nothing is submitted to the portal from this panel.
+              </p>
+            )}
           </div>
         </div>
       )}

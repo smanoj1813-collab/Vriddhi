@@ -38,16 +38,19 @@ const PaperPDFPreview: React.FC<PaperPDFPreviewProps> = ({
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   const handleOpen = () => {
     setOpen(true)
     setError(null)
+    setNotice(null)
   }
 
   const handleClose = () => {
     setOpen(false)
     setError(null)
+    setNotice(null)
   }
 
   const handleClientDownload = async () => {
@@ -70,8 +73,12 @@ const PaperPDFPreview: React.FC<PaperPDFPreviewProps> = ({
   const handleBackendDownload = async () => {
     setLoading(true)
     setError(null)
+    setNotice(null)
     try {
-      await downloadPaperPDF(paper.id, paper.title)
+      // Falls back to the in-browser renderer automatically when the server
+      // reports 503 { fallback: 'client' }; the paper is passed so no refetch is needed.
+      const result = await downloadPaperPDF(paper.id, paper.title, { paper, collegeName })
+      if (result.renderedBy === 'client' && result.notice) setNotice(result.notice)
     } catch (err: any) {
       setError(err.message || 'Failed to download PDF from server')
     } finally {
@@ -123,6 +130,11 @@ const PaperPDFPreview: React.FC<PaperPDFPreviewProps> = ({
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
+            </Alert>
+          )}
+          {notice && (
+            <Alert severity="info" sx={{ mb: 2 }} onClose={() => setNotice(null)}>
+              {notice}
             </Alert>
           )}
 

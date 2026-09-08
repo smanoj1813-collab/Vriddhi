@@ -29,6 +29,9 @@ jobs:
       - name: Check for dead code in src/
         run: node scripts/check-dead-code.cjs
 
+      - name: Frontend unit tests (API base URL + PDF contract)   # ← NEW
+        run: npm run test:unit
+
       - name: Build the frontend
         run: npm run build
 
@@ -58,3 +61,7 @@ jobs:
       - name: Build the functions
         working-directory: functions
         run: npm run build
+
+      - name: Functions unit tests   # ← NEW
+        working-directory: functions
+        run: npm run test:unit
