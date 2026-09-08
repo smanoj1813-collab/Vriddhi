@@ -75,7 +75,7 @@ const AIQuestionGenerator: React.FC<AIQuestionGeneratorProps> = ({
   onQuestionsSaved,
   defaultSubject,
   subjects: propSubjects,
-  batches = ['2024', '2025', '2026', '2027'],
+  batches = ['2026', '2027', '2028', '2029'],
   branches = DEFAULT_PROGRAMS,
 }) => {
   const { user } = useAuth();

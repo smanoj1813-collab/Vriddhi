@@ -92,9 +92,9 @@ function getNextOccurrence(dayOfWeek: DayOfWeek): string {
 
 // ─── CSV Template ─────────────────────────────────────
 const CSV_TEMPLATE = `subject,subjectCode,facultyId,facultyName,branch,batch,semester,division,section,room,dayOfWeek,startTime,endTime,type
-Business Statistics,BST101,faculty_id_here,Dr. Smith,B.Com,2024,4,A,A,301,monday,09:00,10:00,lecture
-Financial Accounting,FAC101,faculty_id_here,Dr. Jones,B.Com,2024,4,A,A,302,monday,10:00,11:00,lecture
-Computer Applications,CAP101,faculty_id_here,Dr. Lee,BCA,2024,4,B,B,303,tuesday,09:00,10:00,lab`
+Business Statistics,BST101,faculty_id_here,Dr. Smith,B.Com,2026,4,A,A,301,monday,09:00,10:00,lecture
+Financial Accounting,FAC101,faculty_id_here,Dr. Jones,B.Com,2026,4,A,A,302,monday,10:00,11:00,lecture
+Computer Applications,CAP101,faculty_id_here,Dr. Lee,BCA,2026,4,B,B,303,tuesday,09:00,10:00,lab`
 
 const AdminClassSchedule: React.FC = () => {
   const { user } = useAuth()

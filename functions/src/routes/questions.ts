@@ -14,6 +14,7 @@ const QUESTIONS_COLLECTION = 'questions'
 const PAPERS_COLLECTION = 'papers'
 
 const DRAFT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+const READ_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
 const BULK_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty']
 const DELETE_ROLES = ['superadmin', 'admin']
 
@@ -76,7 +77,7 @@ async function fetchCollegeQuestions(collegeId?: string, isSuperadmin = false): 
 // ═══════════════════════════════════════════════════════════════════════
 
 // GET /api/questions/stats
-router.get('/stats', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/stats', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!assertCollegeAccess(req, collegeId)) {
@@ -123,7 +124,7 @@ router.get('/stats', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // GET /api/questions/batch-branch
-router.get('/batch-branch', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/batch-branch', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!assertCollegeAccess(req, collegeId)) {
@@ -138,9 +139,13 @@ router.get('/batch-branch', verifyAuth, async (req: AuthenticatedRequest, res) =
     const configDoc = await db.collection('college_configs').doc(collegeId).get()
     const config = configDoc.data()
     res.json({
-      batches: config?.batches || ['2021-22', '2022-23', '2023-24', '2024-25'],
-      branches: config?.branches || ['CSE', 'ECE', 'ME', 'CE', 'IT', 'EEE'],
-      academicYears: config?.academicYears || ['1st Year', '2nd Year', '3rd Year', '4th Year'],
+      batches: config?.batches || ['2026-27', '2027-28', '2028-29', '2029-30'],
+      // Vriddhi is a NON-TECHNICAL UG/PG college (arts, commerce, science,
+      // management, computer applications). Engineering branch codes are never
+      // part of any seeded list — see src/shared/constants/academicPrograms.ts.
+      branches: config?.branches || ['B.A', 'B.Com', 'B.Sc', 'BBA', 'BCA', 'B.Ed', 'M.A', 'M.Com', 'M.Sc', 'MBA', 'MCA'],
+      // UG = 3 years, PG = 2 years; there is no 4th (engineering-style) year.
+      academicYears: config?.academicYears || ['1st Year', '2nd Year', '3rd Year'],
     })
   } catch (err: any) {
     console.error('[questions/batch-branch]', err)
@@ -149,7 +154,7 @@ router.get('/batch-branch', verifyAuth, async (req: AuthenticatedRequest, res) =
 })
 
 // GET /api/questions/pyq/years
-router.get('/pyq/years', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/pyq/years', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!assertCollegeAccess(req, collegeId)) {
@@ -169,7 +174,7 @@ router.get('/pyq/years', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // GET /api/questions/pyq/names
-router.get('/pyq/names', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/pyq/names', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!assertCollegeAccess(req, collegeId)) {
@@ -192,7 +197,7 @@ router.get('/pyq/names', verifyAuth, async (req: AuthenticatedRequest, res) => {
 })
 
 // GET /api/questions/duplicates
-router.get('/duplicates', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/duplicates', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     const text = (req.query.text as string || '').trim()
@@ -223,7 +228,7 @@ router.get('/duplicates', verifyAuth, async (req: AuthenticatedRequest, res) => 
 })
 
 // GET /api/questions
-router.get('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!assertCollegeAccess(req, collegeId)) {
@@ -431,7 +436,7 @@ router.post('/export/pdf', verifyAuth, requireRole(...DRAFT_ROLES), async (req: 
 // ═══════════════════════════════════════════════════════════════════════
 
 // GET /api/questions/:id/papers
-router.get('/:id/papers', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/:id/papers', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const qDoc = await db.collection(QUESTIONS_COLLECTION).doc(req.params.id).get()
     if (!qDoc.exists) {
@@ -572,7 +577,7 @@ router.post('/:id/clone', verifyAuth, requireRole(...BULK_ROLES), async (req: Au
 })
 
 // GET /api/questions/:id
-router.get('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/:id', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const docSnap = await db.collection(QUESTIONS_COLLECTION).doc(req.params.id).get()
     if (!docSnap.exists) {

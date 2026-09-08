@@ -288,7 +288,7 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     mappings.forEach(m => set.add(m.batch));
     // Also add common batches if empty
     if (set.size === 0) {
-      ['2023-2024', '2024-2025', '2025-2026'].forEach(b => set.add(b));
+      ['2026-2027', '2027-2028', '2028-2029'].forEach(b => set.add(b));
     }
     return Array.from(set).sort();
   }, [mappings]);

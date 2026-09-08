@@ -5,8 +5,8 @@ import { derivePaperState, validatePaperInput } from '../src/paperWorkflow'
 function paper(examType = 'Class Test') {
   return validatePaperInput({
     title: 'Data Structures Test',
-    subject: 'Computer Science',
-    branch: 'CSE',
+    subject: 'Computer Applications',
+    branch: 'BCA',
     batch: '2026',
     semester: '3',
     examType,

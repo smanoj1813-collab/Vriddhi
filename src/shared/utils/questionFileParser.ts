@@ -335,6 +335,6 @@ export function validateDraftQuestion(q: DraftQuestion): string[] {
 }
 
 export const SAMPLE_QUESTION_CSV = `text,subject,type,difficulty,unit,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName
-"State the accounting equation.","Financial Accounting","short_answer","easy","1",2,"","Assets = Liabilities + Capital","Basic identity","accounting","2024-25","B.Com",false,,
-"Which of these is a current asset?","Financial Accounting","mcq","easy","1",1,"Building|Inventory|Goodwill|Land","Inventory","Inventory is converted within a year","assets","2024-25","B.Com",false,,
-"Explain the functions of management with examples.","Business Management","long_answer","medium","2",10,"","","POSDCORB","management","2024-25","BBA",true,"2024","Semester End"`;
+"State the accounting equation.","Financial Accounting","short_answer","easy","1",2,"","Assets = Liabilities + Capital","Basic identity","accounting","2026-27","B.Com",false,,
+"Which of these is a current asset?","Financial Accounting","mcq","easy","1",1,"Building|Inventory|Goodwill|Land","Inventory","Inventory is converted within a year","assets","2026-27","B.Com",false,,
+"Explain the functions of management with examples.","Business Management","long_answer","medium","2",10,"","","POSDCORB","management","2026-27","BBA",true,"2026","Semester End"`;

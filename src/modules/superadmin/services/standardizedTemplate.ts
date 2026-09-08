@@ -55,10 +55,10 @@ export function generateCurriculumTemplate(): Blob {
     ['Field', 'Value'],
     ['University Name', 'University of Mysore'],
     ['Program Name', 'Bachelor of Business Administration'],
-    ['Scheme / Regulation', 'SEP 2025-2026'],
+    ['Scheme / Regulation', 'SEP 2026-2027'],
     ['Branch / Stream', 'BBA'],
     ['Total Semesters', '6'],
-    ['Academic Year', '2025-2026'],
+    ['Academic Year', '2026-2027'],
     ['Total Program Credits', ''],
     ['Total Program Marks', ''],
   ];
@@ -67,11 +67,11 @@ export function generateCurriculumTemplate(): Blob {
   // Sheet 3: Course Matrix
   const courseMatrix = [
     ['Semester', 'Course Code', 'Course Name', 'Short Name', 'Credits', 'Hours/Week', 'Total Hours', 'Total Marks', 'Internal Marks', 'External Marks', 'Course Type', 'Branch', 'Scheme'],
-    [3, 'BBA 3.1', 'Cost Accounting', 'Cost Acct', 5, 5, 68, 100, 20, 80, 'Major', 'BBA', 'SEP 2025'],
-    [3, 'BBA 3.2', 'Business Statistics II', 'Bus Stats II', 5, 5, 68, 100, 20, 80, 'Major', 'BBA', 'SEP 2025'],
-    [3, 'BBA 3.3', 'Business Environment', 'Bus Env', 5, 5, 68, 100, 20, 80, 'Major', 'BBA', 'SEP 2025'],
-    [3, 'BBA 3.4', 'Entrepreneurship and Startup Ecosystem', 'Entrepreneurship', 3, 3, 45, 100, 20, 80, 'Elective', 'BBA', 'SEP 2025'],
-    [3, 'BBA 3.5', 'Banking and Financial Services', 'Banking', 3, 3, 45, 100, 20, 80, 'Elective', 'BBA', 'SEP 2025'],
+    [3, 'BBA 3.1', 'Cost Accounting', 'Cost Acct', 5, 5, 68, 100, 20, 80, 'Major', 'BBA', 'SEP 2026'],
+    [3, 'BBA 3.2', 'Business Statistics II', 'Bus Stats II', 5, 5, 68, 100, 20, 80, 'Major', 'BBA', 'SEP 2026'],
+    [3, 'BBA 3.3', 'Business Environment', 'Bus Env', 5, 5, 68, 100, 20, 80, 'Major', 'BBA', 'SEP 2026'],
+    [3, 'BBA 3.4', 'Entrepreneurship and Startup Ecosystem', 'Entrepreneurship', 3, 3, 45, 100, 20, 80, 'Elective', 'BBA', 'SEP 2026'],
+    [3, 'BBA 3.5', 'Banking and Financial Services', 'Banking', 3, 3, 45, 100, 20, 80, 'Elective', 'BBA', 'SEP 2026'],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(courseMatrix), 'Course Matrix');
 

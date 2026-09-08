@@ -45,7 +45,7 @@ const typeLabelColors: Record<MaterialType, string> = {
   presentation: 'text-orange-400',
 }
 
-const BATCH_OPTIONS = ['All Batches', 'CTD 1', 'CTD 2', 'CTD 3', '2023-2024', '2024-2025', '2025-2026']
+const BATCH_OPTIONS = ['All Batches', 'CTD 1', 'CTD 2', 'CTD 3', '2026-2027', '2027-2028', '2028-2029']
 const TOPIC_OPTIONS = [
   'General', 'Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5',
   'Revision', 'Previous Year Questions', 'Case Studies', 'Practicals'

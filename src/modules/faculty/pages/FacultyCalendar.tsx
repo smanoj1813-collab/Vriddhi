@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock,
   MapPin, Users, BookOpen, X, AlertCircle,
@@ -112,6 +113,7 @@ export default function FacultyCalendar() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+      <NotConnectedBanner message="Events and sessions are not yet read from Firestore. The calendar renders from local state only." />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">

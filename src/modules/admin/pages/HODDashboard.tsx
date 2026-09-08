@@ -1,84 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useAuth } from '../../auth/context/AuthContext'
 import {
-  Shield, Users, Building2, CheckCircle, XCircle, FileText,
-  Search, Filter, BarChart3, Bell, Eye, Edit3, Download,
-  GraduationCap, BookOpen, TrendingUp, AlertTriangle,
-  Clock, Calendar, Activity, ChevronRight, ChevronDown,
-  MoreHorizontal, Mail, Phone
+  Shield, Users, Building2, CheckCircle, FileText,
+  Search, BarChart3, Eye, Download,
+  GraduationCap, BookOpen, TrendingUp,
+  Clock, Activity, ChevronDown, Mail, WifiOff
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+  LineChart, Line
 } from 'recharts'
+import { useDashboardData } from '../../admin/hooks/useDashboardData'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Student {
-  id: string
-  name: string
-  regNo: string
-  email: string
-  batch: string
-  year: string
-  attendance: number
-  avgScore: number
-  status: 'active' | 'inactive' | 'probation'
-  mentor: string
-}
-
-interface Faculty {
-  id: string
-  name: string
-  email: string
-  designation: string
-  subjects: string[]
-  studentCount: number
-  phone?: string
-}
-
-interface ApprovalItem {
-  id: string
-  type: 'schedule' | 'assessment' | 'material' | 'leave' | 'paper'
-  title: string
-  requester: string
-  requestedAt: string
-  status: 'pending' | 'approved' | 'rejected'
-  description?: string
-}
-
-interface SubjectStats {
-  name: string
-  avgScore: number
-  attendance: number
-  students: number
-  faculty: string
-}
-
-// ─── Mock Data — FILTERED BY DEPARTMENT (BA) ───────────────────────────────
-// In production, these come from API with ?department=BA filter
-
+// ─── Constants ────────────────────────────────────────────────────────────────
 const HOD_DEPT = 'BA'
-
-const MOCK_STUDENTS: Student[] = []; // TODO: Fetch from API
-
-const MOCK_FACULTY: Faculty[] = []; // TODO: Fetch from API
-
-const MOCK_APPROVALS: ApprovalItem[] = []; // TODO: Fetch from API
-
-const BATCH_PERFORMANCE: { batch: string; avgScore: number; attendance: number; students: number }[] = []; // TODO: Fetch from API
-
-const SUBJECT_STATS: SubjectStats[] = []; // TODO: Fetch from API
-
-const SCORE_TREND: { month: string; [key: string]: string | number }[] = []; // TODO: Fetch from API
-
-const BUDGET_DATA: { department: string; allocated: number; spent: number; remaining: number }[] = []; // TODO: Fetch from API
-
-const ATTENDANCE_DATA: { name: string; attendance: number; target: number }[] = []; // TODO: Fetch from API
-
-const ROLE_DISTRIBUTION: { name: string; value: number; color: string }[] = []; // TODO: Fetch from API
-
-const COLORS = ['#14b8a6', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b']
-const STATUS_COLORS = { active: '#14b8a6', probation: '#f59e0b', inactive: '#ef4444' }
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -153,22 +88,54 @@ function SectionHeader({ title, icon: Icon, action }: {
   )
 }
 
+// Honest placeholder for views that do not yet have a data source wired up.
+// It replaces the previous empty `MOCK_*` arrays so a figure of "0" can no
+// longer be mistaken for a real measurement.
+function NotConnected({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="glass-card p-10 text-center">
+      <WifiOff size={32} className="text-slate-500 mx-auto mb-3" />
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">{title}</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{description}</p>
+    </div>
+  )
+}
+
+function LoadingState() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="glass-card p-5 h-24">
+          <div className="h-3 w-24 bg-slate-700 rounded mb-3" />
+          <div className="h-6 w-16 bg-slate-700 rounded" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Tab Content Components ───────────────────────────────────────────────────
 
-function DepartmentOverview() {
+function DepartmentOverview({ data }: { data: ReturnType<typeof useDashboardData> }) {
   const { user } = useAuth()
   const dept = user?.department || HOD_DEPT
-  const totalStudents = MOCK_STUDENTS.length
-  const activeStudents = MOCK_STUDENTS.filter(s => s.status === 'active').length
-  const probationStudents = MOCK_STUDENTS.filter(s => s.status === 'probation').length
-  // Dividing by an empty cohort produced `NaN%` on screen, which reads as a number a
-  // principal could act on. An absent measurement is shown as a dash instead.
-  const avgAttendance = totalStudents
-    ? `${Math.round(MOCK_STUDENTS.reduce((acc, s) => acc + s.attendance, 0) / totalStudents)}%`
-    : '—'
-  const avgScore = totalStudents
-    ? (MOCK_STUDENTS.reduce((acc, s) => acc + s.avgScore, 0) / totalStudents).toFixed(1)
-    : '—'
+  const {
+    students, attendanceRecords, assessments, scores,
+    attendanceRate, passRate, activeAssessments,
+    weeklyAttendance, performanceTrend, branchTotals, topPerformers,
+  } = data
+
+  const totalStudents = students.length
+  const activeStudents = students.filter(s => s.status === 'active').length
+  const avgAttendance = attendanceRecords.length ? `${attendanceRate}%` : '—'
+  const avgPassRate = scores.length ? `${passRate}%` : '—'
+
+  const branchAttendance = useMemo(() =>
+    Object.entries(branchTotals).map(([course, v]) => ({
+      course,
+      present: v.totalPresent,
+      absent: v.totalAbsent,
+    })), [branchTotals])
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -177,7 +144,7 @@ function DepartmentOverview() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Welcome back, {user?.name?.split(' ')[0] || 'HOD'}</h2>
-            <p className="text-slate-500 dark:text-slate-400">Department of {dept} · {MOCK_FACULTY.length} Faculty · {totalStudents} Students · {MOCK_APPROVALS.filter(a => a.status === 'pending').length} Pending Approvals</p>
+            <p className="text-slate-500 dark:text-slate-400">Department of {dept} · {totalStudents} Students · {activeAssessments} Active Assessments</p>
           </div>
           <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400">
             <Building2 size={28} />
@@ -187,19 +154,10 @@ function DepartmentOverview() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Students" value={String(totalStudents)} color="teal" />
-        <StatCard icon={GraduationCap} label="Faculty" value={String(MOCK_FACULTY.length)} color="sky" />
+        <StatCard icon={Users} label="Students" value={String(totalStudents)} color="teal" />
         <StatCard icon={Activity} label="Avg Attendance" value={avgAttendance} color="amber" />
-        <StatCard icon={BookOpen} label="Avg Score" value={avgScore} color="violet" />
-        {/* These panels read from empty placeholders (`MOCK_STUDENTS = [] // TODO: Fetch
-            from API`), so every figure below is structurally zero — not a finding about
-            this department. The fabricated "+1.2% vs last month" deltas are gone for the
-            same reason: an invented trend is worse than no trend. */}
-        <p className="text-xs text-amber-600 dark:text-amber-400">
-          These overview panels are not connected to a data source yet, so 0 and — both mean
-          “not measured”. Department Students, Attendance, Grade Records and the rest of the
-          sidebar read live data.
-        </p>
+        <StatCard icon={BookOpen} label="Pass Rate" value={avgPassRate} color="violet" />
+        <StatCard icon={FileText} label="Active Assessments" value={String(activeAssessments)} color="sky" />
       </div>
 
       {/* Quick Stats Row 2 */}
@@ -215,11 +173,11 @@ function DepartmentOverview() {
         </div>
         <div className="glass-card p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400">
-            <AlertTriangle size={20} />
+            <FileText size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{probationStudents}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">On Probation</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{assessments.length}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Assessments</p>
           </div>
         </div>
         <div className="glass-card p-5 flex items-center gap-4">
@@ -227,8 +185,8 @@ function DepartmentOverview() {
             <Clock size={20} />
           </div>
           <div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{MOCK_APPROVALS.filter(a => a.status === 'pending').length}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Pending Approvals</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">{attendanceRecords.length}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Attendance Records</p>
           </div>
         </div>
       </div>
@@ -236,118 +194,126 @@ function DepartmentOverview() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Batch Performance Comparison</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Attendance This Week</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={BATCH_PERFORMANCE}>
+            <BarChart data={weeklyAttendance}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="batch" stroke="#94a3b8" fontSize={11} />
+              <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} />
               <YAxis stroke="#94a3b8" fontSize={12} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                labelStyle={{ color: '#e2e8f0' }}
-              />
-              <Bar dataKey="avgScore" fill="#14b8a6" name="Avg Score" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="attendance" fill="#0ea5e9" name="Attendance %" radius={[4, 4, 0, 0]} />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} labelStyle={{ color: '#e2e8f0' }} />
+              <Bar dataKey="present" fill="#14b8a6" name="Present" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent" fill="#64748b" name="Absent" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Score Trends by Batch</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Performance Trend</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={SCORE_TREND}>
+            <LineChart data={performanceTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
               <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-              <YAxis stroke="#94a3b8" fontSize={12} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                labelStyle={{ color: '#e2e8f0' }}
-              />
-              <Line type="monotone" dataKey="BA-A 2nd" stroke="#14b8a6" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="BA-B 2nd" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="BA-A 3rd" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="BA-B 3rd" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
+              <YAxis stroke="#94a3b8" fontSize={12} domain={[0, 100]} />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} labelStyle={{ color: '#e2e8f0' }} />
+              <Line type="monotone" dataKey="avg" stroke="#14b8a6" strokeWidth={2} dot={{ r: 3 }} name="Avg %" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Bottom Row: Attendance Trend + Pending Approvals */}
+      {/* Bottom Row: Attendance by course + top performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Department Attendance Trend</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Attendance by Course</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={ATTENDANCE_DATA}>
+            <BarChart data={branchAttendance}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-              <YAxis stroke="#94a3b8" fontSize={12} domain={[80, 100]} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                labelStyle={{ color: '#e2e8f0' }}
-              />
-              <Area type="monotone" dataKey="attendance" stroke="#14b8a6" fill="#14b8a6" fillOpacity={0.2} strokeWidth={2} />
-              <Area type="monotone" dataKey="target" stroke="#334155" fill="#334155" fillOpacity={0.1} strokeDasharray="5 5" />
-            </AreaChart>
+              <XAxis dataKey="course" stroke="#94a3b8" fontSize={12} />
+              <YAxis stroke="#94a3b8" fontSize={12} />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} labelStyle={{ color: '#e2e8f0' }} />
+              <Bar dataKey="present" fill="#14b8a6" name="Present" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent" fill="#f59e0b" name="Absent" radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="glass-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Pending Approvals</h3>
-            <Badge variant="warning">{MOCK_APPROVALS.filter(a => a.status === 'pending').length} pending</Badge>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Top Performers</h3>
+            <Badge variant="info">by avg %</Badge>
           </div>
           <div className="space-y-3">
-            {MOCK_APPROVALS.filter(a => a.status === 'pending').map(item => {
-              const typeIcons = { schedule: Calendar, assessment: FileText, material: BookOpen, leave: Clock, paper: FileText }
-              const TypeIcon = typeIcons[item.type] || FileText
-              return (
-                <div key={item.id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 mt-0.5">
-                    <TypeIcon size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{item.title}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{item.requester} · {item.requestedAt}</p>
-                    {item.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{item.description}</p>}
-                  </div>
-                  <div className="flex gap-1">
-                    <button className="p-1.5 rounded-lg bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 transition-colors" title="Approve">
-                      <CheckCircle size={14} />
-                    </button>
-                    <button className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors" title="Reject">
-                      <XCircle size={14} />
-                    </button>
-                  </div>
+            {topPerformers.map((p) => (
+              <div key={p.regNo} className="flex items-center gap-3 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
+                <div className="h-9 w-9 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold text-sm">
+                  {p.rank}
                 </div>
-              )
-            })}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{p.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{p.regNo} · {p.course} · {p.assessmentsTaken}/{p.totalAssessments} assessments</p>
+                </div>
+                <span className="text-sm font-semibold text-teal-400">{p.avg}%</span>
+              </div>
+            ))}
+            {topPerformers.length === 0 && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-6">No scored assessments yet.</p>
+            )}
           </div>
-          <button className="mt-4 text-sm text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors">
-            View all approvals <ChevronRight size={14} />
-          </button>
         </div>
       </div>
     </div>
   )
 }
 
-function StudentManagement() {
+function StudentManagement({ data }: { data: ReturnType<typeof useDashboardData> }) {
   const [search, setSearch] = useState('')
+  const [courseFilter, setCourseFilter] = useState('all')
   const [batchFilter, setBatchFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [yearFilter, setYearFilter] = useState('all')
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null)
 
-  const filtered = MOCK_STUDENTS.filter(s => {
+  const { students, attendanceRecords, scores } = data
+
+  const attendanceByStudent = useMemo(() => {
+    const map: Record<string, { present: number; total: number }> = {}
+    attendanceRecords.forEach(r => {
+      if (!map[r.studentId]) map[r.studentId] = { present: 0, total: 0 }
+      map[r.studentId].total++
+      if (r.status === 'present') map[r.studentId].present++
+    })
+    return map
+  }, [attendanceRecords])
+
+  const avgScoreByStudent = useMemo(() => {
+    const map: Record<string, { sum: number; n: number }> = {}
+    scores.forEach(s => {
+      if (!map[s.studentId]) map[s.studentId] = { sum: 0, n: 0 }
+      map[s.studentId].sum += s.percentage
+      map[s.studentId].n++
+    })
+    return map
+  }, [scores])
+
+  const rows = useMemo(() => students.map(s => {
+    const att = attendanceByStudent[s.id]
+    const score = avgScoreByStudent[s.id]
+    return {
+      ...s,
+      attendance: att && att.total > 0 ? Math.round((att.present / att.total) * 100) : null,
+      avgScore: score && score.n > 0 ? Math.round((score.sum / score.n) * 10) / 10 : null,
+    }
+  }), [students, attendanceByStudent, avgScoreByStudent])
+
+  const filtered = rows.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.regNo.toLowerCase().includes(search.toLowerCase())
+    const matchCourse = courseFilter === 'all' || s.course === courseFilter
     const matchBatch = batchFilter === 'all' || s.batch === batchFilter
     const matchStatus = statusFilter === 'all' || s.status === statusFilter
-    const matchYear = yearFilter === 'all' || s.year === yearFilter
-    return matchSearch && matchBatch && matchStatus && matchYear
+    return matchSearch && matchCourse && matchBatch && matchStatus
   })
 
-  const batches = [...new Set(MOCK_STUDENTS.map(s => s.batch))]
-  const years = [...new Set(MOCK_STUDENTS.map(s => s.year))]
+  const courses = [...new Set(students.map(s => s.course))]
+  const batches = [...new Set(students.map(s => s.batch))]
 
   return (
     <div className="animate-fade-in">
@@ -355,16 +321,10 @@ function StudentManagement() {
         title="Department Students"
         icon={Users}
         action={
-          <div className="flex gap-2">
-            <button className="btn-secondary">
-              <Download size={16} />
-              Export
-            </button>
-            <button className="btn-primary">
-              <Users size={16} />
-              Add Student
-            </button>
-          </div>
+          <button className="btn-secondary">
+            <Download size={16} />
+            Export
+          </button>
         }
       />
 
@@ -380,19 +340,18 @@ function StudentManagement() {
             className="input-field w-full pl-10"
           />
         </div>
+        <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} className="input-field">
+          <option value="all">All Courses</option>
+          {courses.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
         <select value={batchFilter} onChange={e => setBatchFilter(e.target.value)} className="input-field">
           <option value="all">All Batches</option>
           {batches.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
-        <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} className="input-field">
-          <option value="all">All Years</option>
-          {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="input-field">
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
-          <option value="probation">Probation</option>
         </select>
       </div>
 
@@ -403,8 +362,8 @@ function StudentManagement() {
             <tr className="border-b border-slate-200/50 dark:border-slate-700/50">
               <th className="table-header">Student</th>
               <th className="table-header">Reg No</th>
+              <th className="table-header">Course</th>
               <th className="table-header">Batch</th>
-              <th className="table-header">Year</th>
               <th className="table-header">Attendance</th>
               <th className="table-header">Avg Score</th>
               <th className="table-header">Status</th>
@@ -423,37 +382,31 @@ function StudentManagement() {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 dark:text-white">{student.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{student.email}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{student.email || '—'}</p>
                       </div>
                     </div>
                   </td>
                   <td className="table-cell text-slate-600 dark:text-slate-300 font-mono text-sm">{student.regNo}</td>
+                  <td className="table-cell text-slate-600 dark:text-slate-300">{student.course}</td>
                   <td className="table-cell text-slate-600 dark:text-slate-300">{student.batch}</td>
-                  <td className="table-cell text-slate-600 dark:text-slate-300">{student.year}</td>
-                  <td className="table-cell text-slate-600 dark:text-slate-300">{student.attendance}%</td>                  <td className="table-cell">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-teal-500 rounded-full transition-all" style={{ width: `${student.attendance}%` }} />
-                      </div>
-                      <span className="text-xs text-slate-600 dark:text-slate-300">{student.attendance}%</span>
-                    </div>
+                  <td className="table-cell text-slate-600 dark:text-slate-300">
+                    {student.attendance === null ? '—' : `${student.attendance}%`}
                   </td>
-                  <td className="table-cell text-slate-600 dark:text-slate-300 font-semibold">{student.avgScore}</td>
+                  <td className="table-cell text-slate-600 dark:text-slate-300 font-semibold">
+                    {student.avgScore === null ? '—' : `${student.avgScore}%`}
+                  </td>
                   <td className="table-cell">
-                    <Badge variant={student.status === 'active' ? 'success' : student.status === 'probation' ? 'warning' : 'danger'}>
+                    <Badge variant={student.status === 'active' ? 'success' : 'danger'}>
                       {student.status}
                     </Badge>
                   </td>
-                  <td className="table-cell text-slate-500 dark:text-slate-400 text-sm">{student.mentor}</td>
+                  <td className="table-cell text-slate-500 dark:text-slate-400 text-sm">{student.mentor || '—'}</td>
                   <td className="table-cell text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" onClick={e => { e.stopPropagation(); }}>
+                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" onClick={e => { e.stopPropagation() }}>
                         <Eye size={14} />
                       </button>
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" onClick={e => { e.stopPropagation(); }}>
-                        <Edit3 size={14} />
-                      </button>
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" onClick={e => { e.stopPropagation(); }}>
+                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" onClick={e => { e.stopPropagation() }}>
                         <ChevronDown size={14} className={`transition-transform ${expandedStudent === student.id ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
@@ -467,21 +420,16 @@ function StudentManagement() {
                           <div>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Email</p>
                             <p className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                              <Mail size={12} /> {student.email}
+                              <Mail size={12} /> {student.email || '—'}
                             </p>
                           </div>
                           <div>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Mentor</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-300">{student.mentor}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">{student.mentor || '—'}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Performance</p>
-                            <div className="flex items-center gap-2">
-                              <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
-                                <div className="h-full rounded-full" style={{ width: `${student.avgScore}%`, backgroundColor: STATUS_COLORS[student.status] }} />
-                              </div>
-                              <span className="text-xs text-slate-600 dark:text-slate-300">{student.avgScore}%</span>
-                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Division</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">{student.division || '—'}</p>
                           </div>
                         </div>
                       </div>
@@ -505,219 +453,37 @@ function StudentManagement() {
 }
 
 function FacultyOverview() {
-  const [selectedFaculty, setSelectedFaculty] = useState<string | null>(null)
-
   return (
     <div className="animate-fade-in">
-      <SectionHeader
-        title="Department Faculty"
-        icon={GraduationCap}
-        action={
-          <button className="btn-primary">
-            <GraduationCap size={16} />
-            Add Faculty
-          </button>
-        }
+      <SectionHeader title="Department Faculty" icon={GraduationCap} />
+      <NotConnected
+        title="Faculty overview is not connected yet"
+        description="This view has no data source wired up. Department faculty records are managed from the Admin → Faculty screen; once a per-college faculty feed is available this tab will populate."
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {MOCK_FACULTY.map(fac => (
-          <div key={fac.id} className="glass-card-hover p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 font-bold text-lg">
-                  {fac.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white">{fac.name}</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{fac.designation}</p>
-                </div>
-              </div>
-              <Badge variant="info">{fac.studentCount} students</Badge>
-            </div>
-
-            <div className="space-y-3 mb-4">
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <BookOpen size={14} className="text-slate-500" />
-                <span>{fac.subjects.join(', ')}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <Mail size={14} className="text-slate-500" />
-                <span>{fac.email}</span>
-              </div>
-              {fac.phone && (
-                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                  <Phone size={14} className="text-slate-500" />
-                  <span>{fac.phone}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <button className="btn-secondary text-xs flex-1">
-                <Eye size={14} />
-                View Profile
-              </button>
-              <button className="btn-secondary text-xs flex-1">
-                <BarChart3 size={14} />
-                Analytics
-              </button>
-              <button className="btn-secondary text-xs flex-1">
-                <Edit3 size={14} />
-                Edit
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
 
 function SubjectAnalytics() {
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
-
   return (
     <div className="animate-fade-in space-y-6">
       <SectionHeader title="Subject-wise Analytics" icon={BarChart3} />
-
-      {/* Subject Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {SUBJECT_STATS.map((sub, i) => (
-          <div
-            key={sub.name}
-            className={`glass-card-hover p-5 cursor-pointer transition-all ${selectedSubject === sub.name ? 'ring-2 ring-teal-500/50' : ''}`}
-            onClick={() => setSelectedSubject(selectedSubject === sub.name ? null : sub.name)}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-bold text-slate-900 dark:text-white">{sub.name}</h4>
-              <Badge variant="info">{sub.students} students</Badge>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Avg Score</span>
-                  <span className="text-sm font-semibold text-teal-400">{sub.avgScore}%</span>
-                </div>
-                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-500 rounded-full" style={{ width: `${sub.avgScore}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Attendance</span>
-                  <span className="text-sm font-semibold text-sky-400">{sub.attendance}%</span>
-                </div>
-                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-sky-500 rounded-full" style={{ width: `${sub.attendance}%` }} />
-                </div>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Faculty: {sub.faculty}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Detailed Chart */}
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Subject Performance Comparison</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={SUBJECT_STATS} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis type="number" stroke="#94a3b8" fontSize={12} domain={[0, 100]} />
-            <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={11} width={120} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-              labelStyle={{ color: '#e2e8f0' }}
-            />
-            <Bar dataKey="avgScore" fill="#14b8a6" name="Avg Score" radius={[0, 4, 4, 0]} />
-            <Bar dataKey="attendance" fill="#0ea5e9" name="Attendance %" radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <NotConnected
+        title="Subject analytics are not connected yet"
+        description="Subject-level averages need a subject dimension on assessment scores. Until that is recorded, use the Overview tab's performance and attendance charts for the department."
+      />
     </div>
   )
 }
 
 function ApprovalsTab() {
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
-
-  const filtered = filter === 'all' ? MOCK_APPROVALS : MOCK_APPROVALS.filter(a => a.status === filter)
-
-  const typeIcons = { schedule: Calendar, assessment: FileText, material: BookOpen, leave: Clock, paper: FileText }
-  const typeLabels = { schedule: 'Schedule', assessment: 'Assessment', material: 'Material', leave: 'Leave', paper: 'Paper' }
-
   return (
     <div className="animate-fade-in">
-      <SectionHeader
-        title="Approval Requests"
-        icon={CheckCircle}
-        action={
-          <div className="flex gap-2">
-            {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filter === f
-                    ? f === 'pending' ? 'bg-amber-500/20 text-amber-400' :
-                      f === 'approved' ? 'bg-teal-500/20 text-teal-400' :
-                      f === 'rejected' ? 'bg-rose-500/20 text-rose-400' :
-                      'bg-slate-700 text-slate-300'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-                {f === 'pending' && <span className="ml-1">({MOCK_APPROVALS.filter(a => a.status === 'pending').length})</span>}
-              </button>
-            ))}
-          </div>
-        }
+      <SectionHeader title="Approval Requests" icon={CheckCircle} />
+      <NotConnected
+        title="Approvals are not connected yet"
+        description="Approval workflows (schedule changes, paper releases, leave) have no request collection wired to this tab. Approve and reject actions currently live in their own screens."
       />
-
-      <div className="space-y-4">
-        {filtered.map(item => {
-          const TypeIcon = typeIcons[item.type] || FileText
-          return (
-            <div key={item.id} className="glass-card-hover p-5">
-              <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${
-                  item.status === 'pending' ? 'bg-amber-500/10 text-amber-400' :
-                  item.status === 'approved' ? 'bg-teal-500/10 text-teal-400' :
-                  'bg-rose-500/10 text-rose-400'
-                }`}>
-                  <TypeIcon size={20} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium text-slate-900 dark:text-white">{item.title}</h4>
-                    <Badge variant={
-                      item.status === 'approved' ? 'success' :
-                      item.status === 'rejected' ? 'danger' : 'warning'
-                    }>
-                      {item.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                    <span className="text-slate-600 dark:text-slate-300">{item.requester}</span> · {item.requestedAt} · {typeLabels[item.type]}
-                  </p>
-                  {item.description && <p className="text-sm text-slate-500 dark:text-slate-400">{item.description}</p>}
-                </div>
-                {item.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1.5 rounded-lg bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 transition-colors text-sm font-medium">
-                      Approve
-                    </button>
-                    <button className="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors text-sm font-medium">
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -727,6 +493,7 @@ function ApprovalsTab() {
 export default function HODDashboard() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
+  const data = useDashboardData()
 
   const dept = user?.department || HOD_DEPT
 
@@ -735,13 +502,15 @@ export default function HODDashboard() {
     { id: 'students', label: 'Students', icon: Users },
     { id: 'faculty', label: 'Faculty', icon: GraduationCap },
     { id: 'subjects', label: 'Subjects', icon: BookOpen },
-    { id: 'approvals', label: 'Approvals', icon: CheckCircle, badge: MOCK_APPROVALS.filter(a => a.status === 'pending').length },
+    { id: 'approvals', label: 'Approvals', icon: CheckCircle },
   ]
 
   const renderContent = () => {
+    if (activeTab === 'overview') {
+      return data.loading ? <LoadingState /> : <DepartmentOverview data={data} />
+    }
     switch (activeTab) {
-      case 'overview': return <DepartmentOverview />
-      case 'students': return <StudentManagement />
+      case 'students': return <StudentManagement data={data} />
       case 'faculty': return <FacultyOverview />
       case 'subjects': return <SubjectAnalytics />
       case 'approvals': return <ApprovalsTab />
@@ -789,11 +558,6 @@ export default function HODDashboard() {
             >
               <Icon size={16} />
               {tab.label}
-              {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
-                  {tab.badge}
-                </span>
-              )}
             </button>
           )
         })}

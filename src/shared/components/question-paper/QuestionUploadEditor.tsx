@@ -314,7 +314,7 @@ export default function QuestionUploadEditor({
                     list="que-batch-list"
                     value={defBatch}
                     onChange={(e) => setDefBatch(e.target.value)}
-                    placeholder="e.g. 2024-25"
+                    placeholder="e.g. 2026-27"
                     className={inputCls}
                   />
                   <datalist id="que-batch-list">

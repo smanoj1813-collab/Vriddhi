@@ -59,7 +59,7 @@ function entry(overrides: Partial<ScheduleEntry> = {}): ScheduleEntry {
     id: 'candidate',
     collegeId: 'college-a',
     facultyId: 'faculty-a',
-    branch: 'CSE',
+    branch: 'B.Com',
     batch: '2026',
     division: 'A',
     room: '101',
@@ -112,7 +112,7 @@ describe('timetable conflict utilities', () => {
   it('matches cohort values case-insensitively', () => {
     const clashes = findClashes(
       entry({ facultyId: 'new-faculty', room: 'new-room' }),
-      [entry({ id: 'other', facultyId: 'other-faculty', branch: 'cse', division: 'a', room: 'other-room' })]
+      [entry({ id: 'other', facultyId: 'other-faculty', branch: 'b.com', division: 'a', room: 'other-room' })]
     )
     assert.deepEqual(clashes, ['cohort'])
   })

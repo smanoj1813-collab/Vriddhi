@@ -154,7 +154,7 @@ beforeEach(async () => {
       }),
       setDoc(doc(db, 'weeklySchedules', 'schedule-a'), {
         collegeId: COLLEGE_A,
-        branch: 'CSE',
+        branch: 'B.Com',
         batch: '2026',
         semester: 1,
         division: 'A',
@@ -164,7 +164,7 @@ beforeEach(async () => {
       }),
       setDoc(doc(db, 'weeklySchedules', 'schedule-b'), {
         collegeId: COLLEGE_B,
-        branch: 'CSE',
+        branch: 'B.Com',
         batch: '2026',
         semester: 1,
         division: 'A',
@@ -176,7 +176,10 @@ beforeEach(async () => {
         collegeId: COLLEGE_A,
         facultyId: 'legacy-faculty-a',
         facultyName: 'Legacy Faculty',
-        branch: 'CSE',
+        // A different stream from the student timetable fixture (B.Com) so the
+        // student-scoped list query does not pick this legacy row up. All values
+        // here are non-technical UG/PG programs, matching academicPrograms.ts.
+        branch: 'B.Sc',
         batch: '2026',
         semester: 1,
         division: 'A',
@@ -225,6 +228,14 @@ beforeEach(async () => {
         status: 'graded',
         marksObtained: 10,
         gradingBreakdown: [{ questionId: 'q-0001', status: 'correct' }],
+      }),
+      setDoc(doc(db, 'studentAssessments', 'test-a_student-domain-b'), {
+        collegeId: COLLEGE_A,
+        testId: 'test-a',
+        studentId: OTHER_STUDENT_ID,
+        studentUid: OTHER_UID,
+        status: 'graded',
+        marksObtained: 6,
       }),
       setDoc(doc(db, 'assignments', 'assignment-a'), {
         collegeId: COLLEGE_A,
@@ -453,7 +464,7 @@ describe('student academic reads', () => {
         query(
           collection(db, 'weeklySchedules'),
           where('collegeId', '==', COLLEGE_A),
-          where('branch', '==', 'CSE')
+          where('branch', '==', 'B.Com')
         )
       )
     )
@@ -468,11 +479,15 @@ describe('student academic reads', () => {
     await assertFails(getDoc(doc(db, 'papers', 'paper-a')))
   })
 
-  it('denies students direct access to test authoring, answer keys, and attempt scores', async () => {
+  it('keeps students out of test authoring and answer keys, but lets each read their own attempt', async () => {
     const db = studentContext().firestore()
+    // Authoring and answer keys stay staff-only.
     await assertFails(getDoc(doc(db, 'scheduledTests', 'test-a')))
     await assertFails(getDoc(doc(db, 'scheduledTests', 'test-a', 'assessmentQuestions', 'q-0001')))
-    await assertFails(getDoc(doc(db, 'studentAssessments', 'test-a_student-domain-a')))
+    // A student reads their own attempt (how the portal shows results), but not
+    // another student's, and never writes one.
+    await assertSucceeds(getDoc(doc(db, 'studentAssessments', 'test-a_student-domain-a')))
+    await assertFails(getDoc(doc(db, 'studentAssessments', 'test-a_student-domain-b')))
     await assertFails(setDoc(doc(db, 'studentAssessments', 'forged-attempt'), {
       collegeId: COLLEGE_A,
       studentId: STUDENT_ID,
@@ -551,17 +566,22 @@ describe('student academic reads', () => {
 describe('legacy no-claim faculty reads', () => {
   function legacyFacultyContext() {
     // No role/collegeId claims and no users/{uid} document: the account is only
-    // a legacy faculty profile. Rules must resolve the identity from faculty/uid
-    // and stay under the 10 get()/exists() call limit.
+    // a legacy faculty profile. Identity for AUTHORIZATION is claim-only, so
+    // staff-scoped reads are denied until identity repair issues claims and the
+    // user signs in again. (The profile doc still lets them sign IN — it just
+    // cannot authorize a staff query. See current-firestore.rules header.)
     return testEnv.authenticatedContext('legacy-faculty-a', {
       email: 'legacy-faculty@example.edu',
     })
   }
 
-  it('resolves role and college from a legacy faculty profile for the exact faculty queries', async () => {
+  it('denies staff-scoped queries to a legacy faculty until claims are issued', async () => {
     const db = legacyFacultyContext().firestore()
 
-    const weekly = await assertSucceeds(
+    // Role comes from the token claim ONLY — a claim-less account must not be
+    // able to read staff-only collections by virtue of a client-writable
+    // profile document.
+    await assertFails(
       getDocs(
         query(
           collection(db, 'weeklySchedules'),
@@ -570,9 +590,8 @@ describe('legacy no-claim faculty reads', () => {
         )
       )
     )
-    assert.equal(weekly.size, 1)
 
-    const sessions = await assertSucceeds(
+    await assertFails(
       getDocs(
         query(
           collection(db, 'classSessions'),
@@ -581,9 +600,8 @@ describe('legacy no-claim faculty reads', () => {
         )
       )
     )
-    assert.equal(sessions.size, 1)
 
-    const assignments = await assertSucceeds(
+    await assertFails(
       getDocs(
         query(
           collection(db, 'assignments'),
@@ -594,7 +612,6 @@ describe('legacy no-claim faculty reads', () => {
         )
       )
     )
-    assert.equal(assignments.size, 1)
   })
 
   it('does not grant legacy faculty implicit superadmin or write access', async () => {

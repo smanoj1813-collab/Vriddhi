@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   ChevronLeft, BookOpen, Search, Plus, Trash2, Edit3, UserCheck,
   AlertTriangle, Clock, X, Check, BookMarked, ArrowRightLeft, DollarSign
@@ -53,7 +54,7 @@ export default function FacultyLibrary() {
 
   // Add Book Modal
   const [showAddModal, setShowAddModal] = useState<boolean>(false)
-  const [newBook, setNewBook] = useState<Partial<LibraryBook>>({ category: 'Computer Science', totalCopies: 1 })
+  const [newBook, setNewBook] = useState<Partial<LibraryBook>>({ category: 'Computer Applications', totalCopies: 1 })
 
   // Issue Book Modal
   const [showIssueModal, setShowIssueModal] = useState<boolean>(false)
@@ -93,7 +94,7 @@ export default function FacultyLibrary() {
     }
     setBooks((prev: LibraryBook[]) => [book, ...prev])
     setShowAddModal(false)
-    setNewBook({ category: 'Computer Science', totalCopies: 1 })
+    setNewBook({ category: 'Computer Applications', totalCopies: 1 })
   }
 
   const handleIssueBook = () => {
@@ -136,6 +137,7 @@ export default function FacultyLibrary() {
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
+      <NotConnectedBanner message="The library catalog and issue/return records are not yet read from or written to Firestore." />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
@@ -376,7 +378,7 @@ export default function FacultyLibrary() {
                   type="text"
                   value={issueData.studentId}
                   onChange={e => setIssueData((prev: typeof issueData) => ({ ...prev, studentId: e.target.value }))}
-                  placeholder="STU2024001"
+                  placeholder="STU2026001"
                   className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-teal-500/50 text-sm"
                 />
               </div>
@@ -398,7 +400,7 @@ export default function FacultyLibrary() {
                   type="text"
                   value={issueData.studentRegNo}
                   onChange={e => setIssueData((prev: typeof issueData) => ({ ...prev, studentRegNo: e.target.value }))}
-                  placeholder="R2024001"
+                  placeholder="R2026001"
                   className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-teal-500/50 text-sm"
                 />
               </div>

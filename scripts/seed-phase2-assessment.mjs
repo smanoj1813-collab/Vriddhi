@@ -162,7 +162,7 @@ async function main() {
     const { id, ...data } = q;
     batch.set(ref, {
       ...data,
-      subject: 'Computer Science',
+      subject: 'Computer Applications',
       chapter: 'Phase 2 Seed',
       status: 'active',
       tags: ['phase2-seed'],
@@ -180,7 +180,7 @@ async function main() {
   const paperRef = db.collection('papers').doc();
   batch.set(paperRef, {
     title: TITLE,
-    subject: 'Computer Science',
+    subject: 'Computer Applications',
     examType: 'unit-test',
     totalMarks: TOTAL_MARKS,
     totalQuestions: QUESTIONS.length,
@@ -199,8 +199,8 @@ async function main() {
     createdBy: 'seed-script',
     createdByName: 'Phase 2 Seed',
     linkedQuestionIds: QUESTIONS.map((q) => q.id),
-    batch: '2024-2028',
-    branch: 'CSE',
+    batch: '2026',
+    branch: 'BCA',
     semester: 5,
     createdAt: new Date(NOW).toISOString(),
     updatedAt: new Date(NOW).toISOString(),
@@ -210,14 +210,14 @@ async function main() {
   const testRef = db.collection('scheduledTests').doc();
   batch.set(testRef, {
     title: TITLE,
-    subject: 'Computer Science',
+    subject: 'Computer Applications',
     paperId: paperRef.id,
     paperTitle: TITLE,
     collegeId: COLLEGE_ID,
     facultyId: 'seed-faculty',
     facultyName: 'Seeded Faculty',
-    branch: 'CSE',
-    batch: '2024-2028',
+    branch: 'BCA',
+    batch: '2026',
     semester: 5,
     startDateTime: new Date(NOW - 60_000).toISOString(),
     endDateTime: new Date(NOW + 7 * 24 * 3600_000).toISOString(),
@@ -285,7 +285,7 @@ async function main() {
         studentName: s.data().name || '',
         regNo: s.data().regNo || '',
         title: TITLE,
-        subject: 'Computer Science',
+        subject: 'Computer Applications',
         duration: MINUTES,
         totalMarks: TOTAL_MARKS,
         totalQuestions: QUESTIONS.length,

@@ -13,6 +13,7 @@ const PAPERS_COLLECTION = 'papers'
 const QUESTIONS_COLLECTION = 'questions'
 
 const DRAFT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+const READ_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
 const APPROVE_ROLES = ['superadmin', 'admin', 'hod']
 const DELETE_ROLES = ['superadmin', 'admin']
 
@@ -45,7 +46,7 @@ function paperQuestionIds(paper: any): string[] {
  * GET /api/papers
  * List papers for the current college.
  */
-router.get('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const collegeId = getCollegeId(req)
     if (!assertCollegeAccess(req, collegeId)) {
@@ -73,7 +74,7 @@ router.get('/', verifyAuth, async (req: AuthenticatedRequest, res) => {
  * GET /api/papers/:id
  * Get a single paper.
  */
-router.get('/:id', verifyAuth, async (req: AuthenticatedRequest, res) => {
+router.get('/:id', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const docRef = db.collection(PAPERS_COLLECTION).doc(req.params.id)
     const docSnap = await docRef.get()
@@ -293,10 +294,10 @@ router.post('/:id/status', verifyAuth, requireRole(...APPROVE_ROLES), async (req
  * Generate and download a paper as proper text-based PDF
  * Requires: auth
  */
-router.get('/:id/pdf', verifyAuth, async (req, res) => {
+router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params
-    const user = (req as any).user
+    const user = req.user
 
     // Fetch paper from Firestore
     const paperDoc = await db.collection('papers').doc(id).get()
@@ -308,7 +309,7 @@ router.get('/:id/pdf', verifyAuth, async (req, res) => {
     const paper = paperDoc.data()!
 
     // Ownership check
-    if (paper.collegeId !== user.collegeId && user.role !== 'superadmin') {
+    if (paper.collegeId !== user?.collegeId && user?.role !== 'superadmin') {
       res.status(403).json({ message: 'Access denied' })
       return
     }

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import NotConnectedBanner from '@/shared/components/NotConnectedBanner'
 import {
   ArrowLeft, Users, TrendingUp, TrendingDown, AlertTriangle, Award,
   Calendar, CheckCircle, Clock, Target, BarChart3, Search, Filter,
@@ -64,8 +65,14 @@ export default function FacultyStudentAnalysis() {
     const good = facultyStudents.filter((s: FacultyStudent) => s.status === 'good').length
     const average = facultyStudents.filter((s: FacultyStudent) => s.status === 'average').length
     const weak = facultyStudents.filter((s: FacultyStudent) => s.status === 'weak').length
-    const avgAttendance = Math.round(facultyStudents.reduce((sum: number, s: FacultyStudent) => sum + s.attendancePercentage, 0) / total)
-    const avgScore = Math.round(facultyStudents.reduce((sum: number, s: FacultyStudent) => sum + s.avgScore, 0) / total)
+    // Dividing by an empty cohort produced `NaN%` on screen, which reads as a number a
+    // faculty member could act on. An absent measurement is reported as a dash instead.
+    const avgAttendance = total === 0
+      ? 0
+      : Math.round(facultyStudents.reduce((sum: number, s: FacultyStudent) => sum + s.attendancePercentage, 0) / total)
+    const avgScore = total === 0
+      ? 0
+      : Math.round(facultyStudents.reduce((sum: number, s: FacultyStudent) => sum + s.avgScore, 0) / total)
     return { total, good, average, weak, avgAttendance, avgScore }
   }, [])
 
@@ -112,6 +119,8 @@ export default function FacultyStudentAnalysis() {
         </div>
       </div>
 
+      <NotConnectedBanner message="Student analysis is not yet read from Firestore. Attendance, score and trend figures here are placeholders until a per-faculty student feed is wired." />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <div className="p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
@@ -132,11 +141,11 @@ export default function FacultyStudentAnalysis() {
         </div>
         <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-400 mb-1">Avg Attendance</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.avgAttendance}%</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.total > 0 ? `${stats.avgAttendance}%` : '—'}</p>
         </div>
         <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
           <p className="text-xs text-purple-400 mb-1">Avg Score</p>
-          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.avgScore}%</p>
+          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.total > 0 ? `${stats.avgScore}%` : '—'}</p>
         </div>
       </div>
 

@@ -212,7 +212,7 @@ export default function StudentDashboard() {
                 {t('student.welcomeBack', { name: profile?.name?.split(' ')[0] || t('role.student') })}
               </h1>
               <p className="text-xs md:text-sm text-teal-100 font-medium mt-0.5">
-                {profile?.regNo || 'Reg. ID'} &bull; {profile?.course || 'Undergraduate'} &bull; {profile?.batch || '2024–2028'}
+                {profile?.regNo || 'Reg. ID'} &bull; {profile?.course || 'Undergraduate'} &bull; {profile?.batch || '2026'}
               </p>
             </div>
           </div>

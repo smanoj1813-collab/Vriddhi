@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 // services/syllabusParser.ts — Universal Syllabus Parser v2.3
 // Handles: Course Matrix tables + Detailed Syllabus sections
-// Tuned for: BCU B.Com (Regular) SEP 2024 format
+// Tuned for: BCU B.Com (Regular) SEP 2026 format
 // ═══════════════════════════════════════════════════════════════════════
 
 import type {

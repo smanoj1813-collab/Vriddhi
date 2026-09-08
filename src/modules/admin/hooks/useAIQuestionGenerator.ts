@@ -124,7 +124,7 @@ export function useAIQuestionGenerator() {
       if (!resolvedCollegeId) {
         try {
           const { db } = await import('@/Firebase/config');
-          const { doc, getDoc, collection, getDocs, query, limit } = await import('firebase/firestore');
+          const { doc, getDoc } = await import('firebase/firestore');
           // Try faculty doc directly
           if (user) {
             const uid = (user as any).uid || (user as any).id;
@@ -138,14 +138,11 @@ export function useAIQuestionGenerator() {
               }
             }
           }
-          // Fallback to first college in colleges collection
-          if (!resolvedCollegeId) {
-            const collegesSnap = await getDocs(query(collection(db, 'colleges'), limit(1)));
-            if (!collegesSnap.empty) {
-              resolvedCollegeId = collegesSnap.docs[0].id;
-              console.log('[saveAll] Fallback to first college:', resolvedCollegeId);
-            }
-          }
+          // NOTE: there is deliberately no "first college in the colleges
+          // collection" fallback here. A missing collegeId used to pick an
+          // arbitrary college to save questions into, which is a cross-tenant
+          // write footgun. The save below is still gated by the Firestore rules
+          // on the caller's collegeId claim, so fail closed instead.
         } catch (e) {
           console.error('[saveAll] Failed to resolve collegeId:', e);
         }

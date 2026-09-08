@@ -1304,14 +1304,20 @@ export interface ResetCollegeDataResult {
   errors: string[];
 }
 
-export async function resetCollegeData(collegeId: string): Promise<ResetCollegeDataResult> {
+export async function resetCollegeData(
+  collegeId: string,
+  deleteAuthUsers = false
+): Promise<ResetCollegeDataResult> {
   try {
     const resetFn = httpsCallable<
       { collegeId: string; deleteAuthUsers?: boolean },
       ResetCollegeDataResult
     >(functions, "resetCollegeData");
 
-    const result = await resetFn({ collegeId, deleteAuthUsers: true });
+    // Auth accounts are NOT deleted unless the operator explicitly opts in:
+    // deleting Firebase logins is the one irreversible action a reset can take,
+    // and a re-import recreates them, so the default keeps them intact.
+    const result = await resetFn({ collegeId, deleteAuthUsers });
     return result.data;
   } catch (error) {
     console.error("Error resetting college data:", error);

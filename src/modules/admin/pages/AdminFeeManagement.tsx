@@ -733,7 +733,7 @@ export default function AdminFeeManagement() {
                   className="bg-transparent text-sm text-vriddhi-text focus:outline-none cursor-pointer"
                 >
                   <option value="all">All Batches</option>
-                  {['2026', '2025', '2024', '2023', '2022'].map(b => (
+                  {['2026', '2027', '2028', '2029'].map(b => (
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
