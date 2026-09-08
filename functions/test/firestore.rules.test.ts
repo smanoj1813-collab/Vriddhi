@@ -9,7 +9,9 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -207,6 +209,20 @@ beforeEach(async () => {
         verificationStatus: 'approved-by-hod',
         title: 'Internal assessment',
         questions: [{ text: 'Two plus two?', correctAnswer: '4' }],
+      }),
+      setDoc(doc(db, 'facultyTopics', 'topic-own'), {
+        facultyId: 'faculty-a',
+        title: 'Limits and continuity',
+        subject: 'Mathematics',
+        status: 'planned',
+        createdAt: new Date().toISOString(),
+      }),
+      setDoc(doc(db, 'facultyTopics', 'topic-other'), {
+        facultyId: 'faculty-b',
+        title: 'Thermodynamics',
+        subject: 'Physics',
+        status: 'planned',
+        createdAt: new Date().toISOString(),
       }),
       setDoc(doc(db, 'scheduledTests', 'test-a'), {
         collegeId: COLLEGE_A,
@@ -560,6 +576,81 @@ describe('student academic reads', () => {
       verificationStatus: 'approved-by-hod',
       title: 'Forged publication',
     }))
+  })
+})
+
+describe('faculty topic planner (facultyTopics)', () => {
+  // src/hooks/useTopics.ts talks to the top-level `facultyTopics` collection
+  // straight from the client: getDocs(where('facultyId', '==', uid)), addDoc,
+  // updateDoc, deleteDoc. Ownership is by uid (no collegeId is written), so the
+  // rules key everything off facultyId == request.auth.uid.
+
+  it('lets a faculty list, create, update, and delete their own topics', async () => {
+    const db = facultyContext().firestore()
+
+    const own = await assertSucceeds(
+      getDocs(query(collection(db, 'facultyTopics'), where('facultyId', '==', 'faculty-a')))
+    )
+    assert.equal(own.size, 1)
+
+    const created = await assertSucceeds(
+      addDoc(collection(db, 'facultyTopics'), {
+        facultyId: 'faculty-a',
+        title: 'Derivatives',
+        subject: 'Mathematics',
+        status: 'planned',
+        createdAt: new Date().toISOString(),
+      })
+    )
+    await assertSucceeds(updateDoc(doc(db, 'facultyTopics', created.id), {
+      status: 'in-progress',
+      updatedAt: new Date().toISOString(),
+    }))
+    await assertSucceeds(deleteDoc(doc(db, 'facultyTopics', created.id)))
+  })
+
+  it('refuses to create or re-own a topic under a different facultyId', async () => {
+    const db = facultyContext().firestore()
+
+    await assertFails(
+      addDoc(collection(db, 'facultyTopics'), {
+        facultyId: 'faculty-b',
+        title: 'Forged ownership',
+        subject: 'Mathematics',
+        status: 'planned',
+      })
+    )
+    await assertFails(updateDoc(doc(db, 'facultyTopics', 'topic-own'), {
+      facultyId: 'faculty-b',
+    }))
+  })
+
+  it("refuses to update or delete another faculty's topic", async () => {
+    const db = facultyContext().firestore()
+
+    await assertFails(updateDoc(doc(db, 'facultyTopics', 'topic-other'), {
+      status: 'completed',
+    }))
+    await assertFails(deleteDoc(doc(db, 'facultyTopics', 'topic-other')))
+  })
+
+  it('denies students and claim-less accounts', async () => {
+    const studentDb = studentContext().firestore()
+    await assertFails(
+      getDocs(query(collection(studentDb, 'facultyTopics'), where('facultyId', '==', 'faculty-a')))
+    )
+    await assertFails(getDoc(doc(studentDb, 'facultyTopics', 'topic-own')))
+
+    // Role comes from the token claim ONLY; a legacy faculty without claims
+    // cannot authorize the staff-scoped list query.
+    const legacyDb = testEnv
+      .authenticatedContext('legacy-faculty-a', { email: 'legacy-faculty@example.edu' })
+      .firestore()
+    await assertFails(
+      getDocs(
+        query(collection(legacyDb, 'facultyTopics'), where('facultyId', '==', 'legacy-faculty-a'))
+      )
+    )
   })
 })
 
