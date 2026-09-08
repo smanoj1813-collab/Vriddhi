@@ -9,7 +9,9 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -207,6 +209,22 @@ beforeEach(async () => {
         verificationStatus: 'approved-by-hod',
         title: 'Internal assessment',
         questions: [{ text: 'Two plus two?', correctAnswer: '4' }],
+      }),
+      // Faculty topic planner (src/hooks/useTopics.ts). Tenancy is the owning
+      // uid: these rows carry no collegeId.
+      setDoc(doc(db, 'facultyTopics', 'topic-own'), {
+        facultyId: 'faculty-a',
+        title: 'Linear equations',
+        subject: 'Mathematics',
+        status: 'planned',
+        createdAt: '2026-09-01T09:00:00.000Z',
+      }),
+      setDoc(doc(db, 'facultyTopics', 'topic-other'), {
+        facultyId: 'faculty-b',
+        title: 'Another faculty topic',
+        subject: 'Physics',
+        status: 'planned',
+        createdAt: '2026-09-02T09:00:00.000Z',
       }),
       setDoc(doc(db, 'scheduledTests', 'test-a'), {
         collegeId: COLLEGE_A,
@@ -560,6 +578,92 @@ describe('student academic reads', () => {
       verificationStatus: 'approved-by-hod',
       title: 'Forged publication',
     }))
+  })
+})
+
+describe('faculty topic planner (facultyTopics)', () => {
+  it('lets a faculty member list, create, update, and delete their own topics', async () => {
+    const db = facultyContext().firestore()
+
+    // The page's first query: owned rows only, keyed by the signed-in uid.
+    const own = await assertSucceeds(
+      getDocs(
+        query(
+          collection(db, 'facultyTopics'),
+          where('facultyId', '==', 'faculty-a')
+        )
+      )
+    )
+    assert.equal(own.size, 1)
+    assert.equal(own.docs[0].id, 'topic-own')
+
+    const created = await assertSucceeds(
+      addDoc(collection(db, 'facultyTopics'), {
+        facultyId: 'faculty-a',
+        title: 'Quadratic equations',
+        subject: 'Mathematics',
+        status: 'planned',
+        createdAt: '2026-09-03T09:00:00.000Z',
+      })
+    )
+    await assertSucceeds(updateDoc(created, { status: 'completed' }))
+    await assertSucceeds(deleteDoc(created))
+  })
+
+  it('refuses topics stamped with, or handed to, another faculty id', async () => {
+    const db = facultyContext().firestore()
+
+    await assertFails(addDoc(collection(db, 'facultyTopics'), {
+      facultyId: 'faculty-b',
+      title: 'Forged ownership',
+      subject: 'Mathematics',
+      status: 'planned',
+      createdAt: '2026-09-03T09:00:00.000Z',
+    }))
+    // Re-parenting an owned row onto someone else is denied too.
+    await assertFails(updateDoc(doc(db, 'facultyTopics', 'topic-own'), {
+      facultyId: 'faculty-b',
+    }))
+  })
+
+  it('denies a faculty member updating or deleting another faculty topic', async () => {
+    const db = facultyContext().firestore()
+    await assertFails(updateDoc(doc(db, 'facultyTopics', 'topic-other'), { title: 'Hijacked' }))
+    await assertFails(deleteDoc(doc(db, 'facultyTopics', 'topic-other')))
+  })
+
+  it('keeps students and claim-less accounts out of the planner', async () => {
+    const studentDb = studentContext().firestore()
+    await assertFails(
+      getDocs(
+        query(
+          collection(studentDb, 'facultyTopics'),
+          where('facultyId', '==', 'faculty-a')
+        )
+      )
+    )
+    await assertFails(getDoc(doc(studentDb, 'facultyTopics', 'topic-own')))
+    await assertFails(addDoc(collection(studentDb, 'facultyTopics'), {
+      facultyId: 'faculty-a',
+      title: 'Student-authored topic',
+      subject: 'Mathematics',
+      status: 'planned',
+      createdAt: '2026-09-03T09:00:00.000Z',
+    }))
+
+    // No role/collegeId claims: staff access is claim-only, so even a faculty
+    // profile document must not open the planner.
+    const legacyDb = testEnv
+      .authenticatedContext('legacy-faculty-a', { email: 'legacy-faculty@example.edu' })
+      .firestore()
+    await assertFails(
+      getDocs(
+        query(
+          collection(legacyDb, 'facultyTopics'),
+          where('facultyId', '==', 'legacy-faculty-a')
+        )
+      )
+    )
   })
 })
 
