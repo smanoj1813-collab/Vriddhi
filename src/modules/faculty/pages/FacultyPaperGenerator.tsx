@@ -13,6 +13,7 @@ import { createPaper, updatePaper } from '../../admin/api/paperApi'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Question as BankQuestion } from '../../admin/types/questionBank'
+import PaperBuilder from '../components/PaperBuilder'
 
 interface FacultyQuestion {
   id: string
@@ -73,7 +74,7 @@ export default function FacultyPaperGenerator() {
   const [showPreview, setShowPreview] = useState(false)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [showToast, setShowToast] = useState('')
-  const [activeTab, setActiveTab] = useState<'generate' | 'my-papers'>('generate')
+  const [activeTab, setActiveTab] = useState<'generate' | 'my-papers' | 'visual-builder'>('generate')
   // ── Edit-before-submit: per-question overrides applied to this paper ──
   const [questionEdits, setQuestionEdits] = useState<Record<string, { questionText: string; marks: number }>>({})
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
@@ -437,6 +438,17 @@ export default function FacultyPaperGenerator() {
           Generate New Paper
         </button>
         <button
+          onClick={() => setActiveTab('visual-builder')}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            activeTab === 'visual-builder'
+              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Pencil className="w-4 h-4 inline mr-1.5" />
+          Visual Paper Builder
+        </button>
+        <button
           onClick={() => setActiveTab('my-papers')}
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             activeTab === 'my-papers'
@@ -451,6 +463,12 @@ export default function FacultyPaperGenerator() {
           )}
         </button>
       </div>
+
+      {activeTab === 'visual-builder' && (
+        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <PaperBuilder collegeId={user?.collegeId || ''} />
+        </div>
+      )}
 
       {activeTab === 'generate' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -2,11 +2,12 @@
 // Admin Paper Generator page — configure sections and generate a paper from the bank.
 
 import React, { useEffect, useState } from 'react';
-import { Box, Button, CircularProgress, Typography, Alert, Snackbar } from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { Box, Button, CircularProgress, Typography, Alert, Snackbar, Dialog } from '@mui/material';
+import { CloudUpload as CloudUploadIcon, Description as TemplateIcon } from '@mui/icons-material';
 import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor';
 import { useAuth } from '../../auth/context/AuthContext';
 import PaperGenerator from '../components/question-bank/PaperGenerator';
+import TemplateSelector from '../components/TemplateSelector';
 import { getBatchBranchConfig, getQuestionStats } from '../api/questionBankApi';
 import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
 
@@ -19,6 +20,7 @@ export default function PaperGeneratorPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -63,12 +65,25 @@ export default function PaperGeneratorPage() {
   return (
     <Box sx={{ p: 3 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadOpen(true)}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mb: 2 }}>
+        <Button variant="outlined" startIcon={<TemplateIcon />} onClick={() => setTemplateOpen(true)}>
+          Choose Template
+        </Button>
+        <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={() => setUploadOpen(true)}>
           Upload Question Paper
         </Button>
       </Box>
       <PaperGenerator key={reloadKey} batches={batches} branches={branches} subjects={subjects} />
+      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} maxWidth="md" fullWidth>
+        <TemplateSelector
+          onClose={() => setTemplateOpen(false)}
+          onPaperGenerated={() => {
+            setTemplateOpen(false);
+            setToast('Paper generated successfully from template');
+            setReloadKey(k => k + 1);
+          }}
+        />
+      </Dialog>
       <PaperUploadEditor
         open={uploadOpen}
         collegeId={collegeId}

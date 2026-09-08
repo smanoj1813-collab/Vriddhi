@@ -25,6 +25,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Stack,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -32,6 +33,10 @@ import {
   LibraryBooks as BankIcon,
   Article as PaperIcon,
   SmartToy as AgentIcon,
+  CloudUpload as ImportIcon,
+  PictureAsPdf as PdfIcon,
+  Link as LinkIcon,
+  TableRows as TableIcon,
 } from '@mui/icons-material'
 import { useQuestionBank } from '../../hooks/useQuestionBank'
 import { usePaperGenerator } from '../../hooks/usePaperGenerator'
@@ -39,6 +44,14 @@ import QuestionForm from './QuestionForm'
 import QuestionPreview from './QuestionPreview'
 import PaperGenerator from './PaperGenerator'
 import AIQuestionGenerator from './AIQuestionGenerator'
+import BulkImportModal from './BulkImportModal'
+import FacultyBulkImport from './FacultyBulkImport'
+import FacultyPaperLinker from './FacultyPaperLinker'
+import FacultyQuestionForm from './FacultyQuestionForm'
+import PaperLinkageModal from './PaperLinkageModal'
+import QuestionPDFExport from './QuestionPDFExport'
+import FacultyBankAdmin from './FacultyBankAdmin'
+import * as questionBankService from '../../services/questionBankAPI'
 import type { Question } from '../../types/questionBank'
 
 interface TabPanelProps {
@@ -70,6 +83,10 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
   const [showForm, setShowForm] = useState(false)
   const [showGenerator, setShowGenerator] = useState(false)
   const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
+  const [showPdfExport, setShowPdfExport] = useState(false)
+  const [showLinkModal, setShowLinkModal] = useState(false)
+  const [selectedQuestionForLink, setSelectedQuestionForLink] = useState<Question | null>(null)
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null)
 
@@ -137,131 +154,90 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
     ]
 
     return (
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 2, mb: 3 }}>
         {statCards.map((s, i) => (
-          <Grid size={{ xs: 6, sm: 4, md: 2 }} key={i}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center', py: 1.5 }}>
-                <Typography variant="h4" color={`${s.color}.main`}>
-                  {s.value}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {s.label}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          <Card key={i}>
+            <CardContent sx={{ textAlign: 'center', py: 1.5 }}>
+              <Typography variant="h4" color={`${s.color}.main`}>
+                {s.value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {s.label}
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
     )
   }
 
   // ─── Question List ────────────────────────────────────
   const renderQuestionList = () => (
     <Box>
-      {/* Filters */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>Filters</Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>Subject</InputLabel>
-            <Select
-              label="Subject"
-              value={filters.subject || ''}
-              onChange={(e) => setFilter('subject', e.target.value || undefined)}
-            >
-              <MenuItem value="">All Subjects</MenuItem>
-              {subjects.map((s) => (
-                <MenuItem key={s} value={s}>{s}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Type</InputLabel>
-            <Select
-              label="Type"
-              value={filters.type || ''}
-              onChange={(e) => setFilter('type', e.target.value || undefined)}
-            >
-              <MenuItem value="">All Types</MenuItem>
-              {['mcq', 'true_false', 'fill_in_blank', 'short_answer', 'long_answer', 'matching', 'assertion_reason', 'case_based', 'short', 'long', 'numerical'].map((t) => (
-                <MenuItem key={t} value={t}>{t}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Difficulty</InputLabel>
-            <Select
-              label="Difficulty"
-              value={filters.difficulty || ''}
-              onChange={(e) => setFilter('difficulty', e.target.value || undefined)}
-            >
-              <MenuItem value="">All Difficulties</MenuItem>
-              <MenuItem value="easy">Easy</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="hard">Hard</MenuItem>
-            </Select>
-          </FormControl>
-          {(filters.subject || filters.type || filters.difficulty) && (
-            <Button onClick={clearFilters} color="error" size="small" sx={{ alignSelf: 'center' }}>
-              Clear All
-            </Button>
-          )}
-        </Box>
-      </Paper>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<ImportIcon />}
+            onClick={() => setShowBulkImport(true)}
+          >
+            Bulk Import
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<PdfIcon />}
+            onClick={() => setShowPdfExport(true)}
+          >
+            Export PDF
+          </Button>
+        </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => { setEditingQuestion(null); setShowForm(true) }}
+        >
+          Add Question
+        </Button>
+      </Box>
 
-      {/* Questions */}
-      {questions.map(q => (
-        <Paper key={q.id} variant="outlined" sx={{ p: 2, mb: 1, cursor: 'pointer' }} onClick={() => setPreviewQuestion(q)}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body1" sx={{ mb: 0.5 }}>
-                {q.text.substring(0, 100)}{q.text.length > 100 ? '...' : ''}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                <Chip label={q.subject} size="small" variant="outlined" />
-                <Chip label={q.type.toUpperCase()} size="small" color="primary" />
-                <Chip
-                  label={q.difficulty}
-                  size="small"
-                  color={q.difficulty === 'easy' ? 'success' : q.difficulty === 'medium' ? 'warning' : 'error'}
-                />
-                {q.isPYQ && <Chip label="PYQ" size="small" color="secondary" />}
-                <Chip label={`${q.marks || '?'} marks`} size="small" variant="outlined" />
-                {q.linkedPaperIds && q.linkedPaperIds.length > 0 && (
-                  <Chip label={`${q.linkedPaperIds.length} paper(s)`} size="small" color="info" />
-                )}
+      {/* Questions list cards */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {questions.map((q) => (
+          <Paper key={q.id} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ flex: 1, pr: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                <Chip label={q.subject} size="small" color="primary" variant="outlined" />
+                <Chip label={q.topic} size="small" variant="outlined" />
+                <Chip label={q.difficulty} size="small" color={q.difficulty === 'hard' ? 'error' : q.difficulty === 'medium' ? 'warning' : 'success'} />
+                <Chip label={`${q.marks} Marks`} size="small" />
               </Box>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {q.text}
+              </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <Button size="small" onClick={e => { e.stopPropagation(); handleEdit(q) }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button size="small" onClick={() => setPreviewQuestion(q)}>
+                Preview
+              </Button>
+              <Button size="small" onClick={() => { setSelectedQuestionForLink(q); setShowLinkModal(true) }}>
+                Link Paper
+              </Button>
+              <Button size="small" onClick={() => handleEdit(q)}>
                 Edit
               </Button>
-              <Button size="small" color="error" onClick={e => { e.stopPropagation(); handleDelete(q.id) }}>
+              <Button size="small" color="error" onClick={() => handleDelete(q.id)}>
                 Delete
               </Button>
             </Box>
-          </Box>
-        </Paper>
-      ))}
+          </Paper>
+        ))}
+      </Box>
 
-      {loading && <LinearProgress sx={{ mt: 2 }} />}
-
-      {hasMore && !loading && (
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Button onClick={loadMore} variant="outlined" size="small">
-            Load More
-          </Button>
+      {hasMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Button onClick={() => loadMore()}>Load More</Button>
         </Box>
-      )}
-
-      {questions.length === 0 && !loading && (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <BankIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-          <Typography color="text.secondary">No questions found. Add your first question!</Typography>
-        </Paper>
       )}
     </Box>
   )
@@ -269,38 +245,35 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
   // ─── Papers List ──────────────────────────────────────
   const renderPapersList = () => (
     <Box>
-      {papers.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <PaperIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-          <Typography color="text.secondary">No papers generated yet.</Typography>
-        </Paper>
-      ) : (
-        papers.map(p => (
-          <Paper key={p.id} variant="outlined" sx={{ p: 2, mb: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="subtitle1">{p.title}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {p.subject} | {p.examType} | {p.totalQuestions} questions | {p.totalMarks} marks
-                </Typography>
-              </Box>
-              <Chip
-                label={p.status}
-                color={p.status === 'published' ? 'success' : p.status === 'draft' ? 'warning' : 'default'}
-                size="small"
-              />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setShowGenerator(true)}
+        >
+          Generate New Paper
+        </Button>
+      </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {papers.map((p) => (
+          <Paper key={p.id} sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="h6">{p.title}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {p.subject} • {p.totalMarks} Marks • {p.duration} Mins
+              </Typography>
             </Box>
+            <Chip label={p.status || 'Draft'} color={p.status === 'published' ? 'success' : 'default'} />
           </Paper>
-        ))
-      )}
+        ))}
+      </Box>
     </Box>
   )
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <BankIcon />
-        Question Bank
+      <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+        Question Bank & Exam Management
       </Typography>
 
       {renderStats()}
@@ -309,6 +282,7 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="Questions" icon={<BankIcon />} iconPosition="start" />
           <Tab label="Papers" icon={<PaperIcon />} iconPosition="start" />
+          <Tab label="Table View" icon={<TableIcon />} iconPosition="start" />
         </Tabs>
       </Paper>
 
@@ -318,6 +292,10 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
 
       <TabPanel value={tabValue} index={1}>
         {renderPapersList()}
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={2}>
+        <FacultyBankAdmin />
       </TabPanel>
 
       {/* Add Question FAB */}
@@ -368,6 +346,41 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
         </DialogContent>
       </Dialog>
 
+      {/* Bulk Import Modal Dialog */}
+      <BulkImportModal
+        open={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+        onImport={(imported) => {
+          setShowBulkImport(false)
+          refresh()
+        }}
+        batches={batches}
+        branches={branches}
+      />
+
+      {/* PDF Export Dialog */}
+      <QuestionPDFExport
+        questions={questions}
+        title={subjects[0] || 'Question Bank'}
+      />
+
+      {/* Paper Linkage Modal */}
+      {selectedQuestionForLink && (
+        <PaperLinkageModal
+          open={showLinkModal}
+          onClose={() => { setShowLinkModal(false); setSelectedQuestionForLink(null) }}
+          question={selectedQuestionForLink}
+          onLink={async (qid, pid) => {
+            await questionBankService.linkQuestionToPaper(qid, pid)
+            refresh()
+          }}
+          onUnlink={async (qid, pid) => {
+            await questionBankService.unlinkQuestionFromPaper(qid, pid)
+            refresh()
+          }}
+        />
+      )}
+
       {/* Paper Generator Dialog */}
       <Dialog open={showGenerator} onClose={() => setShowGenerator(false)} maxWidth="lg" fullWidth>
         <DialogContent>
@@ -375,7 +388,7 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
             batches={batches}
             branches={branches}
             subjects={subjects}
-            onPaperCreated={(paperId) => {
+            onPaperCreated={() => {
               setShowGenerator(false)
               setTabValue(1)
               loadPapers()
@@ -392,7 +405,7 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
         <DialogContent>
           <AIQuestionGenerator
             subjects={subjects}
-            onQuestionsSaved={(questions) => {
+            onQuestionsSaved={() => {
               setShowAIGenerator(false)
               refresh()
             }}

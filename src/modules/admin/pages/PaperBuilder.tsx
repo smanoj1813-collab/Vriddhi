@@ -25,6 +25,7 @@ import {
   Tooltip,
   Tabs,
   Tab,
+  Dialog,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -33,6 +34,8 @@ import {
   Save as SaveIcon,
   Preview as PreviewIcon,
   Print as PrintIcon,
+  Description as TemplateIcon,
+  Link as LinkIcon,
 } from '@mui/icons-material';
 import { useQuestionBank } from '../hooks/useQuestionBank';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -43,6 +46,9 @@ import {
   type PaperQuestionRef,
   type QuestionMetadata,
 } from '../../admin/types/universalQuestionBank';
+import TemplateSelector from '../components/TemplateSelector';
+import PaperPDFPreview from '../components/question-bank/PaperPDFPreview';
+import PaperLinkageModal from '../components/question-bank/PaperLinkageModal';
 
 // ============================================================
 // QUESTION SELECTOR DIALOG
@@ -154,6 +160,9 @@ export function PaperBuilder({ initialPaper, onSave, onClose }: PaperBuilderProp
   });
 
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [previewPdfOpen, setPreviewPdfOpen] = useState(false);
+  const [linkageOpen, setLinkageOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -270,14 +279,20 @@ export function PaperBuilder({ initialPaper, onSave, onClose }: PaperBuilderProp
             Create custom papers from the universal question pool
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<TemplateIcon />}
+            onClick={() => setTemplateOpen(true)}
+          >
+            Templates
+          </Button>
           <Button
             variant="outlined"
             startIcon={<PreviewIcon />}
-            onClick={() => previewPaper(paper.id)}
-            disabled={!paper.id}
+            onClick={() => setPreviewPdfOpen(true)}
           >
-            Preview
+            PDF Preview
           </Button>
           <Button
             variant="contained"
@@ -541,6 +556,45 @@ export function PaperBuilder({ initialPaper, onSave, onClose }: PaperBuilderProp
         onClose={() => setSelectorOpen(false)}
         onSelect={handleAddQuestion}
         subjectId={paper.subjectId}
+      />
+
+      {/* Template Dialog */}
+      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} maxWidth="md" fullWidth>
+        <TemplateSelector
+          onClose={() => setTemplateOpen(false)}
+          onPaperGenerated={(result: any) => {
+            setTemplateOpen(false);
+            if (result?.paper) {
+              setPaper(prev => ({
+                ...prev,
+                title: result.paper.title,
+                description: result.paper.description || '',
+                totalMarks: result.paper.totalMarks,
+                duration: result.paper.duration,
+              }));
+            }
+          }}
+        />
+      </Dialog>
+
+      {/* PDF Preview */}
+      <PaperPDFPreview
+        paper={{
+          id: paper.id,
+          title: paper.title,
+          subject: paper.subjectId,
+          totalMarks: paper.totalMarks,
+          duration: paper.duration,
+          instructions: paper.description ? [paper.description] : [],
+          sections: [],
+          status: 'draft',
+          collegeId: user?.collegeId || '',
+          createdBy: user?.id || user?.uid || '',
+          createdAt: paper.createdAt,
+          updatedAt: paper.updatedAt,
+          usageCount: 0,
+          linkedQuestionIds: paper.questions.map((q: any) => q.id || q.questionId),
+        } as any}
       />
     </Box>
   );
