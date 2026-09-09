@@ -448,7 +448,7 @@ describe('deterministic parse (server-side layout rules, no AI)', () => {
     assert.equal(parsed.accepted, true)
     assert.equal(parsed.questionCount, 3)
     const [first, second, third] = parsed.sections[0].questions
-    assert.match(first.text, /^The accounting equation is:$/)
+    assert.match(first.text, /^The accounting equation is:$/, 'trailing colon survives the marks strip (same on both question paths)')
     assert.equal(first.marks, 1)
     assert.equal(first.type, 'mcq')
     assert.deepEqual(first.options, ['Assets = Liabilities − Capital', 'Assets = Liabilities + Capital'])

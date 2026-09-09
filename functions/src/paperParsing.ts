@@ -451,7 +451,7 @@ export function detStripMarks(line: string): { rest: string; marks: number | nul
   if (!match || match.index === undefined) return { rest: line.trim(), marks: null }
   const marks = Number(match[1])
   if (!Number.isFinite(marks) || marks <= 0 || marks > 1000) return { rest: line.trim(), marks: null }
-  return { rest: line.slice(0, match.index).replace(/[\s:;,\-–—]+$/g, '').trim(), marks }
+  return { rest: line.slice(0, match.index).trim(), marks }
 }
 
 function detQuestionType(question: DetDraftQuestion): string {
