@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckCircle, XCircle, AlertTriangle,
   Eye, Upload, Clock, ChevronRight, Download, Send,
-  FileUp, BookOpen, Calendar
+  FileUp, BookOpen, Calendar, Printer, Globe, Database
 } from 'lucide-react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/Firebase/config'
@@ -13,6 +13,7 @@ import { getPaperQuestions } from '../../admin/api/paperApi'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Paper as BankPaper } from '../../admin/types/questionBank'
 import PaperUploadEditor, { type EditablePaper } from '@/shared/components/question-paper/PaperUploadEditor'
+import { paperBadges } from '@/shared/utils/paperReadiness'
 import { getBatchBranchConfig } from '../../admin/api/questionBankApi'
 interface PaperQuestion {
   number: number
@@ -20,6 +21,13 @@ interface PaperQuestion {
   type: string
   marks: number
   text?: string
+  options?: unknown[]
+}
+interface TestPaperSection {
+  id?: string
+  name?: string
+  title?: string
+  questions?: PaperQuestion[]
 }
 interface TestPaper {
   id: string
@@ -32,6 +40,9 @@ interface TestPaper {
   fileName: string
   verificationStatus: string
   questions: PaperQuestion[]
+  sections: TestPaperSection[]
+  questionIds: string[]
+  linkedQuestionIds: string[]
   createdBy: string
   createdByUid: string
   createdAt: string
@@ -50,6 +61,9 @@ interface TestPaper {
   answerKeyName?: string
   answerKeyPath?: string
   requiresApproval?: boolean
+  printReady?: boolean
+  onlineReady?: boolean
+  bankReady?: boolean
 }
 interface PaperVerificationRequest {
   id: string
@@ -323,7 +337,22 @@ export default function FacultyPapers() {
             type: q.type || 'long_answer',
             marks: q.marks || s.marksPerQuestion || 1,
             text: q.text || q.questionText || '',
+            options: Array.isArray(q.options) ? q.options : undefined,
           }))),
+          sections: (p.sections || []).map((s: any) => ({
+            id: s.id,
+            name: s.name || s.title,
+            questions: (s.questions || []).map((q: any, i: number) => ({
+              number: q.number || i + 1,
+              topic: q.topic || q.chapter || '',
+              type: q.type || 'long_answer',
+              marks: q.marks || s.marksPerQuestion || 1,
+              text: q.text || q.questionText || '',
+              options: Array.isArray(q.options) ? q.options : undefined,
+            })),
+          })),
+          questionIds: Array.isArray((p as any).questionIds) ? (p as any).questionIds.map(String) : [],
+          linkedQuestionIds: Array.isArray((p as any).linkedQuestionIds) ? (p as any).linkedQuestionIds.map(String) : [],
           branch: (p as any).branch || '',
           batch: (p as any).batch || '',
           semester: (p as any).semester || '',
@@ -336,6 +365,9 @@ export default function FacultyPapers() {
           answerKeyName: (p as any).answerKeyName || '',
           answerKeyPath: (p as any).answerKeyPath || '',
           requiresApproval: (p as any).requiresApproval ?? false,
+          printReady: (p as any).printReady,
+          onlineReady: (p as any).onlineReady,
+          bankReady: (p as any).bankReady,
           createdBy: p.createdByName || p.createdBy || '',
           createdByUid: p.createdBy || '',
           createdAt: p.createdAt || '',
@@ -476,12 +508,34 @@ export default function FacultyPapers() {
       answerKeyName: paper.answerKeyName,
       answerKeyPath: paper.answerKeyPath,
       requiresApproval: paper.requiresApproval,
-      questions: paper.questions.map((q) => ({
-        rowId: `q_${q.number}`,
-        text: q.text || '',
-        type: q.type || 'long_answer',
-        marks: q.marks || 0,
-        topic: q.topic || '',
+      // Pass the section layout so multi-section (parsed) papers round-trip;
+      // fall back to the flat question list for legacy single-section papers.
+      sections: (paper.sections.length > 0
+        ? paper.sections
+        : [{
+            name: 'Section A',
+            questions: paper.questions.map((q) => ({
+              number: q.number,
+              topic: q.topic,
+              type: q.type || 'long_answer',
+              marks: q.marks || 0,
+              text: q.text || '',
+              options: q.options,
+            })),
+          }]
+      ).map((section, sectionIndex) => ({
+        rowId: `edit_sec_${sectionIndex}`,
+        name: section.name || section.title || `Section ${sectionIndex + 1}`,
+        questions: (section.questions || []).map((q, qIndex) => ({
+          rowId: `edit_q_${sectionIndex}_${qIndex}`,
+          text: q.text || '',
+          type: q.type || 'long_answer',
+          marks: q.marks || 0,
+          topic: q.topic || '',
+          options: Array.isArray(q.options)
+            ? q.options.map((option) => (typeof option === 'string' ? option : String((option as Record<string, unknown>)?.text || '')))
+            : undefined,
+        })),
       })),
     })
     setEditorOpen(true)
@@ -563,6 +617,13 @@ export default function FacultyPapers() {
         <div className="space-y-4">
           {filteredPapers.map(paper => {
             const status = statusConfig[paper.verificationStatus] || fallbackStatus
+            const badges = paperBadges(paper)
+            const isAuthor = paper.createdByUid === (user?.uid || user?.id)
+            // Slice 1: authors may re-open their own file-only "Ready to use"
+            // papers to add structured questions (server enforces the same gate).
+            const canEdit = (canReview || isAuthor)
+              && (['draft', 'modification-requested', 'rejected-by-hod'].includes(paper.verificationStatus)
+                || (paper.verificationStatus === 'not-required' && paper.questions.length === 0 && isAuthor))
             return (
               <div
                 key={paper.id}
@@ -580,6 +641,43 @@ export default function FacultyPapers() {
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full border ${status.bg} ${status.color} ${status.border}`}>
                     {status.label}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span
+                    title="Original file attached — this paper can be printed as a photocopy"
+                    className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
+                      badges.print
+                        ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30'
+                        : 'bg-slate-500/5 text-slate-400 border-slate-500/20 opacity-60'
+                    }`}
+                  >
+                    <Printer className="w-3 h-3" /> Print
+                  </span>
+                  <span
+                    title={badges.online
+                      ? 'Has structured questions — can be scheduled online in Assessments'
+                      : 'No structured questions yet — parse the file in the editor to make it online-ready'}
+                    className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
+                      badges.online
+                        ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/30'
+                        : 'bg-slate-500/5 text-slate-400 border-slate-500/20 opacity-60'
+                    }`}
+                  >
+                    <Globe className="w-3 h-3" /> Online
+                  </span>
+                  <span
+                    title={badges.bank
+                      ? 'Questions are saved in the question bank'
+                      : 'Questions not yet synced to the question bank'}
+                    className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
+                      badges.bank
+                        ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30'
+                        : 'bg-slate-500/5 text-slate-400 border-slate-500/20 opacity-60'
+                    }`}
+                  >
+                    <Database className="w-3 h-3" /> Bank
                   </span>
                 </div>
 
@@ -629,8 +727,7 @@ export default function FacultyPapers() {
                       Changes requested
                     </span>
                   )}
-                  {(canReview || paper.createdByUid === (user?.uid || user?.id))
-                    && ['draft', 'modification-requested', 'rejected-by-hod'].includes(paper.verificationStatus) && (
+                  {canEdit && (
                     <button
                       onClick={() => openEditPaper(paper)}
                       className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors ml-auto"
@@ -711,6 +808,8 @@ export default function FacultyPapers() {
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
           Attach a ready PDF/DOC/image or type the questions in. You can review and edit every detail — title,
           program, marks, instructions and each question — before saving as a draft or submitting for approval.
+          The attached file is kept for printing; a digital PDF/DOCX can also be parsed into editable questions
+          (review first, then confirm) to make the paper online-ready for assessments.
         </p>
         <button
           onClick={openNewPaper}
@@ -735,8 +834,8 @@ export default function FacultyPapers() {
           setEditorOpen(false)
           setEditingPaper(null)
         }}
-        onSaved={async (_id, action) => {
-          setShowToast(
+        onSaved={async (_id, action, structureConfirmed) => {
+          const baseMessage =
             action === 'draft'
               ? 'Paper saved as draft — you can keep editing it'
               : action === 'save'
@@ -744,8 +843,10 @@ export default function FacultyPapers() {
                 : action === 'published'
                   ? 'Paper approved and published'
                   : 'Paper submitted for HOD approval'
+          setShowToast(
+            structureConfirmed ? `${baseMessage} — question structure confirmed and online-ready` : baseMessage
           )
-          setTimeout(() => setShowToast(''), 3000)
+          setTimeout(() => setShowToast(''), structureConfirmed ? 4500 : 3000)
           await loadData()
         }}
       />

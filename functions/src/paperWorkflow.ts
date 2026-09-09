@@ -8,10 +8,10 @@ interface PaperStaff {
   name: string
 }
 
-const PAPER_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
-const REVIEW_ROLES = ['superadmin', 'admin', 'principal', 'hod']
+export const PAPER_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+export const REVIEW_ROLES = ['superadmin', 'admin', 'principal', 'hod']
 const HIGH_STAKES_EXAMS = ['Mid Semester', 'Semester End', 'Model Exam']
-const EDITABLE_STATES = ['draft', 'modification-requested', 'rejected-by-hod']
+export const EDITABLE_STATES = ['draft', 'modification-requested', 'rejected-by-hod']
 const FILE_CONTENT_TYPES = new Set([
   'application/pdf',
   'application/msword',
@@ -20,7 +20,7 @@ const FILE_CONTENT_TYPES = new Set([
   'image/png',
 ])
 
-async function resolvePaperStaff(uid: string, token: Record<string, unknown>): Promise<PaperStaff> {
+export async function resolvePaperStaff(uid: string, token: Record<string, unknown>): Promise<PaperStaff> {
   const userDoc = await admin.firestore().collection('users').doc(uid).get()
   const user = userDoc.data()
   const role = String(token.role || user?.role || '')
@@ -211,6 +211,67 @@ export function derivePaperState(action: string, paper: PaperInput, canReview: b
   return { status: 'draft', verificationStatus: 'draft', requiresApproval: paper.requiresApproval }
 }
 
+export interface PaperReadinessFlags {
+  printReady: boolean
+  onlineReady: boolean
+  bankReady: boolean
+}
+
+/**
+ * Derives the three readiness flags for the two-artefact model:
+ *   printReady  — the original file is attached (the print/photocopy artefact)
+ *   onlineReady — at least one structured question exists (schedulable online)
+ *   bankReady   — question bank documents are linked via questionIds
+ */
+export function paperReadiness(paper: {
+  filePath?: unknown
+  sections?: unknown
+  questionIds?: unknown
+  linkedQuestionIds?: unknown
+  totalQuestions?: unknown
+}): PaperReadinessFlags {
+  const sectionsCount = Array.isArray(paper.sections)
+    ? (paper.sections as Array<Record<string, unknown>>).reduce(
+        (sum, section) => sum + (Array.isArray(section?.questions) ? section.questions.length : 0),
+        0
+      )
+    : 0
+  const bankCount = Math.max(
+    Array.isArray(paper.questionIds) ? paper.questionIds.length : 0,
+    Array.isArray(paper.linkedQuestionIds) ? paper.linkedQuestionIds.length : 0
+  )
+  const questionCount = sectionsCount > 0 ? sectionsCount : bankCount > 0 ? bankCount : Number(paper.totalQuestions) || 0
+  return {
+    printReady: Boolean(paper.filePath),
+    onlineReady: questionCount > 0,
+    bankReady: bankCount > 0,
+  }
+}
+
+/**
+ * Who may edit an existing paper. Submitted / published papers stay locked,
+ * except for the Slice 1 case: the paper's own author may re-open a
+ * file-only "Ready to use" paper (no structured questions yet) to add or
+ * refine its structure — today's EDITABLE_STATES-only check blocked exactly
+ * the "uploaded a PDF, now want to add questions" flow.
+ */
+export function canEditExistingPaper(
+  paper: { verificationStatus?: unknown; status?: unknown; totalQuestions?: unknown; createdBy?: unknown } | undefined,
+  staff: { role: string; uid: string }
+): boolean {
+  if (!paper) return false
+  const verificationStatus = String(paper.verificationStatus || paper.status || 'draft')
+  if (EDITABLE_STATES.includes(verificationStatus)) return true
+  if (
+    verificationStatus === 'not-required'
+    && (Number(paper.totalQuestions) || 0) === 0
+    && String(paper.createdBy || '') === staff.uid
+  ) {
+    return true
+  }
+  return false
+}
+
 export const savePaper = onCall(
   { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 120, minInstances: 0, maxInstances: 30 },
   async (request) => {
@@ -238,9 +299,11 @@ export const savePaper = onCall(
       if (!canReview && existing?.createdBy !== uid) {
         throw new HttpsError('permission-denied', 'Staff may edit only papers they authored')
       }
-      const verificationStatus = String(existing?.verificationStatus || existing?.status || 'draft')
-      if (!EDITABLE_STATES.includes(verificationStatus)) {
-        throw new HttpsError('failed-precondition', 'Submitted or published papers cannot be edited')
+      if (!canEditExistingPaper(existing, staff)) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Submitted or published papers cannot be edited. File-only papers can be re-opened by their author to add structured questions.'
+        )
       }
     }
     const [uploadedPaper, uploadedKey] = await Promise.all([
@@ -252,6 +315,9 @@ export const savePaper = onCall(
     if (action !== 'draft' && paper.totalQuestions === 0 && !filePath) {
       throw new HttpsError('failed-precondition', 'Add a paper file or at least one question')
     }
+    const preservedQuestionIds = Array.isArray(existing?.questionIds) ? existing.questionIds : []
+    const preservedLinkedIds = Array.isArray(existing?.linkedQuestionIds) ? existing.linkedQuestionIds : []
+    const readiness = paperReadiness({ filePath, sections: paper.sections, questionIds: preservedQuestionIds })
     const auditRef = db.collection('paperReviewAudit').doc()
     await db.runTransaction(async (transaction) => {
       const current = await transaction.get(ref)
@@ -264,6 +330,9 @@ export const savePaper = onCall(
         ...state,
         collegeId,
         filePath: filePath || null,
+        printReady: readiness.printReady,
+        onlineReady: readiness.onlineReady,
+        bankReady: readiness.bankReady,
         fileUrl: uploadedPaper
           ? null
           : (filePath === existing?.filePath ? existing?.fileUrl || null : null),
@@ -277,8 +346,8 @@ export const savePaper = onCall(
         answerKeyName: uploadedKey
           ? paper.answerKeyName || null
           : (answerKeyPath === existing?.answerKeyPath ? existing?.answerKeyName || null : null),
-        questionIds: Array.isArray(existing?.questionIds) ? existing.questionIds : [],
-        linkedQuestionIds: Array.isArray(existing?.linkedQuestionIds) ? existing.linkedQuestionIds : [],
+        questionIds: preservedQuestionIds,
+        linkedQuestionIds: preservedLinkedIds,
         usageCount: Number(existing?.usageCount || 0),
         isManual: true,
         createdBy: existing?.createdBy || uid,

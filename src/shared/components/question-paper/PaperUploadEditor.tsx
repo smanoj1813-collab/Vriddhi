@@ -3,11 +3,21 @@
 // EDIT everything (title, program, marks, instructions, each question) and then
 // save it as a draft or submit it for HOD approval.
 // Shared by the faculty and admin portals.
+//
+// Slice 1 (paper-upload parse handoff):
+//   • The paper keeps its original file — that is the PRINT artefact.
+//   • "Parse file" asks the server to transcribe a digital PDF/DOCX into a
+//     reviewable question structure (assistive only — nothing is saved, and
+//     the AI never invents answers; defaults are short/long answer).
+//   • Saving or submitting with questions runs the one server-side Confirm,
+//     which writes the reviewed questions to the question bank and marks the
+//     paper Online-ready so Assessments can schedule it.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   X, UploadCloud, FileText, Plus, Trash2, ArrowUp, ArrowDown, Loader2,
   AlertTriangle, Save, Send, Paperclip, CheckCircle2, ShieldCheck,
+  Sparkles, Printer, Info, Layers, RefreshCw,
 } from 'lucide-react';
 import { collection, doc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -22,6 +32,14 @@ export interface EditablePaperQuestion {
   type: string;
   marks: number;
   topic: string;
+  /** Option texts for mcq / multi_select / true_false rows (never answers). */
+  options?: string[];
+}
+
+export interface EditablePaperSection {
+  rowId: string;
+  name: string;
+  questions: EditablePaperQuestion[];
 }
 
 export interface EditablePaper {
@@ -36,7 +54,10 @@ export interface EditablePaper {
   duration: number;
   totalMarks: number;
   instructions: string;
-  questions: EditablePaperQuestion[];
+  /** Section layout (always present in editor state; single implicit section otherwise). */
+  sections: EditablePaperSection[];
+  /** Legacy flat layout, used only when `sections` is absent. */
+  questions?: EditablePaperQuestion[];
   fileUrl?: string;
   fileName?: string;
   filePath?: string;
@@ -60,7 +81,7 @@ export interface PaperUploadEditorProps {
   /** Admin / HOD can publish straight away. */
   canPublishDirectly?: boolean;
   onClose: () => void;
-  onSaved?: (paperId: string, action: 'draft' | 'save' | 'submitted' | 'published') => void;
+  onSaved?: (paperId: string, action: 'draft' | 'save' | 'submitted' | 'published', structureConfirmed?: boolean) => void;
 }
 
 const EXAM_TYPES = ['Internal Assessment 1', 'Internal Assessment 2', 'Mid Semester', 'Semester End', 'Model Exam', 'Assignment', 'Class Test', 'Practice / Revision', 'Other'];
@@ -76,6 +97,8 @@ export function approvalDefaultFor(examType: string): boolean {
   return EXAM_TYPES_NEEDING_APPROVAL.includes(examType);
 }
 
+const OPTION_TYPES = ['mcq', 'multi_select', 'true_false'];
+
 const inputCls =
   'w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500/60';
 const labelCls = 'block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1';
@@ -90,7 +113,15 @@ const newQ = (patch: Partial<EditablePaperQuestion> = {}): EditablePaperQuestion
   ...patch,
 });
 
-function blankPaper(): EditablePaper {
+let sCounter = 0;
+const nextSectionRowId = () => `ps_${Date.now().toString(36)}_${++sCounter}`;
+const newSection = (name: string): EditablePaperSection => ({
+  rowId: nextSectionRowId(),
+  name,
+  questions: [],
+});
+
+export function blankPaper(): EditablePaper {
   return {
     title: '',
     subject: '',
@@ -102,9 +133,32 @@ function blankPaper(): EditablePaper {
     duration: 90,
     totalMarks: 0,
     instructions: 'Answer all questions. Figures to the right indicate full marks.',
-    questions: [],
+    sections: [newSection('Section A')],
     requiresApproval: approvalDefaultFor(EXAM_TYPES[0]),
   };
+}
+
+type ParseState =
+  | { status: 'idle' }
+  | { status: 'working' }
+  | { status: 'parsed'; message: string; warnings: string[] }
+  | { status: 'scanned'; message: string }
+  | { status: 'unrecognized'; message: string };
+
+interface ParsedQuestion {
+  text: string;
+  type: string;
+  marks: number;
+  topic: string;
+  options?: string[];
+}
+
+interface ParsedPaperResult {
+  status: 'parsed' | 'scanned' | 'unrecognized';
+  message: string;
+  sections: Array<{ name: string; instructions?: string; questions: ParsedQuestion[] }>;
+  questionCount: number;
+  warnings: string[];
 }
 
 export default function PaperUploadEditor({
@@ -130,49 +184,137 @@ export default function PaperUploadEditor({
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  /** Set when savePaper succeeded but the bank sync (confirm) failed — the paper
+   * is now locked from editing, so recovery is a confirm-only retry. */
+  const [confirmError, setConfirmError] = useState('');
+  const [parseState, setParseState] = useState<ParseState>({ status: 'idle' });
   const fileRef = useRef<HTMLInputElement>(null);
   const keyRef = useRef<HTMLInputElement>(null);
+  const lastActionRef = useRef<'draft' | 'save' | 'submitted' | 'published'>('save');
 
   const isEdit = Boolean(paper?.id);
 
   useEffect(() => {
     if (!open) return;
     setError('');
+    setConfirmError('');
     setFile(null);
     setAnswerKey(null);
     setApprovalTouched(Boolean(paper?.id));
+    setParseState({ status: 'idle' });
+
+    // The `paper` prop may carry raw Firestore section data (name/title,
+    // questionText/chapter, object options), so read it defensively.
+    type RawQuestion = {
+      text?: string;
+      questionText?: string;
+      type?: string;
+      marks?: number;
+      topic?: string;
+      chapter?: string;
+      options?: unknown[];
+    };
+    type RawSection = { name?: string; title?: string; questions?: RawQuestion[] };
+    const rawSections: RawSection[] = Array.isArray(paper?.sections) ? (paper!.sections as RawSection[]) : [];
+
+    const loadedSections: EditablePaperSection[] = rawSections.length > 0
+      ? rawSections.map((section, index) => ({
+          rowId: nextSectionRowId(),
+          name: String(section.name || section.title || `Section ${index + 1}`),
+          questions: (Array.isArray(section.questions) ? section.questions : []).map((q) =>
+            newQ({
+              text: q.text || q.questionText || '',
+              type: q.type || 'long_answer',
+              marks: Number(q.marks) || 0,
+              topic: q.topic || q.chapter || '',
+              options: Array.isArray(q.options)
+                ? q.options.map((option) =>
+                    typeof option === 'string'
+                      ? option
+                      : String((option as Record<string, unknown>)?.text || (option as Record<string, unknown>)?.label || '')
+                  )
+                : undefined,
+            })
+          ),
+        }))
+      : [];
+    if (loadedSections.length === 0 && Array.isArray(paper?.questions) && paper!.questions!.length > 0) {
+      loadedSections.push({ ...newSection('Section A'), questions: paper!.questions!.map((q) => newQ(q)) });
+    }
+    if (loadedSections.length === 0) loadedSections.push(newSection('Section A'));
+
     const base = { ...blankPaper(), ...(paper || {}) } as EditablePaper;
     setForm({
       ...base,
+      sections: loadedSections,
+      questions: undefined,
       requiresApproval:
         paper?.requiresApproval !== undefined ? paper.requiresApproval : approvalDefaultFor(base.examType),
-      questions: (paper?.questions || []).map((q) => newQ(q)),
     });
   }, [open, paper]);
 
+  const allQuestions = useMemo(() => form.sections.flatMap((section) => section.questions), [form.sections]);
+  const questionCount = allQuestions.length;
   const computedMarks = useMemo(
-    () => form.questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0),
-    [form.questions]
+    () => allQuestions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0),
+    [allQuestions]
   );
-  const effectiveMarks = form.questions.length > 0 ? computedMarks : Number(form.totalMarks) || 0;
+  const effectiveMarks = questionCount > 0 ? computedMarks : Number(form.totalMarks) || 0;
+  const missingMarks = allQuestions.filter((q) => !(Number(q.marks) > 0)).length;
 
   const set = (patch: Partial<EditablePaper>) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const setSectionName = (rowId: string, name: string) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => (section.rowId === rowId ? { ...section, name } : section)),
+    }));
+  const addSection = () =>
+    setForm((prev) => ({
+      ...prev,
+      sections: [...prev.sections, newSection(`Section ${String.fromCharCode(65 + prev.sections.length)}`)],
+    }));
+  const removeSection = (rowId: string) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.length > 1 ? prev.sections.filter((section) => section.rowId !== rowId) : prev.sections,
+    }));
+
   const setQ = (rowId: string, patch: Partial<EditablePaperQuestion>) =>
     setForm((prev) => ({
       ...prev,
-      questions: prev.questions.map((q) => (q.rowId === rowId ? { ...q, ...patch } : q)),
+      sections: prev.sections.map((section) => ({
+        ...section,
+        questions: section.questions.map((q) => (q.rowId === rowId ? { ...q, ...patch } : q)),
+      })),
     }));
   const removeQ = (rowId: string) =>
-    setForm((prev) => ({ ...prev, questions: prev.questions.filter((q) => q.rowId !== rowId) }));
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => ({
+        ...section,
+        questions: section.questions.filter((q) => q.rowId !== rowId),
+      })),
+    }));
+  const addQ = (sectionRowId: string) =>
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) =>
+        section.rowId === sectionRowId ? { ...section, questions: [...section.questions, newQ()] } : section
+      ),
+    }));
   const moveQ = (rowId: string, dir: -1 | 1) =>
-    setForm((prev) => {
-      const idx = prev.questions.findIndex((q) => q.rowId === rowId);
-      const target = idx + dir;
-      if (idx < 0 || target < 0 || target >= prev.questions.length) return prev;
-      const next = [...prev.questions];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return { ...prev, questions: next };
-    });
+    setForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => {
+        const idx = section.questions.findIndex((q) => q.rowId === rowId);
+        const target = idx + dir;
+        if (idx < 0 || target < 0 || target >= section.questions.length) return section;
+        const next = [...section.questions];
+        [next[idx], next[target]] = [next[target], next[idx]];
+        return { ...section, questions: next };
+      }),
+    }));
 
   const uploadIfNeeded = async (f: File | null, paperId: string, kind: 'paper' | 'answer-key') => {
     if (!f) return null;
@@ -192,6 +334,88 @@ export default function PaperUploadEditor({
     return { path, name: f.name };
   };
 
+  const handleParse = async () => {
+    if (!form.id || !form.filePath) {
+      setError('Save the paper with its file first — the server parses the attached file.');
+      return;
+    }
+    setParseState({ status: 'working' });
+    setError('');
+    try {
+      const parsePaperFile = httpsCallable<{ paperId: string; collegeId: string }, ParsedPaperResult>(
+        functions,
+        'parsePaperFile'
+      );
+      const result = (await parsePaperFile({ paperId: form.id, collegeId })).data;
+
+      if (result.status === 'parsed' && result.sections.length > 0) {
+        const existing = questionCount;
+        if (existing > 0 && !window.confirm(
+          `The editor currently has ${existing} question(s). Replace them with the ${result.questionCount} question(s) transcribed from the file?`
+        )) {
+          setParseState({
+            status: 'parsed',
+            message: `Parsed ${result.questionCount} question(s) from the file, but you chose to keep the current questions. Run it again to replace them.`,
+            warnings: result.warnings,
+          });
+          return;
+        }
+        setForm((prev) => ({
+          ...prev,
+          sections: result.sections.map((section, index) => ({
+            rowId: newSection(`Section ${index + 1}`).rowId,
+            name: section.name || `Section ${index + 1}`,
+            questions: section.questions.map((q) =>
+              newQ({
+                text: q.text,
+                type: q.type,
+                marks: Number(q.marks) || 0,
+                topic: q.topic || '',
+                options: q.options && q.options.length > 0 ? q.options : undefined,
+              })
+            ),
+          })),
+        }));
+        setParseState({ status: 'parsed', message: result.message, warnings: result.warnings });
+      } else if (result.status === 'scanned') {
+        setParseState({ status: 'scanned', message: result.message });
+      } else {
+        setParseState({ status: 'unrecognized', message: result.message });
+      }
+    } catch (err) {
+      setParseState({ status: 'idle' });
+      setError(err instanceof Error ? err.message : 'Parsing the file failed.');
+    }
+  };
+
+  // The one server-side Confirm. Kept as its own callable step so that, if the
+  // paper save succeeds but the bank sync fails, we can retry the confirm alone
+  // (after a save the paper is locked from re-editing, so savePaper must not be
+  // re-run).
+  const runConfirm = async (paperId: string) => {
+    const confirmPaperStructure = httpsCallable<
+      { paperId: string; collegeId: string },
+      { status: string }
+    >(functions, 'confirmPaperStructure');
+    await confirmPaperStructure({ paperId, collegeId });
+  };
+
+  const handleConfirmRetry = async () => {
+    if (!form.id) return;
+    setBusy(true);
+    setConfirmError('');
+    setError('');
+    try {
+      await runConfirm(form.id);
+      onSaved?.(form.id, lastActionRef.current, true);
+      onClose();
+    } catch (err) {
+      setConfirmError(err instanceof Error ? err.message : 'Structure sync failed. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const persist = async (action: 'draft' | 'save' | 'submitted' | 'published') => {
     if (!collegeId || !userId) {
       setError('Missing account or college — please sign in again.');
@@ -205,12 +429,20 @@ export default function PaperUploadEditor({
       setError('Subject is required.');
       return;
     }
-    if (action !== 'draft' && !file && !form.filePath && !form.fileUrl && form.questions.length === 0) {
+    if (action !== 'draft' && !file && !form.filePath && !form.fileUrl && questionCount === 0) {
       setError('Add at least one question or attach a paper file before saving.');
+      return;
+    }
+    // The server Confirm rejects structure with missing marks; fail fast with
+    // an actionable message instead of a round-trip.
+    if (action !== 'draft' && questionCount > 0 && missingMarks > 0) {
+      setError(`${missingMarks} question(s) still need marks. Set a value greater than 0 for every question before confirming.`);
       return;
     }
     setBusy(true);
     setError('');
+    setConfirmError('');
+    lastActionRef.current = action;
     const pendingUploadPaths: string[] = [];
     try {
       // Generate the Firestore-shaped identifier before upload so Storage can
@@ -221,6 +453,8 @@ export default function PaperUploadEditor({
       if (uploaded) pendingUploadPaths.push(uploaded.path);
       const uploadedKey = await uploadIfNeeded(answerKey, paperId, 'answer-key');
       if (uploadedKey) pendingUploadPaths.push(uploadedKey.path);
+
+      const nonEmptySections = form.sections.filter((section) => section.questions.length > 0 || section.name.trim());
       const payload: Record<string, unknown> = {
         title: form.title.trim(),
         subject: form.subject.trim(),
@@ -232,20 +466,19 @@ export default function PaperUploadEditor({
         duration: Number(form.duration) || 0,
         totalMarks: effectiveMarks,
         instructions: form.instructions,
-        sections: form.questions.length
-          ? [{
-              id: 'section-a',
-              name: 'Section A',
-              questions: form.questions.map((q, i) => ({
-                number: i + 1,
-                text: q.text,
-                type: q.type,
-                marks: Number(q.marks) || 0,
-                topic: q.topic,
-              })),
-            }]
-          : [],
-        totalQuestions: form.questions.length,
+        sections: nonEmptySections.map((section, index) => ({
+          id: `section-${index + 1}`,
+          name: section.name.trim() || `Section ${index + 1}`,
+          questions: section.questions.map((q, i) => ({
+            number: i + 1,
+            text: q.text,
+            type: q.type,
+            marks: Number(q.marks) || 0,
+            topic: q.topic,
+            ...(q.options && q.options.length > 0 ? { options: q.options } : {}),
+          })),
+        })),
+        totalQuestions: questionCount,
         requiresApproval: Boolean(form.requiresApproval),
         filePath: uploaded?.path || form.filePath,
         fileUrl: form.fileUrl,
@@ -260,7 +493,28 @@ export default function PaperUploadEditor({
       >(functions, 'savePaper');
       await savePaper({ paperId, collegeId, action, paper: payload });
 
-      onSaved?.(paperId, action);
+      // One server-side Confirm: with the paper document saved (the source of
+      // truth), sync the reviewed structure into the question bank. Drafts
+      // keep iterating in the editor, so drafts never write to the bank.
+      let structureConfirmed = false;
+      if (action !== 'draft' && questionCount > 0) {
+        try {
+          await runConfirm(paperId);
+          structureConfirmed = true;
+        } catch (confirmErr) {
+          // The paper itself saved fine; only the bank sync failed. Stay open
+          // and let the faculty retry the confirm without re-saving (the paper
+          // is now locked from editing, so a re-save would be rejected).
+          setConfirmError(
+            confirmErr instanceof Error
+              ? confirmErr.message
+              : 'The paper was saved, but syncing its questions to the bank failed.'
+          );
+          return;
+        }
+      }
+
+      onSaved?.(paperId, action, structureConfirmed);
       onClose();
     } catch (err) {
       await Promise.allSettled(pendingUploadPaths.map((path) => deleteObject(ref(storage, path))));
@@ -271,6 +525,8 @@ export default function PaperUploadEditor({
   };
 
   if (!open) return null;
+
+  const confirmSuffix = questionCount > 0 ? ' & confirm structure' : '';
 
   return (
     <div className="fixed inset-0 z-[1400] flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto p-4">
@@ -303,6 +559,18 @@ export default function PaperUploadEditor({
             <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-sm text-rose-500">
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+          {confirmError && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                {confirmError}
+                <span className="block text-xs opacity-80 mt-1">
+                  The paper itself was saved. Use “Retry structure confirm” below to sync the questions to the bank
+                  — do not save the paper again.
+                </span>
+              </span>
             </div>
           )}
 
@@ -360,6 +628,69 @@ export default function PaperUploadEditor({
                 </span>
               )}
             </div>
+
+            {/* Print / parse controls — the file is the print artefact; parsing builds the online one */}
+            {form.filePath && (
+              <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-3">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                  <Printer className="w-3.5 h-3.5 text-teal-500" />
+                  Print-ready — original file attached
+                </span>
+                <button
+                  onClick={() => void handleParse()}
+                  disabled={parseState.status === 'working' || busy}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/20 disabled:opacity-50"
+                >
+                  {parseState.status === 'working'
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Sparkles className="w-3.5 h-3.5" />}
+                  {parseState.status === 'working'
+                    ? 'Reading file…'
+                    : questionCount > 0
+                      ? 'Re-parse file & replace questions'
+                      : 'Parse file → add questions'}
+                </button>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Digital PDF/DOCX only — scanned images are not supported yet. Parsing is assistive:
+                  nothing is saved or published until you review and confirm.
+                </span>
+              </div>
+            )}
+            {!form.filePath && (
+              <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                Save the paper with its file first to unlock AI parsing of the attached PDF/DOCX.
+              </p>
+            )}
+
+            {/* Parse outcome banners */}
+            {parseState.status === 'parsed' && (
+              <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-teal-500/10 border border-teal-500/30 text-sm text-teal-600 dark:text-teal-400">
+                <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  {parseState.message}
+                  {parseState.warnings.map((warning) => (
+                    <span key={warning} className="block text-xs opacity-80">{warning}</span>
+                  ))}
+                  <span className="block text-xs opacity-80 mt-1">
+                    The questions below are transcribed from the file — verify every question, and set marks wherever
+                    they show 0, before you confirm.
+                  </span>
+                </span>
+              </div>
+            )}
+            {parseState.status === 'scanned' && (
+              <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{parseState.message}</span>
+              </div>
+            )}
+            {parseState.status === 'unrecognized' && (
+              <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{parseState.message}</span>
+              </div>
+            )}
           </div>
 
           {/* Metadata */}
@@ -460,12 +791,12 @@ export default function PaperUploadEditor({
                 />
               </div>
               <div>
-                <label className={labelCls}>Total marks {form.questions.length > 0 && '(auto)'}</label>
+                <label className={labelCls}>Total marks {questionCount > 0 && '(auto)'}</label>
                 <input
                   type="number"
                   min={0}
                   value={effectiveMarks}
-                  disabled={form.questions.length > 0}
+                  disabled={questionCount > 0}
                   onChange={(e) => set({ totalMarks: Number(e.target.value) })}
                   className={`${inputCls} disabled:opacity-60`}
                 />
@@ -513,95 +844,192 @@ export default function PaperUploadEditor({
             </div>
           </div>
 
-          {/* Questions */}
+          {/* Questions by section */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                Questions {form.questions.length > 0 && `(${form.questions.length} • ${computedMarks} marks)`}
+                Questions {questionCount > 0 && `(${questionCount} • ${computedMarks} marks)`}
+                {missingMarks > 0 && (
+                  <span className="ml-2 text-xs font-normal text-amber-500">
+                    {missingMarks} need marks before confirming
+                  </span>
+                )}
               </h3>
               <button
-                onClick={() => set({ questions: [...form.questions, newQ()] })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-teal-500/10 text-teal-500 border border-teal-500/30 hover:bg-teal-500/20"
+                onClick={addSection}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
               >
-                <Plus className="w-3.5 h-3.5" /> Add question
+                <Layers className="w-3.5 h-3.5" /> Add section
               </button>
             </div>
 
-            {form.questions.length === 0 ? (
-              <p className="text-xs text-slate-500 p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center">
-                No questions typed in. That's fine for a file-only upload — or add questions so the paper is searchable
-                and printable inside Vriddhi.
+            {questionCount === 0 && (
+              <p className="text-xs text-slate-500 p-4 mb-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center">
+                No questions typed in. That's fine for a file-only upload (print only) — or parse the file / add
+                questions so the paper is searchable and schedulable online.
               </p>
-            ) : (
-              <div className="space-y-3">
-                {form.questions.map((q, i) => (
-                  <div
-                    key={q.rowId}
-                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 space-y-2"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="mt-2 text-xs font-semibold text-slate-500 w-6 shrink-0">Q{i + 1}</span>
-                      <textarea
-                        rows={2}
-                        value={q.text}
-                        onChange={(e) => setQ(q.rowId, { text: e.target.value })}
-                        placeholder="Question text"
-                        className={inputCls}
-                      />
-                      <div className="flex flex-col gap-1 shrink-0">
-                        <button
-                          onClick={() => moveQ(q.rowId, -1)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
-                          title="Move up"
-                        >
-                          <ArrowUp className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => moveQ(q.rowId, 1)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
-                          title="Move down"
-                        >
-                          <ArrowDown className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => removeQ(q.rowId)}
-                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10"
-                          title="Remove"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 pl-9">
-                      <div>
-                        <label className={labelCls}>Type</label>
-                        <select value={q.type} onChange={(e) => setQ(q.rowId, { type: e.target.value })} className={inputCls}>
-                          {QUESTION_TYPE_OPTIONS.map((t) => (
-                            <option key={t.value} value={t.value}>
-                              {t.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className={labelCls}>Marks</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={q.marks}
-                          onChange={(e) => setQ(q.rowId, { marks: Number(e.target.value) })}
-                          className={inputCls}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelCls}>Topic / Unit</label>
-                        <input value={q.topic} onChange={(e) => setQ(q.rowId, { topic: e.target.value })} className={inputCls} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
+
+            <div className="space-y-4">
+              {form.sections.map((section) => (
+                <div
+                  key={section.rowId}
+                  className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/20 p-4 space-y-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      value={section.name}
+                      onChange={(e) => setSectionName(section.rowId, e.target.value)}
+                      className={`${inputCls} max-w-[260px] font-semibold`}
+                      aria-label="Section name"
+                    />
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {section.questions.length} question(s) •{' '}
+                      {section.questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0)} marks
+                    </span>
+                    {form.sections.length > 1 && (
+                      <button
+                        onClick={() => removeSection(section.rowId)}
+                        className="ml-auto flex items-center gap-1 text-xs text-rose-500 hover:underline"
+                        title="Remove this section"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove section
+                      </button>
+                    )}
+                  </div>
+
+                  {section.questions.length === 0 ? (
+                    <p className="text-xs text-slate-500 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-center">
+                      This section has no questions yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {section.questions.map((q, i) => (
+                        <div
+                          key={q.rowId}
+                          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 space-y-2"
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="mt-2 text-xs font-semibold text-slate-500 w-6 shrink-0">Q{i + 1}</span>
+                            <textarea
+                              rows={2}
+                              value={q.text}
+                              onChange={(e) => setQ(q.rowId, { text: e.target.value })}
+                              placeholder="Question text"
+                              className={inputCls}
+                            />
+                            <div className="flex flex-col gap-1 shrink-0">
+                              <button
+                                onClick={() => moveQ(q.rowId, -1)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                title="Move up"
+                              >
+                                <ArrowUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => moveQ(q.rowId, 1)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                title="Move down"
+                              >
+                                <ArrowDown className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => removeQ(q.rowId)}
+                                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10"
+                                title="Remove"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 pl-9">
+                            <div>
+                              <label className={labelCls}>Type</label>
+                              <select value={q.type} onChange={(e) => setQ(q.rowId, { type: e.target.value })} className={inputCls}>
+                                {QUESTION_TYPE_OPTIONS.map((t) => (
+                                  <option key={t.value} value={t.value}>
+                                    {t.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className={labelCls}>
+                                Marks {!(Number(q.marks) > 0) && (
+                                  <span className="text-amber-500">— required</span>
+                                )}
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                value={q.marks}
+                                onChange={(e) => setQ(q.rowId, { marks: Number(e.target.value) })}
+                                className={`${inputCls} ${!(Number(q.marks) > 0) ? 'border-amber-400/70' : ''}`}
+                              />
+                            </div>
+                            <div>
+                              <label className={labelCls}>Topic / Unit</label>
+                              <input value={q.topic} onChange={(e) => setQ(q.rowId, { topic: e.target.value })} className={inputCls} />
+                            </div>
+                          </div>
+
+                          {/* Options for objective types — transcribed from the file, verified by the faculty */}
+                          {OPTION_TYPES.includes(q.type) && (
+                            <div className="pl-9 space-y-1.5">
+                              <label className={labelCls}>
+                                Options{' '}
+                                <span className="text-slate-400">(texts only — the correct answer is never stored here)</span>
+                              </label>
+                              {(q.options || []).map((optionText, optionIndex) => (
+                                <div key={optionIndex} className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-slate-500 w-4">
+                                    {String.fromCharCode(65 + optionIndex)}
+                                  </span>
+                                  <input
+                                    value={optionText}
+                                    onChange={(e) => {
+                                      const options = [...(q.options || [])];
+                                      options[optionIndex] = e.target.value;
+                                      setQ(q.rowId, { options });
+                                    }}
+                                    placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
+                                    className={inputCls}
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      setQ(q.rowId, { options: (q.options || []).filter((_, idx) => idx !== optionIndex) })
+                                    }
+                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 shrink-0"
+                                    title="Remove option"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() =>
+                                  setQ(q.rowId, { options: [...(q.options || []), ''] })
+                                }
+                                className="flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 hover:underline"
+                              >
+                                <Plus className="w-3 h-3" /> Add option
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => addQ(section.rowId)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/20"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add question
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -612,6 +1040,16 @@ export default function PaperUploadEditor({
           >
             Cancel
           </button>
+          {confirmError && (
+            <button
+              onClick={() => void handleConfirmRetry()}
+              disabled={busy}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 disabled:opacity-40"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Retry structure confirm
+            </button>
+          )}
           <button
             onClick={() => persist('draft')}
             disabled={busy}
@@ -624,28 +1062,31 @@ export default function PaperUploadEditor({
             <button
               onClick={() => persist('published')}
               disabled={busy}
+              title={questionCount > 0 ? 'Publish and write the reviewed questions to the bank' : 'Publish'}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-40"
             >
-              <CheckCircle2 className="w-4 h-4" /> Approve &amp; publish
+              <CheckCircle2 className="w-4 h-4" /> Approve &amp; publish{questionCount > 0 ? ' & confirm' : ''}
             </button>
           )}
           {form.requiresApproval ? (
             <button
               onClick={() => persist('submitted')}
               disabled={busy}
+              title={questionCount > 0 ? 'Submit for approval and write the reviewed questions to the bank' : 'Submit for approval'}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-40"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Submit for approval
+              Submit for approval{confirmSuffix}
             </button>
           ) : (
             <button
               onClick={() => persist('save')}
               disabled={busy}
+              title={questionCount > 0 ? 'Save the paper and write the reviewed questions to the bank' : 'Save the paper'}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-40"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Save paper
+              Save paper{confirmSuffix}
             </button>
           )}
         </div>
