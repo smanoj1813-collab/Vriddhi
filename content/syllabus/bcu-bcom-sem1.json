@@ -1,0 +1,435 @@
+{
+  "id": "bcu-bcom-sem1",
+  "university": "Bengaluru City University",
+  "universityCode": "BCU",
+  "universityWebsite": "https://bcu.ac.in",
+  "program": "B.Com",
+  "programName": "Bachelor of Commerce (Regular)",
+  "extractedAt": "2026-09-09",
+  "extractedBy": "Vriddhi content seed",
+  "notes": [
+    "Karnataka UG commerce is in transition. Colleges may still teach out NEP 2020 (admitted 2021–23) while 2024–25 onwards follow SEP 2024 (Government Order ED 166 UNE 2023, 08.05.2024).",
+    "The 2026–27 batch should be assumed SEP unless the college says otherwise.",
+    "Detailed module text below is from the BCU B.Com (Regular) NEP 2020 syllabus (2022–23 onwards) for DSC 1.1–1.3, which the in-app syllabusParser (BCU_CONFIG) is tuned to parse.",
+    "SEP 2024 Sem I replaces Management Principles with Business Environment and adds Indian Financial System; Financial Accounting and Principles of Marketing remain DSC papers.",
+    "Do not treat this file as an official university notification. Always prefer the PDF on bcu.ac.in / the college's BoS circular."
+  ],
+  "sources": [
+    {
+      "scheme": "NEP 2020",
+      "title": "BCU B.Com (Regular) NEP syllabus 2022–23 onwards",
+      "url": "https://www.spmcollege.ac.in/downloads/nepsyllabus/bcom.pdf"
+    },
+    {
+      "scheme": "SEP 2024",
+      "title": "BCU B.Com (Regular) I & II Semester SEP syllabus 2024–25",
+      "url": "https://bcu.ac.in/uploads/syllabus/ug_sep/I_and_II_Sem_SEP_Syllabus/Commerce%20Syllabus/B.Com%20-%20Regular%20UG%20Syllabus%20SEP.pdf"
+    }
+  ],
+  "schemes": [
+    {
+      "id": "nep-2020",
+      "name": "NEP 2020 (CBCS, multiple entry/exit)",
+      "academicYearFrom": "2022-23",
+      "seeMarks": 60,
+      "cieMarks": 40,
+      "semesters": {
+        "1": {
+          "credits": 25,
+          "seeTotal": 390,
+          "cieTotal": 310,
+          "totalMarks": 700,
+          "courses": [
+            { "code": "Lang.1.1", "name": "Language I", "category": "AECC", "ltp": "3+1+0", "see": 60, "cie": 40, "totalMarks": 100, "credits": 3 },
+            { "code": "Lang.1.2", "name": "Language II", "category": "AECC", "ltp": "3+1+0", "see": 60, "cie": 40, "totalMarks": 100, "credits": 3 },
+            { "code": "B.Com.1.1", "name": "Financial Accounting", "category": "DSC-1", "ltp": "3+0+2", "see": 60, "cie": 40, "totalMarks": 100, "credits": 4 },
+            { "code": "B.Com.1.2", "name": "Management Principles and Applications", "category": "DSC-2", "ltp": "4+0+0", "see": 60, "cie": 40, "totalMarks": 100, "credits": 4 },
+            { "code": "B.Com.1.3", "name": "Principles of Marketing", "category": "DSC-3", "ltp": "4+0+0", "see": 60, "cie": 40, "totalMarks": 100, "credits": 4 },
+            { "code": "B.Com.1.4", "name": "Digital Fluency / Basics of Computer", "category": "SEC-SB", "ltp": "1+0+2", "see": 30, "cie": 20, "totalMarks": 50, "credits": 2 },
+            { "code": "B.Com.1.5", "name": "OEC-1 (Accounting for Everyone / Personal Finance & Planning)", "category": "OEC", "ltp": "3+0+0", "see": 60, "cie": 40, "totalMarks": 100, "credits": 3 },
+            { "code": "B.Com.1.6", "name": "Yoga", "category": "SEC-VB", "ltp": "0+0+2", "see": 0, "cie": 25, "totalMarks": 25, "credits": 1 },
+            { "code": "B.Com.1.7", "name": "Health & Wellness", "category": "SEC-VB", "ltp": "0+0+2", "see": 0, "cie": 25, "totalMarks": 25, "credits": 1 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sep-2024",
+      "name": "SEP 2024 (CBCS)",
+      "academicYearFrom": "2024-25",
+      "seeMarks": 80,
+      "cieMarks": 20,
+      "questionPaperPattern": {
+        "durationMinutes": 180,
+        "totalMarks": 80,
+        "sections": [
+          { "name": "A", "kind": "conceptual", "choice": "5 of 8", "marks": "5 × 2 = 10" },
+          { "name": "B", "kind": "analytical", "choice": "4 of 6", "marks": "4 × 5 = 20" },
+          { "name": "C", "kind": "essay", "choice": "3 of 5", "marks": "3 × 15 = 45" },
+          { "name": "D", "kind": "skill-based", "choice": "compulsory", "marks": "1 × 5 = 5" }
+        ]
+      },
+      "semesters": {
+        "1": {
+          "dsc": [
+            { "code": "1.1", "name": "Financial Accounting", "credits": 4, "see": 80, "cie": 20, "totalMarks": 100 },
+            { "code": "1.2", "name": "Principles of Marketing", "credits": 4, "see": 80, "cie": 20, "totalMarks": 100 },
+            { "code": "1.3", "name": "Business Environment", "credits": 4, "see": 80, "cie": 20, "totalMarks": 100 },
+            { "code": "1.4", "name": "Indian Financial System", "credits": 4, "see": 80, "cie": 20, "totalMarks": 100 }
+          ],
+          "notes": "Languages, AECC and skill courses follow the SEP common structure issued with the matrix. Confirm the latest annexure on bcu.ac.in before seeding a college."
+        }
+      }
+    }
+  ],
+  "detailedSyllabus": {
+    "schemeId": "nep-2020",
+    "courses": [
+      {
+        "code": "B.Com.1.1",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "hoursPerWeek": 4,
+        "totalHours": 56,
+        "outcomes": [
+          "Understand the theoretical framework of accounting as well as accounting standards.",
+          "Demonstrate the ability to prepare financial statements of manufacturing and non-manufacturing sole proprietors.",
+          "Work out the accounting treatments for consignment transactions in the books of consignor and consignee.",
+          "Understand the accounting treatment for royalty transactions and articulate royalty agreements.",
+          "Demonstrate accounting treatments for dependent and independent branches."
+        ],
+        "modules": [
+          {
+            "moduleNo": 1,
+            "title": "Theoretical Framework of Accounting",
+            "hours": 8,
+            "topics": [
+              "Meaning, scope, objectives, importance and functions of accounting",
+              "Terminologies; users of accounting information; accounting process",
+              "Cash basis and accrual basis; branches of accounting",
+              "Concepts, conventions, Accounting Standards and Ind AS (theory)",
+              "Accounting equation — theory and problems"
+            ]
+          },
+          {
+            "moduleNo": 2,
+            "title": "Financial Statements of Sole Proprietary Concerns",
+            "hours": 12,
+            "topics": [
+              "Manufacturing, trading and profit & loss accounts and balance sheet of manufacturing and non-manufacturing entities",
+              "Problems on final accounts of sole proprietors"
+            ]
+          },
+          {
+            "moduleNo": 3,
+            "title": "Consignment Accounts",
+            "hours": 12,
+            "topics": [
+              "Consignor and consignee; goods invoiced at cost and at selling price",
+              "Normal loss, abnormal loss, valuation of stock, stock reserve",
+              "Journal entries and ledger accounts in the books of the consignor (problems)"
+            ]
+          },
+          {
+            "moduleNo": 4,
+            "title": "Royalty Accounts",
+            "hours": 12,
+            "topics": [
+              "Lessee, lessor, minimum rent, short workings, recoupment",
+              "Accounting in the books of the lessee only, including minimum-rent account",
+              "Sub-lease and lessor books excluded"
+            ]
+          },
+          {
+            "moduleNo": 5,
+            "title": "Branch Accounts",
+            "hours": 12,
+            "topics": [
+              "Objectives of branch accounting; dependent, independent and foreign branches",
+              "Debtors system — ascertainment of branch profit or loss (problems)"
+            ]
+          }
+        ],
+        "skillActivities": [
+          "Collect annual financial statements of a sole proprietor and identify concepts/conventions used.",
+          "Prepare a pro-forma invoice and account sales with imaginary figures.",
+          "Prepare a royalty table with imaginary figures.",
+          "Prepare a branch account with imaginary figures."
+        ],
+        "references": [
+          "S. Anil Kumar, V. Rajesh Kumar and B. Mariyappa — Financial Accounting, Himalaya",
+          "S.N. Maheshwari and S.K. Maheshwari — Financial Accounting, Vikas",
+          "B.S. Raman — Financial Accounting Vol. I & II",
+          "Robert N. Anthony, David Hawkins, Kenneth A. Merchant — Accounting: Text and Cases, McGraw-Hill"
+        ]
+      },
+      {
+        "code": "B.Com.1.2",
+        "name": "Management Principles and Applications",
+        "credits": 4,
+        "hoursPerWeek": 4,
+        "totalHours": 56,
+        "outcomes": [
+          "Bring out the relevance of F.W. Taylor's view on management in today's knowledge era.",
+          "Design strategic plans for organisations for the attainment of organisational goals.",
+          "Differentiate organisational structures and authority and identify a fit for an MNC.",
+          "Compare leadership styles.",
+          "Identify control techniques for better productivity."
+        ],
+        "modules": [
+          {
+            "moduleNo": 1,
+            "title": "Introduction to Management",
+            "hours": 12,
+            "topics": [
+              "Meaning and importance of management; functions; role of managers",
+              "Thoughts of F.W. Taylor, Peter F. Drucker and Henri Fayol only",
+              "Fourteen principles of management"
+            ]
+          },
+          {
+            "moduleNo": 2,
+            "title": "Planning",
+            "hours": 8,
+            "topics": [
+              "Nature, purpose, types of plans, planning process, limitations",
+              "Decision-making process; SWOC analysis"
+            ]
+          },
+          {
+            "moduleNo": 3,
+            "title": "Organizing",
+            "hours": 14,
+            "topics": [
+              "Process and principles of organising; types of authority",
+              "Centralisation, decentralisation, span of management, delegation",
+              "Traditional structures: line, line and staff, functional, matrix, committee",
+              "Modern forms: bureaucratic, horizontal, network, virtual, free-form (concepts)"
+            ]
+          },
+          {
+            "moduleNo": 4,
+            "title": "Staffing and Leading",
+            "hours": 14,
+            "topics": [
+              "Staffing process — recruitment and selection only",
+              "Motivation: Maslow, Herzberg; intrinsic and extrinsic",
+              "Leadership styles: autocratic, democratic, benevolent, free-rein, transactional, transformational",
+              "Communication types and barriers"
+            ]
+          },
+          {
+            "moduleNo": 5,
+            "title": "Coordination and Controlling",
+            "hours": 8,
+            "topics": [
+              "Principles of coordination",
+              "Control process, limitations, principles of effective control",
+              "PERT/CPM (concepts only); emerging issues in management"
+            ]
+          }
+        ]
+      },
+      {
+        "code": "B.Com.1.3",
+        "name": "Principles of Marketing",
+        "credits": 4,
+        "hoursPerWeek": 4,
+        "totalHours": 56,
+        "outcomes": [
+          "Understand basic marketing concepts and assess the marketing environment.",
+          "Discover new-product development and factors affecting price.",
+          "Judge promotional techniques and channels of distribution.",
+          "Outline recent developments in marketing.",
+          "Analyse consumer behaviour and segmentation."
+        ],
+        "modules": [
+          {
+            "moduleNo": 1,
+            "title": "Introduction to Marketing",
+            "hours": 12,
+            "topics": [
+              "Meaning, nature, scope, importance; concepts and approaches",
+              "Need, want, demand, customer value; selling vs marketing",
+              "Micro and macro environment; marketing mix (4Ps in brief)"
+            ]
+          },
+          {
+            "moduleNo": 2,
+            "title": "Consumer Behaviour & Market Segmentation",
+            "hours": 12,
+            "topics": [
+              "Buying decision process; factors influencing consumer behaviour",
+              "Meaning, importance and bases of segmentation"
+            ]
+          },
+          {
+            "moduleNo": 3,
+            "title": "Product and Pricing",
+            "hours": 12,
+            "topics": [
+              "Product line and mix, branding, packaging, labelling",
+              "Product life cycle; new product development stages",
+              "Pricing significance, factors, types and strategies"
+            ]
+          },
+          {
+            "moduleNo": 4,
+            "title": "Promotion and Distribution",
+            "hours": 12,
+            "topics": [
+              "Promotion mix: advertising, personal selling, sales promotion, publicity, PR",
+              "Channels of distribution and factors affecting channel choice"
+            ]
+          },
+          {
+            "moduleNo": 5,
+            "title": "Recent Developments in Marketing",
+            "hours": 8,
+            "topics": [
+              "Online, direct, services, green and rural marketing",
+              "Search-engine, mobile, social-media, email and network marketing (concepts)"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "sampleQuestions": [
+    {
+      "id": "bcu-fa-sq-01",
+      "courseCode": "B.Com.1.1",
+      "moduleNo": 1,
+      "subject": "Financial Accounting",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "text": "State the accounting equation. Name any two users of accounting information.",
+      "modelAnswer": "Assets = Liabilities + Capital. Users: owners, management, lenders, tax authorities, employees, investors.",
+      "tags": ["equation", "users"]
+    },
+    {
+      "id": "bcu-fa-sq-02",
+      "courseCode": "B.Com.1.1",
+      "moduleNo": 1,
+      "subject": "Financial Accounting",
+      "type": "mcq",
+      "difficulty": "easy",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "text": "Ind AS in Indian corporate reporting are converged with:",
+      "options": [
+        { "id": "A", "text": "US GAAP only", "isCorrect": false },
+        { "id": "B", "text": "IFRS", "isCorrect": true },
+        { "id": "C", "text": "Income-tax Rules 1962 only", "isCorrect": false },
+        { "id": "D", "text": "The Companies Act schedule of 1956 exclusively", "isCorrect": false }
+      ],
+      "correctAnswer": "B",
+      "explanation": "Indian Accounting Standards are substantially converged with IFRS."
+    },
+    {
+      "id": "bcu-fa-sq-03",
+      "courseCode": "B.Com.1.1",
+      "moduleNo": 2,
+      "subject": "Financial Accounting",
+      "type": "numerical",
+      "difficulty": "medium",
+      "marks": 8,
+      "bloomLevel": "apply",
+      "text": "From imaginary figures of a sole-proprietor manufacturer, outline the order of statements: Statement of Manufacture → Trading A/c → P&L A/c → Balance Sheet. Where does opening work-in-progress appear?",
+      "modelAnswer": "Opening WIP is debited on the Statement of Manufacture (or manufacturing account); closing WIP is credited there. Finished goods opening/closing appear on the Trading Account."
+    },
+    {
+      "id": "bcu-fa-sq-04",
+      "courseCode": "B.Com.1.1",
+      "moduleNo": 3,
+      "subject": "Financial Accounting",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "marks": 5,
+      "bloomLevel": "understand",
+      "text": "Distinguish normal loss and abnormal loss in consignment. How is each treated in valuing unsold stock?",
+      "modelAnswer": "Normal loss (evaporation, leakage) is expected and its cost is borne by remaining units — stock is valued after inflating unit cost. Abnormal loss is credited to consignment (and often transferred to P&L / insurance); it is not loaded onto closing stock."
+    },
+    {
+      "id": "bcu-fa-sq-05",
+      "courseCode": "B.Com.1.1",
+      "moduleNo": 4,
+      "subject": "Financial Accounting",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "marks": 5,
+      "bloomLevel": "understand",
+      "text": "Define minimum rent and short workings. When can short workings be recouped?",
+      "modelAnswer": "Minimum rent is the guaranteed amount payable to the lessor even if actual royalty is lower. Short workings = minimum rent − actual royalty. They are recouped in later years if the agreement allows, from excess of royalty over minimum rent, within the recoupment period."
+    },
+    {
+      "id": "bcu-fa-sq-06",
+      "courseCode": "B.Com.1.1",
+      "moduleNo": 5,
+      "subject": "Financial Accounting",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "marks": 5,
+      "bloomLevel": "understand",
+      "text": "What is the debtors system of branch accounting? Which branches is it suitable for?",
+      "modelAnswer": "Under the debtors system the head office treats the dependent branch like a debtor: goods sent, remittances, expenses and returns are recorded in a Branch Account whose balance after closing stock/petty cash is the branch profit or loss. Suitable for dependent branches that do not keep full double-entry books."
+    },
+    {
+      "id": "bcu-mpa-sq-01",
+      "courseCode": "B.Com.1.2",
+      "moduleNo": 1,
+      "subject": "Management Principles and Applications",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "marks": 5,
+      "bloomLevel": "remember",
+      "text": "List any five of Fayol's fourteen principles of management.",
+      "modelAnswer": "Division of work; authority and responsibility; discipline; unity of command; unity of direction; subordination of individual interest; remuneration; centralisation; scalar chain; order; equity; stability of tenure; initiative; esprit de corps (any five)."
+    },
+    {
+      "id": "bcu-mpa-sq-02",
+      "courseCode": "B.Com.1.2",
+      "moduleNo": 2,
+      "subject": "Management Principles and Applications",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "text": "What is SWOC analysis? Write one illustration each of a strength, weakness, opportunity and challenge for a Bengaluru degree college.",
+      "modelAnswer": "SWOC = Strengths, Weaknesses, Opportunities, Challenges (a planning tool in the BCU module). Example: S — experienced faculty; W — limited lab hours; O — NEP/SEP skill courses and internships; C — fee competition from neighbouring colleges. (Accept SWOT.)"
+    },
+    {
+      "id": "bcu-mkt-sq-01",
+      "courseCode": "B.Com.1.3",
+      "moduleNo": 1,
+      "subject": "Principles of Marketing",
+      "type": "mcq",
+      "difficulty": "easy",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "text": "Need, want and demand are related as:",
+      "options": [
+        { "id": "A", "text": "Demand is a want backed by purchasing power", "isCorrect": true },
+        { "id": "B", "text": "Need is created only by advertising", "isCorrect": false },
+        { "id": "C", "text": "Want and demand are identical", "isCorrect": false },
+        { "id": "D", "text": "Marketing cannot influence wants", "isCorrect": false }
+      ],
+      "correctAnswer": "A",
+      "explanation": "Needs are basic; wants are culturally shaped; demand = want + ability and willingness to pay."
+    },
+    {
+      "id": "bcu-mkt-sq-02",
+      "courseCode": "B.Com.1.3",
+      "moduleNo": 3,
+      "subject": "Principles of Marketing",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "marks": 5,
+      "bloomLevel": "understand",
+      "text": "Sketch the four stages of the product life cycle and name one marketing objective at each stage.",
+      "modelAnswer": "Introduction — create awareness / induce trial. Growth — maximise market share. Maturity — defend share, differentiate. Decline — harvest or withdraw. Sales and profit curves should be mentioned."
+    }
+  ]
+}

@@ -1,0 +1,700 @@
+{
+  "schemaVersion": 1,
+  "id": "bsc-sem1-preassessment",
+  "title": "B.Sc Semester I — Pre-Assessment (Diagnostic)",
+  "subject": "Science bridge (Physics, Chemistry, Mathematics, Biology)",
+  "examType": "pre-assessment",
+  "program": "B.Sc",
+  "branch": "B.Sc",
+  "semester": 1,
+  "batch": "2026-27",
+  "scheme": "Karnataka UG SEP 2024 / NEP 2020 — Sem I readiness",
+  "university": "Bengaluru City University (template — substitute the college's affiliating university)",
+  "duration": 60,
+  "totalMarks": 50,
+  "language": "en",
+  "negativeMarking": false,
+  "passingPercentage": 40,
+  "instructions": [
+    "This is a diagnostic paper given in Week 1. It is not a university examination and does not count toward SEE.",
+    "It checks PUC / Class 12 Science readiness for B.Sc Semester I (Physics, Chemistry, Mathematics, Botany/Zoology combinations).",
+    "Attempt all of Sections A–D. PCM and PCB students are expected to attempt every MCQ — unanswered items flag a gap, they are not penalised.",
+    "In Section E, attempt any ONE of the two problems.",
+    "Use g = 10 m s⁻² and π = 3.14 where needed. Show working.",
+    "No negative marking."
+  ],
+  "sources": [
+    "Karnataka 2nd PUC Physics, Chemistry, Mathematics and Biology (DPUE)",
+    "KSHEC NEP model DSC titles for B.Sc Sem I (Mechanics / Chemical bonding and stoichiometry / Algebra-Calculus / Microbial diversity and Cell biology)",
+    "SI units and dimensional analysis as used in Indian UG Physics"
+  ],
+  "sections": [
+    {
+      "id": "bsc-sec-a",
+      "name": "Physics",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "bsc-a-01",
+          "text": "The SI unit of force is the newton. In base units it is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Units",
+          "unit": "PUC Physics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "kg m s⁻²", "isCorrect": true },
+            { "id": "B", "text": "kg m s⁻¹", "isCorrect": false },
+            { "id": "C", "text": "kg m² s⁻²", "isCorrect": false },
+            { "id": "D", "text": "g cm s⁻²", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "F = ma → kg · m · s⁻². Dyne is the CGS unit."
+        },
+        {
+          "id": "bsc-a-02",
+          "text": "A body moving with uniform velocity has:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Newton's laws",
+          "unit": "PUC Physics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Zero net force", "isCorrect": true },
+            { "id": "B", "text": "A constantly increasing net force", "isCorrect": false },
+            { "id": "C", "text": "Infinite acceleration", "isCorrect": false },
+            { "id": "D", "text": "Zero mass", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Newton I / II: a = 0 when ΣF = 0, so velocity is constant (including rest)."
+        },
+        {
+          "id": "bsc-a-03",
+          "text": "Ohm's law (V = IR) holds for:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Current electricity",
+          "unit": "PUC Physics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "All devices at all temperatures", "isCorrect": false },
+            { "id": "B", "text": "Ohmic conductors under specified conditions (e.g. constant temperature)", "isCorrect": true },
+            { "id": "C", "text": "Only semiconductors", "isCorrect": false },
+            { "id": "D", "text": "Only vacuum", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Ohmic: V–I graph is a straight line through origin at constant T. Diodes, lamps (hot filament) are non-ohmic."
+        },
+        {
+          "id": "bsc-a-04",
+          "text": "Dimensional formula of energy is the same as that of:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Dimensions",
+          "unit": "PUC Physics",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "Force", "isCorrect": false },
+            { "id": "B", "text": "Work and torque (both ML²T⁻²; torque is a vector moment)", "isCorrect": true },
+            { "id": "C", "text": "Momentum", "isCorrect": false },
+            { "id": "D", "text": "Power", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Work = F·s → ML²T⁻². Power is ML²T⁻³; momentum is MLT⁻¹."
+        },
+        {
+          "id": "bsc-a-05",
+          "text": "The image formed by a plane mirror is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Ray optics",
+          "unit": "PUC Physics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Real, inverted, same size", "isCorrect": false },
+            { "id": "B", "text": "Virtual, erect, same size, laterally inverted", "isCorrect": true },
+            { "id": "C", "text": "Real, erect, magnified", "isCorrect": false },
+            { "id": "D", "text": "Virtual, inverted, diminished", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Plane mirror: virtual erect image, m = +1, left–right reversal."
+        },
+        {
+          "id": "bsc-a-06",
+          "text": "If the distance between two point charges is doubled, the electrostatic force becomes:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Electrostatics",
+          "unit": "PUC Physics",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "Twice", "isCorrect": false },
+            { "id": "B", "text": "Half", "isCorrect": false },
+            { "id": "C", "text": "One-fourth", "isCorrect": true },
+            { "id": "D", "text": "Four times", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Coulomb: F ∝ 1/r². Double r → force × 1/4."
+        },
+        {
+          "id": "bsc-a-07",
+          "text": "The slope of a velocity–time graph gives:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Kinematics",
+          "unit": "PUC Physics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Displacement", "isCorrect": false },
+            { "id": "B", "text": "Acceleration", "isCorrect": true },
+            { "id": "C", "text": "Jerk only", "isCorrect": false },
+            { "id": "D", "text": "Mass", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "a = dv/dt = slope of v–t. Area under v–t is displacement."
+        },
+        {
+          "id": "bsc-a-08",
+          "text": "A scalar quantity among the following is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Vectors",
+          "unit": "PUC Physics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Displacement", "isCorrect": false },
+            { "id": "B", "text": "Velocity", "isCorrect": false },
+            { "id": "C", "text": "Work", "isCorrect": true },
+            { "id": "D", "text": "Acceleration", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Work is a scalar (dot product). Displacement, velocity, acceleration are vectors."
+        },
+        {
+          "id": "bsc-a-09",
+          "text": "The refractive index of glass is 1.5. The speed of light in glass is (c = 3 × 10⁸ m s⁻¹):",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Wave optics / refraction",
+          "unit": "PUC Physics",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "2.0 × 10⁸ m s⁻¹", "isCorrect": true },
+            { "id": "B", "text": "3.0 × 10⁸ m s⁻¹", "isCorrect": false },
+            { "id": "C", "text": "4.5 × 10⁸ m s⁻¹", "isCorrect": false },
+            { "id": "D", "text": "1.5 × 10⁸ m s⁻¹", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "n = c/v ⇒ v = c/n = 3e8 / 1.5 = 2e8 m s⁻¹."
+        },
+        {
+          "id": "bsc-a-10",
+          "text": "Kepler's second law (equal areas in equal times) is a consequence of conservation of:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Gravitation",
+          "unit": "PUC Physics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Linear momentum only", "isCorrect": false },
+            { "id": "B", "text": "Angular momentum", "isCorrect": true },
+            { "id": "C", "text": "Charge", "isCorrect": false },
+            { "id": "D", "text": "Mass only", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Central gravitational force ⇒ torque = 0 ⇒ dL/dt = 0. Areal velocity = L/(2m)."
+        }
+      ]
+    },
+    {
+      "id": "bsc-sec-b",
+      "name": "Chemistry",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "bsc-b-01",
+          "text": "The number of moles in 22 g of CO₂ (C = 12, O = 16) is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Mole concept",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "0.25", "isCorrect": false },
+            { "id": "B", "text": "0.50", "isCorrect": true },
+            { "id": "C", "text": "1.00", "isCorrect": false },
+            { "id": "D", "text": "2.00", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Molar mass CO₂ = 44 g mol⁻¹. n = 22/44 = 0.50 mol."
+        },
+        {
+          "id": "bsc-b-02",
+          "text": "The atomic number of an element is equal to the number of:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Atomic structure",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Neutrons only", "isCorrect": false },
+            { "id": "B", "text": "Protons in the nucleus", "isCorrect": true },
+            { "id": "C", "text": "Nucleons minus protons", "isCorrect": false },
+            { "id": "D", "text": "Electrons in a cation only", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Z = proton count. In a neutral atom Z also equals the electron count."
+        },
+        {
+          "id": "bsc-b-03",
+          "text": "Which bond is most ionic?",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Chemical bonding",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "analyze",
+          "options": [
+            { "id": "A", "text": "H–H", "isCorrect": false },
+            { "id": "B", "text": "Cl–Cl", "isCorrect": false },
+            { "id": "C", "text": "Na–Cl", "isCorrect": true },
+            { "id": "D", "text": "C–C", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Large electronegativity difference (Na vs Cl) → ionic. Homonuclear bonds are covalent."
+        },
+        {
+          "id": "bsc-b-04",
+          "text": "pH of a 0.001 M HCl solution (strong acid, 25 °C) is approximately:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Equilibrium / pH",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "1", "isCorrect": false },
+            { "id": "B", "text": "3", "isCorrect": true },
+            { "id": "C", "text": "11", "isCorrect": false },
+            { "id": "D", "text": "7", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "pH = −log₁₀[H⁺] = −log(10⁻³) = 3."
+        },
+        {
+          "id": "bsc-b-05",
+          "text": "Isotopes of an element have:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Atomic structure",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Same mass number, different atomic number", "isCorrect": false },
+            { "id": "B", "text": "Same atomic number, different mass number", "isCorrect": true },
+            { "id": "C", "text": "Different numbers of protons", "isCorrect": false },
+            { "id": "D", "text": "Always different chemical properties", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Same Z, different N (hence different A). Chemical behaviour is nearly identical."
+        },
+        {
+          "id": "bsc-b-06",
+          "text": "The functional group in ethanol is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Organic chemistry",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "—CHO", "isCorrect": false },
+            { "id": "B", "text": "—COOH", "isCorrect": false },
+            { "id": "C", "text": "—OH (alcohol)", "isCorrect": true },
+            { "id": "D", "text": "—NH₂", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Ethanol is CH₃CH₂OH. —CHO aldehyde, —COOH carboxylic acid, —NH₂ amine."
+        },
+        {
+          "id": "bsc-b-07",
+          "text": "Avogadro's number is the number of entities in:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Mole concept",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "1 g of any substance", "isCorrect": false },
+            { "id": "B", "text": "1 mole of a substance", "isCorrect": true },
+            { "id": "C", "text": "1 litre of any gas at any T, P", "isCorrect": false },
+            { "id": "D", "text": "1 cm³ of water", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "N_A ≈ 6.022 × 10²³ mol⁻¹. STP molar volume (22.4 L) is a separate fact."
+        },
+        {
+          "id": "bsc-b-08",
+          "text": "In the periodic table, atomic radius generally:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Periodicity",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Increases across a period, decreases down a group", "isCorrect": false },
+            { "id": "B", "text": "Decreases across a period, increases down a group", "isCorrect": true },
+            { "id": "C", "text": "Is constant", "isCorrect": false },
+            { "id": "D", "text": "Depends only on mass number", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Across a period: rising Z_eff shrinks radius. Down a group: new shells increase radius."
+        },
+        {
+          "id": "bsc-b-09",
+          "text": "Oxidation is best defined as:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Redox",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Gain of electrons", "isCorrect": false },
+            { "id": "B", "text": "Loss of electrons / increase in oxidation number", "isCorrect": true },
+            { "id": "C", "text": "Always a reaction with oxygen only", "isCorrect": false },
+            { "id": "D", "text": "Decrease in oxidation number", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "OIL RIG: oxidation is loss of electrons. Classical 'addition of oxygen' is a special case."
+        },
+        {
+          "id": "bsc-b-10",
+          "text": "The conjugate base of HSO₄⁻ is:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Acids and bases",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "H₂SO₄", "isCorrect": false },
+            { "id": "B", "text": "SO₄²⁻", "isCorrect": true },
+            { "id": "C", "text": "H₃SO₄⁺", "isCorrect": false },
+            { "id": "D", "text": "OH⁻", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Remove one H⁺ from HSO₄⁻ → SO₄²⁻. H₂SO₄ is the conjugate acid of HSO₄⁻."
+        }
+      ]
+    },
+    {
+      "id": "bsc-sec-c",
+      "name": "Mathematics & Biology",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Questions 1–5 are Mathematics; 6–10 are Biology. Attempt all ten (diagnostic for both PCM and PCB streams).",
+      "questions": [
+        {
+          "id": "bsc-c-01",
+          "text": "The roots of x² − 5x + 6 = 0 are:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Quadratic equations",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "2 and 3", "isCorrect": true },
+            { "id": "B", "text": "−2 and −3", "isCorrect": false },
+            { "id": "C", "text": "1 and 6", "isCorrect": false },
+            { "id": "D", "text": "5 and 6", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "(x−2)(x−3)=0."
+        },
+        {
+          "id": "bsc-c-02",
+          "text": "d/dx (x³) equals:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Differentiation",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "3x²", "isCorrect": true },
+            { "id": "B", "text": "x²", "isCorrect": false },
+            { "id": "C", "text": "3x", "isCorrect": false },
+            { "id": "D", "text": "x³/3", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Power rule: d/dx (xⁿ) = n xⁿ⁻¹."
+        },
+        {
+          "id": "bsc-c-03",
+          "text": "If A = [1 2; 0 3], det(A) is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Matrices",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "0", "isCorrect": false },
+            { "id": "B", "text": "3", "isCorrect": true },
+            { "id": "C", "text": "5", "isCorrect": false },
+            { "id": "D", "text": "6", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "det = 1·3 − 2·0 = 3."
+        },
+        {
+          "id": "bsc-c-04",
+          "text": "The 10th term of the AP 3, 7, 11, 15, … is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Sequences",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "39", "isCorrect": true },
+            { "id": "B", "text": "43", "isCorrect": false },
+            { "id": "C", "text": "35", "isCorrect": false },
+            { "id": "D", "text": "31", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "a=3, d=4; a₁₀ = 3+9·4 = 39."
+        },
+        {
+          "id": "bsc-c-05",
+          "text": "sin²θ + cos²θ equals:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Trigonometry",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "0", "isCorrect": false },
+            { "id": "B", "text": "1", "isCorrect": true },
+            { "id": "C", "text": "2", "isCorrect": false },
+            { "id": "D", "text": "tan θ", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Fundamental identity."
+        },
+        {
+          "id": "bsc-c-06",
+          "text": "The powerhouse of the cell is the:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Cell biology",
+          "unit": "PUC Biology",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Nucleus", "isCorrect": false },
+            { "id": "B", "text": "Mitochondrion", "isCorrect": true },
+            { "id": "C", "text": "Ribosome", "isCorrect": false },
+            { "id": "D", "text": "Golgi apparatus", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Mitochondria generate ATP by oxidative phosphorylation."
+        },
+        {
+          "id": "bsc-c-07",
+          "text": "Photosynthesis in plants releases which gas?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Plant physiology",
+          "unit": "PUC Biology",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Carbon dioxide", "isCorrect": false },
+            { "id": "B", "text": "Oxygen", "isCorrect": true },
+            { "id": "C", "text": "Nitrogen", "isCorrect": false },
+            { "id": "D", "text": "Methane", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Light reaction splits water (photolysis) and O₂ is evolved. CO₂ is a reactant of the Calvin cycle."
+        },
+        {
+          "id": "bsc-c-08",
+          "text": "DNA is a polymer of:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Genetics",
+          "unit": "PUC Biology",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Amino acids", "isCorrect": false },
+            { "id": "B", "text": "Nucleotides", "isCorrect": true },
+            { "id": "C", "text": "Fatty acids", "isCorrect": false },
+            { "id": "D", "text": "Monosaccharides only, with no bases", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Nucleotide = sugar + phosphate + nitrogenous base. Amino acids polymerise to proteins."
+        },
+        {
+          "id": "bsc-c-09",
+          "text": "Mitosis produces:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Cell division",
+          "unit": "PUC Biology",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Four haploid cells", "isCorrect": false },
+            { "id": "B", "text": "Two diploid daughter cells (in a diploid parent) that are genetically similar", "isCorrect": true },
+            { "id": "C", "text": "Gametes only", "isCorrect": false },
+            { "id": "D", "text": "No change in chromosome number in meiosis-I sense", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Mitosis conserves ploidy. Meiosis yields four haploid cells and is the reduction division."
+        },
+        {
+          "id": "bsc-c-10",
+          "text": "A food chain always begins with a:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Ecology",
+          "unit": "PUC Biology",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Producer (autotroph)", "isCorrect": true },
+            { "id": "B", "text": "Secondary consumer", "isCorrect": false },
+            { "id": "C", "text": "Decomposer only, never a green plant", "isCorrect": false },
+            { "id": "D", "text": "Top carnivore", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Producers fix energy. Decomposers act at all levels; they do not start a grazing food chain."
+        }
+      ]
+    },
+    {
+      "id": "bsc-sec-d",
+      "name": "Short answers",
+      "questionType": "short_answer",
+      "compulsory": true,
+      "instructions": "Answer briefly. Each question carries 2 marks.",
+      "questions": [
+        {
+          "id": "bsc-d-01",
+          "text": "State Newton's second law in words and in the form F = dp/dt. What does it reduce to when mass is constant?",
+          "type": "short_answer",
+          "difficulty": "medium",
+          "marks": 2,
+          "topic": "Newton's laws",
+          "unit": "PUC Physics",
+          "bloomLevel": "understand",
+          "modelAnswer": "The rate of change of momentum of a body equals the net external force (in the direction of the force). F = dp/dt. If m is constant, p = mv so F = ma."
+        },
+        {
+          "id": "bsc-d-02",
+          "text": "Balance: __ Al + __ O₂ → __ Al₂O₃. State the number of moles of O₂ needed for 4 mol Al.",
+          "type": "short_answer",
+          "difficulty": "medium",
+          "marks": 2,
+          "topic": "Stoichiometry",
+          "unit": "PUC Chemistry",
+          "bloomLevel": "apply",
+          "correctAnswer": "4 Al + 3 O₂ → 2 Al₂O₃; 3 mol O₂ for 4 mol Al",
+          "modelAnswer": "4 Al + 3 O₂ → 2 Al₂O₃. For 4 mol Al, O₂ required = 3 mol."
+        },
+        {
+          "id": "bsc-d-03",
+          "text": "Differentiate: y = 3x² + 2x − 5. Find dy/dx at x = 1.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Differentiation",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "apply",
+          "correctAnswer": "8",
+          "modelAnswer": "dy/dx = 6x + 2. At x = 1, 6+2 = 8."
+        },
+        {
+          "id": "bsc-d-04",
+          "text": "Name two differences between plant and animal cells.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Cell biology",
+          "unit": "PUC Biology",
+          "bloomLevel": "understand",
+          "modelAnswer": "Plant cells have a cellulose cell wall and chloroplasts (in green tissues); animal cells do not. Plant cells typically have a large central vacuole; animal cells have smaller, scattered vacuoles. Plant cells lack centrioles in most higher plants."
+        },
+        {
+          "id": "bsc-d-05",
+          "text": "Define SI unit of electric current and write the relation V = IR with units of each quantity.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Current electricity",
+          "unit": "PUC Physics",
+          "bloomLevel": "remember",
+          "modelAnswer": "Ampere (A) is the SI base unit of current. V (volt) = I (ampere) × R (ohm)."
+        }
+      ]
+    },
+    {
+      "id": "bsc-sec-e",
+      "name": "Application (attempt any one)",
+      "questionType": "numerical",
+      "compulsory": false,
+      "attempt": { "count": 1 },
+      "instructions": "Attempt any ONE problem. Show working.",
+      "questions": [
+        {
+          "id": "bsc-e-01",
+          "text": "(Physics) A 2 kg body starts from rest and is acted on by a constant net force of 10 N for 4 s. Find (a) acceleration, (b) velocity at t = 4 s, (c) displacement in 4 s, (d) kinetic energy at t = 4 s. Take the force along the direction of motion.",
+          "type": "numerical",
+          "difficulty": "medium",
+          "marks": 10,
+          "topic": "Newton's laws / kinematics",
+          "unit": "PUC Physics",
+          "bloomLevel": "apply",
+          "correctAnswer": "a=5 m s⁻²; v=20 m s⁻¹; s=40 m; KE=400 J",
+          "modelAnswer": "(a) a = F/m = 10/2 = 5 m s⁻².\n(b) v = u + at = 0 + 5×4 = 20 m s⁻¹.\n(c) s = ut + ½at² = 0 + ½×5×16 = 40 m.\n(d) KE = ½mv² = ½×2×400 = 400 J.\n(Check: work = F s = 10×40 = 400 J = ΔKE.)"
+        },
+        {
+          "id": "bsc-e-02",
+          "text": "(Mathematics) (a) Find the derivative of f(x) = x³ − 6x² + 9x. (b) Find the stationary points. (c) Determine the nature of each (max/min) using the second-derivative test. (d) Evaluate f at those points.",
+          "type": "numerical",
+          "difficulty": "medium",
+          "marks": 10,
+          "topic": "Maxima and minima",
+          "unit": "PUC Mathematics",
+          "bloomLevel": "apply",
+          "correctAnswer": "f'=3(x-1)(x-3); min at x=3, f=0; max at x=1, f=4",
+          "modelAnswer": "(a) f'(x) = 3x² − 12x + 9 = 3(x² − 4x + 3) = 3(x−1)(x−3).\n(b) f'=0 ⇒ x=1 or x=3.\n(c) f''(x)=6x−12. f''(1)=−6<0 local max; f''(3)=6>0 local min.\n(d) f(1)=1−6+9=4; f(3)=27−54+27=0."
+        }
+      ]
+    }
+  ]
+}

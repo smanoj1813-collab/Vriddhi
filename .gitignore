@@ -50,3 +50,6 @@ Thumbs.db
 # Project artifacts / scratch
 *.BACKUP
 assessment_files_dump.txt
+
+# Faculty answer-key HTML (generated locally with --with-key; student previews are tracked)
+content/pre-assessment/previews/*-key.html

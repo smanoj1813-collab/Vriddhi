@@ -1,0 +1,687 @@
+{
+  "schemaVersion": 1,
+  "id": "bcom-sem1-preassessment",
+  "title": "B.Com Semester I — Pre-Assessment (Diagnostic)",
+  "subject": "Commerce bridge (Accountancy, Business Studies, Economics)",
+  "examType": "pre-assessment",
+  "program": "B.Com",
+  "branch": "B.Com",
+  "semester": 1,
+  "batch": "2026-27",
+  "scheme": "Karnataka UG SEP 2024 / NEP 2020 — Sem I readiness",
+  "university": "Bengaluru City University (template — substitute the college's affiliating university)",
+  "duration": 60,
+  "totalMarks": 50,
+  "language": "en",
+  "negativeMarking": false,
+  "passingPercentage": 40,
+  "instructions": [
+    "This is a diagnostic paper given in Week 1. It is not a university examination and does not count toward SEE.",
+    "It checks PUC / Class 12 Commerce readiness for B.Com Semester I (Financial Accounting, Marketing, Business Environment / Management).",
+    "Answer all questions in Sections A–D. Section E is one accounting problem.",
+    "Figures to the right of each question indicate marks.",
+    "Use a pen. Show working for the Section E problem.",
+    "No negative marking."
+  ],
+  "sources": [
+    "Karnataka 1st/2nd PUC Accountancy, Business Studies and Economics (DPUE)",
+    "BCU B.Com (Regular) NEP 2020 Sem I DSC list (Financial Accounting, Management Principles and Applications, Principles of Marketing)",
+    "BCU B.Com (Regular) SEP 2024 Sem I DSC list (Financial Accounting, Principles of Marketing, Business Environment, Indian Financial System)"
+  ],
+  "sections": [
+    {
+      "id": "bcom-sec-a",
+      "name": "Accountancy",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "bcom-a-01",
+          "text": "The accounting equation is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Accounting equation",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Assets = Liabilities − Capital", "isCorrect": false },
+            { "id": "B", "text": "Assets = Liabilities + Capital", "isCorrect": true },
+            { "id": "C", "text": "Assets + Liabilities = Capital", "isCorrect": false },
+            { "id": "D", "text": "Capital = Assets + Liabilities", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Dual-aspect concept: every resource (asset) is financed by claims of owners (capital) and outsiders (liabilities)."
+        },
+        {
+          "id": "bcom-a-02",
+          "text": "Under the golden rules of accounting, a Nominal account is debited when there is a:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Golden rules",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Decrease in income", "isCorrect": false },
+            { "id": "B", "text": "Increase in liability", "isCorrect": false },
+            { "id": "C", "text": "Expense or loss", "isCorrect": true },
+            { "id": "D", "text": "Increase in capital", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Nominal accounts: debit all expenses and losses; credit all incomes and gains."
+        },
+        {
+          "id": "bcom-a-03",
+          "text": "Which of the following is a current asset?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Classification of assets",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Building", "isCorrect": false },
+            { "id": "B", "text": "Goodwill", "isCorrect": false },
+            { "id": "C", "text": "Inventory of goods", "isCorrect": true },
+            { "id": "D", "text": "Plant and machinery", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Inventory is expected to be sold or consumed within the operating cycle, so it is a current asset."
+        },
+        {
+          "id": "bcom-a-04",
+          "text": "GST charged on goods purchased for resale is recorded as:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "GST",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "An expense of the business in all cases", "isCorrect": false },
+            { "id": "B", "text": "Input tax credit (asset / recoverable) if the dealer is registered", "isCorrect": true },
+            { "id": "C", "text": "Drawings", "isCorrect": false },
+            { "id": "D", "text": "Capital reserve", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "A registered dealer sets off GST paid on inward supplies (ITC) against GST collected on outward supplies."
+        },
+        {
+          "id": "bcom-a-05",
+          "text": "Depreciation is provided primarily because of the:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Depreciation",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Money-measurement concept", "isCorrect": false },
+            { "id": "B", "text": "Matching and going-concern concepts", "isCorrect": true },
+            { "id": "C", "text": "Dual-aspect concept only", "isCorrect": false },
+            { "id": "D", "text": "Business-entity concept only", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "The cost of a long-lived asset is allocated over the periods that benefit from it (matching), assuming the firm continues (going concern)."
+        },
+        {
+          "id": "bcom-a-06",
+          "text": "A Trial Balance is prepared to:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Trial balance",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Disclose the profit of the year", "isCorrect": false },
+            { "id": "B", "text": "Check the arithmetical accuracy of ledger postings", "isCorrect": true },
+            { "id": "C", "text": "Replace the Balance Sheet", "isCorrect": false },
+            { "id": "D", "text": "Record closing stock", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "A trial balance lists debit and credit totals; agreement is evidence of arithmetical accuracy, not of a complete absence of errors."
+        },
+        {
+          "id": "bcom-a-07",
+          "text": "Purchase of a delivery van is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Capital vs revenue",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "Revenue expenditure", "isCorrect": false },
+            { "id": "B", "text": "Deferred revenue expenditure", "isCorrect": false },
+            { "id": "C", "text": "Capital expenditure", "isCorrect": true },
+            { "id": "D", "text": "Drawings", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "The van is a long-term asset that will generate benefits over several years — capital expenditure."
+        },
+        {
+          "id": "bcom-a-08",
+          "text": "In a bill of exchange, the person who writes and signs the bill is the:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Bills of exchange",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Drawee", "isCorrect": false },
+            { "id": "B", "text": "Payee only, never the drawer", "isCorrect": false },
+            { "id": "C", "text": "Drawer", "isCorrect": true },
+            { "id": "D", "text": "Endorsee", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Drawer makes the bill; drawee is directed to pay; payee is entitled to receive."
+        },
+        {
+          "id": "bcom-a-09",
+          "text": "Under FIFO, closing stock is valued at:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Inventory valuation",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "The cost of the earliest purchases remaining", "isCorrect": false },
+            { "id": "B", "text": "The cost of the most recent purchases remaining", "isCorrect": true },
+            { "id": "C", "text": "Always at selling price", "isCorrect": false },
+            { "id": "D", "text": "Always at replacement cost", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "FIFO assumes oldest units are issued first, so stock is the latest lots."
+        },
+        {
+          "id": "bcom-a-10",
+          "text": "Which error will NOT be revealed by a trial balance?",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Errors",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "analyze",
+          "options": [
+            { "id": "A", "text": "Posting ₹5,000 to the debit of Rent instead of ₹500", "isCorrect": false },
+            { "id": "B", "text": "Omitting to post one side of a journal entry", "isCorrect": false },
+            { "id": "C", "text": "Complete omission of a transaction from the books", "isCorrect": true },
+            { "id": "D", "text": "Casting a ledger account short on the debit side", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "If both debit and credit are omitted equally, the trial balance still agrees. Unequal postings and wrong casts do not."
+        }
+      ]
+    },
+    {
+      "id": "bcom-sec-b",
+      "name": "Business Studies & Management",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "bcom-b-01",
+          "text": "Henri Fayol stated how many principles of management?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Fayol",
+          "unit": "PUC Business Studies / B.Com 1.2",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "10", "isCorrect": false },
+            { "id": "B", "text": "12", "isCorrect": false },
+            { "id": "C", "text": "14", "isCorrect": true },
+            { "id": "D", "text": "16", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Fayol's 14 principles (division of work, authority, discipline, unity of command, …, esprit de corps) are in the B.Com Sem I Management paper."
+        },
+        {
+          "id": "bcom-b-02",
+          "text": "Which sequence lists the core functions of management?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Functions of management",
+          "unit": "PUC Business Studies",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Planning, Organising, Staffing, Directing, Controlling", "isCorrect": true },
+            { "id": "B", "text": "Buying, Selling, Storing, Transporting", "isCorrect": false },
+            { "id": "C", "text": "Debit, Credit, Balance, Close", "isCorrect": false },
+            { "id": "D", "text": "Recruit, Select, Induct, Retire", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "POSDC (planning–organising–staffing–directing–controlling) is the standard Indian UG framing."
+        },
+        {
+          "id": "bcom-b-03",
+          "text": "Top-level management is primarily concerned with:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Levels of management",
+          "unit": "PUC Business Studies",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Day-to-day supervision of workers", "isCorrect": false },
+            { "id": "B", "text": "Strategic goals and policies of the organisation", "isCorrect": true },
+            { "id": "C", "text": "Only the payroll", "isCorrect": false },
+            { "id": "D", "text": "Machine maintenance schedules", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Board / MD / CEO set direction; middle managers translate it; first-line managers supervise operations."
+        },
+        {
+          "id": "bcom-b-04",
+          "text": "SWOC analysis is used mainly at the stage of:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Planning / SWOC",
+          "unit": "B.Com Management Principles",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Controlling only", "isCorrect": false },
+            { "id": "B", "text": "Planning and decision-making", "isCorrect": true },
+            { "id": "C", "text": "Recruitment interviews", "isCorrect": false },
+            { "id": "D", "text": "Depreciation of assets", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "BCU Management Principles (Module 2) links SWOC to the planning / decision-making process."
+        },
+        {
+          "id": "bcom-b-05",
+          "text": "Unity of command means:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Principles of management",
+          "unit": "PUC Business Studies",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "One plan for the whole organisation", "isCorrect": false },
+            { "id": "B", "text": "A subordinate should receive orders from one superior only", "isCorrect": true },
+            { "id": "C", "text": "All employees are paid equally", "isCorrect": false },
+            { "id": "D", "text": "There is only one department", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Unity of command ≠ unity of direction (one plan / one head for a group of activities)."
+        },
+        {
+          "id": "bcom-b-06",
+          "text": "In Maslow's hierarchy, the need for respect and recognition is:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Motivation",
+          "unit": "B.Com Management Principles",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Physiological need", "isCorrect": false },
+            { "id": "B", "text": "Safety need", "isCorrect": false },
+            { "id": "C", "text": "Esteem need", "isCorrect": true },
+            { "id": "D", "text": "Self-actualisation", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Esteem sits above belongingness and below self-actualisation."
+        },
+        {
+          "id": "bcom-b-07",
+          "text": "A manager who takes decisions without consulting subordinates is using which leadership style?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Leadership",
+          "unit": "B.Com Management Principles",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "Democratic", "isCorrect": false },
+            { "id": "B", "text": "Autocratic", "isCorrect": true },
+            { "id": "C", "text": "Laissez-faire / free-rein", "isCorrect": false },
+            { "id": "D", "text": "Transformational only", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Autocratic = centralised authority; democratic = consultation; free-rein = high subordinate freedom."
+        },
+        {
+          "id": "bcom-b-08",
+          "text": "Which of the following is a part of the micro (task) environment of a firm?",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Business environment",
+          "unit": "SEP B.Com 1.3 Business Environment",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "National fiscal policy", "isCorrect": false },
+            { "id": "B", "text": "Customers and competitors", "isCorrect": true },
+            { "id": "C", "text": "Climate change", "isCorrect": false },
+            { "id": "D", "text": "The Constitution of India", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Micro / task environment: customers, suppliers, competitors, intermediaries. Macro: economic, political, legal, social, technological, natural."
+        },
+        {
+          "id": "bcom-b-09",
+          "text": "The minimum number of members required to form a public company in India is:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Company form",
+          "unit": "PUC Business Studies",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "2", "isCorrect": false },
+            { "id": "B", "text": "3", "isCorrect": false },
+            { "id": "C", "text": "7", "isCorrect": true },
+            { "id": "D", "text": "50", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Companies Act: private company ≥ 2 members; public company ≥ 7. (One-person company is a separate form.)"
+        },
+        {
+          "id": "bcom-b-10",
+          "text": "F.W. Taylor is associated with:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Scientific management",
+          "unit": "B.Com Management Principles",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Fourteen principles of management", "isCorrect": false },
+            { "id": "B", "text": "Scientific management (time and motion, differential piece rate)", "isCorrect": true },
+            { "id": "C", "text": "Hierarchy of needs", "isCorrect": false },
+            { "id": "D", "text": "Two-factor theory of motivation", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Taylor = scientific management; Fayol = 14 principles; Maslow = needs; Herzberg = two-factor."
+        }
+      ]
+    },
+    {
+      "id": "bcom-sec-c",
+      "name": "Economics & Marketing",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "bcom-c-01",
+          "text": "The law of demand, other things remaining the same, states that:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Demand",
+          "unit": "PUC Economics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Price and quantity demanded move in the same direction", "isCorrect": false },
+            { "id": "B", "text": "Price and quantity demanded move in opposite directions", "isCorrect": true },
+            { "id": "C", "text": "Demand is always equal to supply", "isCorrect": false },
+            { "id": "D", "text": "Income does not affect demand", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Ceteris paribus, a higher price reduces quantity demanded (downward-sloping demand curve)."
+        },
+        {
+          "id": "bcom-c-02",
+          "text": "GDP at market prices minus net indirect taxes equals:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "National income",
+          "unit": "PUC Economics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "GNP at market prices", "isCorrect": false },
+            { "id": "B", "text": "GDP at factor cost", "isCorrect": true },
+            { "id": "C", "text": "NDP at market prices", "isCorrect": false },
+            { "id": "D", "text": "Personal disposable income", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "GDP_FC = GDP_MP − net indirect taxes (indirect taxes − subsidies)."
+        },
+        {
+          "id": "bcom-c-03",
+          "text": "Which of the following is a function of the Reserve Bank of India?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Money and banking",
+          "unit": "PUC Economics / SEP Indian Financial System",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Collecting income tax from salaried employees", "isCorrect": false },
+            { "id": "B", "text": "Issuing currency and acting as banker to the government", "isCorrect": true },
+            { "id": "C", "text": "Running fair-price shops", "isCorrect": false },
+            { "id": "D", "text": "Preparing the Union Budget", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "RBI: note issue, banker/agent to government, banker to banks, monetary policy. Tax collection is CBDT/CBIC; Budget is Finance Ministry."
+        },
+        {
+          "id": "bcom-c-04",
+          "text": "Inflation is a sustained:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Inflation",
+          "unit": "PUC Economics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Fall in the general price level", "isCorrect": false },
+            { "id": "B", "text": "Rise in the general price level", "isCorrect": true },
+            { "id": "C", "text": "Rise in one commodity's price only", "isCorrect": false },
+            { "id": "D", "text": "Increase in unemployment only", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Inflation = persistent rise in the general price level; deflation is the opposite."
+        },
+        {
+          "id": "bcom-c-05",
+          "text": "The four Ps of the marketing mix are:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Marketing mix",
+          "unit": "B.Com Principles of Marketing",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Product, Price, Place, Promotion", "isCorrect": true },
+            { "id": "B", "text": "People, Process, Physical evidence, Profit", "isCorrect": false },
+            { "id": "C", "text": "Plan, Produce, Pack, Post", "isCorrect": false },
+            { "id": "D", "text": "Purchase, Pay, Pack, Provide", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "McCarthy's 4Ps. (Services marketing adds people, process, physical evidence — 7Ps.)"
+        },
+        {
+          "id": "bcom-c-06",
+          "text": "Selling differs from marketing in that selling:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Selling vs marketing",
+          "unit": "B.Com Principles of Marketing",
+          "bloomLevel": "analyze",
+          "options": [
+            { "id": "A", "text": "Starts with customer needs and designs the product around them", "isCorrect": false },
+            { "id": "B", "text": "Focuses on converting existing output into cash", "isCorrect": true },
+            { "id": "C", "text": "Ignores price completely", "isCorrect": false },
+            { "id": "D", "text": "Is only used in online business", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Selling is inside-out (product → customer). Marketing is outside-in (customer need → product)."
+        },
+        {
+          "id": "bcom-c-07",
+          "text": "Dividing a heterogeneous market into relatively homogeneous groups of buyers is called:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Market segmentation",
+          "unit": "B.Com Principles of Marketing",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Positioning", "isCorrect": false },
+            { "id": "B", "text": "Market segmentation", "isCorrect": true },
+            { "id": "C", "text": "Branding", "isCorrect": false },
+            { "id": "D", "text": "Skimming", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Segmentation → targeting → positioning (STP). Bases: geographic, demographic, psychographic, behavioural."
+        },
+        {
+          "id": "bcom-c-08",
+          "text": "In the product life cycle, sales grow rapidly and competitors enter during:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Product life cycle",
+          "unit": "B.Com Principles of Marketing",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Introduction", "isCorrect": false },
+            { "id": "B", "text": "Growth", "isCorrect": true },
+            { "id": "C", "text": "Decline only", "isCorrect": false },
+            { "id": "D", "text": "Withdrawal", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Introduction: low sales; growth: rapid sales + new rivals; maturity: peak; decline: falling sales."
+        },
+        {
+          "id": "bcom-c-09",
+          "text": "Under perfect competition, in the long run, firms typically earn:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Market forms",
+          "unit": "PUC Economics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Supernormal profit indefinitely", "isCorrect": false },
+            { "id": "B", "text": "Normal profit", "isCorrect": true },
+            { "id": "C", "text": "Always a loss", "isCorrect": false },
+            { "id": "D", "text": "Monopoly rent", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Free entry/exit drives economic profit to zero (normal profit) in the long run."
+        },
+        {
+          "id": "bcom-c-10",
+          "text": "A government budget deficit means:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Fiscal policy",
+          "unit": "PUC Economics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Receipts exceed expenditure", "isCorrect": false },
+            { "id": "B", "text": "Expenditure exceeds receipts", "isCorrect": true },
+            { "id": "C", "text": "Exports exceed imports", "isCorrect": false },
+            { "id": "D", "text": "The RBI has no reserves", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Budget deficit: spending > receipts. Trade deficit is exports vs imports — a different concept."
+        }
+      ]
+    },
+    {
+      "id": "bcom-sec-d",
+      "name": "Short answers",
+      "questionType": "short_answer",
+      "compulsory": true,
+      "instructions": "Answer in 3–5 sentences or a short working. Each question carries 2 marks.",
+      "questions": [
+        {
+          "id": "bcom-d-01",
+          "text": "State the accounting equation. If capital is ₹4,00,000 and liabilities are ₹1,50,000, compute assets.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Accounting equation",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "apply",
+          "correctAnswer": "Assets = Liabilities + Capital = 1,50,000 + 4,00,000 = ₹5,50,000",
+          "modelAnswer": "Assets = Liabilities + Capital. Assets = ₹1,50,000 + ₹4,00,000 = ₹5,50,000."
+        },
+        {
+          "id": "bcom-d-02",
+          "text": "Distinguish between a journal and a ledger (any two points).",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Books of account",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "understand",
+          "modelAnswer": "Journal is the book of original entry recording transactions chronologically as debit/credit; ledger is the book of final entry where journal postings are classified account-wise. Journal answers 'what happened today'; ledger answers 'what is the balance of this account'."
+        },
+        {
+          "id": "bcom-d-03",
+          "text": "List any four of Fayol's principles of management.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Fayol",
+          "unit": "B.Com Management Principles",
+          "bloomLevel": "remember",
+          "modelAnswer": "Any four of: division of work, authority and responsibility, discipline, unity of command, unity of direction, subordination of individual interest, remuneration, centralisation, scalar chain, order, equity, stability of tenure, initiative, esprit de corps."
+        },
+        {
+          "id": "bcom-d-04",
+          "text": "What is market segmentation? Give two bases used to segment a consumer market.",
+          "type": "short_answer",
+          "difficulty": "medium",
+          "marks": 2,
+          "topic": "Market segmentation",
+          "unit": "B.Com Principles of Marketing",
+          "bloomLevel": "understand",
+          "modelAnswer": "Market segmentation is dividing a heterogeneous market into groups of buyers with similar needs or behaviour. Bases include geographic (region, urban/rural), demographic (age, income, gender), psychographic (lifestyle) and behavioural (loyalty, occasion)."
+        },
+        {
+          "id": "bcom-d-05",
+          "text": "Name the three types of accounts in the traditional classification and state the debit rule for a Real account.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Types of accounts",
+          "unit": "PUC Accountancy",
+          "bloomLevel": "remember",
+          "modelAnswer": "Personal, Real and Nominal. Real account: debit what comes in, credit what goes out."
+        }
+      ]
+    },
+    {
+      "id": "bcom-sec-e",
+      "name": "Application",
+      "questionType": "numerical",
+      "compulsory": true,
+      "instructions": "Show workings. 10 marks.",
+      "questions": [
+        {
+          "id": "bcom-e-01",
+          "text": "From the following, prepare a Trading Account of Smt. Latha for the year ended 31 March 2026. Opening stock ₹40,000; Purchases ₹2,60,000; Purchase returns ₹10,000; Sales ₹4,20,000; Sales returns ₹20,000; Wages ₹18,000; Carriage inwards ₹7,000; Closing stock ₹55,000. (Ignore GST.)\n\nRequired: (a) show the Trading Account (8 marks); (b) state the gross profit or gross loss (2 marks).",
+          "type": "numerical",
+          "difficulty": "medium",
+          "marks": 10,
+          "topic": "Trading account",
+          "unit": "PUC Accountancy / B.Com Financial Accounting",
+          "bloomLevel": "apply",
+          "correctAnswer": "Gross profit ₹1,40,000",
+          "modelAnswer": "Dr Trading A/c Cr\nTo Opening stock 40,000\nTo Purchases 2,60,000 less returns 10,000 = 2,50,000\nTo Wages 18,000\nTo Carriage inwards 7,000\nTo Gross profit c/d 1,40,000\nTotal 4,55,000\nBy Sales 4,20,000 less returns 20,000 = 4,00,000\nBy Closing stock 55,000\nTotal 4,55,000\nGross profit = ₹1,40,000.",
+          "explanation": "Net purchases 2,50,000; net sales 4,00,000. Debit side excluding GP = 40k+250k+18k+7k = 3,15,000. Credit = 4,00,000+55,000 = 4,55,000. GP = 4,55,000−3,15,000 = 1,40,000."
+        }
+      ]
+    }
+  ]
+}

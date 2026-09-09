@@ -1,0 +1,683 @@
+{
+  "schemaVersion": 1,
+  "id": "ba-sem1-preassessment",
+  "title": "B.A Semester I — Pre-Assessment (Diagnostic)",
+  "subject": "Arts bridge (English, History, Political Science, Social Science)",
+  "examType": "pre-assessment",
+  "program": "B.A",
+  "branch": "B.A",
+  "semester": 1,
+  "batch": "2026-27",
+  "scheme": "Karnataka UG SEP 2024 / NEP 2020 — Sem I readiness",
+  "university": "Bengaluru City University (template — substitute the college's affiliating university)",
+  "duration": 60,
+  "totalMarks": 50,
+  "language": "en",
+  "negativeMarking": false,
+  "passingPercentage": 40,
+  "instructions": [
+    "This is a diagnostic paper given in Week 1. It is not a university examination and does not count toward SEE.",
+    "It checks PUC / Class 12 Arts readiness for B.A Semester I (languages, History, Political Science, Economics/Sociology combinations).",
+    "Answer all questions. Figures to the right indicate marks.",
+    "Write the Section E answer in about 180–220 words.",
+    "No negative marking."
+  ],
+  "sources": [
+    "Karnataka 2nd PUC History, Political Science, Sociology, Economics and English",
+    "KSHEC NEP model syllabi for B.A History (Political History of Karnataka) and Political Science (Basic Concepts in Political Science)",
+    "Constitution of India — Preamble, Fundamental Rights, basic structure (PUC / AECC Constitution of India later in the degree)"
+  ],
+  "sections": [
+    {
+      "id": "ba-sec-a",
+      "name": "English language",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "ba-a-01",
+          "text": "Choose the correctly punctuated sentence.",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Punctuation",
+          "unit": "PUC English",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "The students asked, \"When is the internal test?\"", "isCorrect": true },
+            { "id": "B", "text": "The students asked \"When is the internal test.\"", "isCorrect": false },
+            { "id": "C", "text": "The students asked, when is the internal test?", "isCorrect": false },
+            { "id": "D", "text": "The students asked; When is the internal test?", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "A direct question inside quotation marks keeps its question mark; a comma introduces the quote."
+        },
+        {
+          "id": "ba-a-02",
+          "text": "\"The minutes were approved by the committee.\" The voice of this sentence is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Voice",
+          "unit": "PUC English",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Active voice", "isCorrect": false },
+            { "id": "B", "text": "Passive voice", "isCorrect": true },
+            { "id": "C", "text": "Imperative mood", "isCorrect": false },
+            { "id": "D", "text": "Present continuous", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Be + past participle (were approved) with a by-agent is passive."
+        },
+        {
+          "id": "ba-a-03",
+          "text": "Choose the word closest in meaning to \"succinct\".",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Vocabulary",
+          "unit": "PUC English",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Wordy", "isCorrect": false },
+            { "id": "B", "text": "Brief and clear", "isCorrect": true },
+            { "id": "C", "text": "Ambiguous", "isCorrect": false },
+            { "id": "D", "text": "Hostile", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Succinct = expressed in few words without losing meaning."
+        },
+        {
+          "id": "ba-a-04",
+          "text": "Identify the tense: \"By next June she will have completed her internship.\"",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Tense",
+          "unit": "PUC English",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Simple future", "isCorrect": false },
+            { "id": "B", "text": "Future continuous", "isCorrect": false },
+            { "id": "C", "text": "Future perfect", "isCorrect": true },
+            { "id": "D", "text": "Present perfect", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Will have + past participle = future perfect (action complete before a future point)."
+        },
+        {
+          "id": "ba-a-05",
+          "text": "A topic sentence in a paragraph usually:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Paragraph writing",
+          "unit": "PUC English",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "States the main idea of that paragraph", "isCorrect": true },
+            { "id": "B", "text": "Must be a quotation from a poem", "isCorrect": false },
+            { "id": "C", "text": "Is always the last sentence", "isCorrect": false },
+            { "id": "D", "text": "Contains only examples and no claim", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "The topic sentence carries the controlling idea; other sentences support it."
+        },
+        {
+          "id": "ba-a-06",
+          "text": "Choose the correctly reported sentence. Direct: He said, \"I am writing an essay now.\"",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Reported speech",
+          "unit": "PUC English / B.Com AECC English",
+          "bloomLevel": "apply",
+          "options": [
+            { "id": "A", "text": "He said that he is writing an essay now.", "isCorrect": false },
+            { "id": "B", "text": "He said that he was writing an essay then.", "isCorrect": true },
+            { "id": "C", "text": "He said that I was writing an essay now.", "isCorrect": false },
+            { "id": "D", "text": "He said that he wrote an essay tomorrow.", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Present continuous → past continuous; now → then; pronoun I → he."
+        },
+        {
+          "id": "ba-a-07",
+          "text": "Which word is a synonym of \"ancient\" as used in \"ancient inscriptions\"?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Vocabulary",
+          "unit": "PUC English",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Recent", "isCorrect": false },
+            { "id": "B", "text": "Old / of a distant past", "isCorrect": true },
+            { "id": "C", "text": "Imaginary", "isCorrect": false },
+            { "id": "D", "text": "Illegal", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Ancient = belonging to a remote past; useful when reading History sources."
+        },
+        {
+          "id": "ba-a-08",
+          "text": "In the sentence \"Although it rained, the rally continued,\" the word Although introduces a:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Clauses",
+          "unit": "PUC English",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Coordinating clause of addition", "isCorrect": false },
+            { "id": "B", "text": "Subordinate concessive clause", "isCorrect": true },
+            { "id": "C", "text": "Relative clause", "isCorrect": false },
+            { "id": "D", "text": "Noun clause acting as subject", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Although / though / even if mark concession — a dependent clause."
+        },
+        {
+          "id": "ba-a-09",
+          "text": "Choose the option that is NOT a feature of a formal letter.",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Letter writing",
+          "unit": "PUC English",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Sender's address and date", "isCorrect": false },
+            { "id": "B", "text": "Subject line", "isCorrect": false },
+            { "id": "C", "text": "Slang and contractions throughout", "isCorrect": true },
+            { "id": "D", "text": "Complimentary close (Yours faithfully / sincerely)", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Formal letters avoid slang and keep a polite, compact register."
+        },
+        {
+          "id": "ba-a-10",
+          "text": "\"The Western Ghats are older than the Himalayas.\" This sentence is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Degrees of comparison",
+          "unit": "PUC English",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Positive degree", "isCorrect": false },
+            { "id": "B", "text": "Comparative degree", "isCorrect": true },
+            { "id": "C", "text": "Superlative degree", "isCorrect": false },
+            { "id": "D", "text": "Not a comparison", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Older than = comparative. Superlative would be oldest."
+        }
+      ]
+    },
+    {
+      "id": "ba-sec-b",
+      "name": "History & Political Science",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "ba-b-01",
+          "text": "Ashoka's dhamma is known mainly from:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Mauryas",
+          "unit": "PUC History",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "The Arthashastra alone", "isCorrect": false },
+            { "id": "B", "text": "His edicts inscribed on rocks and pillars", "isCorrect": true },
+            { "id": "C", "text": "Megasthenes' play on Chanakya", "isCorrect": false },
+            { "id": "D", "text": "Ain-i-Akbari", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Major and minor rock edicts and pillar edicts are the primary sources for Ashoka's dhamma."
+        },
+        {
+          "id": "ba-b-02",
+          "text": "Hampi was the capital of which empire?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Vijayanagara",
+          "unit": "PUC History / B.A History of Karnataka",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Hoysala", "isCorrect": false },
+            { "id": "B", "text": "Vijayanagara", "isCorrect": true },
+            { "id": "C", "text": "Bahmani only", "isCorrect": false },
+            { "id": "D", "text": "Wodeyar Mysore in the 18th century", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Vijayanagara (Hampi) is a UNESCO site and a core B.A History of Karnataka topic."
+        },
+        {
+          "id": "ba-b-03",
+          "text": "Kittur Rani Chennamma is remembered for:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Modern Karnataka",
+          "unit": "PUC History",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Leading resistance against the British at Kittur (1824)", "isCorrect": true },
+            { "id": "B", "text": "Founding the Indian National Congress", "isCorrect": false },
+            { "id": "C", "text": "Drafting the Constitution", "isCorrect": false },
+            { "id": "D", "text": "Building the Gol Gumbaz", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "She opposed the Doctrine of Lapse / British interference at Kittur — a standard Karnataka PUC example."
+        },
+        {
+          "id": "ba-b-04",
+          "text": "The States Reorganisation Act that created a united Mysore (later Karnataka) linguistic state belongs to the year:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Unification of Karnataka",
+          "unit": "PUC History",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "1947", "isCorrect": false },
+            { "id": "B", "text": "1950", "isCorrect": false },
+            { "id": "C", "text": "1956", "isCorrect": true },
+            { "id": "D", "text": "1973 only, with no earlier reorganisation", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "1 November 1956: linguistic reorganisation. The state was renamed Karnataka in 1973."
+        },
+        {
+          "id": "ba-b-05",
+          "text": "The Harappan civilisation is also called:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Ancient India",
+          "unit": "PUC History",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Mesolithic culture of the Deccan", "isCorrect": false },
+            { "id": "B", "text": "Indus Valley civilisation", "isCorrect": true },
+            { "id": "C", "text": "Sangam culture", "isCorrect": false },
+            { "id": "D", "text": "Gupta golden age", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Harappa and Mohenjo-daro are type-sites of the Indus (Harappan) civilisation."
+        },
+        {
+          "id": "ba-b-06",
+          "text": "The Constitution of India came into force on:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Constitution",
+          "unit": "PUC Political Science",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "15 August 1947", "isCorrect": false },
+            { "id": "B", "text": "26 November 1949", "isCorrect": false },
+            { "id": "C", "text": "26 January 1950", "isCorrect": true },
+            { "id": "D", "text": "1 November 1956", "isCorrect": false }
+          ],
+          "correctAnswer": "C",
+          "explanation": "Adopted 26 Nov 1949 (Constitution Day); enforced 26 Jan 1950 (Republic Day)."
+        },
+        {
+          "id": "ba-b-07",
+          "text": "Which of the following is a Fundamental Right?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Fundamental Rights",
+          "unit": "PUC Political Science",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Right to property (as it stands today, a legal right not a FR)", "isCorrect": false },
+            { "id": "B", "text": "Right to Equality (Articles 14–18)", "isCorrect": true },
+            { "id": "C", "text": "Directive Principle of equal pay", "isCorrect": false },
+            { "id": "D", "text": "Fundamental Duty to vote in every election", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Right to property was removed from FRs by the 44th Amendment (now Art. 300A). Voting is a legal/constitutional right, not listed as a Fundamental Duty."
+        },
+        {
+          "id": "ba-b-08",
+          "text": "India is described in the Preamble as a:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Preamble",
+          "unit": "PUC Political Science",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Sovereign Socialist Secular Democratic Republic", "isCorrect": true },
+            { "id": "B", "text": "Federal monarchy", "isCorrect": false },
+            { "id": "C", "text": "Unitary theocracy", "isCorrect": false },
+            { "id": "D", "text": "Presidential dictatorship", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Socialist and Secular were added by the 42nd Amendment (1976)."
+        },
+        {
+          "id": "ba-b-09",
+          "text": "In a parliamentary system, the Council of Ministers is collectively responsible to the:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Parliamentary system",
+          "unit": "PUC Political Science",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Supreme Court only", "isCorrect": false },
+            { "id": "B", "text": "Lok Sabha", "isCorrect": true },
+            { "id": "C", "text": "Rajya Sabha only", "isCorrect": false },
+            { "id": "D", "text": "Election Commission", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Art. 75(3): the Council of Ministers is collectively responsible to the House of the People."
+        },
+        {
+          "id": "ba-b-10",
+          "text": "Which feature best describes Indian federalism?",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Federalism",
+          "unit": "PUC Political Science",
+          "bloomLevel": "analyze",
+          "options": [
+            { "id": "A", "text": "States may secede by a simple majority", "isCorrect": false },
+            { "id": "B", "text": "A strong Centre with a division of powers in the Union, State and Concurrent lists", "isCorrect": true },
+            { "id": "C", "text": "No written constitution", "isCorrect": false },
+            { "id": "D", "text": "Governors are elected by state assemblies only", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "India is a Union of States with three lists (Seventh Schedule) and a strong Centre; Governors are appointed by the President."
+        }
+      ]
+    },
+    {
+      "id": "ba-sec-c",
+      "name": "Society & Economy",
+      "questionType": "mcq",
+      "compulsory": true,
+      "instructions": "Choose the correct option. Each question carries 1 mark.",
+      "questions": [
+        {
+          "id": "ba-c-01",
+          "text": "Urbanisation refers to:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Urbanisation",
+          "unit": "PUC Sociology",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "An increase in the proportion of people living in towns and cities", "isCorrect": true },
+            { "id": "B", "text": "A fall in literacy", "isCorrect": false },
+            { "id": "C", "text": "The caste system becoming more rigid", "isCorrect": false },
+            { "id": "D", "text": "Only the growth of agriculture", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Urbanisation is the process and the rising urban share of population."
+        },
+        {
+          "id": "ba-c-02",
+          "text": "Which statement about caste in contemporary India is most accurate?",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Caste",
+          "unit": "PUC Sociology",
+          "bloomLevel": "analyze",
+          "options": [
+            { "id": "A", "text": "Caste has no legal or social existence today", "isCorrect": false },
+            { "id": "B", "text": "Untouchability is abolished by the Constitution, but caste still shapes marriage, politics and inequality", "isCorrect": true },
+            { "id": "C", "text": "Caste exists only in villages, never in cities", "isCorrect": false },
+            { "id": "D", "text": "Caste is identical with class", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Art. 17 abolishes untouchability; caste as a social structure persists in many domains."
+        },
+        {
+          "id": "ba-c-03",
+          "text": "HDI (Human Development Index) combines:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Human development",
+          "unit": "PUC Economics / Sociology",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Only per-capita income", "isCorrect": false },
+            { "id": "B", "text": "Health, education and standard of living", "isCorrect": true },
+            { "id": "C", "text": "Only the number of factories", "isCorrect": false },
+            { "id": "D", "text": "Military expenditure and gold reserves", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "UNDP HDI: life expectancy, education (mean/expected years of schooling), GNI per capita."
+        },
+        {
+          "id": "ba-c-04",
+          "text": "A poverty line is:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Poverty",
+          "unit": "PUC Economics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "A cut-off of income/consumption used to count the poor", "isCorrect": true },
+            { "id": "B", "text": "The border of a slum", "isCorrect": false },
+            { "id": "C", "text": "The RBI repo rate", "isCorrect": false },
+            { "id": "D", "text": "A type of tax", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Poverty lines (Tendulkar, Rangarajan, etc.) are thresholds; headcount ratio is the share below the line."
+        },
+        {
+          "id": "ba-c-05",
+          "text": "Sex ratio in Indian census terms is usually expressed as:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Demography",
+          "unit": "PUC Sociology",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Number of females per 1,000 males", "isCorrect": true },
+            { "id": "B", "text": "Number of males per 100 females only", "isCorrect": false },
+            { "id": "C", "text": "Births minus deaths", "isCorrect": false },
+            { "id": "D", "text": "Literacy of women minus literacy of men", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Census of India: females per 1,000 males. Child sex ratio uses ages 0–6."
+        },
+        {
+          "id": "ba-c-06",
+          "text": "Which is a Directive Principle of State Policy, not a Fundamental Right?",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "DPSP",
+          "unit": "PUC Political Science",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Freedom of speech", "isCorrect": false },
+            { "id": "B", "text": "Equal pay for equal work (Art. 39)", "isCorrect": true },
+            { "id": "C", "text": "Protection against arrest and detention in certain cases", "isCorrect": false },
+            { "id": "D", "text": "Abolition of untouchability", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "DPSPs (Part IV) are non-justiciable guidelines; FRs (Part III) are enforceable."
+        },
+        {
+          "id": "ba-c-07",
+          "text": "The Green Revolution in India is associated with:",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Agriculture",
+          "unit": "PUC Economics",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "HYV seeds, irrigation, fertilisers and a rise in foodgrain output from the 1960s", "isCorrect": true },
+            { "id": "B", "text": "The abolition of zamindari in 1950 only", "isCorrect": false },
+            { "id": "C", "text": "IT parks in Bengaluru", "isCorrect": false },
+            { "id": "D", "text": "Nationalisation of banks in 1969 only", "isCorrect": false }
+          ],
+          "correctAnswer": "A",
+          "explanation": "Wheat (and later rice) HYVs, especially in Punjab, Haryana and western UP."
+        },
+        {
+          "id": "ba-c-08",
+          "text": "Globalisation, in the Indian 1991-reform sense, mainly involved:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Economic reforms",
+          "unit": "PUC Economics",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "Closing the economy to all trade", "isCorrect": false },
+            { "id": "B", "text": "Liberalisation, privatisation and greater integration with world trade and capital", "isCorrect": true },
+            { "id": "C", "text": "Returning to a wholly planned licence-permit raj", "isCorrect": false },
+            { "id": "D", "text": "Banning foreign direct investment", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "LPG (liberalisation, privatisation, globalisation) is the PUC shorthand for 1991 reforms."
+        },
+        {
+          "id": "ba-c-09",
+          "text": "A social movement is best described as:",
+          "type": "mcq",
+          "difficulty": "medium",
+          "marks": 1,
+          "topic": "Social movements",
+          "unit": "PUC Sociology",
+          "bloomLevel": "understand",
+          "options": [
+            { "id": "A", "text": "A one-day festival", "isCorrect": false },
+            { "id": "B", "text": "Collective, organised effort to promote or resist social change", "isCorrect": true },
+            { "id": "C", "text": "A government department", "isCorrect": false },
+            { "id": "D", "text": "An individual's private diary", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Examples: farmers' movements, environmental movements, women's movements, anti-caste struggles."
+        },
+        {
+          "id": "ba-c-10",
+          "text": "Which river is central to a long-running inter-state water dispute involving Karnataka?",
+          "type": "mcq",
+          "difficulty": "easy",
+          "marks": 1,
+          "topic": "Karnataka / resources",
+          "unit": "PUC Political Science / Geography",
+          "bloomLevel": "remember",
+          "options": [
+            { "id": "A", "text": "Ganga", "isCorrect": false },
+            { "id": "B", "text": "Cauvery (Kaveri)", "isCorrect": true },
+            { "id": "C", "text": "Brahmaputra", "isCorrect": false },
+            { "id": "D", "text": "Yamuna", "isCorrect": false }
+          ],
+          "correctAnswer": "B",
+          "explanation": "Cauvery dispute (Karnataka–Tamil Nadu, also Kerala and Puducherry) is a staple of Karnataka civic awareness."
+        }
+      ]
+    },
+    {
+      "id": "ba-sec-d",
+      "name": "Short answers",
+      "questionType": "short_answer",
+      "compulsory": true,
+      "instructions": "Answer in 4–6 sentences. Each question carries 2 marks.",
+      "questions": [
+        {
+          "id": "ba-d-01",
+          "text": "State two differences between Fundamental Rights and Directive Principles of State Policy.",
+          "type": "short_answer",
+          "difficulty": "medium",
+          "marks": 2,
+          "topic": "FR vs DPSP",
+          "unit": "PUC Political Science",
+          "bloomLevel": "understand",
+          "modelAnswer": "FRs (Part III) are justiciable — courts can enforce them; DPSPs (Part IV) are non-justiciable guidelines for the State. FRs limit the State (civil-political rights); DPSPs ask the State to pursue socio-economic goals (welfare). In a conflict, FRs generally prevail, though later amendments and cases have sought harmony."
+        },
+        {
+          "id": "ba-d-02",
+          "text": "Why are Ashokan edicts important as historical sources?",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Sources",
+          "unit": "PUC History",
+          "bloomLevel": "understand",
+          "modelAnswer": "They are contemporary royal inscriptions in Prakrit (and other languages), spread across the subcontinent. They record Ashoka's dhamma, administration and after the Kalinga war, and can be compared with Buddhist texts and archaeology. As public documents they are less filtered than later chronicles."
+        },
+        {
+          "id": "ba-d-03",
+          "text": "Explain any two causes of urbanisation in India after 1991.",
+          "type": "short_answer",
+          "difficulty": "medium",
+          "marks": 2,
+          "topic": "Urbanisation",
+          "unit": "PUC Sociology",
+          "bloomLevel": "analyze",
+          "modelAnswer": "Growth of services and industry in cities (IT, construction, informal work) pulls rural labour. Distress in agriculture and better perceived education/health in towns push migration. Liberalisation expanded private investment in metro regions (e.g. Bengaluru, Pune)."
+        },
+        {
+          "id": "ba-d-04",
+          "text": "Write two sentences in reported speech: (1) The teacher said, \"Submit the assignment tomorrow.\" (2) She said, \"I have visited Hampi.\"",
+          "type": "short_answer",
+          "difficulty": "medium",
+          "marks": 2,
+          "topic": "Reported speech",
+          "unit": "PUC English",
+          "bloomLevel": "apply",
+          "modelAnswer": "(1) The teacher told us/them to submit the assignment the next day. (2) She said that she had visited Hampi."
+        },
+        {
+          "id": "ba-d-05",
+          "text": "What is meant by 'unity in diversity' in the Indian context? Give one cultural and one political illustration.",
+          "type": "short_answer",
+          "difficulty": "easy",
+          "marks": 2,
+          "topic": "Indian society",
+          "unit": "PUC Sociology / Political Science",
+          "bloomLevel": "understand",
+          "modelAnswer": "It means many languages, religions and regions coexist within one political community. Cultural: multiple classical and folk traditions (e.g. Kannada, Tamil, Hindi literatures) under a shared civilisational space. Political: a single Constitution with federal states and official recognition of scheduled languages."
+        }
+      ]
+    },
+    {
+      "id": "ba-sec-e",
+      "name": "Essay",
+      "questionType": "long_answer",
+      "compulsory": true,
+      "instructions": "Write about 180–220 words.",
+      "questions": [
+        {
+          "id": "ba-e-01",
+          "text": "\"Local history is a way into national history.\" Taking any one example from Karnataka (Vijayanagara / Kittur / unification of the State / a freedom-movement episode), explain how a regional event helps us understand a wider Indian process. Mention at least one type of source a historian would use.",
+          "type": "long_answer",
+          "difficulty": "medium",
+          "marks": 10,
+          "topic": "Regional history",
+          "unit": "B.A History Sem I — Political History of Karnataka (bridge)",
+          "bloomLevel": "analyze",
+          "modelAnswer": "A strong answer (i) picks one case, (ii) narrates it briefly with dates, (iii) links it to a pan-Indian theme (state formation, colonialism, nationalism, linguistic federalism), (iv) names a source type (inscriptions, colonial records, newspapers, oral history, monuments), (v) closes with a caution about not treating the region as a mere illustration. Example: Vijayanagara as a Deccan state in the post-Sultanate world — Hampi monuments + Portuguese travelogues + inscriptions; or 1956 reorganisation as the working of linguistic federalism after the States Reorganisation Commission."
+        }
+      ]
+    }
+  ]
+}
