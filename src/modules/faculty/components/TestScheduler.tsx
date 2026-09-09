@@ -23,6 +23,7 @@ import { auth, db } from '../../../Firebase/config';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,
 } from '../../../types/assessment';
+import { isPaperOnlineReady, paperQuestionCount } from '../../../shared/utils/paperReadiness';
 import { format } from 'date-fns';
 
 interface TestSchedulerProps {
@@ -270,8 +271,12 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   };
 
   const typedTests = (tests || []) as ScheduledTest[];
+  // Only list papers that are ONLINE-ready — they must carry a structured
+  // question set (sections or a question-bank link). File-only "Ready to use"
+  // papers stay printable but cannot be scheduled online.
   const typedPapers = (papers || []).filter((paper: AssessmentPaper) =>
     ['approved', 'published'].includes(String(paper.status))
+    && isPaperOnlineReady(paper)
     && (!auth.currentUser || paper.createdBy === auth.currentUser.uid)
   ) as AssessmentPaper[];
 
@@ -376,7 +381,7 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                           </Typography>
                           <Stack direction="row" spacing={0.5}>
                             <Chip size="small" label={paper.type || (paper as any).paperType || 'exam'} />
-                            <Chip size="small" label={`${(paper.sections || []).reduce((sum: number, s: any) => sum + (s.questions?.length || 0), 0)} Q`} />
+                            <Chip size="small" label={`${paperQuestionCount(paper)} Q`} />
                             <Chip size="small" label={`${paper.totalMarks} M`} />
                             <Chip size="small" label={`${paper.duration} min`} />
                           </Stack>
@@ -386,7 +391,11 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                   </Box>
                   {papersLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading approved papers…</Alert>}
                   {!papersLoading && typedPapers.length === 0 && (
-                    <Alert severity="warning" sx={{ mt: 2 }}>No approved papers are available. Approve a paper before scheduling.</Alert>
+                    <Alert severity="warning" sx={{ mt: 2 }}>
+                      No online-ready papers are available. A paper needs structured questions to be scheduled
+                      online — open it in Papers, use “Parse file” (or add questions by hand), review, and confirm.
+                      File-only papers remain printable but cannot be scheduled here.
+                    </Alert>
                   )}
                   <Box sx={{ mt: 2 }}>
                     <Button variant="contained" onClick={handleNext} disabled={!selectedPaper}>

@@ -73,6 +73,7 @@ import {
   deleteDraftGradeRecords,
 } from './gradeRecords'
 import { savePaper, reviewPaper, getPaperFileDownload } from './paperWorkflow'
+import { parsePaperFile, confirmPaperStructure } from './paperParsing'
 
 const app = express()
 
@@ -197,4 +198,6 @@ export {
   savePaper,
   reviewPaper,
   getPaperFileDownload,
+  parsePaperFile,
+  confirmPaperStructure,
 }
