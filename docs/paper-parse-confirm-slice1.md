@@ -117,7 +117,11 @@ never appeared in Assessments.
 `parsePaperFile` now tries **`deterministicParse`** before any AI: a line-layout
 parser (section headers, `N.` questions, `A.` option lines, `[n]`/`(n)`/`[n marks]`
 marks, "Each question carries N marks" defaults, date/meta line skips) that runs
-entirely on the server — **no API key, no cost, nothing leaves the server**. It is
+entirely on the server — **no API key, no cost, nothing leaves the server**. It
+also handles numbered-cell layouts (e.g. papers printed from the `content/`
+preview template): a `1.` alone on a line opens a question, and float-right marks
+that lead the text in the extracted layer (`[1]The accounting equation is:`) are
+recognised as that question's marks. It is
 accepted when it finds ≥1 question and the recognised lines cover ≥30% of the
 document text (the coverage guard defers to the AI fallback for unusual layouts).
 "Recognised" means structural evidence — section headers, question starts, option

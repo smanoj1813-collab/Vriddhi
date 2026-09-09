@@ -427,6 +427,53 @@ describe('deterministic parse (server-side layout rules, no AI)', () => {
     assert.deepEqual(detStripMarks('Plain question without marks'), { rest: 'Plain question without marks', marks: null })
   })
 
+  it('parses numbered-cell layouts (float-right marks, "N." alone on its line)', () => {
+    // The text layer of table/flex-printed papers looks like this: the number
+    // is its own line and the right-aligned marks span leads the question text.
+    const parsed = deterministicParse([
+      'Section A — Accountancy',
+      '[10 marks]',
+      'Choose the correct option. Each question carries 1 mark.',
+      '1.',
+      '[1]The accounting equation is:',
+      'A. Assets = Liabilities − Capital',
+      'B. Assets = Liabilities + Capital',
+      '2.',
+      '[1]Which of the following is a current asset?',
+      'A. Goodwill',
+      'B. Inventory',
+      '3.',
+      '[2]State the golden rules of accounting.',
+    ].join('\n'))
+    assert.equal(parsed.accepted, true)
+    assert.equal(parsed.questionCount, 3)
+    const [first, second, third] = parsed.sections[0].questions
+    assert.match(first.text, /^The accounting equation is:$/)
+    assert.equal(first.marks, 1)
+    assert.equal(first.type, 'mcq')
+    assert.deepEqual(first.options, ['Assets = Liabilities − Capital', 'Assets = Liabilities + Capital'])
+    assert.equal(second.marks, 1)
+    assert.equal(third.marks, 2)
+    assert.equal(third.type, 'short_answer')
+    // a lone section-total "[10 marks]" must not leak into any question's marks
+    assert.ok(parsed.sections[0].questions.every((q) => q.marks <= 2))
+  })
+
+  it('drops stray "N." openers that never receive a question body', () => {
+    const parsed = deterministicParse([
+      'Section A',
+      '1.',
+      '[1]Explain the ledger.',
+      '2.',
+      '3.',
+      '[1]Define journal.',
+    ].join('\n'))
+    assert.equal(parsed.questionCount, 2)
+    assert.equal(parsed.accepted, true)
+    const texts = parsed.sections[0].questions.map((q) => q.text)
+    assert.deepEqual(texts, ['Explain the ledger.', 'Define journal.'])
+  })
+
   it('handles "All questions carry N marks" wording and empty documents', () => {
     const parsed = deterministicParse([
       'Section A (Objective Type)',

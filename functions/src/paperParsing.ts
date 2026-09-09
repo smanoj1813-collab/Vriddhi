@@ -409,6 +409,9 @@ const DET_MAX_CONTINUATION_CHARS = 600
 
 const DET_SECTION_RE = /^(?:section|part)\s+[-–—:.]?\s*(?:[A-J]\b|[IVX]{1,4}\b|\d{1,2}\b)[^\n]{0,90}$/i
 const DET_QUESTION_START_RE = /^(?:Q(?:uestion)?\s*[.:]?\s*)?(\d{1,3})\s*[.)]\s*(.*)$/
+/** Leading marks token — float-right marks sit BEFORE the question text in a
+ *  PDF/DOCX text layer even though they print to its right. */
+const DET_LEADING_MARKS_RE = /^[\[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]\s*(.+)$/i
 const DET_OPTION_RE = /^\(?\s*([A-H])\s*[.)]\s*(.+)$/
 const DET_TRAILING_MARKS_RE = /[[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]\s*$/i
 const DET_MARKS_ONLY_RE = /^[\[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]$/i
@@ -516,11 +519,39 @@ export function deterministicParse(text: string): DeterministicParseResult {
 
     const questionMatch = line.match(DET_QUESTION_START_RE)
     if (questionMatch) {
-      const { rest, marks } = detStripMarks(questionMatch[2] || '')
+      let { rest, marks } = detStripMarks(questionMatch[2] || '')
+      // "1." alone on a line is a numbered-cell opener (very common in
+      // table/flex layouts exported to PDF/DOCX): open a pending question and
+      // let the following lines fill it. A pending question with no text at
+      // the end is dropped, so stray "2." lines are harmless.
       if (!rest) {
-        // A bare number with no question text — noise, not a question.
+        const openerSection = ensureSection()
+        if (questionCount >= MAX_QUESTIONS) {
+          warnings.push(`Only the first ${MAX_QUESTIONS} questions were kept.`)
+          capped = true
+          break
+        }
+        const pending: DetDraftQuestion = {
+          text: '',
+          options: [],
+          marks: null,
+          nextOptionLetter: null,
+          continuationChars: 0,
+        }
+        openerSection.questions.push(pending)
+        lastQuestion = pending
+        questionCount += 1
         consume(line)
         continue
+      }
+      // float-right marks may lead the text: "[1] The accounting equation is:"
+      const lead = rest.match(DET_LEADING_MARKS_RE)
+      if (lead) {
+        if (marks === null) {
+          const leadMarks = Number(lead[1])
+          if (Number.isFinite(leadMarks) && leadMarks > 0 && leadMarks <= 1000) marks = leadMarks
+        }
+        rest = lead[2]
       }
       const section = ensureSection()
       if (section.questions.length >= MAX_QUESTIONS || questionCount >= MAX_QUESTIONS) {
@@ -540,6 +571,23 @@ export function deterministicParse(text: string): DeterministicParseResult {
       questionCount += 1
       consume(line)
       continue
+    }
+
+    // A pending numbered opener ("1." on its own line) is filled by the next
+    // real line — either "[n] Text" (float-right marks first) or plain text via
+    // the continuation branch below. Option-shaped lines never become the text.
+    if (lastQuestion && lastQuestion.text === '') {
+      const lead = line.match(DET_LEADING_MARKS_RE)
+      if (lead) {
+        const leadMarks = Number(lead[1])
+        if (lastQuestion.marks === null && Number.isFinite(leadMarks) && leadMarks > 0 && leadMarks <= 1000) {
+          lastQuestion.marks = leadMarks
+        }
+        lastQuestion.text = lead[2].replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+        consume(line)
+        continue
+      }
+      if (/^\(?\s*[A-H]\s*[.)]\s/.test(line)) continue
     }
 
     const optionMatch = line.match(DET_OPTION_RE)
@@ -640,6 +688,9 @@ export function deterministicParse(text: string): DeterministicParseResult {
   for (const section of sections.slice(0, MAX_SECTIONS)) {
     const questions: ParsedQuestion[] = []
     for (const question of section.questions) {
+      // A pending opener that never got body text (a stray "2." / page number)
+      // is dropped — it was not a question.
+      if (!question.text.trim()) continue
       const marks = question.marks ?? (section.defaultMarks || 0)
       if (marks === 0) zeroMarks += 1
       questions.push({
