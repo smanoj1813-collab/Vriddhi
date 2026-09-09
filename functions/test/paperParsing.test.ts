@@ -3,13 +3,16 @@ import { describe, it } from 'node:test'
 import {
   buildParsePrompt,
   canConfirmPaperStructure,
+  detStripMarks,
+  deterministicParse,
   extractPaperText,
+  MIN_DETERMINISTIC_COVERAGE,
   normalizeConfirmSections,
   normalizeParsedStructure,
   normalizeQuestionType,
   SUPPORTED_QUESTION_TYPES,
 } from '../src/paperParsing'
-import { canEditExistingPaper, paperReadiness } from '../src/paperWorkflow'
+import { canDeletePaper, canEditExistingPaper, hasActiveScheduledTest, paperReadiness } from '../src/paperWorkflow'
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -280,5 +283,227 @@ describe('readiness flags (print / online / bank)', () => {
   it('treats legacy bank-linked papers (questionIds, no sections) as online-ready', () => {
     const flags = paperReadiness({ linkedQuestionIds: ['q1'] })
     assert.deepEqual(flags, { printReady: false, onlineReady: true, bankReady: true })
+  })
+})
+
+// ─── Deterministic-first parse (no AI needed) ───────────────────────────────
+
+/** A standard-layout PRE-ASSESSMENT paper: header block + MCQs + short answers. */
+const STANDARD_LAYOUT = [
+  'KRISHNAPUR UNIVERSITY',
+  'B.Com Semester I — PRE-ASSESSMENT Examination 2025-26',
+  'Subject: Financial Accounting',
+  'Date: 12/09/2025',
+  'Time: 1 Hour',
+  'Max. Marks: 30',
+  'SECTION A — Multiple Choice Questions',
+  'Answer ALL questions. Each question carries 1 mark.',
+  '1. Which of the following is a current asset?',
+  'A. Land',
+  'B. Inventory',
+  'C. Goodwill',
+  'D. Building',
+  '2. The accounting equation is best stated as:',
+  'A. Assets = Liabilities + Capital',
+  'B. Assets = Liabilities - Capital',
+  'C. Capital = Assets + Liabilities',
+  'D. None of the above',
+  '3. The double entry system was described by:',
+  'A. Adam Smith',
+  'B. Luca Pacioli',
+  'C. Karl Marx',
+  'D. J.M. Keynes',
+  'SECTION B — Short Answer Questions',
+  'Answer ANY TWO questions. Each question carries 10 marks.',
+  '4. Explain the rules of debit and credit. (10)',
+  '5. Distinguish between capital and revenue expenditure. [10]',
+].join('\n')
+
+describe('deterministic parse (server-side layout rules, no AI)', () => {
+  it('parses a standard question paper layout end-to-end', () => {
+    const parsed = deterministicParse(STANDARD_LAYOUT)
+    assert.equal(parsed.accepted, true)
+    assert.ok(parsed.coverage >= MIN_DETERMINISTIC_COVERAGE, 'coverage should clear the guard')
+    assert.equal(parsed.questionCount, 5)
+    assert.equal(parsed.sections.length, 2)
+    assert.match(parsed.sections[0].name, /SECTION A/)
+
+    const mcqs = parsed.sections[0].questions
+    assert.equal(mcqs.length, 3)
+    assert.equal(mcqs[0].type, 'mcq')
+    assert.equal(mcqs[0].marks, 1, 'default marks from "Each question carries 1 mark"')
+    assert.deepEqual(mcqs[0].options, ['Land', 'Inventory', 'Goodwill', 'Building'])
+    assert.equal(mcqs[1].options?.[0], 'Assets = Liabilities + Capital')
+    assert.equal(mcqs[2].options?.length, 4)
+    // transcribed options are text only — nothing answer-bearing exists or is invented
+    assert.equal(parsed.warnings.length, 0)
+
+    const shorts = parsed.sections[1].questions
+    assert.equal(shorts[0].type, 'long_answer')
+    assert.equal(shorts[0].marks, 10, 'printed (10) wins over the section default')
+    assert.equal(shorts[1].marks, 10, 'printed [10] is honoured too')
+    assert.equal(shorts[0].text.includes('(10)'), false, 'the marks token is stripped from the text')
+
+    assert.equal(parsed.meta.subject, 'Financial Accounting')
+    assert.equal(parsed.meta.durationMinutes, 60)
+    assert.equal(parsed.meta.totalMarks, 30)
+    assert.match(parsed.meta.title, /PRE-ASSESSMENT/)
+  })
+
+  it('never invents marks and flags what is missing', () => {
+    const parsed = deterministicParse([
+      'Section A (20 marks)',
+      '1. Define accounting.',
+      '2. Give two examples of Current Assets. (2)',
+      '3. Write short note on: (a) GST (b) Depreciation',
+    ].join('\n'))
+    assert.equal(parsed.accepted, true)
+    const questions = parsed.sections[0].questions
+    assert.equal(questions[0].marks, 0, 'no printed marks → 0, decided by the faculty at review')
+    assert.equal(questions[1].marks, 2)
+    assert.ok(questions[2].text.includes('(a) GST (b) Depreciation'), 'sub-parts stay in the question text')
+    assert.equal(questions[2].options, undefined, 'lowercase sub-parts are not MCQ options')
+    assert.ok(parsed.warnings.some((w) => w.includes('no printed marks')))
+  })
+
+  it('takes marks from a standalone bracketed line', () => {
+    const parsed = deterministicParse([
+      'Section A',
+      '1. Pick one.',
+      'A. x',
+      'B. y',
+      'C. z',
+      'D. w',
+      '[1]',
+    ].join('\n'))
+    assert.equal(parsed.accepted, true)
+    assert.equal(parsed.sections[0].questions[0].marks, 1)
+    assert.equal(parsed.sections[0].questions[0].type, 'mcq')
+  })
+
+  it('defers non-question documents to the AI fallback', () => {
+    const parsed = deterministicParse([
+      'NOTICE',
+      'All students are informed that the central library will remain closed on Saturday on account of the',
+      'annual inspection. The sports meet will be held on 15/09/2025 at the main ground, and students should',
+      'report to their wardens for instructions about transport arrangements and the roll of participants.',
+      'Library timings will be revised from next Monday. The examination cell will publish the revised calendar',
+      'on the notice board and on the college portal before the end of this week. No separate communication',
+      'will be issued to individual students or parents regarding these changes at this stage of the semester.',
+    ].join('\n'))
+    assert.equal(parsed.accepted, false)
+    assert.equal(parsed.questionCount, 0)
+    assert.ok(parsed.warnings.some((w) => w.includes('did not match')))
+  })
+
+  it('rejects a few question-like lines buried in unrelated text (coverage guard)', () => {
+    const prose = 'The syllabus committee met to discuss the outcome-based curriculum framework. '.repeat(12)
+    const parsed = deterministicParse(`${prose}\n1. Explain inflation. (5)\n${prose}`)
+    assert.equal(parsed.questionCount, 1)
+    assert.equal(parsed.accepted, false, 'recognised lines must cover a meaningful share of the document')
+    assert.ok(parsed.warnings.some((w) => w.includes('deferring to the AI fallback')))
+  })
+
+  it('caps option lists at the eight letters it recognises, like the AI path', () => {
+    const lines = ['Section A', '1. Select every correct alternative below.']
+    for (const letter of 'ABCDEFGHI') lines.push(`${letter}. Option ${letter}`)
+    const parsed = deterministicParse(lines.join('\n'))
+    assert.equal(parsed.accepted, true)
+    assert.equal(parsed.sections[0].questions[0].options?.length, 8)
+  })
+
+  it('caps questions at 400 like the AI path', () => {
+    const lines = ['Section A']
+    for (let i = 1; i <= 420; i += 1) lines.push(`${i}. Question number ${i}. (1)`)
+    const parsed = deterministicParse(lines.join('\n'))
+    assert.equal(parsed.questionCount, 400)
+    assert.ok(parsed.warnings.some((w) => w.includes('400')))
+  })
+
+  it('strips trailing marks tokens only when they are marks', () => {
+    assert.deepEqual(detStripMarks('Explain X (10 marks)'), { rest: 'Explain X', marks: 10 })
+    assert.deepEqual(detStripMarks('Define X [2]'), { rest: 'Define X', marks: 2 })
+    assert.deepEqual(detStripMarks('Estimate for FY (2025)'), { rest: 'Estimate for FY (2025)', marks: null })
+    assert.deepEqual(detStripMarks('Plain question without marks'), { rest: 'Plain question without marks', marks: null })
+  })
+
+  it('handles "All questions carry N marks" wording and empty documents', () => {
+    const parsed = deterministicParse([
+      'Section A (Objective Type)',
+      'All questions carry 2 marks.',
+      '1. Choose the correct alternative: Accounting period assumes the business:',
+      'A. Has an indefinite life',
+      'B. Closes every year',
+      'C. Is owned by the government',
+      'D. Has no liabilities',
+      '2. Define bank reconciliation statement. [2 Marks]',
+    ].join('\n'))
+    assert.equal(parsed.accepted, true)
+    assert.equal(parsed.sections[0].questions[0].marks, 2, 'carry-wording sets the section default')
+    assert.equal(parsed.sections[0].questions[1].marks, 2, 'printed [2 Marks] is honoured')
+
+    const empty = deterministicParse('')
+    assert.equal(empty.accepted, false)
+    assert.equal(empty.questionCount, 0)
+    assert.equal(empty.coverage, 0)
+  })
+
+  it('parses straight from a generated PDF text layer (the faculty upload path)', async () => {
+    const pdf = makePdf([
+      'PRE-ASSESSMENT PAPER - B.Com Semester I',
+      'Time: 60 Minutes',
+      'Max. Marks: 30',
+      'Section A - Objective Questions',
+      'All questions carry 10 marks.',
+      '1. Define the accounting equation.',
+      '2. Explain the double entry system.',
+    ])
+    const extracted = await extractPaperText(pdf, PDF_TYPE)
+    const parsed = deterministicParse(extracted.text)
+    assert.equal(parsed.accepted, true, 'the extracted layout must be trusted without any AI call')
+    assert.equal(parsed.questionCount, 2)
+    assert.equal(parsed.sections[0].questions[0].marks, 10)
+    assert.match(parsed.sections[0].questions[1].text, /double entry/)
+    assert.equal(parsed.meta.durationMinutes, 60)
+    assert.equal(parsed.meta.totalMarks, 30)
+    assert.equal(parsed.meta.title, 'PRE-ASSESSMENT PAPER - B.Com Semester I')
+  })
+})
+
+// ─── Paper deletion gates ───────────────────────────────────────────────────
+
+describe('delete paper gates (who/when may remove a paper)', () => {
+  const author = { role: 'faculty', uid: 'u1' }
+  const reviewer = { role: 'hod', uid: 'u9' }
+  const otherFaculty = { role: 'faculty', uid: 'u2' }
+
+  it('lets authors and reviewers delete editable / not-required papers', () => {
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'draft', createdBy: 'u1' }, author), { ok: true })
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'not-required', createdBy: 'u1' }, author), { ok: true })
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'modification-requested', createdBy: 'u1' }, reviewer), { ok: true })
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'rejected-by-hod', createdBy: 'u1' }, reviewer), { ok: true })
+  })
+
+  it('blocks everyone while the paper is under review', () => {
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'submitted-for-approval', createdBy: 'u1' }, author), { ok: false, reason: 'under-review' })
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'pending-verification', createdBy: 'u1' }, reviewer), { ok: false, reason: 'under-review' })
+  })
+
+  it('keeps approved/published papers reviewer-only', () => {
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'approved-by-hod', createdBy: 'u1' }, reviewer), { ok: true })
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'approved-by-hod', createdBy: 'u1' }, author), { ok: false, reason: 'reviewer-only' })
+    assert.deepEqual(canDeletePaper({ status: 'published', createdBy: 'u1' }, author), { ok: false, reason: 'reviewer-only' })
+  })
+
+  it('forbids staff who neither authored nor review the paper', () => {
+    assert.deepEqual(canDeletePaper({ verificationStatus: 'draft', createdBy: 'u1' }, otherFaculty), { ok: false, reason: 'forbidden' })
+  })
+
+  it('counts every non-cancelled scheduled test as an active link', () => {
+    assert.equal(hasActiveScheduledTest([]), false)
+    assert.equal(hasActiveScheduledTest([{ status: 'scheduled' }]), true)
+    assert.equal(hasActiveScheduledTest([{ status: 'published' }, { status: 'cancelled' }]), true)
+    assert.equal(hasActiveScheduledTest([{ status: 'cancelled' }]), false)
+    assert.equal(hasActiveScheduledTest([null]), false)
   })
 })

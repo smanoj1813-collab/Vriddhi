@@ -110,6 +110,43 @@ never appeared in Assessments.
     `sections` or a bank link); empty state explains how to make a paper
     online-ready.
 
+## Added after deploy: deterministic-first parsing + paper deletion
+
+### Parse without AI (deterministic-first)
+
+`parsePaperFile` now tries **`deterministicParse`** before any AI: a line-layout
+parser (section headers, `N.` questions, `A.` option lines, `[n]`/`(n)`/`[n marks]`
+marks, "Each question carries N marks" defaults, date/meta line skips) that runs
+entirely on the server — **no API key, no cost, nothing leaves the server**. It is
+accepted when it finds ≥1 question and the recognised lines cover ≥30% of the
+document text (the coverage guard defers to the AI fallback for unusual layouts).
+"Recognised" means structural evidence — section headers, question starts, option
+lines, marks tokens and header meta; ordinary continuation prose is absorbed into
+the question text but never counted, so a few stray "1."-like lines in an unrelated
+document cannot fake their way past the guard. The result is flagged
+`method: 'deterministic' | 'gemini'` in the response and the `ai_generation_logs`
+audit row. Faculty review + strict Confirm are identical for both methods. With no
+Gemini key configured, standard-layout papers now parse anyway; only unusual
+layouts degrade to manual entry (a clear `unrecognized` banner, never a crash).
+
+### Delete paper (`deletePaper` callable + card button)
+
+- **Who**: paper author or a reviewer (superadmin/admin/principal/HOD), same college.
+- **When**: never while under review (`submitted-for-approval`/`pending-verification`);
+  `approved-by-hod`/`published` reviewer-only; never while a non-cancelled
+  `scheduledTests` doc references the paper (tests keep their own question copy,
+  but the paper record stays linked to active tests).
+- **Cleanup**: question-bank docs created by this paper's Confirm are deleted
+  (tagged `source:'paper-confirm'` + `paperId`), shared bank docs only unlinked,
+  the original file + answer key are removed from Storage (best effort), and a
+  `paperReviewAudit` row (`paper_deleted`) records the action. Paper deletion is
+  one optimistic-concurrency-guarded transaction (audit + delete); very large
+  papers fall back to the same two-phase ordering as Confirm (delayed owned-doc
+  cleanup, so an aborted run can never leave the paper pointing at deleted docs).
+- **UI**: Faculty Papers cards show a **Delete** button (author or reviewer) with a
+  confirmation dialog explaining what is removed; under-review and
+  approved/published states are called out in the dialog before anything happens.
+
 ## Deliberately not done (scope guard)
 
 - No OCR of scanned images (Slice 2); no auto-publish of anything AI-produced.

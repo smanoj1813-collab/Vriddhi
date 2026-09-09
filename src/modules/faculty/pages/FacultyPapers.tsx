@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckCircle, XCircle, AlertTriangle,
   Eye, Upload, Clock, ChevronRight, Download, Send,
-  FileUp, BookOpen, Calendar, Printer, Globe, Database
+  FileUp, BookOpen, Calendar, Printer, Globe, Database, Trash2
 } from 'lucide-react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/Firebase/config'
@@ -311,6 +311,8 @@ export default function FacultyPapers() {
   const [batches, setBatches] = useState<string[]>([])
   const [showToast, setShowToast] = useState('')
   const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<TestPaper | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const canReview = ['superadmin', 'admin', 'principal', 'hod'].includes(user?.role || '')
 
   const loadData = useCallback(async () => {
@@ -480,6 +482,33 @@ export default function FacultyPapers() {
     } catch (err) {
       setShowToast(err instanceof Error ? err.message : 'Failed to submit request')
       setTimeout(() => setShowToast(''), 3000)
+    }
+  }
+
+  const handleDeletePaper = async () => {
+    if (!deleteTarget || deleteBusy) return
+    setDeleteBusy(true)
+    try {
+      const deletePaperCall = httpsCallable<
+        { paperId: string },
+        { status: string; removedQuestions: number; unlinkedQuestions: number }
+      >(functions, 'deletePaper')
+      const response = await deletePaperCall({ paperId: deleteTarget.id })
+      const removed = response.data.removedQuestions || 0
+      const unlinked = response.data.unlinkedQuestions || 0
+      setDeleteTarget(null)
+      setPapers((prev) => prev.filter((p) => p.id !== deleteTarget.id))
+      setShowToast(
+        `"${deleteTarget.title}" was deleted` +
+        (removed || unlinked ? ` — ${removed} bank question(s) removed, ${unlinked} shared question(s) unlinked` : '')
+      )
+      setTimeout(() => setShowToast(''), 4500)
+      await loadData()
+    } catch (err) {
+      setShowToast(err instanceof Error ? err.message : 'Failed to delete paper')
+      setTimeout(() => setShowToast(''), 4500)
+    } finally {
+      setDeleteBusy(false)
     }
   }
 
@@ -743,6 +772,15 @@ export default function FacultyPapers() {
                   >
                     <Download className="w-4 h-4" /> Download
                   </button>
+                  {(canReview || isAuthor) && (
+                    <button
+                      onClick={() => setDeleteTarget(paper)}
+                      title="Delete this paper (and the bank questions its confirm created). Blocked while it is under review or linked to a scheduled test."
+                      className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -860,6 +898,55 @@ export default function FacultyPapers() {
           onRequestModify={handleRequestModify}
           onDownload={handlePaperFileDownload}
         />
+      )}
+
+      {/* Delete confirmation dialog — the server enforces the same gates */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Delete “{deleteTarget.title}”?</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{deleteTarget.subject} • {deleteTarget.className}</p>
+              </div>
+            </div>
+            <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2">
+              <p>Deleting this paper removes:</p>
+              <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-400">
+                <li>The paper record, its structure and review history links</li>
+                <li>The attached PDF/DOCX and answer key stored for printing</li>
+                <li>The question bank entries created by this paper’s confirm — shared bank questions are only unlinked</li>
+              </ul>
+              <p className="font-medium text-slate-700 dark:text-slate-300">This cannot be undone.</p>
+              {(deleteTarget.verificationStatus === 'submitted-for-approval' || deleteTarget.verificationStatus === 'pending-verification') && (
+                <p className="text-amber-500">This paper is under review — deletion will be blocked until a reviewer returns or rejects the submission.</p>
+              )}
+              {(deleteTarget.verificationStatus === 'approved-by-hod' || deleteTarget.verificationStatus === 'published') && !canReview && (
+                <p className="text-amber-500">Approved/published papers can only be deleted by a reviewer (HOD or above).</p>
+              )}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteBusy}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-400 border border-slate-500/20 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all disabled:opacity-50"
+              >
+                Keep paper
+              </button>
+              <button
+                onClick={handleDeletePaper}
+                disabled={deleteBusy}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-500/90 text-white hover:bg-rose-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleteBusy ? 'Deleting…' : 'Delete paper'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast */}

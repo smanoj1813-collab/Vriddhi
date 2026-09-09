@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin'
+import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 interface PaperStaff {
@@ -435,6 +436,222 @@ export const reviewPaper = onCall(
       })
     })
     return { success: true }
+  }
+)
+
+// ─── deletePaper — safe removal of a paper and what its Confirm owned ──────
+
+/** States in which a paper is inside the approval queue and must not vanish. */
+export const UNDER_REVIEW_STATES = ['submitted-for-approval', 'pending-verification']
+
+export interface PaperDeleteDecision {
+  ok: boolean
+  reason?: 'under-review' | 'reviewer-only' | 'forbidden'
+}
+
+/**
+ * Who may delete a paper and when (the college match and the active-test link
+ * are checked by the callable itself):
+ *   • never while the paper is under review — reviewers must return/reject it first;
+ *   • `approved-by-hod` / `published` papers are reviewer-only;
+ *   • everything else: the paper's author or a reviewer.
+ */
+export function canDeletePaper(
+  paper: { verificationStatus?: unknown; status?: unknown; createdBy?: unknown },
+  staff: { role: string; uid: string }
+): PaperDeleteDecision {
+  const verificationStatus = String(paper.verificationStatus || paper.status || 'draft')
+  const isReviewer = REVIEW_ROLES.includes(staff.role)
+  const isAuthor = String(paper.createdBy || '') === staff.uid
+  if (UNDER_REVIEW_STATES.includes(verificationStatus)) return { ok: false, reason: 'under-review' }
+  if (verificationStatus === 'approved-by-hod' || verificationStatus === 'published' || String(paper.status || '') === 'published') {
+    return isReviewer ? { ok: true } : { ok: false, reason: 'reviewer-only' }
+  }
+  if (!isReviewer && !isAuthor) return { ok: false, reason: 'forbidden' }
+  return { ok: true }
+}
+
+/**
+ * A paper stays linked to every test that has not been cancelled (scheduled,
+ * published, ongoing or completed) — the test keeps its own copy of the
+ * questions, but the paper record is the audit anchor for those results.
+ */
+export function hasActiveScheduledTest(tests: Array<{ status?: unknown } | null | undefined>): boolean {
+  return tests.some((test) => Boolean(test) && String((test as { status?: unknown }).status ?? '') !== 'cancelled')
+}
+
+const DELETE_REJECTIONS: Record<NonNullable<PaperDeleteDecision['reason']>, { code: 'failed-precondition' | 'permission-denied'; message: string }> = {
+  'under-review': {
+    code: 'failed-precondition',
+    message: 'This paper is under review and cannot be deleted. Ask the reviewer to return it (modification requested) or reject it first.',
+  },
+  'reviewer-only': {
+    code: 'permission-denied',
+    message: 'Approved or published papers can only be deleted by a reviewer (HOD, principal, admin or superadmin).',
+  },
+  forbidden: {
+    code: 'permission-denied',
+    message: 'Staff may delete only papers they authored.',
+  },
+}
+
+export const deletePaper = onCall(
+  { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 120, minInstances: 0, maxInstances: 20 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolvePaperStaff(uid, request.auth?.token || {})
+    const paperId = String(request.data?.paperId || '')
+    const requestedCollege = String(request.data?.collegeId || '')
+    const collegeId = staff.role === 'superadmin' ? requestedCollege : staff.collegeId
+    if (!paperId || paperId.includes('/') || paperId.length > 200 || !collegeId) {
+      throw new HttpsError('invalid-argument', 'Paper and college identifiers are required')
+    }
+
+    const db = admin.firestore()
+    const ref = db.collection('papers').doc(paperId)
+    const before = await ref.get()
+    const paper = before.data()
+    if (!before.exists || !paper) throw new HttpsError('not-found', 'Paper not found')
+    if (staff.role !== 'superadmin' && paper.collegeId !== collegeId) {
+      throw new HttpsError('permission-denied', 'Paper belongs to another college')
+    }
+
+    const decision = canDeletePaper(paper, staff)
+    if (!decision.ok && decision.reason) {
+      const rejection = DELETE_REJECTIONS[decision.reason]
+      throw new HttpsError(rejection.code, rejection.message)
+    }
+
+    // Never delete a paper that a live test still references. Single-field
+    // query, cancelled tests filtered in memory — no composite index needed.
+    const linked = await db.collection('scheduledTests')
+      .where('paperId', '==', paperId)
+      .limit(100)
+      .get()
+    const activeTest = linked.docs.find((doc) => String(doc.data().status ?? '') !== 'cancelled')
+    if (activeTest) {
+      const title = String(activeTest.data().title || 'a scheduled test')
+      throw new HttpsError(
+        'failed-precondition',
+        `This paper is linked to the scheduled test "${title}". Cancel that test before deleting the paper.`
+      )
+    }
+
+    // Bank cleanup follows the Confirm's ownership model: documents this paper
+    // created are deleted (source tag + paperId), shared bank documents are
+    // only unlinked.
+    const previousIds = [...new Set(
+      (Array.isArray(paper.questionIds) ? paper.questionIds : [])
+        .concat(Array.isArray(paper.linkedQuestionIds) ? paper.linkedQuestionIds : [])
+        .map((id: unknown) => String(id))
+        .filter(Boolean)
+    )]
+    const owned: string[] = []
+    const shared: string[] = []
+    for (let i = 0; i < previousIds.length; i += 100) {
+      const chunk = previousIds.slice(i, i + 100)
+      if (chunk.length === 0) break
+      const docs = await db.getAll(...chunk.map((id) => db.collection('questions').doc(id)))
+      docs.forEach((docSnap) => {
+        const data = docSnap.data()
+        if (!data) return
+        if (data.source === 'paper-confirm' && String(data.paperId || '') === paperId) owned.push(docSnap.id)
+        else shared.push(docSnap.id)
+      })
+    }
+
+    const verificationStatus = String(paper.verificationStatus || paper.status || 'draft')
+    const auditRef = db.collection('paperReviewAudit').doc()
+    const auditData = {
+      paperId,
+      collegeId: String(paper.collegeId || collegeId),
+      action: 'paper_deleted',
+      fromStatus: verificationStatus,
+      toStatus: 'deleted',
+      removedQuestions: owned.length,
+      unlinkedQuestions: shared.length,
+      performedBy: uid,
+      performedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }
+
+    const unlinkShared = (writer: { update: (target: FirebaseFirestore.DocumentReference, data: admin.firestore.DocumentData) => void }) => {
+      shared.forEach((id) => {
+        writer.update(db.collection('questions').doc(id), {
+          linkedPaperIds: admin.firestore.FieldValue.arrayRemove(paperId),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+      })
+    }
+
+    const operationCount = owned.length + shared.length + 2
+    if (operationCount <= 480) {
+      // Typical paper: unlinks, owned deletes, audit and the paper deletion
+      // are ONE transaction with the same optimistic-concurrency guard the
+      // Confirm uses — nothing can half-delete a paper.
+      await db.runTransaction(async (transaction) => {
+        const current = await transaction.get(ref)
+        if (!current.exists || current.updateTime?.isEqual(before.updateTime!) !== true) {
+          throw new HttpsError('aborted', 'Paper changed while it was being deleted; reload and try again')
+        }
+        unlinkShared(transaction)
+        owned.forEach((id) => transaction.delete(db.collection('questions').doc(id)))
+        transaction.create(auditRef, auditData)
+        transaction.delete(ref)
+      })
+    } else {
+      // Very large paper: unlinks run first (idempotent), the guarded
+      // transaction then commits audit + paper deletion; owned-question
+      // cleanup is delayed afterwards — the same ordering guarantee as the
+      // Confirm path, so an aborted transaction can never delete docs the
+      // paper still points at.
+      for (let i = 0; i < shared.length; i += 450) {
+        const batch = db.batch()
+        shared.slice(i, i + 450).forEach((id) => {
+          batch.update(db.collection('questions').doc(id), {
+            linkedPaperIds: admin.firestore.FieldValue.arrayRemove(paperId),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          })
+        })
+        await batch.commit()
+      }
+      await db.runTransaction(async (transaction) => {
+        const current = await transaction.get(ref)
+        if (!current.exists || current.updateTime?.isEqual(before.updateTime!) !== true) {
+          throw new HttpsError('aborted', 'Paper changed while it was being deleted; reload and try again')
+        }
+        transaction.create(auditRef, auditData)
+        transaction.delete(ref)
+      })
+      const cleanup = db.batch()
+      owned.forEach((id) => cleanup.delete(db.collection('questions').doc(id)))
+      await cleanup.commit().catch((err) => {
+        logger.warn('[PaperWorkflow] Deferred cleanup of paper-owned question docs failed', err)
+      })
+    }
+
+    // Storage is best-effort: the DB state is authoritative once committed.
+    const storedPaths = [paper.filePath, paper.answerKeyPath]
+      .map((value) => String(value || ''))
+      .filter(Boolean)
+    await Promise.all(
+      storedPaths.map(async (path) => {
+        try {
+          await admin.storage().bucket().file(path).delete({ ignoreNotFound: true })
+        } catch (err) {
+          logger.warn('[PaperWorkflow] Paper storage file could not be removed', { paperId, path, err })
+        }
+      })
+    )
+
+    logger.info('[PaperWorkflow] Paper deleted', {
+      paperId,
+      collegeId,
+      performedBy: uid,
+      removedQuestions: owned.length,
+      unlinkedQuestions: shared.length,
+    })
+    return { status: 'deleted', paperId, removedQuestions: owned.length, unlinkedQuestions: shared.length }
   }
 )
 
