@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useColleges, useImportUsers } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Key } from 'lucide-react'
-import { parseCSV, validateCSV, generateCSVTemplate } from '../../../shared/utils/parseCSV'
+import { parseCSV, validateCSV, generateCSVTemplate, downloadCsv } from '../../../shared/utils/parseCSV'
+import type { ValidationResult } from '../../../shared/utils/parseCSV'
 import CredentialsTable from '../components/CredentialsTable'
 import type { College, ImportResult } from '../api/superAdminApi'
 
@@ -17,6 +18,11 @@ const UserImport: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [parseWarnings, setParseWarnings] = useState<string[]>([])
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  // Kept so the rows rejected before anything was sent can still be exported
+  // after the import has run. Without this they exist only as strings on
+  // screen, which is how a file "loses" rows with no way to recover them.
+  const [preflight, setPreflight] = useState<ValidationResult | null>(null)
+  const [preflightWarnings, setPreflightWarnings] = useState<string[]>([])
   const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
@@ -43,6 +49,8 @@ const UserImport: React.FC = () => {
 
         const validation = validateCSV(parsed, 'students')
         setValidationErrors(validation.errors)
+        setPreflight(validation)
+        setPreflightWarnings(validation.warnings || [])
 
         if (validation.validRows.length === 0 && parsed.rows.length > 0) {
           showError(`All ${parsed.rows.length} rows have validation errors. Check the error list below.`)
@@ -118,6 +126,71 @@ const UserImport: React.FC = () => {
     a.download = 'student-import-template.csv'
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const stamp = () => new Date().toISOString().slice(0, 10)
+
+  /** Original uploaded rows, so exports can carry columns the result omits. */
+  const uploadedByEmail = new Map(
+    previewData.map((r) => [String(r.email || '').trim().toLowerCase(), r] as const)
+  )
+
+  const validationFailures = preflight?.invalidRows || []
+
+  const exportValidationFailures = () => {
+    if (validationFailures.length === 0) return
+    downloadCsv(
+      `student-validation-failed-${stamp()}.csv`,
+      ['Row', 'Name', 'Email', 'Reg No', 'Phone', 'Reasons'],
+      validationFailures.map((r) => [
+        r.rowNumber,
+        r.row.name,
+        r.row.email,
+        r.row.regNo,
+        r.row.phone,
+        r.reasons.join('; '),
+      ])
+    )
+  }
+
+  const exportImportFailures = () => {
+    const rows = importResult?.failedStudents || []
+    if (rows.length === 0) return
+    downloadCsv(
+      `student-import-failed-${stamp()}.csv`,
+      ['Name', 'Email', 'Reg No', 'Reason'],
+      rows.map((f) => [f.name, f.email, f.regNo, f.reason])
+    )
+  }
+
+  /**
+   * Success export including the generated one-time password.
+   *
+   * This file is a credential dump: treat it like a printout of passwords,
+   * because that is what it is. It is produced because handing out login
+   * details is the point of a bulk import, not despite the risk.
+   */
+  const exportSuccessful = () => {
+    const rows = importResult?.imported || []
+    if (rows.length === 0) return
+    downloadCsv(
+      `student-import-successful-${stamp()}.csv`,
+      ['Name', 'Email', 'Reg No', 'Phone', 'UID', 'Status', 'Temporary Password', 'Reset Link', 'Auth Verified'],
+      rows.map((r) => {
+        const original = uploadedByEmail.get(String(r.email || '').trim().toLowerCase())
+        return [
+          r.name || original?.name,
+          r.email,
+          original?.regNo,
+          original?.phone,
+          r.uid || r.id,
+          r.status,
+          r.password,
+          r.resetLink,
+          r.authVerified === false ? 'NO' : 'yes',
+        ]
+      })
+    )
   }
 
   return (
@@ -229,6 +302,29 @@ const UserImport: React.FC = () => {
         </div>
       )}
 
+      {/* Pre-import sanity check */}
+      {previewData.length > 0 && preflight && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <FileSpreadsheet className="w-4 h-4 text-slate-400" />
+            <p className="text-sm font-medium text-slate-200">Pre-import check</p>
+          </div>
+          <p className="text-xs text-slate-400">
+            {previewData.length} row(s) read · {preflight.validCount} will be sent ·{' '}
+            <span className={preflight.invalidCount ? 'text-amber-300' : ''}>
+              {preflight.invalidCount ?? 0} rejected before sending
+            </span>
+          </p>
+          {preflightWarnings.length > 0 && (
+            <ul className="mt-2 space-y-1 max-h-24 overflow-y-auto">
+              {preflightWarnings.map((w, i) => (
+                <li key={i} className="text-xs text-amber-300/90">{w}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {/* Preview */}
       {previewData.length > 0 && (
         <div className="glass-card overflow-hidden mb-6">
@@ -297,7 +393,15 @@ const UserImport: React.FC = () => {
             )}
             <h2 className="text-lg font-semibold text-white">Import Complete</h2>
           </div>
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-5 gap-4 mb-4">
+            <div className="bg-blue-500/10 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-blue-400">{previewData.length}</p>
+              <p className="text-xs text-slate-400">Rows Uploaded</p>
+            </div>
+            <div className="bg-amber-500/10 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-amber-400">{validationFailures.length}</p>
+              <p className="text-xs text-slate-400">Rejected Pre-check</p>
+            </div>
             <div className="bg-green-500/10 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-green-400">{importResult.success}</p>
               <p className="text-xs text-slate-400">Provisioned</p>
@@ -310,10 +414,33 @@ const UserImport: React.FC = () => {
               <p className="text-2xl font-bold text-emerald-400">{importResult.authVerified ?? 0}</p>
               <p className="text-xs text-slate-400">Verified in Auth</p>
             </div>
-            <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{(importResult.imported?.length || 0) + importResult.failed}</p>
-              <p className="text-xs text-slate-400">Total Rows</p>
-            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <button
+              onClick={exportValidationFailures}
+              disabled={validationFailures.length === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Download size={14} />
+              Validation Failed ({validationFailures.length})
+            </button>
+            <button
+              onClick={exportImportFailures}
+              disabled={(importResult.failedStudents?.length || 0) === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Download size={14} />
+              Import Failed ({importResult.failedStudents?.length || 0})
+            </button>
+            <button
+              onClick={exportSuccessful}
+              disabled={(importResult.imported?.length || 0) === 0}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-green-500/10 border border-green-500/30 text-green-300 hover:bg-green-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Download size={14} />
+              Successful + Passwords ({importResult.imported?.length || 0})
+            </button>
           </div>
 
           <CredentialsTable

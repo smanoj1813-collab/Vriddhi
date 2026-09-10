@@ -14,9 +14,19 @@ export interface ParsedCSV {
 
 export interface ValidationResult {
   validRows: Record<string, string>[];
+  /** Rows rejected pre-flight, with the reason(s) and their 1-based sheet row. */
+  invalidRows?: Array<{
+    rowNumber: number;
+    row: Record<string, string>;
+    reasons: string[];
+  }>;
   errors: string[];
+  /** Non-blocking notes, e.g. a phone number that was normalised. */
+  warnings?: string[];
   validCount: number;
   errorCount: number;
+  /** Distinct rows rejected — an invalid row can raise several `errors`. */
+  invalidCount?: number;
 }
 
 // ─── Column Mapping Configuration ───────────────────────────────────────────
@@ -443,18 +453,32 @@ export function parseCSV(csvText: string, type: ImportType = 'students'): Parsed
 export function validateCSV(parsed: ParsedCSV, type: ImportType = 'students'): ValidationResult {
   const config = getColumnConfig(type);
   const errors: string[] = [];
+  const warnings: string[] = [];
   const validRows: Record<string, string>[] = [];
+  const invalidRows: NonNullable<ValidationResult['invalidRows']> = [];
+
+  // Cross-row state. The server rejects a repeated email or registration
+  // number, so a file carrying duplicates silently loses every copy after the
+  // first — which is invisible from the row itself and was the whole of
+  // "300 uploaded, 43 onboarded". Catching it here means the row is reported
+  // before anything is sent, rather than coming back as an unexplained failure.
+  const seenEmails = new Map<string, number>();
+  const seenRegNos = new Map<string, number>();
 
   parsed.rows.forEach((row, index) => {
     const rowNum = index + 2;
-    let rowValid = true;
+    const reasons: string[] = [];
+    const reject = (message: string) => {
+      const full = `Row ${rowNum}: ${message}`;
+      errors.push(full);
+      reasons.push(message);
+    };
 
     for (const col of config) {
       if (col.required) {
         const val = row[col.field];
         if (!val || val.trim() === '') {
-          errors.push(`Row ${rowNum}: Missing required field "${col.aliases[0]}"`);
-          rowValid = false;
+          reject(`Missing required field "${col.aliases[0]}"`);
         }
       }
     }
@@ -464,22 +488,91 @@ export function validateCSV(parsed: ParsedCSV, type: ImportType = 'students'): V
         const err = col.validator(row[col.field], rowNum);
         if (err) {
           errors.push(err);
-          rowValid = false;
+          reasons.push(err.replace(/^Row \d+: /, ''));
         }
       }
     }
 
-    if (rowValid) {
+    // ── Cross-row checks ────────────────────────────────────────────────
+    const rawEmail = row.email ?? '';
+    const email = String(rawEmail).trim();
+
+    // Internal whitespace is not fixable by trimming and is rejected by the
+    // server's email pattern, where it looks identical to a blank address.
+    if (email && /\s/.test(String(rawEmail))) {
+      reject(`Email contains a space — "${String(rawEmail).trim()}"`);
+    }
+
+    if (email) {
+      const key = email.toLowerCase();
+      const firstRow = seenEmails.get(key);
+      if (firstRow !== undefined) {
+        reject(`Duplicate email "${email}" (first used on row ${firstRow})`);
+      } else {
+        seenEmails.set(key, rowNum);
+      }
+    }
+
+    const regNo = String(row.regNo ?? '').trim();
+    if (regNo) {
+      const key = regNo.toLowerCase();
+      const firstRow = seenRegNos.get(key);
+      if (firstRow !== undefined) {
+        reject(`Duplicate registration number "${regNo}" (first used on row ${firstRow})`);
+      } else {
+        seenRegNos.set(key, rowNum);
+      }
+    }
+
+    // ── Normalisation (non-blocking) ────────────────────────────────────
+    // toPhoneE164 already strips non-digits server-side, so a spaced-out
+    // number imports fine. Normalise it and say so rather than failing a row
+    // that would have succeeded.
+    const rawPhone = row.phone;
+    if (rawPhone && /\s/.test(String(rawPhone))) {
+      const digits = String(rawPhone).replace(/\D/g, '');
+      row.phone = digits;
+      warnings.push(`Row ${rowNum}: phone "${String(rawPhone).trim()}" had spaces — normalised to "${digits}"`);
+    }
+
+    if (reasons.length === 0) {
       validRows.push(row);
+    } else {
+      invalidRows.push({ rowNumber: rowNum, row, reasons });
     }
   });
 
   return {
     validRows,
+    invalidRows,
     errors,
+    warnings,
     validCount: validRows.length,
     errorCount: errors.length,
+    invalidCount: invalidRows.length,
   };
+}
+
+/**
+ * Write `rows` to a CSV file and trigger a browser download.
+ *
+ * Used for the three post-import exports (validation-failed, import-failed,
+ * import-successful) so an operator can fix and re-send just the rows that
+ * did not land, instead of reconstructing them from an on-screen list.
+ */
+export function downloadCsv(filename: string, headers: string[], rows: Array<Array<string | number | undefined>>): void {
+  const escape = (value: string | number | undefined): string => {
+    const text = String(value ?? '');
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+  const csv = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 /**
