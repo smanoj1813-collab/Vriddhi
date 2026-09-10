@@ -23,7 +23,7 @@ import {
   Loader2,
   GraduationCap,
 } from "lucide-react";
-import type { Admin, CreateAdminInput, AdminRole, Faculty } from "../types/superAdmin";
+import type { Admin, College, CreateAdminInput, AdminRole, Faculty } from "../types/superAdmin";
 
 const ROLE_LABELS: Record<AdminRole, string> = {
   superadmin: "Super Admin",
@@ -88,6 +88,16 @@ const SuperAdminAdmins: React.FC = () => {
   const colleges = collegesData?.items || [];
   const facultyList = facultyData?.items || [];
 
+  // The promote dropdown lists active faculty from every college, so with more
+  // than one college on the platform the options were unreadable — several
+  // people share a name and nothing on the row said which college they belong
+  // to. Promoting is destructive to privilege, so the row has to be
+  // identifiable before it is chosen.
+  const collegeNameById = colleges.reduce<Record<string, string>>((acc, c: College) => {
+    acc[c.id] = c.name || c.shortName || c.code || c.id;
+    return acc;
+  }, {});
+
   const handleCreate = async () => {
     if (!createForm.name.trim() || !createForm.email.trim() || !createForm.collegeId) {
       showError("Name, email, and college are required");
@@ -118,6 +128,15 @@ const SuperAdminAdmins: React.FC = () => {
     const faculty = facultyList.find((f: Faculty) => f.id === promoteForm.facultyId);
     if (!faculty) {
       showError("Faculty not found");
+      return;
+    }
+    // The college comes from the faculty record, so an empty one here means the
+    // row is unscoped rather than that the superadmin forgot a field.
+    if (!faculty.collegeId) {
+      showError(
+        `${faculty.name} has no college on their faculty record, so they cannot be promoted. ` +
+          `Re-import them with a college, or create the admin directly instead.`
+      );
       return;
     }
     try {
@@ -555,11 +574,20 @@ const SuperAdminAdmins: React.FC = () => {
                   className="input-field"
                 >
                   <option value="">Select Faculty</option>
-                  {facultyList.map((faculty: Faculty) => (
-                    <option key={faculty.id} value={faculty.id}>
-                      {faculty.name} — {faculty.email}
-                    </option>
-                  ))}
+                  {[...facultyList]
+                    .sort((a: Faculty, b: Faculty) => {
+                      const ca = collegeNameById[a.collegeId] || "";
+                      const cb = collegeNameById[b.collegeId] || "";
+                      return ca.localeCompare(cb) || (a.name || "").localeCompare(b.name || "");
+                    })
+                    .map((faculty: Faculty) => (
+                      <option key={faculty.id} value={faculty.id}>
+                        {faculty.name} — {faculty.email}
+                        {faculty.collegeId
+                          ? ` (${collegeNameById[faculty.collegeId] || faculty.collegeId})`
+                          : " (no college — cannot be promoted)"}
+                      </option>
+                    ))}
                 </select>
                 {facultyList.length === 0 && (
                   <p className="text-xs text-amber-400 mt-1">
