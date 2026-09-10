@@ -198,6 +198,56 @@ export async function ensureClassSession(
   }
 }
 
+// ─── S2.3: mark a session complete and flip the topic ledger ─
+
+export interface CompleteSessionInput {
+  sessionId: string
+  topicIds?: string[]
+  topicTitles?: string[]
+  notes?: string
+}
+
+export interface CompleteSessionResult {
+  id: string
+  status: string
+  topicIds: string[]
+  topicsCovered: string[]
+  topicsAttached: number
+  ledgerRowsCreated: number
+  ledgerRowsUpdated: number
+  alreadyCovered: number
+}
+
+/**
+ * Mark a delivered class complete and flip the faculty's topic ledger for the
+ * topics it covered — one server-side transaction, so the session and the
+ * ledger cannot disagree.
+ *
+ * `topicIds` are `topics/*` ids from the curriculum bank. `topicTitles` is the
+ * free-text fallback: a faculty member can always type a topic that has no
+ * curriculum row, and it still lands in the ledger (and in `topicsCovered`,
+ * which is what the UI displays).
+ */
+export async function completeClassSession(
+  input: CompleteSessionInput
+): Promise<CompleteSessionResult> {
+  const call = httpsCallable<Record<string, unknown>, CompleteSessionResult>(
+    functions,
+    'completeClassSession'
+  )
+  try {
+    const response = await call({
+      sessionId: input.sessionId,
+      ...(input.topicIds ? { topicIds: input.topicIds } : {}),
+      ...(input.topicTitles ? { topicTitles: input.topicTitles } : {}),
+      ...(input.notes ? { notes: input.notes } : {}),
+    })
+    return response.data
+  } catch (error) {
+    throw new Error(toMessage(error, 'The class session could not be completed.'))
+  }
+}
+
 // ─── Small date helpers (shared by the admin UI) ──────
 
 export function toDateKey(date: Date): string {

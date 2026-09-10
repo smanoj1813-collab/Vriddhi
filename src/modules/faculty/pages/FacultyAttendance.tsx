@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft, Check, X, Clock, AlertCircle, FileMinus,
   Users, Calendar, Save, RotateCcw, Search, Pill,
-  Loader2, AlertTriangle
+  Loader2, AlertTriangle, BookOpen, CheckCircle2, Plus
 } from 'lucide-react'
 import { useFacultyAttendance } from '../hooks/useFacultyAttendance'
+import { completeClassSession } from '../../admin/api/classSessionApi'
+import { fetchSessionTopicOptions, type SessionTopicOption } from '../api/sessionTopicsApi'
 import { useAttendanceExport } from '../hooks/useAttendanceExport'
 import { DateRangeSelector } from '../../../components/shared/DateRangeSelector'
 import { ExportButton } from '../../../components/shared/ExportButton'
@@ -61,6 +63,7 @@ const allStatuses: AttendanceStatus[] = ['Present', 'Absent', 'Late', 'Leave', '
 
 export default function FacultyAttendance() {
   const {
+    facultyId,
     selectedDate,
     setSelectedDate,
     classSessions,
@@ -95,6 +98,75 @@ export default function FacultyAttendance() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<AttendanceStatus | 'all'>('all')
+
+  // ─── Slice 2 S2.3: tag the topics this class covered ─────────────────────
+  // Marking a class complete writes the session's topicIds AND flips the
+  // faculty topic ledger in one server-side transaction, which is what makes
+  // the coverage numbers in Curriculum Progress real instead of typed in.
+  const [topicOptions, setTopicOptions] = useState<SessionTopicOption[]>([])
+  const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([])
+  const [extraTopic, setExtraTopic] = useState('')
+  const [completing, setCompleting] = useState(false)
+  const [completeNotice, setCompleteNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!selectedClass || !facultyId) {
+      setTopicOptions([])
+      return
+    }
+    let active = true
+    setSelectedTopicIds([])
+    setExtraTopic('')
+    setCompleteNotice(null)
+    fetchSessionTopicOptions({
+      facultyId,
+      subject: selectedClass.subject,
+      subjectCode: selectedClass.subjectCode,
+    })
+      .then(options => { if (active) setTopicOptions(options) })
+      .catch(() => { if (active) setTopicOptions([]) })
+    return () => { active = false }
+  }, [selectedClass, facultyId])
+
+  const toggleTopic = (id: string) => {
+    setSelectedTopicIds(prev =>
+      prev.includes(id) ? prev.filter(existing => existing !== id) : [...prev, id]
+    )
+  }
+
+  const handleMarkComplete = async () => {
+    if (!selectedClass) return
+    // A session must exist before it can be completed; a recurring class that
+    // has never been marked has only a virtual row so far.
+    if (!selectedClass.materialised) {
+      setCompleteNotice('Save the attendance for this class first — that is what creates the session to complete.')
+      return
+    }
+    setCompleting(true)
+    setCompleteNotice(null)
+    try {
+      const chosen = topicOptions.filter(option => selectedTopicIds.includes(option.id))
+      const result = await completeClassSession({
+        sessionId: selectedClass.id,
+        topicIds: chosen.filter(option => option.source === 'curriculum').map(option => option.id),
+        topicTitles: [
+          ...chosen.filter(option => option.source === 'ledger').map(option => option.title),
+          ...(extraTopic.trim() ? [extraTopic.trim()] : []),
+        ],
+      })
+      const parts = [`Marked complete — ${result.topicsAttached} topic(s) attached.`]
+      if (result.ledgerRowsUpdated) parts.push(`${result.ledgerRowsUpdated} ledger row(s) set to covered.`)
+      if (result.ledgerRowsCreated) parts.push(`${result.ledgerRowsCreated} new ledger row(s) created.`)
+      if (result.alreadyCovered) parts.push(`${result.alreadyCovered} already covered.`)
+      setCompleteNotice(parts.join(' '))
+      setSelectedTopicIds([])
+      setExtraTopic('')
+    } catch (err) {
+      setCompleteNotice(err instanceof Error ? err.message : 'Could not mark this class complete')
+    } finally {
+      setCompleting(false)
+    }
+  }
 
   const filteredStudents = useMemo(() => {
     return students.filter((s: FacultyStudent) => {
@@ -250,6 +322,74 @@ export default function FacultyAttendance() {
             ))}
           </div>
         )}
+
+        {/* ─── Slice 2 S2.3: tag what this class actually covered ───────── */}
+        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+              Topics covered in this class
+            </span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              — marking complete updates your topic ledger
+            </span>
+          </div>
+
+          {topicOptions.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {topicOptions.map(option => {
+                const active = selectedTopicIds.includes(option.id)
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => toggleTopic(option.id)}
+                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${
+                      option.covered
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
+                        : active
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-blue-500/40'
+                    }`}
+                    title={option.covered ? 'Already covered' : option.source === 'curriculum' ? 'Curriculum topic' : 'Your topic'}
+                  >
+                    {option.covered && <CheckCircle2 className="w-3 h-3 inline mr-1" />}
+                    {option.title}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+              No curriculum topics found for this subject — type one below and it will be added to your ledger.
+            </p>
+          )}
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 flex-1 min-w-[200px]">
+              <Plus className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                value={extraTopic}
+                onChange={event => setExtraTopic(event.target.value)}
+                placeholder="Or type a topic not in the list..."
+                className="flex-1 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleMarkComplete}
+              disabled={completing || selectedClass?.status === 'cancelled'}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {completing ? 'Saving…' : 'Mark class complete'}
+            </button>
+          </div>
+
+          {completeNotice && (
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{completeNotice}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">

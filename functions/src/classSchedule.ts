@@ -1003,3 +1003,295 @@ export const ensureClassSession = onCall(
     }
   }
 )
+
+// ─── S2.3: topic attachment + the coverage ledger ──────────────────────────
+//
+// Finding F3: `topicsCovered` on a session is free text. Nothing links a
+// delivered class to a topic record, so completing a lecture cannot update the
+// faculty topic ledger and coverage per course/semester cannot be computed.
+// The curriculum mapping stores totalHours/credits/modulesCount snapshots that
+// nothing ever compares against actuals.
+//
+// `completeClassSession` closes that loop in ONE transaction: it writes the
+// session's `topicIds` and flips the faculty's ledger rows for those topics, so
+// a completed lecture and the ledger can never disagree.
+
+/** Upper bound on topics attached to one session, to bound the transaction. */
+export const MAX_TOPICS_PER_SESSION = 50
+
+/**
+ * Statuses that mean "this topic has been taught". Both spellings are in the
+ * data: `FacultyTopic` (facultyApi) declares 'covered', while the faculty
+ * ledger UI (src/modules/faculty/pages/FacultyTopics.tsx) counts 'completed'.
+ */
+export const COVERED_STATUSES = ['covered', 'completed']
+
+/** The status completeClassSession writes on the faculty ledger. */
+export const LEDGER_COVERED_STATUS = 'completed'
+
+export function isTopicCovered(status: unknown): boolean {
+  return COVERED_STATUSES.includes(String(status || '').trim().toLowerCase())
+}
+
+/**
+ * Additive-only status transition. A topic already marked covered is never
+ * walked back to pending — the standing constraint on `facultyTopics` is
+ * additive writes only, and silently un-teaching a topic would corrupt the
+ * coverage numbers S2.4 computes from this ledger.
+ */
+export function nextTopicStatus(current: unknown, target: string): string {
+  return isTopicCovered(current) ? String(current) : target
+}
+
+/** Loose key for matching a topic across `topics/*` and `facultyTopics`. */
+export function normalizeTopicKey(value: unknown): string {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+/**
+ * Order-preserving union of two string lists, de-duplicated on the normalised
+ * key and capped. Used for `topicIds` and `topicsCovered`, both of which
+ * accumulate across re-completions rather than being replaced.
+ */
+export function mergeUnique(existing: unknown, incoming: unknown, cap = MAX_TOPICS_PER_SESSION): string[] {
+  const toList = (value: unknown): string[] =>
+    Array.isArray(value) ? value.map((item) => String(item ?? '').trim()).filter(Boolean) : []
+  const merged: string[] = []
+  const seen = new Set<string>()
+  for (const item of [...toList(existing), ...toList(incoming)]) {
+    const key = normalizeTopicKey(item)
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    merged.push(item)
+    if (merged.length >= cap) break
+  }
+  return merged
+}
+
+export interface CompleteSessionInput {
+  sessionId: string
+  topicIds: string[]
+  topicTitles: string[]
+  notes: string
+}
+
+export function validateCompleteInput(data: unknown): CompleteSessionInput {
+  const raw = (data || {}) as Record<string, unknown>
+  const sessionId = String(raw.sessionId ?? '').trim()
+  if (!sessionId || sessionId.includes('/') || sessionId.length > 200) {
+    throw new HttpsError('invalid-argument', 'sessionId is required')
+  }
+  const collect = (value: unknown, field: string): string[] => {
+    if (value === undefined || value === null || value === '') return []
+    if (!Array.isArray(value)) throw new HttpsError('invalid-argument', `${field} must be a list`)
+    if (value.length > MAX_TOPICS_PER_SESSION) {
+      throw new HttpsError(
+        'invalid-argument',
+        `At most ${MAX_TOPICS_PER_SESSION} topics can be attached to one session`
+      )
+    }
+    return value.map((item) => String(item ?? '').trim()).filter(Boolean).slice(0, MAX_TOPICS_PER_SESSION)
+  }
+  return {
+    sessionId,
+    topicIds: collect(raw.topicIds, 'topicIds'),
+    // The handoff keeps free text as the display fallback, so a faculty member
+    // can always type "Integration by parts" even with no curriculum topic.
+    topicTitles: collect(raw.topicTitles, 'topicTitles'),
+    notes: optionalFilter(raw.notes, 'notes', 2000),
+  }
+}
+
+/**
+ * Which ledger row a completed topic belongs to, or null when there is none
+ * yet and one has to be created. Matches on `topicId` first (the real link),
+ * then on the topic title, so rows created before `topicIds` existed still
+ * line up.
+ */
+export function matchLedgerRow(
+  rows: Array<{ id: string; data: admin.firestore.DocumentData }>,
+  candidate: { topicId: string; title: string }
+): { id: string; data: admin.firestore.DocumentData } | null {
+  const titleKey = normalizeTopicKey(candidate.title)
+  return (
+    rows.find((row) => String(row.data.topicId || '') === candidate.topicId) ||
+    (titleKey ? rows.find((row) => normalizeTopicKey(row.data.title) === titleKey) : undefined) ||
+    null
+  )
+}
+
+/** The ledger row created when a covered topic has no row yet. */
+export function buildLedgerRow(
+  topic: { topicId: string; title: string },
+  session: admin.firestore.DocumentData,
+  sessionId: string,
+  collegeId: string,
+  now: Date = new Date()
+): admin.firestore.DocumentData {
+  // Shaped like the rows src/hooks/useTopics.ts writes, so the existing faculty
+  // Topics page renders it without changes.
+  return {
+    title: topic.title,
+    description: '',
+    course: String(session.branch || ''),
+    batch: String(session.batch || ''),
+    division: String(session.division || ''),
+    plannedDate: '',
+    duration: Number(session.durationMinutes || 0) || 0,
+    status: LEDGER_COVERED_STATUS,
+    resources: [],
+    notes: '',
+    subject: String(session.subject || ''),
+    subjectCode: String(session.subjectCode || ''),
+    semester: Number(session.semester || 0) || 0,
+    facultyId: String(session.facultyId || ''),
+    collegeId,
+    // Traceability back to the class that covered it — this is the edge the
+    // audit says does not exist yet.
+    topicId: topic.topicId,
+    sessionId,
+    dateCovered: String(session.date || ''),
+    coveredAt: now.toISOString(),
+    source: 'class-session',
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  }
+}
+
+/**
+ * Mark a session complete and flip the faculty topic ledger for the topics it
+ * covered — atomically, so a completed lecture and the ledger cannot disagree.
+ *
+ * Same shape as confirmPaperStructure: read everything, then one transaction.
+ * Ledger writes are additive-only: an existing row is moved forward to covered
+ * and never back, and a missing row is created rather than the update being
+ * dropped.
+ */
+export const completeClassSession = onCall(
+  { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 120, minInstances: 0, maxInstances: 20 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveSessionWriter(uid, request.auth?.token || {})
+    const input = validateCompleteInput(request.data)
+
+    const db = admin.firestore()
+    const sessionRef = db.collection('classSessions').doc(input.sessionId)
+
+    const sessionSnap = await sessionRef.get()
+    if (!sessionSnap.exists) throw new HttpsError('not-found', 'Class session not found')
+    const session = sessionSnap.data() || {}
+    if (String(session.collegeId || '') !== staff.collegeId) {
+      throw new HttpsError('permission-denied', 'This session belongs to another college')
+    }
+    // A cancelled session is a class that did not happen; completing it would
+    // credit topics that were never taught.
+    if (String(session.status || 'scheduled') === 'cancelled') {
+      throw new HttpsError('failed-precondition', 'A cancelled session cannot be completed')
+    }
+    const privileged = SCHEDULING_ROLES.includes(staff.role)
+    if (!privileged && String(session.facultyId || '') !== uid) {
+      throw new HttpsError('permission-denied', 'You can only complete your own class sessions')
+    }
+
+    // Resolve each requested curriculum topic to a title. `topics/*` names the
+    // field `name`; the ledger and sessions call the same thing `title`.
+    const topics: Array<{ topicId: string; title: string }> = []
+    for (const topicId of input.topicIds) {
+      const topicSnap = await db.collection('topics').doc(topicId).get()
+      const data = topicSnap.data()
+      const title = String(data?.name || data?.title || '').trim()
+      if (topicSnap.exists && title) topics.push({ topicId, title })
+    }
+    input.topicTitles.forEach((title) => topics.push({ topicId: '', title }))
+
+    // Candidate ledger rows are found before the transaction (Firestore
+    // transactions cannot run a fresh query), then re-read inside it.
+    const ledgerSnap = await db
+      .collection('facultyTopics')
+      .where('facultyId', '==', String(session.facultyId || ''))
+      .limit(300)
+      .get()
+    const ledgerRows = ledgerSnap.docs.map((doc) => ({ id: doc.id, data: doc.data() }))
+
+    const now = new Date()
+    const stamp = now.toISOString()
+
+    const summary = await db.runTransaction(async (txn) => {
+      // Re-read inside the transaction so the union is computed against what is
+      // actually stored, not a snapshot from before.
+      const freshSession = await txn.get(sessionRef)
+      const current = freshSession.data() || {}
+      const topicIds = mergeUnique(current.topicIds, topics.map((topic) => topic.topicId))
+      const topicsCovered = mergeUnique(
+        current.topicsCovered,
+        topics.map((topic) => topic.title)
+      )
+
+      txn.update(sessionRef, {
+        status: 'completed',
+        topicIds,
+        topicsCovered,
+        completedAt: stamp,
+        completedBy: uid,
+        ...(input.notes ? { notes: input.notes } : {}),
+        updatedAt: stamp,
+      })
+
+      let rowsUpdated = 0
+      let rowsCreated = 0
+      let alreadyCovered = 0
+
+      for (const topic of topics) {
+        const match = matchLedgerRow(ledgerRows, topic)
+        if (match) {
+          const rowRef = db.collection('facultyTopics').doc(match.id)
+          const freshRow = await txn.get(rowRef)
+          const rowData = freshRow.exists ? freshRow.data() || {} : match.data
+          if (isTopicCovered(rowData.status)) {
+            alreadyCovered += 1
+            continue
+          }
+          txn.update(rowRef, {
+            status: nextTopicStatus(rowData.status, LEDGER_COVERED_STATUS),
+            dateCovered: String(current.date || session.date || ''),
+            coveredAt: stamp,
+            sessionId: input.sessionId,
+            updatedAt: stamp,
+          })
+          rowsUpdated += 1
+        } else {
+          const rowRef = db.collection('facultyTopics').doc()
+          txn.set(rowRef, buildLedgerRow(topic, session, input.sessionId, staff.collegeId, now))
+          rowsCreated += 1
+        }
+      }
+
+      return { topicIds, topicsCovered, rowsUpdated, rowsCreated, alreadyCovered }
+    })
+
+    logger.info('[classSchedule] completeClassSession', {
+      collegeId: staff.collegeId,
+      sessionId: input.sessionId,
+      topics: topics.length,
+      rowsCreated: summary.rowsCreated,
+      rowsUpdated: summary.rowsUpdated,
+      alreadyCovered: summary.alreadyCovered,
+      actorUid: uid,
+    })
+
+    return {
+      id: input.sessionId,
+      status: 'completed',
+      topicIds: summary.topicIds,
+      topicsCovered: summary.topicsCovered,
+      topicsAttached: topics.length,
+      ledgerRowsCreated: summary.rowsCreated,
+      ledgerRowsUpdated: summary.rowsUpdated,
+      alreadyCovered: summary.alreadyCovered,
+    }
+  }
+)

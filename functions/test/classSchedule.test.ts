@@ -633,3 +633,183 @@ describe('validateEnsureInput', () => {
     )
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// S2.3 — topic attachment and the coverage ledger
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+  MAX_TOPICS_PER_SESSION,
+  buildLedgerRow,
+  isTopicCovered,
+  matchLedgerRow,
+  mergeUnique,
+  nextTopicStatus,
+  normalizeTopicKey,
+  validateCompleteInput,
+} from '../src/classSchedule'
+
+describe('normalizeTopicKey', () => {
+  it('ignores case, punctuation and spacing', () => {
+    assert.equal(normalizeTopicKey('Integration by Parts'), 'integration by parts')
+    assert.equal(normalizeTopicKey('  Integration   BY-parts! '), 'integration by parts')
+    assert.equal(normalizeTopicKey(''), '')
+    assert.equal(normalizeTopicKey(undefined), '')
+  })
+})
+
+describe('isTopicCovered', () => {
+  it('accepts both spellings that exist in the data', () => {
+    // FacultyTopic declares 'covered'; the faculty Topics page counts
+    // 'completed'. Both mean taught.
+    assert.equal(isTopicCovered('covered'), true)
+    assert.equal(isTopicCovered('completed'), true)
+    assert.equal(isTopicCovered('COVERED'), true)
+    assert.equal(isTopicCovered('pending'), false)
+    assert.equal(isTopicCovered('in-progress'), false)
+    assert.equal(isTopicCovered(''), false)
+    assert.equal(isTopicCovered(undefined), false)
+  })
+})
+
+describe('nextTopicStatus', () => {
+  it('moves a pending topic forward', () => {
+    assert.equal(nextTopicStatus('pending', 'completed'), 'completed')
+    assert.equal(nextTopicStatus('in-progress', 'completed'), 'completed')
+  })
+
+  it('never walks a covered topic back — additive writes only', () => {
+    assert.equal(nextTopicStatus('covered', 'completed'), 'covered')
+    assert.equal(nextTopicStatus('completed', 'completed'), 'completed')
+    // Re-completing a session must not un-teach a topic.
+    assert.equal(nextTopicStatus('covered', 'pending'), 'covered')
+  })
+})
+
+describe('mergeUnique', () => {
+  it('unions two lists preserving order', () => {
+    assert.deepEqual(mergeUnique(['a'], ['b']), ['a', 'b'])
+    assert.deepEqual(mergeUnique(['a', 'b'], ['b', 'c']), ['a', 'b', 'c'])
+  })
+
+  it('de-duplicates across the two spellings of a topic', () => {
+    assert.deepEqual(mergeUnique(['Stacks'], ['stacks']), ['Stacks'])
+    assert.deepEqual(mergeUnique(['Integration by Parts'], ['integration by parts!']), [
+      'Integration by Parts',
+    ])
+  })
+
+  it('drops blanks and caps the result', () => {
+    assert.deepEqual(mergeUnique(['', '  '], ['x']), ['x'])
+    const many = Array.from({ length: 120 }, (_, index) => `t${index}`)
+    assert.equal(mergeUnique([], many, MAX_TOPICS_PER_SESSION).length, MAX_TOPICS_PER_SESSION)
+  })
+
+  it('tolerates junk input instead of throwing', () => {
+    assert.deepEqual(mergeUnique(undefined, null), [])
+    assert.deepEqual(mergeUnique('not-a-list', ['a']), ['a'])
+  })
+})
+
+describe('matchLedgerRow', () => {
+  const rows = [
+    { id: 'row-1', data: { topicId: 'topic-9', title: 'Stacks', status: 'pending' } as any },
+    { id: 'row-2', data: { title: 'Queues', status: 'in-progress' } as any },
+  ]
+
+  it('prefers the explicit topicId link', () => {
+    const match = matchLedgerRow(rows, { topicId: 'topic-9', title: 'Something else' })
+    assert.equal(match?.id, 'row-1')
+  })
+
+  it('falls back to the title so pre-S2.3 rows still line up', () => {
+    const match = matchLedgerRow(rows, { topicId: 'unlinked', title: 'queues' })
+    assert.equal(match?.id, 'row-2')
+  })
+
+  it('returns null when there is nothing to update', () => {
+    assert.equal(matchLedgerRow(rows, { topicId: 'x', title: 'Trees' }), null)
+    assert.equal(matchLedgerRow([], { topicId: 'x', title: 'Trees' }), null)
+  })
+})
+
+describe('buildLedgerRow', () => {
+  const session = {
+    branch: 'BCA',
+    batch: '2026',
+    division: 'A',
+    durationMinutes: 60,
+    subject: 'Data Structures',
+    subjectCode: 'BCA301',
+    semester: 3,
+    facultyId: 'faculty-9',
+    date: '2026-09-14',
+  }
+
+  it('carries the session context a ledger row needs', () => {
+    const row = buildLedgerRow(
+      { topicId: 'topic-9', title: 'Stacks' },
+      session,
+      'session-1',
+      'college-1',
+      new Date(Date.UTC(2026, 8, 14))
+    )
+    assert.equal(row.title, 'Stacks')
+    assert.equal(row.status, 'completed')
+    assert.equal(row.subject, 'Data Structures')
+    assert.equal(row.facultyId, 'faculty-9')
+    assert.equal(row.collegeId, 'college-1')
+    assert.equal(row.dateCovered, '2026-09-14')
+    assert.equal(row.topicId, 'topic-9')
+    assert.equal(row.sessionId, 'session-1')
+    assert.equal(row.source, 'class-session')
+  })
+
+  it('is shaped like the rows the faculty Topics page already renders', () => {
+    // src/hooks/useTopics.ts writes description/course/batch/division/duration/
+    // resources/notes, and FacultyTopics.tsx reads them.
+    const row = buildLedgerRow({ topicId: '', title: 'Queues' }, session, 'session-1', 'college-1')
+    ;['description', 'course', 'batch', 'division', 'duration', 'resources', 'notes'].forEach(field => {
+      assert.ok(field in row, `missing ${field}`)
+    })
+    assert.equal(row.course, 'BCA')
+    assert.equal(row.duration, 60)
+  })
+})
+
+describe('validateCompleteInput', () => {
+  it('accepts topics, titles and notes', () => {
+    const parsed = validateCompleteInput({
+      sessionId: 'session-1',
+      topicIds: ['t1', 't2'],
+      topicTitles: ['Ad-hoc topic'],
+      notes: 'Covered quickly',
+    })
+    assert.equal(parsed.sessionId, 'session-1')
+    assert.deepEqual(parsed.topicIds, ['t1', 't2'])
+    assert.deepEqual(parsed.topicTitles, ['Ad-hoc topic'])
+    assert.equal(parsed.notes, 'Covered quickly')
+  })
+
+  it('accepts a completion with no topics at all', () => {
+    const parsed = validateCompleteInput({ sessionId: 'session-1' })
+    assert.deepEqual(parsed.topicIds, [])
+    assert.deepEqual(parsed.topicTitles, [])
+  })
+
+  it('rejects a missing or unsafe session id', () => {
+    assert.throws(() => validateCompleteInput({}), /sessionId is required/)
+    assert.throws(() => validateCompleteInput({ sessionId: 'a/b' }), /sessionId is required/)
+  })
+
+  it('rejects lists that would blow the transaction budget', () => {
+    assert.throws(
+      () => validateCompleteInput({ sessionId: 's', topicIds: new Array(60).fill('t') }),
+      /At most 50/
+    )
+    assert.throws(
+      () => validateCompleteInput({ sessionId: 's', topicIds: 'not-a-list' }),
+      /topicIds must be a list/
+    )
+  })
+})

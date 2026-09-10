@@ -79,6 +79,7 @@ import {
   generateClassSessions,
   cancelWeeklySchedule,
   ensureClassSession,
+  completeClassSession,
 } from './classSchedule'
 
 const app = express()
@@ -210,4 +211,5 @@ export {
   generateClassSessions,
   cancelWeeklySchedule,
   ensureClassSession,
+  completeClassSession,
 }
