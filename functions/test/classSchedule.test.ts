@@ -1051,3 +1051,78 @@ describe('validateProgressInput', () => {
     assert.throws(() => validateProgressInput({}, 'admin', ''), /No college/)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// S2.5 — server-side conflict enforcement
+// ═══════════════════════════════════════════════════════════════════════════
+
+import { toConflictCandidate } from '../src/classSchedule'
+
+describe('toConflictCandidate', () => {
+  it('reads a whole Firestore document defensively', () => {
+    const candidate = toConflictCandidate({
+      id: 'weekly-1_2026-09-14',
+      collegeId: 'college-1',
+      date: '2026-09-14',
+      facultyId: 'faculty-9',
+      room: 'LH-201',
+      startTime: '09:00',
+      endTime: '10:00',
+      subject: 'Data Structures',
+    })
+    assert.equal(candidate.id, 'weekly-1_2026-09-14')
+    assert.equal(candidate.date, '2026-09-14')
+    assert.equal(candidate.facultyId, 'faculty-9')
+    assert.equal(candidate.room, 'LH-201')
+    assert.equal(candidate.status, 'scheduled')
+    assert.equal(candidate.subject, 'Data Structures')
+  })
+
+  it('does not throw on a sparse or legacy row', () => {
+    // A row with no room or times must still be comparable rather than
+    // crashing the whole generate run.
+    const candidate = toConflictCandidate({ id: 'legacy-1', collegeId: 'college-1' })
+    assert.equal(candidate.date, '')
+    assert.equal(candidate.room, '')
+    assert.equal(candidate.facultyId, '')
+    assert.equal(candidate.startTime, '')
+  })
+})
+
+describe('generate payload conflict switches', () => {
+  const base = { from: '2026-09-01', to: '2026-09-30' }
+
+  it('detects conflicts by default — silence is the failure mode', () => {
+    const payload = validateGeneratePayload(base, 'admin', 'college-1')
+    assert.equal(payload.detectConflicts, true)
+    assert.equal(payload.skipConflicting, false)
+  })
+
+  it('lets an admin opt into skipping the clashing slots', () => {
+    const payload = validateGeneratePayload(
+      { ...base, skipConflicting: true },
+      'admin',
+      'college-1'
+    )
+    assert.equal(payload.skipConflicting, true)
+    assert.equal(payload.detectConflicts, true)
+  })
+
+  it('lets an admin turn detection off entirely', () => {
+    const payload = validateGeneratePayload(
+      { ...base, detectConflicts: false },
+      'admin',
+      'college-1'
+    )
+    assert.equal(payload.detectConflicts, false)
+  })
+
+  it('ignores a truthy-but-not-true skipConflicting', () => {
+    // Guards against a string "false" arriving from a form control.
+    assert.equal(
+      validateGeneratePayload({ ...base, skipConflicting: 'false' }, 'admin', 'college-1')
+        .skipConflicting,
+      false
+    )
+  })
+})

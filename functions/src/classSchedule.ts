@@ -36,6 +36,14 @@
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import {
+  conflictErrorCode,
+  describeConflict,
+  findSessionClashes,
+  hardClashes,
+  type SessionCandidate,
+  type SessionConflict,
+} from './utils/timetableConflicts'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -540,6 +548,10 @@ export interface GeneratePayload {
   facultyId: string
   branch: string
   batch: string
+  /** S2.5: check for faculty/room double-bookings before writing. */
+  detectConflicts: boolean
+  /** Generate the clean slots and skip the clashing ones instead of failing. */
+  skipConflicting: boolean
 }
 
 export function validateGeneratePayload(data: unknown, role: string, claimCollegeId: string): GeneratePayload {
@@ -573,6 +585,10 @@ export function validateGeneratePayload(data: unknown, role: string, claimColleg
     facultyId: optionalFilter(raw.facultyId, 'facultyId', 200),
     branch: optionalFilter(raw.branch, 'branch', 100),
     batch: optionalFilter(raw.batch, 'batch', 100),
+    // On by default: silently materialising a double-booked term is the
+    // failure mode this is here to prevent.
+    detectConflicts: raw.detectConflicts !== false,
+    skipConflicting: raw.skipConflicting === true,
   }
 }
 
@@ -595,6 +611,53 @@ export function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
   for (let index = 0; index < items.length; index += size) out.push(items.slice(index, index + size))
   return out
+}
+
+// ─── S2.5: server-side conflict enforcement ─────────────────────────────────
+
+/**
+ * A planned occurrence as the clash engine sees it. Ids are the deterministic
+ * session ids, so a conflict names the exact document that would be written.
+ */
+/**
+ * Accepts a whole Firestore document: every field is read defensively so a
+ * partial or legacy row still produces a usable candidate rather than throwing.
+ */
+export function toConflictCandidate(input: { id: string; collegeId: string } & Record<string, unknown>): SessionCandidate {
+  return {
+    id: input.id,
+    collegeId: input.collegeId,
+    date: String(input.date ?? ''),
+    facultyId: String(input.facultyId ?? ''),
+    room: String(input.room ?? ''),
+    startTime: String(input.startTime ?? ''),
+    endTime: String(input.endTime ?? ''),
+    status: String(input.status ?? 'scheduled'),
+    branch: String(input.branch ?? ''),
+    batch: String(input.batch ?? ''),
+    division: String(input.division ?? ''),
+    subject: String(input.subject ?? ''),
+  }
+}
+
+/** Cap on how many conflicts are reported back to the caller. */
+export const MAX_REPORTED_CONFLICTS = 10
+
+function conflictDetails(conflicts: SessionConflict[]): Record<string, unknown> {
+  const hard = hardClashes(conflicts)
+  return {
+    conflicts: hard.slice(0, MAX_REPORTED_CONFLICTS).map((conflict) => ({
+      code: conflictErrorCode(conflict),
+      kind: conflict.kind,
+      date: conflict.date,
+      startTime: conflict.startTime,
+      endTime: conflict.endTime,
+      sessionId: conflict.sessionId,
+      conflictsWith: conflict.otherSessionId,
+      message: describeConflict(conflict),
+    })),
+    conflictCount: hard.length,
+  }
 }
 
 // ─── Callables ──────────────────────────────────────────────────────────────
@@ -632,11 +695,76 @@ export const generateClassSessions = onCall(
       }
     }
 
+    // ─── S2.5: refuse to materialise a timetable that double-books ─────────
+    // Sessions already in the range, plus every planned occurrence, are checked
+    // against each other. A hard clash (faculty or room) is a data problem in
+    // the timetable; generating it would scatter double-booked classes across
+    // the whole term, so the run stops before writing anything.
+    let existingSessionsSnap: admin.firestore.QuerySnapshot | null = null
+    if (payload.detectConflicts) {
+      let sessionQuery: admin.firestore.Query = db
+        .collection('classSessions')
+        .where('collegeId', '==', payload.collegeId)
+        .where('date', '>=', payload.from)
+        .where('date', '<=', payload.to)
+      existingSessionsSnap = await sessionQuery.limit(MAX_PROGRESS_SESSIONS).get()
+    }
+    const existingCandidates: SessionCandidate[] = (existingSessionsSnap?.docs || []).map((doc) =>
+      toConflictCandidate({ id: doc.id, collegeId: payload.collegeId, ...(doc.data() as Record<string, unknown>) })
+    )
+
+    const plannedCandidates: SessionCandidate[] = planned.map(({ slot, date }) =>
+      toConflictCandidate({
+        id: slotDateKey(slot.id, date),
+        collegeId: payload.collegeId,
+        date,
+        facultyId: slot.facultyId,
+        room: slot.room,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        branch: slot.branch,
+        batch: slot.batch,
+        division: slot.division,
+        subject: slot.subject,
+      })
+    )
+
+    const conflicts: SessionConflict[] = []
+    const conflictedIds = new Set<string>()
+    if (payload.detectConflicts) {
+      plannedCandidates.forEach((candidate, index) => {
+        // Against what already exists, and against the rest of this run.
+        const others = [
+          ...existingCandidates,
+          ...plannedCandidates.slice(0, index),
+          ...plannedCandidates.slice(index + 1),
+        ]
+        const found = hardClashes(findSessionClashes(candidate, others))
+        if (found.length > 0) {
+          conflicts.push(...found)
+          conflictedIds.add(candidate.id)
+        }
+      })
+    }
+
+    if (conflictedIds.size > 0 && !payload.skipConflicting) {
+      throw new HttpsError(
+        'failed-precondition',
+        `${conflictedIds.size} class session(s) would double-book a faculty member or a room. ` +
+          'Fix the timetable, or pass skipConflicting to generate everything else.',
+        conflictDetails(conflicts)
+      )
+    }
+
+    const generatePlan = planned.filter(
+      ({ slot, date }) => !conflictedIds.has(slotDateKey(slot.id, date))
+    )
+
     let created = 0
     let skippedExisting = 0
     let batches = 0
 
-    for (const group of chunk(planned, MAX_BATCH_OPS)) {
+    for (const group of chunk(generatePlan, MAX_BATCH_OPS)) {
       const refs = group.map(({ slot, date }) =>
         db.collection('classSessions').doc(slotDateKey(slot.id, date))
       )
@@ -675,6 +803,7 @@ export const generateClassSessions = onCall(
       planned: planned.length,
       created,
       skippedExisting,
+      skippedConflicts: conflictedIds.size,
       batches,
       actorUid: uid,
     })
@@ -687,6 +816,8 @@ export const generateClassSessions = onCall(
       scheduledOccurrences: planned.length,
       created,
       skippedExisting,
+      skippedConflicts: conflictedIds.size,
+      conflicts: conflictDetails(conflicts).conflicts,
       batches,
     }
   }
@@ -964,6 +1095,64 @@ export const ensureClassSession = onCall(
     }
     const sessionId = ensureSessionId(target)
     const ref = db.collection('classSessions').doc(sessionId)
+
+    // ─── S2.5: an ad-hoc session must not double-book anyone either ────────
+    // Attendance marking arrives here for sessions that already exist, and
+    // those are returned untouched below, so this only ever gates a genuinely
+    // new class.
+    const allowConflicts = (request.data as Record<string, unknown> | undefined)?.allowConflicts === true
+    if (!allowConflicts) {
+      const sameDaySnap = await db
+        .collection('classSessions')
+        .where('collegeId', '==', staff.collegeId)
+        .where('date', '==', input.date)
+        .limit(MAX_PROGRESS_SESSIONS)
+        .get()
+      const others: SessionCandidate[] = sameDaySnap.docs
+        .filter((doc) => doc.id !== sessionId)
+        .map((doc) =>
+          toConflictCandidate({
+            id: doc.id,
+            collegeId: staff.collegeId,
+            ...(doc.data() as Record<string, unknown>),
+          })
+        )
+      const candidate = slot
+        ? toConflictCandidate({
+            id: sessionId,
+            collegeId: staff.collegeId,
+            date: input.date,
+            facultyId: slot.facultyId,
+            room: slot.room,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            branch: slot.branch,
+            batch: slot.batch,
+            division: slot.division,
+            subject: slot.subject,
+          })
+        : toConflictCandidate({
+            id: sessionId,
+            collegeId: staff.collegeId,
+            date: input.date,
+            facultyId,
+            room: input.room,
+            startTime: input.startTime,
+            endTime: input.endTime,
+            branch: input.branch,
+            batch: input.batch,
+            division: input.division,
+            subject: input.subject,
+          })
+      const blocking = hardClashes(findSessionClashes(candidate, others))
+      if (blocking.length > 0) {
+        throw new HttpsError(
+          'failed-precondition',
+          blocking[0] ? describeConflict(blocking[0]) : 'This class would double-book a faculty member or a room.',
+          conflictDetails(blocking)
+        )
+      }
+    }
 
     const result = await db.runTransaction(async (txn) => {
       const existing = await txn.get(ref)

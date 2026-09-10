@@ -31,6 +31,8 @@ import {
   Divider,
   Stack,
   Paper,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -50,7 +52,9 @@ import {
   cancelWeeklySchedule,
   defaultTermWindow,
   isValidDateKey,
+  SessionConflictError,
   type GenerateSessionsResult,
+  type SessionConflict,
 } from '../api/classSessionApi'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
 
@@ -138,7 +142,11 @@ const AdminClassSchedule: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState<WeeklyScheduleFormData>({ ...EMPTY_FORM })
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error' | 'warning'
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -153,6 +161,8 @@ const AdminClassSchedule: React.FC = () => {
   const [generateWindow, setGenerateWindow] = useState(() => defaultTermWindow())
   const [generating, setGenerating] = useState(false)
   const [generateResult, setGenerateResult] = useState<GenerateSessionsResult | null>(null)
+  const [generateConflicts, setGenerateConflicts] = useState<SessionConflict[]>([])
+  const [skipConflicting, setSkipConflicting] = useState(false)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   // ─── Apply prefill from AdminCurriculum "Schedule Class" ──────────────
@@ -286,6 +296,8 @@ const AdminClassSchedule: React.FC = () => {
   const handleOpenGenerate = () => {
     setGenerateWindow(defaultTermWindow())
     setGenerateResult(null)
+    setGenerateConflicts([])
+    setSkipConflicting(false)
     setGenerateOpen(true)
   }
 
@@ -301,23 +313,36 @@ const AdminClassSchedule: React.FC = () => {
     }
     setGenerating(true)
     setGenerateResult(null)
+    setGenerateConflicts([])
     try {
-      const result = await generateClassSessions({ from, to })
+      const result = await generateClassSessions({ from, to, skipConflicting })
       setGenerateResult(result)
+      setGenerateConflicts(result.conflicts || [])
+      const skipped = result.skippedConflicts || 0
       setSnackbar({
         open: true,
-        severity: 'success',
+        severity: skipped > 0 ? 'warning' : 'success',
         message:
-          result.created === 0
+          result.created === 0 && skipped === 0
             ? `Already up to date — ${result.skippedExisting} session(s) existed for ${result.slotsScanned} slot(s), nothing new created.`
-            : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).`,
+            : skipped > 0
+              ? `Created ${result.created} session(s) and skipped ${skipped} that would double-book a faculty member or a room.`
+              : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).`,
       })
     } catch (error) {
-      setSnackbar({
-        open: true,
-        severity: 'error',
-        message: error instanceof Error ? error.message : 'Failed to generate class sessions',
-      })
+      // S2.5: the server refuses to materialise a timetable that double-books.
+      // Surface the individual clashes so the admin can fix the slot rather
+      // than guess which one blocked the run.
+      if (error instanceof SessionConflictError) {
+        setGenerateConflicts(error.conflicts)
+        setSnackbar({ open: true, severity: 'error', message: error.message })
+      } else {
+        setSnackbar({
+          open: true,
+          severity: 'error',
+          message: error instanceof Error ? error.message : 'Failed to generate class sessions',
+        })
+      }
     } finally {
       setGenerating(false)
     }
@@ -984,11 +1009,51 @@ const AdminClassSchedule: React.FC = () => {
               fullWidth
             />
           </Stack>
+          <FormControlLabel
+            sx={{ mt: 1 }}
+            control={
+              <Checkbox
+                checked={skipConflicting}
+                onChange={event => setSkipConflicting(event.target.checked)}
+              />
+            }
+            label="Skip slots that clash instead of stopping"
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            Faculty and room double-bookings are refused by default so a bad timetable is not
+            scattered across the whole term. Tick this to generate everything else and list what was
+            skipped.
+          </Typography>
+
           {generateResult && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              {generateResult.created} created · {generateResult.skippedExisting} already existed ·{' '}
+            <Alert severity={(generateResult.skippedConflicts || 0) > 0 ? 'warning' : 'success'} sx={{ mt: 2 }}>
+              {generateResult.created} created · {generateResult.skippedExisting} already existed
+              {(generateResult.skippedConflicts || 0) > 0 && ` · ${generateResult.skippedConflicts} skipped (clash)`} ·{' '}
               {generateResult.slotsScanned} active slot(s) × {generateResult.scheduledOccurrences} occurrence(s)
               in range.
+            </Alert>
+          )}
+
+          {generateConflicts.length > 0 && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                {generateConflicts.length} clash(es) found
+              </Typography>
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {generateConflicts.slice(0, 8).map((conflict, index) => (
+                  <li key={`${conflict.sessionId}-${conflict.kind}-${index}`}>
+                    <Typography variant="caption">
+                      {conflict.message}
+                      {conflict.conflictsWith && ` (${conflict.conflictsWith})`}
+                    </Typography>
+                  </li>
+                ))}
+              </Box>
+              {generateConflicts.length > 8 && (
+                <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+                  …and {generateConflicts.length - 8} more.
+                </Typography>
+              )}
             </Alert>
           )}
         </DialogContent>

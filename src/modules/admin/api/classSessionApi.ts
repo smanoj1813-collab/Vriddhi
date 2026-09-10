@@ -23,6 +23,24 @@ export interface GenerateSessionsInput {
   facultyId?: string
   branch?: string
   batch?: string
+  /**
+   * S2.5. When false (default) a faculty/room double-booking aborts the run
+   * before anything is written. When true, the clean slots are generated and
+   * the clashing ones are reported in `conflicts`.
+   */
+  skipConflicting?: boolean
+  detectConflicts?: boolean
+}
+
+export interface SessionConflict {
+  code: string
+  kind: 'faculty' | 'room' | 'cohort'
+  date: string
+  startTime: string
+  endTime: string
+  sessionId: string
+  conflictsWith: string
+  message: string
 }
 
 export interface GenerateSessionsResult {
@@ -33,7 +51,25 @@ export interface GenerateSessionsResult {
   scheduledOccurrences: number
   created: number
   skippedExisting: number
+  skippedConflicts: number
+  conflicts: SessionConflict[]
   batches: number
+}
+
+/** Errors that carry conflict details attached by the callable. */
+export class SessionConflictError extends Error {
+  conflicts: SessionConflict[]
+  constructor(message: string, conflicts: SessionConflict[]) {
+    super(message)
+    this.name = 'SessionConflictError'
+    this.conflicts = conflicts
+  }
+}
+
+function extractConflicts(error: unknown): SessionConflict[] {
+  const details = (error as { details?: unknown } | null)?.details
+  const list = (details as { conflicts?: unknown } | null)?.conflicts
+  return Array.isArray(list) ? (list as SessionConflict[]) : []
 }
 
 export interface CancelWeeklyScheduleInput {
@@ -64,7 +100,10 @@ const MESSAGES: Record<string, string> = {
     'Only college administrators (admin, principal, HOD) can generate or cancel class sessions.',
   'functions/invalid-argument': 'The date range is not valid. Use a start and end date within one term (92 days).',
   'functions/not-found': 'That weekly schedule no longer exists. Refresh the page and try again.',
-  'functions/failed-precondition': 'This schedule cannot be materialised in its current state.',
+  // S2.5: most failed-preconditions in this module are the server refusing a
+  // double-booking, so the copy leads with that and names the escape hatch.
+  'functions/failed-precondition':
+    'This would double-book a faculty member or a room. Fix the timetable first, or skip the conflicting slots.',
 }
 
 function toMessage(error: unknown, fallback: string): string {
@@ -95,9 +134,18 @@ export async function generateClassSessions(
       ...(input.facultyId ? { facultyId: input.facultyId } : {}),
       ...(input.branch ? { branch: input.branch } : {}),
       ...(input.batch ? { batch: input.batch } : {}),
+      ...(input.skipConflicting ? { skipConflicting: true } : {}),
+      ...(input.detectConflicts === false ? { detectConflicts: false } : {}),
     })
     return response.data
   } catch (error) {
+    const conflicts = extractConflicts(error)
+    if (conflicts.length > 0) {
+      throw new SessionConflictError(
+        conflicts[0]?.message || 'This timetable would double-book a faculty member or a room.',
+        conflicts
+      )
+    }
     throw new Error(toMessage(error, 'Class sessions could not be generated.'))
   }
 }
@@ -145,6 +193,8 @@ export interface EnsureSessionInput {
   endTime?: string
   type?: string
   topic?: string
+  /** S2.5: create the session even if it double-books someone. */
+  allowConflicts?: boolean
 }
 
 export interface EnsureSessionResult {
@@ -191,9 +241,17 @@ export async function ensureClassSession(
       ...(input.endTime ? { endTime: input.endTime } : {}),
       ...(input.type ? { type: input.type } : {}),
       ...(input.topic ? { topic: input.topic } : {}),
+      ...(input.allowConflicts ? { allowConflicts: true } : {}),
     })
     return response.data
   } catch (error) {
+    const conflicts = extractConflicts(error)
+    if (conflicts.length > 0) {
+      throw new SessionConflictError(
+        conflicts[0]?.message || 'This class would double-book a faculty member or a room.',
+        conflicts
+      )
+    }
     throw new Error(toMessage(error, 'The class session could not be created.'))
   }
 }
