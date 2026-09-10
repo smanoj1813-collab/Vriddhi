@@ -63,6 +63,24 @@ export function CurriculumReviewTable({
   const [editValues, setEditValues] = useState<{ name: string; hours: string; marks: string }>({ name: "", hours: "", marks: "" });
   const [localError, setLocalError] = useState<string | null>(null);
   const [deletingCourse, setDeletingCourse] = useState<string | null>(null);
+  // Course-level hours editing. A blank hours column in the uploaded template
+  // parses to null rather than 0, and the only way to supply the real figure
+  // is to type it here.
+  const [editingCourseHours, setEditingCourseHours] = useState<string | null>(null);
+  const [courseHoursValue, setCourseHoursValue] = useState<string>("");
+
+  const handleSaveCourseHours = async (course: ParsedCourse) => {
+    const parsed = Number(courseHoursValue);
+    if (courseHoursValue.trim() === "" || !Number.isFinite(parsed) || parsed < 0) {
+      setLocalError("Enter a valid number of hours (0 or more)");
+      return;
+    }
+    if (onUpdateCourse) {
+      await onUpdateCourse(course.id, { totalHours: parsed, isEdited: true });
+    }
+    setEditingCourseHours(null);
+    setLocalError(null);
+  };
 
   // ─── Auto-convert extract.courses into review rows ────────────────────
   const displayItems = useMemo<CurriculumReviewItem[]>(() => {
@@ -237,10 +255,71 @@ export function CurriculumReviewTable({
                       )}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {course.branch ?? "N/A"} · Sem {course.semester ?? 0} · {course.credits ?? 0} credits · {modules.length} modules · {course.totalHours ?? 0} hrs · {course.totalMarks ?? 0} marks
+                      {course.branch ?? "N/A"} · Sem {course.semester ?? 0} · {course.credits ?? 0} credits · {modules.length} modules · {course.totalHours === null ? "hours not set" : `${course.totalHours} hrs`} · {course.totalMarks ?? 0} marks
                     </Typography>
                   </Box>
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    {!readOnly && onUpdateCourse && (
+                      editingCourseHours === course.id ? (
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          sx={{ alignItems: "center" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <TextField
+                            size="small"
+                            type="number"
+                            label="Hours"
+                            value={courseHoursValue}
+                            onChange={(e) => setCourseHoursValue(e.target.value)}
+                            sx={{ width: 100 }}
+                          />
+                          <Tooltip title="Save hours">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveCourseHours(course);
+                              }}
+                            >
+                              <Save fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCourseHours(null);
+                              setLocalError(null);
+                            }}
+                          >
+                            <Cancel fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      ) : (
+                        <Tooltip
+                          title={
+                            course.totalHours === null
+                              ? "Hours were blank in the upload — set them here"
+                              : "Edit course hours"
+                          }
+                        >
+                          <Chip
+                            size="small"
+                            color={course.totalHours === null ? "warning" : "default"}
+                            variant={course.totalHours === null ? "filled" : "outlined"}
+                            label={course.totalHours === null ? "Set hours" : `${course.totalHours} hrs`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCourseHours(course.id);
+                              setCourseHoursValue(course.totalHours === null ? "" : String(course.totalHours));
+                            }}
+                          />
+                        </Tooltip>
+                      )
+                    )}
                     {!readOnly && onDeleteCourse && (
                       <Tooltip title={`Delete ${courseName}`}>
                         <IconButton

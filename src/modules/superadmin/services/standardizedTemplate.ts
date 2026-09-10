@@ -15,6 +15,23 @@ export interface TemplateValidationError {
   severity: 'error' | 'warning';
 }
 
+/**
+ * Reads a numeric cell that is allowed to be blank.
+ *
+ * `Number(raw) || 0` collapses three very different inputs into the same
+ * value: a genuine 0, a blank cell, and garbage like "n/a" all become 0. A
+ * blank hours column then flowed into validation as a real number and
+ * produced warnings such as "Module hours (44) ≠ Course hours (0)" against
+ * hours nobody had ever claimed. Null keeps "not stated" distinct from "zero".
+ */
+function parseOptionalNumber(raw: unknown): number | null {
+  if (raw === null || raw === undefined) return null;
+  const text = String(raw).trim();
+  if (text === '') return null;
+  const value = Number(text);
+  return Number.isFinite(value) ? value : null;
+}
+
 export interface ParsedTemplateResult {
   success: boolean;
   extract: SyllabusExtract | null;
@@ -181,7 +198,10 @@ export async function parseCurriculumTemplate(file: File, userId: string, userNa
     }
 
     const credits = Number(row[4]) || 0;
-    const totalHours = Number(row[6]) || 0;
+    // A blank hours column means "not stated", not "zero hours". It must stay
+    // null so the review step can prompt for a value instead of validating
+    // against a number the college never entered.
+    const totalHours = parseOptionalNumber(row[6]);
     const totalMarks = Number(row[7]) || 0;
 
     const course: ParsedCourse = {
@@ -283,19 +303,41 @@ externalMarks: row[9] !== '' ? Number(row[9]) : undefined,
   // ── Post-Validation ──
   const courses = Array.from(coursesMap.values());
   courses.forEach(course => {
-    const modHours = course.modules.reduce((s, m) => s + m.hours, 0);
-    if (course.modules.length === 0) {
-      warnings.push({ sheet: 'Modules', row: 0, field: course.code, message: `${course.code}: No modules found`, severity: 'warning' });
+    const modHours = course.modules.reduce((s, m) => s + (m.hours ?? 0), 0);
+    // Messages must NOT repeat the course code: `field` is already rendered
+    // as a prefix by StandardizedCurriculumUploader, so including it here
+    // produced "Lang3.1: Lang3.1: No modules found".
+    if (course.totalHours === null) {
+      warnings.push({
+        sheet: 'Modules',
+        row: 0,
+        field: course.code,
+        message:
+          course.modules.length > 0
+            ? `Hours not specified — enter them in the review table, or accept the module total (${modHours})`
+            : 'Hours not specified — enter them in the review table',
+        severity: 'warning',
+      });
+    } else if (course.modules.length === 0) {
+      warnings.push({ sheet: 'Modules', row: 0, field: course.code, message: 'No modules found', severity: 'warning' });
     } else if (modHours !== course.totalHours) {
-      warnings.push({ sheet: 'Modules', row: 0, field: course.code, message: `${course.code}: Module hours (${modHours}) ≠ Course hours (${course.totalHours})`, severity: 'warning' });
+      warnings.push({
+        sheet: 'Modules',
+        row: 0,
+        field: course.code,
+        message: `Module hours (${modHours}) ≠ Course hours (${course.totalHours})`,
+        severity: 'warning',
+      });
     }
     if (!course.outcomes?.length) {
-      warnings.push({ sheet: 'Outcomes', row: 0, field: course.code, message: `${course.code}: No outcomes found`, severity: 'warning' });
+      warnings.push({ sheet: 'Outcomes', row: 0, field: course.code, message: 'No outcomes found', severity: 'warning' });
     }
   });
 
   const totalModules = courses.reduce((s, c) => s + c.modules.length, 0);
-  const totalHours = courses.reduce((s, c) => s + c.totalHours, 0);
+  // Unspecified hours contribute nothing to the total rather than turning it
+  // into NaN.
+  const totalHours = courses.reduce((s, c) => s + (c.totalHours ?? 0), 0);
   const totalMarks = courses.reduce((s, c) => s + c.totalMarks, 0);
 
   const confidenceScore = errors.length === 0 ? 95 : errors.length < 3 ? 80 : 60;
