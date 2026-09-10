@@ -87,7 +87,24 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2))
-const PROJECT = args.project || process.env.GCLOUD_PROJECT || 'vriddhi-academic'
+
+// A flag with no value parses to boolean true. Passing that into path.resolve
+// or fs.readFileSync throws an opaque ERR_INVALID_ARG_TYPE stack trace, which
+// is a poor answer to what is really a typo. Validate the value-bearing flags
+// up front and say what they need.
+function valueFlag(key, example) {
+  const raw = args[key]
+  if (raw === undefined || raw === null) return undefined
+  if (typeof raw !== 'string' || !raw.trim()) {
+    console.error(`--${key} needs a value.`)
+    console.error(`  e.g.  --${key} ${example}`)
+    process.exit(1)
+  }
+  return raw.trim()
+}
+
+const SERVICE_ACCOUNT = valueFlag('service-account', '"C:\\path\\to\\vriddhi-serviceAccount.json"')
+const PROJECT = valueFlag('project', 'vriddhi-academic') || process.env.GCLOUD_PROJECT || 'vriddhi-academic'
 const EMAIL = String(args.email || '').trim().toLowerCase()
 const APPLY = Boolean(args.apply)
 const PRUNE_ADMIN_DOC = Boolean(args['prune-admin-doc'])
@@ -98,8 +115,31 @@ if (!EMAIL || !EMAIL.includes('@')) {
 }
 
 const admin = loadAdmin()
-const credential = args['service-account']
-  ? admin.credential.cert(JSON.parse(fs.readFileSync(path.resolve(args['service-account']), 'utf8')))
+function readServiceAccount(filePath) {
+  const resolved = path.resolve(filePath)
+  let raw
+  try {
+    raw = fs.readFileSync(resolved, 'utf8')
+  } catch (err) {
+    console.error(`Could not read the service-account file: ${resolved}`)
+    console.error(`  ${err?.code || err?.message}`)
+    console.error(
+      '\nDownload one from Firebase Console -> Project settings (gear) -> Service accounts' +
+        '\n-> "Generate new private key", then pass its path to --service-account.'
+    )
+    process.exit(1)
+  }
+  try {
+    return JSON.parse(raw)
+  } catch (err) {
+    console.error(`That service-account file is not valid JSON: ${resolved}`)
+    console.error(`  ${err?.message}`)
+    process.exit(1)
+  }
+}
+
+const credential = SERVICE_ACCOUNT
+  ? admin.credential.cert(readServiceAccount(SERVICE_ACCOUNT))
   : admin.credential.applicationDefault()
 
 admin.initializeApp({ credential, projectId: PROJECT })
