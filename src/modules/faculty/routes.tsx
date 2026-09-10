@@ -16,6 +16,9 @@ function RouteTracer({ label, children }: { label: string; children: ReactNode }
 const FacultyDashboard = lazy(() => import('./pages/FacultyDashboard'));
 const FacultyAttendance = lazy(() => import('./pages/FacultyAttendance'));
 const FacultyAttendanceMarking = lazy(() => import('./components/FacultyAttendanceMarking'));
+// Faculty marking THEIR OWN attendance — distinct from FacultyAttendance, which
+// is a teacher marking a class of students.
+const FacultySelfAttendance = lazy(() => import('./pages/FacultySelfAttendance'));
 const FacultyTopics = lazy(() => import('./pages/FacultyTopics'));
 const FacultyPapers = lazy(() => import('./pages/FacultyPapers'));
 const FacultyQuestionBank = lazy(() => import('./pages/FacultyQuestionBank'));
@@ -122,6 +125,10 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'dashboard', element: <LazyPage label="faculty/dashboard"><FacultyDashboard /></LazyPage> },
       { path: 'attendance', element: <LazyPage label="faculty/attendance"><FacultyAttendance /></LazyPage> },
       { path: 'attendance-marking', element: <LazyPage label="faculty/attendance-marking"><FacultyAttendanceMarkingWrapper /></LazyPage> },
+      // The faculty member's OWN attendance. `my-attendance` is the canonical
+      // path; `self-attendance` is an alias so a hand-typed URL still lands.
+      { path: 'my-attendance', element: <LazyPage label="faculty/my-attendance"><FacultySelfAttendance /></LazyPage> },
+      { path: 'self-attendance', element: <LazyPage label="faculty/self-attendance"><FacultySelfAttendance /></LazyPage> },
       { path: 'topics', element: <LazyPage label="faculty/topics"><FacultyTopics /></LazyPage> },
       { path: 'papers', element: <LazyPage label="faculty/papers"><FacultyPapers /></LazyPage> },
       { path: 'question-bank', element: <LazyPage label="faculty/question-bank"><FacultyQuestionBank /></LazyPage> },

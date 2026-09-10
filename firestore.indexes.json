@@ -47,15 +47,15 @@
       ]
     },
     {
-      "collectionGroup": "assignments",
+      "collectionGroup": "assignmentSubmissionDrafts",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "collegeId",
+          "fieldPath": "status",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "status",
+          "fieldPath": "expiresAt",
           "order": "ASCENDING"
         }
       ]
@@ -79,15 +79,15 @@
       ]
     },
     {
-      "collectionGroup": "assignmentSubmissionDrafts",
+      "collectionGroup": "assignments",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "status",
+          "fieldPath": "collegeId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "expiresAt",
+          "fieldPath": "status",
           "order": "ASCENDING"
         }
       ]
@@ -221,6 +221,20 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "faculty",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "department",
           "order": "ASCENDING"
         }
@@ -237,20 +251,6 @@
         {
           "fieldPath": "status",
           "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "faculty",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -327,7 +327,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "status",
+          "fieldPath": "createdBy",
           "order": "ASCENDING"
         },
         {
@@ -345,7 +345,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdBy",
+          "fieldPath": "status",
           "order": "ASCENDING"
         },
         {
@@ -423,92 +423,6 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "subject",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "difficulty",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "type",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "batch",
           "order": "ASCENDING"
         },
@@ -545,7 +459,111 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "createdBy",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "difficulty",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPYQ",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPYQ",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "examYear",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "subject",
           "order": "ASCENDING"
         },
         {
@@ -585,25 +603,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "isPYQ",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "examYear",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "questions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isPYQ",
+          "fieldPath": "type",
           "order": "ASCENDING"
         },
         {
@@ -649,20 +649,6 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "scheduledTests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
@@ -683,6 +669,20 @@
         {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "scheduledTests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
         }
       ]
     },
@@ -705,6 +705,76 @@
       ]
     },
     {
+      "collectionGroup": "staffAttendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "staffAttendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "month",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "staffAttendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "studentAssessments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "assessmentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "studentAssessments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "studentAssessments",
       "queryScope": "COLLECTION",
       "fields": [
@@ -732,20 +802,6 @@
         },
         {
           "fieldPath": "studentId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "studentAssessments",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
           "order": "ASCENDING"
         },
         {
@@ -819,34 +875,6 @@
       ]
     },
     {
-      "collectionGroup": "studentAssessments",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "assessmentId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "students",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "students",
       "queryScope": "COLLECTION",
       "fields": [
@@ -856,34 +884,6 @@
         },
         {
           "fieldPath": "batch",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "students",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "department",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "students",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "collegeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "regNo",
           "order": "ASCENDING"
         }
       ]
@@ -911,6 +911,20 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "department",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "students",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "facultyId",
           "order": "ASCENDING"
         }
@@ -926,6 +940,34 @@
         },
         {
           "fieldPath": "mentor",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "students",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "regNo",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "students",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
           "order": "ASCENDING"
         }
       ]

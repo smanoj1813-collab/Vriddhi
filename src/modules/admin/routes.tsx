@@ -12,6 +12,9 @@ const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Assessments = lazy(() => import('./pages/Assessments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
+// Staff (faculty) attendance — what the faculty themselves marked. Student
+// attendance stays on `attendance`.
+const FacultyAttendanceAdmin = lazy(() => import('./pages/FacultyAttendanceAdmin'));
 const CollegeOnboarding = lazy(() => import('./pages/CollegeOnboarding'));
 const HODDashboard = lazy(() => import('./pages/HODDashboard'));
 const GradeRecords = lazy(() => import('./pages/GradeRecords'));
@@ -91,6 +94,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'students', element: <LazyPage><AdminDashboard /></LazyPage> },
       { path: 'view360', element: <LazyPage><View360 /></LazyPage> },
       { path: 'attendance', element: <LazyPage><Attendance /></LazyPage> },
+      { path: 'faculty-attendance', element: <LazyPage><FacultyAttendanceAdmin /></LazyPage> },
       { path: 'assessments', element: <LazyPage><Assessments /></LazyPage> },
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
