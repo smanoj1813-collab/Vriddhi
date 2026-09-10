@@ -1295,3 +1295,514 @@ export const completeClassSession = onCall(
     }
   }
 )
+
+// ─── S2.4: real curriculum coverage ────────────────────────────────────────
+//
+// Finding F4: the "Coverage/Journey" analytics are fake in this area.
+// src/modules/admin/hooks/useJourney.ts reads `faculty.topicsCovered` — a
+// static number typed into the faculty document — hardcodes `classesThisWeek:
+// 0` and defaults `avgAttendance` to 85. Admins see a gauge computed from
+// nothing.
+//
+// `getCurriculumProgress` computes all of it from the data the previous
+// sub-slices made trustworthy: the faculty topic ledger (S2.3), the
+// materialised sessions (S2.1/S2.2) and the curriculum mapping's planned
+// hours.
+
+/** How many faculties one progress call will analyse. Bounds the fan-out. */
+export const MAX_PROGRESS_FACULTIES = 40
+
+/** Sessions / topics / mappings read per call, to bound the callable. */
+export const MAX_PROGRESS_SESSIONS = 2000
+export const MAX_PROGRESS_MAPPINGS = 500
+export const MAX_PROGRESS_TOPICS = 300
+
+export interface ModuleProgress {
+  moduleNo: string
+  moduleName: string
+  total: number
+  covered: number
+  pct: number
+}
+
+export interface FacultyProgress {
+  facultyId: string
+  facultyName: string
+  courses: Array<{
+    curriculumId: string
+    courseName: string
+    courseCode: string
+    branch: string
+    batch: string
+    semester: number
+    totalHours: number
+    credits: number
+    modulesCount: number
+  }>
+  hoursPlanned: number
+  hoursDelivered: number
+  hoursPct: number
+  topics: { total: number; covered: number; pending: number; pct: number }
+  modules: ModuleProgress[]
+  sessions: { total: number; completed: number; scheduled: number; cancelled: number }
+  pace: { slotsPerWeek: number; weeksElapsed: number; expected: number; completed: number; pct: number }
+  attendance: { present: number; marked: number; pct: number }
+}
+
+// ─── Pure maths (unit-tested) ──────────────────────────────────────────────
+
+/** Percentage that answers 0 instead of NaN/Infinity when nothing is planned. */
+export function percent(part: number, whole: number): number {
+  if (!Number.isFinite(part) || !Number.isFinite(whole) || whole <= 0) return 0
+  return Math.round((part / whole) * 1000) / 10
+}
+
+/** Contact minutes → hours, to one decimal. */
+export function hoursFromMinutes(minutes: number): number {
+  if (!Number.isFinite(minutes) || minutes <= 0) return 0
+  return Math.round((minutes / 60) * 10) / 10
+}
+
+/**
+ * Whole weeks covered by an inclusive date range.
+ *
+ * A semester is counted in teaching weeks, so a partial week still counts as a
+ * week of teaching — hence ceiling rather than flooring.
+ */
+export function weeksBetween(from: string, to: string): number {
+  const start = parseDateKey(from).getTime()
+  const end = parseDateKey(to).getTime()
+  if (end < start) return 0
+  return Math.ceil((end - start) / 604_800_000 + 1e-9) || 0
+}
+
+/**
+ * How many classes the timetable promised by now. `slotsPerWeek` comes from the
+ * live weekly schedule, so the denominator is the college's own plan rather
+ * than an assumed number.
+ */
+export function expectedSessions(slotsPerWeek: number, weeksElapsed: number): number {
+  if (!Number.isFinite(slotsPerWeek) || !Number.isFinite(weeksElapsed)) return 0
+  if (slotsPerWeek <= 0 || weeksElapsed <= 0) return 0
+  return Math.round(slotsPerWeek * weeksElapsed)
+}
+
+export function pacePercent(completed: number, expected: number): number {
+  return percent(completed, expected)
+}
+
+/**
+ * Per-module rollup. Rows with no module number are grouped under a single
+ * "Unassigned" bucket rather than dropped, so the totals still add up.
+ */
+export function moduleRollup(
+  entries: Array<{ moduleNo?: unknown; moduleName?: unknown; covered: boolean }>
+): ModuleProgress[] {
+  const buckets = new Map<string, ModuleProgress>()
+  entries.forEach((entry) => {
+    const moduleNo = String(entry.moduleNo ?? '').trim()
+    const key = moduleNo || '—'
+    const bucket =
+      buckets.get(key) ||
+      ({
+        moduleNo,
+        moduleName: String(entry.moduleName ?? '').trim() || (moduleNo ? `Module ${moduleNo}` : 'Unassigned'),
+        total: 0,
+        covered: 0,
+        pct: 0,
+      } as ModuleProgress)
+    bucket.total += 1
+    if (entry.covered) bucket.covered += 1
+    buckets.set(key, bucket)
+  })
+  return [...buckets.values()]
+    .map((bucket) => ({ ...bucket, pct: percent(bucket.covered, bucket.total) }))
+    .sort((a, b) => a.moduleNo.localeCompare(b.moduleNo, 'en', { numeric: true }))
+}
+
+/** Totals across faculties. Courses and modules are concatenated, not summed. */
+export function sumProgress(list: FacultyProgress[]): FacultyProgress {
+  const empty: FacultyProgress = {
+    facultyId: '',
+    facultyName: 'All faculty',
+    courses: [],
+    hoursPlanned: 0,
+    hoursDelivered: 0,
+    hoursPct: 0,
+    topics: { total: 0, covered: 0, pending: 0, pct: 0 },
+    modules: [],
+    sessions: { total: 0, completed: 0, scheduled: 0, cancelled: 0 },
+    pace: { slotsPerWeek: 0, weeksElapsed: 0, expected: 0, completed: 0, pct: 0 },
+    attendance: { present: 0, marked: 0, pct: 0 },
+  }
+  const totals = list.reduce<FacultyProgress>((acc, item) => {
+    const next: FacultyProgress = {
+      ...acc,
+      courses: [...acc.courses, ...item.courses],
+      hoursPlanned: acc.hoursPlanned + item.hoursPlanned,
+      hoursDelivered: Math.round((acc.hoursDelivered + item.hoursDelivered) * 10) / 10,
+      topics: {
+        total: acc.topics.total + item.topics.total,
+        covered: acc.topics.covered + item.topics.covered,
+        pending: acc.topics.pending + item.topics.pending,
+        pct: 0,
+      },
+      modules: [...acc.modules, ...item.modules],
+      sessions: {
+        total: acc.sessions.total + item.sessions.total,
+        completed: acc.sessions.completed + item.sessions.completed,
+        scheduled: acc.sessions.scheduled + item.sessions.scheduled,
+        cancelled: acc.sessions.cancelled + item.sessions.cancelled,
+      },
+      pace: {
+        slotsPerWeek: acc.pace.slotsPerWeek + item.pace.slotsPerWeek,
+        weeksElapsed: Math.max(acc.pace.weeksElapsed, item.pace.weeksElapsed),
+        expected: acc.pace.expected + item.pace.expected,
+        completed: acc.pace.completed + item.pace.completed,
+        pct: 0,
+      },
+      attendance: {
+        present: acc.attendance.present + item.attendance.present,
+        marked: acc.attendance.marked + item.attendance.marked,
+        pct: 0,
+      },
+    }
+    return next
+  }, empty)
+  return {
+    ...totals,
+    hoursPct: percent(totals.hoursDelivered, totals.hoursPlanned),
+    topics: { ...totals.topics, pct: percent(totals.topics.covered, totals.topics.total) },
+    pace: { ...totals.pace, pct: percent(totals.pace.completed, totals.pace.expected) },
+    attendance: { ...totals.attendance, pct: percent(totals.attendance.present, totals.attendance.marked) },
+  }
+}
+
+/** Later of two date keys, used to clamp "elapsed" to the end of term. */
+export function laterDateKey(a: string, b: string): string {
+  if (!isValidDateKey(a)) return b
+  if (!isValidDateKey(b)) return a
+  return a >= b ? a : b
+}
+
+/** Earlier of two date keys. */
+export function earlierDateKey(a: string, b: string): string {
+  if (!isValidDateKey(a)) return b
+  if (!isValidDateKey(b)) return a
+  return a <= b ? a : b
+}
+
+// ─── Callable ──────────────────────────────────────────────────────────────
+
+interface ProgressTopicRow {
+  title: string
+  moduleNo: string
+  moduleName: string
+  covered: boolean
+}
+
+/**
+ * Merge the faculty ledger (`facultyTopics`) with the curriculum bank
+ * (`topics/*`) into one coverage list.
+ *
+ * The two stores have no join, so the key is the normalised title. A topic is
+ * covered if *either* side says so: the ledger carries the status the faculty
+ * planner writes, and a session completion (S2.3) covers a topic by title even
+ * when no ledger row existed.
+ */
+export function mergeTopicCoverage(
+  ledger: ProgressTopicRow[],
+  coveredTitles: Set<string>
+): ProgressTopicRow[] {
+  const merged = new Map<string, ProgressTopicRow>()
+  const add = (row: ProgressTopicRow) => {
+    const key = normalizeTopicKey(row.title)
+    if (!key) return
+    const existing = merged.get(key)
+    if (!existing) {
+      merged.set(key, { ...row, covered: row.covered || coveredTitles.has(key) })
+      return
+    }
+    merged.set(key, {
+      ...existing,
+      moduleNo: existing.moduleNo || row.moduleNo,
+      moduleName: existing.moduleName || row.moduleName,
+      covered: existing.covered || row.covered || coveredTitles.has(key),
+    })
+  }
+  ledger.forEach(add)
+  return [...merged.values()]
+}
+
+export interface ProgressInput {
+  collegeId: string
+  facultyId: string
+  batch: string
+  branch: string
+  semester: string
+  curriculumId: string
+  from: string
+  to: string
+}
+
+export function validateProgressInput(
+  data: unknown,
+  role: string,
+  claimCollegeId: string
+): ProgressInput {
+  const raw = (data || {}) as Record<string, unknown>
+  const collegeId = role === 'superadmin' ? String(raw.collegeId ?? '').trim() : claimCollegeId
+  if (!collegeId) {
+    throw new HttpsError('invalid-argument', 'No college is associated with this account')
+  }
+  const from = String(raw.from ?? '').trim()
+  const to = String(raw.to ?? '').trim()
+  if (from && !isValidDateKey(from)) throw new HttpsError('invalid-argument', 'from must be yyyy-mm-dd')
+  if (to && !isValidDateKey(to)) throw new HttpsError('invalid-argument', 'to must be yyyy-mm-dd')
+  if (from && to && from > to) {
+    throw new HttpsError('invalid-argument', 'from must be on or before to')
+  }
+  return {
+    collegeId,
+    facultyId: optionalFilter(raw.facultyId, 'facultyId', 200),
+    batch: optionalFilter(raw.batch, 'batch', 100),
+    branch: optionalFilter(raw.branch, 'branch', 100),
+    semester: optionalFilter(raw.semester, 'semester', 10),
+    curriculumId: optionalFilter(raw.curriculumId, 'curriculumId', 200),
+    from,
+    to,
+  }
+}
+
+function matchesProgressFilter(value: unknown, wanted: string): boolean {
+  if (!wanted) return true
+  return String(value ?? '').trim().toLowerCase() === wanted.toLowerCase()
+}
+
+/**
+ * Coverage and pace for a college, a single faculty member, or one cohort.
+ *
+ * Everything here is computed — topics from the faculty ledger plus the
+ * curriculum bank, delivered hours from completed session durations, and pace
+ * against the number of classes the college's own timetable promised by now.
+ */
+export const getCurriculumProgress = onCall(
+  { region: 'asia-south1', memory: '1GiB', timeoutSeconds: 120, minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveSessionWriter(uid, request.auth?.token || {})
+    const input = validateProgressInput(request.data, staff.role, staff.collegeId)
+
+    // Faculty may only read their own progress; scheduling roles may read the
+    // whole college.
+    const privileged = SCHEDULING_ROLES.includes(staff.role)
+    const facultyFilter = privileged ? input.facultyId : staff.uid
+
+    const db = admin.firestore()
+
+    // ─── Plan: what was assigned, and what the timetable promises ──────────
+    const mappingsSnap = await db
+      .collection('curriculumFacultyMappings')
+      .where('collegeId', '==', input.collegeId)
+      .limit(MAX_PROGRESS_MAPPINGS)
+      .get()
+
+    const mappings = mappingsSnap.docs
+      .map((doc): Record<string, unknown> & { id: string } => ({
+        id: doc.id,
+        ...(doc.data() as Record<string, unknown>),
+      }))
+      .filter((mapping) => {
+        if (facultyFilter && String(mapping.facultyId || '') !== facultyFilter) return false
+        if (input.curriculumId && String(mapping.curriculumId || '') !== input.curriculumId) return false
+        if (!matchesProgressFilter(mapping.batch, input.batch)) return false
+        if (!matchesProgressFilter(mapping.branch, input.branch)) return false
+        if (input.semester && String(mapping.semester ?? '') !== input.semester) return false
+        return true
+      })
+
+    const facultyIds = [...new Set(mappings.map((m) => String(m.facultyId || '')).filter(Boolean))].slice(
+      0,
+      MAX_PROGRESS_FACULTIES
+    )
+
+    // Sessions: collegeId+date is an existing composite index, so an explicit
+    // range is cheap. Without one, fall back to the newest sessions.
+    let sessionQuery: admin.firestore.Query = db
+      .collection('classSessions')
+      .where('collegeId', '==', input.collegeId)
+    if (input.from) sessionQuery = sessionQuery.where('date', '>=', input.from)
+    if (input.to) sessionQuery = sessionQuery.where('date', '<=', input.to)
+    const sessionsSnap = await sessionQuery.limit(MAX_PROGRESS_SESSIONS).get()
+    const sessions: Array<Record<string, unknown>> = sessionsSnap.docs.map((doc) => doc.data())
+
+    const weeklySnap = await db
+      .collection('weeklySchedules')
+      .where('collegeId', '==', input.collegeId)
+      .limit(MAX_PROGRESS_MAPPINGS)
+      .get()
+    const weeklySlots = weeklySnap.docs
+      .map((doc): Record<string, unknown> & { id: string } => ({
+        id: doc.id,
+        ...(doc.data() as Record<string, unknown>),
+      }))
+      .filter((slot) => isSlotActive(slot as WeeklySlot))
+
+    // ─── Per faculty ──────────────────────────────────────────────────────
+    const perFaculty: FacultyProgress[] = []
+
+    for (const facultyId of facultyIds) {
+      const facultyMappings = mappings.filter((m) => String(m.facultyId || '') === facultyId)
+      const facultySessions = sessions.filter((s) => String(s.facultyId || '') === facultyId)
+
+      // Ledger + curriculum bank, both filtered to this faculty.
+      const ledgerSnap = await db
+        .collection('facultyTopics')
+        .where('facultyId', '==', facultyId)
+        .limit(MAX_PROGRESS_TOPICS)
+        .get()
+      const bankSnap = await db
+        .collection('topics')
+        .where('facultyId', '==', facultyId)
+        .limit(MAX_PROGRESS_TOPICS)
+        .get()
+
+      // Titles the faculty has actually taught, from completed sessions.
+      const coveredTitles = new Set<string>()
+      facultySessions
+        .filter((s) => String(s.status || '') === 'completed')
+        .forEach((s) => {
+          const ids = Array.isArray(s.topicIds) ? s.topicIds : []
+          const titles = Array.isArray(s.topicsCovered) ? s.topicsCovered : []
+          titles.forEach((title) => {
+            const key = normalizeTopicKey(title)
+            if (key) coveredTitles.add(key)
+          })
+          void ids
+        })
+
+      const rows: ProgressTopicRow[] = [
+        ...ledgerSnap.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            title: String(data.title || data.name || ''),
+            moduleNo: String(data.moduleNo || ''),
+            moduleName: String(data.moduleName || data.unit || ''),
+            covered: isTopicCovered(data.status),
+          }
+        }),
+        ...bankSnap.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            title: String(data.name || data.title || ''),
+            moduleNo: String(data.moduleNo || ''),
+            moduleName: String(data.moduleName || data.unit || ''),
+            covered: isTopicCovered(data.status),
+          }
+        }),
+      ]
+      const topics = mergeTopicCoverage(rows, coveredTitles)
+      const topicsCovered = topics.filter((topic) => topic.covered).length
+
+      // Delivered hours come from completed sessions only — a scheduled class
+      // is a promise, not delivery.
+      const completed = facultySessions.filter((s) => String(s.status || '') === 'completed')
+      const deliveredMinutes = completed.reduce(
+        (sum, s) => sum + (Number(s.durationMinutes) > 0 ? Number(s.durationMinutes) : 60),
+        0
+      )
+
+      const slotsPerWeek = weeklySlots.filter(
+        (slot) => String(slot.facultyId || '') === facultyId
+      ).length
+
+      // Term window: what the caller asked for, else what actually happened.
+      const sessionDates = facultySessions
+        .map((s) => normalizeSessionDate(s.date))
+        .filter((date): date is string => Boolean(date))
+        .sort()
+      const today = todayKey()
+      const termStart = input.from || sessionDates[0] || today
+      const termEnd = earlierDateKey(input.to || sessionDates[sessionDates.length - 1] || today, today)
+      const weeksElapsed =
+        termEnd && termStart && termEnd >= termStart ? weeksBetween(termStart, termEnd) : 0
+      const expected = expectedSessions(slotsPerWeek, weeksElapsed)
+
+      const attendanceMarked = facultySessions.reduce(
+        (sum, s) => sum + (Number(s.attendanceCount) || 0),
+        0
+      )
+      const attendancePresent = facultySessions.reduce(
+        (sum, s) => sum + (Number(s.presentCount) || 0),
+        0
+      )
+
+      const hoursPlanned = facultyMappings.reduce((sum, m) => sum + (Number(m.totalHours) || 0), 0)
+
+      perFaculty.push({
+        facultyId,
+        facultyName: String(facultyMappings[0]?.facultyName || ''),
+        courses: facultyMappings.map((m) => ({
+          curriculumId: String(m.curriculumId || ''),
+          courseName: String(m.courseName || ''),
+          courseCode: String(m.courseCode || ''),
+          branch: String(m.branch || ''),
+          batch: String(m.batch || ''),
+          semester: Number(m.semester) || 0,
+          totalHours: Number(m.totalHours) || 0,
+          credits: Number(m.credits) || 0,
+          modulesCount: Number(m.modulesCount) || 0,
+        })),
+        hoursPlanned,
+        hoursDelivered: hoursFromMinutes(deliveredMinutes),
+        hoursPct: percent(hoursFromMinutes(deliveredMinutes), hoursPlanned),
+        topics: {
+          total: topics.length,
+          covered: topicsCovered,
+          pending: topics.length - topicsCovered,
+          pct: percent(topicsCovered, topics.length),
+        },
+        modules: moduleRollup(topics),
+        sessions: {
+          total: facultySessions.length,
+          completed: completed.length,
+          scheduled: facultySessions.filter((s) => String(s.status || 'scheduled') === 'scheduled').length,
+          cancelled: facultySessions.filter((s) => String(s.status || '') === 'cancelled').length,
+        },
+        pace: {
+          slotsPerWeek,
+          weeksElapsed,
+          expected,
+          completed: completed.length,
+          pct: percent(completed.length, expected),
+        },
+        attendance: {
+          present: attendancePresent,
+          marked: attendanceMarked,
+          pct: percent(attendancePresent, attendanceMarked),
+        },
+      })
+    }
+
+    const totals = sumProgress(perFaculty)
+
+    logger.info('[classSchedule] getCurriculumProgress', {
+      collegeId: input.collegeId,
+      facultyFilter: facultyFilter || null,
+      faculties: perFaculty.length,
+      sessions: sessions.length,
+      actorUid: uid,
+    })
+
+    return {
+      collegeId: input.collegeId,
+      from: input.from,
+      to: input.to,
+      generatedAt: new Date().toISOString(),
+      facultyCount: perFaculty.length,
+      faculty: perFaculty,
+      totals,
+    }
+  }
+)

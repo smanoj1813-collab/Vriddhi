@@ -80,6 +80,7 @@ import {
   cancelWeeklySchedule,
   ensureClassSession,
   completeClassSession,
+  getCurriculumProgress,
 } from './classSchedule'
 
 const app = express()
@@ -212,4 +213,5 @@ export {
   cancelWeeklySchedule,
   ensureClassSession,
   completeClassSession,
+  getCurriculumProgress,
 }

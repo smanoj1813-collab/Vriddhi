@@ -13,6 +13,7 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Assessments = lazy(() => import('./pages/Assessments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const CollegeOnboarding = lazy(() => import('./pages/CollegeOnboarding'));
+const CurriculumProgress = lazy(() => import('./pages/CurriculumProgress'));
 const HODDashboard = lazy(() => import('./pages/HODDashboard'));
 const GradeRecords = lazy(() => import('./pages/GradeRecords'));
 const Journey = lazy(() => import('./pages/Journey'));
@@ -100,6 +101,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'paper-generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
       { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },
       { path: 'curriculum', element: <LazyPage><AdminCurriculum /></LazyPage> },
+      { path: 'curriculum-progress', element: <LazyPage><CurriculumProgress /></LazyPage> },
       { path: 'analytics', element: <LazyPage><Analytics /></LazyPage> },
       { path: 'journey', element: <LazyPage><Journey /></LazyPage> },
       { path: 'settings', element: <LazyPage><Settings /></LazyPage> },

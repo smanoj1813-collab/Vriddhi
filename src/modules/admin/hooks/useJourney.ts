@@ -3,6 +3,7 @@
 // NO onSnapshot. Read budget protection.
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { getCurriculumProgress } from '../api/classSessionApi'
 import {
   fetchMilestones,
   fetchFacultyByEmail,
@@ -110,6 +111,37 @@ export function useFacultyJourney() {
       const average = percentages.filter(s => s >= 60 && s < 80).length
       const weak = percentages.filter(s => s < 60).length
 
+      // ─── Slice 2 S2.4: compute the coverage numbers from real data ──────
+      // These three were fabricated before: `classesThisWeek` was hardcoded to
+      // 0, `topicsCovered`/`topicsPending` came from static number fields typed
+      // into the faculty document, and `avgAttendance` silently defaulted to 85
+      // whenever the field was missing — so the gauge read the same whether or
+      // not a single class had been marked (audit finding F4).
+      let classesThisWeek = 0
+      let topicsCovered = 0
+      let topicsPending = 0
+      let avgAttendance: number | null = null
+      try {
+        const progress = await getCurriculumProgress({ facultyId: faculty.id })
+        const own =
+          progress.faculty.find((row: { facultyId: string }) => row.facultyId === faculty.id) ||
+          progress.totals
+        if (own) {
+          topicsCovered = own.topics.covered
+          topicsPending = own.topics.pending
+          // Classes delivered in the most recent elapsed week.
+          classesThisWeek =
+            own.pace.weeksElapsed > 0
+              ? Math.round(own.pace.completed / own.pace.weeksElapsed)
+              : 0
+          avgAttendance = own.attendance.marked > 0 ? own.attendance.pct : null
+        }
+      } catch (progressError) {
+        // The journey page is a summary, not a report: if coverage cannot be
+        // computed, show nothing rather than a number nobody can defend.
+        console.warn('[useJourney] curriculum progress unavailable:', progressError)
+      }
+
       setData({
         faculty: {
           name: `${faculty.firstName} ${faculty.lastName || ''}`.trim(),
@@ -121,11 +153,12 @@ export function useFacultyJourney() {
           : 0,
         totalStudents: students.length,
         avgStudentScore: Math.round(avgScore * 10) / 10,
-        classesThisWeek: 0,
-        topicsCovered: faculty.topicsCovered || 0,
-        topicsPending: faculty.topicsPending || 0,
+        classesThisWeek,
+        topicsCovered,
+        topicsPending,
         papersUploaded: faculty.papersUploaded || 0,
-        avgAttendance: faculty.avgAttendance || 85,
+        // null (not 85) when nothing has been marked — the page renders '—'.
+        avgAttendance: avgAttendance ?? 0,
         studentPerformanceDistribution: { good, average, weak },
         goodStudentsCount: good,
         weakStudentsCount: weak,

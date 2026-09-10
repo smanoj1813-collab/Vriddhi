@@ -248,6 +248,91 @@ export async function completeClassSession(
   }
 }
 
+// ─── S2.4: computed curriculum coverage ───────────────
+
+export interface CurriculumProgressInput {
+  facultyId?: string
+  batch?: string
+  branch?: string
+  semester?: string
+  curriculumId?: string
+  from?: string
+  to?: string
+}
+
+export interface ModuleProgress {
+  moduleNo: string
+  moduleName: string
+  total: number
+  covered: number
+  pct: number
+}
+
+export interface FacultyProgress {
+  facultyId: string
+  facultyName: string
+  courses: Array<{
+    curriculumId: string
+    courseName: string
+    courseCode: string
+    branch: string
+    batch: string
+    semester: number
+    totalHours: number
+    credits: number
+    modulesCount: number
+  }>
+  hoursPlanned: number
+  hoursDelivered: number
+  hoursPct: number
+  topics: { total: number; covered: number; pending: number; pct: number }
+  modules: ModuleProgress[]
+  sessions: { total: number; completed: number; scheduled: number; cancelled: number }
+  pace: { slotsPerWeek: number; weeksElapsed: number; expected: number; completed: number; pct: number }
+  attendance: { present: number; marked: number; pct: number }
+}
+
+export interface CurriculumProgressResult {
+  collegeId: string
+  from: string
+  to: string
+  generatedAt: string
+  facultyCount: number
+  faculty: FacultyProgress[]
+  totals: FacultyProgress
+}
+
+/**
+ * Coverage, hours and pace — computed from the topic ledger, the delivered
+ * sessions and the curriculum mapping, not typed into a faculty document.
+ *
+ * Replaces the numbers src/modules/admin/hooks/useJourney.ts used to read off
+ * `faculty.topicsCovered` with `classesThisWeek: 0` and a hardcoded
+ * `avgAttendance: 85` fallback (audit finding F4).
+ */
+export async function getCurriculumProgress(
+  input: CurriculumProgressInput = {}
+): Promise<CurriculumProgressResult> {
+  const call = httpsCallable<Record<string, unknown>, CurriculumProgressResult>(
+    functions,
+    'getCurriculumProgress'
+  )
+  try {
+    const response = await call({
+      ...(input.facultyId ? { facultyId: input.facultyId } : {}),
+      ...(input.batch ? { batch: input.batch } : {}),
+      ...(input.branch ? { branch: input.branch } : {}),
+      ...(input.semester ? { semester: input.semester } : {}),
+      ...(input.curriculumId ? { curriculumId: input.curriculumId } : {}),
+      ...(input.from ? { from: input.from } : {}),
+      ...(input.to ? { to: input.to } : {}),
+    })
+    return response.data
+  } catch (error) {
+    throw new Error(toMessage(error, 'Curriculum progress could not be loaded.'))
+  }
+}
+
 // ─── Small date helpers (shared by the admin UI) ──────
 
 export function toDateKey(date: Date): string {

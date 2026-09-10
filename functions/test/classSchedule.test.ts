@@ -813,3 +813,241 @@ describe('validateCompleteInput', () => {
     )
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// S2.4 — computing coverage instead of typing it in
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+  earlierDateKey,
+  expectedSessions,
+  hoursFromMinutes,
+  laterDateKey,
+  mergeTopicCoverage,
+  moduleRollup,
+  pacePercent,
+  percent,
+  sumProgress,
+  validateProgressInput,
+  weeksBetween,
+  type FacultyProgress,
+  type ProgressTopicRow,
+} from '../src/classSchedule'
+
+describe('percent', () => {
+  it('rounds to one decimal', () => {
+    assert.equal(percent(1, 3), 33.3)
+    assert.equal(percent(1, 2), 50)
+    assert.equal(percent(3, 3), 100)
+  })
+
+  it('answers 0 when nothing is planned rather than NaN', () => {
+    // useJourney defaults avgAttendance to 85 when there is no data; a gauge
+    // must not invent a number, so this returns 0 instead.
+    assert.equal(percent(5, 0), 0)
+    assert.equal(percent(0, 0), 0)
+    assert.equal(percent(Number.NaN, 10), 0)
+    assert.equal(percent(5, Number.NaN), 0)
+  })
+})
+
+describe('hoursFromMinutes', () => {
+  it('converts contact minutes to hours', () => {
+    assert.equal(hoursFromMinutes(60), 1)
+    assert.equal(hoursFromMinutes(90), 1.5)
+    assert.equal(hoursFromMinutes(45), 0.8)
+    assert.equal(hoursFromMinutes(0), 0)
+    assert.equal(hoursFromMinutes(-30), 0)
+  })
+})
+
+describe('weeksBetween', () => {
+  it('counts whole teaching weeks across an inclusive range', () => {
+    assert.equal(weeksBetween('2026-09-07', '2026-09-13'), 1)
+    assert.equal(weeksBetween('2026-09-07', '2026-09-14'), 2)
+    assert.equal(weeksBetween('2026-09-07', '2026-09-07'), 1) // one day is still a week of teaching
+    // 30 (Sep) + 31 (Oct) + 30 (Nov) = 91 inclusive days = exactly 13 weeks.
+    assert.equal(weeksBetween('2026-09-01', '2026-11-30'), 13)
+  })
+
+  it('is 0 for an empty or reversed range', () => {
+    assert.equal(weeksBetween('2026-09-14', '2026-09-07'), 0)
+  })
+})
+
+describe('expectedSessions / pacePercent', () => {
+  it('derives the denominator from the college’s own timetable', () => {
+    // 5 slots a week over 4 elapsed weeks ⇒ 20 classes the plan promised.
+    assert.equal(expectedSessions(5, 4), 20)
+    assert.equal(pacePercent(15, 20), 75)
+    assert.equal(pacePercent(20, 20), 100)
+    assert.equal(pacePercent(24, 20), 120) // ahead of plan is allowed to show
+  })
+
+  it('is 0 when there is no timetable or no elapsed time', () => {
+    assert.equal(expectedSessions(0, 4), 0)
+    assert.equal(expectedSessions(5, 0), 0)
+    assert.equal(pacePercent(3, 0), 0)
+  })
+})
+
+describe('moduleRollup', () => {
+  it('groups by module and computes coverage per module', () => {
+    const rows: ProgressTopicRow[] = [
+      { title: 'Stacks', moduleNo: '1', moduleName: 'Linear', covered: true },
+      { title: 'Queues', moduleNo: '1', moduleName: 'Linear', covered: false },
+      { title: 'Trees', moduleNo: '2', moduleName: 'Non-linear', covered: true },
+    ]
+    assert.deepEqual(moduleRollup(rows), [
+      { moduleNo: '1', moduleName: 'Linear', total: 2, covered: 1, pct: 50 },
+      { moduleNo: '2', moduleName: 'Non-linear', total: 2 - 1, covered: 1, pct: 100 },
+    ])
+  })
+
+  it('keeps unnumbered rows in one bucket so totals still add up', () => {
+    const rows: ProgressTopicRow[] = [
+      { title: 'Intro', moduleNo: '', moduleName: '', covered: false },
+      { title: 'Exam prep', moduleNo: '', moduleName: '', covered: false },
+    ]
+    const rolled = moduleRollup(rows)
+    assert.equal(rolled.length, 1)
+    assert.equal(rolled[0].moduleName, 'Unassigned')
+    assert.equal(rolled[0].total, 2)
+  })
+
+  it('handles an empty ledger', () => {
+    assert.deepEqual(moduleRollup([]), [])
+  })
+})
+
+describe('mergeTopicCoverage', () => {
+  const ledger: ProgressTopicRow[] = [
+    { title: 'Stacks', moduleNo: '1', moduleName: 'Linear', covered: false },
+    { title: 'Queues', moduleNo: '1', moduleName: 'Linear', covered: true },
+  ]
+
+  it('covers a ledger row that a completed session claims by title', () => {
+    const merged = mergeTopicCoverage(ledger, new Set(['stacks']))
+    const stacks = merged.find((row) => row.title === 'Stacks')
+    assert.equal(stacks?.covered, true)
+  })
+
+  it('leaves a covered row covered (additive only)', () => {
+    const merged = mergeTopicCoverage(ledger, new Set())
+    const queues = merged.find((row) => row.title === 'Queues')
+    assert.equal(queues?.covered, true)
+  })
+
+  it('de-duplicates the same topic coming from both stores', () => {
+    const merged = mergeTopicCoverage(
+      [
+        { title: 'Stacks', moduleNo: '1', moduleName: 'Linear', covered: false },
+        { title: 'stacks ', moduleNo: '', moduleName: '', covered: false },
+      ],
+      new Set()
+    )
+    assert.equal(merged.length, 1)
+  })
+
+  it('backfills module metadata from whichever row has it', () => {
+    const merged = mergeTopicCoverage(
+      [
+        { title: 'Trees', moduleNo: '', moduleName: '', covered: false },
+        { title: 'Trees', moduleNo: '2', moduleName: 'Non-linear', covered: false },
+      ],
+      new Set()
+    )
+    assert.equal(merged.length, 1)
+    assert.equal(merged[0].moduleNo, '2')
+    assert.equal(merged[0].moduleName, 'Non-linear')
+  })
+})
+
+describe('earlierDateKey / laterDateKey', () => {
+  it('clamps the term window', () => {
+    assert.equal(earlierDateKey('2026-09-14', '2026-11-30'), '2026-09-14')
+    assert.equal(laterDateKey('2026-09-14', '2026-11-30'), '2026-11-30')
+  })
+
+  it('ignores missing or malformed keys', () => {
+    assert.equal(earlierDateKey('', '2026-11-30'), '2026-11-30')
+    assert.equal(laterDateKey('2026-09-14', 'nonsense'), '2026-09-14')
+  })
+})
+
+describe('sumProgress', () => {
+  const faculty = (overrides: Partial<FacultyProgress>): FacultyProgress => ({
+    facultyId: 'f1',
+    facultyName: 'A',
+    courses: [{ curriculumId: 'c1', courseName: 'DS', courseCode: 'BCA301', branch: 'BCA', batch: '2026', semester: 3, totalHours: 40, credits: 4, modulesCount: 5 }],
+    hoursPlanned: 40,
+    hoursDelivered: 10,
+    hoursPct: 25,
+    topics: { total: 20, covered: 5, pending: 15, pct: 25 },
+    modules: [{ moduleNo: '1', moduleName: 'Linear', total: 4, covered: 2, pct: 50 }],
+    sessions: { total: 30, completed: 10, scheduled: 18, cancelled: 2 },
+    pace: { slotsPerWeek: 5, weeksElapsed: 6, expected: 30, completed: 10, pct: 33.3 },
+    attendance: { present: 80, marked: 100, pct: 80 },
+    ...overrides,
+  })
+
+  it('recomputes every percentage from the summed parts', () => {
+    const totals = sumProgress([faculty({}), faculty({ facultyId: 'f2', hoursDelivered: 30 })])
+    assert.equal(totals.hoursPlanned, 80)
+    assert.equal(totals.hoursDelivered, 40)
+    assert.equal(totals.hoursPct, 50)
+    assert.equal(totals.topics.covered, 10)
+    assert.equal(totals.topics.total, 40)
+    assert.equal(totals.topics.pct, 25)
+    assert.equal(totals.attendance.pct, 80)
+  })
+
+  it('takes the longest elapsed window, not the sum', () => {
+    const totals = sumProgress([
+      faculty({ pace: { slotsPerWeek: 5, weeksElapsed: 4, expected: 20, completed: 10, pct: 50 } }),
+      faculty({ pace: { slotsPerWeek: 3, weeksElapsed: 9, expected: 27, completed: 27, pct: 100 } }),
+    ])
+    assert.equal(totals.pace.weeksElapsed, 9)
+    assert.equal(totals.pace.slotsPerWeek, 8)
+    assert.equal(totals.pace.expected, 47)
+    assert.equal(totals.pace.completed, 37)
+  })
+
+  it('returns an empty-but-valid shape for no faculty', () => {
+    const totals = sumProgress([])
+    assert.equal(totals.hoursPlanned, 0)
+    assert.equal(totals.hoursPct, 0)
+    assert.equal(totals.topics.pct, 0)
+  })
+})
+
+describe('validateProgressInput', () => {
+  it('pins non-superadmins to the auth claim', () => {
+    const parsed = validateProgressInput({ collegeId: 'other' }, 'admin', 'college-1')
+    assert.equal(parsed.collegeId, 'college-1')
+  })
+
+  it('lets a superadmin target a college', () => {
+    assert.equal(validateProgressInput({ collegeId: 'college-2' }, 'superadmin', '').collegeId, 'college-2')
+  })
+
+  it('accepts an empty filter set — the whole college', () => {
+    const parsed = validateProgressInput({}, 'admin', 'college-1')
+    assert.equal(parsed.facultyId, '')
+    assert.equal(parsed.batch, '')
+    assert.equal(parsed.from, '')
+  })
+
+  it('validates the optional date range', () => {
+    assert.equal(validateProgressInput({ from: '2026-09-01', to: '2026-11-30' }, 'admin', 'c').to, '2026-11-30')
+    assert.throws(() => validateProgressInput({ from: 'yesterday' }, 'admin', 'c'), /yyyy-mm-dd/)
+    assert.throws(
+      () => validateProgressInput({ from: '2026-11-30', to: '2026-09-01' }, 'admin', 'c'),
+      /on or before/
+    )
+  })
+
+  it('refuses to run for a claim-less account', () => {
+    assert.throws(() => validateProgressInput({}, 'admin', ''), /No college/)
+  })
+})
