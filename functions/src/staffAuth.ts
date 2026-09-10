@@ -238,14 +238,12 @@ export const bulkProvisionStaff = onCall(
     }
 
     // ── Verify caller ──
-    const caller = await verifyCaller(request)
-    // Non-superadmins may only import into their own college.
-    if (caller.role !== 'superadmin' && caller.collegeId && caller.collegeId !== collegeId) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only import staff into your own college'
-      )
-    }
+    // Provisioning staff identities (faculty, HOD, principal, admin) is
+    // superadmin-only. It previously used verifyCaller's default
+    // STAFF_CREATOR_ROLES and only required that a non-superadmin target their
+    // own college, so a college admin could create privileged accounts in
+    // their own tenant. The narrow role list must be passed explicitly.
+    const caller = await verifyCaller(request, ['superadmin'])
 
     // ── Load college data ──
     const collegeRef = admin.firestore().collection('colleges').doc(collegeId)
