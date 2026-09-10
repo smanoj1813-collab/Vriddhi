@@ -870,6 +870,9 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
     authVerified,
     imported,
     failedStudents,
+    // Same rows under the generic name, so the export UI does not have to
+    // know whether it is dealing with students or staff.
+    failedRows: failedStudents,
   };
 }
 
@@ -955,6 +958,7 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
   const imported: ImportResult["imported"] = [];
   const errors: string[] = [];
   const warnings: string[] = [];
+  const failedRows: NonNullable<ImportResult["failedRows"]> = [];
   let skipped = 0;
   let authVerified = 0;
 
@@ -979,7 +983,9 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
         error: member.error,
       });
     } else {
-      errors.push(`${member.name || member.email} — ${member.error || "Unknown error"}`);
+      const reason = member.error || "Unknown error";
+      errors.push(`${member.name || member.email} — ${reason}`);
+      failedRows.push({ name: member.name, email: member.email, reason });
     }
   }
 
@@ -1011,6 +1017,7 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
     errors,
     warnings,
     authVerified,
+    failedRows,
   };
 }
 

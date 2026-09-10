@@ -272,6 +272,13 @@ export interface ImportResult {
     error?: string;
   }>;
   failedStudents?: Array<{ name: string; email: string; regNo: string; reason: string }>;
+  /**
+   * Structured failures from any importer, not just the student one.
+   * `failedStudents` is student-specific and predates this; these are the
+   * generic rows the export buttons read, so faculty imports can hand back
+   * something a spreadsheet can open instead of only a list of strings.
+   */
+  failedRows?: Array<{ name?: string; email?: string; regNo?: string; reason: string }>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -6,6 +6,7 @@ import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, Al
 import { parseCSV, validateCSV, generateCSVTemplate, downloadCsv } from '../../../shared/utils/parseCSV'
 import type { ValidationResult } from '../../../shared/utils/parseCSV'
 import CredentialsTable from '../components/CredentialsTable'
+import ImportExports from '../components/ImportExports'
 import type { College, ImportResult } from '../api/superAdminApi'
 
 const UserImport: React.FC = () => {
@@ -128,70 +129,6 @@ const UserImport: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  const stamp = () => new Date().toISOString().slice(0, 10)
-
-  /** Original uploaded rows, so exports can carry columns the result omits. */
-  const uploadedByEmail = new Map(
-    previewData.map((r) => [String(r.email || '').trim().toLowerCase(), r] as const)
-  )
-
-  const validationFailures = preflight?.invalidRows || []
-
-  const exportValidationFailures = () => {
-    if (validationFailures.length === 0) return
-    downloadCsv(
-      `student-validation-failed-${stamp()}.csv`,
-      ['Row', 'Name', 'Email', 'Reg No', 'Phone', 'Reasons'],
-      validationFailures.map((r) => [
-        r.rowNumber,
-        r.row.name,
-        r.row.email,
-        r.row.regNo,
-        r.row.phone,
-        r.reasons.join('; '),
-      ])
-    )
-  }
-
-  const exportImportFailures = () => {
-    const rows = importResult?.failedStudents || []
-    if (rows.length === 0) return
-    downloadCsv(
-      `student-import-failed-${stamp()}.csv`,
-      ['Name', 'Email', 'Reg No', 'Reason'],
-      rows.map((f) => [f.name, f.email, f.regNo, f.reason])
-    )
-  }
-
-  /**
-   * Success export including the generated one-time password.
-   *
-   * This file is a credential dump: treat it like a printout of passwords,
-   * because that is what it is. It is produced because handing out login
-   * details is the point of a bulk import, not despite the risk.
-   */
-  const exportSuccessful = () => {
-    const rows = importResult?.imported || []
-    if (rows.length === 0) return
-    downloadCsv(
-      `student-import-successful-${stamp()}.csv`,
-      ['Name', 'Email', 'Reg No', 'Phone', 'UID', 'Status', 'Temporary Password', 'Reset Link', 'Auth Verified'],
-      rows.map((r) => {
-        const original = uploadedByEmail.get(String(r.email || '').trim().toLowerCase())
-        return [
-          r.name || original?.name,
-          r.email,
-          original?.regNo,
-          original?.phone,
-          r.uid || r.id,
-          r.status,
-          r.password,
-          r.resetLink,
-          r.authVerified === false ? 'NO' : 'yes',
-        ]
-      })
-    )
-  }
 
   return (
     <div className="page-container">
@@ -393,55 +330,14 @@ const UserImport: React.FC = () => {
             )}
             <h2 className="text-lg font-semibold text-white">Import Complete</h2>
           </div>
-          <div className="grid grid-cols-5 gap-4 mb-4">
-            <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{previewData.length}</p>
-              <p className="text-xs text-slate-400">Rows Uploaded</p>
-            </div>
-            <div className="bg-amber-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-amber-400">{validationFailures.length}</p>
-              <p className="text-xs text-slate-400">Rejected Pre-check</p>
-            </div>
-            <div className="bg-green-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-400">{importResult.success}</p>
-              <p className="text-xs text-slate-400">Provisioned</p>
-            </div>
-            <div className="bg-red-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-red-400">{importResult.failed}</p>
-              <p className="text-xs text-slate-400">Failed</p>
-            </div>
-            <div className="bg-emerald-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-400">{importResult.authVerified ?? 0}</p>
-              <p className="text-xs text-slate-400">Verified in Auth</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <button
-              onClick={exportValidationFailures}
-              disabled={validationFailures.length === 0}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <Download size={14} />
-              Validation Failed ({validationFailures.length})
-            </button>
-            <button
-              onClick={exportImportFailures}
-              disabled={(importResult.failedStudents?.length || 0) === 0}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <Download size={14} />
-              Import Failed ({importResult.failedStudents?.length || 0})
-            </button>
-            <button
-              onClick={exportSuccessful}
-              disabled={(importResult.imported?.length || 0) === 0}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-green-500/10 border border-green-500/30 text-green-300 hover:bg-green-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <Download size={14} />
-              Successful + Passwords ({importResult.imported?.length || 0})
-            </button>
-          </div>
+          <ImportExports
+            uploadedCount={previewData.length}
+            preflight={preflight}
+            result={importResult}
+            filePrefix="student"
+            uploadedRows={previewData}
+            idField="regNo"
+          />
 
           <CredentialsTable
             rows={(importResult.imported || []).map((row) => ({
@@ -482,30 +378,6 @@ const UserImport: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm text-red-400 font-medium">Failed / Issues ({importResult.failed})</p>
-                {importResult.failedStudents && importResult.failedStudents.length > 0 && (
-                  <button
-                    onClick={() => {
-                      const list = importResult.failedStudents || []
-                      const headers = ['Name', 'Email', 'Reg No', 'Reason']
-                      const rows = list.map((f) => [f.name, f.email, f.regNo, f.reason])
-                      const csv = [
-                        headers.join(','),
-                        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
-                      ].join('\n')
-                      const blob = new Blob([csv], { type: 'text/csv' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = 'student-import-failures.csv'
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs px-3 py-1.5 rounded bg-red-500/10 border border-red-500/30 transition-colors"
-                  >
-                    <Download size={14} />
-                    Download Failed CSV
-                  </button>
-                )}
               </div>
               {importResult.failedStudents && importResult.failedStudents.length > 0 ? (
                 <div className="overflow-x-auto rounded-lg border border-red-900/50 max-h-96 overflow-y-auto">
