@@ -8,7 +8,10 @@
 // This module provides the two server callables that close the loop:
 //
 //   1. parsePaperFile — extracts text from a digital PDF / DOCX in Cloud
-//      Storage and asks Gemini to structure it. Parsing is ASSISTIVE ONLY:
+//      Storage and structures it. Standard printed layouts are parsed
+//      DETERMINISTICALLY on the server (deterministicParse — no API key, no
+//      cost, nothing leaves the server); Gemini is consulted only as a
+//      fallback for unusual layouts. Parsing is ASSISTIVE ONLY:
 //      it never writes to the `questions` bank, never touches the paper
 //      document, and never auto-publishes anything. The result is returned
 //      to the PaperUploadEditor for faculty review.
@@ -378,6 +381,353 @@ export function normalizeParsedStructure(raw: unknown): NormalizedParse {
   }
 }
 
+// ─── Deterministic-first parse (no AI, no key, no cost) ─────────────────────
+//
+// Most university question papers share the same printed line layout: section
+// headers ("SECTION A — Objective Type"), numbered questions ("1." / "Q1." /
+// "2)"), "A."-style option lines, and printed marks as "[2]", "(5)" or
+// "[10 marks]" with occasional "Each question carries N marks" defaults. A
+// small rule engine recovers the structure from that layout entirely on the
+// server — no Gemini key required, no token cost, and nothing leaves the box.
+//
+// The output is only ACCEPTED when it finds ≥ 1 question AND the recognised
+// question lines cover ≥ MIN_DETERMINISTIC_COVERAGE of the document's text;
+// that coverage guard defers unusual layouts (notices, syllabi, exotic PDFs)
+// to the Gemini fallback below instead of half-guessing a structure. Faculty
+// review and the strict server-side Confirm are identical for both methods,
+// and — like the AI path — nothing is written anywhere here: marks are never
+// invented (0 stays 0) and answers are never produced.
+
+/** Minimum share of the document's characters that must be recognised. */
+export const MIN_DETERMINISTIC_COVERAGE = 0.3
+/**
+ * Per-question budget for absorbed continuation lines — keeps a stray "1."
+ * in an unrelated document from swallowing the whole file as one giant
+ * question. Continuation never counts towards coverage anyway (see below).
+ */
+const DET_MAX_CONTINUATION_CHARS = 600
+
+const DET_SECTION_RE = /^(?:section|part)\s+[-–—:.]?\s*(?:[A-J]\b|[IVX]{1,4}\b|\d{1,2}\b)[^\n]{0,90}$/i
+const DET_QUESTION_START_RE = /^(?:Q(?:uestion)?\s*[.:]?\s*)?(\d{1,3})\s*[.)]\s*(.*)$/
+/** Leading marks token — float-right marks sit BEFORE the question text in a
+ *  PDF/DOCX text layer even though they print to its right. */
+const DET_LEADING_MARKS_RE = /^[\[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]\s*(.+)$/i
+const DET_OPTION_RE = /^\(?\s*([A-H])\s*[.)]\s*(.+)$/
+const DET_TRAILING_MARKS_RE = /[[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]\s*$/i
+const DET_MARKS_ONLY_RE = /^[\[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]$/i
+const DET_DEFAULT_MARKS_RE = /\b(?:each|all|every)\b[\s\S]{0,60}?\b(?:carries|carry|carrying)\b\s*(?:up\s+to\s+)?(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?)?/i
+const DET_MAX_MARKS_RE = /^(?:max(?:imum)?\.?\s*marks?|total\s*marks?)\s*[:.\-–=]?\s*(\d{1,4}(?:\.\d)?)/i
+const DET_TIME_RE = /^(?:time|duration)\s*[:.\-–=]?\s*(\d{1,3}(?:\.\d)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i
+const DET_SUBJECT_RE = /^(?:subject|sub)\s*[:.\-–=]\s*(.{2,120})$/i
+const DET_DATE_LINE_RE = /^(?:date\s*[:.\-]?\s*\S.*)|(?:^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}$)|(?:\b(?:session|academic year)\b[^\n]*\b20\d\d\b)/i
+const DET_TITLE_RE = /(?:question\s+paper|pre-?assessment|examination|mid-?sem|model\s+exam|class\s+test|end\s+semester)/i
+const DET_LONG_ANSWER_RE = /^(?:explain|describe|discuss|derive|prove|evaluate|elaborate|critically\s+examine|write\s+(?:a\s+)?(?:note|essay|answer))/i
+
+export interface DeterministicParseResult extends NormalizedParse {
+  /** True when the layout matched well enough to trust without AI. */
+  accepted: boolean
+  /** Share (0..1) of the document's characters consumed by recognised lines. */
+  coverage: number
+}
+
+interface DetDraftQuestion {
+  text: string
+  options: string[]
+  marks: number | null
+  nextOptionLetter: string | null
+  continuationChars: number
+}
+
+interface DetDraftSection {
+  name: string
+  instructions: string[]
+  defaultMarks: number
+  questions: DetDraftQuestion[]
+}
+
+/** Strips a trailing marks token ("(5)", "[2 marks]") from a line. */
+export function detStripMarks(line: string): { rest: string; marks: number | null } {
+  const match = line.match(DET_TRAILING_MARKS_RE)
+  if (!match || match.index === undefined) return { rest: line.trim(), marks: null }
+  const marks = Number(match[1])
+  if (!Number.isFinite(marks) || marks <= 0 || marks > 1000) return { rest: line.trim(), marks: null }
+  return { rest: line.slice(0, match.index).trim(), marks }
+}
+
+function detQuestionType(question: DetDraftQuestion): string {
+  if (question.options.length >= 2) return 'mcq'
+  if (DET_LONG_ANSWER_RE.test(question.text) || (question.marks ?? 0) >= 6) return 'long_answer'
+  return 'short_answer'
+}
+
+/**
+ * Rule-based transcription of a standard printed question paper. Deterministic
+ * by construction: same text in, same structure out — and no answer-bearing
+ * field is ever produced (there is nothing to strip because nothing is looked
+ * for).
+ */
+export function deterministicParse(text: string): DeterministicParseResult {
+  const warnings: string[] = []
+  const lines = String(text || '').replace(/\u00a0/g, ' ').split(/\r?\n/)
+  const contentLines: string[] = []
+  for (const line of lines) {
+    const trimmed = line.trim().replace(/\s+/g, ' ')
+    if (trimmed) contentLines.push(trimmed)
+  }
+  const totalChars = contentLines.reduce((sum, line) => sum + line.replace(/\s+/g, '').length, 0)
+  const empty: DeterministicParseResult = {
+    meta: { ...EMPTY_META },
+    sections: [],
+    questionCount: 0,
+    warnings,
+    note: '',
+    accepted: false,
+    coverage: 0,
+  }
+  if (totalChars === 0) return empty
+
+  const meta: ParsedMeta = { ...EMPTY_META }
+  const sections: DetDraftSection[] = []
+  let current: DetDraftSection | null = null
+  let lastQuestion: DetDraftQuestion | null = null
+  let questionCount = 0
+  let recognisedChars = 0
+  let capped = false
+
+  const countChars = (value: string) => value.replace(/\s+/g, '').length
+  const consume = (line: string) => {
+    recognisedChars += countChars(line)
+  }
+  const ensureSection = (): DetDraftSection => {
+    if (!current) {
+      current = { name: `Section ${String.fromCharCode(65 + sections.length)}`, instructions: [], defaultMarks: 0, questions: [] }
+      sections.push(current)
+    }
+    return current
+  }
+
+  for (const line of contentLines) {
+    if (capped) break
+    const sectionMatch = line.match(DET_SECTION_RE)
+    if (sectionMatch && !DET_QUESTION_START_RE.test(line)) {
+      current = { name: line.slice(0, 200), instructions: [], defaultMarks: 0, questions: [] }
+      sections.push(current)
+      lastQuestion = null
+      consume(line)
+      continue
+    }
+
+    const questionMatch = line.match(DET_QUESTION_START_RE)
+    if (questionMatch) {
+      let { rest, marks } = detStripMarks(questionMatch[2] || '')
+      // "1." alone on a line is a numbered-cell opener (very common in
+      // table/flex layouts exported to PDF/DOCX): open a pending question and
+      // let the following lines fill it. A pending question with no text at
+      // the end is dropped, so stray "2." lines are harmless.
+      if (!rest) {
+        const openerSection = ensureSection()
+        if (questionCount >= MAX_QUESTIONS) {
+          warnings.push(`Only the first ${MAX_QUESTIONS} questions were kept.`)
+          capped = true
+          break
+        }
+        const pending: DetDraftQuestion = {
+          text: '',
+          options: [],
+          marks: null,
+          nextOptionLetter: null,
+          continuationChars: 0,
+        }
+        openerSection.questions.push(pending)
+        lastQuestion = pending
+        questionCount += 1
+        consume(line)
+        continue
+      }
+      // float-right marks may lead the text: "[1] The accounting equation is:"
+      const lead = rest.match(DET_LEADING_MARKS_RE)
+      if (lead) {
+        if (marks === null) {
+          const leadMarks = Number(lead[1])
+          if (Number.isFinite(leadMarks) && leadMarks > 0 && leadMarks <= 1000) marks = leadMarks
+        }
+        rest = lead[2]
+      }
+      const section = ensureSection()
+      if (section.questions.length >= MAX_QUESTIONS || questionCount >= MAX_QUESTIONS) {
+        warnings.push(`Only the first ${MAX_QUESTIONS} questions were kept.`)
+        capped = true
+        break
+      }
+      const question: DetDraftQuestion = {
+        text: rest.slice(0, MAX_QUESTION_TEXT),
+        options: [],
+        marks,
+        nextOptionLetter: null,
+        continuationChars: 0,
+      }
+      section.questions.push(question)
+      lastQuestion = question
+      questionCount += 1
+      consume(line)
+      continue
+    }
+
+    // A pending numbered opener ("1." on its own line) is filled by the next
+    // real line — either "[n] Text" (float-right marks first) or plain text via
+    // the continuation branch below. Option-shaped lines never become the text.
+    if (lastQuestion && lastQuestion.text === '') {
+      const lead = line.match(DET_LEADING_MARKS_RE)
+      if (lead) {
+        const leadMarks = Number(lead[1])
+        if (lastQuestion.marks === null && Number.isFinite(leadMarks) && leadMarks > 0 && leadMarks <= 1000) {
+          lastQuestion.marks = leadMarks
+        }
+        lastQuestion.text = lead[2].replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+        consume(line)
+        continue
+      }
+      if (/^\(?\s*[A-H]\s*[.)]\s/.test(line)) continue
+    }
+
+    const optionMatch = line.match(DET_OPTION_RE)
+    if (optionMatch && lastQuestion) {
+      const letter = optionMatch[1]
+      const accepts =
+        lastQuestion.options.length === 0
+          ? letter === 'A'
+          : lastQuestion.nextOptionLetter === letter
+      if (accepts) {
+        if (lastQuestion.options.length < MAX_OPTIONS) {
+          lastQuestion.options.push(optionMatch[2].replace(/\s+/g, ' ').trim().slice(0, 2000))
+        }
+        lastQuestion.nextOptionLetter = String.fromCharCode(letter.charCodeAt(0) + 1)
+        consume(line)
+        continue
+      }
+    }
+
+    const marksOnlyMatch = line.match(DET_MARKS_ONLY_RE)
+    if (marksOnlyMatch && lastQuestion) {
+      const marks = Number(marksOnlyMatch[1])
+      if (Number.isFinite(marks) && marks > 0 && marks <= 1000 && lastQuestion.marks === null) {
+        lastQuestion.marks = marks
+      }
+      consume(line)
+      continue
+    }
+
+    // Header/meta lines: recognised structure, but not questions.
+    const maxMarksMatch = line.match(DET_MAX_MARKS_RE)
+    if (maxMarksMatch) {
+      if (!meta.totalMarks) meta.totalMarks = Math.max(0, Math.min(10_000, Math.round(Number(maxMarksMatch[1]) || 0)))
+      consume(line)
+      continue
+    }
+    const timeMatch = line.match(DET_TIME_RE)
+    if (timeMatch) {
+      const value = Number(timeMatch[1])
+      if (!meta.durationMinutes && Number.isFinite(value)) {
+        const minutes = /^h/i.test(timeMatch[2]) ? value * 60 : value
+        meta.durationMinutes = Math.max(0, Math.min(1440, Math.round(minutes)))
+      }
+      consume(line)
+      continue
+    }
+    const subjectMatch = line.match(DET_SUBJECT_RE)
+    if (subjectMatch) {
+      if (!meta.subject) meta.subject = subjectMatch[1].trim().slice(0, 200)
+      consume(line)
+      continue
+    }
+    if (DET_DATE_LINE_RE.test(line) || (line.length <= 120 && !meta.title && DET_TITLE_RE.test(line) && !lastQuestion)) {
+      if (line.length <= 120 && DET_TITLE_RE.test(line) && !meta.title && !lastQuestion) meta.title = line.slice(0, 200)
+      consume(line)
+      continue
+    }
+
+    if (lastQuestion) {
+      // Continuation of the current question — including printed sub-parts
+      // like "(a) … (b) …", which stay inside the question text on purpose.
+      // The text is absorbed (so wrapped questions come out complete), but it
+      // is NOT counted as recognised: continuation is ordinary prose, not
+      // evidence of the standard layout, and counting it would let a wall of
+      // text after one "1." line fake its way past the coverage guard.
+      const { rest, marks } = detStripMarks(line)
+      if (marks !== null && lastQuestion.marks === null) lastQuestion.marks = marks
+      if (rest && lastQuestion.continuationChars < DET_MAX_CONTINUATION_CHARS) {
+        const budget = DET_MAX_CONTINUATION_CHARS - lastQuestion.continuationChars
+        const keep = countChars(rest) > budget ? `${rest.slice(0, budget)}…` : rest
+        lastQuestion.continuationChars += countChars(keep)
+        lastQuestion.text = `${lastQuestion.text} ${keep}`.replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+      }
+      continue
+    }
+
+    const section = current
+    if (section) {
+      const defaultMatch = line.match(DET_DEFAULT_MARKS_RE)
+      if (defaultMatch) {
+        const value = Number(defaultMatch[1])
+        if (Number.isFinite(value) && value > 0 && value <= 1000 && section.defaultMarks === 0) section.defaultMarks = value
+        consume(line)
+        continue
+      }
+      if (section.questions.length === 0 && line.length <= 300) {
+        // Section instruction block ("Answer ALL questions …") — keep it for
+        // the editor, but it never counts towards coverage on its own.
+        section.instructions.push(line)
+      }
+    }
+  }
+
+  if (questionCount >= MAX_QUESTIONS) capped = true
+
+  let zeroMarks = 0
+  const outSections: ParsedSection[] = []
+  for (const section of sections.slice(0, MAX_SECTIONS)) {
+    const questions: ParsedQuestion[] = []
+    for (const question of section.questions) {
+      // A pending opener that never got body text (a stray "2." / page number)
+      // is dropped — it was not a question.
+      if (!question.text.trim()) continue
+      const marks = question.marks ?? (section.defaultMarks || 0)
+      if (marks === 0) zeroMarks += 1
+      questions.push({
+        text: question.text.trim(),
+        type: detQuestionType(question),
+        marks: normalizeMarks(marks),
+        topic: '',
+        ...(question.options.length > 0 ? { options: question.options.filter(Boolean) } : {}),
+      })
+    }
+    if (questions.length === 0) continue
+    outSections.push({
+      name: section.name || `Section ${outSections.length + 1}`,
+      instructions: section.instructions.join(' ').replace(/\s+/g, ' ').trim().slice(0, 2000),
+      questions,
+    })
+  }
+  if (sections.length > MAX_SECTIONS) warnings.push(`Only the first ${MAX_SECTIONS} sections were kept.`)
+
+  const coverage = totalChars > 0 ? recognisedChars / totalChars : 0
+  const questionCountOut = outSections.reduce((sum, section) => sum + section.questions.length, 0)
+  if (questionCountOut > 0 && zeroMarks === questionCountOut) {
+    warnings.push('No printed marks were recognised — every question shows 0 marks. Set the marks before confirming.')
+  } else if (zeroMarks > 0) {
+    warnings.push(`${zeroMarks} question(s) have no printed marks and show 0 — set them before confirming.`)
+  }
+  if (!capped && questionCountOut === 0) {
+    warnings.push('The printed line layout did not match the standard question pattern.')
+  }
+  const accepted = questionCountOut >= 1 && coverage >= MIN_DETERMINISTIC_COVERAGE
+  if (!accepted && questionCountOut > 0) {
+    warnings.push(`Only ${Math.round(coverage * 100)}% of the document text was recognised (needs ≥ ${Math.round(MIN_DETERMINISTIC_COVERAGE * 100)}%) — deferring to the AI fallback.`)
+  }
+
+  return { meta, sections: outSections, questionCount: questionCountOut, warnings, note: '', accepted, coverage }
+}
+
 function extractJsonObject(raw: string): unknown {
   let text = String(raw || '').trim()
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
@@ -399,6 +749,8 @@ function extractJsonObject(raw: string): unknown {
 
 export interface ParsePaperFileResult {
   status: 'parsed' | 'scanned' | 'unrecognized'
+  /** Which engine produced the result — deterministic layout rules or AI. */
+  method: 'deterministic' | 'gemini'
   message: string
   sections: ParsedSection[]
   meta: ParsedMeta
@@ -471,6 +823,7 @@ export const parsePaperFile = onCall(
     if (text.length < MIN_TEXT_CHARS) {
       const result: ParsePaperFileResult = {
         status: 'scanned',
+        method: 'deterministic',
         message:
           'No readable text was found in this file — it looks like a scanned image or an image-based PDF. ' +
           'Upload the digital PDF/DOCX instead, or type the questions in manually. Scanned-image support is planned for a later update.',
@@ -484,9 +837,66 @@ export const parsePaperFile = onCall(
       return result
     }
 
+    // Deterministic first: standard printed layouts parse on the server alone.
+    const deterministic = deterministicParse(text)
+    if (deterministic.accepted) {
+      await db.collection('ai_generation_logs').add({
+        userId: uid,
+        collegeId,
+        provider: 'none',
+        model: 'deterministic-layout-parser',
+        method: 'deterministic',
+        kind: 'paper-parse',
+        paperId,
+        numQuestions: deterministic.questionCount,
+        config: { fileKind: extracted.kind, textLength: text.length, coverage: Math.round(deterministic.coverage * 100) / 100 },
+        generationTime: 0,
+        savedIds: [],
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+      logger.info('[PaperParsing] Paper parsed deterministically (no AI, no writes)', {
+        paperId,
+        collegeId,
+        questionCount: deterministic.questionCount,
+        coverage: Math.round(deterministic.coverage * 100),
+      })
+      const result: ParsePaperFileResult = {
+        status: 'parsed',
+        method: 'deterministic',
+        message:
+          `Recognised ${deterministic.questionCount} question(s) straight from the printed layout — no AI was used. ` +
+          'Review every question — especially marks — before you confirm.',
+        sections: deterministic.sections,
+        meta: deterministic.meta,
+        questionCount: deterministic.questionCount,
+        warnings: deterministic.warnings,
+        fileKind: extracted.kind,
+        textLength: text.length,
+      }
+      return result
+    }
+
+    // Unusual layout (or nothing recognised) — fall back to Gemini. With no
+    // key configured the paper stays manually editable instead of failing.
     const client = geminiClient()
     if (!client) {
-      throw new HttpsError('failed-precondition', 'AI parsing is not configured on the server yet. Add the questions manually for now.')
+      const partial =
+        deterministic.questionCount > 0
+          ? `A rule-based pass found ${deterministic.questionCount} question(s) but the layout was too unusual to trust, `
+          : ''
+      const result: ParsePaperFileResult = {
+        status: 'unrecognized',
+        method: 'deterministic',
+        message:
+          `${partial}AI parsing is not configured on the server, so nothing was transcribed. Add the questions manually for now.`,
+        sections: [],
+        meta: { ...EMPTY_META },
+        questionCount: 0,
+        warnings: deterministic.warnings,
+        fileKind: extracted.kind,
+        textLength: text.length,
+      }
+      return result
     }
 
     const startedAt = Date.now()
@@ -517,10 +927,11 @@ export const parsePaperFile = onCall(
       collegeId,
       provider: 'gemini',
       model: GEMINI_PARSE_MODEL,
+      method: 'gemini',
       kind: 'paper-parse',
       paperId,
       numQuestions: parsed.questionCount,
-      config: { fileKind: extracted.kind, textLength: text.length },
+      config: { fileKind: extracted.kind, textLength: text.length, deterministicCoverage: Math.round(deterministic.coverage * 100) / 100 },
       generationTime: Date.now() - startedAt,
       savedIds: [],
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -535,6 +946,7 @@ export const parsePaperFile = onCall(
 
     const result: ParsePaperFileResult = {
       status: parsed.sections.length > 0 ? 'parsed' : 'unrecognized',
+      method: 'gemini',
       message:
         parsed.sections.length > 0
           ? `Transcribed ${parsed.questionCount} question(s) from the file. Review every question — especially marks — before you confirm.`
