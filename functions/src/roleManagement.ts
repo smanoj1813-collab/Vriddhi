@@ -69,6 +69,33 @@ export const grantUserRole = onCall(
     const previousCollegeId = existingClaims.collegeId ?? null
     const roleChanged = previousRole !== role || previousCollegeId !== collegeId
 
+    // Refuse to demote a superadmin.
+    //
+    // Granting a lesser role to a superadmin's own address deletes
+    // superadmins/{uid} and rewrites users/{uid}.role — and callerIsSuperadmin()
+    // reads exactly those two places. So the caller silently revokes the one
+    // privilege that authorises this very function, with no way back through
+    // the UI: every later call is rejected before it can repair anything.
+    // Worse, claims are not what gates it, so a still-valid superadmin ID
+    // token does not help.
+    //
+    // Demotion should be deliberate and auditable, so it belongs in a
+    // service-account script rather than a form field.
+    if (role !== 'superadmin' && (await callerIsSuperadmin(authUser.uid))) {
+      if (authUser.uid === request.auth.uid) {
+        throw new HttpsError(
+          'failed-precondition',
+          'This is your own superadmin account. Demoting it would lock you out of every ' +
+            'privileged action with no way to undo it from the app. Use a service-account ' +
+            'script (scripts/restore-superadmin.mjs has the inverse operation) if you intend this.'
+        )
+      }
+      throw new HttpsError(
+        'failed-precondition',
+        `${email} is a superadmin. Demote them with a service-account script so the change is deliberate.`
+      )
+    }
+
     await admin.auth().setCustomUserClaims(authUser.uid, {
       ...existingClaims, role, collegeId, mustChangePassword: created || existingClaims.mustChangePassword === true,
     })

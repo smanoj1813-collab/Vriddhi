@@ -15,6 +15,7 @@
     "deploy:functions": "npm --prefix functions run build && firebase deploy --only functions --project vriddhi-academic",
     "deploy:hosting": "npm run build && firebase deploy --only hosting --project vriddhi-academic",
     "identity:doctor": "node scripts/identity-doctor.mjs",
+    "identity:restore-superadmin": "node scripts/restore-superadmin.mjs",
     "build:functions": "npm --prefix functions run build",
     "test:functions:unit": "npm --prefix functions run test:unit",
     "test:rules": "npm --prefix functions run test:rules"
