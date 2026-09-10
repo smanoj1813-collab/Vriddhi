@@ -28,6 +28,18 @@ export interface ClassSchedule {
   notes: string
   createdAt: string
   updatedAt: string
+  // ─── Slice 2 ────────────────────────────────────────────────────────────
+  // Backlink to the recurring slot this session was generated from. Absent on
+  // ad-hoc sessions; present on everything the timetable produced.
+  weeklyScheduleId?: string
+  /** Real topic references (S2.3); `topicsCovered` stays the display text. */
+  topicIds?: string[]
+  /** Scheduled contact minutes, derived from startTime/endTime. */
+  durationMinutes?: number
+  /** 'weekly-schedule' when materialised from the timetable, else 'adhoc'. */
+  source?: string
+  attendanceMarked?: boolean
+  presentCount?: number
 }
 
 export interface BulkScheduleRow {

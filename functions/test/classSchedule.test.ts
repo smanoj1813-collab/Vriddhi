@@ -414,3 +414,222 @@ describe('materialisation idempotency (end-to-end on the pure core)', () => {
     assert.equal(new Set(ids).size, 2)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// S2.2 — one session identity, one writer
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+  adhocSessionId,
+  buildAdhocSessionDoc,
+  ensureSessionId,
+  normalizeSessionDate,
+  shortHash,
+  slugify,
+  subjectKey,
+  validateEnsureInput,
+} from '../src/classSchedule'
+
+describe('normalizeSessionDate', () => {
+  it('passes a canonical date key straight through', () => {
+    assert.equal(normalizeSessionDate('2026-09-10'), '2026-09-10')
+  })
+
+  it('reduces an ISO datetime to its date', () => {
+    // scheduleApi.createSchedule wrote these before S2.2.
+    assert.equal(normalizeSessionDate('2026-09-10T09:00:00.000Z'), '2026-09-10')
+    assert.equal(normalizeSessionDate('2026-09-10T00:00:00Z'), '2026-09-10')
+  })
+
+  it('reduces a Firestore Timestamp to its date', () => {
+    // attendanceApi.createClassSession wrote these.
+    const timestamp = { toDate: () => new Date(Date.UTC(2026, 8, 10, 4, 30)) }
+    assert.equal(normalizeSessionDate(timestamp), '2026-09-10')
+  })
+
+  it('reduces a raw Timestamp JSON shape', () => {
+    const seconds = Math.floor(Date.UTC(2026, 8, 10, 12, 0) / 1000)
+    assert.equal(normalizeSessionDate({ seconds }), '2026-09-10')
+    assert.equal(normalizeSessionDate({ _seconds: seconds }), '2026-09-10')
+  })
+
+  it('reduces a JS Date', () => {
+    assert.equal(normalizeSessionDate(new Date(Date.UTC(2026, 8, 10))), '2026-09-10')
+  })
+
+  it('returns empty rather than inventing a date', () => {
+    assert.equal(normalizeSessionDate(''), '')
+    assert.equal(normalizeSessionDate(null), '')
+    assert.equal(normalizeSessionDate(undefined), '')
+    assert.equal(normalizeSessionDate('tomorrow'), '')
+    assert.equal(normalizeSessionDate('10/09/2026'), '')
+    assert.equal(normalizeSessionDate(new Date('nonsense')), '')
+  })
+})
+
+describe('slugify / shortHash', () => {
+  it('makes free text safe for a document id', () => {
+    assert.equal(slugify('Data Structures'), 'data-structures')
+    assert.equal(slugify('BCA/301'), 'bca-301')
+    assert.equal(slugify('  R&D (Lab) '), 'r-d-lab')
+    assert.equal(slugify(''), '')
+    assert.equal(slugify('x'.repeat(80), 10).length, 10)
+  })
+
+  it('hashes deterministically and separates similar inputs', () => {
+    assert.equal(shortHash('a'), shortHash('a'))
+    assert.match(shortHash('a'), /^[0-9a-f]{8}$/)
+    assert.notEqual(shortHash('a'), shortHash('b'))
+    // Not a prefix/rotation hash: small changes change everything.
+    assert.notEqual(shortHash('BCA301'), shortHash('BCA302'))
+  })
+})
+
+describe('adhocSessionId', () => {
+  const base = {
+    facultyId: 'faculty-9',
+    date: '2026-09-14',
+    startTime: '09:00',
+    subject: 'Data Structures',
+    subjectCode: 'BCA301',
+    branch: 'BCA',
+    batch: '2026',
+    division: 'A',
+  }
+
+  it('is deterministic — the get-or-create contract', () => {
+    assert.equal(adhocSessionId(base), adhocSessionId(base))
+  })
+
+  it('separates two different classes on the same day', () => {
+    assert.notEqual(adhocSessionId(base), adhocSessionId({ ...base, startTime: '11:00' }))
+    assert.notEqual(adhocSessionId(base), adhocSessionId({ ...base, subjectCode: 'BCA302' }))
+    assert.notEqual(adhocSessionId(base), adhocSessionId({ ...base, division: 'B' }))
+    assert.notEqual(adhocSessionId(base), adhocSessionId({ ...base, facultyId: 'faculty-8' }))
+  })
+
+  it('produces a Firestore-safe id', () => {
+    const id = adhocSessionId(base)
+    assert.match(id, /^adhoc_[a-z0-9-]+_\d{4}-\d{2}-\d{2}_[a-z0-9-]+_[a-z0-9-]+_[0-9a-f]{8}$/)
+    assert.ok(!id.includes('/'))
+    assert.ok(!id.includes('..'))
+  })
+
+  it('still works with only the minimum a session needs', () => {
+    const id = adhocSessionId({ facultyId: 'f1', date: '2026-09-14' })
+    assert.match(id, /^adhoc_f1_2026-09-14_na_class_[0-9a-f]{8}$/)
+  })
+
+  it('refuses to build an id without an owner or a valid date', () => {
+    assert.throws(() => adhocSessionId({ facultyId: '', date: '2026-09-14' }), /facultyId is required/)
+    assert.throws(() => adhocSessionId({ facultyId: 'f1', date: '14-09-2026' }), /yyyy-mm-dd/)
+  })
+})
+
+describe('ensureSessionId', () => {
+  it('prefers the recurring slot when there is one', () => {
+    assert.equal(
+      ensureSessionId({ weeklyScheduleId: 'weekly-1', facultyId: 'f1', date: '2026-09-14' }),
+      'weekly-1_2026-09-14'
+    )
+  })
+
+  it('falls back to the ad-hoc hash when there is not', () => {
+    assert.match(
+      ensureSessionId({ facultyId: 'f1', date: '2026-09-14', startTime: '09:00' }),
+      /^adhoc_f1_2026-09-14_/
+    )
+  })
+
+  it('agrees with slotDateKey for recurring slots', () => {
+    assert.equal(
+      ensureSessionId({ weeklyScheduleId: 'weekly-9', date: '2026-10-05' }),
+      slotDateKey('weekly-9', '2026-10-05')
+    )
+  })
+})
+
+describe('subjectKey', () => {
+  it('prefers the code and falls back to the name', () => {
+    assert.equal(subjectKey('Data Structures', 'BCA301'), 'bca301')
+    assert.equal(subjectKey('Data Structures', ''), 'data-structures')
+    assert.equal(subjectKey('', ''), '')
+  })
+})
+
+describe('buildAdhocSessionDoc', () => {
+  const input = {
+    collegeId: '',
+    date: '2026-09-14',
+    weeklyScheduleId: '',
+    facultyId: 'faculty-9',
+    facultyName: 'Asha Rao',
+    subject: 'Data Structures',
+    subjectCode: 'BCA301',
+    branch: 'BCA',
+    batch: '2026',
+    semester: 3,
+    division: 'A',
+    section: '1',
+    room: 'LH-201',
+    startTime: '09:00',
+    endTime: '10:00',
+    type: 'lecture',
+    topic: 'Stacks',
+  }
+
+  it('matches the canonical shape a materialised session gets', () => {
+    const doc = buildAdhocSessionDoc(input, 'college-1', 'uid-1', new Date(Date.UTC(2026, 8, 1)))
+    assert.equal(doc.date, '2026-09-14')
+    assert.equal(doc.dayOfWeek, 'monday')
+    assert.equal(doc.status, 'scheduled')
+    assert.equal(doc.durationMinutes, 60)
+    assert.deepEqual(doc.topicIds, [])
+    assert.equal(doc.attendanceCount, 0)
+    assert.equal(doc.presentCount, 0)
+    assert.equal(doc.collegeId, 'college-1')
+    assert.equal(doc.createdBy, 'uid-1')
+  })
+
+  it('records that it has no recurring parent', () => {
+    const doc = buildAdhocSessionDoc(input, 'college-1', 'uid-1')
+    assert.equal(doc.source, 'adhoc')
+    assert.equal('weeklyScheduleId' in doc, false)
+    assert.equal(doc.subjectKey, 'bca301')
+  })
+
+  it('keeps the free-text topic the legacy readers look for', () => {
+    // scheduleApi.ts:84 falls back to topicsCovered || topicsPlanned.
+    const withTopic = buildAdhocSessionDoc(input, 'college-1', 'uid-1')
+    assert.deepEqual(withTopic.topicsCovered, ['Stacks'])
+    const withoutTopic = buildAdhocSessionDoc({ ...input, topic: '' }, 'college-1', 'uid-1')
+    assert.deepEqual(withoutTopic.topicsCovered, [])
+  })
+})
+
+describe('validateEnsureInput', () => {
+  it('accepts a minimal request', () => {
+    const parsed = validateEnsureInput({ date: '2026-09-14', facultyId: 'f1' })
+    assert.equal(parsed.date, '2026-09-14')
+    assert.equal(parsed.facultyId, 'f1')
+    assert.equal(parsed.type, 'lecture')
+    assert.equal(parsed.semester, 0)
+  })
+
+  it('normalises an ISO datetime date', () => {
+    assert.equal(validateEnsureInput({ date: '2026-09-14T09:00:00.000Z' }).date, '2026-09-14')
+  })
+
+  it('rejects a request with no usable date', () => {
+    assert.throws(() => validateEnsureInput({ date: 'tomorrow' }), /date is required/)
+    assert.throws(() => validateEnsureInput({}), /date is required/)
+  })
+
+  it('bounds free-text fields instead of storing whatever it is given', () => {
+    assert.equal(validateEnsureInput({ date: '2026-09-14', subject: '  Stacks  ' }).subject, 'Stacks')
+    assert.throws(
+      () => validateEnsureInput({ date: '2026-09-14', subject: 'x'.repeat(500) }),
+      /subject is invalid/
+    )
+  })
+})

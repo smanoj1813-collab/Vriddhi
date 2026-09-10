@@ -126,6 +126,78 @@ export async function cancelWeeklySchedule(
   }
 }
 
+// ─── S2.2: the one writer for a class session ─────────
+
+export interface EnsureSessionInput {
+  date: string // yyyy-mm-dd
+  weeklyScheduleId?: string
+  facultyId?: string
+  facultyName?: string
+  subject?: string
+  subjectCode?: string
+  branch?: string
+  batch?: string
+  semester?: number | string
+  division?: string
+  section?: string
+  room?: string
+  startTime?: string
+  endTime?: string
+  type?: string
+  topic?: string
+}
+
+export interface EnsureSessionResult {
+  id: string
+  created: boolean
+  date: string
+  weeklyScheduleId: string
+  status: string
+  attendanceMarked: boolean
+}
+
+/**
+ * Get-or-create the `classSessions` document for one day+slot.
+ *
+ * This is the single writer shared by the admin schedule form and the faculty
+ * attendance flow, which is what stops a day+slot from ending up with two
+ * documents in different shapes (audit DoD #3). The id is deterministic —
+ * `${weeklyScheduleId}_${date}` for a recurring slot, otherwise a hash of
+ * faculty + date + start time + subject + cohort — so calling it twice never
+ * creates a second session, and an existing session is never overwritten.
+ */
+export async function ensureClassSession(
+  input: EnsureSessionInput
+): Promise<EnsureSessionResult> {
+  const call = httpsCallable<Record<string, unknown>, EnsureSessionResult>(
+    functions,
+    'ensureClassSession'
+  )
+  try {
+    const response = await call({
+      date: input.date,
+      ...(input.weeklyScheduleId ? { weeklyScheduleId: input.weeklyScheduleId } : {}),
+      ...(input.facultyId ? { facultyId: input.facultyId } : {}),
+      ...(input.facultyName ? { facultyName: input.facultyName } : {}),
+      ...(input.subject ? { subject: input.subject } : {}),
+      ...(input.subjectCode ? { subjectCode: input.subjectCode } : {}),
+      ...(input.branch ? { branch: input.branch } : {}),
+      ...(input.batch ? { batch: input.batch } : {}),
+      ...(input.semester !== undefined ? { semester: input.semester } : {}),
+      ...(input.division ? { division: input.division } : {}),
+      ...(input.section ? { section: input.section } : {}),
+      ...(input.room ? { room: input.room } : {}),
+      ...(input.startTime ? { startTime: input.startTime } : {}),
+      ...(input.endTime ? { endTime: input.endTime } : {}),
+      ...(input.type ? { type: input.type } : {}),
+      ...(input.topic ? { topic: input.topic } : {}),
+    })
+    return response.data
+  } catch (error) {
+    throw new Error(toMessage(error, 'The class session could not be created.'))
+  }
+}
+
 // ─── Small date helpers (shared by the admin UI) ──────
 
 export function toDateKey(date: Date): string {

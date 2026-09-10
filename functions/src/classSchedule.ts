@@ -330,6 +330,146 @@ export function buildSessionDoc(slot: WeeklySlot, date: string, now: Date = new 
   }
 }
 
+// ─── S2.2: canonical session identity ───────────────────────────────────────
+//
+// Finding F2: two client writers produced two different `classSessions`
+// payloads — scheduleApi.createSchedule wrote an ISO datetime `date` plus
+// `topicsCovered` and counters, attendanceApi.createClassSession wrote a
+// Timestamp-bearing `ClassSession`, and attendance for a *recurring* slot was
+// keyed on the weeklySchedules id, so no classSessions document existed at all
+// for the class being marked. Three shapes, one collection.
+//
+// The fix is an identity rule both writers can agree on:
+//
+//   * A session generated from a recurring slot is named
+//     `${weeklyScheduleId}_${yyyy-mm-dd}` — already the case since S2.1.
+//   * A session with no recurring parent is named deterministically from what
+//     defines it (faculty + date + start time + subject + cohort), so the same
+//     ad-hoc class marked twice still resolves to one document.
+//
+// `ensureClassSession` is then the single writer: it gets-or-creates under that
+// id, so attendance marks the session that exists instead of creating a
+// parallel one (audit DoD #3).
+
+/** Roles that may only ensure sessions for themselves. */
+export const SELF_SERVICE_ROLES = ['faculty', 'mentor']
+
+/** Everything that is allowed to call ensureClassSession. */
+export const SESSION_WRITE_ROLES = [...SCHEDULING_ROLES, ...SELF_SERVICE_ROLES]
+
+/** Reduce free text to a document-id-safe slug. */
+export function slugify(value: unknown, maximum = 40): string {
+  const slug = String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, maximum)
+  return slug
+}
+
+/**
+ * FNV-1a — small, deterministic, dependency-free. Only used to keep ad-hoc
+ * session ids unique when two classes share every visible field; it is not
+ * security-sensitive.
+ */
+export function shortHash(value: string): string {
+  let hash = 0x811c9dc5
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 0x01000193) >>> 0
+  }
+  return hash.toString(16).padStart(8, '0')
+}
+
+export interface AdhocSessionParts {
+  facultyId: unknown
+  date: unknown
+  startTime: unknown
+  subject: unknown
+  subjectCode: unknown
+  branch: unknown
+  batch: unknown
+  division: unknown
+}
+
+/**
+ * Deterministic id for a session with no recurring parent.
+ *
+ * Visible fields make the id readable in the console; the hash of the same
+ * fields keeps it unique. Two different ad-hoc classes therefore never collide,
+ * and the same class marked twice always resolves to one document.
+ */
+export function adhocSessionId(parts: AdhocSessionParts): string {
+  const faculty = slugify(parts.facultyId)
+  if (!faculty) throw new Error('facultyId is required to build an ad-hoc session id')
+  const date = assertDateKey(parts.date, 'date')
+  const start = slugify(parts.startTime, 10) || 'na'
+  const subject = slugify(parts.subjectCode || parts.subject, 20) || 'class'
+  const signature = [
+    faculty,
+    date,
+    start,
+    subject,
+    slugify(parts.branch, 12),
+    slugify(parts.batch, 12),
+    slugify(parts.division, 12),
+  ].join('|')
+  return `adhoc_${faculty}_${date}_${start}_${subject}_${shortHash(signature)}`
+}
+
+/**
+ * The id a session *should* have, which is how "is there already a session for
+ * this day and slot?" gets answered without a query.
+ */
+export function ensureSessionId(parts: AdhocSessionParts & { weeklyScheduleId?: unknown }): string {
+  const weekly = String(parts.weeklyScheduleId ?? '').trim()
+  if (weekly) return slotDateKey(weekly, String(parts.date))
+  return adhocSessionId(parts)
+}
+
+/**
+ * Older rows store `date` in three different shapes — a `yyyy-mm-dd` string
+ * (scheduleApi), an ISO datetime (some bulk imports) and a Firestore Timestamp
+ * (attendanceApi's session writer). Everything downstream sorts and filters on
+ * the string form, so normalise once, here.
+ *
+ * Returns '' when nothing usable is present rather than guessing a date.
+ */
+export function normalizeSessionDate(value: unknown): string {
+  if (!value) return ''
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+    // Already the canonical form, or an ISO datetime whose date part is it.
+    const head = trimmed.slice(0, 10)
+    return isValidDateKey(head) ? head : ''
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return toDateKey(value)
+  if (typeof value === 'object') {
+    const candidate = value as { toDate?: () => Date; seconds?: number; _seconds?: number }
+    if (typeof candidate.toDate === 'function') {
+      const date = candidate.toDate()
+      return date instanceof Date && !Number.isNaN(date.getTime()) ? toDateKey(date) : ''
+    }
+    const seconds = Number(candidate.seconds ?? candidate._seconds)
+    if (Number.isFinite(seconds) && seconds > 0) return toDateKey(new Date(seconds * 1000))
+  }
+  const numeric = Number(value)
+  if (Number.isFinite(numeric) && numeric > 0) return toDateKey(new Date(numeric))
+  return ''
+}
+
+/**
+ * Normalised join key for the free-text subject strings that tie this domain
+ * together (audit F6). Not a migration — S2.2 just stamps it on new writes so
+ * later slices have something stable to group by.
+ */
+export function subjectKey(subject?: unknown, subjectCode?: unknown): string {
+  const code = slugify(subjectCode, 30)
+  if (code) return code
+  return slugify(subject, 30)
+}
+
 // ─── Staff resolution ───────────────────────────────────────────────────────
 
 interface SchedulingStaff {
@@ -355,6 +495,31 @@ export async function resolveSchedulingStaff(
   const collegeId = String(token.collegeId || user?.collegeId || '')
   if (!userDoc.exists || !SCHEDULING_ROLES.includes(role) || (role !== 'superadmin' && !collegeId)) {
     throw new HttpsError('permission-denied', 'Scheduling administration access is required')
+  }
+  return { uid, role, collegeId, name: String(user?.name || user?.displayName || '') }
+}
+
+/**
+ * Same check as resolveSchedulingStaff, but also lets faculty and mentors
+ * through — they are the ones standing in front of a class. A self-service
+ * caller is pinned to their own uid by ensureClassSession, so a faculty
+ * member can materialise their own lesson but not somebody else's.
+ */
+export async function resolveSessionWriter(
+  uid: string,
+  token: Record<string, unknown>
+): Promise<SchedulingStaff> {
+  const userDoc = await admin.firestore().collection('users').doc(uid).get()
+  const user = userDoc.data()
+  const role = String(token.role || user?.role || '')
+  const collegeId = String(token.collegeId || user?.collegeId || '')
+  if (!userDoc.exists || !SESSION_WRITE_ROLES.includes(role)) {
+    throw new HttpsError('permission-denied', 'Teaching staff access is required')
+  }
+  // Even a superadmin needs a college to file a session under; unlike the
+  // admin-only callables there is nothing meaningful to do without one.
+  if (!collegeId) {
+    throw new HttpsError('permission-denied', 'No college is associated with this account')
   }
   return { uid, role, collegeId, name: String(user?.name || user?.displayName || '') }
 }
@@ -638,6 +803,203 @@ export const cancelWeeklySchedule = onCall(
       cancelled,
       skipped,
       slotDeactivated: true,
+    }
+  }
+)
+
+// ─── S2.2: ensureClassSession — the one writer for a class session ───────────
+
+export interface EnsureSessionInput {
+  collegeId: string
+  date: string
+  weeklyScheduleId: string
+  facultyId: string
+  facultyName: string
+  subject: string
+  subjectCode: string
+  branch: string
+  batch: string
+  semester: number
+  division: string
+  section: string
+  room: string
+  startTime: string
+  endTime: string
+  type: string
+  topic: string
+}
+
+/** Bounded, type-coerced copy of the client's session request. */
+export function validateEnsureInput(data: unknown): EnsureSessionInput {
+  const raw = (data || {}) as Record<string, unknown>
+  const date = normalizeSessionDate(raw.date ?? raw.dateStr)
+  if (!date) throw new HttpsError('invalid-argument', 'date is required as yyyy-mm-dd')
+
+  const semester = Number(raw.semester)
+  return {
+    collegeId: optionalFilter(raw.collegeId, 'collegeId', 200),
+    date,
+    weeklyScheduleId: optionalFilter(raw.weeklyScheduleId, 'weeklyScheduleId', 200),
+    facultyId: optionalFilter(raw.facultyId, 'facultyId', 200),
+    facultyName: optionalFilter(raw.facultyName, 'facultyName', 200),
+    subject: optionalFilter(raw.subject, 'subject', 200),
+    subjectCode: optionalFilter(raw.subjectCode, 'subjectCode', 100),
+    branch: optionalFilter(raw.branch, 'branch', 100),
+    batch: optionalFilter(raw.batch, 'batch', 100),
+    semester: Number.isFinite(semester) ? semester : 0,
+    division: optionalFilter(raw.division, 'division', 100),
+    section: optionalFilter(raw.section, 'section', 100),
+    room: optionalFilter(raw.room, 'room', 100),
+    startTime: optionalFilter(raw.startTime, 'startTime', 10),
+    endTime: optionalFilter(raw.endTime, 'endTime', 10),
+    type: optionalFilter(raw.type, 'type', 50) || 'lecture',
+    topic: optionalFilter(raw.topic, 'topic', 300),
+  }
+}
+
+/**
+ * Payload for a session created on demand (no recurring parent). Mirrors
+ * buildSessionDoc's canonical shape so the two creation paths cannot drift.
+ */
+export function buildAdhocSessionDoc(
+  input: EnsureSessionInput,
+  collegeId: string,
+  uid: string,
+  now: Date = new Date()
+): admin.firestore.DocumentData {
+  const day = coerceDayOfWeek(weekdayOf(input.date))
+  const stamp = now.toISOString()
+  const doc = buildSessionDoc(
+    {
+      id: '',
+      collegeId,
+      subject: input.subject,
+      subjectCode: input.subjectCode,
+      facultyId: input.facultyId,
+      facultyName: input.facultyName,
+      branch: input.branch,
+      batch: input.batch,
+      semester: input.semester,
+      division: input.division,
+      section: input.section,
+      room: input.room,
+      dayOfWeek: day || undefined,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      type: input.type,
+    },
+    input.date,
+    now
+  )
+  // An ad-hoc session has no recurring parent, so the backlink is absent by
+  // design; `source` is what tells the two apart later.
+  delete doc.weeklyScheduleId
+  return {
+    ...doc,
+    source: 'adhoc',
+    subjectKey: subjectKey(input.subject, input.subjectCode),
+    // Legacy readers look for the free-text topic list (scheduleApi.ts:84).
+    topicsCovered: input.topic ? [input.topic] : [],
+    createdBy: uid,
+    createdAt: stamp,
+    updatedAt: stamp,
+  }
+}
+
+/**
+ * Get-or-create one class session. This is the single writer both the admin
+ * schedule form and the faculty attendance flow go through, so a day+slot can
+ * only ever resolve to one document (audit DoD #3).
+ *
+ * - `weeklyScheduleId` given: the id is `${weeklyScheduleId}_${date}` and the
+ *   server builds the payload from the stored slot, so a client cannot invent
+ *   a subject or room for somebody else's recurring class.
+ * - Otherwise: the id is derived from faculty + date + start time + subject +
+ *   cohort, so the same ad-hoc class always resolves to the same document.
+ *
+ * Returns the session either way, with `created` telling the caller whether
+ * this call created it. An existing session is never overwritten.
+ */
+export const ensureClassSession = onCall(
+  { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 60, minInstances: 0, maxInstances: 20 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveSessionWriter(uid, request.auth?.token || {})
+    const input = validateEnsureInput(request.data)
+
+    const privileged = SCHEDULING_ROLES.includes(staff.role)
+    // Self-service callers may only touch their own classes.
+    const facultyId = privileged ? input.facultyId || staff.uid : staff.uid
+    if (!privileged && input.facultyId && input.facultyId !== staff.uid) {
+      throw new HttpsError('permission-denied', 'You can only manage your own class sessions')
+    }
+    if (!facultyId) throw new HttpsError('invalid-argument', 'facultyId is required')
+
+    const db = admin.firestore()
+
+    // A recurring slot is authoritative about what the class actually is.
+    let slot: WeeklySlot | null = null
+    if (input.weeklyScheduleId) {
+      const slotSnap = await db.collection('weeklySchedules').doc(input.weeklyScheduleId).get()
+      if (!slotSnap.exists) throw new HttpsError('not-found', 'Weekly schedule not found')
+      if (String(slotSnap.data()?.collegeId || '') !== staff.collegeId) {
+        throw new HttpsError('permission-denied', 'Weekly schedule belongs to another college')
+      }
+      slot = { id: slotSnap.id, ...(slotSnap.data() as Record<string, unknown>) }
+    }
+
+    // One shape either way; ensureSessionId prefers weeklyScheduleId when the
+    // slot supplies one and falls back to the ad-hoc hash when it does not.
+    const target: AdhocSessionParts & { weeklyScheduleId?: unknown } = {
+      weeklyScheduleId: slot ? slot.id : '',
+      facultyId: slot ? slot.facultyId : facultyId,
+      date: input.date,
+      startTime: slot ? slot.startTime : input.startTime,
+      subject: slot ? slot.subject : input.subject,
+      subjectCode: slot ? slot.subjectCode : input.subjectCode,
+      branch: slot ? slot.branch : input.branch,
+      batch: slot ? slot.batch : input.batch,
+      division: slot ? slot.division : input.division,
+    }
+    const sessionId = ensureSessionId(target)
+    const ref = db.collection('classSessions').doc(sessionId)
+
+    const result = await db.runTransaction(async (txn) => {
+      const existing = await txn.get(ref)
+      if (existing.exists) {
+        // Already there — this is the normal case once a term is generated.
+        // Deliberately not overwritten: the stored session is the record.
+        return { id: sessionId, created: false, data: existing.data() || {} }
+      }
+      const now = new Date()
+      const payload = slot
+        ? {
+            ...buildSessionDoc(slot, input.date, now),
+            subjectKey: subjectKey(slot.subject, slot.subjectCode),
+            topicsCovered: input.topic ? [input.topic] : [],
+            createdBy: uid,
+          }
+        : buildAdhocSessionDoc({ ...input, facultyId }, staff.collegeId, uid, now)
+      txn.set(ref, payload)
+      return { id: sessionId, created: true, data: payload }
+    })
+
+    logger.info('[classSchedule] ensureClassSession', {
+      collegeId: staff.collegeId,
+      sessionId,
+      created: result.created,
+      weeklyScheduleId: input.weeklyScheduleId || null,
+      actorUid: uid,
+    })
+
+    return {
+      id: result.id,
+      created: result.created,
+      date: input.date,
+      weeklyScheduleId: input.weeklyScheduleId || '',
+      status: String(result.data.status || 'scheduled'),
+      attendanceMarked: Boolean(result.data.attendanceMarked),
     }
   }
 )

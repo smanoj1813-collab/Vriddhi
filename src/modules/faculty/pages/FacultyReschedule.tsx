@@ -9,7 +9,6 @@ import {
   query,
   where,
   getDocs,
-  addDoc,
   updateDoc,
   doc,
   serverTimestamp,
@@ -17,6 +16,8 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
 import { useAuth } from '@/modules/auth/context/AuthContext'
+import { ensureClassSession } from '@/modules/admin/api/classSessionApi'
+import { normalizeSessionDate, slotDateKey } from '@/shared/utils/sessionDate'
 
 interface ScheduleItem {
   id: string
@@ -33,6 +34,10 @@ interface ScheduleItem {
   originalTime?: string
   reason?: string
   collegeId?: string
+  /** Set when the row came from the recurring timetable (S2.2). */
+  weeklyScheduleId?: string
+  /** False for a recurring row with no classSessions document yet. */
+  materialised?: boolean
 }
 
 export default function FacultyReschedule() {
@@ -74,7 +79,9 @@ export default function FacultyReschedule() {
             id: d.id,
             subject: data.subject || 'Subject',
             topic: data.topic || data.topicsPlanned?.[0] || 'General Session',
-            date: data.date || new Date().toISOString().split('T')[0],
+            // Rows predate the one-session schema and may store an ISO
+            // datetime or a Timestamp here.
+            date: normalizeSessionDate(data.date) || new Date().toISOString().split('T')[0],
             time: data.startTime || data.time || '10:00',
             duration: data.duration || '1 hr',
             room: data.room || 'Room 101',
@@ -85,6 +92,8 @@ export default function FacultyReschedule() {
             originalTime: data.originalTime,
             reason: data.reason,
             collegeId: data.collegeId,
+            weeklyScheduleId: data.weeklyScheduleId,
+            materialised: true,
           })
         })
       }
@@ -103,7 +112,12 @@ export default function FacultyReschedule() {
           weeklySnap.docs.forEach((d, idx) => {
             const data = d.data()
             loaded.push({
-              id: `sched_${d.id}`,
+              // S2.2: this used to be `sched_${weeklyId}` — a third id shape
+              // that matched nothing else in the collection. Using the same
+              // deterministic id the materialiser and the attendance flow use
+              // means rescheduling this row lands on the session that already
+              // exists for the slot, instead of creating a parallel one.
+              id: slotDateKey(d.id, todayStr),
               subject: data.subject || 'Subject',
               topic: `${data.subject || 'Class'} (${data.branch || ''})`,
               date: todayStr,
@@ -114,6 +128,8 @@ export default function FacultyReschedule() {
               students: 35,
               status: 'scheduled',
               collegeId: data.collegeId,
+              weeklyScheduleId: d.id,
+              materialised: false,
             })
           })
         }
@@ -145,11 +161,23 @@ export default function FacultyReschedule() {
     setSubmitting(true)
 
     try {
-      if (selected.id.startsWith('sched_')) {
-        // Create new classSession record in Firestore
-        const docRef = await addDoc(collection(db, 'classSessions'), {
-          collegeId,
+      if (selected.materialised === false) {
+        // S2.2: this used to `addDoc` a fourth session shape (topic/time/
+        // students fields, status 'rescheduled'). Go through the single
+        // get-or-create writer so the row becomes the canonical session for
+        // this day+slot, then stamp the reschedule metadata onto it.
+        const ensured = await ensureClassSession({
+          date: newDate,
+          weeklyScheduleId: selected.weeklyScheduleId,
+          facultyId: user?.uid || undefined,
+          facultyName: user?.name || undefined,
           subject: selected.subject,
+          batch: selected.batch,
+          room: newRoom || selected.room,
+          startTime: newTime,
+        })
+
+        await updateDoc(doc(db, 'classSessions', ensured.id), {
           topic: selected.topic,
           date: newDate,
           startTime: newTime,
@@ -159,16 +187,15 @@ export default function FacultyReschedule() {
           originalTime: selected.time,
           status: 'rescheduled',
           reason: reason || 'Schedule adjustment',
-          createdBy: user?.uid || '',
-          createdByName: user?.name || 'Faculty',
-          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         })
 
         setSchedules(prev => prev.map(s =>
           s.id === selected.id
             ? {
                 ...s,
-                id: docRef.id,
+                id: ensured.id,
+                materialised: true,
                 originalDate: s.date,
                 originalTime: s.time,
                 date: newDate,
@@ -225,9 +252,12 @@ export default function FacultyReschedule() {
     }
   }
 
-  const handleCancel = async (id: string) => {
+  const handleCancel = async (item: ScheduleItem) => {
+    const id = item.id
     try {
-      if (!id.startsWith('sched_')) {
+      // A recurring row with no document behind it has nothing to cancel in
+      // Firestore; the row stays cancelled for this session only.
+      if (item.materialised !== false) {
         await updateDoc(doc(db, 'classSessions', id), {
           status: 'cancelled',
           updatedAt: serverTimestamp(),
@@ -388,7 +418,7 @@ export default function FacultyReschedule() {
                           Reschedule
                         </button>
                         <button
-                          onClick={() => handleCancel(item.id)}
+                          onClick={() => handleCancel(item)}
                           className="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20 text-sm font-medium hover:bg-rose-500/20 transition-all shadow-sm"
                         >
                           Cancel
