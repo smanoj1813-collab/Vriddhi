@@ -37,7 +37,18 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { extractRawText } from 'mammoth'
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
+// Type-only import: erased at compile time, so pdfjs is NOT loaded here.
+//
+// pdfjs-dist's legacy build probes for `canvas` (and polyfills DOMMatrix /
+// Path2D) the moment it is required, which costs seconds. Because index.ts
+// pulls this module in, that cost landed on every function's cold start AND
+// on the deploy-time discovery step, where the CLI allows only 10s to
+// enumerate backends — large deploys failed with "User code failed to load.
+// Cannot determine backend specification. Timeout after 10000".
+//
+// Firebase's own guidance for that error is to defer initialization instead
+// of raising the timeout, so the library is now imported on first PDF parse.
+import type * as PdfJsLib from 'pdfjs-dist/legacy/build/pdf.js'
 import { SchemaType, type GenerateContentRequest, type ResponseSchema } from '@google/generative-ai'
 import { geminiClient } from './config/aiProviders'
 import {
@@ -106,6 +117,22 @@ export interface ExtractedPaperText {
   pages: number
 }
 
+/** Cached pdfjs namespace, loaded on first PDF parse. */
+let pdfjsModule: typeof PdfJsLib | null = null
+
+/**
+ * Loads pdfjs-dist on demand. The legacy build is CJS, so depending on how
+ * the runtime interops it the namespace lands either on the module object or
+ * on `.default`; both are handled rather than assumed.
+ */
+async function loadPdfJs(): Promise<typeof PdfJsLib> {
+  if (!pdfjsModule) {
+    const loaded: any = await import('pdfjs-dist/legacy/build/pdf.js')
+    pdfjsModule = (loaded && loaded.getDocument ? loaded : loaded?.default) as typeof PdfJsLib
+  }
+  return pdfjsModule
+}
+
 /**
  * Pulls readable text out of a digital PDF or DOCX buffer.
  * Throws failed-precondition when no usable text layer exists (i.e. the file
@@ -113,13 +140,14 @@ export interface ExtractedPaperText {
  */
 export async function extractPaperText(buffer: Buffer, contentType: string): Promise<ExtractedPaperText> {
   if (contentType === PDF_TYPE) {
+    const pdfjsLib = await loadPdfJs()
     // maxPages is honoured by the runtime but missing from the published
     // typings, so the params are widened for the call.
     const params = {
       data: new Uint8Array(buffer),
       verbosity: 0,
       maxPages: MAX_PARSE_PAGES,
-    } as unknown as Parameters<typeof pdfjsLib.getDocument>[0]
+    } as unknown as Parameters<typeof PdfJsLib.getDocument>[0]
     const task = pdfjsLib.getDocument(params)
     const doc = await task.promise
     try {
