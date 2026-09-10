@@ -40,9 +40,18 @@ import {
   UploadFile as UploadIcon,
   Download as DownloadIcon,
   CalendarToday as CalendarIcon,
+  EventBusy as EventBusyIcon,
+  AutoAwesomeMotion as MaterialiseIcon,
 } from '@mui/icons-material'
 import { useAdminSchedule } from '../hooks/useAdminSchedule'
 import { useAuth } from '../../auth/context/AuthContext'
+import {
+  generateClassSessions,
+  cancelWeeklySchedule,
+  defaultTermWindow,
+  isValidDateKey,
+  type GenerateSessionsResult,
+} from '../api/classSessionApi'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -136,6 +145,15 @@ const AdminClassSchedule: React.FC = () => {
   })
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
   const [csvText, setCsvText] = useState('')
+
+  // ─── Slice 2: materialise weekly slots into real class sessions ────────
+  // The grid above is the *plan*; classSessions are the *actual*. Until Slice 2
+  // nothing connected them, so a class only existed once somebody typed it in.
+  const [generateOpen, setGenerateOpen] = useState(false)
+  const [generateWindow, setGenerateWindow] = useState(() => defaultTermWindow())
+  const [generating, setGenerating] = useState(false)
+  const [generateResult, setGenerateResult] = useState<GenerateSessionsResult | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   // ─── Apply prefill from AdminCurriculum "Schedule Class" ──────────────
   useEffect(() => {
@@ -260,6 +278,83 @@ const AdminClassSchedule: React.FC = () => {
     }
   }
 
+  // ─── Slice 2 S2.1: generate / cancel real class sessions ────────────────
+  // Server-side callables: the college is taken from the caller's auth claim,
+  // not from localStorage, and generation is idempotent so a double-click
+  // cannot double-book a term.
+
+  const handleOpenGenerate = () => {
+    setGenerateWindow(defaultTermWindow())
+    setGenerateResult(null)
+    setGenerateOpen(true)
+  }
+
+  const handleGenerate = async () => {
+    const { from, to } = generateWindow
+    if (!isValidDateKey(from) || !isValidDateKey(to)) {
+      setSnackbar({ open: true, message: 'Enter both dates as yyyy-mm-dd', severity: 'error' })
+      return
+    }
+    if (from > to) {
+      setSnackbar({ open: true, message: 'The start date must be on or before the end date', severity: 'error' })
+      return
+    }
+    setGenerating(true)
+    setGenerateResult(null)
+    try {
+      const result = await generateClassSessions({ from, to })
+      setGenerateResult(result)
+      setSnackbar({
+        open: true,
+        severity: 'success',
+        message:
+          result.created === 0
+            ? `Already up to date — ${result.skippedExisting} session(s) existed for ${result.slotsScanned} slot(s), nothing new created.`
+            : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).`,
+      })
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: error instanceof Error ? error.message : 'Failed to generate class sessions',
+      })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleCancelSlot = async (schedule: typeof daySchedules[0]) => {
+    const confirmed = window.confirm(
+      `Cancel "${schedule.subject}" (${schedule.dayOfWeek} ${schedule.startTime})?\n\n` +
+        'Every unmarked session it generated from today onwards will be cancelled and the slot ' +
+        'will be switched off. Past and already-marked sessions are left untouched.'
+    )
+    if (!confirmed) return
+    setCancellingId(schedule.id)
+    try {
+      const result = await cancelWeeklySchedule({
+        weeklyScheduleId: schedule.id,
+        reason: 'Cancelled from the timetable manager',
+      })
+      setSnackbar({
+        open: true,
+        severity: 'success',
+        message:
+          result.cancelled === 0
+            ? 'Slot switched off — no future unmarked sessions needed cancelling.'
+            : `Slot switched off and ${result.cancelled} future session(s) cancelled.`,
+      })
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: error instanceof Error ? error.message : 'Failed to cancel the weekly schedule',
+      })
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
   // ─── Bulk Upload ──────────────────────────────────────
   const handleDownloadTemplate = () => {
     const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv' })
@@ -359,6 +454,13 @@ const AdminClassSchedule: React.FC = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<MaterialiseIcon />}
+            onClick={handleOpenGenerate}
+          >
+            Generate Sessions
+          </Button>
           <Button
             variant="outlined"
             startIcon={<UploadIcon />}
@@ -513,6 +615,18 @@ const AdminClassSchedule: React.FC = () => {
                       <IconButton size="small" onClick={() => handleOpen(schedule)}>
                         <EditIcon fontSize="small" />
                       </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Cancel slot and its future sessions">
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="warning"
+                          disabled={cancellingId === schedule.id}
+                          onClick={() => handleCancelSlot(schedule)}
+                        >
+                          <EventBusyIcon fontSize="small" />
+                        </IconButton>
+                      </span>
                     </Tooltip>
                     <Tooltip title="Delete">
                       <IconButton size="small" color="error" onClick={() => handleDelete(schedule.id)}>
@@ -839,6 +953,49 @@ const AdminClassSchedule: React.FC = () => {
             disabled={isBulkCreating || !csvText.trim()}
           >
             {isBulkCreating ? 'Uploading...' : 'Upload'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ─── Slice 2: Generate class sessions from the weekly timetable ──── */}
+      <Dialog open={generateOpen} onClose={() => setGenerateOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Generate class sessions</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Turns the active weekly timetable into real class sessions that faculty can mark
+            attendance and topic coverage against. Running it twice over the same range is safe —
+            each slot-day maps to one session, so nothing is duplicated.
+          </Typography>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="From"
+              type="date"
+              value={generateWindow.from}
+              onChange={e => setGenerateWindow(prev => ({ ...prev, from: e.target.value }))}
+              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth
+            />
+            <TextField
+              label="To (max 92 days)"
+              type="date"
+              value={generateWindow.to}
+              onChange={e => setGenerateWindow(prev => ({ ...prev, to: e.target.value }))}
+              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth
+            />
+          </Stack>
+          {generateResult && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {generateResult.created} created · {generateResult.skippedExisting} already existed ·{' '}
+              {generateResult.slotsScanned} active slot(s) × {generateResult.scheduledOccurrences} occurrence(s)
+              in range.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setGenerateOpen(false)}>Close</Button>
+          <Button variant="contained" onClick={handleGenerate} disabled={generating}>
+            {generating ? 'Generating...' : generateResult ? 'Generate again' : 'Generate'}
           </Button>
         </DialogActions>
       </Dialog>
