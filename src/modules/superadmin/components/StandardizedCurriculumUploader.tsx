@@ -266,17 +266,40 @@ export const StandardizedCurriculumUploader: React.FC<StandardizedCurriculumUplo
                       <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>
                         Modules
                       </Typography>
-                      <Table size="small">
+                      {/* tableLayout fixed: without it a long module name or a
+                          run of long topics widens the table past its panel
+                          instead of wrapping inside it. */}
+                      <Table size="small" sx={{ tableLayout: 'fixed' }}>
                         <TableBody>
                           {course.modules.map((m) => (
                             <TableRow key={m.id}>
                               <TableCell sx={{ width: 40, fontWeight: 600 }}>{m.moduleNo}</TableCell>
-                              <TableCell>{m.moduleName}</TableCell>
+                              <TableCell sx={{ width: '30%', overflowWrap: 'anywhere' }}>{m.moduleName}</TableCell>
                               <TableCell sx={{ width: 60 }}>{m.hours}h</TableCell>
-                              <TableCell>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {/* minWidth 0 lets the flex cell shrink below its
+                                  content width, which is what allows wrapping
+                                  to happen at all. */}
+                              <TableCell sx={{ minWidth: 0 }}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: '100%' }}>
                                   {m.topics.slice(0, 3).map((t: string, i: number) => (
-                                    <Chip key={i} label={t} size="small" variant="outlined" />
+                                    <Chip
+                                      key={i}
+                                      label={t}
+                                      size="small"
+                                      variant="outlined"
+                                      sx={{
+                                        maxWidth: '100%',
+                                        height: 'auto',
+                                        '& .MuiChip-label': {
+                                          // Long single topics overflowed the
+                                          // chip because chip labels default to
+                                          // nowrap; let them break instead.
+                                          whiteSpace: 'normal',
+                                          overflowWrap: 'anywhere',
+                                          py: 0.25,
+                                        },
+                                      }}
+                                    />
                                   ))}
                                   {m.topics.length > 3 && (
                                     <Chip label={`+${m.topics.length - 3} more`} size="small" />

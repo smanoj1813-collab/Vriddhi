@@ -365,7 +365,9 @@ export function CurriculumReviewTable({
                           </Typography>
                         ) : (
                           <TableContainer>
-                            <Table size="small">
+                            {/* Fixed layout keeps wide module names and topic
+                                lists from widening the table past the card. */}
+                            <Table size="small" sx={{ tableLayout: "fixed" }}>
                               <TableHead>
                                 <TableRow sx={{ backgroundColor: "background.default" }}>
                                   <TableCell width={50}>#</TableCell>
@@ -398,7 +400,19 @@ export function CurriculumReviewTable({
                                               {mod.moduleName ?? mod.title ?? mod.name ?? "Untitled"}
                                             </Typography>
                                             {mod.topics && mod.topics.length > 0 && (
-                                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                                              <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                                sx={{
+                                                  display: "block",
+                                                  mt: 0.5,
+                                                  // Joined topic lists could run
+                                                  // past the card edge; break
+                                                  // them instead.
+                                                  overflowWrap: "anywhere",
+                                                  wordBreak: "break-word",
+                                                }}
+                                              >
                                                 {mod.topics.slice(0, 3).join(" · ")}
                                                 {mod.topics.length > 3 && ` +${mod.topics.length - 3} more`}
                                               </Typography>
