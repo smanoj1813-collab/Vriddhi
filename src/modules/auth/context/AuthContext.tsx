@@ -47,20 +47,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resolution = await resolveIdentity(fbUser.uid, fbUser.email || undefined);
     let data = resolution.user;
 
-    // Self-heal once: the Firestore rules take the authoritative role from the
-    // ID-token claim, while a profile document may exist without one (accounts
-    // created before the claims work, or through the Identity Toolkit REST API
-    // which cannot set claims). Those accounts sign in successfully and then see
-    // "permission denied" everywhere. `syncMyIdentity` re-issues the claim from
-    // users/{uid} — a document whose role/college fields are not self-writable —
-    // and the token is refreshed so the very next read is authorised.
+    // Self-heal once: the Firestore rules take the authoritative role AND
+    // college from the ID-token claims, while a profile document may exist
+    // without the matching claims (accounts created before the claims work,
+    // or through the Identity Toolkit REST API which cannot set claims). Those
+    // accounts sign in successfully and then see "permission denied" — on the
+    // whole dashboard for a missing role claim, or only on writes (staff
+    // attendance) for a missing/wrong collegeId claim. `syncMyIdentity`
+    // re-issues the claims from users/{uid} (falling back to the role profile
+    // collection for legacy accounts) — documents whose role/college fields
+    // are not self-writable — and the token is force-refreshed so the very
+    // next read is authorised.
     if (data && resolution.claimMissing) {
       try {
+        console.warn(
+          '[AuthContext] stale ID-token claims — roleStale:', resolution.claimRoleMissing,
+          'collegeStale:', resolution.claimCollegeMissing, '; running syncMyIdentity',
+        );
         const sync = await syncMyIdentity();
         if (sync?.updated) {
           await fbUser.getIdToken(true);
           const afterRepair = await resolveIdentity(fbUser.uid, fbUser.email || undefined);
           if (afterRepair.user) data = afterRepair.user;
+        } else if (!sync) {
+          // The callable returned nothing: it is not deployed (stale backend),
+          // or no users/profile document exists at all (an identity-repair
+          // job, not a self-heal). Either way the user is still stale — say so.
+          console.warn(
+            '[AuthContext] syncMyIdentity could not re-issue the claims. ' +
+            'Deploy the current functions, or have a superadmin run Access Control → Identity Repair.',
+          );
         }
       } catch (err) {
         console.warn('[AuthContext] claim self-heal failed:', err);

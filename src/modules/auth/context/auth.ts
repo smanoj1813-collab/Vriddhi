@@ -1,6 +1,7 @@
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { auth, db } from '@/Firebase/config';
+import { detectClaimStaleness } from '@/shared/utils/identityClaims';
 
 export type UserRole = 'superadmin' | 'admin' | 'principal' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor';
 
@@ -65,11 +66,21 @@ export interface IdentityResolution {
    */
   permissionDenied: boolean;
   /**
-   * A role was found in Firestore but the ID-token claim is missing or
-   * different. Under claim-authoritative rules such an account can sign in and
-   * then read nothing; `syncMyIdentity` repairs it.
+   * The ID token disagrees with the resolved identity on the role claim OR the
+   * collegeId claim. Under claim-authoritative rules such an account can sign
+   * in and then have reads and/or writes denied; `syncMyIdentity` repairs it.
+   *
+   * The college half is not optional: a token with the correct role but a
+   * missing/wrong collegeId passes every role check, the UI displays the
+   * profile's college, and then every tenant-scoped WRITE (staff attendance
+   * included) is denied — the "My Attendance: Missing or insufficient
+   * permissions" state where sign-in works and the dashboard loads.
    */
   claimMissing: boolean;
+  /** Role claim specifically stale (missing or different). */
+  claimRoleMissing: boolean;
+  /** CollegeId claim specifically stale (missing or different for a tenant role). */
+  claimCollegeMissing: boolean;
   /** Where the role came from, for diagnostics in the console. */
   source: 'claim' | 'users' | 'profile' | null;
   resolvedRole: UserRole | null;
@@ -177,18 +188,26 @@ function classifyReadError(err: any): { kind: 'permission' | 'other'; text: stri
  */
 export const resolveIdentity = async (uid: string, email?: string): Promise<IdentityResolution> => {
   const outcome: IdentityResolution = {
-    user: null, permissionDenied: false, claimMissing: false, source: null,
+    user: null, permissionDenied: false, claimMissing: false,
+    claimRoleMissing: false, claimCollegeMissing: false, source: null,
     resolvedRole: null, errors: [], attempts: 0,
   };
 
   const claims = await safeClaims(uid);
-  const claimedRole = normalizeRole(claims.role);
 
   const finish = (data: any, source: IdentityResolution['source']): FirebaseUserData => {
     outcome.source = source;
     const role = normalizeRole(data.role);
     outcome.resolvedRole = role;
-    outcome.claimMissing = !role ? false : claimedRole !== role;
+    // Role AND college must agree with the token — the college check is the
+    // one the role-only version skipped, and it is why a faculty member with
+    // the right role but no collegeId claim could still load "My Attendance"
+    // only to be denied the moment anything touched the tenant. The decision
+    // mirrors resolveIdentityTarget() in functions/src/selfIdentity.ts.
+    const staleness = detectClaimStaleness(claims, { role, collegeId: data.collegeId ?? null });
+    outcome.claimMissing = staleness.stale;
+    outcome.claimRoleMissing = staleness.roleStale;
+    outcome.claimCollegeMissing = staleness.collegeStale;
     return {
       uid: data.uid || uid,
       email: data.email || email || '',
