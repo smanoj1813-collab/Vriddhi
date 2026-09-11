@@ -6,13 +6,15 @@
 // field. A faculty member can only ever write the document their own uid owns;
 // current-firestore.rules enforces the same thing server-side.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 import {
   fetchMyStaffAttendance,
   fetchStaffAttendanceForDate,
   saveStaffAttendance,
 } from '@/shared/api/staffAttendanceApi';
+import { ensureIdentityClaims } from '@/shared/services/identitySelfHeal';
+import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims';
 import {
   monthBounds,
   monthKeyOf,
@@ -55,7 +57,46 @@ export function useMyStaffAttendance() {
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
+  // How many times this session has asked syncMyIdentity to re-issue the
+  // token claims. One attempt per page mount: after that, further denials
+  // get the actionable message instead of re-calling the function.
+  const healAttempts = useRef(0);
+
+  // selectDate reads the month records through a ref (not a dependency) on
+  // purpose: the page re-runs selectDate(today) whenever the callback's
+  // identity changes, and keying it on records would yank the form back to
+  // "today" the moment the month load — or the post-save reload — lands.
+  const recordsRef = useRef<StaffAttendanceRecord[]>([]);
+  recordsRef.current = records;
+
   const range: AttendanceRange = useMemo(() => monthRange(month), [month]);
+
+  /**
+   * The permanent self-heal, on demand: if the sign-in self-heal never ran
+   * (or the token went stale mid-session — a superadmin just ran Identity
+   * Repair, the token was minted by an older deployment, …) a permission
+   * denial on this page triggers it here. Resolves true only when the claims
+   * were actually re-issued and the force-refreshed token now agrees, which
+   * is the one case where retrying the failed operation can succeed.
+   */
+  const selfHealOnce = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    if (healAttempts.current > 0) return false;
+    healAttempts.current += 1;
+    try {
+      const outcome = await ensureIdentityClaims({
+        role: user.role,
+        collegeId: user.collegeId ?? null,
+      });
+      if (outcome !== 'refreshed') {
+        console.warn('[useMyStaffAttendance] claim self-heal did not re-issue claims:', outcome);
+      }
+      return outcome === 'refreshed';
+    } catch (err) {
+      console.warn('[useMyStaffAttendance] claim self-heal failed:', err);
+      return false;
+    }
+  }, [user]);
 
   const load = useCallback(async () => {
     if (!facultyId) return;
@@ -68,11 +109,26 @@ export function useMyStaffAttendance() {
       setRecords(data);
     } catch (err) {
       console.error('[useMyStaffAttendance] load failed', err);
-      setError(err instanceof Error ? err.message : 'Could not load your attendance.');
+      if (isPermissionDeniedError(err) && (await selfHealOnce())) {
+        // The token was stale; the fresh one may now be authorised.
+        try {
+          setRecords(await fetchMyStaffAttendance(facultyId, bounds.start, bounds.end));
+          return;
+        } catch (retryErr) {
+          console.error('[useMyStaffAttendance] load failed after claim refresh', retryErr);
+          setError(staleClaimMessage('attendance load'));
+          return;
+        }
+      }
+      setError(
+        isPermissionDeniedError(err)
+          ? staleClaimMessage('attendance load')
+          : err instanceof Error ? err.message : 'Could not load your attendance.',
+      );
     } finally {
       setLoading(false);
     }
-  }, [facultyId, month]);
+  }, [facultyId, month, selfHealOnce]);
 
   useEffect(() => {
     void load();
@@ -83,7 +139,12 @@ export function useMyStaffAttendance() {
     async (date: string) => {
       setForm(emptyForm(date));
       if (!collegeId || !facultyId) return;
-      const existing = await fetchStaffAttendanceForDate(collegeId, facultyId, date);
+      // The month load already told us which days are marked; pass that along
+      // so the expected denial on an unmarked day's deterministic id stays
+      // quiet instead of flooding the console with "single-day read failed".
+      const existing = await fetchStaffAttendanceForDate(collegeId, facultyId, date, {
+        expectExists: recordsRef.current.some((r) => r.date === date),
+      });
       if (!existing) return;
       setForm({
         date,
@@ -111,32 +172,49 @@ export function useMyStaffAttendance() {
       return false;
     }
     setSaving(true);
+    const params = {
+      collegeId,
+      facultyId,
+      facultyName,
+      department,
+      date: form.date,
+      status: form.status,
+      checkIn: form.checkIn,
+      checkOut: form.checkOut,
+      note: form.note,
+      source: 'self' as const,
+      markedBy: facultyId,
+    };
     try {
-      await saveStaffAttendance({
-        collegeId,
-        facultyId,
-        facultyName,
-        department,
-        date: form.date,
-        status: form.status,
-        checkIn: form.checkIn,
-        checkOut: form.checkOut,
-        note: form.note,
-        source: 'self',
-        markedBy: facultyId,
-      });
+      try {
+        await saveStaffAttendance(params);
+      } catch (err) {
+        // A tenant-scoped write is exactly where a stale collegeId claim
+        // hurts: the rules compare the document's collegeId against the
+        // token, not the profile. Re-issue the claims and try once more —
+        // the write is an idempotent upsert, so the retry cannot duplicate.
+        if (isPermissionDeniedError(err) && (await selfHealOnce())) {
+          await saveStaffAttendance(params);
+        } else {
+          throw err;
+        }
+      }
       setSavedAt(new Date().toISOString());
       // Only reload when the saved day is inside the month being displayed.
       if (monthKeyOf(form.date) === month) await load();
       return true;
     } catch (err) {
       console.error('[useMyStaffAttendance] save failed', err);
-      setError(err instanceof Error ? err.message : 'Could not save your attendance.');
+      setError(
+        isPermissionDeniedError(err)
+          ? staleClaimMessage('attendance save')
+          : err instanceof Error ? err.message : 'Could not save your attendance.',
+      );
       return false;
     } finally {
       setSaving(false);
     }
-  }, [collegeId, facultyId, facultyName, department, form, month, load]);
+  }, [collegeId, facultyId, facultyName, department, form, month, load, selfHealOnce]);
 
   /** Rollup of just this faculty member, for the stats strip. */
   const summary = useMemo(

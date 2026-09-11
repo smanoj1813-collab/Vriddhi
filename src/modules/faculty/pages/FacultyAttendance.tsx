@@ -12,6 +12,7 @@ import { useAttendanceExport } from '../hooks/useAttendanceExport'
 import { DateRangeSelector } from '../../../components/shared/DateRangeSelector'
 import { ExportButton } from '../../../components/shared/ExportButton'
 import type { AttendanceStatus, FacultyExportRow, FacultyStudent, FacultyClassSession } from '../types/attendance'
+import type { RosterDiagnostics } from '../../../shared/utils/cohortMatching'
 import type { DateRangeType } from '../hooks/useAttendanceExport'
 
 const statusConfig: Record<AttendanceStatus, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
@@ -61,6 +62,80 @@ const statusConfig: Record<AttendanceStatus, { label: string; color: string; bg:
 
 const allStatuses: AttendanceStatus[] = ['Present', 'Absent', 'Late', 'Leave', 'OnDuty', 'MedicalLeave'];
 
+// ─── Roster diagnostics (the "0 students" that explains itself) ────────────
+
+const MISMATCH_LABELS: Record<string, string> = {
+  branch: 'Program / branch',
+  batch: 'Batch',
+  semester: 'Semester',
+  division: 'Division',
+  section: 'Section',
+  subject: 'Subject',
+  collegeId: 'College',
+}
+
+function describeCohortTarget(target: RosterDiagnostics['target']): string {
+  const parts: string[] = []
+  if (target.branch) parts.push(target.branch)
+  if (target.batch) parts.push(target.batch)
+  if (target.semester) parts.push(`Semester ${target.semester}`)
+  const letters = [target.division, target.section].filter(Boolean).join(' ')
+  if (letters) parts.push(letters)
+  if (target.subject) parts.push(target.subject)
+  return parts.join(' • ') || 'this class'
+}
+
+/**
+ * Shown INSTEAD of the roster table when the college query returned students
+ * but none matched the class cohort. Requirement: never show a generic
+ * "no students" empty state in that case — the college clearly HAS students,
+ * so the answer is which field is disagreeing and what values were seen.
+ */
+function RosterDiagnosticPanel({ diagnostics }: { diagnostics: RosterDiagnostics }) {
+  const mismatchEntries = Object.entries(diagnostics.mismatches)
+  return (
+    <div className="rounded-xl border border-amber-300/70 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-5 mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+          {diagnostics.collegeTotal} {diagnostics.collegeTotal === 1 ? 'student' : 'students'} loaded from this college — none match this class's cohort
+        </h3>
+      </div>
+
+      <p className="text-sm text-amber-900/90 dark:text-amber-200/90 mb-3">
+        Class cohort: <strong>{describeCohortTarget(diagnostics.target)}</strong>
+      </p>
+
+      {mismatchEntries.length > 0 && (
+        <ul className="space-y-1 mb-3">
+          {mismatchEntries.map(([field, detail]) => (
+            <li key={field} className="text-xs text-amber-900/80 dark:text-amber-200/80">
+              <span className="font-medium">{MISMATCH_LABELS[field] ?? field}</span>:{' '}
+              {detail.count} {detail.count === 1 ? 'student differs' : 'students differ'}
+              {detail.values.length > 0 && (
+                <span className="text-amber-800/70 dark:text-amber-300/70">
+                  {' '}— values found: {detail.values.join(', ')}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
+        Ask an admin to align this class's schedule (program, batch, semester, section) with
+        how the students were imported, then mark attendance again.
+      </p>
+
+      {diagnostics.truncated && (
+        <p className="text-xs text-amber-900/70 dark:text-amber-200/70 mt-2">
+          Note: this college has more than 450 students; only the first 450 were checked.
+        </p>
+      )}
+    </div>
+  )
+}
+
 export default function FacultyAttendance() {
   const {
     facultyId,
@@ -70,6 +145,7 @@ export default function FacultyAttendance() {
     selectedClass,
     setSelectedClass,
     students,
+    rosterDiagnostics,
     attendance,
     existingAttendance,
     loading,
@@ -83,6 +159,14 @@ export default function FacultyAttendance() {
     resetAttendance,
     handleSave,
   } = useFacultyAttendance();
+
+  // The schedule left its semester blank, so the roster was widened to every
+  // semester: if the matched students span more than one, say so — otherwise
+  // the faculty quietly marks attendance for two cohorts at once.
+  const rosterSemesterSpread =
+    rosterDiagnostics?.matchedSemesters && rosterDiagnostics.matchedSemesters.length > 1
+      ? rosterDiagnostics.matchedSemesters
+      : null
 
   const { 
     exportFacultyAttendance, 
@@ -519,6 +603,19 @@ export default function FacultyAttendance() {
         </div>
       </div>
 
+      {students.length > 0 && rosterSemesterSpread && (
+        <div className="mb-4 p-3 rounded-xl border border-amber-300/70 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            The schedule has no semester set, so this roster spans semesters{' '}
+            {rosterSemesterSpread.join(', ')} — set a semester on the schedule to narrow it to one cohort.
+          </span>
+        </div>
+      )}
+
+      {students.length === 0 && rosterDiagnostics && rosterDiagnostics.collegeTotal > 0 ? (
+        <RosterDiagnosticPanel diagnostics={rosterDiagnostics} />
+      ) : (
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -605,11 +702,24 @@ export default function FacultyAttendance() {
         </div>
         {filteredStudents.length === 0 && (
           <div className="text-center py-12 text-slate-500 dark:text-slate-600 dark:text-slate-400">
-            <Search className="w-8 h-8 mx-auto mb-3 opacity-50" />
-            <p className="text-sm">No students found matching your criteria</p>
+            {students.length === 0 && rosterDiagnostics && rosterDiagnostics.collegeTotal === 0 ? (
+              <>
+                <Users className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No students are enrolled at this college yet.</p>
+                <p className="text-xs mt-1 opacity-80">
+                  Import the student list from Admin → Students, then mark attendance.
+                </p>
+              </>
+            ) : (
+              <>
+                <Search className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No students found matching your criteria</p>
+              </>
+            )}
           </div>
         )}
       </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">

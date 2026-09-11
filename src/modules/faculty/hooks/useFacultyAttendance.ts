@@ -14,6 +14,7 @@ import type {
   FacultyAttendanceDoc,
   AttendanceStatus,
 } from '../types/attendance';
+import type { RosterDiagnostics } from '@/shared/utils/cohortMatching';
 
 interface AttendanceState {
   [studentId: string]: {
@@ -53,6 +54,7 @@ export function useFacultyAttendance() {
   const [classSessions, setClassSessions] = useState<FacultyClassSession[]>([]);
   const [selectedClass, setSelectedClass] = useState<FacultyClassSession | null>(null);
   const [students, setStudents] = useState<FacultyStudent[]>([]);
+  const [rosterDiagnostics, setRosterDiagnostics] = useState<RosterDiagnostics | null>(null);
   const [attendance, setAttendance] = useState<AttendanceState>({});
   const [existingAttendance, setExistingAttendance] = useState<FacultyAttendanceDoc | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,6 +78,7 @@ export function useFacultyAttendance() {
         setSelectedClass(preselected || sessions[0] || null);
         if (sessions.length === 0) {
           setStudents([]);
+          setRosterDiagnostics(null);
           setAttendance({});
           setExistingAttendance(null);
         }
@@ -99,15 +102,22 @@ export function useFacultyAttendance() {
       setLoading(true);
       setError(null);
       try {
-        const studentsData = await fetchStudentsForSession(
-          cls.branch,
-          cls.batch,
-          cls.division,
-          cls.semester,
-          cls.subject,
+        const { students: studentsData, diagnostics } = await fetchStudentsForSession(
+          {
+            branch: cls.branch,
+            batch: cls.batch,
+            division: cls.division,
+            // Section is part of the cohort — dropping it is how a class for
+            // "A B" used to find nobody recorded under either letter.
+            section: cls.section,
+            semester: cls.semester,
+            subject: cls.subject,
+            subjectCode: cls.subjectCode,
+          },
           cid
         );
         setStudents(studentsData);
+        setRosterDiagnostics(diagnostics);
 
         const existing = await fetchAttendanceForSession(cls.id, cls.date);
         setExistingAttendance(existing);
@@ -129,6 +139,9 @@ export function useFacultyAttendance() {
           setAttendance(defaultState);
         }
       } catch (err) {
+        console.error('[useFacultyAttendance] student roster load failed', err);
+        setStudents([]);
+        setRosterDiagnostics(null);
         setError(err instanceof Error ? err.message : 'Failed to load students');
       } finally {
         setLoading(false);
@@ -263,6 +276,7 @@ export function useFacultyAttendance() {
     selectedClass,
     setSelectedClass,
     students,
+    rosterDiagnostics,
     attendance,
     existingAttendance,
     loading,

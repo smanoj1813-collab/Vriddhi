@@ -174,11 +174,22 @@ export async function fetchMyStaffAttendance(
   ]);
 }
 
-/** A single day for one faculty member (used to pre-fill the marking form). */
+/**
+ * A single day for one faculty member (used to pre-fill the marking form).
+ *
+ * `expectExists` matters because of a quirk of the rules, not a bug in them:
+ * a `get` on the deterministic id of a document that DOES NOT EXIST YET is
+ * denied — the rule cannot prove ownership of a document with no data, and
+ * widening `get` for that case would expose another faculty member's
+ * unmarked days' document id space to ownership probes. The month load
+ * already knows which days are marked, so the caller says when a denial here
+ * is the expected "no record yet" (quiet) versus a genuine anomaly (loud).
+ */
 export async function fetchStaffAttendanceForDate(
   collegeId: string,
   facultyId: string,
   date: string,
+  opts: { expectExists?: boolean } = {},
 ): Promise<StaffAttendanceRecord | null> {
   if (!collegeId || !facultyId || !date) return null;
   try {
@@ -186,7 +197,19 @@ export async function fetchStaffAttendanceForDate(
     if (!snap.exists()) return null;
     return mapStaffAttendanceDoc(snap.id, snap.data());
   } catch (err) {
-    console.warn('[staffAttendanceApi] single-day read failed', err);
+    if (opts.expectExists) {
+      // The month load saw this day, so the document should exist and be
+      // readable by its owner. A denial here is a real anomaly (stale
+      // claims, a rule-version mismatch, or a record owned by a different
+      // uid) — surface it.
+      console.warn('[staffAttendanceApi] single-day read failed', err);
+    } else {
+      console.debug(
+        '[staffAttendanceApi] no record yet for',
+        collegeId, facultyId, date,
+        '(get on a not-yet-written deterministic id is denied by design)',
+      );
+    }
     return null;
   }
 }

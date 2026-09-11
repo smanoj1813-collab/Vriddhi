@@ -870,6 +870,116 @@ describe('staff (faculty) attendance', () => {
       })
     )
   })
+
+  // ─── Stale identity claims (the "My Attendance" production bug) ──────────
+  //
+  // A faculty token with the correct ROLE claim but a missing or wrong
+  // COLLEGE claim can read its own rows (ownership is uid-based and
+  // claim-independent) but every write is denied, because writes require
+  // the tenant claim (`isCollegeStaff` + `sameCollege`). The rules
+  // intentionally keep that requirement: the fix is claim issuance
+  // (syncMyIdentity, self-healed by the client), not rule relaxation.
+  // These tests pin both halves of that boundary.
+  describe('stale identity claims', () => {
+    function newDay(collegeId: string, uid: string, date: string) {
+      return {
+        collegeId,
+        facultyId: uid,
+        facultyName: 'Faculty A',
+        date,
+        month: date.slice(0, 7),
+        status: 'present',
+        source: 'self',
+        markedBy: uid,
+      }
+    }
+
+    it('lets a role-only token read its own history but refuse its writes', async () => {
+      // Correct role claim, NO collegeId claim.
+      const db = testEnv.authenticatedContext('faculty-a', { role: 'faculty' }).firestore()
+
+      // Ownership reads are claim-independent and must keep working — this
+      // is why the symptom is "the month loads, the save fails", not a full
+      // lock-out.
+      const mine = await assertSucceeds(
+        getDocs(
+          query(
+            collection(db, 'staffAttendance'),
+            where('facultyId', '==', 'faculty-a'),
+            where('date', '>=', '2026-09-01'),
+            where('date', '<=', '2026-09-30')
+          )
+        )
+      )
+      assert.equal(mine.size, 1)
+      await assertSucceeds(getDoc(doc(db, 'staffAttendance', ownDay())))
+
+      // The get on a not-yet-written deterministic id is denied by design
+      // (the rule cannot prove ownership of a document with no data, and
+      // widening `get` for it would open ownership probes on another
+      // faculty's id space). The client expects this and treats it as
+      // "no record yet" — it must not become a real permission failure.
+      await assertFails(getDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-03'))))
+
+      // The writes the faculty actually makes: denied until syncMyIdentity
+      // re-issues the college claim and the token is force-refreshed.
+      await assertFails(
+        setDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-04')), newDay(COLLEGE_A, 'faculty-a', '2026-09-04'))
+      )
+      await assertFails(updateDoc(doc(db, 'staffAttendance', ownDay()), { status: 'late' }))
+    })
+
+    it('refuses writes when the college claim points at another college', async () => {
+      // Correct role claim, collegeId claim for the WRONG college.
+      const db = testEnv
+        .authenticatedContext('faculty-a', { role: 'faculty', collegeId: COLLEGE_B })
+        .firestore()
+
+      // Ownership reads still work (uid-based)…
+      await assertSucceeds(
+        getDocs(query(collection(db, 'staffAttendance'), where('facultyId', '==', 'faculty-a')))
+      )
+
+      // …but the record the UI writes is stamped with the profile's college,
+      // which does not match the stale claim — denied, not silently moved
+      // across tenants.
+      await assertFails(
+        setDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-05')), newDay(COLLEGE_A, 'faculty-a', '2026-09-05'))
+      )
+      // And the existing record (college A) cannot be corrected by a token
+      // that claims college B.
+      await assertFails(updateDoc(doc(db, 'staffAttendance', ownDay()), { status: 'late' }))
+    })
+
+    it('lets the repaired token create, update and re-read its own day', async () => {
+      // After syncMyIdentity: role AND college claim agree with the profile.
+      const db = facultyContext().firestore()
+
+      await assertSucceeds(
+        setDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-06')), newDay(COLLEGE_A, 'faculty-a', '2026-09-06'))
+      )
+      await assertSucceeds(updateDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-06')), { status: 'late' }))
+      // A get on the now-existing deterministic id is allowed: the document
+      // exists and is owned, which is exactly when the single-day prefill
+      // must succeed.
+      await assertSucceeds(getDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-06'))))
+    })
+
+    it('denies cross-college faculty the record, the list and the write', async () => {
+      // A correctly-claimed faculty of another college.
+      const db = testEnv
+        .authenticatedContext('faculty-c', { role: 'faculty', collegeId: COLLEGE_B })
+        .firestore()
+
+      await assertFails(getDoc(doc(db, 'staffAttendance', ownDay())))
+      await assertFails(
+        getDocs(query(collection(db, 'staffAttendance'), where('facultyId', '==', 'faculty-a')))
+      )
+      await assertFails(
+        setDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-07')), newDay(COLLEGE_A, 'faculty-a', '2026-09-07'))
+      )
+    })
+  })
 })
 
 describe('legacy no-claim faculty reads', () => {

@@ -6,6 +6,7 @@ import {
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import { ensureClassSession } from '../../admin/api/classSessionApi';
 import { normalizeSessionDate, parseSlotDateKey, slotDateKey } from '@/shared/utils/sessionDate';
+import { matchCohortRows, type RosterDiagnostics } from '@/shared/utils/cohortMatching';
 import type {
   FacultyClassSession,
   FacultyAttendanceDoc,
@@ -199,20 +200,51 @@ export async function fetchFacultyClassSessions(
 
 // ─── Fetch Students for a Class Session ────────────────────────────────────
 
+/**
+ * The cohort a class session is taught to. `section` is part of the cohort —
+ * it used to be dropped here, which is how a class for "A B" could never
+ * find a student recorded under either letter. All matching is delegated to
+ * the pure, unit-tested helpers in src/shared/utils/cohortMatching.ts so the
+ * rules (normalisation, legacy-semester tolerance, per-field diagnostics)
+ * live in exactly one place.
+ */
+export interface SessionCohort {
+  branch: string;
+  batch: string;
+  division: string;
+  section: string;
+  semester: number | string;
+  subject: string;
+  subjectCode?: string;
+}
+
+export interface SessionRoster {
+  students: FacultyStudent[];
+  /**
+   * Why the roster looks the way it does: the target cohort, how many
+   * students the college query returned, and per-field mismatch counts with
+   * the distinct values seen. Null only on the error/early-return paths.
+   */
+  diagnostics: RosterDiagnostics | null;
+}
+
+/**
+ * Load the students of a class session, scoped to one tenant.
+ *
+ * The query stays `where('collegeId', '==', collegeId) + limit` — a single-
+ * field equality needs no composite index, and the roster must never widen
+ * across colleges. The cohort itself is filtered client-side over the loaded
+ * documents (five-field composite indexes would be the alternative, and the
+ * normalisation this matching needs makes those indexes useless anyway).
+ */
 export async function fetchStudentsForSession(
-  branch: string,
-  batch: string,
-  division: string,
-  semester: number,
-  subject: string,
+  cohort: SessionCohort,
   collegeId: string
-): Promise<FacultyStudent[]> {
-  if (sessionReadCount >= MAX_READS_PER_SESSION) return [];
-  if (!collegeId) return [];
+): Promise<SessionRoster> {
+  if (sessionReadCount >= MAX_READS_PER_SESSION) return { students: [], diagnostics: null };
+  if (!collegeId) return { students: [], diagnostics: null };
 
   try {
-    // Query only by tenant and filter the cohort client-side. This avoids a
-    // five-field composite index and tolerates legacy numeric/string values.
     const q = query(
       collection(db, 'students'),
       where('collegeId', '==', collegeId),
@@ -223,29 +255,19 @@ export async function fetchStudentsForSession(
     const snap = await getDocs(q);
     trackRead(snap.size);
 
-    const students: FacultyStudent[] = [];
+    const docs = snap.docs;
+    const rows = docs.map((d) => d.data() as Record<string, unknown>);
+    const { matchedIndices, diagnostics } = matchCohortRows(
+      rows,
+      { ...cohort, collegeId },
+      450
+    );
 
-    for (const docSnap of snap.docs) {
-      const d = docSnap.data();
-      const studentDivision = d.division || d.section || '';
-      if (
-        String(d.branch || d.department || '') !== String(branch) ||
-        String(d.batch || '') !== String(batch) ||
-        String(studentDivision) !== String(division) ||
-        Number(d.semester || 0) !== Number(semester)
-      ) {
-        continue;
-      }
+    const students: FacultyStudent[] = matchedIndices.map((i) =>
+      buildFacultyStudent(rows[i], docs[i].id)
+    ).sort((a, b) => a.name.localeCompare(b.name));
 
-      const studentSubjects = d.subjects || d.assignedSubjects || [];
-      const subjectNames = Array.isArray(studentSubjects)
-        ? studentSubjects.map((item: any) => typeof item === 'string' ? item : item.name || item.subject || '')
-        : [];
-      if (subjectNames.length > 0 && !subjectNames.includes(subject)) continue;
-      students.push(buildFacultyStudent(d, docSnap.id));
-    }
-
-    return students.sort((a, b) => a.name.localeCompare(b.name));
+    return { students, diagnostics };
   } catch (err) {
     console.error('[FacultyApi] Students query failed:', err);
     throw new Error('Failed to load students for this class.');
