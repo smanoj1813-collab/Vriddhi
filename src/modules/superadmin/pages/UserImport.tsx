@@ -3,8 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useColleges, useImportUsers } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Key } from 'lucide-react'
-import { parseCSV, validateCSV, generateCSVTemplate } from '../../../shared/utils/parseCSV'
+import { parseCSV, validateCSV, generateCSVTemplate, downloadCsv } from '../../../shared/utils/parseCSV'
+import type { ValidationResult } from '../../../shared/utils/parseCSV'
 import CredentialsTable from '../components/CredentialsTable'
+import ImportExports from '../components/ImportExports'
+import ImportProgressOverlay from '../components/ImportProgressOverlay'
+import { useBlockUnload } from '../../../shared/hooks/useBlockUnload'
+import type { BatchProgress } from '../../../shared/utils/batchedImport'
 import type { College, ImportResult } from '../api/superAdminApi'
 
 const UserImport: React.FC = () => {
@@ -17,12 +22,24 @@ const UserImport: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [parseWarnings, setParseWarnings] = useState<string[]>([])
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  // Kept so the rows rejected before anything was sent can still be exported
+  // after the import has run. Without this they exist only as strings on
+  // screen, which is how a file "loses" rows with no way to recover them.
+  const [preflight, setPreflight] = useState<ValidationResult | null>(null)
+  const [preflightWarnings, setPreflightWarnings] = useState<string[]>([])
   const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
+  // Live batch progress. Rows go up in batches because one request cannot stay
+  // open for the minutes a large upload takes.
+  const [progress, setProgress] = useState<BatchProgress | null>(null)
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
   const importUsers = useImportUsers()
 
   const colleges = collegesData?.items || []
+
+  // Closing or reloading the tab mid-import would discard the response — and
+  // with it every password the backend has already generated.
+  useBlockUnload(isProcessing)
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0]
@@ -43,6 +60,8 @@ const UserImport: React.FC = () => {
 
         const validation = validateCSV(parsed, 'students')
         setValidationErrors(validation.errors)
+        setPreflight(validation)
+        setPreflightWarnings(validation.warnings || [])
 
         if (validation.validRows.length === 0 && parsed.rows.length > 0) {
           showError(`All ${parsed.rows.length} rows have validation errors. Check the error list below.`)
@@ -66,6 +85,7 @@ const UserImport: React.FC = () => {
     }
 
     setIsProcessing(true)
+    setProgress(null)
     try {
       const parsed = { headers: [], rows: previewData, rowCount: previewData.length, mappedHeaders: {}, unknownHeaders: [], warnings: [] }
       const validation = validateCSV(parsed, 'students')
@@ -79,6 +99,7 @@ const UserImport: React.FC = () => {
       const result = await importUsers.mutateAsync({
         collegeId: selectedCollege,
         deliveryMode,
+        onProgress: setProgress,
         users: validation.validRows.map((r: Record<string, string>) => ({
           name: r.name,
           email: r.email,
@@ -106,6 +127,7 @@ const UserImport: React.FC = () => {
       showError(err.message || 'Import failed')
     } finally {
       setIsProcessing(false)
+      setProgress(null)
     }
   }
 
@@ -119,6 +141,7 @@ const UserImport: React.FC = () => {
     a.click()
     URL.revokeObjectURL(url)
   }
+
 
   return (
     <div className="page-container">
@@ -229,6 +252,29 @@ const UserImport: React.FC = () => {
         </div>
       )}
 
+      {/* Pre-import sanity check */}
+      {previewData.length > 0 && preflight && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <FileSpreadsheet className="w-4 h-4 text-slate-400" />
+            <p className="text-sm font-medium text-slate-200">Pre-import check</p>
+          </div>
+          <p className="text-xs text-slate-400">
+            {previewData.length} row(s) read · {preflight.validCount} will be sent ·{' '}
+            <span className={preflight.invalidCount ? 'text-amber-300' : ''}>
+              {preflight.invalidCount ?? 0} rejected before sending
+            </span>
+          </p>
+          {preflightWarnings.length > 0 && (
+            <ul className="mt-2 space-y-1 max-h-24 overflow-y-auto">
+              {preflightWarnings.map((w, i) => (
+                <li key={i} className="text-xs text-amber-300/90">{w}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {/* Preview */}
       {previewData.length > 0 && (
         <div className="glass-card overflow-hidden mb-6">
@@ -297,24 +343,14 @@ const UserImport: React.FC = () => {
             )}
             <h2 className="text-lg font-semibold text-white">Import Complete</h2>
           </div>
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-green-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-400">{importResult.success}</p>
-              <p className="text-xs text-slate-400">Provisioned</p>
-            </div>
-            <div className="bg-red-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-red-400">{importResult.failed}</p>
-              <p className="text-xs text-slate-400">Failed</p>
-            </div>
-            <div className="bg-emerald-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-400">{importResult.authVerified ?? 0}</p>
-              <p className="text-xs text-slate-400">Verified in Auth</p>
-            </div>
-            <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{(importResult.imported?.length || 0) + importResult.failed}</p>
-              <p className="text-xs text-slate-400">Total Rows</p>
-            </div>
-          </div>
+          <ImportExports
+            uploadedCount={previewData.length}
+            preflight={preflight}
+            result={importResult}
+            filePrefix="student"
+            uploadedRows={previewData}
+            idField="regNo"
+          />
 
           <CredentialsTable
             rows={(importResult.imported || []).map((row) => ({
@@ -355,30 +391,6 @@ const UserImport: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm text-red-400 font-medium">Failed / Issues ({importResult.failed})</p>
-                {importResult.failedStudents && importResult.failedStudents.length > 0 && (
-                  <button
-                    onClick={() => {
-                      const list = importResult.failedStudents || []
-                      const headers = ['Name', 'Email', 'Reg No', 'Reason']
-                      const rows = list.map((f) => [f.name, f.email, f.regNo, f.reason])
-                      const csv = [
-                        headers.join(','),
-                        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
-                      ].join('\n')
-                      const blob = new Blob([csv], { type: 'text/csv' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = 'student-import-failures.csv'
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs px-3 py-1.5 rounded bg-red-500/10 border border-red-500/30 transition-colors"
-                  >
-                    <Download size={14} />
-                    Download Failed CSV
-                  </button>
-                )}
               </div>
               {importResult.failedStudents && importResult.failedStudents.length > 0 ? (
                 <div className="overflow-x-auto rounded-lg border border-red-900/50 max-h-96 overflow-y-auto">
@@ -414,6 +426,9 @@ const UserImport: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Modal: blocks in-app navigation for the duration of the import. */}
+      {isProcessing && <ImportProgressOverlay progress={progress} subject="students" />}
     </div>
   )
 }

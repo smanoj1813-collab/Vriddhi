@@ -43,10 +43,15 @@ import {
   resetFacultyPassword,
   type CredentialResetResult,
   resetStudentPassword,
+  bulkResetStudentPasswords,
+  bulkResetFacultyPasswords,
+  type BulkResetItem,
+  type BulkResetOutcome,
   SuperAdminApiError,
   type ResetCollegeDataResult,
   type CreateAdminResult,
 } from "../api/superAdminApi";
+import type { BatchProgress } from "@/shared/utils/batchedImport";
 
 import {
   type CreateCollegeInput,
@@ -95,8 +100,6 @@ export const useResetStudentPassword = () => {
   >({
     mutationFn: resetStudentPassword,
     onSuccess: (_data, studentId) => {
-      // The reset revokes the student's sessions, so any cached view of their
-      // access state is stale by definition.
       queryClient.invalidateQueries({ queryKey: superAdminKeys.studentDetail(studentId) });
     },
   });
@@ -609,9 +612,6 @@ export const useResetCollegeData = () => {
     SuperAdminApiError,
     string
   >({
-    // Auth accounts are NOT deleted by default — the mutation only takes the
-    // collegeId, and the irreversible Auth-deletion flag stays opt-in in the
-    // college detail reset dialog.
     mutationFn: (collegeId: string) => resetCollegeData(collegeId, false),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.colleges() });
@@ -622,3 +622,28 @@ export const useResetCollegeData = () => {
     },
   });
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+// BULK CREDENTIAL RESET HOOKS
+// ═══════════════════════════════════════════════════════════════════════
+export const useBulkResetStudentPasswords = () => {
+  return useMutation<
+    BulkResetOutcome,
+    SuperAdminApiError,
+    { items: BulkResetItem[]; onProgress?: (p: BatchProgress) => void }
+  >({
+    mutationFn: ({ items, onProgress }) => bulkResetStudentPasswords(items, onProgress),
+  });
+};
+
+export const useBulkResetFacultyPasswords = () => {
+  return useMutation<
+    BulkResetOutcome,
+    SuperAdminApiError,
+    { items: BulkResetItem[]; onProgress?: (p: BatchProgress) => void }
+  >({
+    mutationFn: ({ items, onProgress }) => bulkResetFacultyPasswords(items, onProgress),
+  });
+};
+
+export type { BulkResetItem, BulkResetOutcome } from "../api/superAdminApi";
