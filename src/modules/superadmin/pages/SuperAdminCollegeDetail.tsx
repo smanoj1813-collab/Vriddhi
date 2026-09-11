@@ -30,8 +30,10 @@ import {
   AlertTriangle,
   Trash2,
   Loader2,
+  KeyRound,
 } from "lucide-react";
 import { resetCollegeData } from '../api/superAdminApi';
+import BulkCredentialReset from '../components/BulkCredentialReset';
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface Tab {
@@ -55,6 +57,9 @@ const SuperAdminCollegeDetail: React.FC = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // ── Bulk credential reset ──────────────────────────────────────────
+  const [bulkReset, setBulkReset] = useState<null | { collection: 'students' | 'faculty'; items: Array<{ id: string; name: string; email: string; regNo?: string; department?: string }> }>(null);
 
   // ── Data fetching ──────────────────────────────────────────────────
   const {
@@ -319,6 +324,17 @@ const SuperAdminCollegeDetail: React.FC = () => {
         </div>
       )}
 
+      {/* Bulk credential reset dialog */}
+      {bulkReset && id && (
+        <BulkCredentialReset
+          collegeId={id}
+          collegeName={college.name}
+          collection={bulkReset.collection}
+          items={bulkReset.items}
+          onClose={() => setBulkReset(null)}
+        />
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* HEADER                                                        */}
       {/* ═══════════════════════════════════════════════════════════════ */}
@@ -503,6 +519,26 @@ const SuperAdminCollegeDetail: React.FC = () => {
                     onClick={() => navigate("/superadmin/students/import")}
                     icon={<Users className="w-4 h-4" />}
                   />
+                  <ActionButton
+                    label="Regenerate Student Credentials"
+                    onClick={() =>
+                      setBulkReset({
+                        collection: 'students',
+                        items: students.map((s: any) => ({ id: s.id, name: s.name, email: s.email, regNo: s.regNo, department: s.department })),
+                      })
+                    }
+                    icon={<KeyRound className="w-4 h-4" />}
+                  />
+                  <ActionButton
+                    label="Regenerate Faculty Credentials"
+                    onClick={() =>
+                      setBulkReset({
+                        collection: 'faculty',
+                        items: faculty.map((f: any) => ({ id: f.id, name: `${f.firstName} ${f.lastName}`.trim() || f.name, email: f.email, department: f.department })),
+                      })
+                    }
+                    icon={<KeyRound className="w-4 h-4" />}
+                  />
                 </div>
               </div>
 
@@ -531,66 +567,98 @@ const SuperAdminCollegeDetail: React.FC = () => {
 
         {/* ── FACULTY TAB ────────────────────────────────────────────── */}
         {activeTab === "faculty" && (
-          <DataTable
-            title="Faculty Members"
-            data={faculty}
-            isLoading={facultyLoading}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            columns={[
-              { key: "name", label: "Name", render: (f) => `${f.firstName} ${f.lastName}` },
-              { key: "email", label: "Email" },
-              { key: "department", label: "Department" },
-              { key: "designation", label: "Designation" },
-              { key: "employmentType", label: "Type", render: (f) => (
-                <span className={`px-2 py-0.5 rounded text-xs ${
-                  f.employmentType === "FULL_TIME" ? "bg-emerald-500/20 text-emerald-400" :
-                  f.employmentType === "PART_TIME" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" :
-                  "bg-slate-500/20 text-slate-400"
-                }`}>
-                  {f.employmentType?.replace("_", " ")}
-                </span>
-              )},
-              { key: "status", label: "Status", render: (f) => (
-                <span className={`inline-flex items-center gap-1 text-xs ${
-                  f.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
-                }`}>
-                  {f.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                  {f.status}
-                </span>
-              )},
-            ]}
-            onRowClick={(f) => navigate(`/superadmin/faculty/${f.id}`)}
-            emptyMessage="No faculty members found for this college."
-          />
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <button
+                onClick={() =>
+                  setBulkReset({
+                    collection: 'faculty',
+                    items: faculty.map((f: any) => ({ id: f.id, name: `${f.firstName} ${f.lastName}`.trim() || f.name, email: f.email, department: f.department })),
+                  })
+                }
+                disabled={faculty.length === 0}
+                className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                <KeyRound className="w-4 h-4" /> Regenerate {faculty.length} Faculty Credential(s)
+              </button>
+            </div>
+            <DataTable
+              title="Faculty Members"
+              data={faculty}
+              isLoading={facultyLoading}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              columns={[
+                { key: "name", label: "Name", render: (f) => `${f.firstName} ${f.lastName}` },
+                { key: "email", label: "Email" },
+                { key: "department", label: "Department" },
+                { key: "designation", label: "Designation" },
+                { key: "employmentType", label: "Type", render: (f) => (
+                  <span className={`px-2 py-0.5 rounded text-xs ${
+                    f.employmentType === "FULL_TIME" ? "bg-emerald-500/20 text-emerald-400" :
+                    f.employmentType === "PART_TIME" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" :
+                    "bg-slate-500/20 text-slate-400"
+                  }`}>
+                    {f.employmentType?.replace("_", " ")}
+                  </span>
+                )},
+                { key: "status", label: "Status", render: (f) => (
+                  <span className={`inline-flex items-center gap-1 text-xs ${
+                    f.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
+                  }`}>
+                    {f.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                    {f.status}
+                  </span>
+                )},
+              ]}
+              onRowClick={(f) => navigate(`/superadmin/faculty/${f.id}`)}
+              emptyMessage="No faculty members found for this college."
+            />
+          </div>
         )}
 
         {/* ── STUDENTS TAB ───────────────────────────────────────────── */}
         {activeTab === "students" && (
-          <DataTable
-            title="Students"
-            data={students}
-            isLoading={studentsLoading}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            columns={[
-              { key: "name", label: "Name" },
-              { key: "regNo", label: "Reg No" },
-              { key: "email", label: "Email" },
-              { key: "batch", label: "Batch" },
-              { key: "division", label: "Division" },
-              { key: "mentor", label: "Mentor" },
-              { key: "status", label: "Status", render: (s) => (
-                <span className={`inline-flex items-center gap-1 text-xs ${
-                  s.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
-                }`}>
-                  {s.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                  {s.status}
-                </span>
-              )},
-            ]}
-            emptyMessage="No students found for this college."
-          />
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <button
+                onClick={() =>
+                  setBulkReset({
+                    collection: 'students',
+                    items: students.map((s: any) => ({ id: s.id, name: s.name, email: s.email, regNo: s.regNo, department: s.department })),
+                  })
+                }
+                disabled={students.length === 0}
+                className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                <KeyRound className="w-4 h-4" /> Regenerate {students.length} Student Credential(s)
+              </button>
+            </div>
+            <DataTable
+              title="Students"
+              data={students}
+              isLoading={studentsLoading}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              columns={[
+                { key: "name", label: "Name" },
+                { key: "regNo", label: "Reg No" },
+                { key: "email", label: "Email" },
+                { key: "batch", label: "Batch" },
+                { key: "division", label: "Division" },
+                { key: "mentor", label: "Mentor" },
+                { key: "status", label: "Status", render: (s) => (
+                  <span className={`inline-flex items-center gap-1 text-xs ${
+                    s.status === "active" ? "text-emerald-400" : "text-red-600 dark:text-red-400"
+                  }`}>
+                    {s.status === "active" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                    {s.status}
+                  </span>
+                )},
+              ]}
+              emptyMessage="No students found for this college."
+            />
+          </div>
         )}
 
         {/* ── ADMINS TAB ─────────────────────────────────────────────── */}

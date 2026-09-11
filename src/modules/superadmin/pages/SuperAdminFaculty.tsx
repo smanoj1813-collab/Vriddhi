@@ -1,16 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useFacultyList, useDeleteFaculty, useToggleFacultyStatus, useResetFacultyPassword, useColleges } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import {
   Users, Search, Filter, ArrowLeft, Trash2, Eye,
   GraduationCap, Mail, Phone, MapPin, Key,
-  CheckCircle, XCircle, Download
+  CheckCircle, XCircle, Download, KeyRound
 } from 'lucide-react'
 import type { Faculty } from '../api/superAdminApi'
 import { sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '@/Firebase/config'
 import { runIdentityRepair, type RepairResult } from '../api/identityApi'
+import BulkCredentialReset from '../components/BulkCredentialReset'
 
 const SuperAdminFaculty: React.FC = () => {
   const navigate = useNavigate()
@@ -22,10 +23,6 @@ const SuperAdminFaculty: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [resetPassword, setResetPassword] = useState('')
   const [resetFacultyName, setResetFacultyName] = useState('')
-  // Which Auth account the rotation landed on. A name and a password are not enough to
-  // hand someone: when a profile's stored uid or email is stale, the credential is
-  // valid for an address that is not the one on the row, and the only honest way to
-  // show that is to quote the account the server actually changed.
   const [resetAccount, setResetAccount] = useState<{
     email: string | null;
     uid: string;
@@ -35,6 +32,8 @@ const SuperAdminFaculty: React.FC = () => {
   const [fixingPasswords, setFixingPasswords] = useState(false)
   const [repairSummary, setRepairSummary] = useState<RepairResult | null>(null)
   const [resetEmailState, setResetEmailState] = useState<Record<string, 'sending' | 'sent' | 'error'>>({})
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showBulkReset, setShowBulkReset] = useState(false)
 
   const { data: facultyData, isLoading, refetch } = useFacultyList({
     status: statusFilter,
@@ -55,6 +54,20 @@ const SuperAdminFaculty: React.FC = () => {
     if (departmentFilter !== 'all' && f.department !== departmentFilter) return false
     return true
   })
+
+  const allSelected = filteredFaculty.length > 0 && filteredFaculty.every((f) => selectedIds.has(f.id))
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set())
+    else setSelectedIds(new Set(filteredFaculty.map((f) => f.id)))
+  }
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const stats = {
     total: filteredFaculty.length,
@@ -101,21 +114,6 @@ const SuperAdminFaculty: React.FC = () => {
     }
   }
 
-  /**
-   * Provision Firebase Auth accounts for faculty rows that have none.
-   *
-   * This used to run in the browser: build a password with Math.random(), POST
-   * to the Identity Toolkit REST endpoint, then write users/{uid} with the
-   * superadmin's own session. Three things were wrong with that — Math.random is
-   * not a CSPRNG, the REST API cannot set custom claims (so the new account
-   * could sign in while every rule-guarded read was denied), and a failed row
-   * was visible only in console.log while the import still looked successful.
-   *
-   * It now delegates to the server-side identity repair, which creates the Auth
-   * account, issues role/college claims, verifies the users/{uid} lookup
-   * document, strips legacy plaintext passwords from profile documents, and
-   * returns reset links so no shared secret is ever displayed.
-   */
   const handleFixPasswords = async () => {
     if (!window.confirm(
       'Create missing Firebase Auth accounts for faculty in this college?\n\n' +
@@ -152,13 +150,6 @@ const SuperAdminFaculty: React.FC = () => {
     }
   }
 
-  /**
-   * Per-row "no password needed" recovery. The old flow was: open Firestore,
-   * read the plaintext password from the profile document, tell the user. That
-   * field is exactly what this app now refuses to store, so the row action
-   * sends Firebase's own reset email instead — the faculty member picks a new
-   * password and the credential never passes through anyone's hands.
-   */
   const handleSendResetEmail = async (email: string) => {
     if (!email) {
       showError('This faculty record has no email address')
@@ -227,7 +218,15 @@ const SuperAdminFaculty: React.FC = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm">View, edit and manage all faculty members</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => setShowBulkReset(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <KeyRound className="w-4 h-4" /> Regenerate {selectedIds.size} credential(s)
+            </button>
+          )}
           <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-colors text-sm">
             <Download className="w-4 h-4" /> Export CSV
           </button>
@@ -293,7 +292,10 @@ const SuperAdminFaculty: React.FC = () => {
           <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
           <select
             value={collegeFilter}
-            onChange={e => setCollegeFilter(e.target.value)}
+            onChange={e => {
+              setCollegeFilter(e.target.value)
+              setSelectedIds(new Set())
+            }}
             className="pl-10 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 appearance-none"
           >
             <option value="all">All Colleges</option>
@@ -317,6 +319,12 @@ const SuperAdminFaculty: React.FC = () => {
             </select>
           </div>
         )}
+        {filteredFaculty.length > 0 && (
+          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" />
+            Select all {filteredFaculty.length}
+          </label>
+        )}
       </div>
 
       {/* Faculty Table */}
@@ -325,6 +333,9 @@ const SuperAdminFaculty: React.FC = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">
+                <th className="px-4 py-3 w-10">
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" />
+                </th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Faculty</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Contact</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Department</th>
@@ -337,6 +348,9 @@ const SuperAdminFaculty: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredFaculty.map((f: Faculty) => (
                 <tr key={f.id} className="hover:bg-slate-100 dark:hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <td className="px-4 py-3">
+                    <input type="checkbox" checked={selectedIds.has(f.id)} onChange={() => toggleOne(f.id)} className="rounded" />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
@@ -540,6 +554,17 @@ const SuperAdminFaculty: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {showBulkReset && (
+        <BulkCredentialReset
+          collegeId={collegeFilter !== 'all' ? collegeFilter : filteredFaculty[0]?.collegeId || ''}
+          collegeName={colleges.find((c) => c.id === collegeFilter)?.name}
+          collection="faculty"
+          items={filteredFaculty.filter((f) => selectedIds.has(f.id)).map((f) => ({ id: f.id, name: `${f.firstName} ${f.lastName}`.trim() || f.email, email: f.email, department: f.department }))}
+          onClose={() => setShowBulkReset(false)}
+          title={`Regenerate ${selectedIds.size} faculty credential(s)`}
+        />
       )}
     </div>
   )
