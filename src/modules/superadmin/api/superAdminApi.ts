@@ -738,6 +738,15 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
       mentorId: s.mentor || '',
     }));
 
+    // Marker: proves the batched sender is the code actually running. If an
+    // import fails without this line in the console, the deployed bundle is
+    // stale and is still sending every row in a single 70 s-capped request.
+    console.log(
+      `[ImportUsers] batched sender: ${payloads.length} row(s) in ` +
+      `${Math.ceil(payloads.length / IMPORT_BATCH_SIZE)} batch(es) of ${IMPORT_BATCH_SIZE}, ` +
+      `${IMPORT_BATCH_TIMEOUT_MS / 1000}s per batch`
+    );
+
     let outcome: BatchedOutcome<{ data: StudentBatchData; meta: BatchMeta }>;
     try {
       outcome = await runInBatches({
@@ -886,6 +895,11 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
       isPrincipal: (u as any).role === "principal",
     }));
 
+    console.log(
+      `[ImportUsers] batched sender (staff): ${payloads.length} row(s) in ` +
+      `${Math.ceil(payloads.length / IMPORT_BATCH_SIZE)} batch(es) of ${IMPORT_BATCH_SIZE}`
+    );
+
     let outcome: BatchedOutcome<{ data: StaffBatchData; meta: BatchMeta }>;
     try {
       outcome = await runInBatches({
@@ -1013,6 +1027,13 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
     experienceYears: f.experienceYears,
     isHOD: f.isHOD,
   }));
+
+  // Marker: proves the batched sender is the code actually running.
+  console.log(
+    `[ImportFaculty] batched sender: ${staffPayloads.length} row(s) in ` +
+    `${Math.ceil(staffPayloads.length / IMPORT_BATCH_SIZE)} batch(es) of ${IMPORT_BATCH_SIZE}, ` +
+    `${IMPORT_BATCH_TIMEOUT_MS / 1000}s per batch`
+  );
 
   let outcome: BatchedOutcome<{ data: StaffBatchData; meta: BatchMeta }>;
   try {

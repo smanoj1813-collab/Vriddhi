@@ -120,9 +120,19 @@ test('runInBatches: reports progress before each batch and once at the end', asy
 test('batch constants: a batch finishes well inside the client deadline', () => {
   // The bug this module exists to fix: the Firebase JS SDK abandons a callable
   // after 70 s by default, and nothing in the app ever overrode it.
-  assert.equal(IMPORT_BATCH_TIMEOUT_MS, 120_000);
   assert.ok(IMPORT_BATCH_TIMEOUT_MS > 70_000, 'must exceed the SDK default deadline');
-  // Server-side provisioning is sequential, so keep batches small enough that
-  // ~1 s/row stays far below the per-call deadline.
-  assert.ok(IMPORT_BATCH_SIZE <= 50, 'batch must stay small enough to finish quickly');
+  // ...but it must stay inside the callables' own 540 s server limit, so a
+  // wedged batch surfaces as a client error with a usable message rather than
+  // being killed server-side after the work is already done.
+  assert.ok(IMPORT_BATCH_TIMEOUT_MS < 540_000, 'must stay under the function timeout');
+
+  // Per-row cost when Firebase Auth throttles the project: up to 4 attempts
+  // with 400/800/1600 ms backoff on each of ~3 Auth calls, so a throttled row
+  // can take ~10 s. Ten rows keeps the worst case near a third of the budget.
+  const WORST_CASE_SECONDS_PER_ROW = 10;
+  assert.ok(
+    IMPORT_BATCH_SIZE * WORST_CASE_SECONDS_PER_ROW * 1000 <= IMPORT_BATCH_TIMEOUT_MS / 2,
+    'a fully throttled batch must still finish in half the deadline'
+  );
+  assert.ok(IMPORT_BATCH_SIZE >= 1 && IMPORT_BATCH_SIZE <= 500, 'must respect the 500-row server cap');
 });

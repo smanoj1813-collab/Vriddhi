@@ -31,15 +31,27 @@
  *   - the server's 500-row-per-call cap stops being a ceiling on the upload
  */
 
-export const IMPORT_BATCH_SIZE = 25;
+/**
+ * Rows per request.
+ *
+ * Deliberately small. Each row costs roughly three Firebase Auth round-trips
+ * (create, set claims, read back to verify) plus two Firestore writes, and
+ * every Auth call is wrapped in `withAuthQuotaRetry` — up to 4 attempts with
+ * exponential backoff (400/800/1600 ms + jitter) whenever the project is
+ * throttled. A throttled row can therefore take ~10 s, so a large batch is
+ * exactly what makes a request overrun its deadline. Ten rows keeps the worst
+ * case near 100 s, a third of the budget below.
+ */
+export const IMPORT_BATCH_SIZE = 10;
 
 /**
  * Per-call client deadline, in milliseconds. Explicitly set on every
- * `httpsCallable` so the 70 s SDK default can never apply. Sized well above
- * what a 25-row batch needs (~25 s) and well below the function's own 540 s
- * limit, so a genuinely wedged batch fails here rather than server-side.
+ * `httpsCallable` so the 70 s SDK default can never apply. Large enough to
+ * absorb a badly throttled batch, still comfortably inside the callables' own
+ * 540 s server limit — so a genuinely wedged batch fails here, with a usable
+ * error, rather than being killed server-side.
  */
-export const IMPORT_BATCH_TIMEOUT_MS = 120_000;
+export const IMPORT_BATCH_TIMEOUT_MS = 300_000;
 
 export interface BatchProgress {
   /** Rows the backend has already finished, excluding the in-flight batch. */
