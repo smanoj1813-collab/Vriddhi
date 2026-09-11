@@ -264,7 +264,7 @@ export async function updateSyllabusExtract(extractId: string, updates: Partial<
 
 export async function updateSyllabusExtractCourses(extractId: string, courses: ParsedCourse[]): Promise<void> {
   const totalModules = courses.reduce((sum, c) => sum + c.modules.length, 0);
-  const totalHours = courses.reduce((sum, c) => sum + c.totalHours, 0);
+  const totalHours = courses.reduce((sum, c) => sum + (c.totalHours ?? 0), 0);
   const totalMarks = courses.reduce((sum, c) => sum + c.totalMarks, 0);
   const confidenceScores = courses.map(c => c.confidence === "high" ? 85 : c.confidence === "medium" ? 60 : 30);
   const avgScore = confidenceScores.length > 0 ? Math.round(confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length) : 0;
@@ -386,7 +386,7 @@ export async function assignCurriculumToCollege(input: AssignCurriculumInput): P
   const selectedCourses = input.selectedCourseIds ? extract.courses.filter(c => input.selectedCourseIds?.includes(c.id)) : extract.courses;
   if (selectedCourses.length === 0) throw new Error("No courses selected for assignment");
   const totalModules = selectedCourses.reduce((sum, c) => sum + c.modules.length, 0);
-  const totalHours = selectedCourses.reduce((sum, c) => sum + c.totalHours, 0);
+  const totalHours = selectedCourses.reduce((sum, c) => sum + (c.totalHours ?? 0), 0);
   const totalMarks = selectedCourses.reduce((sum, c) => sum + c.totalMarks, 0);
   const firstCourse = selectedCourses[0];
   const curriculumData = deepSanitize({

@@ -163,6 +163,18 @@ export interface FacultyTopic {
 export interface FacultyClassSession {
   id: string;
   source?: 'weekly' | 'daily';
+  /**
+   * The weeklySchedules row this session came from, when it came from one.
+   * Set for both virtual (not yet materialised) and materialised sessions, so
+   * the UI can tell them apart via `materialised`.
+   */
+  weeklyScheduleId?: string;
+  /**
+   * S2.2. False for a recurring slot that has no `classSessions` document yet —
+   * the session is created by `ensureClassSession` the first time attendance is
+   * saved for it.
+   */
+  materialised?: boolean;
   subject: string;
   subjectCode: string;
   facultyId: string;

@@ -174,7 +174,7 @@ export function useCurriculumMapping(collegeId: string | undefined) {
         batch,
         division: division || null,
         section: section || null,
-        totalHours: course.totalHours,
+        totalHours: course.totalHours ?? 0,
         credits: course.credits,
         modulesCount: course.modules.length,
         assignedBy: assignedBy || '',

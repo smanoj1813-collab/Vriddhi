@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore'
 import type {
   ClassSchedule,
+  ClassStatus,
   ScheduleFilters,
   WeeklyClassSchedule,
   WeeklyScheduleFormData,
@@ -21,6 +22,8 @@ import {
   type ScheduleEntry,
   type Clash,
 } from '@/shared/utils/timetableConflicts'
+import { ensureClassSession } from './classSessionApi'
+import { normalizeSessionDate } from '@/shared/utils/sessionDate'
 
 export type { ScheduleFilters }
 
@@ -76,17 +79,30 @@ function docToSchedule(d: any, id: string): ClassSchedule {
     division: d.division || '',
     section: d.section || '',
     room: d.room || '',
-    date: d.date || '',
-    timeSlot: d.timeSlot || '',
-    duration: d.duration || 60,
+    // S2.2: three writers have put three shapes in this field — a yyyy-mm-dd
+    // string, an ISO datetime and a Firestore Timestamp. Every filter and sort
+    // downstream assumes the string form, so normalise on the way out.
+    date: normalizeSessionDate(d.date),
+    timeSlot: d.timeSlot || (d.startTime && d.endTime ? `${d.startTime}-${d.endTime}` : ''),
+    duration: d.duration || d.durationMinutes || 60,
     type: d.type || 'lecture',
     status: d.status || 'scheduled',
+    // The `topicsCovered || topicsPlanned` fallback from the original reader is
+    // kept deliberately: rows written before S2.2 only ever had one or the
+    // other, and the UI reads whichever is present.
     topicsCovered: d.topicsCovered || d.topicsPlanned || [],
     attendanceCount: d.attendanceCount || 0,
     totalStudents: d.totalStudents || 0,
     notes: d.notes || '',
     createdAt: d.createdAt || new Date().toISOString(),
     updatedAt: d.updatedAt || new Date().toISOString(),
+    // ─── Slice 2 fields ──────────────────────────────────────────────────
+    weeklyScheduleId: d.weeklyScheduleId || '',
+    topicIds: d.topicIds || [],
+    durationMinutes: d.durationMinutes || d.duration || 60,
+    source: d.source || '',
+    attendanceMarked: d.attendanceMarked || false,
+    presentCount: d.presentCount || 0,
   }
 }
 
@@ -181,22 +197,52 @@ export async function fetchSchedules(
   }
 }
 
+/**
+ * S2.2: this used to `addDoc` straight from the browser with an ISO-datetime
+ * `date` and its own field set — one of the two incompatible `classSessions`
+ * writers behind audit finding F2. It is now a thin wrapper over
+ * `ensureClassSession`, so the shape is decided in one place (the callable) and
+ * an ad-hoc class for the same faculty/date/time/subject cannot be created
+ * twice.
+ */
 export async function createSchedule(collegeId: string, data: Partial<ClassSchedule>): Promise<ClassSchedule> {
+  const result = await ensureClassSession({
+    date: normalizeSessionDate(data.date) || data.date || '',
+    weeklyScheduleId: data.weeklyScheduleId,
+    facultyId: data.facultyId,
+    facultyName: data.facultyName,
+    subject: data.subject,
+    subjectCode: data.subjectCode,
+    branch: data.branch,
+    batch: data.batch,
+    semester: data.semester,
+    division: data.division,
+    section: data.section,
+    room: data.room,
+    // ClassSchedule carries a combined "09:00-10:00" slot; the callable wants
+    // the two ends separately.
+    startTime: data.timeSlot ? data.timeSlot.split('-')[0]?.trim() : undefined,
+    endTime: data.timeSlot ? data.timeSlot.split('-')[1]?.trim() : undefined,
+    type: data.type,
+  })
+
   const now = new Date().toISOString()
-  const docData = {
-    ...data,
-    collegeId,
-    status: data.status || 'scheduled',
-    type: data.type || 'lecture',
-    topicsCovered: data.topicsCovered || [],
-    attendanceCount: 0,
-    totalStudents: 0,
-    notes: data.notes || '',
-    createdAt: now,
-    updatedAt: now,
-  }
-  const docRef = await addDoc(collection(db, 'classSessions'), docData)
-  return docToSchedule(docData, docRef.id)
+  return docToSchedule(
+    {
+      ...data,
+      collegeId,
+      date: result.date || data.date || '',
+      status: (result.status || data.status || 'scheduled') as ClassStatus,
+      type: data.type || 'lecture',
+      topicsCovered: data.topicsCovered || [],
+      attendanceCount: data.attendanceCount || 0,
+      totalStudents: data.totalStudents || 0,
+      notes: data.notes || '',
+      createdAt: now,
+      updatedAt: now,
+    },
+    result.id
+  )
 }
 
 export async function updateSchedule(collegeId: string, id: string, data: Partial<ClassSchedule>): Promise<void> {

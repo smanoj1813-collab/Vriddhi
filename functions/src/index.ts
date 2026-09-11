@@ -74,6 +74,14 @@ import {
 } from './gradeRecords'
 import { savePaper, reviewPaper, getPaperFileDownload, deletePaper } from './paperWorkflow'
 import { parsePaperFile, confirmPaperStructure } from './paperParsing'
+// ─── Slice 2 "Delivery Spine" — timetable → class sessions ───
+import {
+  generateClassSessions,
+  cancelWeeklySchedule,
+  ensureClassSession,
+  completeClassSession,
+  getCurriculumProgress,
+} from './classSchedule'
 
 const app = express()
 
@@ -201,4 +209,9 @@ export {
   deletePaper,
   parsePaperFile,
   confirmPaperStructure,
+  generateClassSessions,
+  cancelWeeklySchedule,
+  ensureClassSession,
+  completeClassSession,
+  getCurriculumProgress,
 }

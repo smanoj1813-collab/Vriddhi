@@ -256,6 +256,7 @@ export function useFacultyAttendance() {
   }, [selectedClass, facultyId, facultyName, collegeId, students, attendance]);
 
   return {
+    facultyId,
     selectedDate,
     setSelectedDate,
     classSessions,

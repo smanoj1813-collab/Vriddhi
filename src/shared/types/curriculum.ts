@@ -32,7 +32,7 @@ export interface ParsedCourse {
   name: string;
   shortName?: string | null;
   credits: number;
-  totalHours: number;
+  totalHours: number | null;
   totalMarks: number;
   internalMarks?: number;
   externalMarks?: number;

@@ -496,7 +496,7 @@ function postProcessExtract(extract: SyllabusExtract, config: ParserConfig): Syl
   });
 
   const totalModules = cleanedCourses.reduce((s, c) => s + c.modules.length, 0);
-  const totalHours = cleanedCourses.reduce((s, c) => s + c.totalHours, 0);
+  const totalHours = cleanedCourses.reduce((s, c) => s + (c.totalHours ?? 0), 0);
   const totalMarks = cleanedCourses.reduce((s, c) => s + c.totalMarks, 0);
 
   return {
@@ -681,7 +681,7 @@ export function parseSyllabusDocument(
     if (confidenceScore >= 70) averageConfidence = 'high';
     else if (confidenceScore >= 40) averageConfidence = 'medium';
 
-    const totalHours = courses.reduce((sum, c) => sum + c.totalHours, 0);
+    const totalHours = courses.reduce((sum, c) => sum + (c.totalHours ?? 0), 0);
     const totalMarks = courses.reduce((sum, c) => sum + c.totalMarks, 0);
 
     let extract: SyllabusExtract = {

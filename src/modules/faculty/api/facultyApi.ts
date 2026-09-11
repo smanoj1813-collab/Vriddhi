@@ -4,6 +4,8 @@ import {
   getDoc, Timestamp, orderBy, limit, writeBatch
 } from 'firebase/firestore';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
+import { ensureClassSession } from '../../admin/api/classSessionApi';
+import { normalizeSessionDate, parseSlotDateKey, slotDateKey } from '@/shared/utils/sessionDate';
 import type {
   FacultyClassSession,
   FacultyAttendanceDoc,
@@ -89,8 +91,17 @@ export async function fetchFacultyClassSessions(
     const recurringSessions: FacultyClassSession[] = weekly
       .filter(item => item.dayOfWeek === requestedDay)
       .map(item => ({
-        id: item.id,
+        // S2.2: the id is the one the materialised session will have, not the
+        // weeklySchedules id. Before this, attendance for a recurring class was
+        // keyed on the weekly slot id and no classSessions document existed at
+        // all for the class being marked — the "two writers, two shapes"
+        // problem in audit finding F2. Using the deterministic id here means
+        // the same day+slot always resolves to one document, whether or not an
+        // admin has run Generate Sessions yet.
+        id: slotDateKey(item.id, requestedDate),
         source: 'weekly',
+        weeklyScheduleId: item.id,
+        materialised: false,
         subject: item.subject,
         subjectCode: item.subjectCode,
         facultyId: item.facultyId,
@@ -106,7 +117,7 @@ export async function fetchFacultyClassSessions(
         endTime: item.endTime,
         date: requestedDate,
         topicsPlanned: [],
-        status: 'scheduled',
+        status: item.isActive === false ? 'cancelled' : 'scheduled',
         attendanceMarked: false,
       }));
 
@@ -120,13 +131,23 @@ export async function fetchFacultyClassSessions(
     const snap = await getDocs(q);
     trackRead(snap.size);
 
-    const dailySessions = snap.docs
-      .filter(d => d.data().date === requestedDate)
+    // Legacy rows store `date` as a yyyy-mm-dd string, an ISO datetime or a
+    // Timestamp (see src/shared/utils/sessionDate.ts), so compare on the
+    // normalised form rather than raw equality.
+    const datedSessions = snap.docs
+      .filter(d => normalizeSessionDate(d.data().date) === requestedDate)
       .map(d => {
         const data = d.data();
+        const weeklyScheduleId = String(data.weeklyScheduleId || '');
+        const startTime = data.startTime || '';
+        const endTime = data.endTime || '';
         return {
           id: d.id,
-          source: 'daily',
+          // A session materialised from the timetable keeps its recurring
+          // parent; everything else is ad-hoc or a reschedule.
+          source: weeklyScheduleId ? 'weekly' : 'daily',
+          weeklyScheduleId,
+          materialised: true,
           subject: data.subject || '',
           subjectCode: data.subjectCode || '',
           facultyId: data.facultyId || '',
@@ -137,23 +158,36 @@ export async function fetchFacultyClassSessions(
           division: data.division || '',
           section: data.section || '',
           room: data.room || '',
-          timeSlot: data.timeSlot || '',
-          startTime: data.startTime || '',
-          endTime: data.endTime || '',
-          date: data.date || requestedDate,
-          topicsPlanned: data.topicsPlanned || [],
+          timeSlot: data.timeSlot || (startTime && endTime ? `${startTime}-${endTime}` : ''),
+          startTime,
+          endTime,
+          date: normalizeSessionDate(data.date) || requestedDate,
+          topicsPlanned: data.topicsPlanned || data.topicsCovered || [],
           status: data.status || 'scheduled',
           attendanceMarked: data.attendanceMarked || false,
         } as FacultyClassSession;
       });
 
-    // A daily session supersedes the matching recurring slot.
+    // Sessions materialised from the timetable supersede the virtual entry for
+    // the same slot — that is the whole point of generating them.
+    const materialisedBySlot = new Map<string, FacultyClassSession>();
+    const dailySessions: FacultyClassSession[] = [];
+    datedSessions.forEach(session => {
+      if (session.weeklyScheduleId) materialisedBySlot.set(session.weeklyScheduleId, session);
+      else dailySessions.push(session);
+    });
+
+    const weeklySessions = recurringSessions.map(session =>
+      materialisedBySlot.get(session.weeklyScheduleId || '') || session
+    );
+
+    // An ad-hoc / rescheduled session supersedes the matching recurring slot.
     const dailyKeys = new Set(dailySessions.map(session =>
       `${session.subjectCode}|${session.timeSlot}|${session.branch}|${session.batch}|${session.division}`
     ));
     return [
       ...dailySessions,
-      ...recurringSessions.filter(session => !dailyKeys.has(
+      ...weeklySessions.filter(session => !dailyKeys.has(
         `${session.subjectCode}|${session.timeSlot}|${session.branch}|${session.batch}|${session.division}`
       )),
     ].sort((a, b) => (a.timeSlot || '').localeCompare(b.timeSlot || ''));
@@ -235,6 +269,21 @@ export async function fetchAttendanceForSession(
     let docSnap = await getDoc(doc(db, 'attendance', attendanceDocumentId(sessionId, date)));
     trackRead(1);
 
+    // S2.2 shim: a recurring session used to be keyed on the bare weekly slot
+    // id, so attendance marked before this change lives under `${date}_${weeklyId}`
+    // while the session is now named `${weeklyId}_${date}`. Try the old key
+    // before falling back to a query, otherwise every previously-marked
+    // recurring class looks unmarked.
+    if (!docSnap.exists()) {
+      const legacySlot = parseSlotDateKey(sessionId);
+      if (legacySlot && legacySlot.date === date) {
+        docSnap = await getDoc(
+          doc(db, 'attendance', attendanceDocumentId(legacySlot.weeklyScheduleId, date))
+        );
+        trackRead(1);
+      }
+    }
+
     // Backward-compatible lookup for attendance written before deterministic IDs.
     if (!docSnap.exists()) {
       const q = query(
@@ -299,11 +348,47 @@ export async function saveAttendance(
   const medicalLeaveCount = records.filter(r => r.status === 'MedicalLeave').length;
   const markedAt = new Date().toISOString();
   const timestamp = Timestamp.now();
-  const documentId = attendanceDocumentId(session.id, session.date || '');
+
+  // ─── S2.2: mark the session that exists ──────────────────────────────────
+  // A recurring class that has not been materialised yet has no classSessions
+  // document — only a virtual entry built from the weekly slot. Get-or-create
+  // it now so attendance, attendanceRecords and attendanceSummary all point at
+  // a real session, and so a second save for the same day+slot cannot create a
+  // second one (audit DoD #3).
+  let sessionId = session.id;
+  if (!session.materialised) {
+    try {
+      const ensured = await ensureClassSession({
+        date: normalizeSessionDate(session.date) || session.date,
+        weeklyScheduleId: session.source === 'weekly'
+          ? (session.weeklyScheduleId || parseSlotDateKey(session.id)?.weeklyScheduleId)
+          : undefined,
+        facultyId: session.facultyId || facultyId,
+        facultyName: session.facultyName || facultyName,
+        subject: session.subject,
+        subjectCode: session.subjectCode,
+        branch: session.branch,
+        batch: session.batch,
+        semester: session.semester,
+        division: session.division,
+        section: session.section,
+        room: session.room,
+        startTime: session.startTime,
+        endTime: session.endTime,
+      });
+      sessionId = ensured.id;
+    } catch (err) {
+      // A session document is an optimisation here, not the point of the save:
+      // attendance must not be lost because the callable was unavailable.
+      console.warn('[FacultyApi] Could not materialise session, marking attendance anyway:', err);
+    }
+  }
+
+  const documentId = attendanceDocumentId(sessionId, session.date || '');
 
   const attendanceData = {
     collegeId,
-    sessionId: session.id,
+    sessionId,
     facultyId,
     facultyName,
     subject: session.subject,
@@ -347,8 +432,8 @@ export async function saveAttendance(
     const recordId = `${documentId}_${record.studentId}`.replace(/\//g, '_');
     batch.set(doc(db, 'attendanceRecords', recordId), {
       collegeId,
-      sessionId: session.id,
-      classSessionId: session.id,
+      sessionId,
+      classSessionId: sessionId,
       studentId: record.studentId,
       studentName: record.name,
       usn: record.usn,
@@ -371,7 +456,7 @@ export async function saveAttendance(
 
   batch.set(doc(db, 'attendanceSummary', documentId), {
     collegeId,
-    sessionId: session.id,
+    sessionId,
     facultyId,
     facultyName,
     date: session.date,
@@ -394,13 +479,48 @@ export async function saveAttendance(
     updatedAt: timestamp,
   }, { merge: true });
 
-  if (session.source === 'daily') {
-    batch.update(doc(db, 'classSessions', session.id), {
-      attendanceMarked: true,
-      markedAt: timestamp,
-      updatedAt: timestamp,
-    });
-  }
+  // S2.2: update the session for *every* source, not just ad-hoc ones. Before
+  // this, marking attendance on a recurring class never touched classSessions
+  // at all, so the timetable and the attendance ledger disagreed silently
+  // (audit finding F2).
+  //
+  // `merge` is required either way: the session may have been created by
+  // ensureClassSession moments ago and a plain set would drop the fields the
+  // server wrote. When we *did* just create it — or when the callable was
+  // unavailable and this write is what brings the document into existence —
+  // the full context goes in so the row is not left a half-empty shell that
+  // only attendance understands.
+  const sessionWrite: Record<string, unknown> = session.materialised
+    ? {}
+    : {
+        subject: session.subject,
+        subjectCode: session.subjectCode,
+        facultyId: session.facultyId || facultyId,
+        facultyName: session.facultyName || facultyName,
+        branch: session.branch,
+        batch: session.batch,
+        semester: session.semester,
+        division: session.division,
+        section: session.section,
+        room: session.room,
+        date: normalizeSessionDate(session.date) || session.date,
+        startTime: session.startTime || '',
+        endTime: session.endTime || '',
+        timeSlot: session.timeSlot || '',
+        weeklyScheduleId: session.weeklyScheduleId || '',
+        source: session.source === 'weekly' ? 'weekly-schedule' : 'adhoc',
+      };
+
+  batch.set(doc(db, 'classSessions', sessionId), {
+    ...sessionWrite,
+    collegeId,
+    attendanceMarked: true,
+    attendanceCount: records.length,
+    presentCount,
+    markedAt: timestamp,
+    markedBy: facultyId,
+    updatedAt: timestamp,
+  }, { merge: true });
 
   await batch.commit();
   return documentId;
@@ -411,8 +531,28 @@ export async function saveAttendance(
 export async function createClassSession(
   data: Omit<FacultyClassSession, 'id'>
 ): Promise<string> {
-  const docRef = await addDoc(collection(db, 'classSessions'), data);
-  return docRef.id;
+  // S2.2: this used to `addDoc` a second, incompatible session shape straight
+  // from the browser — one of the two writers behind audit finding F2. It now
+  // goes through the single get-or-create writer, so the caller gets back the
+  // id of the session that *already exists* for this day+slot if there is one,
+  // instead of creating a parallel document.
+  const result = await ensureClassSession({
+    date: normalizeSessionDate(data.date) || data.date,
+    weeklyScheduleId: data.weeklyScheduleId,
+    facultyId: data.facultyId,
+    facultyName: data.facultyName,
+    subject: data.subject,
+    subjectCode: data.subjectCode,
+    branch: data.branch,
+    batch: data.batch,
+    semester: data.semester,
+    division: data.division,
+    section: data.section,
+    room: data.room,
+    startTime: data.startTime,
+    endTime: data.endTime,
+  });
+  return result.id;
 }
 
 // ─── Fetch Faculty Students ───────────────────────────────────────────────

@@ -69,6 +69,33 @@ export const grantUserRole = onCall(
     const previousCollegeId = existingClaims.collegeId ?? null
     const roleChanged = previousRole !== role || previousCollegeId !== collegeId
 
+    // Refuse to demote a superadmin.
+    //
+    // Granting a lesser role to a superadmin's own address deletes
+    // superadmins/{uid} and rewrites users/{uid}.role — and callerIsSuperadmin()
+    // reads exactly those two places. So the caller silently revokes the one
+    // privilege that authorises this very function, with no way back through
+    // the UI: every later call is rejected before it can repair anything.
+    // Worse, claims are not what gates it, so a still-valid superadmin ID
+    // token does not help.
+    //
+    // Demotion should be deliberate and auditable, so it belongs in a
+    // service-account script rather than a form field.
+    if (role !== 'superadmin' && (await callerIsSuperadmin(authUser.uid))) {
+      if (authUser.uid === request.auth.uid) {
+        throw new HttpsError(
+          'failed-precondition',
+          'This is your own superadmin account. Demoting it would lock you out of every ' +
+            'privileged action with no way to undo it from the app. Use a service-account ' +
+            'script (scripts/restore-superadmin.mjs has the inverse operation) if you intend this.'
+        )
+      }
+      throw new HttpsError(
+        'failed-precondition',
+        `${email} is a superadmin. Demote them with a service-account script so the change is deliberate.`
+      )
+    }
+
     await admin.auth().setCustomUserClaims(authUser.uid, {
       ...existingClaims, role, collegeId, mustChangePassword: created || existingClaims.mustChangePassword === true,
     })
@@ -100,9 +127,34 @@ export const grantUserRole = onCall(
 
     const profileCollection = role === 'faculty' ? 'faculty' : ['admin', 'principal'].includes(role) ? 'admins' : role === 'hod' ? 'hods' : role === 'mentor' ? 'mentors' : null
     if (profileCollection) {
+      // `findByEmail` returns document *snapshots*; WriteBatch needs a
+      // reference. Using the snapshot directly made any second grant for the
+      // same address — re-running an admin creation, or promoting someone who
+      // already has a profile row — fail inside batch.set and take the whole
+      // identity write down with it.
       const docs = await findByEmail(profileCollection, email)
-      const target = docs[0] || db.doc(`${profileCollection}/${authUser.uid}`)
-      batch.set(target as any, { uid: authUser.uid, email, name: resolvedName, role, collegeId, updatedAt: now }, { merge: true })
+      const target = docs[0]?.ref || db.doc(`${profileCollection}/${authUser.uid}`)
+
+      // `status` and `createdAt` are not decoration: listAdmins() and
+      // listFaculty() both query with orderBy('createdAt') and an optional
+      // status filter, and Firestore silently omits any document that is
+      // missing the ordered field. A profile written without them exists in
+      // the console but is invisible in every list — which is exactly what
+      // "created successfully but not showing anywhere" looks like.
+      //
+      // createdAt is only stamped when absent, so re-granting a role to an
+      // existing account does not overwrite when they were first created.
+      const existingProfile = docs[0] ? docs[0].data() : null
+      batch.set(target, {
+        uid: authUser.uid,
+        email,
+        name: resolvedName,
+        role,
+        collegeId,
+        status: 'active',
+        updatedAt: now,
+        ...(existingProfile && existingProfile.createdAt ? {} : { createdAt: now }),
+      }, { merge: true })
     }
     if (role === 'student') {
       const docs = await findByEmail('students', email)

@@ -5,10 +5,12 @@
 
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy,
-  addDoc, updateDoc, deleteDoc, Timestamp, writeBatch,
+  updateDoc, deleteDoc, Timestamp, writeBatch,
   QueryConstraint, onSnapshot, Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
+import { ensureClassSession } from './classSessionApi';
+import { normalizeSessionDate } from '@/shared/utils/sessionDate';
 
 import type {
   AttendanceRecord,
@@ -29,11 +31,38 @@ function toISO(ts: any): string {
 // Class Sessions
 // ═══════════════════════════════════════════════════════════════════════
 
+/**
+ * S2.2: this used to `addDoc` a session with a Firestore-Timestamp `createdAt`
+ * and none of the scheduling fields — the second of the two incompatible
+ * writers behind audit finding F2 (the other was scheduleApi.createSchedule).
+ *
+ * It now goes through `ensureClassSession`, the single server-side get-or-create
+ * writer, so attendance attaches to the session that already exists for this
+ * day+slot instead of creating a parallel document in a different shape.
+ */
 export async function createClassSession(data: Omit<ClassSession, 'id'>): Promise<ClassSession> {
-  const now = Timestamp.now();
-  const payload = { ...data, createdAt: now, updatedAt: now };
-  const ref = await addDoc(collection(db, 'classSessions'), payload);
-  return { id: ref.id, ...data } as ClassSession;
+  const result = await ensureClassSession({
+    date: normalizeSessionDate(data.date) || data.date,
+    facultyId: data.facultyId,
+    facultyName: data.facultyName,
+    subject: data.subject,
+    subjectCode: (data as { subjectCode?: string }).subjectCode,
+    branch: data.branch,
+    batch: data.batch,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    topic: data.topic,
+  });
+
+  const nowIso = new Date().toISOString();
+  return {
+    ...data,
+    id: result.id,
+    date: result.date || data.date,
+    status: (result.status || data.status || 'scheduled') as ClassSession['status'],
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  } as ClassSession;
 }
 
 export async function getClassSession(id: string): Promise<ClassSession | null> {
@@ -43,7 +72,9 @@ export async function getClassSession(id: string): Promise<ClassSession | null> 
   return {
     id: snap.id,
     ...d,
-    date: d.date || '',
+    // S2.2: `date` may still be an ISO datetime or a Timestamp on rows written
+    // before there was one session schema; normalise on the way out.
+    date: normalizeSessionDate(d.date),
     startTime: d.startTime || '',
     endTime: d.endTime || '',
     markedAt: toISO(d.markedAt),
@@ -75,7 +106,7 @@ export async function listClassSessions(filters: ListSessionsFilters = {}): Prom
     return {
       id: d.id,
       ...data,
-      date: data.date || '',
+      date: normalizeSessionDate(data.date),
       startTime: data.startTime || '',
       endTime: data.endTime || '',
       markedAt: toISO(data.markedAt),

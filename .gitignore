@@ -40,6 +40,15 @@ Thumbs.db
 
 # Firebase
 .firebase/
+
+# Service-account keys. These are full project-admin credentials: anyone
+# holding one can mint custom claims, read every Firestore document and
+# impersonate any user. They are downloaded for local repair scripts only and
+# must never be committed. Generating an extra key is additive, so there is no
+# reason to keep one in the tree.
+*firebase-adminsdk*.json
+*service-account*.json
+serviceAccountKey.json
 # .firebaserc is intentionally TRACKED: it pins the Google Cloud project that
 # the rules, functions and hosting in this repository belong to. Leaving it out
 # is what let deploys drift (a deploy without --project either fails or targets

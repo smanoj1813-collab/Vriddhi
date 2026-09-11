@@ -190,13 +190,12 @@ export const bulkCreateStudentAccounts = onCall(
     // is what previously turned one empty cell into "Successful: 0").
 
     // ── Verify caller ──
-    const caller = await verifyCaller(request)
-    if (caller.role !== 'superadmin' && caller.collegeId !== collegeId) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only import students into your own college'
-      )
-    }
+    // Creating student identities is superadmin-only. It previously fell back
+    // to verifyCaller's default STAFF_CREATOR_ROLES and then only checked that
+    // a non-superadmin targeted their own college — which let a college admin
+    // provision students, faculty, HODs and principals into their own tenant.
+    // The narrow role list must be passed explicitly.
+    const caller = await verifyCaller(request, ['superadmin'])
 
     // ── Load college data ──
     const college = await getCollegeData(collegeId)
