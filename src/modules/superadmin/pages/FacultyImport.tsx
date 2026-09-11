@@ -5,6 +5,11 @@ import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, GraduationCap } from 'lucide-react'
 import CredentialsTable from '../components/CredentialsTable'
 import { parseCSV, validateCSV, generateCSVTemplate, parseBoolean, normalizeEmploymentType, parseSubjects } from '../../../shared/utils/parseCSV'
+import type { ValidationResult } from '../../../shared/utils/parseCSV'
+import ImportExports from '../components/ImportExports'
+import ImportProgressOverlay from '../components/ImportProgressOverlay'
+import { useBlockUnload } from '../../../shared/hooks/useBlockUnload'
+import type { BatchProgress } from '../../../shared/utils/batchedImport'
 import type { College, ImportResult } from '../api/superAdminApi'
 
 const FacultyImport: React.FC = () => {
@@ -17,6 +22,8 @@ const FacultyImport: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [parseWarnings, setParseWarnings] = useState<string[]>([])
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  // Kept so rows rejected before sending can still be exported afterwards.
+  const [preflight, setPreflight] = useState<ValidationResult | null>(null)
   const [selectedCollegeName, setSelectedCollegeName] = useState('')
   const [selectedCollegeCode, setSelectedCollegeCode] = useState('')
   // Credential delivery: 'temp-password' shows a one-time password the importer
@@ -24,11 +31,18 @@ const FacultyImport: React.FC = () => {
   const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
   // What to do with faculty who already have an account in this college.
   const [onExisting, setOnExisting] = useState<'skip' | 'reset'>('skip')
+  // Live batch progress. Rows go up in batches because one request cannot stay
+  // open for the minutes a large upload takes.
+  const [progress, setProgress] = useState<BatchProgress | null>(null)
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
   const importFaculty = useImportFaculty()
 
   const colleges = collegesData?.items || []
+
+  // Closing or reloading the tab mid-import would discard the response — and
+  // with it every password the backend has already generated.
+  useBlockUnload(isProcessing)
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0]
@@ -49,6 +63,7 @@ const FacultyImport: React.FC = () => {
 
         const validation = validateCSV(parsed, 'faculty')
         setValidationErrors(validation.errors)
+        setPreflight(validation)
 
         if (validation.validRows.length === 0 && parsed.rows.length > 0) {
           showError(`All ${parsed.rows.length} rows have validation errors. Check the error list below.`)
@@ -79,6 +94,7 @@ const FacultyImport: React.FC = () => {
     }
 
     setIsProcessing(true)
+    setProgress(null)
     try {
       const parsed = { headers: [], rows: previewData, rowCount: previewData.length, mappedHeaders: {}, unknownHeaders: [], warnings: [] }
       const validation = validateCSV(parsed, 'faculty')
@@ -115,6 +131,7 @@ const FacultyImport: React.FC = () => {
         faculty: facultyData,
         deliveryMode,
         onExisting,
+        onProgress: setProgress,
       })
 
       setImportResult(result)
@@ -124,6 +141,7 @@ const FacultyImport: React.FC = () => {
       showError(err.message || 'Import failed')
     } finally {
       setIsProcessing(false)
+      setProgress(null)
     }
   }
 
@@ -348,20 +366,14 @@ const FacultyImport: React.FC = () => {
             )}
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Import Complete</h2>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-green-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{importResult.success}</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">Successful</p>
-            </div>
-            <div className="bg-red-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{importResult.failed}</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">Failed</p>
-            </div>
-            <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{importResult.imported?.length || 0}</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">Imported</p>
-            </div>
-          </div>
+          <ImportExports
+            uploadedCount={previewData.length}
+            preflight={preflight}
+            result={importResult}
+            filePrefix="faculty"
+            uploadedRows={previewData}
+            idField="facultyId"
+          />
           {importResult.errors && importResult.errors.length > 0 && (
             <div className="mt-4">
               <p className="text-sm text-red-600 dark:text-red-400 mb-2">Errors:</p>
@@ -374,6 +386,9 @@ const FacultyImport: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Modal: blocks in-app navigation for the duration of the import. */}
+      {isProcessing && <ImportProgressOverlay progress={progress} subject="faculty" />}
     </div>
   )
 }

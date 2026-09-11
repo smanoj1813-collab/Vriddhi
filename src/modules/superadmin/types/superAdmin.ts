@@ -2,6 +2,7 @@
 // Centralized types for Super Admin module
 
 import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import type { BatchProgress } from "../../../shared/utils/batchedImport";
 
 // ═══════════════════════════════════════════════════════════════════════
 // UNIVERSITY CLASSIFICATION (shared with types/university.ts)
@@ -240,6 +241,12 @@ export interface ImportUsersInput {
   deliveryMode?: 'temp-password' | 'reset-email';
   /** Staff rows whose account already exists: leave them or rotate credentials. */
   onExisting?: 'skip' | 'reset';
+  /**
+   * Called as each batch is dispatched. Rows go up in batches because one
+   * request cannot be held open for the minutes a large upload takes — see
+   * `src/shared/utils/batchedImport.ts`.
+   */
+  onProgress?: (progress: BatchProgress) => void;
 }
 
 export interface ImportResult {
@@ -272,6 +279,13 @@ export interface ImportResult {
     error?: string;
   }>;
   failedStudents?: Array<{ name: string; email: string; regNo: string; reason: string }>;
+  /**
+   * Structured failures from any importer, not just the student one.
+   * `failedStudents` is student-specific and predates this; these are the
+   * generic rows the export buttons read, so faculty imports can hand back
+   * something a spreadsheet can open instead of only a list of strings.
+   */
+  failedRows?: Array<{ name?: string; email?: string; regNo?: string; reason: string }>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -306,6 +320,12 @@ export interface FacultyImportPayload {
   deliveryMode?: 'temp-password' | 'reset-email';
   /** 'skip' leaves existing accounts alone; 'reset' rotates their password. */
   onExisting?: 'skip' | 'reset';
+  /**
+   * Called as each batch is dispatched. Rows go up in batches because one
+   * request cannot be held open for the minutes a large upload takes — see
+   * `src/shared/utils/batchedImport.ts`.
+   */
+  onProgress?: (progress: BatchProgress) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
