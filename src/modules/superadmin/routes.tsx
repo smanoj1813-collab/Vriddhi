@@ -21,6 +21,7 @@ const SuperAdminUniversityDetail = lazy(() => import('./pages/SuperAdminUniversi
 const SystemHealthMonitor = lazy(() => import('./pages/SystemHealthMonitor'));
 const UserImport = lazy(() => import('./pages/UserImport'));
 const AccessControl = lazy(() => import('./pages/AccessControl'));
+const BulkCredentialResetPage = lazy(() => import('./pages/BulkCredentialResetPage'));
 
 export const superadminRoutes: RouteObject[] = [
   {
@@ -46,6 +47,7 @@ export const superadminRoutes: RouteObject[] = [
       { path: 'faculty', element: <SuperAdminFaculty /> },
       { path: 'faculty/:id', element: <SuperAdminFacultyDetail /> },
       { path: 'faculty/import', element: <FacultyImport /> },
+      { path: 'credentials/regenerate', element: <BulkCredentialResetPage /> },
       { path: 'curriculum', element: <SuperAdminCurriculum /> },
       { path: 'comparison', element: <MultiCollegeComparison /> },
       { path: 'billing', element: <SubscriptionBilling /> },

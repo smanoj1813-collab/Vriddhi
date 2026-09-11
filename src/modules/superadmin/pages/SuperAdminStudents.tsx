@@ -1,21 +1,20 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudents, useColleges, useUpdateStudent, useResetStudentPassword } from '../hooks/useSuperAdmin';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
 import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2, KeyRound } from "lucide-react";
 import type { Student, College } from '../types/superAdmin';
+import BulkCredentialReset from '../components/BulkCredentialReset';
 
 const SuperAdminStudents: React.FC = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [collegeFilter, setCollegeFilter] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [editForm, setEditForm] = useState<Partial<Student>>({});
   const [showEditModal, setShowEditModal] = useState(false)
-  // One-time credential shown in a dialog, never persisted. Deliberately not
-  // closed on a timeout: the person handing it to a student needs it on screen
-  // while they paste it into a message.
   const [credential, setCredential] = useState<{
     name: string;
     email: string;
@@ -24,10 +23,13 @@ const SuperAdminStudents: React.FC = () => {
     resetLink: string | null;
     profileEmail: string | null;
   } | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkReset, setShowBulkReset] = useState(false);
 
   const { data, isLoading } = useStudents({
     status: statusFilter === "all" ? undefined : statusFilter,
     search: searchQuery || undefined,
+    collegeId: collegeFilter !== "all" ? collegeFilter : undefined,
   });
   const { data: collegesData } = useColleges({ status: "active" });
   const updateStudent = useUpdateStudent();
@@ -35,6 +37,25 @@ const SuperAdminStudents: React.FC = () => {
 
   const students = data?.items || [];
   const colleges = collegesData?.items || [];
+
+  const filteredForBulk = useMemo(() => {
+    // Use current displayed students (already filtered by college/status/search via query)
+    return students;
+  }, [students]);
+
+  const allSelected = filteredForBulk.length > 0 && filteredForBulk.every((s) => selectedIds.has(s.id));
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filteredForBulk.map((s) => s.id)));
+  };
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleEdit = (student: Student) => {
     setSelectedStudent(student);
@@ -82,10 +103,6 @@ const SuperAdminStudents: React.FC = () => {
       const result = await resetPassword.mutateAsync(student.id)
       setCredential({
         name: student.name,
-        // The account the callable changed wins over the row. They differ exactly when
-        // the profile's stored uid or email is stale — and quoting the row's address
-        // there is what makes a successful reset look like a failure, because the
-        // person is told to sign in with an address that never had the password.
         email: result.email || student.email || "",
         password: result.temporaryPassword,
         uid: result.uid || student.uid || null,
@@ -121,6 +138,14 @@ const SuperAdminStudents: React.FC = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm">Manage all students across colleges</p>
           </div>
         </div>
+        {selectedIds.size > 0 && (
+          <button
+            onClick={() => setShowBulkReset(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <KeyRound className="w-4 h-4" /> Regenerate {selectedIds.size} credential(s)
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -144,7 +169,7 @@ const SuperAdminStudents: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <input
@@ -167,6 +192,28 @@ const SuperAdminStudents: React.FC = () => {
             <option value="inactive">Inactive</option>
           </select>
         </div>
+        <div className="relative">
+          <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <select
+            value={collegeFilter}
+            onChange={e => {
+              setCollegeFilter(e.target.value);
+              setSelectedIds(new Set());
+            }}
+            className="input-field pl-10 pr-8 appearance-none"
+          >
+            <option value="all">All Colleges</option>
+            {colleges.map((c: College) => (
+              <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+            ))}
+          </select>
+        </div>
+        {students.length > 0 && (
+          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 ml-2">
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" />
+            Select all {students.length}
+          </label>
+        )}
       </div>
 
       {/* Table */}
@@ -174,6 +221,9 @@ const SuperAdminStudents: React.FC = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-700">
+              <th className="table-header w-10">
+                <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" />
+              </th>
               <th className="table-header">Name</th>
               <th className="table-header">Reg No</th>
               <th className="table-header">Email</th>
@@ -188,6 +238,9 @@ const SuperAdminStudents: React.FC = () => {
           <tbody>
             {students.map((student: Student) => (
               <tr key={student.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <td className="table-cell">
+                  <input type="checkbox" checked={selectedIds.has(student.id)} onChange={() => toggleOne(student.id)} className="rounded" />
+                </td>
                 <td className="table-cell">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
@@ -413,6 +466,17 @@ const SuperAdminStudents: React.FC = () => {
             <button onClick={() => setCredential(null)} className="btn-primary w-full mt-5">Done</button>
           </div>
         </div>
+      )}
+
+      {showBulkReset && (
+        <BulkCredentialReset
+          collegeId={collegeFilter !== 'all' ? collegeFilter : students[0]?.collegeId || ''}
+          collegeName={colleges.find((c) => c.id === collegeFilter)?.name}
+          collection="students"
+          items={students.filter((s) => selectedIds.has(s.id)).map((s) => ({ id: s.id, name: s.name, email: s.email, regNo: s.regNo, department: s.department }))}
+          onClose={() => setShowBulkReset(false)}
+          title={`Regenerate ${selectedIds.size} student credential(s)`}
+        />
       )}
     </div>
   );

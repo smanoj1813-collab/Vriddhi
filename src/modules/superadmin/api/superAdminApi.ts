@@ -607,12 +607,26 @@ export async function listStudents(options: ListStudentsOptions = {}): Promise<P
       q = query(q, where("status", "==", options.status));
     }
 
-    const snapshot = await getDocs(q);
+    const [snapshot, collegesSnap] = await Promise.all([
+      getDocs(q),
+      getDocs(collection(db, "colleges")),
+    ]);
     let items = snapshot.docs.map(docToStudent);
 
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
+
+    const collegeMap: Record<string, { name: string; code: string }> = {};
+    collegesSnap.docs.forEach(d => {
+      const data = d.data();
+      collegeMap[d.id] = { name: data.name || "", code: data.code || "" };
+    });
+
+    items = items.map(s => ({
+      ...s,
+      collegeName: s.collegeName || collegeMap[s.collegeId]?.name || s.collegeId || "—",
+    }));
 
     const total = items.length;
     const hasMore = false;
@@ -1566,8 +1580,22 @@ export async function listFaculty(options: ListFacultyOptions = {}): Promise<Pag
       q = query(q, where("status", "==", options.status));
     }
 
-    const snapshot = await getDocs(q);
+    const [snapshot, collegesSnap] = await Promise.all([
+      getDocs(q),
+      getDocs(collection(db, "colleges")),
+    ]);
     let items = snapshot.docs.map(docToFaculty);
+
+    const collegeMap: Record<string, { name: string; code: string }> = {};
+    collegesSnap.docs.forEach(d => {
+      const data = d.data();
+      collegeMap[d.id] = { name: data.name || "", code: data.code || "" };
+    });
+
+    items = items.map(f => ({
+      ...f,
+      collegeName: f.collegeName || collegeMap[f.collegeId]?.name || f.collegeId || "—",
+    }));
 
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -1729,4 +1757,181 @@ export async function resetFacultyPassword(facultyId: string): Promise<Credentia
     uid: result.data?.uid ?? "",
     resetLink: result.data?.resetLink ?? null,
   };
+}
+// ═══════════════════════════════════════════════════════════════════════
+// BULK CREDENTIAL REGENERATION
+//
+// Why this exists: every run that timed out before the batched sender
+// created accounts server-side and threw the passwords away. Re-importing
+// does not recover them — students have no onExisting: 'reset' option, so
+// the duplicate check reports "already exists" and returns no passwords.
+// The fix is to rotate the credentials in place, using the same chunked
+// runner that fixed the import timeout so a large college does not hit the
+// 70 s SDK deadline again.
+//
+// Each row calls the existing `resetUserPassword` callable (60 s server
+// timeout, 540 s is not needed here because a single reset is fast) and
+// returns the one-time password for CSV export. The callable itself sets
+// mustChangePassword and revokes sessions; we add a best-effort
+// passwordResetRequired flag on the profile doc for UI hints.
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface BulkResetItem {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface BulkResetResult {
+  id: string;
+  name: string;
+  email: string;
+  temporaryPassword?: string;
+  resetLink?: string | null;
+  uid?: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface BulkResetOutcome {
+  results: BulkResetResult[];
+  failures: import('@/shared/utils/batchedImport').BatchFailure[];
+  total: number;
+  succeeded: number;
+  failed: number;
+}
+
+function isFatalResetError(err: any): boolean {
+  const msg = String(err?.message || err || '').toLowerCase();
+  const code = String(err?.code || '').toLowerCase();
+  return (
+    code.includes('permission-denied') ||
+    code.includes('unauthenticated') ||
+    code.includes('not-found') ||
+    msg.includes('permission-denied') ||
+    msg.includes('unauthenticated') ||
+    msg.includes('api version') ||
+    msg.includes('does not exist') ||
+    msg.includes('deployment') ||
+    err?.fatal === true
+  );
+}
+
+async function bulkResetCollection(
+  collectionName: 'students' | 'faculty',
+  items: BulkResetItem[],
+  onProgress?: (p: import('@/shared/utils/batchedImport').BatchProgress) => void
+): Promise<BulkResetOutcome> {
+  if (items.length === 0) {
+    return { results: [], failures: [], total: 0, succeeded: 0, failed: 0 };
+  }
+
+  console.log(
+    `[BulkReset] batched sender (${collectionName}): ${items.length} row(s) in ` +
+      `${Math.ceil(items.length / IMPORT_BATCH_SIZE)} batch(es) of ${IMPORT_BATCH_SIZE}, ` +
+      `${IMPORT_BATCH_TIMEOUT_MS / 1000}s per batch`
+  );
+
+  const resetFn = httpsCallable<
+    { collection: 'students' | 'faculty'; docId: string },
+    ResetResponse
+  >(functions, 'resetUserPassword', { timeout: IMPORT_BATCH_TIMEOUT_MS });
+
+  type BatchResult = BulkResetResult[];
+
+  let outcome: BatchedOutcome<BatchResult>;
+  try {
+    outcome = await runInBatches<BulkResetItem, BatchResult>({
+      items,
+      batchSize: IMPORT_BATCH_SIZE,
+      onProgress,
+      isFatal: isFatalResetError,
+      run: async (batch) => {
+        const batchResults: BulkResetResult[] = [];
+        for (const item of batch) {
+          try {
+            const result = await resetFn({ collection: collectionName, docId: item.id });
+            const temp = result.data?.temporaryPassword;
+            if (!temp) throw new Error('Password reset did not return a temporary password');
+
+            try {
+              await updateDoc(doc(db, collectionName, item.id), {
+                passwordResetRequired: true,
+                updatedAt: Timestamp.now(),
+              });
+            } catch {
+              // Non-fatal: credential already rotated.
+            }
+
+            batchResults.push({
+              id: item.id,
+              name: item.name,
+              email: result.data?.email || item.email,
+              temporaryPassword: temp,
+              resetLink: result.data?.resetLink ?? null,
+              uid: result.data?.uid ?? '',
+              success: true,
+            });
+          } catch (err: any) {
+            const message = describeIdentityError(err, 'resetUserPassword');
+            if (isFatalResetError(err) || isFatalResetError({ message })) {
+              throw Object.assign(new Error(message), { fatal: true });
+            }
+            batchResults.push({
+              id: item.id,
+              name: item.name,
+              email: item.email,
+              success: false,
+              error: message,
+            });
+          }
+        }
+        return batchResults;
+      },
+    });
+  } catch (err: any) {
+    throw new SuperAdminApiError(describeIdentityError(err, 'resetUserPassword'));
+  }
+
+  const flat = outcome.results.flat();
+  const succeeded = flat.filter((r) => r.success).length;
+  const failedFromBatches = outcome.failures.reduce((acc, f) => acc + (f.toRow - f.fromRow + 1), 0);
+  const failed = flat.filter((r) => !r.success).length + failedFromBatches;
+
+  const failureRows: BulkResetResult[] = [];
+  for (const failure of outcome.failures) {
+    for (let i = failure.fromRow; i <= failure.toRow; i++) {
+      const item = items[i - 1];
+      if (!item) continue;
+      failureRows.push({
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        success: false,
+        error: failure.message,
+      });
+    }
+  }
+
+  return {
+    results: [...flat, ...failureRows],
+    failures: outcome.failures,
+    total: items.length,
+    succeeded,
+    failed,
+  };
+}
+
+export async function bulkResetStudentPasswords(
+  items: BulkResetItem[],
+  onProgress?: (p: import('@/shared/utils/batchedImport').BatchProgress) => void
+): Promise<BulkResetOutcome> {
+  return bulkResetCollection('students', items, onProgress);
+}
+
+export async function bulkResetFacultyPasswords(
+  items: BulkResetItem[],
+  onProgress?: (p: import('@/shared/utils/batchedImport').BatchProgress) => void
+): Promise<BulkResetOutcome> {
+  return bulkResetCollection('faculty', items, onProgress);
 }

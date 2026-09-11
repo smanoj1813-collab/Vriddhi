@@ -138,6 +138,7 @@ const navItems: NavItem[] = [
   { label: "Import Faculty", path: "/superadmin/faculty/import", icon: <UploadFile fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Manage Students", path: "/superadmin/students", icon: <ManageAccounts fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Import Students", path: "/superadmin/students/import", icon: <UploadFile fontSize="small" />, roles: ["superadmin"], section: "User Management" },
+  { label: "Regenerate Credentials", path: "/superadmin/credentials/regenerate", icon: <BadgeIcon fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Curriculum", path: "/superadmin/curriculum", icon: <School fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
