@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
+import FacultyAttendancePanel from '../components/FacultyAttendancePanel'
+import FacultyAttendanceTodayCard from '../components/FacultyAttendanceTodayCard'
 import { db } from '@/Firebase/config'
 import {
   collection, query, where, getDocs
@@ -10,7 +12,7 @@ import {
   Clock, Search, Filter, Plus, BarChart3, Bell,
   Lock, Eye, Trash2, Edit3, Download, Upload, RefreshCw, AlertTriangle,
   UserCheck, GraduationCap, BookOpen, Calendar, TrendingUp, MoreHorizontal,
-  DollarSign, School, LogOut, User as UserIcon
+  DollarSign, School, LogOut, User as UserIcon, BadgeCheck
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -703,6 +705,7 @@ export default function AdminDashboard() {
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'departments', label: 'Departments', icon: Building2 },
+    { id: 'faculty-attendance', label: 'Faculty Attendance', icon: BadgeCheck },
     { id: 'approvals', label: 'Approvals', icon: CheckCircle },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'audit', label: 'Audit Logs', icon: Clock },
@@ -744,6 +747,8 @@ export default function AdminDashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FacultyAttendanceTodayCard collegeId={collegeId} />
+
               <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white">Departments</h3>
@@ -764,6 +769,9 @@ export default function AdminDashboard() {
                 )}
               </div>
 
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white">Recent Users</h3>
@@ -807,6 +815,7 @@ export default function AdminDashboard() {
         )
       case 'users': return <UserManagement users={dashboardData.users} collegeId={collegeId} />
       case 'departments': return <DepartmentOverview departments={dashboardData.departments} />
+      case 'faculty-attendance': return <FacultyAttendancePanel collegeId={collegeId} compact />
       case 'approvals': return <ApprovalWorkflows />
       case 'reports': return <ReportsAnalytics totalStudents={dashboardData.totalStudents} totalFaculty={dashboardData.totalFaculty} />
       case 'audit': return <AuditLogs />
@@ -837,6 +846,7 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'College-wide overview and key metrics'}
                 {activeTab === 'users' && 'Manage all users, roles and permissions'}
                 {activeTab === 'departments' && 'Department performance and analytics'}
+                {activeTab === 'faculty-attendance' && 'Faculty self-marked attendance, analysis and downloads'}
                 {activeTab === 'approvals' && 'Review and approve pending requests'}
                 {activeTab === 'reports' && 'Generate and download reports'}
                 {activeTab === 'audit' && 'System activity and security logs'}

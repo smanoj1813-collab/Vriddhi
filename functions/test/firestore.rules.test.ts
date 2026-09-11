@@ -336,6 +336,38 @@ beforeEach(async () => {
         title: 'College-wide announcement',
         message: 'Visible to every student under the old sameCollege rule',
       }),
+      // Staff (faculty) attendance. Document ids follow the storage contract in
+      // src/shared/api/staffAttendanceApi.ts: {collegeId}__{facultyUid}__{date}.
+      setDoc(doc(db, 'staffAttendance', `${COLLEGE_A}__faculty-a__2026-09-01`), {
+        collegeId: COLLEGE_A,
+        facultyId: 'faculty-a',
+        facultyName: 'Faculty A',
+        date: '2026-09-01',
+        month: '2026-09',
+        status: 'present',
+        source: 'self',
+        markedBy: 'faculty-a',
+      }),
+      setDoc(doc(db, 'staffAttendance', `${COLLEGE_A}__faculty-b__2026-09-01`), {
+        collegeId: COLLEGE_A,
+        facultyId: 'faculty-b',
+        facultyName: 'Faculty B',
+        date: '2026-09-01',
+        month: '2026-09',
+        status: 'present',
+        source: 'self',
+        markedBy: 'faculty-b',
+      }),
+      setDoc(doc(db, 'staffAttendance', `${COLLEGE_B}__faculty-c__2026-09-01`), {
+        collegeId: COLLEGE_B,
+        facultyId: 'faculty-c',
+        facultyName: 'Faculty C',
+        date: '2026-09-01',
+        month: '2026-09',
+        status: 'present',
+        source: 'self',
+        markedBy: 'faculty-c',
+      }),
     ])
   })
 })
@@ -663,6 +695,162 @@ describe('faculty topic planner (facultyTopics)', () => {
           where('facultyId', '==', 'legacy-faculty-a')
         )
       )
+    )
+  })
+})
+
+describe('staff (faculty) attendance', () => {
+  // The collection the faculty "My Attendance" page writes and the principal's
+  // Faculty Attendance tab reads. Ownership is the whole security story: a
+  // teacher marks their own day, the people who run the college read everyone's.
+  //
+  // `isStaff()` is deliberately NOT the college-wide read gate — it includes
+  // faculty and mentors, so it would let any teacher list every colleague's
+  // attendance. The first test below is the one that would catch that.
+  function ownDay(collegeId = COLLEGE_A, uid = 'faculty-a', date = '2026-09-01') {
+    return `${collegeId}__${uid}__${date}`
+  }
+
+  function principalContext(collegeId = COLLEGE_A) {
+    return testEnv.authenticatedContext(`principal-${collegeId}`, {
+      role: 'principal',
+      collegeId,
+    })
+  }
+
+  it('lets a faculty member read and mark only their own day', async () => {
+    const db = facultyContext().firestore()
+
+    // The page's own-month query: scoped to the signed-in uid.
+    const mine = await assertSucceeds(
+      getDocs(
+        query(
+          collection(db, 'staffAttendance'),
+          where('facultyId', '==', 'faculty-a')
+        )
+      )
+    )
+    assert.equal(mine.size, 1)
+    assert.equal(mine.docs[0].id, ownDay())
+
+    await assertSucceeds(getDoc(doc(db, 'staffAttendance', ownDay())))
+
+    // Writing a NEW day for yourself, at the deterministic id.
+    await assertSucceeds(
+      setDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-a', '2026-09-02')), {
+        collegeId: COLLEGE_A,
+        facultyId: 'faculty-a',
+        facultyName: 'Faculty A',
+        date: '2026-09-02',
+        month: '2026-09',
+        status: 'present',
+        source: 'self',
+        markedBy: 'faculty-a',
+      })
+    )
+    // Correcting an existing day of your own.
+    await assertSucceeds(updateDoc(doc(db, 'staffAttendance', ownDay()), { status: 'late' }))
+  })
+
+  it('refuses a record stamped with another faculty id', async () => {
+    const db = facultyContext().firestore()
+
+    // Marking someone else present/absent is the forgery this collection most
+    // needs to prevent.
+    await assertFails(
+      setDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-b', '2026-09-02')), {
+        collegeId: COLLEGE_A,
+        facultyId: 'faculty-b',
+        facultyName: 'Faculty B',
+        date: '2026-09-02',
+        month: '2026-09',
+        status: 'absent',
+        source: 'self',
+        markedBy: 'faculty-a',
+      })
+    )
+
+    // So is re-parenting your own row onto a colleague, which would move a day
+    // of attendance between people without creating a new document.
+    await assertFails(updateDoc(doc(db, 'staffAttendance', ownDay()), { facultyId: 'faculty-b' }))
+
+    // And reading or editing theirs directly.
+    await assertFails(getDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-b'))))
+    await assertFails(updateDoc(doc(db, 'staffAttendance', ownDay(COLLEGE_A, 'faculty-b')), { status: 'absent' }))
+  })
+
+  it('keeps the college-wide list away from ordinary faculty', async () => {
+    const db = facultyContext().firestore()
+    // The principal's query. A teacher must not be able to run it: the rollup
+    // names who is absent, which is exactly what a colleague should not see.
+    await assertFails(
+      getDocs(query(collection(db, 'staffAttendance'), where('collegeId', '==', COLLEGE_A)))
+    )
+  })
+
+  it('reserves deletion for admin and principal', async () => {
+    // A teacher cannot delete their own history either — a day of attendance is
+    // payroll-relevant, so removing one is a management action.
+    await assertFails(deleteDoc(doc(facultyContext().firestore(), 'staffAttendance', ownDay())))
+
+    const hodDb = testEnv
+      .authenticatedContext('hod-a', { role: 'hod', collegeId: COLLEGE_A })
+      .firestore()
+    await assertFails(deleteDoc(doc(hodDb, 'staffAttendance', ownDay())))
+
+    await assertSucceeds(deleteDoc(doc(principalContext().firestore(), 'staffAttendance', ownDay())))
+  })
+
+  it('gives management the college rollup but not another college\'s', async () => {
+    const db = principalContext().firestore()
+
+    const collegeA = await assertSucceeds(
+      getDocs(query(collection(db, 'staffAttendance'), where('collegeId', '==', COLLEGE_A)))
+    )
+    assert.equal(collegeA.size, 2)
+
+    // Tenancy comes from the claim, so the same role in another college sees
+    // only its own rows.
+    const otherDb = principalContext(COLLEGE_B).firestore()
+    await assertFails(getDoc(doc(otherDb, 'staffAttendance', ownDay())))
+    const collegeB = await assertSucceeds(
+      getDocs(query(collection(otherDb, 'staffAttendance'), where('collegeId', '==', COLLEGE_B)))
+    )
+    assert.equal(collegeB.size, 1)
+  })
+
+  it('lets management correct a record but not move it between people', async () => {
+    const db = principalContext().firestore()
+    await assertSucceeds(updateDoc(doc(db, 'staffAttendance', ownDay()), { status: 'absent', source: 'admin' }))
+    await assertFails(updateDoc(doc(db, 'staffAttendance', ownDay()), { facultyId: 'faculty-b' }))
+  })
+
+  it('keeps students and claim-less accounts out entirely', async () => {
+    const studentDb = studentContext().firestore()
+    await assertFails(getDoc(doc(studentDb, 'staffAttendance', ownDay())))
+    await assertFails(
+      getDocs(query(collection(studentDb, 'staffAttendance'), where('facultyId', '==', 'faculty-a')))
+    )
+
+    // No role/collegeId claims: staff access is claim-only, so even a faculty
+    // profile document must not open the collection.
+    const legacyDb = testEnv
+      .authenticatedContext('legacy-faculty-a', { email: 'legacy-faculty@example.edu' })
+      .firestore()
+    await assertFails(
+      getDocs(query(collection(legacyDb, 'staffAttendance'), where('facultyId', '==', 'faculty-a')))
+    )
+    await assertFails(
+      setDoc(doc(legacyDb, 'staffAttendance', ownDay(COLLEGE_A, 'legacy-faculty-a', '2026-09-02')), {
+        collegeId: COLLEGE_A,
+        facultyId: 'legacy-faculty-a',
+        facultyName: 'Legacy Faculty',
+        date: '2026-09-02',
+        month: '2026-09',
+        status: 'present',
+        source: 'self',
+        markedBy: 'legacy-faculty-a',
+      })
     )
   })
 })

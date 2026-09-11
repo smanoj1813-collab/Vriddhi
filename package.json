@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "check:dead-code": "node scripts/check-dead-code.cjs",
-    "test:unit": "node --import tsx --test src/shared/api/apiBase.test.ts src/shared/utils/pdfDownloader.test.ts",
+    "test:unit": "node --import tsx --test src/shared/api/apiBase.test.ts src/shared/utils/pdfDownloader.test.ts src/shared/utils/staffAttendanceStats.test.ts src/shared/utils/attendanceExport.test.ts",
     "deploy:all": "npm run build && firebase deploy --only firestore:rules,storage,functions,hosting --project vriddhi-academic",
     "deploy:rules": "firebase deploy --only firestore:rules,storage --project vriddhi-academic",
     "deploy:indexes": "firebase deploy --only firestore:indexes --project vriddhi-academic",
@@ -17,7 +17,8 @@
     "identity:doctor": "node scripts/identity-doctor.mjs",
     "build:functions": "npm --prefix functions run build",
     "test:functions:unit": "npm --prefix functions run test:unit",
-    "test:rules": "npm --prefix functions run test:rules"
+    "test:rules": "npm --prefix functions run test:rules",
+    "test:render": "node --import ./scripts/render-check/domsetup.mjs scripts/render-check/run.mjs"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
@@ -57,6 +58,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "jsdom": "^30.0.1",
     "postcss": "^8.4.38",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^3.4.4",

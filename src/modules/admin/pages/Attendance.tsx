@@ -32,6 +32,7 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
@@ -40,9 +41,25 @@ import {
   getAllStudentsAttendanceSummary,
   getAttendanceStats,
   getFacultyMap,
+  listAttendanceRecordsInRange,
+  summarizeAttendanceRecords,
 } from '../api/attendanceApi';
 import { useAuth } from '../../auth/context/AuthContext';
 import type { AttendanceSummary, ClassSession } from '../types/attendance';
+import {
+  buildStudentAttendanceReport,
+  downloadAttendanceReport,
+  type ExportFormat,
+} from '@/shared/utils/attendanceExport';
+import {
+  customRange,
+  dayRange,
+  monthBounds,
+  monthLabel,
+  monthRange,
+  currentMonthKey,
+  type AttendanceRange,
+} from '@/shared/utils/staffAttendanceStats';
 
 // ─── College scoping for the attendance queries ───
 // The collegeId comes from the verified ID-token claim (user.collegeId), with a
@@ -81,6 +98,84 @@ export default function Attendance() {
     avgPercentage: 0,
   });
   const [facultyMap, setFacultyMap] = useState<Map<string, { name: string; id: string }>>(new Map());
+
+  // ─── Download controls ─────────────────────────────────────────────
+  // A principal downloads a *period*, not the single day the table happens to
+  // be filtered to, so the export gets its own range state: the selected day,
+  // a whole month, or an arbitrary range.
+  const [downloadKind, setDownloadKind] = useState<'day' | 'month' | 'custom'>('month');
+  const [downloadMonth, setDownloadMonth] = useState<string>(() => currentMonthKey());
+  const [rangeFrom, setRangeFrom] = useState<string>(() => monthBounds(currentMonthKey())?.start ?? '');
+  const [rangeTo, setRangeTo] = useState<string>(() => monthBounds(currentMonthKey())?.end ?? '');
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const downloadRange: AttendanceRange = useMemo(() => {
+    if (downloadKind === 'day') return dayRange(date);
+    if (downloadKind === 'custom' && rangeFrom && rangeTo) return customRange(rangeFrom, rangeTo);
+    return monthRange(downloadMonth);
+  }, [downloadKind, date, downloadMonth, rangeFrom, rangeTo]);
+
+  const handleDownload = useCallback(async (format: ExportFormat) => {
+    setExporting(format);
+    setExportError(null);
+    try {
+      const records = await listAttendanceRecordsInRange({
+        collegeId,
+        dateFrom: downloadRange.start,
+        dateTo: downloadRange.end,
+        branch: branch !== 'all' ? branch : undefined,
+        batch: batch !== 'all' ? batch : undefined,
+      });
+
+      if (records.length === 0) {
+        setExportError(`No student attendance recorded between ${downloadRange.start} and ${downloadRange.end}.`);
+        return;
+      }
+
+      // The per-student rollup comes from the same records that fill the detail
+      // sheet, so the two sheets can never disagree about a student's total.
+      const report = buildStudentAttendanceReport({
+        detail: records.map((r) => ({
+          date: r.date,
+          studentName: r.studentName,
+          regNo: r.regNo,
+          usn: (r as unknown as { usn?: string }).usn,
+          branch: (r as unknown as { branch?: string }).branch,
+          batch: (r as unknown as { batch?: string }).batch,
+          division: (r as unknown as { division?: string }).division,
+          subject: r.subject,
+          status: r.status,
+          markedBy: r.markedBy,
+        })),
+        summary: summarizeAttendanceRecords(records).map((s) => {
+          const match = records.find((r) => r.studentId === s.studentId);
+          return {
+            studentName: s.studentName,
+            regNo: s.regNo,
+            branch: (match as unknown as { branch?: string } | undefined)?.branch,
+            batch: (match as unknown as { batch?: string } | undefined)?.batch,
+            totalClasses: s.totalClasses,
+            present: s.present,
+            absent: s.absent,
+            late: s.late,
+            leave: s.leave + s.medicalLeave,
+            percentage: s.percentage,
+          };
+        }),
+        range: downloadRange,
+      });
+
+      const branchPart = branch !== 'all' ? `_${branch}` : '';
+      const batchPart = batch !== 'all' ? `_${batch}` : '';
+      downloadAttendanceReport(format, `student_attendance${branchPart}${batchPart}`, downloadRange, report);
+    } catch (err) {
+      console.error('[Attendance] download failed', err);
+      setExportError(err instanceof Error ? err.message : 'Download failed.');
+    } finally {
+      setExporting(null);
+    }
+  }, [collegeId, downloadRange, branch, batch]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -168,6 +263,92 @@ export default function Attendance() {
           </Button>
         </Box>
       </Box>
+
+      {/* ─── Download ─────────────────────────────────────────────────
+          Period-scoped export: the selected day, a whole month, or any
+          date range. Branch/batch filters above still apply. */}
+      <Paper sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', mb: 2, p: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 1.5 }}>
+          <Typography sx={{ fontWeight: 600, color: 'text.primary', mr: 1, alignSelf: 'center' }}>
+            Download
+          </Typography>
+
+          <FormControl size="small" sx={{ minWidth: 130 }}>
+            <InputLabel sx={{ color: 'text.secondary' }}>Period</InputLabel>
+            <Select
+              value={downloadKind}
+              label="Period"
+              onChange={(e) => setDownloadKind(e.target.value as 'day' | 'month' | 'custom')}
+              sx={{ color: 'text.primary', bgcolor: 'background.paper', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' } }}
+            >
+              <MenuItem value="day">Selected day</MenuItem>
+              <MenuItem value="month">Month</MenuItem>
+              <MenuItem value="custom">Date range</MenuItem>
+            </Select>
+          </FormControl>
+
+          {downloadKind === 'month' && (
+            <TextField
+              type="month"
+              label="Month"
+              value={downloadMonth}
+              onChange={(e) => setDownloadMonth(e.target.value)}
+              size="small"
+              sx={{ width: 170, input: { color: 'text.primary' }, label: { color: 'text.secondary' }, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: 1 } }}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          )}
+
+          {downloadKind === 'custom' && (
+            <>
+              <TextField
+                type="date"
+                label="From"
+                value={rangeFrom}
+                onChange={(e) => setRangeFrom(e.target.value)}
+                size="small"
+                sx={{ width: 160, input: { color: 'text.primary' }, label: { color: 'text.secondary' }, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: 1 } }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                type="date"
+                label="To"
+                value={rangeTo}
+                onChange={(e) => setRangeTo(e.target.value)}
+                size="small"
+                sx={{ width: 160, input: { color: 'text.primary' }, label: { color: 'text.secondary' }, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: 1 } }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </>
+          )}
+
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', alignSelf: 'center' }}>
+            {downloadKind === 'month' ? monthLabel(downloadMonth) : `${downloadRange.start} → ${downloadRange.end}`}
+            {branch !== 'all' ? ` · ${branch}` : ''}
+            {batch !== 'all' ? ` · batch ${batch}` : ''}
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+            {(['csv', 'excel', 'pdf'] as ExportFormat[]).map((format) => (
+              <Button
+                key={format}
+                variant="outlined"
+                size="small"
+                disabled={exporting !== null}
+                onClick={() => handleDownload(format)}
+                startIcon={exporting === format ? <CircularProgress size={14} /> : <DownloadIcon />}
+                sx={{ color: 'text.secondary', borderColor: 'divider', textTransform: 'none' }}
+              >
+                {format === 'excel' ? 'Excel' : format.toUpperCase()}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+
+        {exportError && (
+          <Typography sx={{ mt: 1, fontSize: 12, color: '#f87171' }}>{exportError}</Typography>
+        )}
+      </Paper>
 
       {/* Stats */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>

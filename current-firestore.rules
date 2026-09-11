@@ -546,6 +546,57 @@ service cloud.firestore {
       allow write: if isCollegeStaff() && sameCollege(request.resource.data);
     }
 
+    // -- Staff (faculty) attendance --------------------------------------------
+    // One document per faculty member per calendar day, written by
+    // src/shared/api/staffAttendanceApi.ts with the deterministic id
+    // {collegeId}__{facultyUid}__{YYYY-MM-DD}.
+    //
+    // This is NOT student attendance. The distinguishing rule is ownership: a
+    // faculty member marks their OWN day and nothing else, while the people who
+    // read the whole college's records are the ones who run it. Note that
+    // `isStaff()` includes faculty and mentors, so it is deliberately NOT used
+    // for the college-wide read below — that would let any teacher list every
+    // colleague's attendance.
+    match /staffAttendance/{docId} {
+      function isOwnRecord(data) {
+        return isSignedIn() && 'facultyId' in data && data.facultyId == request.auth.uid;
+      }
+
+      // Management roles only — the tenant still has to match the claim.
+      function isAttendanceManager(data) {
+        return isSignedIn() && role() in ['admin', 'principal', 'hod'] && sameCollege(data);
+      }
+
+      allow get: if isSuperadmin() || isOwnRecord(resource.data) || isAttendanceManager(resource.data);
+
+      // A list is authorised per candidate document, so a faculty member's own
+      // `where('facultyId','==',uid)` query admits exactly their own rows.
+      allow list: if isSuperadmin()
+        || isAttendanceManager(resource.data)
+        || isOwnRecord(resource.data);
+
+      // A faculty member writes only their own document, in their own college;
+      // management may correct a record. `claimedRole()` is the verified claim,
+      // so a forged role field on a profile document cannot widen this.
+      allow create: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(request.resource.data)
+          && (isOwnRecord(request.resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
+
+      // `facultyId` is immutable on update, for management too. Without this a
+      // teacher could edit their own day and re-parent it onto a colleague's
+      // uid, silently moving attendance between people — the same hole the
+      // facultyTopics rules close.
+      allow update: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data) && sameCollege(request.resource.data)
+          && 'facultyId' in resource.data
+          && request.resource.data.facultyId == resource.data.facultyId
+          && (isOwnRecord(resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
+
+      // Deleting a day of payroll-relevant history is a management action only.
+      allow delete: if isSuperadmin()
+        || (claimedRole() in ['admin', 'principal'] && sameCollege(resource.data));
+    }
+
     match /payments/{id} {
       allow read: if isSignedIn() && (isSuperadmin() || resource.data.studentId == request.auth.uid || (role() in ['admin', 'hod'] && sameCollege(resource.data)));
       allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
