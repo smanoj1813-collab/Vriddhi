@@ -726,7 +726,9 @@ describe('staff (faculty) attendance', () => {
       getDocs(
         query(
           collection(db, 'staffAttendance'),
-          where('facultyId', '==', 'faculty-a')
+          where('facultyId', '==', 'faculty-a'),
+          where('date', '>=', '2026-09-01'),
+          where('date', '<=', '2026-09-30')
         )
       )
     )
@@ -804,10 +806,25 @@ describe('staff (faculty) attendance', () => {
   it('gives management the college rollup but not another college\'s', async () => {
     const db = principalContext().firestore()
 
+    // Exercise the exact date-range and month query shapes used by
+    // staffAttendanceApi, not just a simplified college-only approximation.
     const collegeA = await assertSucceeds(
-      getDocs(query(collection(db, 'staffAttendance'), where('collegeId', '==', COLLEGE_A)))
+      getDocs(query(
+        collection(db, 'staffAttendance'),
+        where('collegeId', '==', COLLEGE_A),
+        where('date', '>=', '2026-09-01'),
+        where('date', '<=', '2026-09-30')
+      ))
     )
     assert.equal(collegeA.size, 2)
+    const collegeAMonth = await assertSucceeds(
+      getDocs(query(
+        collection(db, 'staffAttendance'),
+        where('collegeId', '==', COLLEGE_A),
+        where('month', '==', '2026-09')
+      ))
+    )
+    assert.equal(collegeAMonth.size, 2)
 
     // Tenancy comes from the claim, so the same role in another college sees
     // only its own rows.

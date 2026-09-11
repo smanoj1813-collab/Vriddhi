@@ -15,6 +15,7 @@ import {
   withApiVersion,
   withAuthQuotaRetry,
 } from './identityShared'
+import { buildMentorDirectory, resolveMentorAssignment } from './mentorAssignment'
 
 /** A throttle is transient and recoverable, so it gets a log line rather than a
  * row failure the operator has to interpret. The retry policy itself lives in
@@ -197,10 +198,19 @@ export const bulkCreateStudentAccounts = onCall(
     // The narrow role list must be passed explicitly.
     const caller = await verifyCaller(request, ['superadmin'])
 
-    // ── Load college data ──
+    // ── Load college data and mentor aliases ──
     const college = await getCollegeData(collegeId)
     const db = admin.firestore()
     const auth = admin.auth()
+
+    // Faculty profiles use a stable code as their document id but faculty-owned
+    // records use the Auth uid. Resolve the CSV's Mentor value (FAC001, uid,
+    // email, or an unambiguous name) before writing any student representation.
+    // This snapshot is loaded once per callable batch rather than once per row.
+    const facultySnap = await db.collection('faculty').where('collegeId', '==', collegeId).get()
+    const mentorDirectory = buildMentorDirectory(
+      facultySnap.docs.map((profile) => ({ docId: profile.id, data: profile.data() }))
+    )
 
     // ── Pre-check duplicates ──
     // Firestore `in` filters accept at most 30 values. Chunk the checks so the
@@ -434,7 +444,15 @@ export const bulkCreateStudentAccounts = onCall(
           }
         }
 
-        // 2. Prepare the canonical student doc in /students
+        // 2. Prepare the canonical student doc in /students. Keep both the Auth
+        // uid and stable faculty code: new pages query the uid, while old data
+        // and timetable/admin screens still display or reference FAC001.
+        const rawMentor = String(row.mentorId || '').trim()
+        const resolvedMentor = resolveMentorAssignment(mentorDirectory, rawMentor)
+        if (rawMentor && !resolvedMentor) {
+          const warning = `Mentor "${rawMentor}" did not match a unique faculty profile; assignment was preserved for later repair`
+          if (!warnings.includes(warning)) warnings.push(warning)
+        }
         const studentRef = db.collection('students').doc()
         const studentData = {
           id: studentRef.id,
@@ -448,7 +466,9 @@ export const bulkCreateStudentAccounts = onCall(
           batch: String(row.batch || '').trim(),
           division: String(row.division || '').trim(),
           semester: normalizeSemester(row.semester),
-          mentorId: row.mentorId || '',
+          mentorId: resolvedMentor?.mentorId || rawMentor,
+          mentorFacultyId: resolvedMentor?.mentorFacultyId || rawMentor,
+          mentor: resolvedMentor?.mentor || rawMentor,
           dob: row.dob || '',
           gender: row.gender || '',
           address: row.address || '',
