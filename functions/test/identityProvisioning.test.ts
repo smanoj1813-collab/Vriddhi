@@ -21,8 +21,56 @@ import {
   withApiVersion,
   withAuthQuotaRetry,
 } from '../src/identityShared.ts'
+import {
+  buildMentorDirectory,
+  normalizeMentorReference,
+  resolveMentorAssignment,
+} from '../src/mentorAssignment.ts'
 
 const here = dirname(fileURLToPath(import.meta.url))
+
+describe('mentor assignment normalization', () => {
+  const profiles = [
+    {
+      docId: 'FAC001',
+      data: {
+        facultyId: 'FAC001', uid: 'auth-faculty-1', name: 'Asha Rao',
+        email: 'asha@example.edu', collegeId: 'college-a',
+      },
+    },
+    {
+      docId: 'FAC002',
+      data: {
+        facultyId: 'FAC002', uid: 'auth-faculty-2', firstName: 'Vikram', lastName: 'Shah',
+        email: 'vikram@example.edu', collegeId: 'college-a',
+      },
+    },
+  ]
+
+  it('resolves faculty code, uid, email, and name to the Auth uid', () => {
+    const directory = buildMentorDirectory(profiles)
+    for (const alias of ['FAC001', 'auth-faculty-1', 'ASHA@EXAMPLE.EDU', '  Asha   Rao ']) {
+      assert.deepEqual(resolveMentorAssignment(directory, alias), {
+        mentorId: 'auth-faculty-1',
+        mentorFacultyId: 'FAC001',
+        mentor: 'Asha Rao',
+      })
+    }
+    assert.equal(normalizeMentorReference('  Asha   Rao '), 'asha rao')
+  })
+
+  it('does not guess when two faculty profiles share an alias', () => {
+    const directory = buildMentorDirectory([
+      ...profiles,
+      {
+        docId: 'FAC003',
+        data: { facultyId: 'FAC003', uid: 'auth-faculty-3', name: 'Asha Rao' },
+      },
+    ])
+    assert.equal(resolveMentorAssignment(directory, 'Asha Rao'), null)
+    assert.equal(resolveMentorAssignment(directory, 'FAC001')?.mentorId, 'auth-faculty-1')
+  })
+})
 
 describe('identity API version handshake', () => {
   it('matches the constant the web client expects', () => {

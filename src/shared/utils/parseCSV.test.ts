@@ -82,6 +82,17 @@ test('a phone number with spaces is normalised, not rejected', () => {
   );
 });
 
+test('mentor id headers are preserved for server-side faculty resolution', () => {
+  for (const mentorHeader of ['Mentor ID', 'mentorId', 'Faculty ID']) {
+    const csv = [
+      `Student Name,Email Address,Registration Number,${mentorHeader}`,
+      'Ada Lovelace,ada@college.edu,R001,FAC001',
+    ].join('\n');
+    const parsed = parseCSV(csv, 'students');
+    assert.equal(parsed.rows[0].mentor, 'FAC001', `failed header: ${mentorHeader}`);
+  }
+});
+
 test('missing required fields are still rejected', () => {
   const result = check([',ada@college.edu,R001,9876543210']);
 

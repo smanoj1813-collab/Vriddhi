@@ -18,8 +18,16 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
 import { useAuth } from '@/modules/auth/context/AuthContext'
-import type { StudentIndex } from '@/types/students'
-import { getStudentIndex, listStudentIndex } from '@/api/studentIndexApi'
+
+function normalizeMentorReference(value: unknown): string {
+  return String(value ?? '').trim().toLocaleLowerCase('en-US').replace(/\s+/g, ' ')
+}
+
+function isAssignedToFaculty(data: Record<string, unknown>, aliases: Set<string>): boolean {
+  return [data.mentorId, data.mentorFacultyId, data.mentor, data.mentorName]
+    .map(normalizeMentorReference)
+    .some((value) => value && aliases.has(value))
+}
 
 interface AssessmentScore {
   assessment: string
@@ -64,6 +72,7 @@ export default function FacultyStudentAnalysis() {
 
   const [students, setStudents] = useState<FacultyStudent[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'good' | 'average' | 'weak'>('all')
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null)
@@ -74,14 +83,40 @@ export default function FacultyStudentAnalysis() {
       return
     }
     setLoading(true)
+    setLoadError(null)
     try {
-      // 1. Fetch Students from Firestore
-      const studentQuery = query(
-        collection(db, 'students'),
-        where('collegeId', '==', collegeId),
-        limit(150)
+      // Faculty profiles are keyed by a stable code such as FAC001, while the
+      // signed-in identity and newer imports use the Auth uid. Load the caller's
+      // profile and accept every historical alias when selecting assignments.
+      const facultyUid = user?.uid || user?.id || ''
+      const [studentSnap, facultySnap] = await Promise.all([
+        getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId))),
+        facultyUid
+          ? getDocs(query(collection(db, 'faculty'), where('uid', '==', facultyUid), limit(2)))
+          : Promise.resolve(null),
+      ])
+      const facultyProfile = facultySnap?.docs[0]
+      const facultyData = facultyProfile?.data() || {}
+      const facultyName = String(
+        facultyData.name ||
+        `${facultyData.firstName || ''} ${facultyData.lastName || ''}`.trim() ||
+        user?.name || ''
       )
-      const studentSnap = await getDocs(studentQuery)
+      const mentorAliases = new Set(
+        [
+          facultyUid,
+          facultyProfile?.id,
+          facultyData.facultyId,
+          facultyData.id,
+          facultyData.email,
+          facultyName,
+          user?.email,
+          user?.name,
+        ].map(normalizeMentorReference).filter(Boolean)
+      )
+      const assignedStudentDocs = studentSnap.docs.filter((student) =>
+        isAssignedToFaculty(student.data(), mentorAliases)
+      )
 
       // 2. Fetch Attendance Summary for college
       const attQuery = query(
@@ -122,7 +157,7 @@ export default function FacultyStudentAnalysis() {
         })
       }
 
-      const loadedStudents: FacultyStudent[] = studentSnap.docs.map(docSnap => {
+      const loadedStudents: FacultyStudent[] = assignedStudentDocs.map(docSnap => {
         const d = docSnap.data()
         const sid = docSnap.id
         const regNo = d.regNo || d.rollNo || sid
@@ -143,7 +178,7 @@ export default function FacultyStudentAnalysis() {
           regNo,
           batch: d.batch || '2026',
           division: d.division || d.section || 'A',
-          mentor: d.mentor || user?.name || 'Faculty Mentor',
+          mentor: d.mentor || d.mentorName || facultyName || user?.name || 'Faculty Mentor',
           email: d.email || `${regNo.toLowerCase()}@college.edu`,
           phone: d.phone || d.parentPhone || '—',
           avatar: d.avatar,
@@ -171,10 +206,16 @@ export default function FacultyStudentAnalysis() {
       setStudents(loadedStudents)
     } catch (err) {
       console.error('[FacultyStudentAnalysis] fetch error:', err)
+      setStudents([])
+      setLoadError(
+        err instanceof Error
+          ? `Could not load assigned students: ${err.message}`
+          : 'Could not load assigned students.'
+      )
     } finally {
       setLoading(false)
     }
-  }, [collegeId, user?.name])
+  }, [collegeId, user?.uid, user?.id, user?.email, user?.name])
 
   useEffect(() => {
     fetchStudentData()
@@ -233,6 +274,16 @@ export default function FacultyStudentAnalysis() {
           <p className="text-slate-600 dark:text-slate-400">Assigned students academic and attendance performance overview</p>
         </div>
       </div>
+
+      {loadError && (
+        <div className="mb-6 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{loadError}</span>
+          <button type="button" onClick={() => void fetchStudentData()} className="ml-auto font-medium underline">
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
@@ -431,7 +482,11 @@ export default function FacultyStudentAnalysis() {
             {filteredStudents.length === 0 && (
               <div className="p-12 text-center bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 rounded-2xl">
                 <Users className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                <p className="text-slate-500">No students found matching filters</p>
+                <p className="text-slate-500">
+                  {students.length === 0
+                    ? 'No students are assigned to your faculty profile yet.'
+                    : 'No students found matching filters.'}
+                </p>
               </div>
             )}
           </div>
