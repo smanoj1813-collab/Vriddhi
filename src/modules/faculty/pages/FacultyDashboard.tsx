@@ -32,6 +32,7 @@ import {
   School,
   TrendingUp,
   AccessTime,
+  Badge as BadgeIcon,
 } from '@mui/icons-material';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -185,6 +186,15 @@ export default function FacultyDashboard() {
       icon: <CheckCircle />,
       color: '#14b8a6',
       path: '/faculty/attendance-marking',
+    },
+    {
+      // A teacher's own attendance is a different thing from the class
+      // attendance above it; both belong on the dashboard.
+      label: 'My Attendance',
+      value: 'Mark Self',
+      icon: <BadgeIcon />,
+      color: '#6366f1',
+      path: '/faculty/my-attendance',
     },
     {
       label: 'My Students',

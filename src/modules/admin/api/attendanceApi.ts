@@ -171,6 +171,91 @@ export async function listAttendanceRecords(filters: {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// Date-range reads (downloads and reports)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Every per-student attendance record inside an inclusive date range.
+ *
+ * `getAllStudentsAttendanceSummary` walks classSessions and has no date filter
+ * at all, which is unusable for "download last month". This reads the
+ * per-student records directly and relies on the existing composite index
+ * `attendanceRecords (collegeId ASC, date DESC)`.
+ */
+export async function listAttendanceRecordsInRange(filters: {
+  collegeId?: string;
+  /** Inclusive `YYYY-MM-DD`. */
+  dateFrom: string;
+  /** Inclusive `YYYY-MM-DD`. */
+  dateTo: string;
+  branch?: string;
+  batch?: string;
+}): Promise<AttendanceRecord[]> {
+  if (!filters.dateFrom || !filters.dateTo) return [];
+
+  const constraints: QueryConstraint[] = [
+    where('date', '>=', filters.dateFrom),
+    where('date', '<=', filters.dateTo),
+    orderBy('date', 'desc'),
+  ];
+  if (filters.collegeId) constraints.unshift(where('collegeId', '==', filters.collegeId));
+
+  const snap = await getDocs(query(collection(db, 'attendanceRecords'), ...constraints));
+  const records = snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      ...data,
+      markedAt: toISO(data.markedAt),
+      date: data.date || '',
+    } as AttendanceRecord;
+  });
+
+  // Branch/batch are not indexed together with date, so they are applied here
+  // rather than adding a composite index for a report-only filter.
+  return records.filter((r: AttendanceRecord & { branch?: string; batch?: string }) =>
+    (!filters.branch || r.branch === filters.branch) &&
+    (!filters.batch || r.batch === filters.batch));
+}
+
+/** Per-student rollup of any record set — the summary sheet of a download. */
+export function summarizeAttendanceRecords(records: AttendanceRecord[]): AttendanceSummary[] {
+  const byStudent = new Map<string, { name: string; regNo: string; counts: Record<string, number> }>();
+
+  for (const rec of records) {
+    const key = rec.studentId || rec.regNo || 'unknown';
+    let entry = byStudent.get(key);
+    if (!entry) {
+      entry = { name: rec.studentName || '', regNo: rec.regNo || '', counts: {} };
+      byStudent.set(key, entry);
+    }
+    entry.counts[rec.status] = (entry.counts[rec.status] || 0) + 1;
+    if (rec.studentName) entry.name = rec.studentName;
+    if (rec.regNo) entry.regNo = rec.regNo;
+  }
+
+  return Array.from(byStudent.entries()).map(([studentId, entry]) => {
+    const c = entry.counts;
+    const present = c['present'] || 0;
+    const onDuty = c['onDuty'] || 0;
+    const total = Object.values(c).reduce((a, b) => a + b, 0);
+    return {
+      studentId,
+      studentName: entry.name || 'Unknown',
+      regNo: entry.regNo,
+      totalClasses: total,
+      present,
+      absent: c['absent'] || 0,
+      leave: c['leave'] || 0,
+      late: c['late'] || 0,
+      onDuty,
+      medicalLeave: c['medicalLeave'] || 0,
+      percentage: total > 0 ? ((present + onDuty) / total) * 100 : 0,
+    };
+  }).sort((a, b) => a.percentage - b.percentage || a.studentName.localeCompare(b.studentName));
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // Student Attendance Summary
 // ═══════════════════════════════════════════════════════════════════════
 
