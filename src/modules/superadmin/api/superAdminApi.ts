@@ -11,6 +11,13 @@ import {
   type CredentialDelivery,
 } from '@/shared/services/identityBackend';
 import {
+  IMPORT_BATCH_SIZE,
+  IMPORT_BATCH_TIMEOUT_MS,
+  runInBatches,
+  type BatchMeta,
+  type BatchedOutcome,
+} from '@/shared/utils/batchedImport';
+import {
   collection,
   doc,
   getDoc,
@@ -646,6 +653,40 @@ export async function updateStudentSuperAdmin(studentId: string, updates: Update
 // IMPORT API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════
 
+/**
+ * Response shape of `bulkProvisionStaff`, shared by the mixed user import and
+ * the dedicated faculty import so both stay in step with the callable.
+ */
+type StaffBatchData = {
+  /** Present only on newer deployments; absent on the mixed-user call site. */
+  total?: number;
+  created: number;
+  reclaimed: number;
+  skipped?: number;
+  failed: number;
+  authVerified?: number;
+  warnings?: string[];
+  secretsStripped?: number;
+  apiVersion?: string;
+  errors: any[];
+  staff: Array<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    success: boolean;
+    uid?: string;
+    password?: string;
+    reclaimed?: boolean;
+    status?: 'created' | 'reclaimed' | 'skipped' | 'failed';
+    facultyDocId?: string;
+    authVerified?: boolean;
+    delivery?: 'temp-password' | 'reset-link' | 'none';
+    resetLink?: string;
+    error?: string;
+  }>;
+};
+
 export async function importUsers(input: ImportUsersInput): Promise<ImportResult> {
   // Separate students from other roles: students are provisioned by
   // bulkCreateStudentAccounts, staff by bulkProvisionStaff. Both run in the
@@ -668,42 +709,87 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
   }
 
   // ── Students: use Cloud Function (creates Auth + Firestore) ──────────────
+  //
+  // Rows go up in batches. One `httpsCallable` request cannot be held open for
+  // the minutes a full-size upload takes: the Firebase JS SDK abandons it
+  // after 70 s (`FirebaseError: deadline-exceeded`) while the Cloud Function
+  // carries on server-side, so the accounts are created but the response —
+  // counts and every generated one-time password — is thrown away. Batching
+  // keeps each request inside the deadline, makes progress visible, and means
+  // one bad batch no longer costs the credentials already issued.
   if (students.length > 0) {
+    type StudentBatchData = {
+      success: boolean; total: number; created: number; reclaimed: number; failed: number;
+      authVerified?: number; errors: any[]; students: any[]; warnings?: string[]; apiVersion?: string;
+    };
+
+    const payloads = students.map(s => ({
+      regNo: s.regNo || '',
+      name: s.name,
+      email: s.email,
+      phone: s.phone,
+      department: s.department || '',
+      batch: s.batch || '',
+      division: s.division || '',
+      semester: s.semester || 1,
+      dob: s.dob || '',
+      gender: s.gender || '',
+      address: s.address || '',
+      mentorId: s.mentor || '',
+    }));
+
+    let outcome: BatchedOutcome<{ data: StudentBatchData; meta: BatchMeta }>;
     try {
-      const bulkCreateFn = httpsCallable<
-        { collegeId: string; students: any[]; deliveryMode?: CredentialDelivery },
-        {
-          success: boolean; total: number; created: number; reclaimed: number; failed: number;
-          authVerified?: number; errors: any[]; students: any[]; warnings?: string[]; apiVersion?: string;
-        }
-      >(functions, 'bulkCreateStudentAccounts');
+      outcome = await runInBatches({
+        items: payloads,
+        batchSize: IMPORT_BATCH_SIZE,
+        onProgress: input.onProgress,
+        // A stale or missing deployment answers the same way for every batch,
+        // so one verdict is enough. Report it as a hard error instead of
+        // grinding through the upload and blaming every row.
+        isFatal: (err: any) => err?.fatal === true,
+        run: async (batch, meta) => {
+          const bulkCreateFn = httpsCallable<
+            { collegeId: string; students: any[]; deliveryMode?: CredentialDelivery },
+            StudentBatchData
+            // The explicit deadline is the whole point of batching: the SDK's
+            // default is 70 s, which any real upload exceeds.
+          >(functions, 'bulkCreateStudentAccounts', { timeout: IMPORT_BATCH_TIMEOUT_MS });
 
-      const result = await bulkCreateFn({
-        collegeId: input.collegeId,
-        deliveryMode: input.deliveryMode,
-        students: students.map(s => ({
-          regNo: s.regNo || '',
-          name: s.name,
-          email: s.email,
-          phone: s.phone,
-          department: s.department || '',
-          batch: s.batch || '',
-          division: s.division || '',
-          semester: s.semester || 1,
-          dob: s.dob || '',
-          gender: s.gender || '',
-          address: s.address || '',
-          mentorId: s.mentor || '',
-        })),
+          const result = await bulkCreateFn({
+            collegeId: input.collegeId,
+            deliveryMode: input.deliveryMode,
+            students: batch,
+          });
+
+          // Hard gate: if the deployed function predates the Auth-verification
+          // contract, STOP and say so. Reporting "0 failures" against a stale
+          // backend is what made this look like a rules problem for days.
+          const mismatch = identityBackendMismatch(result.data, 'bulkCreateStudentAccounts');
+          if (mismatch) throw Object.assign(new Error(mismatch.message), { fatal: true });
+
+          return { data: result.data, meta };
+        },
       });
+    } catch (cfErr: any) {
+      console.error('[ImportUsers] Cloud Function error:', cfErr);
+      throw new SuperAdminApiError(describeIdentityError(cfErr, 'bulkCreateStudentAccounts'));
+    }
 
-      const data = result.data;
+    // Totals that only mean something once every batch has reported.
+    let total = 0;
+    let created = 0;
+    let reclaimed = 0;
+    let batchFailed = 0;
+    let verified = 0;
+    let stalledBatches = 0;
 
-      // Hard gate: if the deployed function predates the Auth-verification
-      // contract, STOP and say so. Reporting "0 failures" against a stale
-      // backend is what made this look like a rules problem for days.
-      const mismatch = identityBackendMismatch(data, 'bulkCreateStudentAccounts');
-      if (mismatch) throw new Error(mismatch.message);
+    for (const { data } of outcome.results) {
+      total += data.total || 0;
+      created += data.created || 0;
+      reclaimed += data.reclaimed || 0;
+      batchFailed += data.failed || 0;
+      if (typeof data.authVerified === 'number') verified += data.authVerified;
 
       // The callable reports each failed row twice — once in `students` (with
       // success:false) and once in `errors`. Use `students` as the single
@@ -741,31 +827,42 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
       if (data.warnings?.length) warnings.push(...data.warnings);
 
       // Nothing created and nothing reported as failed means the batch never
-      // ran at all (region/permissions/quota). Surface it instead of a green 0.
+      // ran at all (region/permissions/quota). Counted per batch, reported
+      // once below, so a 12-batch import does not repeat it 12 times.
       if (data.total > 0 && data.created + data.reclaimed === 0 && data.failed === 0) {
-        errors.push(
-          'The import reported no created and no failed rows — the Cloud Function did not process the batch. ' +
-          `Verify the deployment: ${DEPLOY_COMMAND}`
-        );
+        stalledBatches++;
       }
-      if (typeof data.authVerified === 'number' && data.authVerified < data.created + data.reclaimed) {
-        warnings.push(
-          `${data.created + data.reclaimed - data.authVerified} student(s) have a profile but no verified Auth account. ` +
-          'Run Superadmin → Access Control → Identity repair to close the gap.'
-        );
-      }
-
-      console.log('[ImportUsers] Cloud Function result:', {
-        total: data.total,
-        created: data.created,
-        reclaimed: data.reclaimed,
-        authVerified: data.authVerified,
-        failed: data.failed,
-      });
-    } catch (cfErr: any) {
-      console.error('[ImportUsers] Cloud Function error:', cfErr);
-      throw new SuperAdminApiError(describeIdentityError(cfErr, 'bulkCreateStudentAccounts'));
     }
+
+    // Whole batches that never reached the backend. Identified by position
+    // because the backend never saw enough to name them.
+    for (const failure of outcome.failures) {
+      errors.push(`Rows ${failure.fromRow}–${failure.toRow} — ${failure.message}`);
+    }
+
+    const batchTotal = outcome.results.length + outcome.failures.length;
+    if (stalledBatches > 0) {
+      errors.push(
+        `${stalledBatches} of ${batchTotal} batch(es) reported no created and no failed rows — ` +
+        `the Cloud Function did not process them. Verify the deployment: ${DEPLOY_COMMAND}`
+      );
+    }
+    if (verified < created + reclaimed) {
+      warnings.push(
+        `${created + reclaimed - verified} student(s) have a profile but no verified Auth account. ` +
+        'Run Superadmin → Access Control → Identity repair to close the gap.'
+      );
+    }
+
+    console.log('[ImportUsers] Cloud Function result:', {
+      total,
+      created,
+      reclaimed,
+      authVerified: verified,
+      failed: batchFailed,
+      batches: batchTotal,
+      failedBatches: outcome.failures.length,
+    });
   }
 
   // ── Non-students (faculty / HOD / principal / admin): provision through the
@@ -773,58 +870,58 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
   //    reclaimed (password reset + claims) instead of failing or being silently
   //    re-used with a stale password. The callable also writes the profile,
   //    the users/{uid} lookup doc and increments the college faculty counter.
+  //
+  //    Batched for the same reason as the students: provisioning is one row at
+  //    a time server-side, so a single request outlives the SDK's 70 s default
+  //    deadline and the credentials it already minted are lost with it.
   if (nonStudents.length > 0) {
+    const payloads = nonStudents.map((u) => ({
+      name: u.name,
+      email: u.email,
+      phone: (u as any).phone,
+      department: (u as any).department || "",
+      designation: (u as any).designation,
+      role: (u as any).role,
+      isHOD: (u as any).role === "hod",
+      isPrincipal: (u as any).role === "principal",
+    }));
+
+    let outcome: BatchedOutcome<{ data: StaffBatchData; meta: BatchMeta }>;
     try {
-      const bulkProvision = httpsCallable<
-        { collegeId: string; staff: any[]; deliveryMode?: CredentialDelivery; onExisting?: 'skip' | 'reset' },
-        {
-          created: number;
-          reclaimed: number;
-          skipped?: number;
-          failed: number;
-          authVerified?: number;
-          warnings?: string[];
-          apiVersion?: string;
-          errors: any[];
-          staff: Array<{
-            id: string;
-            email: string;
-            name: string;
-            role: string;
-            success: boolean;
-            uid?: string;
-            password?: string;
-            reclaimed?: boolean;
-            status?: 'created' | 'reclaimed' | 'skipped' | 'failed';
-            facultyDocId?: string;
-            authVerified?: boolean;
-            delivery?: 'temp-password' | 'reset-link' | 'none';
-            resetLink?: string;
-            error?: string;
-          }>;
-        }
-      >(functions, "bulkProvisionStaff");
+      outcome = await runInBatches({
+        items: payloads,
+        batchSize: IMPORT_BATCH_SIZE,
+        onProgress: input.onProgress,
+        isFatal: (err: any) => err?.fatal === true,
+        run: async (batch, meta) => {
+          const bulkProvision = httpsCallable<
+            { collegeId: string; staff: any[]; deliveryMode?: CredentialDelivery; onExisting?: 'skip' | 'reset' },
+            StaffBatchData
+          >(functions, "bulkProvisionStaff", { timeout: IMPORT_BATCH_TIMEOUT_MS });
 
-      const staffResult = await bulkProvision({
-        collegeId: input.collegeId,
-        deliveryMode: input.deliveryMode,
-        onExisting: input.onExisting || 'skip',
-        staff: nonStudents.map((u) => ({
-          name: u.name,
-          email: u.email,
-          phone: (u as any).phone,
-          department: (u as any).department || "",
-          designation: (u as any).designation,
-          role: (u as any).role,
-          isHOD: (u as any).role === "hod",
-          isPrincipal: (u as any).role === "principal",
-        })),
+          const staffResult = await bulkProvision({
+            collegeId: input.collegeId,
+            deliveryMode: input.deliveryMode,
+            onExisting: input.onExisting || 'skip',
+            staff: batch,
+          });
+
+          // A stale deployment must not look like per-row failures.
+          const mismatch = identityBackendMismatch(staffResult.data, 'bulkProvisionStaff');
+          if (mismatch) throw Object.assign(new Error(mismatch.message), { fatal: true });
+
+          return { data: staffResult.data, meta };
+        },
       });
+    } catch (staffErr: any) {
+      console.error("[ImportUsers] Staff provisioning error:", staffErr);
+      throw new SuperAdminApiError(describeIdentityError(staffErr, 'bulkProvisionStaff'));
+    }
 
-      const mismatch = identityBackendMismatch(staffResult.data, 'bulkProvisionStaff');
-      if (mismatch) throw new Error(mismatch.message);
+    let reclaimedTotal = 0;
 
-      for (const member of staffResult.data.staff || []) {
+    for (const { data } of outcome.results) {
+      for (const member of data.staff || []) {
         if (member.success) {
           if (member.authVerified) authVerified++;
           if (member.status === 'skipped') skipped++;
@@ -848,14 +945,17 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         }
       }
 
-      if (staffResult.data.warnings?.length) warnings.push(...staffResult.data.warnings);
-      const reclaimed = staffResult.data.reclaimed || 0;
-      if (reclaimed > 0) {
-        warnings.push(`${reclaimed} existing account(s) were reclaimed and their password was reset`);
-      }
-    } catch (staffErr: any) {
-      console.error("[ImportUsers] Staff provisioning error:", staffErr);
-      throw new SuperAdminApiError(describeIdentityError(staffErr, 'bulkProvisionStaff'));
+      if (data.warnings?.length) warnings.push(...data.warnings);
+      reclaimedTotal += data.reclaimed || 0;
+    }
+
+    // Whole batches that never reached the backend; named by position.
+    for (const failure of outcome.failures) {
+      errors.push(`Rows ${failure.fromRow}–${failure.toRow} — ${failure.message}`);
+    }
+
+    if (reclaimedTotal > 0) {
+      warnings.push(`${reclaimedTotal} existing account(s) were reclaimed and their password was reset`);
     }
   }
 
@@ -886,74 +986,66 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
   // re-issued) instead of either failing with "email already exists" or being
   // silently re-used with a stale password. The callable writes the faculty
   // profile, the users/{uid} lookup doc, the HOD doc and the college counter.
-  const bulkProvision = httpsCallable<
-    { collegeId: string; staff: any[]; deliveryMode?: CredentialDelivery; onExisting?: 'skip' | 'reset' },
-    {
-      total: number;
-      created: number;
-      reclaimed: number;
-      skipped?: number;
-      failed: number;
-      authVerified?: number;
-      secretsStripped?: number;
-      warnings?: string[];
-      apiVersion?: string;
-      errors: Array<{ row: number; email: string; message: string }>;
-      staff: Array<{
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        success: boolean;
-        uid?: string;
-        password?: string;
-        reclaimed?: boolean;
-        status?: 'created' | 'reclaimed' | 'skipped' | 'failed';
-        facultyDocId?: string;
-        authVerified?: boolean;
-        delivery?: 'temp-password' | 'reset-link' | 'none';
-        resetLink?: string;
-        error?: string;
-      }>;
-    }
-  >(functions, "bulkProvisionStaff");
+  //
+  // Rows go up in batches. Provisioning is one row at a time server-side, so a
+  // single request outlives the Firebase JS SDK's 70 s default deadline
+  // (`FirebaseError: deadline-exceeded`) while the function keeps running
+  // server-side — the accounts get created and the response carrying every
+  // generated password is discarded. See `shared/utils/batchedImport.ts`.
 
-  let result: Awaited<ReturnType<typeof bulkProvision>>;
+  const staffPayloads = payload.faculty.map((f) => ({
+    facultyId: f.facultyId,
+    firstName: f.firstName,
+    lastName: f.lastName,
+    email: f.email,
+    phone: f.phone,
+    gender: f.gender,
+    collegeName: f.collegeName,
+    collegeCode: f.collegeCode,
+    department: f.department,
+    designation: f.designation,
+    employmentType: f.employmentType,
+    joiningDate: f.joiningDate,
+    qualification: f.qualification,
+    specialization: f.specialization,
+    subjectsUG: f.subjectsUG,
+    subjectsPG: f.subjectsPG,
+    experienceYears: f.experienceYears,
+    isHOD: f.isHOD,
+  }));
+
+  let outcome: BatchedOutcome<{ data: StaffBatchData; meta: BatchMeta }>;
   try {
-    result = await bulkProvision({
-      collegeId: payload.collegeId,
-      deliveryMode: payload.deliveryMode,
-      onExisting: payload.onExisting || 'skip',
-      staff: payload.faculty.map((f) => ({
-        facultyId: f.facultyId,
-        firstName: f.firstName,
-        lastName: f.lastName,
-        email: f.email,
-        phone: f.phone,
-        gender: f.gender,
-        collegeName: f.collegeName,
-        collegeCode: f.collegeCode,
-        department: f.department,
-        designation: f.designation,
-        employmentType: f.employmentType,
-        joiningDate: f.joiningDate,
-        qualification: f.qualification,
-        specialization: f.specialization,
-        subjectsUG: f.subjectsUG,
-        subjectsPG: f.subjectsPG,
-        experienceYears: f.experienceYears,
-        isHOD: f.isHOD,
-      })),
+    outcome = await runInBatches({
+      items: staffPayloads,
+      batchSize: IMPORT_BATCH_SIZE,
+      onProgress: payload.onProgress,
+      isFatal: (err: any) => err?.fatal === true,
+      run: async (batch, meta) => {
+        const bulkProvision = httpsCallable<
+          { collegeId: string; staff: any[]; deliveryMode?: CredentialDelivery; onExisting?: 'skip' | 'reset' },
+          StaffBatchData
+        >(functions, "bulkProvisionStaff", { timeout: IMPORT_BATCH_TIMEOUT_MS });
+
+        const result = await bulkProvision({
+          collegeId: payload.collegeId,
+          deliveryMode: payload.deliveryMode,
+          onExisting: payload.onExisting || 'skip',
+          staff: batch,
+        });
+
+        // A stale or missing deployment must never look like per-row failures.
+        const mismatch = identityBackendMismatch(result.data, 'bulkProvisionStaff');
+        if (mismatch) throw Object.assign(new Error(mismatch.message), { fatal: true });
+
+        return { data: result.data, meta };
+      },
     });
   } catch (err: any) {
     // A missing/stale callable must never look like an empty-but-successful
     // import: that is exactly how faculty ended up with profiles and no login.
     throw new SuperAdminApiError(describeIdentityError(err, 'bulkProvisionStaff'));
   }
-
-  const data = result.data;
-  const mismatch = identityBackendMismatch(data, 'bulkProvisionStaff');
-  if (mismatch) throw new SuperAdminApiError(mismatch.message);
 
   const imported: ImportResult["imported"] = [];
   const errors: string[] = [];
@@ -962,57 +1054,95 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
   let skipped = 0;
   let authVerified = 0;
 
-  // `staff` is the single source of truth (each failed row is also mirrored in
-  // `errors`, so we do not append those separately to avoid double-counting).
-  for (const member of data.staff || []) {
-    if (member.success) {
-      if (member.authVerified) authVerified++;
-      if (member.status === 'skipped') skipped++;
-      imported.push({
-        id: member.id || member.uid || "",
-        email: member.email,
-        password: member.password,
-        resetLink: member.resetLink,
-        name: member.name,
-        role: member.role,
-        uid: member.uid,
-        docId: member.facultyDocId || member.id,
-        status: member.status || (member.reclaimed ? 'reclaimed' : 'created'),
-        authVerified: member.authVerified !== false,
-        delivery: member.delivery,
-        error: member.error,
-      });
-    } else {
-      const reason = member.error || "Unknown error";
-      errors.push(`${member.name || member.email} — ${reason}`);
-      failedRows.push({ name: member.name, email: member.email, reason });
+  // Totals that only mean something once every batch has reported.
+  let total = 0;
+  let created = 0;
+  let reclaimed = 0;
+  let failed = 0;
+  let verified = 0;
+  let secretsStripped = 0;
+  let stalledBatches = 0;
+
+  for (const { data } of outcome.results) {
+    total += data.total || 0;
+    created += data.created || 0;
+    reclaimed += data.reclaimed || 0;
+    failed += data.failed || 0;
+    secretsStripped += data.secretsStripped || 0;
+    if (typeof data.authVerified === 'number') verified += data.authVerified;
+
+    // `staff` is the single source of truth (each failed row is also mirrored
+    // in `errors`, so we do not append those separately to avoid double-counting).
+    for (const member of data.staff || []) {
+      if (member.success) {
+        if (member.authVerified) authVerified++;
+        if (member.status === 'skipped') skipped++;
+        imported.push({
+          id: member.id || member.uid || "",
+          email: member.email,
+          password: member.password,
+          resetLink: member.resetLink,
+          name: member.name,
+          role: member.role,
+          uid: member.uid,
+          docId: member.facultyDocId || member.id,
+          status: member.status || (member.reclaimed ? 'reclaimed' : 'created'),
+          authVerified: member.authVerified !== false,
+          delivery: member.delivery,
+          error: member.error,
+        });
+      } else {
+        const reason = member.error || "Unknown error";
+        errors.push(`${member.name || member.email} — ${reason}`);
+        failedRows.push({ name: member.name, email: member.email, reason });
+      }
+    }
+
+    if (data.warnings?.length) warnings.push(...data.warnings);
+
+    if ((data.total || 0) > 0 && data.created + data.reclaimed === 0 && data.failed === 0 && skipped === 0) {
+      stalledBatches++;
     }
   }
 
-  if (data.warnings?.length) warnings.push(...data.warnings);
-  const reclaimed = data.reclaimed || 0;
+  // Whole batches that never reached the backend; named by position.
+  for (const failure of outcome.failures) {
+    errors.push(`Rows ${failure.fromRow}–${failure.toRow} — ${failure.message}`);
+  }
+
+  const batchTotal = outcome.results.length + outcome.failures.length;
   if (reclaimed > 0) {
     warnings.push(`${reclaimed} existing account(s) were reclaimed and their password was reset`);
   }
-  if (data.secretsStripped) {
-    warnings.push(`${data.secretsStripped} plaintext password field(s) were deleted from profile documents`);
+  if (secretsStripped > 0) {
+    warnings.push(`${secretsStripped} plaintext password field(s) were deleted from profile documents`);
   }
-  if (typeof data.authVerified === 'number' && data.authVerified < data.created + data.reclaimed) {
+  if (verified < created + reclaimed) {
     warnings.push(
-      `${data.created + data.reclaimed - data.authVerified} staff row(s) lack a verified Auth account — run Access Control → Identity repair`
+      `${created + reclaimed - verified} staff row(s) lack a verified Auth account — run Access Control → Identity repair`
     );
   }
-  if (data.total > 0 && data.created + data.reclaimed === 0 && data.failed === 0 && skipped === 0) {
+  if (stalledBatches > 0) {
     errors.push(
-      'No rows were created, skipped or failed — the Cloud Function did not process the batch. ' +
-      `Verify the deployment: ${DEPLOY_COMMAND}`
+      `No rows were created, skipped or failed in ${stalledBatches} of ${batchTotal} batch(es) — ` +
+      `the Cloud Function did not process them. Verify the deployment: ${DEPLOY_COMMAND}`
     );
   }
+
+  console.log('[ImportFaculty] Cloud Function result:', {
+    total,
+    created,
+    reclaimed,
+    authVerified: verified,
+    failed,
+    batches: batchTotal,
+    failedBatches: outcome.failures.length,
+  });
 
   return {
     success: imported.length - skipped,
     skipped,
-    failed: data.failed,
+    failed,
     imported,
     errors,
     warnings,

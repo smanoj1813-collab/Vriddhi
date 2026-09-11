@@ -7,6 +7,9 @@ import CredentialsTable from '../components/CredentialsTable'
 import { parseCSV, validateCSV, generateCSVTemplate, parseBoolean, normalizeEmploymentType, parseSubjects } from '../../../shared/utils/parseCSV'
 import type { ValidationResult } from '../../../shared/utils/parseCSV'
 import ImportExports from '../components/ImportExports'
+import ImportProgressOverlay from '../components/ImportProgressOverlay'
+import { useBlockUnload } from '../../../shared/hooks/useBlockUnload'
+import type { BatchProgress } from '../../../shared/utils/batchedImport'
 import type { College, ImportResult } from '../api/superAdminApi'
 
 const FacultyImport: React.FC = () => {
@@ -28,11 +31,18 @@ const FacultyImport: React.FC = () => {
   const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
   // What to do with faculty who already have an account in this college.
   const [onExisting, setOnExisting] = useState<'skip' | 'reset'>('skip')
+  // Live batch progress. Rows go up in batches because one request cannot stay
+  // open for the minutes a large upload takes.
+  const [progress, setProgress] = useState<BatchProgress | null>(null)
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
   const importFaculty = useImportFaculty()
 
   const colleges = collegesData?.items || []
+
+  // Closing or reloading the tab mid-import would discard the response — and
+  // with it every password the backend has already generated.
+  useBlockUnload(isProcessing)
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0]
@@ -84,6 +94,7 @@ const FacultyImport: React.FC = () => {
     }
 
     setIsProcessing(true)
+    setProgress(null)
     try {
       const parsed = { headers: [], rows: previewData, rowCount: previewData.length, mappedHeaders: {}, unknownHeaders: [], warnings: [] }
       const validation = validateCSV(parsed, 'faculty')
@@ -120,6 +131,7 @@ const FacultyImport: React.FC = () => {
         faculty: facultyData,
         deliveryMode,
         onExisting,
+        onProgress: setProgress,
       })
 
       setImportResult(result)
@@ -129,6 +141,7 @@ const FacultyImport: React.FC = () => {
       showError(err.message || 'Import failed')
     } finally {
       setIsProcessing(false)
+      setProgress(null)
     }
   }
 
@@ -373,6 +386,9 @@ const FacultyImport: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Modal: blocks in-app navigation for the duration of the import. */}
+      {isProcessing && <ImportProgressOverlay progress={progress} subject="faculty" />}
     </div>
   )
 }

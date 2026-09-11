@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "check:dead-code": "node scripts/check-dead-code.cjs",
-    "test:unit": "node --import tsx --test src/shared/api/apiBase.test.ts src/shared/utils/pdfDownloader.test.ts src/shared/utils/parseCSV.test.ts src/shared/utils/sessionDate.test.ts",
+    "test:unit": "node --import tsx --test src/shared/api/apiBase.test.ts src/shared/utils/batchedImport.test.ts src/shared/utils/pdfDownloader.test.ts src/shared/utils/parseCSV.test.ts src/shared/utils/sessionDate.test.ts",
     "deploy:all": "npm run build && firebase deploy --only firestore:rules,storage,functions,hosting --project vriddhi-academic",
     "deploy:rules": "firebase deploy --only firestore:rules,storage --project vriddhi-academic",
     "deploy:indexes": "firebase deploy --only firestore:indexes --project vriddhi-academic",
