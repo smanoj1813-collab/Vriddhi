@@ -112,10 +112,24 @@ npm run deploy:indexes     # adds staffAttendance (collegeId,date), (collegeId,m
 ## Verification
 
 ```bash
-npm run test:unit          # 57 tests, including the stats and export contracts
+npm run test:unit          # 57 tests — the stats and export contracts
+npm run test:render        # 21 checks — the components actually mount and render
 npm run build              # tsc + vite
 node scripts/check-dead-code.cjs
 ```
 
+`test:render` exists because the other three only prove the code *compiles*.
+It boots a jsdom DOM, loads the real components through Vite (so the `@` alias
+and TSX go through the same pipeline as the app), and asserts on the rendered
+text. Only the I/O boundary is stubbed — Firestore, `AuthContext` and the
+router live in `scripts/render-check/stubs/`; the components, their hooks, and
+`staffAttendanceStats` are the shipped source.
+
+The fixtures are deliberately small enough to check by hand: 3 faculty, 7
+records across 1–3 Sep 2026, and September 2026 has 26 working days. So the
+rendered overall figure must be `4.5 / (26 × 3) = 5.8%` and Bala Kumar's
+`2.5 / 26 = 9.6%`. If either number moves, the aggregation changed.
+
 `npm run test:rules` (the Firestore rules suite) needs the emulator, which needs
-a JVM — it was not run in this environment.
+a JVM — it was not run in this environment, so the `staffAttendance` rules
+block has no automated coverage yet.

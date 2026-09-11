@@ -17,7 +17,8 @@
     "identity:doctor": "node scripts/identity-doctor.mjs",
     "build:functions": "npm --prefix functions run build",
     "test:functions:unit": "npm --prefix functions run test:unit",
-    "test:rules": "npm --prefix functions run test:rules"
+    "test:rules": "npm --prefix functions run test:rules",
+    "test:render": "node --import ./scripts/render-check/domsetup.mjs scripts/render-check/run.mjs"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
@@ -57,6 +58,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "jsdom": "^30.0.1",
     "postcss": "^8.4.38",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^3.4.4",
