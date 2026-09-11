@@ -582,8 +582,14 @@ service cloud.firestore {
         || (isCollegeStaff() && sameCollege(request.resource.data)
           && (isOwnRecord(request.resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
 
+      // `facultyId` is immutable on update, for management too. Without this a
+      // teacher could edit their own day and re-parent it onto a colleague's
+      // uid, silently moving attendance between people — the same hole the
+      // facultyTopics rules close.
       allow update: if isSuperadmin()
         || (isCollegeStaff() && sameCollege(resource.data) && sameCollege(request.resource.data)
+          && 'facultyId' in resource.data
+          && request.resource.data.facultyId == resource.data.facultyId
           && (isOwnRecord(resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
 
       // Deleting a day of payroll-relevant history is a management action only.

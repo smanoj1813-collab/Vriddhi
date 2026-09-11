@@ -94,10 +94,19 @@ by `summarizeByFaculty` / `buildRegister`.
   college. `isStaff()` is deliberately *not* used for the college-wide read —
   it includes faculty and mentors, so it would let any teacher list every
   colleague's attendance.
+* `facultyId` is **immutable on update**, for management too. Ownership is
+  otherwise checked against the *existing* document, so without this a teacher
+  editing their own day could re-parent it onto a colleague's uid and move that
+  day of attendance between people — no new document, no delete, so nothing
+  else in the ruleset would notice.
 * `admin` / `principal` / `hod` read the whole college and may correct a record;
   only `admin` / `principal` may delete a day.
 * Role and college come from the verified ID-token claim, never from a
   client-writable profile document.
+
+These are covered by the `staff (faculty) attendance` block in
+`functions/test/firestore.rules.test.ts` (7 cases). Run them with
+`npm run test:rules` — that needs the Firestore emulator, and therefore a JVM.
 
 ## Deployment
 
