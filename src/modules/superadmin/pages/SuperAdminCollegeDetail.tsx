@@ -31,9 +31,56 @@ import {
   Trash2,
   Loader2,
   KeyRound,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import { resetCollegeData } from '../api/superAdminApi';
 import BulkCredentialReset from '../components/BulkCredentialReset';
+import { downloadCsv } from '@/shared/utils/parseCSV';
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function exportCollegeStudents(collegeName: string, collegeCode: string, students: any[]) {
+  const stamp = new Date().toISOString().slice(0, 10);
+  const safeName = collegeCode || collegeName.replace(/\s+/g, '-');
+  downloadCsv(
+    `${safeName}-students-${stamp}.csv`,
+    ['Name', 'Reg No', 'Email', 'Phone', 'Batch', 'Division', 'Department', 'Mentor', 'Status', 'College Code'],
+    students.map((s: any) => [
+      s.name,
+      s.regNo,
+      s.email,
+      s.phone || '',
+      s.batch || '',
+      s.division || '',
+      s.department || '',
+      s.mentor || '',
+      s.status || '',
+      collegeCode || '',
+    ])
+  );
+}
+
+function exportCollegeFaculty(collegeName: string, collegeCode: string, faculty: any[]) {
+  const stamp = new Date().toISOString().slice(0, 10);
+  const safeName = collegeCode || collegeName.replace(/\s+/g, '-');
+  downloadCsv(
+    `${safeName}-faculty-${stamp}.csv`,
+    ['Faculty ID', 'Name', 'First Name', 'Last Name', 'Email', 'Phone', 'Department', 'Designation', 'Employment Type', 'Status', 'College Code'],
+    faculty.map((f: any) => [
+      f.facultyId || f.id,
+      f.name || `${f.firstName || ''} ${f.lastName || ''}`.trim(),
+      f.firstName || '',
+      f.lastName || '',
+      f.email,
+      f.phone || '',
+      f.department || '',
+      f.designation || '',
+      f.employmentType || '',
+      f.status || '',
+      collegeCode || f.collegeCode || '',
+    ])
+  );
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface Tab {
@@ -366,6 +413,22 @@ const SuperAdminCollegeDetail: React.FC = () => {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() => exportCollegeStudents(college.name, college.code, students)}
+              disabled={students.length === 0}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-40"
+              title={`Download ${students.length} students as CSV`}
+            >
+              <Download className="w-3.5 h-3.5" /> Students ({students.length})
+            </button>
+            <button
+              onClick={() => exportCollegeFaculty(college.name, college.code, faculty)}
+              disabled={faculty.length === 0}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-medium transition-colors disabled:opacity-40"
+              title={`Download ${faculty.length} faculty as CSV`}
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" /> Faculty ({faculty.length})
+            </button>
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium border ${
                 statusColors[college.status] || statusColors.inactive
@@ -520,6 +583,16 @@ const SuperAdminCollegeDetail: React.FC = () => {
                     icon={<Users className="w-4 h-4" />}
                   />
                   <ActionButton
+                    label={`Export Students (${students.length})`}
+                    onClick={() => exportCollegeStudents(college.name, college.code, students)}
+                    icon={<Download className="w-4 h-4" />}
+                  />
+                  <ActionButton
+                    label={`Export Faculty (${faculty.length})`}
+                    onClick={() => exportCollegeFaculty(college.name, college.code, faculty)}
+                    icon={<FileSpreadsheet className="w-4 h-4" />}
+                  />
+                  <ActionButton
                     label="Regenerate Student Credentials"
                     onClick={() =>
                       setBulkReset({
@@ -568,7 +641,15 @@ const SuperAdminCollegeDetail: React.FC = () => {
         {/* ── FACULTY TAB ────────────────────────────────────────────── */}
         {activeTab === "faculty" && (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => exportCollegeFaculty(college.name, college.code, faculty)}
+                disabled={faculty.length === 0}
+                className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50 bg-slate-100 dark:bg-slate-800"
+                title="Download faculty list as CSV"
+              >
+                <Download className="w-4 h-4" /> Export {faculty.length} Faculty
+              </button>
               <button
                 onClick={() =>
                   setBulkReset({
@@ -620,7 +701,15 @@ const SuperAdminCollegeDetail: React.FC = () => {
         {/* ── STUDENTS TAB ───────────────────────────────────────────── */}
         {activeTab === "students" && (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => exportCollegeStudents(college.name, college.code, students)}
+                disabled={students.length === 0}
+                className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50 bg-slate-100 dark:bg-slate-800"
+                title="Download student list as CSV"
+              >
+                <Download className="w-4 h-4" /> Export {students.length} Students
+              </button>
               <button
                 onClick={() =>
                   setBulkReset({

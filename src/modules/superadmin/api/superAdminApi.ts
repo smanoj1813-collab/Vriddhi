@@ -607,12 +607,26 @@ export async function listStudents(options: ListStudentsOptions = {}): Promise<P
       q = query(q, where("status", "==", options.status));
     }
 
-    const snapshot = await getDocs(q);
+    const [snapshot, collegesSnap] = await Promise.all([
+      getDocs(q),
+      getDocs(collection(db, "colleges")),
+    ]);
     let items = snapshot.docs.map(docToStudent);
 
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
+
+    const collegeMap: Record<string, { name: string; code: string }> = {};
+    collegesSnap.docs.forEach(d => {
+      const data = d.data();
+      collegeMap[d.id] = { name: data.name || "", code: data.code || "" };
+    });
+
+    items = items.map(s => ({
+      ...s,
+      collegeName: s.collegeName || collegeMap[s.collegeId]?.name || s.collegeId || "—",
+    }));
 
     const total = items.length;
     const hasMore = false;
@@ -1566,8 +1580,22 @@ export async function listFaculty(options: ListFacultyOptions = {}): Promise<Pag
       q = query(q, where("status", "==", options.status));
     }
 
-    const snapshot = await getDocs(q);
+    const [snapshot, collegesSnap] = await Promise.all([
+      getDocs(q),
+      getDocs(collection(db, "colleges")),
+    ]);
     let items = snapshot.docs.map(docToFaculty);
+
+    const collegeMap: Record<string, { name: string; code: string }> = {};
+    collegesSnap.docs.forEach(d => {
+      const data = d.data();
+      collegeMap[d.id] = { name: data.name || "", code: data.code || "" };
+    });
+
+    items = items.map(f => ({
+      ...f,
+      collegeName: f.collegeName || collegeMap[f.collegeId]?.name || f.collegeId || "—",
+    }));
 
     if (options.collegeId) {
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
