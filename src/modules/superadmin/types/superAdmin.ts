@@ -644,6 +644,32 @@ export interface PerformanceMetric {
   memoryUsage: number;
 }
 
+export interface SystemConfig {
+  id: string;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+  allowCollegeOnboarding: boolean;
+  defaultAcademicYear: string;
+  feePolicy: {
+    currency: string;
+    defaultLateFeePerDay: number;
+    gracePeriodDays: number;
+    enabledPaymentModes: string[];
+  };
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+export interface SystemAuditLog {
+  id: string;
+  action: string;
+  area: string;
+  summary: string;
+  actorName: string;
+  actorUid?: string;
+  createdAt: string;
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // API ERROR
 // ═══════════════════════════════════════════════════════════════════════

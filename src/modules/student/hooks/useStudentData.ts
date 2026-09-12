@@ -220,7 +220,7 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       const results = await Promise.allSettled([
         fetchAttendance(profileData.id, profileData.collegeId || user?.collegeId || ''),
         fetchAssignments(profileData.id),
-        fetchFees(profileData.id),
+        fetchFees(profileData.id, profileData.collegeId || user?.collegeId),
         fetchTodaySchedule(
           {
             collegeId: profileData.collegeId || user?.collegeId || '',

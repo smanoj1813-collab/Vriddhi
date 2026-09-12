@@ -11,6 +11,9 @@ import {
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
+import { useNotification } from '../../../shared/providers/NotificationProvider'
+import FeeAssignmentModal from '../components/FeeAssignmentModal'
+import FeeStructureModal from '../components/FeeStructureModal'
 
 // ─── Status Config ─────────────────────────────────────
 const STATUS_CONFIG: Record<FeeStatus, { label: string; color: string; bg: string; icon: React.ElementType }> = {
@@ -93,19 +96,20 @@ function CollectPaymentModal({
 }: {
   payment: FeePayment
   onClose: () => void
-  onCollect: (amount: number, mode: PaymentMode) => void
+  onCollect: (amount: number, mode: PaymentMode) => Promise<boolean>
 }) {
   const [amount, setAmount] = useState(payment.amount - payment.paidAmount)
   const [mode, setMode] = useState<PaymentMode>('cash')
   const [processing, setProcessing] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setProcessing(true)
-    setTimeout(() => {
-      onCollect(amount, mode)
+    try {
+      const success = await onCollect(amount, mode)
+      if (success) onClose()
+    } finally {
       setProcessing(false)
-      onClose()
-    }, 800)
+    }
   }
 
   const remaining = payment.amount - payment.paidAmount
@@ -213,18 +217,19 @@ function WaiveFeeModal({
 }: {
   payment: FeePayment
   onClose: () => void
-  onWaive: (remarks: string) => void
+  onWaive: (remarks: string) => Promise<boolean>
 }) {
   const [remarks, setRemarks] = useState('')
   const [processing, setProcessing] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setProcessing(true)
-    setTimeout(() => {
-      onWaive(remarks || 'Fee waived by admin')
+    try {
+      const success = await onWaive(remarks || 'Fee waived by admin')
+      if (success) onClose()
+    } finally {
       setProcessing(false)
-      onClose()
-    }, 600)
+    }
   }
 
   return (
@@ -375,6 +380,7 @@ function PaymentDetailModal({ payment, onClose }: { payment: FeePayment; onClose
 // ─── Main Component ──────────────────────────────────────
 export default function AdminFeeManagement() {
   const { resolvedMode } = useThemeMode()
+  const { showSuccess, showError } = useNotification()
   const chartGrid = resolvedMode === 'dark' ? '#334155' : '#e2e8f0'
   const chartAxis = resolvedMode === 'dark' ? '#94a3b8' : '#64748b'
   const {
@@ -386,27 +392,68 @@ export default function AdminFeeManagement() {
     categorySummary,
     monthlyCollection,
     overduePayments,
+    students,
+    feeStructures,
     updateFilters,
     refreshData,
     collectPayment,
     waiveFee,
+    createFeePayment,
+    createFeeStructure,
   } = useFeeData()
 
   const [selectedPayment, setSelectedPayment] = useState<FeePayment | null>(null)
   const [modalMode, setModalMode] = useState<'collect' | 'waive' | 'detail' | null>(null)
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'overdue'>('overview')
+  const [showAssignment, setShowAssignment] = useState(false)
+  const [showStructure, setShowStructure] = useState(false)
 
-  const handleCollect = (amount: number, mode: PaymentMode) => {
-    if (selectedPayment) {
-      collectPayment(selectedPayment.id, amount, mode)
-    }
+  const handleCollect = async (amount: number, mode: PaymentMode) => {
+    if (!selectedPayment) return false
+    const success = await collectPayment(selectedPayment.id, amount, mode)
+    if (success) showSuccess('Payment recorded and receipt generated.')
+    else showError('Payment could not be recorded. Refresh the ledger and try again.')
+    return success
   }
 
-  const handleWaive = (remarks: string) => {
-    if (selectedPayment) {
-      waiveFee(selectedPayment.id, remarks)
-    }
+  const handleWaive = async (remarks: string) => {
+    if (!selectedPayment) return false
+    const success = await waiveFee(selectedPayment.id, remarks)
+    if (success) showSuccess('Fee waived and audit transaction recorded.')
+    else showError('Fee could not be waived. Refresh the ledger and try again.')
+    return success
+  }
+
+  const handleCreateInvoice = async (input: import('../api/feeApi').CreateFeePaymentInput) => {
+    const created = await createFeePayment(input)
+    if (created) showSuccess(`Fee invoice created for ${created.studentName}.`)
+    else showError('Could not create the fee invoice.')
+    return Boolean(created)
+  }
+
+  const handleCreateStructure = async (input: Omit<import('../api/feeApi').FeeStructure, 'id'>) => {
+    const created = await createFeeStructure(input)
+    if (created) showSuccess(`Fee template “${created.name}” saved.`)
+    else showError('Could not save the fee template.')
+    return Boolean(created)
+  }
+
+  const exportPayments = () => {
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+    const header = ['Student', 'Registration No', 'Course', 'Batch', 'Category', 'Amount', 'Paid', 'Outstanding', 'Status', 'Due Date', 'Receipt No']
+    const rows = allPayments.map(payment => [
+      payment.studentName, payment.regNo, payment.course, payment.batch, payment.category,
+      payment.amount, payment.paidAmount, Math.max(0, payment.amount - payment.paidAmount),
+      payment.status, payment.dueDate, payment.receiptNo || '',
+    ])
+    const csv = [header, ...rows].map(row => row.map(escape).join(',')).join('\\n')
+    const url = URL.createObjectURL(new Blob([`\\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `fee-ledger-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   const statusData = [
@@ -440,11 +487,26 @@ export default function AdminFeeManagement() {
             Refresh
           </button>
           <button
-            onClick={() => console.log('Export fees')}
+            onClick={() => setShowStructure(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-vriddhi-card border border-vriddhi-border text-vriddhi-text rounded-xl text-sm hover:bg-vriddhi-border/50 transition-colors"
+          >
+            <BookOpen size={16} />
+            New template
+          </button>
+          <button
+            onClick={() => setShowAssignment(true)}
             className="flex items-center gap-2 px-4 py-2 bg-vriddhi-accent text-white rounded-xl text-sm hover:bg-teal-600 transition-colors"
           >
+            <CreditCard size={16} />
+            Assign fee
+          </button>
+          <button
+            onClick={exportPayments}
+            disabled={allPayments.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-vriddhi-card border border-vriddhi-border text-vriddhi-text rounded-xl text-sm hover:bg-vriddhi-border/50 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <Download size={16} />
-            Export
+            Export CSV
           </button>
         </div>
       </div>
@@ -950,7 +1012,7 @@ export default function AdminFeeManagement() {
             />
             <StatCard
               label="Overdue Amount"
-              value={`₹${overduePayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString('en-IN')}`}
+              value={`₹${overduePayments.reduce((sum, p) => sum + Math.max(0, p.amount - p.paidAmount), 0).toLocaleString('en-IN')}`}
               icon={DollarSign}
               color="bg-red-500 text-red-600 dark:text-red-400"
               loading={loading}
@@ -964,7 +1026,7 @@ export default function AdminFeeManagement() {
             />
             <StatCard
               label="Avg Overdue"
-              value={`₹${overduePayments.length ? Math.round(overduePayments.reduce((sum, p) => sum + p.amount, 0) / overduePayments.length).toLocaleString('en-IN') : 0}`}
+              value={`₹${overduePayments.length ? Math.round(overduePayments.reduce((sum, p) => sum + Math.max(0, p.amount - p.paidAmount), 0) / overduePayments.length).toLocaleString('en-IN') : 0}`}
               icon={TrendingUp}
               color="bg-blue-500 text-blue-600 dark:text-blue-400"
               loading={loading}
@@ -1022,7 +1084,7 @@ export default function AdminFeeManagement() {
                             <span className="capitalize text-vriddhi-muted">{payment.category}</span>
                           </td>
                           <td className="table-cell text-right font-bold text-red-600 dark:text-red-400">
-                            ₹{payment.amount.toLocaleString('en-IN')}
+                            ₹{Math.max(0, payment.amount - payment.paidAmount).toLocaleString('en-IN')}
                           </td>
                           <td className="table-cell text-center text-vriddhi-muted">{payment.dueDate}</td>
                           <td className="table-cell text-center">
@@ -1076,6 +1138,20 @@ export default function AdminFeeManagement() {
         <PaymentDetailModal
           payment={selectedPayment}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
+        />
+      )}
+      {showAssignment && (
+        <FeeAssignmentModal
+          students={students}
+          structures={feeStructures}
+          onClose={() => setShowAssignment(false)}
+          onSubmit={handleCreateInvoice}
+        />
+      )}
+      {showStructure && (
+        <FeeStructureModal
+          onClose={() => setShowStructure(false)}
+          onSubmit={handleCreateStructure}
         />
       )}
     </div>

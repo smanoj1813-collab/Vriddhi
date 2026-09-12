@@ -35,6 +35,9 @@ import {
   getPerformanceMetrics,
   resolveError,
   acknowledgeAlert,
+  getSystemConfig,
+  updateSystemConfig,
+  getSystemAuditLogs,
   listFaculty,
   getFacultyById,
   updateFaculty,
@@ -83,6 +86,8 @@ import {
   type SlowQuery,
   type ErrorLog,
   type PerformanceMetric,
+  type SystemConfig,
+  type SystemAuditLog,
   type ImportResult,
   type ListCollegesOptions,
   type ListAdminsOptions,
@@ -129,6 +134,8 @@ export const superAdminKeys = {
   slowQueries: (limit: number) => [...superAdminKeys.all, "slow-queries", limit] as const,
   errors: (options?: object) => [...superAdminKeys.all, "errors", options || {}] as const,
   performance: (hours: number) => [...superAdminKeys.all, "performance", hours] as const,
+  systemConfig: () => [...superAdminKeys.all, "system-config"] as const,
+  systemAudit: () => [...superAdminKeys.all, "system-audit"] as const,
   faculty: () => [...superAdminKeys.all, "faculty"] as const,
   facultyList: (filters: ListFacultyOptions) => [...superAdminKeys.faculty(), { filters }] as const,
   facultyDetail: (id: string) => [...superAdminKeys.faculty(), "detail", id] as const,
@@ -532,6 +539,35 @@ export const useAcknowledgeAlert = () => {
     mutationFn: acknowledgeAlert,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.health() });
+    },
+  });
+};
+
+export const useSystemConfig = (queryOptions?: Omit<UseQueryOptions<SystemConfig, SuperAdminApiError>, "queryKey" | "queryFn">) => {
+  return useQuery<SystemConfig, SuperAdminApiError>({
+    queryKey: superAdminKeys.systemConfig(),
+    queryFn: getSystemConfig,
+    staleTime: 1000 * 60,
+    ...queryOptions,
+  });
+};
+
+export const useSystemAuditLogs = (limitCount = 30, queryOptions?: Omit<UseQueryOptions<SystemAuditLog[], SuperAdminApiError>, "queryKey" | "queryFn">) => {
+  return useQuery<SystemAuditLog[], SuperAdminApiError>({
+    queryKey: [...superAdminKeys.systemAudit(), limitCount],
+    queryFn: () => getSystemAuditLogs(limitCount),
+    staleTime: 1000 * 30,
+    ...queryOptions,
+  });
+};
+
+export const useUpdateSystemConfig = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, SuperAdminApiError, Partial<Omit<SystemConfig, 'id' | 'updatedAt' | 'updatedBy'>>>({
+    mutationFn: updateSystemConfig,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.systemConfig() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.systemAudit() });
     },
   });
 };

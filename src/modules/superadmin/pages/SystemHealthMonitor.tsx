@@ -121,7 +121,7 @@ const SystemHealthMonitor: React.FC = () => {
     );
   }
 
-  const overallStatus = health?.overallStatus || "healthy";
+  const overallStatus = health?.overallStatus || "unavailable";
   const statusColor = overallStatus === "healthy" ? "text-green-600 dark:text-green-400" : overallStatus === "degraded" ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400";
   const statusBg = overallStatus === "healthy" ? "bg-green-500/10" : overallStatus === "degraded" ? "bg-yellow-500/10" : "bg-red-500/10";
 
@@ -151,19 +151,19 @@ const SystemHealthMonitor: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Uptime (24h)</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health?.uptime24h?.toFixed(2) || "99.99"}%</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health ? health.uptime24h.toFixed(2) : "—"}{health ? '%' : ''}</p>
         </div>
         <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Error Rate (24h)</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health?.errorRate24h?.toFixed(2) || "0.02"}%</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health ? health.errorRate24h.toFixed(2) : "—"}{health ? '%' : ''}</p>
         </div>
         <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Avg Response</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health?.avgResponseTime || "85"}ms</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health ? `${health.avgResponseTime}ms` : "—"}</p>
         </div>
         <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
           <p className="text-xs text-slate-500 mb-1">Total Requests</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{(health?.totalRequests24h || 0).toLocaleString()}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{health ? health.totalRequests24h.toLocaleString() : "—"}</p>
         </div>
       </div>
 

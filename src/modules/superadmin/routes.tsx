@@ -19,6 +19,7 @@ const SuperAdminStudents = lazy(() => import('./pages/SuperAdminStudents'));
 const SuperAdminUniversities = lazy(() => import('./pages/SuperAdminUniversities'));
 const SuperAdminUniversityDetail = lazy(() => import('./pages/SuperAdminUniversityDetail'));
 const SystemHealthMonitor = lazy(() => import('./pages/SystemHealthMonitor'));
+const SystemManagement = lazy(() => import('./pages/SystemManagement'));
 const UserImport = lazy(() => import('./pages/UserImport'));
 const AccessControl = lazy(() => import('./pages/AccessControl'));
 const BulkCredentialResetPage = lazy(() => import('./pages/BulkCredentialResetPage'));
@@ -52,6 +53,7 @@ export const superadminRoutes: RouteObject[] = [
       { path: 'comparison', element: <MultiCollegeComparison /> },
       { path: 'billing', element: <SubscriptionBilling /> },
       { path: 'health', element: <SystemHealthMonitor /> },
+      { path: 'system-management', element: <SystemManagement /> },
     ],
   },
 ];
