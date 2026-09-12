@@ -7,7 +7,7 @@ import {
   fetchAttendanceForSession,
   saveAttendance,
 } from '../api/facultyApi';
-import { ensureIdentityClaims } from '@/shared/services/identitySelfHeal';
+import { ensureIdentityClaims, type SelfHealOutcome } from '@/shared/services/identitySelfHeal';
 import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims';
 import type {
   FacultyClassSession,
@@ -67,23 +67,30 @@ export function useFacultyAttendance() {
   // One on-demand identity self-heal per mount (mirrors useMyStaffAttendance):
   // a permission denial on the save is exactly what a stale role/collegeId
   // claim produces, and re-issuing the claims mid-session can rescue the save
-  // without a sign-out.
+  // without a sign-out. The OUTCOME is kept so the error can say which real
+  // fix is needed: 'unavailable' → the deployed functions are too old (deploy
+  // functions); 'unchanged' → no document states this account's college
+  // (superadmin Identity Repair / data fix); 'refreshed' → claims were
+  // re-issued and the retry simply still failed (genuine rules/data issue).
   const healAttempts = useRef(0);
-  const selfHealOnce = useCallback(async (): Promise<boolean> => {
-    if (!user || healAttempts.current > 0) return false;
+  const healOutcomeRef = useRef<SelfHealOutcome | null>(null);
+  const selfHealOnce = useCallback(async (): Promise<SelfHealOutcome> => {
+    if (!user || healAttempts.current > 0) return 'unavailable';
     healAttempts.current += 1;
     try {
       const outcome = await ensureIdentityClaims({
         role: user.role,
         collegeId: user.collegeId ?? null,
       });
+      healOutcomeRef.current = outcome;
       if (outcome !== 'refreshed') {
         console.warn('[useFacultyAttendance] claim self-heal did not re-issue claims:', outcome);
       }
-      return outcome === 'refreshed';
+      return outcome;
     } catch (err) {
       console.warn('[useFacultyAttendance] claim self-heal failed:', err);
-      return false;
+      healOutcomeRef.current = 'unavailable';
+      return 'unavailable';
     }
   }, [user]);
 
@@ -258,14 +265,17 @@ export function useFacultyAttendance() {
           // A tenant-scoped write is exactly where a stale collegeId claim
           // hurts: re-issue the claims once and retry — the batched write is
           // an upsert keyed on session+date, so a retry cannot duplicate.
-          if (isPermissionDeniedError(err) && (await selfHealOnce())) {
-            return saveAttendance(
-              selectedClass,
-              records,
-              facultyId,
-              facultyName,
-              collegeId
-            );
+          if (isPermissionDeniedError(err)) {
+            const outcome = await selfHealOnce();
+            if (outcome === 'refreshed') {
+              return saveAttendance(
+                selectedClass,
+                records,
+                facultyId,
+                facultyName,
+                collegeId
+              );
+            }
           }
           throw err;
         }
@@ -305,11 +315,22 @@ export function useFacultyAttendance() {
 
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setError(
-        isPermissionDeniedError(err)
-          ? staleClaimMessage('attendance save')
-          : err instanceof Error ? err.message : 'Failed to save attendance'
-      );
+      if (isPermissionDeniedError(err)) {
+        // Say WHICH fix is needed instead of one generic message: an
+        // 'unavailable' self-heal almost always means the deployed functions
+        // predate syncMyIdentity (deploy functions); 'unchanged' means no
+        // record states this account's college (superadmin repair).
+        const outcome = healOutcomeRef.current;
+        setError(
+          outcome === 'unavailable'
+            ? 'Security rules refused this save, and the automatic identity refresh could not reach the identity service. The deployed backend is likely out of date — an admin must run "npm run deploy:functions", then you sign out and back in.'
+            : outcome === 'unchanged'
+              ? 'Security rules refused this save, and no record states the college for your account, so there is nothing to refresh automatically. Ask a superadmin to check your users and faculty profile collegeId (Access Control → Identity Repair).'
+              : staleClaimMessage('attendance save')
+        );
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to save attendance');
+      }
     } finally {
       setSaving(false);
     }

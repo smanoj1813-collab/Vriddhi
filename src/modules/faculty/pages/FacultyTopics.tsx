@@ -77,6 +77,7 @@ export default function FacultyTopics() {
   const { user } = useAuth()
   const { showError } = useNotification()
   const facultyId = user?.id || user?.uid || ''
+  const collegeId = user?.collegeId || ''
 
   const {
     topics, stats, loading, error, readStats,
@@ -100,13 +101,13 @@ export default function FacultyTopics() {
     setBankLoading(true)
     setBankError(null)
     try {
-      setBankTopics(await fetchFacultyCurriculumTopics(facultyId))
+      setBankTopics(await fetchFacultyCurriculumTopics(facultyId, collegeId))
     } catch (err: unknown) {
       setBankError(err instanceof Error ? err.message : 'Could not load curriculum topics')
     } finally {
       setBankLoading(false)
     }
-  }, [facultyId])
+  }, [facultyId, collegeId])
 
   React.useEffect(() => {
     void loadBankTopics()
@@ -598,8 +599,10 @@ export default function FacultyTopics() {
           <div className="p-8 text-center rounded-xl bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed">
             <BookOpen className="w-8 h-8 text-slate-600 mx-auto mb-2" />
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              No curriculum topics match your assigned subjects yet. Once your college maps a
-              curriculum to you (Admin → Curriculum Mapping), its topics appear here.
+              No curriculum topics yet. Two things put topics here: (1) your college uploads a
+              syllabus and assigns the curriculum to the college, and (2) an admin maps one of its
+              courses to you (Admin → Curriculum → Curriculum Mapping). The topics then come
+              straight from that course's modules.
             </p>
           </div>
         ) : (

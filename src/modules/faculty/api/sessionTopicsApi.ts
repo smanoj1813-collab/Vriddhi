@@ -18,9 +18,9 @@
 // de-duplicates on a normalised title so the same topic taught from either
 // store does not appear twice.
 
-import { collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { collection, doc, query, where, getDocs, getDoc, limit } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
-import { resolveFacultyAliases } from '../../admin/api/curriculumMappingApi'
+import { resolveFacultyAliases, listMappings } from '../../admin/api/curriculumMappingApi'
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi'
 
 export interface SessionTopicOption {
@@ -100,55 +100,140 @@ async function fetchTaughtSubjects(facultyId: string): Promise<Set<string>> {
 }
 
 /**
- * Curriculum-bank topics for this faculty member.
+ * Curriculum topics for this faculty member, from BOTH real sources:
  *
- * Bank rows have no facultyId, so relevance is derived from the subjects the
- * faculty teaches (mappings first, timetable as fallback). A bank topic is
- * included when its subject matches one of those — or, when nothing could be
- * resolved, the whole bank is surfaced rather than an empty list, because a
- * picker that is empty for want of an exact subject string is worse than one
- * showing a few extra topics.
+ * 1. The ASSIGNED CURRICULUM documents (primary). When a college assigns a
+ *    syllabus, the parsed topics live inside the curriculum document —
+ *    courses[].modules[].topics as plain strings — NOT in the legacy
+ *    `topics/*` bank. A page that only queries `topics/*` therefore shows
+ *    nothing for colleges that never used the legacy manual-topic flow,
+ *    which is exactly the "Topics shows nothing" report. Here each active
+ *    mapping for this faculty is resolved to its curriculum document and the
+ *    course's modules are flattened into topic rows.
+ *
+ * 2. The legacy `topics/*` bank (secondary, filtered to the subjects the
+ *    faculty teaches — mappings first, timetable as fallback). Included so
+ *    manually curated bank topics still appear alongside syllabus topics.
+ *
+ * Curriculum-derived rows win de-duplication over bank rows with the same
+ * title, because they carry the module context.
  */
-export async function fetchFacultyCurriculumTopics(facultyId: string): Promise<SessionTopicOption[]> {
+export async function fetchFacultyCurriculumTopics(
+  facultyId: string,
+  collegeId?: string,
+): Promise<SessionTopicOption[]> {
   if (!facultyId) return []
 
-  const [taught, bankSnap] = await Promise.all([
-    fetchTaughtSubjects(facultyId),
-    // Rules allow any staff member to list `topics`; the bank is small, so one
-    // bounded read + client-side subject filter beats per-subject queries
-    // (each of which would need a composite index).
-    getDocs(query(collection(db, 'topics'), limit(500))).catch((err) => {
-      console.warn('[SessionTopics] curriculum bank lookup failed:', err)
-      return null
-    }),
-  ])
+  // The mappings query is broadest (and alias-tolerant) when scoped by
+  // college; fall back to the localStorage path selector the other faculty
+  // APIs use so callers that omit collegeId still get profile-id-keyed rows.
+  const cid = collegeId || localStorage.getItem('vriddhi_college_id') || ''
 
-  const rows: SessionTopicOption[] = []
-  bankSnap?.docs.forEach((d) => {
-    const data = d.data()
-    const title = String(data.name || data.title || '').trim()
-    if (!title) return
-    const rowSubject = String(data.subject || '')
-    rows.push({
-      id: d.id,
-      title,
-      moduleNo: String(data.moduleNo || ''),
-      moduleName: String(data.moduleName || ''),
-      unit: String(data.unit || ''),
-      status: String(data.status || 'active'),
-      source: 'curriculum',
-      covered: COVERED.includes(String(data.status || '').toLowerCase()),
-      subject: rowSubject,
-      course: String(data.course || ''),
-      semester: Number(data.semester) || undefined,
+  const results = new Map<string, { option: SessionTopicOption; priority: number }>()
+  const add = (option: SessionTopicOption, priority: number) => {
+    const key = topicKey(option.title)
+    if (!key) return
+    const existing = results.get(key)
+    if (!existing || priority > existing.priority) results.set(key, { option, priority })
+  }
+
+  const aliases = await resolveFacultyAliases(facultyId).catch(() => null)
+
+  // ─── 1. Topics flattened from the assigned curriculum documents ─────────
+  try {
+    const mappings = await listMappings({
+      facultyId,
+      collegeId: cid,
+      facultyAliases: aliases?.ids,
+      facultyEmail: aliases?.email || undefined,
+      status: 'active',
     })
-  })
 
-  if (taught.size === 0) return rows
-  const matched = rows.filter(
-    (row) => [...taught].some((s) => matchesSubject(row.subject, s) || matchesSubject(row.course, s)),
-  )
-  return matched.length > 0 ? matched : rows
+    for (const mapping of mappings.slice(0, 20)) {
+      try {
+        const snap = await getDoc(doc(db, 'curriculum', mapping.curriculumId))
+        if (!snap.exists()) continue
+        const courses: any[] = Array.isArray(snap.data().courses) ? snap.data().courses : []
+        const course =
+          courses.find((c) => String(c.id || '') === mapping.courseId) ||
+          courses.find((c) => String(c.code || '') === mapping.courseCode) ||
+          courses.find((c) => String(c.name || '') === mapping.courseName)
+        if (!course) continue
+
+        const modules: any[] = Array.isArray(course.modules) ? course.modules : []
+        modules.forEach((m, moduleIndex) => {
+          const topics: string[] = Array.isArray(m.topics) ? m.topics : []
+          topics.forEach((rawTopic, topicIndex) => {
+            const title = String(rawTopic || '').trim()
+            if (!title) return
+            add(
+              {
+                id: `${mapping.curriculumId}__${String(m.id || m.moduleNo || moduleIndex)}__${topicKey(title) || topicIndex}`,
+                title,
+                moduleNo: String(m.moduleNo ?? ''),
+                moduleName: String(m.moduleName || m.title || ''),
+                status: 'active',
+                source: 'curriculum',
+                covered: false,
+                subject: String(course.name || mapping.courseName || ''),
+                course: String(course.code || mapping.courseCode || ''),
+                semester: Number(course.semester || mapping.semester) || undefined,
+              },
+              2,
+            )
+          })
+        })
+      } catch (err) {
+        console.warn('[SessionTopics] curriculum document read failed:', mapping.curriculumId, err)
+      }
+    }
+  } catch (err) {
+    console.warn('[SessionTopics] mapping lookup failed:', err)
+  }
+
+  // ─── 2. Legacy bank (topics/*), filtered to the subjects taught ──────────
+  try {
+    const [taught, bankSnap] = await Promise.all([
+      fetchTaughtSubjects(facultyId),
+      getDocs(query(collection(db, 'topics'), limit(500))).catch((err) => {
+        console.warn('[SessionTopics] curriculum bank lookup failed:', err)
+        return null
+      }),
+    ])
+
+    bankSnap?.docs.forEach((d) => {
+      const data = d.data()
+      const title = String(data.name || data.title || '').trim()
+      if (!title) return
+      const option: SessionTopicOption = {
+        id: d.id,
+        title,
+        moduleNo: String(data.moduleNo || ''),
+        moduleName: String(data.moduleName || ''),
+        unit: String(data.unit || ''),
+        status: String(data.status || 'active'),
+        source: 'curriculum',
+        covered: COVERED.includes(String(data.status || '').toLowerCase()),
+        subject: String(data.subject || ''),
+        course: String(data.course || ''),
+        semester: Number(data.semester) || undefined,
+      }
+      // Bank rows are only relevant when their subject matches what the
+      // faculty teaches; with nothing resolvable, surface the whole bank.
+      if (
+        taught.size === 0 ||
+        [...taught].some((s) => matchesSubject(option.subject, s) || matchesSubject(option.course, s))
+      ) {
+        add(option, 1)
+      }
+    })
+  } catch (err) {
+    console.warn('[SessionTopics] bank merge failed:', err)
+  }
+
+  return [...results.values()]
+    .map(({ option }) => option)
+    .sort((a, b) => a.title.localeCompare(b.title))
 }
 
 /**

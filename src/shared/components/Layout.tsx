@@ -115,6 +115,8 @@ const NAV_LABEL_KEYS: Record<string, TranslationKey> = {
   "Mark Attendance": "nav.markAttendance",
   "My Attendance": "nav.myAttendance",
   "Mark Student Attendance": "nav.markStudentAttendance",
+  Academics: "nav.academics",
+  Insights: "nav.insights",
   "Upload Materials": "nav.uploadMaterials",
   "Assessment Schedule": "nav.assessmentSchedule",
   "My Curriculum": "nav.myCurriculum",
@@ -187,8 +189,8 @@ const navItems: NavItem[] = [
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["hod"], section: "Insights" },
 
   // ─── FACULTY ───
-  // Faculty navigation is rendered from facultyNavGroups (collapsible master
-  // groups) instead of this flat list — see FacultyNavEntry below. Mentors
+  // Faculty navigation is rendered from facultyNav (collapsible master
+  // groups) instead of this flat list — see SidebarEntry below. Mentors
   // keep the flat list below.
 
   // ─── HOD ─── additional settings
@@ -211,17 +213,17 @@ const navItems: NavItem[] = [
 // Every path here must exist in src/modules/faculty/routes.tsx — this is a
 // navigation-only reorganisation; no routes were added, removed, or renamed.
 
-interface FacultyNavLeaf {
+interface SidebarLeaf {
   label: string;
   path: string;
   icon: React.ReactNode;
 }
 
-type FacultyNavEntry =
+type SidebarEntry =
   | { kind: "link"; label: string; path: string; icon: React.ReactNode }
-  | { kind: "group"; label: string; icon: React.ReactNode; children: FacultyNavLeaf[] };
+  | { kind: "group"; label: string; icon: React.ReactNode; children: SidebarLeaf[] };
 
-const facultyNav: FacultyNavEntry[] = [
+const facultyNav: SidebarEntry[] = [
   { kind: "link", label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
 
   {
@@ -275,6 +277,80 @@ const facultyNav: FacultyNavEntry[] = [
   { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
   { kind: "link", label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" /> },
 ];
+
+/**
+ * Principal portal — same collapsible-group treatment as faculty. The
+ * principal shares the admin route set; every path here exists in
+ * src/modules/admin/routes.tsx. Admins/HODs keep the flat list.
+ */
+const principalNav: SidebarEntry[] = [
+  { kind: "link", label: "Dashboard", path: "/admin/dashboard", icon: <Dashboard fontSize="small" /> },
+
+  {
+    kind: "group",
+    label: "Students",
+    icon: <People fontSize="small" />,
+    children: [
+      { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+      { label: "360° View", path: "/admin/view360", icon: <Assessment fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Attendance",
+    icon: <CalendarToday fontSize="small" />,
+    children: [
+      { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" /> },
+      { label: "Faculty Attendance", path: "/admin/faculty-attendance", icon: <BadgeIcon fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Academics",
+    icon: <School fontSize="small" />,
+    children: [
+      { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
+      { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Assessments",
+    icon: <Assignment fontSize="small" />,
+    children: [
+      { label: "Assessments", path: "/admin/assessments", icon: <Assignment fontSize="small" /> },
+      { label: "Grade Records", path: "/admin/grade-records", icon: <Assessment fontSize="small" /> },
+      { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer fontSize="small" /> },
+      { label: "Question Review", path: "/admin/review-queue", icon: <RateReview fontSize="small" /> },
+      { label: "Paper Review", path: "/admin/paper-review", icon: <Description fontSize="small" /> },
+      { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" /> },
+      { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description fontSize="small" /> },
+    ],
+  },
+
+  { kind: "link", label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+
+  {
+    kind: "group",
+    label: "Insights",
+    icon: <TrendingUp fontSize="small" />,
+    children: [
+      { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" /> },
+      { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" /> },
+    ],
+  },
+
+  { kind: "link", label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" /> },
+];
+
+/** Roles whose sidebar renders as collapsible master groups. */
+const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
+  faculty: facultyNav,
+  principal: principalNav,
+};
 
 /** True when the current location points at this nav path. */
 function isNavPathActive(pathname: string, path: string): boolean {
@@ -355,24 +431,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navLabel = (label: string) =>
     NAV_LABEL_KEYS[label] ? t(NAV_LABEL_KEYS[label]) : label;
 
-  const facultyActiveGroup = React.useMemo(() => {
-    if (effectiveRole !== "faculty") return null;
+  const collapsibleNav = collapsibleNavByRole[effectiveRole] ?? null;
+
+  const activeGroup = React.useMemo(() => {
+    if (!collapsibleNav) return null;
     return (
-      facultyNav.find(
+      collapsibleNav.find(
         (entry) =>
           entry.kind === "group" &&
           entry.children.some((child) => isNavPathActive(pathname, child.path))
       ) ?? null
     );
-  }, [effectiveRole, pathname]);
+  }, [collapsibleNav, pathname]);
 
   useEffect(() => {
-    if (facultyActiveGroup && facultyActiveGroup.kind === "group") {
+    if (activeGroup && activeGroup.kind === "group") {
       setOpenGroups((prev) =>
-        prev.has(facultyActiveGroup.label) ? prev : new Set(prev).add(facultyActiveGroup.label)
+        prev.has(activeGroup.label) ? prev : new Set(prev).add(activeGroup.label)
       );
     }
-  }, [facultyActiveGroup]);
+  }, [activeGroup]);
 
   const toggleGroup = (label: string) => {
     setOpenGroups((prev) => {
@@ -499,11 +577,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Navigation Links */}
       <List sx={{ flex: 1, overflowY: "auto", px: 1, py: 1 }}>
-        {effectiveRole === "faculty" ? (
+        {collapsibleNav ? (
           <>
-            {/* Faculty: collapsible master groups. Navigation-only reorganisation —
-                every path lives in faculty/routes.tsx unchanged. */}
-            {facultyNav.map((entry) => {
+            {/* Grouped roles (faculty, principal): collapsible master groups.
+                Navigation-only reorganisation — every path lives in the role's
+                routes file unchanged. */}
+            {collapsibleNav.map((entry) => {
               if (entry.kind === "link") {
                 const isActive =
                   isNavPathActive(pathname, entry.path) ||
