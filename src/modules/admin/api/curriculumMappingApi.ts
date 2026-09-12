@@ -5,7 +5,7 @@
 import { db } from '@/Firebase/config';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, Timestamp, writeBatch,
+  query, where, limit, Timestamp, writeBatch,
   DocumentData, QueryDocumentSnapshot, Query,
 } from "firebase/firestore";
 
@@ -71,6 +71,73 @@ function docToMapping(docSnap: QueryDocumentSnapshot<DocumentData>): CurriculumF
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// Faculty identity aliases
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface FacultyIdentityAliases {
+  /** Auth uid (what the signed-in session calls facultyId). */
+  uid: string;
+  /** faculty/{doc} document id — the id the mapping dialog used to store. */
+  profileId: string | null;
+  /** Lower-cased profile email, for mappings that carry facultyEmail. */
+  email: string | null;
+  /** Every id a mapping may legitimately use for this faculty member. */
+  ids: string[];
+}
+
+const aliasCache = new Map<string, FacultyIdentityAliases>();
+
+/**
+ * The signed-in id and the id stamped on curriculumFacultyMappings diverge:
+ * admins pick faculty from the `faculty` collection (document ids like
+ * FAC001) while the faculty app queries with the Auth uid. Resolve the
+ * profile document for the uid so a mapping written either way still matches.
+ * Mirrors the roster fallback in src/shared/api/staffAttendanceApi.ts.
+ */
+export async function resolveFacultyAliases(uid: string): Promise<FacultyIdentityAliases> {
+  const cached = aliasCache.get(uid);
+  if (cached) return cached;
+  const empty: FacultyIdentityAliases = { uid, profileId: null, email: null, ids: [uid] };
+  if (!uid) return empty;
+  try {
+    const snap = await getDocs(
+      query(collection(db, 'faculty'), where('uid', '==', uid), limit(1))
+    );
+    const docSnap = snap.docs[0];
+    if (!docSnap) {
+      aliasCache.set(uid, empty);
+      return empty;
+    }
+    const data = docSnap.data() as Record<string, unknown>;
+    const email = typeof data.email === 'string' && data.email.trim() ? data.email.trim().toLowerCase() : null;
+    const resolved: FacultyIdentityAliases = {
+      uid,
+      profileId: docSnap.id,
+      email,
+      ids: [uid, docSnap.id, String(data.facultyId || '')].filter(Boolean),
+    };
+    aliasCache.set(uid, resolved);
+    return resolved;
+  } catch (error) {
+    console.warn('[CurriculumMappingApi] faculty alias resolution failed:', error);
+    return empty;
+  }
+}
+
+/** True when a mapping belongs to the faculty described by the aliases. */
+function mappingBelongsToFaculty(
+  mapping: CurriculumFacultyMapping,
+  aliases: FacultyIdentityAliases | null,
+): boolean {
+  if (!aliases) return true;
+  if (aliases.ids.includes(mapping.facultyId)) return true;
+  if (aliases.email && mapping.facultyEmail && mapping.facultyEmail.trim().toLowerCase() === aliases.email) {
+    return true;
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // CRUD Operations
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -116,7 +183,16 @@ export async function listMappings(options: MappingFilterOptions = {}): Promise<
 
     // Client-side filtering (no composite indexes required)
     if (options.collegeId) items = items.filter((m) => m.collegeId === options.collegeId);
-    if (options.facultyId) items = items.filter((m) => m.facultyId === options.facultyId);
+    if (options.facultyId && !options.facultyAliases) items = items.filter((m) => m.facultyId === options.facultyId);
+    if (options.facultyAliases) {
+      const aliases: FacultyIdentityAliases = {
+        uid: options.facultyId || options.facultyAliases[0] || '',
+        profileId: null,
+        email: options.facultyEmail ? options.facultyEmail.trim().toLowerCase() : null,
+        ids: options.facultyAliases,
+      };
+      items = items.filter((m) => mappingBelongsToFaculty(m, aliases));
+    }
     if (options.curriculumId) items = items.filter((m) => m.curriculumId === options.curriculumId);
     if (options.branch) items = items.filter((m) => m.branch === options.branch);
     if (options.semester) items = items.filter((m) => m.semester === options.semester);
@@ -179,7 +255,18 @@ export async function bulkCreateMappings(inputs: CreateMappingInput[]): Promise<
 
 export async function getFacultyCurriculum(facultyId: string, collegeId?: string): Promise<FacultyCurriculumView[]> {
   try {
-    const mappings = await listMappings({ facultyId, collegeId, status: 'active' });
+    // Match mappings written with the Auth uid OR the faculty profile document
+    // id (the mapping dialog's historical key) OR the profile email. Without
+    // this, every mapping created before the uid work was invisible to the
+    // faculty it belonged to and "My Curriculum" rendered empty.
+    const aliases = await resolveFacultyAliases(facultyId);
+    const mappings = await listMappings({
+      facultyId,
+      facultyAliases: aliases.ids,
+      facultyEmail: aliases.email || undefined,
+      collegeId,
+      status: 'active',
+    });
     const views: FacultyCurriculumView[] = [];
 
     for (const mapping of mappings) {

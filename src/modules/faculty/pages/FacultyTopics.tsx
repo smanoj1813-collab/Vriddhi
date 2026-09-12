@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useTopics } from '../../../hooks/useTopics'
 import type { TopicStatus, StatusFilter, Topic, TopicStats, ReadStats } from '../../../hooks/useTopics'
+import { fetchFacultyCurriculumTopics, type SessionTopicOption } from '../api/sessionTopicsApi'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 interface StatusConfigItem {
@@ -84,6 +85,45 @@ export default function FacultyTopics() {
     refresh,
     addTopic, editTopic, removeTopic,
   } = useTopics(facultyId || undefined)
+
+  // ─── Curriculum bank topics (read-only) ─────────────────────────────────
+  // The superadmin curriculum bank (`topics/*`) is where uploaded syllabus
+  // topics live; before this section existed the page only listed the
+  // faculty's own ledger, so it showed nothing until a topic was added by
+  // hand. Bank rows are matched to the subjects this faculty teaches.
+  const [bankTopics, setBankTopics] = useState<SessionTopicOption[]>([])
+  const [bankLoading, setBankLoading] = useState(false)
+  const [bankError, setBankError] = useState<string | null>(null)
+
+  const loadBankTopics = React.useCallback(async () => {
+    if (!facultyId) return
+    setBankLoading(true)
+    setBankError(null)
+    try {
+      setBankTopics(await fetchFacultyCurriculumTopics(facultyId))
+    } catch (err: unknown) {
+      setBankError(err instanceof Error ? err.message : 'Could not load curriculum topics')
+    } finally {
+      setBankLoading(false)
+    }
+  }, [facultyId])
+
+  React.useEffect(() => {
+    void loadBankTopics()
+  }, [loadBankTopics])
+
+  const visibleBankTopics = React.useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return bankTopics.filter((t) => {
+      const matchesSearch =
+        !q ||
+        t.title.toLowerCase().includes(q) ||
+        (t.subject || '').toLowerCase().includes(q) ||
+        (t.course || '').toLowerCase().includes(q)
+      const matchesStatus = statusFilter === 'all' || (t.covered ? 'completed' : 'planned') === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [bankTopics, search, statusFilter])
 
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -518,6 +558,75 @@ export default function FacultyTopics() {
             >
               Add your first topic
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Curriculum Bank Topics (read-only) */}
+      <div className="mt-10">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              Curriculum Topics
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Topics from the curriculum assigned to you (read-only — managed by your college)
+            </p>
+          </div>
+          <button
+            onClick={() => void loadBankTopics()}
+            className="p-2 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all shadow-sm"
+            title="Refresh curriculum topics"
+          >
+            <RefreshCw className={`w-4 h-4 ${bankLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        {bankError && (
+          <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />{bankError}
+          </div>
+        )}
+
+        {bankLoading && bankTopics.length === 0 ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="w-6 h-6 text-teal-400 animate-spin" />
+            <span className="ml-3 text-sm text-slate-600 dark:text-slate-400">Loading curriculum topics...</span>
+          </div>
+        ) : visibleBankTopics.length === 0 ? (
+          <div className="p-8 text-center rounded-xl bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed">
+            <BookOpen className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              No curriculum topics match your assigned subjects yet. Once your college maps a
+              curriculum to you (Admin → Curriculum Mapping), its topics appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {visibleBankTopics.map((topic) => (
+              <div
+                key={topic.id}
+                className="rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm p-4"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug">{topic.title}</p>
+                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                    topic.covered
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                  }`}>
+                    {topic.covered ? 'Covered' : 'Active'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
+                  {topic.subject && <span>Subject: {topic.subject}</span>}
+                  {topic.course && <span>Course: {topic.course}</span>}
+                  {topic.moduleNo && <span>Module {topic.moduleNo}{topic.moduleName ? ` — ${topic.moduleName}` : ''}</span>}
+                  {topic.unit && <span>Unit {topic.unit}</span>}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

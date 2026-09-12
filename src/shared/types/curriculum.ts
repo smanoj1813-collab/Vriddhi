@@ -263,6 +263,16 @@ export interface MappingFilterOptions {
   curriculumId?: string;
   collegeId?: string;
   facultyId?: string;
+  /**
+   * Every identity that should count as "this faculty member" when matching a
+   * mapping client-side: the Auth uid, the faculty profile document id (older
+   * mappings were written with that), and any other historical alias. The
+   * mapping dialog used to store the profile document id while the faculty
+   * side queried by Auth uid — the reason "My Curriculum" came up empty.
+   */
+  facultyAliases?: string[];
+  /** Matched case-insensitively against the mapping's facultyEmail. */
+  facultyEmail?: string;
   branch?: string;
   semester?: number;
   batch?: string;
