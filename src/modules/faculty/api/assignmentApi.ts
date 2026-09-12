@@ -294,6 +294,13 @@ export async function updateAssignment(
     { success: boolean }
   >(functions, 'updateFacultyAssignment')
   const merged = { ...existing, ...data }
+  // deadline is a yyyy-mm-dd string after docToAssignment; normalise it to a
+  // full ISO instant the function can parse, and refuse an unparseable one
+  // instead of throwing a raw RangeError from toISOString().
+  const deadlineDate = new Date(merged.deadline)
+  if (Number.isNaN(deadlineDate.getTime())) {
+    throw new Error('Set a valid deadline before saving the assignment.')
+  }
   const assignment = {
     title: merged.title,
     description: merged.description,
@@ -301,7 +308,7 @@ export async function updateAssignment(
     subject: merged.subject,
     subjectCode: merged.subjectCode,
     maxScore: merged.maxScore,
-    deadline: new Date(merged.deadline).toISOString(),
+    deadline: deadlineDate.toISOString(),
     type: merged.type,
     targetType: merged.targetType,
     cohort: merged.cohort,
