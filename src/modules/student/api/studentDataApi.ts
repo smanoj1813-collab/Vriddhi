@@ -359,24 +359,33 @@ export async function fetchAssignments(studentId: string): Promise<StudentAssign
 
 // ─── Fees ──────────────────────────────────────────────────────────────
 
-export async function fetchFees(studentId: string): Promise<StudentFeeData> {
+export async function fetchFees(studentId: string, collegeId?: string): Promise<StudentFeeData> {
   const empty = {
     totalFees: 0, paidFees: 0, pendingFees: 0,
     totalPaid: 0, totalBalance: 0, totalOverdue: 0,
   };
   if (!studentId) return empty;
 
-  const feeStructures = await safeQuery<any>(
+  // The canonical ledger is tenant-scoped under colleges/{collegeId}. Keep the
+  // legacy top-level read below only for old deployments that have not migrated
+  // their fee data yet; new invoices created by Fee Management are visible here.
+  const feeQuery = collegeId
+    ? query(collection(db, 'colleges', collegeId, 'feePayments'), where('studentId', '==', studentId), limit(50))
+    : null;
+  const ledgerRows = feeQuery
+    ? await safeQuery<any>(feeQuery, (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
+    : [];
+  const feeRows = ledgerRows.length > 0 ? ledgerRows : await safeQuery<any>(
     query(collection(db, 'feeStructures'), where('studentId', '==', studentId), limit(50)),
     (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
   );
 
-  if (feeStructures.length > 0) {
-    const totalFees = feeStructures.reduce((sum, f) => sum + (Number(f.totalAmount) || Number(f.amount) || 0), 0);
-    const paidFees = feeStructures.reduce((sum, f) => sum + (Number(f.paidAmount) || 0), 0);
+  if (feeRows.length > 0) {
+    const totalFees = feeRows.reduce((sum, f) => sum + (Number(f.totalAmount) || Number(f.amount) || 0), 0);
+    const paidFees = feeRows.reduce((sum, f) => sum + (Number(f.paidAmount) || 0), 0);
     const pendingFees = Math.max(0, totalFees - paidFees);
-    const overdue = feeStructures
-      .filter((f) => f.status === 'overdue' || (f.dueDate && new Date(f.dueDate).getTime() < Date.now() && (Number(f.paidAmount) || 0) < (Number(f.totalAmount) || 0)))
+    const overdue = feeRows
+      .filter((f) => f.status === 'overdue' || (f.dueDate && new Date(f.dueDate).getTime() < Date.now() && (Number(f.paidAmount) || 0) < (Number(f.totalAmount) || Number(f.amount) || 0)))
       .reduce((sum, f) => sum + Math.max(0, (Number(f.totalAmount) || Number(f.amount) || 0) - (Number(f.paidAmount) || 0)), 0);
     return {
       totalFees,

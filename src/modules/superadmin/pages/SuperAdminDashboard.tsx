@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useDashboardStats } from '../hooks/useSuperAdmin';
+import { useDashboardStats, useSystemHealth } from '../hooks/useSuperAdmin';
 import { useSeedUniversities } from '../../admin/hooks/useUniversities';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
 import {
@@ -34,6 +34,7 @@ const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
   const { data, isLoading, error } = useDashboardStats();
+  const { data: health } = useSystemHealth();
   const seedMutation = useSeedUniversities();
 
   React.useEffect(() => {
@@ -85,7 +86,7 @@ const SuperAdminDashboard: React.FC = () => {
     { label: "Active Faculty", value: stats?.totalFaculty || 0, icon: GraduationCap, color: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-50 border-emerald-200/80 dark:bg-emerald-950/40 dark:border-emerald-800" },
     { label: "College Admins", value: stats?.totalAdmins || 0, icon: Shield, color: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 border-amber-200/80 dark:bg-amber-950/40 dark:border-amber-800" },
     { label: "Total Assessments", value: stats?.activeAssessments || 0, icon: Activity, color: "text-purple-700 dark:text-purple-300", bg: "bg-purple-50 border-purple-200/80 dark:bg-purple-950/40 dark:border-purple-800" },
-    { label: "System Health", value: "99.9%", icon: TrendingUp, color: "text-cyan-700 dark:text-cyan-300", bg: "bg-cyan-50 border-cyan-200/80 dark:bg-cyan-950/40 dark:border-cyan-800" },
+    { label: "System Health", value: health ? `${health.uptime24h.toFixed(2)}%` : "—", icon: TrendingUp, color: "text-cyan-700 dark:text-cyan-300", bg: "bg-cyan-50 border-cyan-200/80 dark:bg-cyan-950/40 dark:border-cyan-800" },
   ];
 
   return (

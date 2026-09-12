@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCreateCollege } from '../hooks/useSuperAdmin'
+import { useCreateCollege, useSystemConfig } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Building2, ArrowLeft, Save, Loader2, Globe, MapPin, Phone, Mail } from 'lucide-react'
 import type { PlanType } from '../types/superAdmin'
@@ -45,6 +45,7 @@ const CreateCollege: React.FC = () => {
   const navigate = useNavigate()
   const { showSuccess, showError } = useNotification()
   const createCollege = useCreateCollege()
+  const systemConfig = useSystemConfig()
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
 
@@ -75,6 +76,10 @@ const CreateCollege: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (systemConfig.data && !systemConfig.data.allowCollegeOnboarding) {
+      showError('College onboarding is disabled in System Management.')
+      return
+    }
     if (!validateForm()) return
 
     try {
@@ -129,6 +134,12 @@ const CreateCollege: React.FC = () => {
           <p className="text-slate-600 dark:text-slate-400 text-sm">Register a new college in the system</p>
         </div>
       </div>
+
+      {systemConfig.data && !systemConfig.data.allowCollegeOnboarding && (
+        <div className="mb-6 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+          College onboarding is currently disabled from System Management. Re-enable it there before creating an institution.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
         {/* Basic Information */}
@@ -369,7 +380,7 @@ const CreateCollege: React.FC = () => {
           </button>
           <button
             type="submit"
-            disabled={createCollege.isPending}
+            disabled={createCollege.isPending || systemConfig.isLoading || systemConfig.data?.allowCollegeOnboarding === false}
             className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-slate-900 dark:text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {createCollege.isPending ? (

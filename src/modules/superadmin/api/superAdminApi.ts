@@ -2,7 +2,7 @@
 // Cleaned - No mock data. Connects to Firebase Firestore.
 // All types imported from ../types/superAdmin.ts (single source of truth)
 
-import { db, functions } from '@/Firebase/config';
+import { auth, db, functions } from '@/Firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import {
   DEPLOY_COMMAND,
@@ -79,6 +79,8 @@ import {
   type ServiceHealth,
   type HealthAlert,
   type EmploymentType,
+  type SystemConfig,
+  type SystemAuditLog,
 } from "../types/superAdmin";
 
 export {
@@ -113,6 +115,8 @@ export {
   type ServiceHealth,
   type HealthAlert,
   type EmploymentType,
+  type SystemConfig,
+  type SystemAuditLog,
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1423,33 +1427,152 @@ export async function updateSubscriptionPlan(
 // SYSTEM HEALTH API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════
 
+function healthDate(value: unknown): string {
+  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as { toDate?: unknown }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate().toISOString();
+  }
+  return value ? String(value) : new Date().toISOString();
+}
+
+async function readHealthCollection<T>(name: string, mapper: (id: string, data: DocumentData) => T, count = 20): Promise<T[]> {
+  try {
+    const snapshot = await getDocs(query(collection(db, name), limit(count)));
+    return snapshot.docs.map(item => mapper(item.id, item.data()));
+  } catch (error) {
+    // Some installations do not have telemetry collections yet. A missing
+    // collection is an empty result, not a fake "healthy" metric.
+    console.warn(`[system-management] Could not read ${name}:`, error);
+    return [];
+  }
+}
+
+async function probeCollection(name: string, label: string): Promise<ServiceHealth> {
+  const started = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  try {
+    const snapshot = await getDocs(query(collection(db, name), limit(1)));
+    const elapsed = Math.max(1, Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - started));
+    return {
+      name: label,
+      status: 'operational',
+      uptime: 100,
+      responseTime: elapsed,
+      errorRate: 0,
+      requestsPerMinute: snapshot.size,
+      incidents24h: 0,
+      lastChecked: new Date().toISOString(),
+    };
+  } catch (error) {
+    const elapsed = Math.max(1, Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - started));
+    console.warn(`[system-management] Probe failed for ${name}:`, error);
+    return {
+      name: label,
+      status: 'down',
+      uptime: 0,
+      responseTime: elapsed,
+      errorRate: 100,
+      requestsPerMinute: 0,
+      incidents24h: 1,
+      lastChecked: new Date().toISOString(),
+    };
+  }
+}
+
 export async function getSystemHealth(): Promise<SystemHealthStatus> {
+  const [services, metrics, alerts, recentErrors] = await Promise.all([
+    Promise.all([
+      probeCollection('colleges', 'Firestore · institutions'),
+      probeCollection('users', 'Firestore · identity profiles'),
+      probeCollection('systemConfig', 'Firestore · system config'),
+      probeCollection('systemAuditLogs', 'Firestore · audit trail'),
+    ]),
+    getPerformanceMetrics(24),
+    readHealthCollection<HealthAlert>('alerts', (id, data) => ({
+      id,
+      message: String(data.message || 'System alert'),
+      severity: (data.severity || 'info') as HealthAlert['severity'],
+      service: data.service ? String(data.service) : undefined,
+      timestamp: healthDate(data.timestamp || data.createdAt),
+      acknowledged: Boolean(data.acknowledged),
+    })),
+    readHealthCollection<ErrorLog>('errors', (id, data) => ({
+      id,
+      message: String(data.message || 'Unknown error'),
+      endpoint: String(data.endpoint || data.path || '—'),
+      method: String(data.method || '—'),
+      statusCode: Number(data.statusCode || 500),
+      count: Number(data.count || 1),
+      firstSeen: healthDate(data.firstSeen || data.createdAt),
+      lastSeen: healthDate(data.lastSeen || data.updatedAt || data.createdAt),
+      stack: data.stack ? String(data.stack) : undefined,
+      resolved: Boolean(data.resolved),
+    })),
+  ]);
+
+  const failed = services.filter(service => service.status === 'down').length;
+  const latestMetrics = metrics.slice(-24);
+  const avgResponseTime = latestMetrics.length
+    ? Math.round(latestMetrics.reduce((sum, item) => sum + item.responseTime, 0) / latestMetrics.length)
+    : services.length ? Math.round(services.reduce((sum, item) => sum + item.responseTime, 0) / services.length) : 0;
+  const totalRequests24h = latestMetrics.reduce((sum, item) => sum + item.requestsPerMinute, 0);
+  const errorRate24h = latestMetrics.length
+    ? latestMetrics.reduce((sum, item) => sum + item.errorRate, 0) / latestMetrics.length
+    : 0;
+
   return {
-    overallStatus: "healthy",
-    uptime: 99.98,
-    uptime24h: 99.95,
-    errorRate24h: 0.02,
-    avgResponseTime: 85,
-    totalRequests24h: 245678,
-    services: [],
-    slowQueries: [],
-    recentErrors: [],
-    alerts: [],
+    overallStatus: failed === 0 ? 'healthy' : failed < services.length ? 'degraded' : 'critical',
+    uptime: failed === 0 ? 100 : ((services.length - failed) / services.length) * 100,
+    uptime24h: failed === 0 ? 100 : ((services.length - failed) / services.length) * 100,
+    errorRate24h,
+    avgResponseTime,
+    totalRequests24h,
+    services,
+    slowQueries: await getSlowQueries(20),
+    recentErrors,
+    alerts: alerts.filter(alert => !alert.acknowledged),
   };
 }
 
 export async function getSlowQueries(limitCount: number = 20): Promise<SlowQuery[]> {
-  return [];
+  return readHealthCollection<SlowQuery>('slowQueries', (id, data) => ({
+    id,
+    query: String(data.query || data.description || '—'),
+    endpoint: String(data.endpoint || data.path || '—'),
+    duration: Number(data.duration || data.durationMs || 0),
+    severity: (data.severity || 'medium') as SlowQuery['severity'],
+    timestamp: healthDate(data.timestamp || data.createdAt),
+  }), limitCount);
 }
 
 export async function getErrorLogs(
   options?: { severity?: string; resolved?: boolean; limit?: number }
 ): Promise<PaginatedResult<ErrorLog>> {
-  return { items: [], data: [], total: 0, hasMore: false };
+  const all = await readHealthCollection<ErrorLog>('errors', (id, data) => ({
+    id,
+    message: String(data.message || 'Unknown error'),
+    endpoint: String(data.endpoint || data.path || '—'),
+    method: String(data.method || '—'),
+    statusCode: Number(data.statusCode || 500),
+    count: Number(data.count || 1),
+    firstSeen: healthDate(data.firstSeen || data.createdAt),
+    lastSeen: healthDate(data.lastSeen || data.updatedAt || data.createdAt),
+    stack: data.stack ? String(data.stack) : undefined,
+    resolved: Boolean(data.resolved),
+  }), options?.limit || 50);
+  const filtered = all.filter(item => options?.resolved == null || item.resolved === options.resolved);
+  return { items: filtered, data: filtered, total: filtered.length, hasMore: false };
 }
 
 export async function getPerformanceMetrics(hours: number = 24): Promise<PerformanceMetric[]> {
-  return [];
+  const count = Math.max(1, Math.min(hours * 4, 200));
+  const metrics = await readHealthCollection<PerformanceMetric>('performanceMetrics', (_id, data) => ({
+    timestamp: healthDate(data.timestamp || data.createdAt),
+    responseTime: Number(data.responseTime || data.responseTimeMs || 0),
+    requestsPerMinute: Number(data.requestsPerMinute || 0),
+    errorRate: Number(data.errorRate || 0),
+    cpuUsage: Number(data.cpuUsage || 0),
+    memoryUsage: Number(data.memoryUsage || 0),
+  }), count);
+  return metrics.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 }
 
 export async function resolveError(errorId: string): Promise<void> {
@@ -1553,6 +1676,84 @@ export async function getHealthHistory(hours: number = 24): Promise<PerformanceM
 
 export async function acknowledgeAlert(alertId: string): Promise<void> {
   await updateDoc(doc(db, "alerts", alertId), { acknowledged: true, acknowledgedAt: Timestamp.now() });
+}
+
+const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
+  id: 'app',
+  maintenanceMode: false,
+  maintenanceMessage: 'Vriddhi is temporarily under maintenance. Please try again shortly.',
+  allowCollegeOnboarding: true,
+  defaultAcademicYear: new Date().getFullYear().toString(),
+  feePolicy: {
+    currency: 'INR',
+    defaultLateFeePerDay: 0,
+    gracePeriodDays: 7,
+    enabledPaymentModes: ['cash', 'upi', 'card', 'netbanking', 'cheque', 'dd'],
+  },
+};
+
+function mapSystemConfig(data: DocumentData): SystemConfig {
+  return {
+    ...DEFAULT_SYSTEM_CONFIG,
+    ...data,
+    id: 'app',
+    feePolicy: { ...DEFAULT_SYSTEM_CONFIG.feePolicy, ...(data.feePolicy || {}) },
+    updatedAt: data.updatedAt?.toDate?.().toISOString?.() || data.updatedAt,
+    updatedBy: data.updatedBy ? String(data.updatedBy) : undefined,
+  };
+}
+
+export async function getSystemConfig(): Promise<SystemConfig> {
+  try {
+    const snapshot = await getDoc(doc(db, 'systemConfig', 'app'));
+    return snapshot.exists() ? mapSystemConfig(snapshot.data()) : DEFAULT_SYSTEM_CONFIG;
+  } catch (error) {
+    console.error('[system-management] failed to read configuration:', error);
+    throw new SuperAdminApiError('System configuration could not be loaded. Check Firestore rules and connectivity.');
+  }
+}
+
+export async function updateSystemConfig(
+  updates: Partial<Omit<SystemConfig, 'id' | 'updatedAt' | 'updatedBy'>>
+): Promise<void> {
+  const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'Super admin';
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'systemConfig', 'app'), {
+    ...updates,
+    ...(updates.feePolicy ? { feePolicy: updates.feePolicy } : {}),
+    updatedAt: serverTimestamp(),
+    updatedBy: actor,
+  }, { merge: true });
+  batch.set(doc(collection(db, 'systemAuditLogs')), {
+    action: 'system_config_updated',
+    area: 'system-management',
+    summary: 'Updated platform operational settings',
+    actorName: actor,
+    actorUid: auth.currentUser?.uid || '',
+    createdAt: serverTimestamp(),
+  });
+  await batch.commit();
+}
+
+export async function getSystemAuditLogs(limitCount = 30): Promise<SystemAuditLog[]> {
+  try {
+    const snapshot = await getDocs(query(collection(db, 'systemAuditLogs'), limit(limitCount)));
+    return snapshot.docs.map(item => {
+      const data = item.data();
+      return {
+        id: item.id,
+        action: String(data.action || 'system_event'),
+        area: String(data.area || 'system'),
+        summary: String(data.summary || data.action || 'System event'),
+        actorName: String(data.actorName || 'System'),
+        actorUid: data.actorUid ? String(data.actorUid) : undefined,
+        createdAt: healthDate(data.createdAt),
+      };
+    }).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  } catch (error) {
+    console.error('[system-management] failed to read audit log:', error);
+    return [];
+  }
 }
 
 export async function getCollegeComparisonTrend(

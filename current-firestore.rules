@@ -330,7 +330,13 @@ service cloud.firestore {
 
     match /colleges/{collegeId} {
       allow read: if isSignedIn() && (isSuperadmin() || collegeId() == collegeId);
-      allow write: if isSuperadmin();
+      // System Management can pause onboarding at the security boundary, not
+      // only in the Create College UI. Missing config preserves the historical
+      // default of allowing onboarding until a superadmin explicitly disables it.
+      allow create: if isSuperadmin()
+        && (!exists(/databases/$(database)/documents/systemConfig/app)
+          || get(/databases/$(database)/documents/systemConfig/app).data.allowCollegeOnboarding == true);
+      allow update, delete: if isSuperadmin();
 
       match /students/{id} {
         allow get: if ownsStudentProfile(id, resource.data)
@@ -446,6 +452,19 @@ service cloud.firestore {
             && 'studentId' in resource.data && ownsStudentId(resource.data.studentId)));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+
+        // The ledger entry is the current balance; this append-only trail makes
+        // receipts and waivers auditable without exposing another student's
+        // payment history.
+        match /transactions/{transactionId} {
+          allow get, list: if isSignedIn() && (isSuperadmin() || isStaff()
+            || (role() == 'student'
+              && 'studentId' in get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data
+              && ownsStudentId(get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data.studentId)));
+          allow create: if isSuperadmin()
+            || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+          allow update, delete: if false;
+        }
       }
 
       match /faculty/{docId} {
@@ -838,6 +857,41 @@ service cloud.firestore {
           || ('createdBy' in resource.data && resource.data.createdBy == request.auth.uid));
       allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin();
+    }
+
+    // -- Super-admin system management ----------------------------------------
+    // These collections are deliberately separate from tenant data. They back
+    // the live diagnostics and operational controls page; only an authoritative
+    // superadmin can read or change platform-wide settings and telemetry.
+    match /systemConfig/{docId} {
+      allow read, write: if isSuperadmin();
+    }
+
+    match /systemAuditLogs/{docId} {
+      allow read: if isSuperadmin();
+      allow create: if isSuperadmin();
+      allow update, delete: if false;
+    }
+
+    // Cloud Functions may write telemetry with the Admin SDK. The console can
+    // inspect it, but cannot forge or delete operational history from a browser.
+    match /performanceMetrics/{docId} {
+      allow read: if isSuperadmin();
+      allow write: if false;
+    }
+    match /slowQueries/{docId} {
+      allow read: if isSuperadmin();
+      allow write: if false;
+    }
+    match /errors/{docId} {
+      allow read: if isSuperadmin();
+      allow update: if isSuperadmin();
+      allow create, delete: if false;
+    }
+    match /alerts/{docId} {
+      allow read: if isSuperadmin();
+      allow update: if isSuperadmin();
+      allow create, delete: if false;
     }
 
     // -- Attendance summaries --------------------------------------------------

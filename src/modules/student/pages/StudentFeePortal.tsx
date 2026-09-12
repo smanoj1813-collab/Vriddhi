@@ -13,6 +13,7 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
+import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 // ─── Status Config ─────────────────────────────────────
 const STATUS_CONFIG: Record<FeeStatus, { label: string; color: string; bg: string; icon: React.ElementType; description: string }> = {
@@ -305,6 +306,7 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
 // ─── Main Component ──────────────────────────────────────
 export default function StudentFeePortal({ studentId: studentIdProp }: { studentId?: string }) {
   const { user } = useAuth();
+  const { showInfo } = useNotification();
   const { profile } = useStudentProfile(user?.uid);
   const studentId = studentIdProp || profile?.id || user?.uid || '';
   const {
@@ -567,10 +569,10 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                         <div className="flex items-center justify-center gap-1.5">
                           {isPayable && (
                             <button
-                              onClick={() => { setSelectedPayment(payment); setModalMode('pay') }}
-                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white shadow-xs transition-colors"
+                              onClick={() => showInfo('Online payment is not configured yet. Please pay through the college finance office; the admin will record the payment and issue your official receipt.')}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-xs transition-colors"
                             >
-                              Pay Now
+                              Contact finance
                             </button>
                           )}
                           {(payment.status === 'paid' || payment.status === 'partial' || payment.status === 'waived') && (

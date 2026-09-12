@@ -149,6 +149,7 @@ const navItems: NavItem[] = [
   { label: "Curriculum", path: "/superadmin/curriculum", icon: <School fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
+  { label: "System Management", path: "/superadmin/system-management", icon: <Settings fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "System Health", path: "/superadmin/health", icon: <MonitorHeartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
 
   // ─── ADMIN / PRINCIPAL ───
