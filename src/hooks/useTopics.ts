@@ -75,6 +75,21 @@ export interface TopicResource {
 
 const TOPICS_COLLECTION = 'facultyTopics';
 
+/** Firestore Timestamps → ISO strings, so dates sort and render as strings. */
+function toIsoString(value: unknown): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate().toISOString();
+  }
+  if (typeof value === 'object' && (value as { seconds?: unknown }).seconds !== undefined) {
+    const ms = Number((value as { seconds: unknown }).seconds) * 1000;
+    const date = new Date(ms);
+    return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+  }
+  return '';
+}
+
 function docToTopic(d: any, id: string): Topic {
   return {
     id,
@@ -90,8 +105,8 @@ function docToTopic(d: any, id: string): Topic {
     notes: d.notes || '',
     subject: d.subject || '',
     facultyId: d.facultyId || '',
-    createdAt: d.createdAt || '',
-    updatedAt: d.updatedAt || '',
+    createdAt: toIsoString(d.createdAt),
+    updatedAt: toIsoString(d.updatedAt),
   };
 }
 

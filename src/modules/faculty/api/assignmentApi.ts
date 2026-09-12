@@ -104,7 +104,34 @@ function getCollegeId(): string {
 }
 
 function toISO(val: any): string {
-  return val?.toDate?.().toISOString() || val || new Date().toISOString()
+  if (!val) return ''
+  // Firestore Timestamp instance (from a direct doc read)…
+  if (typeof val?.toDate === 'function') return val.toDate().toISOString()
+  // …or a plain {seconds, nanoseconds} shape (legacy/callable JSON). Rendering
+  // either of these raw is what produced "Minified React error #31".
+  if (typeof val === 'object' && val.seconds !== undefined) {
+    const ms = Number(val.seconds) * 1000 + Math.round(Number(val.nanoseconds || 0) / 1e6)
+    const date = new Date(ms)
+    return Number.isNaN(date.getTime()) ? '' : date.toISOString()
+  }
+  if (val instanceof Date) return val.toISOString()
+  return typeof val === 'string' ? val : ''
+}
+
+/**
+ * Deadline as a yyyy-mm-dd string (the create form collects a date input).
+ * Timestamps of every shape are normalised so the list/detail views always
+ * render a string, never a raw object.
+ */
+function deadlineToISODate(val: any): string {
+  const iso = toISO(val)
+  if (!iso) return ''
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return typeof val === 'string' ? val : ''
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function docToAssignment(d: any, id: string): Assignment {
@@ -119,7 +146,9 @@ function docToAssignment(d: any, id: string): Assignment {
     subject: d.subject || '',
     subjectCode: d.subjectCode || '',
     maxScore: d.maxScore || 100,
-    deadline: d.deadline || '',
+    // createFacultyAssignment stores this as a Firestore Timestamp — convert
+    // it here so no caller ever receives (or renders) {seconds, nanoseconds}.
+    deadline: deadlineToISODate(d.deadline),
     status: d.status || 'draft',
     type: d.type || 'assignment',
     targetType: d.targetType || 'cohort',
@@ -265,6 +294,13 @@ export async function updateAssignment(
     { success: boolean }
   >(functions, 'updateFacultyAssignment')
   const merged = { ...existing, ...data }
+  // deadline is a yyyy-mm-dd string after docToAssignment; normalise it to a
+  // full ISO instant the function can parse, and refuse an unparseable one
+  // instead of throwing a raw RangeError from toISOString().
+  const deadlineDate = new Date(merged.deadline)
+  if (Number.isNaN(deadlineDate.getTime())) {
+    throw new Error('Set a valid deadline before saving the assignment.')
+  }
   const assignment = {
     title: merged.title,
     description: merged.description,
@@ -272,7 +308,7 @@ export async function updateAssignment(
     subject: merged.subject,
     subjectCode: merged.subjectCode,
     maxScore: merged.maxScore,
-    deadline: new Date(merged.deadline).toISOString(),
+    deadline: deadlineDate.toISOString(),
     type: merged.type,
     targetType: merged.targetType,
     cohort: merged.cohort,

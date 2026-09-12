@@ -50,6 +50,14 @@ interface LocalAssignment extends Assignment {
   _submissions?: Submission[]
 }
 
+/** Human date for a deadline that may be '' — never renders a raw object. */
+function formatDeadline(value: string): string {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function FacultyAssignments() {
@@ -419,7 +427,7 @@ export default function FacultyAssignments() {
                     <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 line-clamp-2">{item.description}</p>
                     <div className="flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400">
                       {item.topic && <span className="flex items-center gap-1"><Target className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> {item.topic}</span>}
-                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Due: {item.deadline}</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Due: {formatDeadline(item.deadline)}</span>
                       {item.cohort?.batch && <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> {item.cohort.batch}</span>}
                       <span className="flex items-center gap-1"><BarChart3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Max: {item.maxScore} pts</span>
                     </div>
@@ -547,7 +555,7 @@ export default function FacultyAssignments() {
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{showDetail.title}</h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  {showDetail.topic && `${showDetail.topic} • `}Due: {showDetail.deadline} • Max: {showDetail.maxScore} pts
+                  {showDetail.topic && `${showDetail.topic} • `}Due: {formatDeadline(showDetail.deadline)} • Max: {showDetail.maxScore} pts
                 </p>
               </div>
               <button onClick={() => setShowDetail(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">

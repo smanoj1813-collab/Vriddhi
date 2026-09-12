@@ -25,6 +25,7 @@ import {
   Menu,
   MenuItem,
   Chip,
+  Collapse,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -62,6 +63,7 @@ import {
   NotificationsNone,
   SwapHoriz,
   ExpandMore,
+  ExpandLess,
   RateReview,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
@@ -112,6 +114,9 @@ const NAV_LABEL_KEYS: Record<string, TranslationKey> = {
   "Department Students": "nav.departmentStudents",
   "Mark Attendance": "nav.markAttendance",
   "My Attendance": "nav.myAttendance",
+  "Mark Student Attendance": "nav.markStudentAttendance",
+  "Upload Materials": "nav.uploadMaterials",
+  "Assessment Schedule": "nav.assessmentSchedule",
   "My Curriculum": "nav.myCurriculum",
   Topics: "nav.topics",
   Assignments: "nav.assignments",
@@ -182,24 +187,9 @@ const navItems: NavItem[] = [
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["hod"], section: "Insights" },
 
   // ─── FACULTY ───
-  { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" />, roles: ["faculty"], section: "Overview" },
-  { label: "Student Requests", path: "/faculty/appointments", icon: <People fontSize="small" />, roles: ["faculty"], section: "Overview" },
-  { label: "Mark Attendance", path: "/faculty/attendance-marking", icon: <CheckCircle fontSize="small" />, roles: ["faculty"], section: "Attendance" },
-  { label: "My Attendance", path: "/faculty/my-attendance", icon: <BadgeIcon fontSize="small" />, roles: ["faculty"], section: "Attendance" },
-  { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" />, roles: ["faculty"], section: "Teaching" },
-  { label: "Topics", path: "/faculty/topics", icon: <School fontSize="small" />, roles: ["faculty"], section: "Teaching" },
-  { label: "Assignments", path: "/faculty/assignments", icon: <Assignment fontSize="small" />, roles: ["faculty"], section: "Teaching" },
-  { label: "Upload Material", path: "/faculty/upload-material", icon: <UploadFile fontSize="small" />, roles: ["faculty"], section: "Teaching" },
-  { label: "Question Bank", path: "/faculty/question-bank", icon: <QuestionAnswer fontSize="small" />, roles: ["faculty"], section: "Assessments" },
-  { label: "AI Question Generator", path: "/faculty/ai-questions", icon: <AutoAwesome fontSize="small" />, roles: ["faculty"], section: "Assessments" },
-  { label: "Generated Papers", path: "/faculty/papers", icon: <Description fontSize="small" />, roles: ["faculty"], section: "Assessments" },
-  { label: "Assessments", path: "/faculty/assessments", icon: <Assignment fontSize="small" />, roles: ["faculty"], section: "Assessments" },
-  { label: "Student Analysis", path: "/faculty/student-analysis", icon: <Assessment fontSize="small" />, roles: ["faculty"], section: "Insights" },
-  { label: "360° View", path: "/faculty/view360", icon: <Assessment fontSize="small" />, roles: ["faculty"], section: "Insights" },
-  { label: "Reschedule Class", path: "/faculty/reschedule", icon: <CalendarToday fontSize="small" />, roles: ["faculty"], section: "Schedule" },
-  { label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" />, roles: ["faculty"], section: "Communication" },
-  { label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" />, roles: ["faculty"], section: "Schedule" },
-  { label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" />, roles: ["faculty"], section: "Settings" },
+  // Faculty navigation is rendered from facultyNavGroups (collapsible master
+  // groups) instead of this flat list — see FacultyNavEntry below. Mentors
+  // keep the flat list below.
 
   // ─── HOD ─── additional settings
   { label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" />, roles: ["hod"], section: "Settings" },
@@ -212,6 +202,84 @@ const navItems: NavItem[] = [
   { label: "Attendance Overview", path: "/faculty/attendance", icon: <CalendarToday fontSize="small" />, roles: ["mentor"], section: "Attendance" },
   { label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" />, roles: ["mentor"], section: "Settings" },
 ];
+
+// ─── Faculty Collapsible Navigation ──────────────────────────────────────────
+//
+// The faculty sidebar is organised into master groups (Attendance, Students,
+// Curriculum, Assessments) that expand/collapse, with single-page entries
+// (Dashboard, Announcements, Calendar, Settings) rendered as plain links.
+// Every path here must exist in src/modules/faculty/routes.tsx — this is a
+// navigation-only reorganisation; no routes were added, removed, or renamed.
+
+interface FacultyNavLeaf {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+}
+
+type FacultyNavEntry =
+  | { kind: "link"; label: string; path: string; icon: React.ReactNode }
+  | { kind: "group"; label: string; icon: React.ReactNode; children: FacultyNavLeaf[] };
+
+const facultyNav: FacultyNavEntry[] = [
+  { kind: "link", label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
+
+  {
+    kind: "group",
+    label: "Attendance",
+    icon: <CalendarToday fontSize="small" />,
+    children: [
+      { label: "My Attendance", path: "/faculty/my-attendance", icon: <BadgeIcon fontSize="small" /> },
+      { label: "Mark Student Attendance", path: "/faculty/attendance-marking", icon: <CheckCircle fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Students",
+    icon: <People fontSize="small" />,
+    children: [
+      { label: "Student Requests", path: "/faculty/appointments", icon: <People fontSize="small" /> },
+      { label: "Student Analysis", path: "/faculty/student-analysis", icon: <Assessment fontSize="small" /> },
+      { label: "360° View", path: "/faculty/view360", icon: <Assessment fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Curriculum",
+    icon: <School fontSize="small" />,
+    children: [
+      { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" /> },
+      { label: "Topics", path: "/faculty/topics", icon: <School fontSize="small" /> },
+      { label: "Assignments", path: "/faculty/assignments", icon: <Assignment fontSize="small" /> },
+      { label: "Upload Materials", path: "/faculty/upload-material", icon: <UploadFile fontSize="small" /> },
+      { label: "Reschedule Class", path: "/faculty/reschedule", icon: <CalendarToday fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Assessments",
+    icon: <Assignment fontSize="small" />,
+    children: [
+      { label: "AI Question Generator", path: "/faculty/ai-questions", icon: <AutoAwesome fontSize="small" /> },
+      { label: "Paper Generator", path: "/faculty/paper-generator", icon: <Description fontSize="small" /> },
+      { label: "Generated Papers", path: "/faculty/papers", icon: <Description fontSize="small" /> },
+      { label: "Question Bank", path: "/faculty/question-bank", icon: <QuestionAnswer fontSize="small" /> },
+      { label: "Assessment Schedule", path: "/faculty/assessments", icon: <Assignment fontSize="small" /> },
+    ],
+  },
+
+  { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
+  { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
+  { kind: "link", label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" /> },
+];
+
+/** True when the current location points at this nav path. */
+function isNavPathActive(pathname: string, path: string): boolean {
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -275,6 +343,50 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         return true;
       });
   }, [effectiveRole]);
+
+  // ─── Faculty collapsible groups ────────────────────────────────────────────
+  // One open/closed set for the master groups. Landing on (or navigating to) a
+  // child route auto-opens the group that owns it, so a deep link like
+  // /faculty/assignments never renders with its group mysteriously shut.
+  // Groups may still be closed manually — the effect only runs on route change.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
+  const pathname = location.pathname;
+
+  const navLabel = (label: string) =>
+    NAV_LABEL_KEYS[label] ? t(NAV_LABEL_KEYS[label]) : label;
+
+  const facultyActiveGroup = React.useMemo(() => {
+    if (effectiveRole !== "faculty") return null;
+    return (
+      facultyNav.find(
+        (entry) =>
+          entry.kind === "group" &&
+          entry.children.some((child) => isNavPathActive(pathname, child.path))
+      ) ?? null
+    );
+  }, [effectiveRole, pathname]);
+
+  useEffect(() => {
+    if (facultyActiveGroup && facultyActiveGroup.kind === "group") {
+      setOpenGroups((prev) =>
+        prev.has(facultyActiveGroup.label) ? prev : new Set(prev).add(facultyActiveGroup.label)
+      );
+    }
+  }, [facultyActiveGroup]);
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  const followNavPath = (path: string) => {
+    navigate(path);
+    setMobileOpen(false);
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -387,7 +499,211 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Navigation Links */}
       <List sx={{ flex: 1, overflowY: "auto", px: 1, py: 1 }}>
-        {filteredNav.map((item) => {
+        {effectiveRole === "faculty" ? (
+          <>
+            {/* Faculty: collapsible master groups. Navigation-only reorganisation —
+                every path lives in faculty/routes.tsx unchanged. */}
+            {facultyNav.map((entry) => {
+              if (entry.kind === "link") {
+                const isActive =
+                  isNavPathActive(pathname, entry.path) ||
+                  (pathname === "/faculty" && entry.path === "/faculty/dashboard");
+                return (
+                  <ListItem key={entry.path} disablePadding sx={{ mb: 0.5 }}>
+                    <Tooltip title={collapsed ? navLabel(entry.label) : ""} placement="right" arrow>
+                      <ListItemButton
+                        onClick={() => followNavPath(entry.path)}
+                        selected={isActive}
+                        sx={{
+                          borderRadius: 2,
+                          justifyContent: collapsed ? "center" : "flex-start",
+                          px: collapsed ? 1.5 : 2,
+                          py: 1,
+                          minHeight: 44,
+                          transition: "all 0.15s ease",
+                          "&.Mui-selected": {
+                            bgcolor: "primary.main",
+                            color: "#ffffff",
+                            boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)",
+                            "&:hover": { bgcolor: "primary.dark" },
+                            "& .MuiListItemIcon-root": { color: "#ffffff" },
+                            "& .MuiTypography-root": { fontWeight: 600 },
+                          },
+                          "&:hover": {
+                            bgcolor: resolvedMode === "dark" ? "rgba(255,255,255,0.05)" : "#f1f5f9",
+                          },
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            minWidth: collapsed ? "auto" : 36,
+                            color: isActive ? "#ffffff" : "text.secondary",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {entry.icon}
+                        </ListItemIcon>
+                        {!collapsed && (
+                          <ListItemText
+                            primary={
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontSize: "0.875rem",
+                                  fontWeight: isActive ? 600 : 500,
+                                  color: isActive ? "#ffffff" : "text.primary",
+                                }}
+                              >
+                                {navLabel(entry.label)}
+                              </Typography>
+                            }
+                          />
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
+                  </ListItem>
+                );
+              }
+
+              const isGroupActive = entry.children.some((child) =>
+                isNavPathActive(pathname, child.path)
+              );
+              const isOpen = openGroups.has(entry.label);
+
+              return (
+                <React.Fragment key={entry.label}>
+                  <ListItem disablePadding sx={{ mb: 0.5 }}>
+                    <Tooltip title={collapsed ? navLabel(entry.label) : ""} placement="right" arrow>
+                      <ListItemButton
+                        onClick={() =>
+                          collapsed
+                            ? followNavPath(entry.children[0].path)
+                            : toggleGroup(entry.label)
+                        }
+                        aria-expanded={isOpen}
+                        sx={{
+                          borderRadius: 2,
+                          justifyContent: collapsed ? "center" : "flex-start",
+                          px: collapsed ? 1.5 : 2,
+                          py: 1,
+                          minHeight: 44,
+                          transition: "all 0.15s ease",
+                          ...(isGroupActive
+                            ? {
+                                bgcolor:
+                                  resolvedMode === "dark"
+                                    ? "rgba(13, 148, 136, 0.14)"
+                                    : "rgba(13, 148, 136, 0.07)",
+                                "& .MuiListItemIcon-root": { color: "primary.main" },
+                                "& .MuiTypography-root": { fontWeight: 700, color: "primary.main" },
+                              }
+                            : {
+                                "&:hover": {
+                                  bgcolor:
+                                    resolvedMode === "dark" ? "rgba(255,255,255,0.05)" : "#f1f5f9",
+                                },
+                              }),
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            minWidth: collapsed ? "auto" : 36,
+                            color: isGroupActive ? "primary.main" : "text.secondary",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {entry.icon}
+                        </ListItemIcon>
+                        {!collapsed && (
+                          <>
+                            <ListItemText
+                              primary={
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontSize: "0.875rem",
+                                    fontWeight: isGroupActive ? 700 : 600,
+                                    color: isGroupActive ? "primary.main" : "text.primary",
+                                  }}
+                                >
+                                  {navLabel(entry.label)}
+                                </Typography>
+                              }
+                            />
+                            {isOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+                          </>
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
+                  </ListItem>
+
+                  {!collapsed && (
+                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                      <List disablePadding sx={{ px: 0.5, mb: 0.5 }}>
+                        {entry.children.map((child) => {
+                          const isActive = isNavPathActive(pathname, child.path);
+                          return (
+                            <ListItem key={child.path} disablePadding sx={{ mb: 0.25 }}>
+                              <ListItemButton
+                                onClick={() => followNavPath(child.path)}
+                                selected={isActive}
+                                sx={{
+                                  borderRadius: 2,
+                                  pl: 3.5,
+                                  pr: 2,
+                                  py: 0.75,
+                                  minHeight: 40,
+                                  transition: "all 0.15s ease",
+                                  "&.Mui-selected": {
+                                    bgcolor: "primary.main",
+                                    color: "#ffffff",
+                                    boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)",
+                                    "&:hover": { bgcolor: "primary.dark" },
+                                    "& .MuiListItemIcon-root": { color: "#ffffff" },
+                                    "& .MuiTypography-root": { fontWeight: 600 },
+                                  },
+                                  "&:hover": {
+                                    bgcolor:
+                                      resolvedMode === "dark" ? "rgba(255,255,255,0.05)" : "#f1f5f9",
+                                  },
+                                }}
+                              >
+                                <ListItemIcon
+                                  sx={{
+                                    minWidth: 30,
+                                    color: isActive ? "#ffffff" : "text.secondary",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  {child.icon}
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontSize: "0.82rem",
+                                        fontWeight: isActive ? 600 : 500,
+                                        color: isActive ? "#ffffff" : "text.primary",
+                                      }}
+                                    >
+                                      {navLabel(child.label)}
+                                    </Typography>
+                                  }
+                                />
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                    </Collapse>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </>
+        ) : (
+        filteredNav.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== "/admin" && item.path !== "/faculty" && item.path !== "/superadmin" && location.pathname.startsWith(item.path));
 
@@ -452,7 +768,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </Tooltip>
             </ListItem>
           );
-        })}
+        })
+        )}
       </List>
 
       <Divider sx={{ borderColor: "divider" }} />

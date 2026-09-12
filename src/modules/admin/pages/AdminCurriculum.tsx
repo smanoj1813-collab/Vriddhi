@@ -215,7 +215,10 @@ const AdminCurriculum: React.FC = () => {
 
     if (editingMapping) {
       const result = await updateFacultyAssignment(editingMapping, {
-        facultyId: faculty.id,
+        // Same rule as create: the Auth uid is the canonical faculty key, so
+        // an edit cannot silently re-key the mapping back to the profile doc
+        // id the faculty app cannot match.
+        facultyId: faculty.uid || faculty.id,
         facultyName: faculty.name,
         facultyEmail: faculty.email || null,
         batch: formData.batch,

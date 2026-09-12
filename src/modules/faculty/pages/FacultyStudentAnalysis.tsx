@@ -37,6 +37,7 @@ interface AssessmentScore {
 interface AttendanceRecord {
   date: string
   status: string
+  subject?: string
 }
 
 interface FacultyStudent {
@@ -50,13 +51,15 @@ interface FacultyStudent {
   email: string
   phone: string
   avatar?: string
-  attendancePercentage: number
-  avgScore: number
-  status: 'good' | 'average' | 'weak'
+  /** null = no attendance data recorded yet (shown as "—", never a fake number). */
+  attendancePercentage: number | null
+  /** null = no graded assessments yet. */
+  avgScore: number | null
+  status: 'good' | 'average' | 'weak' | null
   assessmentScores: AssessmentScore[]
   attendanceHistory: AttendanceRecord[]
-  strengths: string[]
-  weaknesses: string[]
+  /** Derived from the REAL numbers above — labelled observations, not canned text. */
+  observations: string[]
 }
 
 const statusConfig: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -118,88 +121,144 @@ export default function FacultyStudentAnalysis() {
         isAssignedToFaculty(student.data(), mentorAliases)
       )
 
-      // 2. Fetch Attendance Summary for college
-      const attQuery = query(
-        collection(db, 'attendanceSummary'),
-        where('collegeId', '==', collegeId),
-        limit(200)
-      )
-      const attSnap = await getDocs(attQuery).catch(() => null)
-      const attMap = new Map<string, number>()
-      if (attSnap) {
-        attSnap.docs.forEach(d => {
-          const data = d.data()
-          const sid = data.studentId || d.id
-          if (data.percentage !== undefined) {
-            attMap.set(sid, Number(data.percentage))
+      // ─── Real attendance: per-student rows written with every save ────────
+      // attendanceSummary rows are per SESSION (they carry no studentId), so
+      // the only honest per-student source is attendanceRecords. Present,
+      // late and on-duty all count as attended — the same rule the student
+      // attendance page applies.
+      const recordsSnap = await getDocs(
+        query(collection(db, 'attendanceRecords'), where('collegeId', '==', collegeId), limit(1000))
+      ).catch(() => null)
+      interface StudentAttendanceRoll {
+        total: number
+        attended: number
+        history: AttendanceRecord[]
+      }
+      const attendanceMap = new Map<string, StudentAttendanceRoll>()
+      if (recordsSnap) {
+        const rows = recordsSnap.docs
+          .map((d) => {
+            const data = d.data()
+            return {
+              studentId: String(data.studentId || ''),
+              date: String(data.date || ''),
+              status: String(data.status || ''),
+              subject: data.subject ? String(data.subject) : undefined,
+            }
+          })
+          .filter((r) => r.studentId && r.date)
+          .sort((a, b) => b.date.localeCompare(a.date))
+        rows.forEach((row) => {
+          const roll = attendanceMap.get(row.studentId) || { total: 0, attended: 0, history: [] }
+          roll.total += 1
+          // status values: present | absent | late | onDuty | leave | medicalLeave
+          if (['present', 'late', 'onduty'].includes(row.status.toLowerCase())) roll.attended += 1
+          if (roll.history.length < 8) {
+            roll.history.push({ date: row.date, status: row.status, subject: row.subject })
           }
+          attendanceMap.set(row.studentId, roll)
         })
       }
 
-      // 3. Fetch Grade Records for college
-      const gradeQuery = query(
-        collection(db, 'gradeRecords'),
-        where('collegeId', '==', collegeId),
-        limit(200)
-      )
-      const gradeSnap = await getDocs(gradeQuery).catch(() => null)
-      const gradeMap = new Map<string, number[]>()
-      if (gradeSnap) {
-        gradeSnap.docs.forEach(d => {
-          const data = d.data()
-          const sid = data.studentId
-          const pct = Number(data.percentage || data.marksObtained) || 0
-          if (sid) {
-            const arr = gradeMap.get(sid) || []
-            arr.push(pct)
-            gradeMap.set(sid, arr)
-          }
-        })
+      // ─── Real scores: graded test attempts (faculty may read these) ───────
+      // gradeRecords are registrar-written and NOT readable by faculty per the
+      // security rules, which is why the old fallback invented a 76%. The
+      // attempts in studentAssessments carry the collegeId and percentage.
+      const attemptsSnap = await getDocs(
+        query(collection(db, 'studentAssessments'), where('collegeId', '==', collegeId), limit(500))
+      ).catch(() => null)
+      const testsSnap = await getDocs(
+        query(collection(db, 'scheduledTests'), where('collegeId', '==', collegeId), limit(200))
+      ).catch(() => null)
+      const testTitles = new Map<string, string>()
+      testsSnap?.docs.forEach((d) => {
+        const title = String(d.data().title || '').trim()
+        if (title) testTitles.set(d.id, title)
+      })
+
+      interface AttemptRow {
+        studentId: string
+        label: string
+        score: number
+        at: number
       }
+      const attemptsByStudent = new Map<string, AttemptRow[]>()
+      attemptsSnap?.docs.forEach((d) => {
+        const data = d.data()
+        const studentId = String(data.studentId || '')
+        const percentage = Number(data.percentage)
+        if (!studentId || !Number.isFinite(percentage)) return
+        if (!['submitted', 'graded'].includes(String(data.status || ''))) return
+        const testId = String(data.testId || data.assessmentId || '')
+        const submittedAt = data.submittedAt?.toDate?.().getTime() || 0
+        const row: AttemptRow = {
+          studentId,
+          label: testTitles.get(testId) || (testId ? `Test ${testId.slice(0, 6)}` : 'Assessment'),
+          score: Math.round(percentage),
+          at: submittedAt,
+        }
+        const list = attemptsByStudent.get(studentId) || []
+        list.push(row)
+        attemptsByStudent.set(studentId, list)
+      })
 
       const loadedStudents: FacultyStudent[] = assignedStudentDocs.map(docSnap => {
         const d = docSnap.data()
         const sid = docSnap.id
         const regNo = d.regNo || d.rollNo || sid
-        const attendance = attMap.get(sid) ?? attMap.get(regNo) ?? (d.attendancePercentage !== undefined ? Number(d.attendancePercentage) : 82)
-        const grades = gradeMap.get(sid) ?? gradeMap.get(regNo) ?? []
-        const avgScore = grades.length > 0
-          ? Math.round(grades.reduce((a, b) => a + b, 0) / grades.length)
-          : (d.avgScore !== undefined ? Number(d.avgScore) : 76)
 
-        const status: 'good' | 'average' | 'weak' =
-          attendance >= 85 && avgScore >= 75 ? 'good' :
-          attendance < 75 || avgScore < 50 ? 'weak' : 'average'
+        const roll = attendanceMap.get(sid) || attendanceMap.get(regNo)
+        const docAttendance = Number(d.attendancePercentage ?? d.attendance)
+        const attendancePercentage = roll && roll.total > 0
+          ? Math.round((roll.attended / roll.total) * 100)
+          : Number.isFinite(docAttendance) && docAttendance > 0
+            ? Math.round(docAttendance)
+            : null
+
+        const attempts = (attemptsByStudent.get(sid) || attemptsByStudent.get(regNo) || [])
+          .sort((a, b) => b.at - a.at)
+        const docAvg = Number(d.avgScore ?? d.averageScore)
+        const avgScore = attempts.length > 0
+          ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length)
+          : Number.isFinite(docAvg) && docAvg > 0
+            ? Math.round(docAvg)
+            : null
+
+        const status: 'good' | 'average' | 'weak' | null =
+          attendancePercentage === null && avgScore === null
+            ? null
+            : (attendancePercentage ?? 100) >= 85 && (avgScore ?? 100) >= 75
+              ? 'good'
+              : (attendancePercentage ?? 100) < 75 || (avgScore ?? 100) < 50
+                ? 'weak'
+                : 'average'
+
+        // Observations are computed from the real numbers — no canned copy.
+        const observations: string[] = []
+        if (attendancePercentage !== null && attendancePercentage < 75) observations.push('Attendance below 75%')
+        if (attendancePercentage !== null && attendancePercentage >= 90) observations.push('Excellent attendance')
+        if (attempts.length === 0 && attendancePercentage !== null) observations.push('No graded assessments yet')
+        if (avgScore !== null && avgScore >= 75) observations.push('Strong assessment scores')
+        if (avgScore !== null && avgScore < 50) observations.push('Needs assessment support')
+        if (observations.length === 0) observations.push('Limited data recorded')
 
         return {
           id: sid,
           name: d.name || 'Student',
           rollNo: d.rollNo || regNo,
           regNo,
-          batch: d.batch || '2026',
-          division: d.division || d.section || 'A',
-          mentor: d.mentor || d.mentorName || facultyName || user?.name || 'Faculty Mentor',
-          email: d.email || `${regNo.toLowerCase()}@college.edu`,
-          phone: d.phone || d.parentPhone || '—',
+          batch: d.batch || '',
+          division: d.division || d.section || '',
+          mentor: d.mentor || d.mentorName || facultyName || user?.name || '',
+          email: d.email || '',
+          phone: d.phone || d.parentPhone || '',
           avatar: d.avatar,
-          attendancePercentage: attendance,
+          attendancePercentage,
           avgScore,
           status,
-          assessmentScores: [
-            { assessment: 'Unit Test 1', score: Math.min(Math.max(avgScore - 4, 40), 100) },
-            { assessment: 'Mid Term', score: avgScore },
-            { assessment: 'Unit Test 2', score: Math.min(Math.max(avgScore + 3, 40), 100) },
-          ],
-          attendanceHistory: [
-            { date: '2026-06-18', status: 'present' },
-            { date: '2026-06-19', status: attendance > 70 ? 'present' : 'absent' },
-            { date: '2026-06-20', status: 'present' },
-            { date: '2026-06-21', status: 'present' },
-            { date: '2026-06-22', status: attendance > 80 ? 'present' : 'absent' },
-            { date: '2026-06-23', status: 'present' },
-          ],
-          strengths: avgScore >= 75 ? ['Concept Clarity', 'Timely Submissions'] : ['Class Participation'],
-          weaknesses: avgScore < 60 ? ['Numerical Problems', 'Exam Revision'] : ['Speed & Accuracy'],
+          assessmentScores: attempts.slice(0, 5).map((a) => ({ assessment: a.label, score: a.score })),
+          attendanceHistory: roll?.history ?? [],
+          observations,
         }
       })
 
@@ -237,26 +296,32 @@ export default function FacultyStudentAnalysis() {
     const good = students.filter(s => s.status === 'good').length
     const average = students.filter(s => s.status === 'average').length
     const weak = students.filter(s => s.status === 'weak').length
-    const avgAttendance = total === 0
-      ? 0
-      : Math.round(students.reduce((sum, s) => sum + s.attendancePercentage, 0) / total)
-    const avgScore = total === 0
-      ? 0
-      : Math.round(students.reduce((sum, s) => sum + s.avgScore, 0) / total)
+    const attendanceValues = students
+      .map(s => s.attendancePercentage)
+      .filter((v): v is number => v !== null)
+    const scoreValues = students
+      .map(s => s.avgScore)
+      .filter((v): v is number => v !== null)
+    const avgAttendance = attendanceValues.length === 0
+      ? null
+      : Math.round(attendanceValues.reduce((sum, v) => sum + v, 0) / attendanceValues.length)
+    const avgScore = scoreValues.length === 0
+      ? null
+      : Math.round(scoreValues.reduce((sum, v) => sum + v, 0) / scoreValues.length)
     return { total, good, average, weak, avgAttendance, avgScore }
   }, [students])
 
-  // Chart data
+  // Chart data — students with no data are excluded rather than bucketed as 0.
   const attendanceDistribution = useMemo(() => [
-    { name: 'Excellent (90%+)', value: students.filter(s => s.attendancePercentage >= 90).length, color: '#22c55e' },
-    { name: 'Good (75-89%)', value: students.filter(s => s.attendancePercentage >= 75 && s.attendancePercentage < 90).length, color: '#6366f1' },
-    { name: 'Poor (<75%)', value: students.filter(s => s.attendancePercentage < 75).length, color: '#ef4444' },
+    { name: 'Excellent (90%+)', value: students.filter(s => (s.attendancePercentage ?? -1) >= 90).length, color: '#22c55e' },
+    { name: 'Good (75-89%)', value: students.filter(s => s.attendancePercentage !== null && s.attendancePercentage >= 75 && s.attendancePercentage < 90).length, color: '#6366f1' },
+    { name: 'Poor (<75%)', value: students.filter(s => s.attendancePercentage !== null && s.attendancePercentage < 75).length, color: '#ef4444' },
   ], [students])
 
   const scoreDistribution = useMemo(() => [
-    { name: 'A (80-100%)', value: students.filter(s => s.avgScore >= 80).length, color: '#22c55e' },
-    { name: 'B (60-79%)', value: students.filter(s => s.avgScore >= 60 && s.avgScore < 80).length, color: '#6366f1' },
-    { name: 'C (<60%)', value: students.filter(s => s.avgScore < 60).length, color: '#ef4444' },
+    { name: 'A (80-100%)', value: students.filter(s => (s.avgScore ?? -1) >= 80).length, color: '#22c55e' },
+    { name: 'B (60-79%)', value: students.filter(s => s.avgScore !== null && s.avgScore >= 60 && s.avgScore < 80).length, color: '#6366f1' },
+    { name: 'C (<60%)', value: students.filter(s => s.avgScore !== null && s.avgScore < 60).length, color: '#ef4444' },
   ], [students])
 
   return (
@@ -305,11 +370,11 @@ export default function FacultyStudentAnalysis() {
         </div>
         <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-500 mb-1">Avg Attendance</p>
-          <p className="text-2xl font-bold text-blue-500">{stats.total > 0 ? `${stats.avgAttendance}%` : '—'}</p>
+          <p className="text-2xl font-bold text-blue-500">{stats.avgAttendance !== null ? `${stats.avgAttendance}%` : '—'}</p>
         </div>
         <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
           <p className="text-xs text-purple-500 mb-1">Avg Score</p>
-          <p className="text-2xl font-bold text-purple-500">{stats.total > 0 ? `${stats.avgScore}%` : '—'}</p>
+          <p className="text-2xl font-bold text-purple-500">{stats.avgScore !== null ? `${stats.avgScore}%` : '—'}</p>
         </div>
       </div>
 
@@ -429,20 +494,22 @@ export default function FacultyStudentAnalysis() {
 
                     <div className="flex items-center gap-6 text-sm">
                       <div className="text-center">
-                        <p className={`font-semibold ${student.attendancePercentage >= 75 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                          {student.attendancePercentage}%
+                        <p className={`font-semibold ${student.attendancePercentage !== null && student.attendancePercentage >= 75 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {student.attendancePercentage !== null ? `${student.attendancePercentage}%` : '—'}
                         </p>
                         <p className="text-[10px] text-slate-400">Attendance</p>
                       </div>
                       <div className="text-center">
-                        <p className={`font-semibold ${student.avgScore >= 75 ? 'text-emerald-500' : student.avgScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
-                          {student.avgScore}%
+                        <p className={`font-semibold ${student.avgScore !== null ? (student.avgScore >= 75 ? 'text-emerald-500' : student.avgScore >= 60 ? 'text-amber-500' : 'text-rose-500') : 'text-slate-400'}`}>
+                          {student.avgScore !== null ? `${student.avgScore}%` : '—'}
                         </p>
                         <p className="text-[10px] text-slate-400">Avg Score</p>
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusConfig[student.status].bg} ${statusConfig[student.status].color} ${statusConfig[student.status].border}`}>
-                        {statusConfig[student.status].label}
-                      </span>
+                      {student.status && (
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusConfig[student.status].bg} ${statusConfig[student.status].color} ${statusConfig[student.status].border}`}>
+                          {statusConfig[student.status].label}
+                        </span>
+                      )}
                       <button className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </button>
@@ -453,23 +520,51 @@ export default function FacultyStudentAnalysis() {
                     <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700/50 pt-4 bg-slate-50/50 dark:bg-slate-800/20">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                         <div className="space-y-2">
-                          <p className="text-slate-500"><span className="font-medium text-slate-700 dark:text-slate-300">Email:</span> {student.email}</p>
-                          <p className="text-slate-500"><span className="font-medium text-slate-700 dark:text-slate-300">Mentor:</span> {student.mentor}</p>
-                          <div className="flex gap-1 flex-wrap mt-2">
-                            {student.strengths.map((s, i) => (
-                              <span key={i} className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[11px]">{s}</span>
+                          <p className="text-slate-500"><span className="font-medium text-slate-700 dark:text-slate-300">Email:</span> {student.email || '—'}</p>
+                          <p className="text-slate-500"><span className="font-medium text-slate-700 dark:text-slate-300">Mentor:</span> {student.mentor || '—'}</p>
+                          {student.batch && (
+                            <p className="text-slate-500"><span className="font-medium text-slate-700 dark:text-slate-300">Batch:</span> {student.batch}{student.division ? ` • Div ${student.division}` : ''}</p>
+                          )}
+                          <p className="font-medium text-slate-700 dark:text-slate-300 pt-1">Observations</p>
+                          <div className="flex gap-1 flex-wrap">
+                            {student.observations.map((s, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 text-[11px]">{s}</span>
                             ))}
                           </div>
+                          {student.attendanceHistory.length > 0 && (
+                            <>
+                              <p className="font-medium text-slate-700 dark:text-slate-300 pt-1">Recent attendance</p>
+                              <div className="flex gap-1 flex-wrap">
+                                {student.attendanceHistory.map((record, i) => (
+                                  <span
+                                    key={`${record.date}-${i}`}
+                                    title={`${record.date}${record.subject ? ` • ${record.subject}` : ''}`}
+                                    className={`px-2 py-0.5 rounded-md text-[11px] border ${
+                                      ['present', 'late', 'onduty'].includes(record.status.toLowerCase())
+                                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                        : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                    }`}
+                                  >
+                                    {record.date.slice(5)} {['present', 'late', 'onduty'].includes(record.status.toLowerCase()) ? '✓' : '✗'}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-slate-700 dark:text-slate-300 mb-2">Recent Assessment Performance</p>
                           <div className="space-y-1.5">
-                            {student.assessmentScores.map((score, i) => (
-                              <div key={i} className="flex items-center justify-between bg-white dark:bg-slate-700/30 p-2 rounded-lg border border-slate-100 dark:border-slate-700/30">
-                                <span className="text-slate-600 dark:text-slate-400">{score.assessment}</span>
-                                <span className="font-bold text-teal-500">{score.score}%</span>
-                              </div>
-                            ))}
+                            {student.assessmentScores.length === 0 ? (
+                              <p className="text-slate-500">No graded assessments recorded yet.</p>
+                            ) : (
+                              student.assessmentScores.map((score, i) => (
+                                <div key={i} className="flex items-center justify-between bg-white dark:bg-slate-700/30 p-2 rounded-lg border border-slate-100 dark:border-slate-700/30">
+                                  <span className="text-slate-600 dark:text-slate-400">{score.assessment}</span>
+                                  <span className="font-bold text-teal-500">{score.score}%</span>
+                                </div>
+                              ))
+                            )}
                           </div>
                         </div>
                       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
 import {
@@ -7,6 +7,8 @@ import {
   fetchAttendanceForSession,
   saveAttendance,
 } from '../api/facultyApi';
+import { ensureIdentityClaims } from '@/shared/services/identitySelfHeal';
+import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims';
 import type {
   FacultyClassSession,
   FacultyStudent,
@@ -61,6 +63,29 @@ export function useFacultyAttendance() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // One on-demand identity self-heal per mount (mirrors useMyStaffAttendance):
+  // a permission denial on the save is exactly what a stale role/collegeId
+  // claim produces, and re-issuing the claims mid-session can rescue the save
+  // without a sign-out.
+  const healAttempts = useRef(0);
+  const selfHealOnce = useCallback(async (): Promise<boolean> => {
+    if (!user || healAttempts.current > 0) return false;
+    healAttempts.current += 1;
+    try {
+      const outcome = await ensureIdentityClaims({
+        role: user.role,
+        collegeId: user.collegeId ?? null,
+      });
+      if (outcome !== 'refreshed') {
+        console.warn('[useFacultyAttendance] claim self-heal did not re-issue claims:', outcome);
+      }
+      return outcome === 'refreshed';
+    } catch (err) {
+      console.warn('[useFacultyAttendance] claim self-heal failed:', err);
+      return false;
+    }
+  }, [user]);
 
   // ─── Load class sessions ────────────────────────────────
   useEffect(() => {
@@ -220,13 +245,31 @@ export function useFacultyAttendance() {
         notes: attendance[s.id]?.notes || '',
       }));
 
-      const attendanceId = await saveAttendance(
-        selectedClass,
-        records,
-        facultyId,
-        facultyName,
-        collegeId
-      );
+      const attendanceId = await (async () => {
+        try {
+          return await saveAttendance(
+            selectedClass,
+            records,
+            facultyId,
+            facultyName,
+            collegeId
+          );
+        } catch (err) {
+          // A tenant-scoped write is exactly where a stale collegeId claim
+          // hurts: re-issue the claims once and retry — the batched write is
+          // an upsert keyed on session+date, so a retry cannot duplicate.
+          if (isPermissionDeniedError(err) && (await selfHealOnce())) {
+            return saveAttendance(
+              selectedClass,
+              records,
+              facultyId,
+              facultyName,
+              collegeId
+            );
+          }
+          throw err;
+        }
+      })();
       setSaveSuccess(true);
       setExistingAttendance({
         id: attendanceId,
@@ -262,11 +305,15 @@ export function useFacultyAttendance() {
 
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save attendance');
+      setError(
+        isPermissionDeniedError(err)
+          ? staleClaimMessage('attendance save')
+          : err instanceof Error ? err.message : 'Failed to save attendance'
+      );
     } finally {
       setSaving(false);
     }
-  }, [selectedClass, facultyId, facultyName, collegeId, students, attendance]);
+  }, [selectedClass, facultyId, facultyName, collegeId, students, attendance, selfHealOnce]);
 
   return {
     facultyId,

@@ -30,7 +30,10 @@ import { listCurriculumDocs } from '../../../modules/superadmin/api/curriculumAp
 
 // ─── Faculty type from Firestore ───────────────────────────────────────
 export interface FacultyOption {
+  /** Firestore document id of the faculty profile (legacy key). */
   id: string;
+  /** Auth uid stored on the profile — the canonical mapping key. */
+  uid?: string;
   name: string;
   email: string;
   department: string;
@@ -77,6 +80,7 @@ export function useCurriculumMapping(collegeId: string | undefined) {
           const data = d.data();
           return {
             id: d.id,
+            uid: typeof data.uid === 'string' && data.uid ? data.uid : undefined,
             name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.name || 'Unknown',
             email: data.email || '',
             department: data.department || 'General',
@@ -166,7 +170,13 @@ export function useCurriculumMapping(collegeId: string | undefined) {
         courseId: course.id,
         courseCode: course.code,
         courseName: course.name,
-        facultyId: faculty.id,
+        // The Auth uid is the canonical faculty key — the faculty app
+        // (My Curriculum, session topics, schedules) resolves identity by
+        // uid. Older rows stored the faculty profile document id here, which
+        // is why assigned curricula never reached the faculty; the reader now
+        // tolerates both, and new rows get the uid so the tolerant path is a
+        // fallback rather than the norm.
+        facultyId: faculty.uid || faculty.id,
         facultyName: faculty.name,
         facultyEmail: faculty.email || null,
         branch: course.branch,
