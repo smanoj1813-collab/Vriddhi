@@ -801,6 +801,20 @@ service cloud.firestore {
       }
     }
 
+    // -- Admission Center ------------------------------------------------------
+    // Applicant records: enquiries, applications, entrance scores and offers,
+    // all staff-entered. Every read and write goes through the `admissions`
+    // callables, which resolve the caller's role and college server-side and
+    // enforce the stage machine. Admin SDK writes from those callables bypass
+    // these rules entirely, so browser access is refused outright: there is no
+    // client path that needs it, and an applicant's personal details (date of
+    // birth, guardian contact, entrance scores) should not be listable by any
+    // signed-in session that happens to guess a document id.
+    match /admissionApplications/{id} {
+      allow read: if false;
+      allow write: if false;
+    }
+
     // -- Curriculum, topics, and test papers ----------------------------------
     // Read by the curriculum, topics, and dashboard flows in
     // src/modules/superadmin/api/curriculumApi.ts and

@@ -94,6 +94,15 @@ import {
 } from './notifications'
 // ─── Student journey: real CGPA, cohort standing, readiness ───
 import { getMyAcademicJourney } from './studentJourney'
+// ─── Admission Center: the funnel before a student record exists ───
+import {
+  saveAdmissionApplication,
+  transitionAdmissionStage,
+  listAdmissionApplications,
+  deleteAdmissionApplication,
+  exportAdmittedApplicants,
+  markAdmissionExported,
+} from './admissions'
 
 const app = express()
 
@@ -234,4 +243,10 @@ export {
   markMyNotificationRead,
   markAllMyNotificationsRead,
   getMyAcademicJourney,
+  saveAdmissionApplication,
+  transitionAdmissionStage,
+  listAdmissionApplications,
+  deleteAdmissionApplication,
+  exportAdmittedApplicants,
+  markAdmissionExported,
 }
