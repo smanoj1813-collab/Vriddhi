@@ -26,7 +26,7 @@ import {
   getMappingStats,
 } from '../api/curriculumMappingApi';
 
-import { listCurriculumDocs } from '../../../modules/superadmin/api/curriculumApi';
+import { listCurriculumDocs } from '../../../modules/superadmin/api/syllabusCurriculumApi';
 
 // ─── Faculty type from Firestore ───────────────────────────────────────
 export interface FacultyOption {

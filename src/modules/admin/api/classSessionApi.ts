@@ -262,6 +262,14 @@ export interface CompleteSessionInput {
   sessionId: string
   topicIds?: string[]
   topicTitles?: string[]
+  /**
+   * Preferred payload — id+title pairs straight from the picker. Curriculum
+   * topics selected from an assigned curriculum document carry a composite
+   * id that cannot be resolved in the `topics/*` bank, so their title has to
+   * ride along with the id (older servers just ignore this field and fall
+   * back to topicIds/topicTitles).
+   */
+  topics?: Array<{ topicId: string; title: string }>
   notes?: string
 }
 
@@ -281,7 +289,8 @@ export interface CompleteSessionResult {
  * topics it covered — one server-side transaction, so the session and the
  * ledger cannot disagree.
  *
- * `topicIds` are `topics/*` ids from the curriculum bank. `topicTitles` is the
+ * `topics` carries id+title pairs from the picker and is what new clients
+ * send; `topicIds` are legacy `topics/*` bank ids and `topicTitles` the
  * free-text fallback: a faculty member can always type a topic that has no
  * curriculum row, and it still lands in the ledger (and in `topicsCovered`,
  * which is what the UI displays).
@@ -296,6 +305,7 @@ export async function completeClassSession(
   try {
     const response = await call({
       sessionId: input.sessionId,
+      ...(input.topics ? { topics: input.topics } : {}),
       ...(input.topicIds ? { topicIds: input.topicIds } : {}),
       ...(input.topicTitles ? { topicTitles: input.topicTitles } : {}),
       ...(input.notes ? { notes: input.notes } : {}),

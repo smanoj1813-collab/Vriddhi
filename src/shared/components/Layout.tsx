@@ -281,9 +281,13 @@ const facultyNav: SidebarEntry[] = [
 ];
 
 /**
- * Principal portal — same collapsible-group treatment as faculty. The
- * principal shares the admin route set; every path here exists in
- * src/modules/admin/routes.tsx. Admins/HODs keep the flat list.
+ * College portal — same collapsible-group treatment as faculty, shared by
+ * admins and principals. They share the admin route set; every path here
+ * exists in src/modules/admin/routes.tsx. It MUST stay in sync with the
+ * admin/principal slice of `navItems` above: pages that are added to the
+ * flat list (Admission Center was the missed one) have to be added here too,
+ * or they become unreachable for exactly the roles that render this nav.
+ * HOD keeps the flat list (its route slice differs).
  */
 const principalNav: SidebarEntry[] = [
   { kind: "link", label: "Dashboard", path: "/admin/dashboard", icon: <Dashboard fontSize="small" /> },
@@ -295,6 +299,7 @@ const principalNav: SidebarEntry[] = [
     children: [
       { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
       { label: "360° View", path: "/admin/view360", icon: <Assessment fontSize="small" /> },
+      { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" /> },
     ],
   },
 
@@ -351,6 +356,12 @@ const principalNav: SidebarEntry[] = [
 /** Roles whose sidebar renders as collapsible master groups. */
 const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
   faculty: facultyNav,
+  // Admins and principals share the route set, so they share the grouped
+  // sidebar. Before this, `admin` fell through to the flat list — which meant
+  // a freshly created admin saw a different navigation shape than the
+  // principal in the same college (and had to scroll to reach newer pages
+  // like the Admission Center).
+  admin: principalNav,
   principal: principalNav,
 };
 

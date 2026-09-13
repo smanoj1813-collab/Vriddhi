@@ -11,7 +11,6 @@ import type {
   FacultyClassSession,
   FacultyAttendanceDoc,
   FacultyStudent,
-  FacultyTopic,
   FacultyStats,
   AttendanceStatus,
   FacultyAttendanceRecord,
@@ -654,29 +653,6 @@ export async function fetchFacultyStudents(
   }
 
   return students;
-}
-
-// ─── Fetch Faculty Topics ─────────────────────────────────────────────────
-
-export async function fetchFacultyTopics(facultyId: string): Promise<FacultyTopic[]> {
-  if (sessionReadCount >= MAX_READS_PER_SESSION) return [];
-
-  try {
-    const q = query(
-      collection(db, 'topics'),
-      where('facultyId', '==', facultyId),
-      limit(200)
-    );
-    const snap = await getDocs(q);
-    trackRead(snap.size);
-
-    return snap.docs
-      .map((d) => ({ id: d.id, ...d.data() } as FacultyTopic))
-      .sort((a, b) => ((a.moduleNo || '').localeCompare(b.moduleNo || '')) || a.title.localeCompare(b.title));
-  } catch (err) {
-    console.error('[FacultyApi] Topics query failed:', err);
-    return [];
-  }
 }
 
 // ─── Fetch Class Sessions (legacy alias) ─────────────────────────────────

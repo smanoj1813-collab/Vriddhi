@@ -643,6 +643,7 @@ import {
   buildLedgerRow,
   isTopicCovered,
   matchLedgerRow,
+  mergeCompletionTopics,
   mergeUnique,
   nextTopicStatus,
   normalizeTopicKey,
@@ -814,6 +815,129 @@ describe('validateCompleteInput', () => {
   })
 })
 
+describe('validateCompleteInput — topic pairs', () => {
+  it('parses topics pairs and drops empty entries', () => {
+    const parsed = validateCompleteInput({
+      sessionId: 's',
+      topics: [
+        { topicId: ' cur__mod__a ', title: '  Linear equations ' },
+        { topicId: '', title: '' },
+        { topicId: 'only-id', title: undefined },
+      ],
+    })
+    assert.deepEqual(parsed.topics, [
+      { topicId: 'cur__mod__a', title: 'Linear equations' },
+      { topicId: 'only-id', title: '' },
+    ])
+  })
+
+  it('rejects a non-list topics payload and over-budget lists', () => {
+    assert.throws(
+      () => validateCompleteInput({ sessionId: 's', topics: 'nope' }),
+      /topics must be a list/
+    )
+    assert.throws(
+      () =>
+        validateCompleteInput({
+          sessionId: 's',
+          topics: new Array(60).fill({ topicId: 't' }),
+        }),
+      /At most 50/
+    )
+  })
+
+  it('defaults to an empty topics list', () => {
+    assert.deepEqual(validateCompleteInput({ sessionId: 's' }).topics, [])
+  })
+})
+
+describe('mergeCompletionTopics', () => {
+  it('keeps pair titles the bank cannot resolve (composite curriculum ids)', () => {
+    const merged = mergeCompletionTopics(
+      [{ topicId: 'cur-1__m2__integration-by-parts', title: 'Integration by Parts' }],
+      [],
+      []
+    )
+    assert.deepEqual(merged, [
+      { topicId: 'cur-1__m2__integration-by-parts', title: 'Integration by Parts' },
+    ])
+  })
+
+  it('de-duplicates on the normalised title, pairs win', () => {
+    const merged = mergeCompletionTopics(
+      [{ topicId: 'bank-9', title: 'Integration  by Parts' }],
+      [{ topicId: 'bank-9', title: 'Integration by parts' }],
+      ['integration by parts']
+    )
+    assert.equal(merged.length, 1)
+    assert.equal(merged[0].topicId, 'bank-9')
+  })
+
+  it('drops entries whose title resolves to nothing', () => {
+    const merged = mergeCompletionTopics(
+      [{ topicId: 'unknown-composite', title: '' }],
+      [],
+      ['   ']
+    )
+    assert.deepEqual(merged, [])
+  })
+
+  it('appends legacy titles without ids after resolved ones', () => {
+    const merged = mergeCompletionTopics(
+      [],
+      [{ topicId: 'bank-1', title: 'Matrices' }],
+      ['Typed fallback']
+    )
+    assert.deepEqual(merged.map((t) => t.title), ['Matrices', 'Typed fallback'])
+    assert.equal(merged[1].topicId, '')
+  })
+})
+
+describe('plannedTopicsFromCurriculum', () => {
+  const curriculumDocs = [
+    {
+      id: 'cur-1',
+      data: {
+        courses: [
+          {
+            id: 'course-a',
+            code: 'BC101',
+            name: 'Financial Accounting',
+            modules: [
+              { moduleNo: 'I', moduleName: 'Fundamentals', topics: [' Debits ', 'Credits', ''] },
+              { moduleNo: 'II', title: 'Ledgers', topics: ['Debits'] },
+            ],
+          },
+          { id: 'course-b', code: 'BC102', name: 'Costing', modules: [] },
+        ],
+      },
+    },
+  ] as Array<{ id: string; data: Record<string, unknown> }>
+
+  it('matches the mapped course by id first, then code, then name', () => {
+    const byId = plannedTopicsFromCurriculum([{ curriculumId: 'cur-1', courseId: 'course-a' }], curriculumDocs)
+    const byCode = plannedTopicsFromCurriculum([{ curriculumId: 'cur-1', courseCode: 'BC101' }], curriculumDocs)
+    const byName = plannedTopicsFromCurriculum([{ curriculumId: 'cur-1', courseName: 'Financial Accounting' }], curriculumDocs)
+    assert.deepEqual(byId.map((r) => r.title), ['Debits', 'Credits'])
+    assert.deepEqual(byCode, byId)
+    assert.deepEqual(byName, byId)
+  })
+
+  it('de-duplicates titles and skips unknown curriculum ids / empty courses', () => {
+    const rows = plannedTopicsFromCurriculum(
+      [
+        { curriculumId: 'cur-1', courseId: 'course-a' },
+        { curriculumId: 'cur-1', courseId: 'course-a' },
+        { curriculumId: 'missing', courseId: 'x' },
+        { curriculumId: 'cur-1', courseId: 'course-b' },
+      ],
+      curriculumDocs
+    )
+    assert.deepEqual(rows.map((r) => r.title), ['Debits', 'Credits'])
+    assert.equal(rows[0].moduleName, 'Fundamentals')
+  })
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // S2.4 — computing coverage instead of typing it in
 // ═══════════════════════════════════════════════════════════════════════════
@@ -827,6 +951,7 @@ import {
   moduleRollup,
   pacePercent,
   percent,
+  plannedTopicsFromCurriculum,
   sumProgress,
   validateProgressInput,
   weeksBetween,

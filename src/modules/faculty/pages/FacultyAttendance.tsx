@@ -5,6 +5,7 @@ import {
   Users, Calendar, Save, RotateCcw, Search, Pill,
   Loader2, AlertTriangle, BookOpen, CheckCircle2, Plus
 } from 'lucide-react'
+import { useAuth } from '../../auth/context/AuthContext'
 import { useFacultyAttendance } from '../hooks/useFacultyAttendance'
 import { completeClassSession } from '../../admin/api/classSessionApi'
 import { fetchSessionTopicOptions, type SessionTopicOption } from '../api/sessionTopicsApi'
@@ -137,6 +138,8 @@ function RosterDiagnosticPanel({ diagnostics }: { diagnostics: RosterDiagnostics
 }
 
 export default function FacultyAttendance() {
+  const { user } = useAuth()
+  const collegeId = (user as { collegeId?: string } | null)?.collegeId || ''
   const {
     facultyId,
     selectedDate,
@@ -206,11 +209,12 @@ export default function FacultyAttendance() {
       facultyId,
       subject: selectedClass.subject,
       subjectCode: selectedClass.subjectCode,
+      collegeId,
     })
       .then(options => { if (active) setTopicOptions(options) })
       .catch(() => { if (active) setTopicOptions([]) })
     return () => { active = false }
-  }, [selectedClass, facultyId])
+  }, [selectedClass, facultyId, collegeId])
 
   const toggleTopic = (id: string) => {
     setSelectedTopicIds(prev =>
@@ -230,8 +234,19 @@ export default function FacultyAttendance() {
     setCompleteNotice(null)
     try {
       const chosen = topicOptions.filter(option => selectedTopicIds.includes(option.id))
+      // Pairs first: a curriculum option's id is a COMPOSITE
+      // (curriculumId__module__topicKey), which the server cannot resolve
+      // against the `topics/*` bank — the title has to travel with it or the
+      // topic silently stops being attached/covered. topicIds/topicTitles
+      // stay for older deployed functions, which ignore `topics`.
+      const topics = chosen.map(option => ({
+        topicId: option.source === 'curriculum' ? option.id : '',
+        title: option.title,
+      }))
+      if (extraTopic.trim()) topics.push({ topicId: '', title: extraTopic.trim() })
       const result = await completeClassSession({
         sessionId: selectedClass.id,
+        topics,
         topicIds: chosen.filter(option => option.source === 'curriculum').map(option => option.id),
         topicTitles: [
           ...chosen.filter(option => option.source === 'ledger').map(option => option.title),

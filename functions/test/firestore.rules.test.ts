@@ -387,6 +387,33 @@ function facultyContext() {
   })
 }
 
+function adminContext() {
+  return testEnv.authenticatedContext('admin-a', {
+    role: 'admin',
+    collegeId: COLLEGE_A,
+  })
+}
+
+function principalContext() {
+  return testEnv.authenticatedContext('principal-a', {
+    role: 'principal',
+    collegeId: COLLEGE_A,
+  })
+}
+
+function superadminContext() {
+  return testEnv.authenticatedContext('platform-root', { role: 'superadmin' })
+}
+
+// Faculty of the OTHER college, whose uid also owns one row in college A —
+// exercises the owner branch of the curriculum mapping rules.
+function facultyBContext() {
+  return testEnv.authenticatedContext('faculty-b', {
+    role: 'faculty',
+    collegeId: COLLEGE_B,
+  })
+}
+
 describe('student identity and profile isolation', () => {
   it('resolves the provisioned profile by canonical userId', async () => {
     const db = studentContext().firestore()
@@ -1046,17 +1073,22 @@ describe('legacy no-claim faculty reads', () => {
 })
 
 describe('notification identity & access', () => {
-  it('lets a student read only notifications addressed to their own identity', async () => {
+  // The direct student read these tests asserted was REMOVED on purpose when
+  // the panel was rewired: students now receive their feed through the
+  // `getMyNotifications` callable (which resolves batch/branch server-side
+  // and can scope per-recipient reads the rules cannot express). Rules for the
+  // collection are superadmin+staff only — any browser path a student tries
+  // must fail, addressed to their own id or not.
+  it('refuses students every direct notification read', async () => {
     const db = studentContext().firestore()
-    await assertSucceeds(getDoc(doc(db, 'notifications', 'notif-own')))
+    await assertFails(getDoc(doc(db, 'notifications', 'notif-own')))
     await assertFails(getDoc(doc(db, 'notifications', 'notif-other')))
-    // A same-college broadcast is no longer readable by arbitrary students.
     await assertFails(getDoc(doc(db, 'notifications', 'notif-broadcast')))
   })
 
-  it('authorizes the student notification list query by canonical studentId', async () => {
+  it('refuses the student notification list query outright', async () => {
     const db = studentContext().firestore()
-    const result = await assertSucceeds(
+    await assertFails(
       getDocs(
         query(
           collection(db, 'notifications'),
@@ -1065,8 +1097,6 @@ describe('notification identity & access', () => {
         )
       )
     )
-    assert.equal(result.size, 1)
-    assert.equal(result.docs[0].id, 'notif-own')
   })
 
   it('keeps same-college staff able to read notifications but not students at large', async () => {

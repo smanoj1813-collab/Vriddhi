@@ -7,12 +7,16 @@
 // There are two topic stores and nothing joins them:
 //   * `topics/*`        — the superadmin curriculum bank. Field is `name`, plus
 //                         `subject` / `course` / `semester`. Superadmin writes
-//                         only (current-firestore.rules ≈798). Bank rows carry
-//                         NO facultyId — assignment to a person is derived from
-//                         the subjects on their curriculumFacultyMappings.
+//                         only (see `match /topics` in current-firestore.rules).
+//                         Bank rows carry NO facultyId — assignment to a person
+//                         is derived from the subjects on their
+//                         curriculumFacultyMappings. (Any code that queries the
+//                         bank BY facultyId is querying the wrong address; the
+//                         dead readers that did — facultyApi.fetchFacultyTopics
+//                         and getCurriculumProgress's bank join — are gone.)
 //   * `facultyTopics/*` — the faculty's own ledger. Field is `title`, plus
 //                         `subject` / `course`. The faculty owns these rows
-//                         (rules ≈815).
+//                         (see `match /facultyTopics` in the rules).
 //
 // The merge keeps both, filtered to the session's subject where possible, and
 // de-duplicates on a normalised title so the same topic taught from either
@@ -58,24 +62,26 @@ function matchesSubject(candidate: string | undefined, wanted: string): boolean 
 }
 
 /** Subjects this faculty member teaches, from curriculum mappings + timetable. */
-async function fetchTaughtSubjects(facultyId: string): Promise<Set<string>> {
+async function fetchTaughtSubjects(facultyId: string, collegeId = ''): Promise<Set<string>> {
   const subjects = new Set<string>()
   const aliases = await resolveFacultyAliases(facultyId).catch(() => null)
 
+  // Scope the mapping read to the college (or, failing that, to the caller's
+  // own facultyId) BEFORE any alias matching — an unscoped `limit(200)` over
+  // the whole collection pulled every other college's rows into the browser
+  // just to drop them client-side. listMappings already implements the
+  // single-equality query + alias-tolerant filter, and the college-scoped
+  // variant is what the tightened curriculumFacultyMappings rules allow.
   try {
-    const snap = await getDocs(
-      query(collection(db, 'curriculumFacultyMappings'), limit(200))
-    )
-    snap.docs.forEach((d) => {
-      const data = d.data()
-      const mine = aliases
-        ? aliases.ids.includes(String(data.facultyId || '')) ||
-          (aliases.email &&
-            String(data.facultyEmail || '').trim().toLowerCase() === aliases.email)
-        : String(data.facultyId || '') === facultyId
-      if (!mine) return
-      const name = String(data.courseName || '').trim()
-      const code = String(data.courseCode || '').trim()
+    const mine = await listMappings({
+      ...(collegeId ? { collegeId } : { facultyId }),
+      facultyAliases: aliases?.ids,
+      facultyEmail: aliases?.email || undefined,
+      status: 'active',
+    })
+    mine.forEach((m) => {
+      const name = String(m.courseName || '').trim()
+      const code = String(m.courseCode || '').trim()
       if (name) subjects.add(name.toLowerCase())
       if (code) subjects.add(code.toLowerCase())
     })
@@ -194,7 +200,7 @@ export async function fetchFacultyCurriculumTopics(
   // ─── 2. Legacy bank (topics/*), filtered to the subjects taught ──────────
   try {
     const [taught, bankSnap] = await Promise.all([
-      fetchTaughtSubjects(facultyId),
+      fetchTaughtSubjects(facultyId, cid),
       getDocs(query(collection(db, 'topics'), limit(500))).catch((err) => {
         console.warn('[SessionTopics] curriculum bank lookup failed:', err)
         return null
@@ -246,8 +252,10 @@ export async function fetchSessionTopicOptions(input: {
   facultyId: string
   subject?: string
   subjectCode?: string
+  /** Caller's college claim — scopes the mapping reads (see fetchTaughtSubjects). */
+  collegeId?: string
 }): Promise<SessionTopicOption[]> {
-  const { facultyId, subject = '', subjectCode = '' } = input
+  const { facultyId, subject = '', subjectCode = '', collegeId = '' } = input
   if (!facultyId) return []
 
   const results = new Map<string, SessionTopicOption>()
@@ -265,7 +273,7 @@ export async function fetchSessionTopicOptions(input: {
 
   // ─── Curriculum bank: topics for the subjects this faculty teaches ──────
   try {
-    const bank = await fetchFacultyCurriculumTopics(facultyId)
+    const bank = await fetchFacultyCurriculumTopics(facultyId, collegeId)
     bank.forEach(add)
   } catch (err) {
     console.warn('[SessionTopics] curriculum topic lookup failed:', err)

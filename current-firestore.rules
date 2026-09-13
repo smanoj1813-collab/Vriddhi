@@ -123,6 +123,37 @@ service cloud.firestore {
         || (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId());
     }
 
+    // -- Shared rule functions (1000-expression budget) ----------------------
+    // The whole file shares one 1000-expression budget; every helper below
+    // replaces an inlined 4-6 expression pattern at each use site. Keep them
+    // EXACTLY equivalent to the patterns they replaced — the rules tests pin
+    // the behaviour. `tenantWrite` == `isSuperadmin() || (isCollegeStaff() &&
+    // sameCollege(data))`; `collegePathWrite` is the same idea where the
+    // /colleges/{collegeId}/... path, not a field, is the tenancy.
+    function tenantWrite(data) {
+      return isSuperadmin() || (isCollegeStaff() && sameCollege(data));
+    }
+
+    function collegePathWrite(pathCollege) {
+      return isSuperadmin() || (isCollegeStaff() && collegeId() == pathCollege);
+    }
+
+    // Curriculum reference data is readable by any college staff member for
+    // their own college, plus the unassigned (collegeId-less) rows a
+    // superadmin keeps in progress. get AND list share this so a list can
+    // never be looser than a get — that mismatch was the cross-college leak.
+    function canReadCurriculum(data) {
+      return isSignedIn()
+        && (isSuperadmin() || (isStaff() && (sameCollege(data) || !('collegeId' in data))));
+    }
+
+    // The faculty member a curriculum-related row names as owner. Used by
+    // facultyTopics (the planner ledger) and curriculumFacultyMappings
+    // (tenancy on a legacy row may be absent, so ownership proves access).
+    function isAssignedFaculty(data) {
+      return isSignedIn() && 'facultyId' in data && data.facultyId == request.auth.uid;
+    }
+
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
@@ -394,29 +425,25 @@ service cloud.firestore {
       match /attendance/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /attendanceRecords/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /assessments/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /scores/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /activities/{docId} {
@@ -429,8 +456,7 @@ service cloud.firestore {
       match /milestones/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /feeStructures/{docId} {
@@ -477,15 +503,13 @@ service cloud.firestore {
       match /materials/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /events/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin() || isStaff() || (role() == 'student' && collegeId() == collegeId));
-        allow write: if isSuperadmin()
-          || (isCollegeStaff() && collegeId() == collegeId);
+        allow write: if collegePathWrite(collegeId);
       }
 
       match /notifications/{docId} {
@@ -552,7 +576,7 @@ service cloud.firestore {
         // A list is authorised per candidate document, so a query the client scopes
         // with where('studentId','==',own record) admits exactly those rows.
         || ('studentId' in resource.data && ownsStudentId(resource.data.studentId)));
-      allow write: if isCollegeStaff() && sameCollege(request.resource.data);
+      allow write: if tenantWrite(request.resource.data);
     }
 
     match /attendanceRecords/{id} {
@@ -562,7 +586,7 @@ service cloud.firestore {
         // A list is authorised per candidate document, so a query the client scopes
         // with where('studentId','==',own record) admits exactly those rows.
         || ('studentId' in resource.data && ownsStudentId(resource.data.studentId)));
-      allow write: if isCollegeStaff() && sameCollege(request.resource.data);
+      allow write: if tenantWrite(request.resource.data);
     }
 
     // -- Staff (faculty) attendance --------------------------------------------
@@ -598,15 +622,16 @@ service cloud.firestore {
       // management may correct a record. `claimedRole()` is the verified claim,
       // so a forged role field on a profile document cannot widen this.
       allow create: if isSuperadmin()
-        || (isCollegeStaff() && sameCollege(request.resource.data)
-          && (isOwnRecord(request.resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
+        || (tenantWrite(request.resource.data)
+          && (isOwnRecord(request.resource.data)
+            || claimedRole() in ['admin', 'principal', 'hod']));
 
       // `facultyId` is immutable on update, for management too. Without this a
       // teacher could edit their own day and re-parent it onto a colleague's
       // uid, silently moving attendance between people — the same hole the
       // facultyTopics rules close.
       allow update: if isSuperadmin()
-        || (isCollegeStaff() && sameCollege(resource.data) && sameCollege(request.resource.data)
+        || (tenantWrite(resource.data) && tenantWrite(request.resource.data)
           && 'facultyId' in resource.data
           && request.resource.data.facultyId == resource.data.facultyId
           && (isOwnRecord(resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
@@ -658,14 +683,34 @@ service cloud.firestore {
     match /classSessions/{sessionId} {
       allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      allow create, update: if isCollegeStaff() && sameCollege(request.resource.data);
-      allow delete: if isCollegeStaff() && sameCollege(resource.data);
+      allow create, update: if tenantWrite(request.resource.data);
+      allow delete: if tenantWrite(resource.data);
     }
 
     match /curriculumFacultyMappings/{mappingId} {
-      allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      allow list: if isSignedIn() && isStaff();
-      allow create, update, delete: if isCollegeStaff() && sameCollege(request.resource.data);
+      // Backs the admin Curriculum Management page
+      // (src/modules/admin/api/curriculumMappingApi.ts) and the faculty read
+      // paths (useFacultyCurriculum, sessionTopicsApi). Tenancy is the
+      // collegeId stamped on the row; the owner clause keeps a legacy row
+      // reachable for its teacher and is why an admin-created row whose only
+      // link is facultyId still resolves. The old pair checked role only —
+      // ANY signed-in staff could stream every college's mappings with an
+      // unscoped collection() call, which is exactly what sessionTopicsApi
+      // used to do (now scoped).
+      allow get, list: if isSuperadmin()
+        || (isStaff() && sameCollege(resource.data))
+        || isAssignedFaculty(resource.data);
+      // Assigning curriculum is a management act (superadmin or the college's
+      // admin/hod/principal). The previous isCollegeStaff() also admitted
+      // faculty and mentors, so a teacher could self-assign any course in
+      // their college. `delete` reads resource.data — request.resource.data
+      // is null on a delete, so the old shared statement could never succeed
+      // for non-superadmins (the UI soft-removes via status='removed').
+      allow create, update: if isSuperadmin()
+        || (role() in ['admin', 'hod', 'principal']
+          && sameCollege(request.resource.data));
+      allow delete: if isSuperadmin()
+        || (role() in ['admin', 'hod', 'principal'] && sameCollege(resource.data));
     }
 
     match /assessments/{assessmentId} {
@@ -831,29 +876,32 @@ service cloud.firestore {
     // src/modules/faculty/api/facultyApi.ts. Writes stay with superadmin and
     // college administration; faculty may only read.
 
+    // `list` used to be role-based (unscoped per document) while `get` was
+    // tenant-scoped — the mismatch let any staff member read every college's
+    // assigned curriculum with one unbounded query. canReadCurriculum() is
+    // now the single definition for both.
     match /curriculum/{docId} {
-      allow get: if isSignedIn()
-        && (isSuperadmin()
-          || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow get, list: if canReadCurriculum(resource.data);
       allow write: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
+    // Same treatment for the parser's raw extracts: an extract before
+    // assignment carries collegeId=null and belongs to the platform review
+    // queue (superadmin only), after assignment only the owning college reads
+    // it. Unassigned extracts stay hidden from staff because the field is
+    // present and null, which fails sameCollege.
     match /syllabusExtracts/{docId} {
-      allow get: if isSignedIn()
-        && (isSuperadmin()
-          || (isStaff() && (sameCollege(resource.data) || !('collegeId' in resource.data))));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow get, list: if canReadCurriculum(resource.data);
       allow write: if isSuperadmin()
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
+    // Shared curriculum bank (`topics/*`) written only by superadmin. The old
+    // owner clause (`facultyId == uid`) was dead: no writer ever stamped
+    // facultyId on a bank row — a faculty member's own store is facultyTopics.
     match /topics/{docId} {
-      allow get: if isSignedIn()
-        && (isSuperadmin() || isStaff()
-          || ('facultyId' in resource.data && resource.data.facultyId == request.auth.uid));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow get, list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin();
     }
 
@@ -868,22 +916,15 @@ service cloud.firestore {
     // additionally pins facultyId so a row cannot be handed to another faculty.
     match /facultyTopics/{docId} {
       allow get: if isSignedIn()
-        && (isSuperadmin() || isStaff()
-          || ('facultyId' in resource.data && resource.data.facultyId == request.auth.uid));
+        && (isSuperadmin() || isStaff() || isAssignedFaculty(resource.data));
       allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isSuperadmin()
-        || (isStaff()
-          && 'facultyId' in request.resource.data
-          && request.resource.data.facultyId == request.auth.uid);
+        || (isStaff() && isAssignedFaculty(request.resource.data));
       allow update: if isSuperadmin()
-        || (isStaff()
-          && 'facultyId' in resource.data
-          && resource.data.facultyId == request.auth.uid
-          && request.resource.data.facultyId == resource.data.facultyId);
+        || (isStaff() && isAssignedFaculty(resource.data)
+          && isAssignedFaculty(request.resource.data));
       allow delete: if isSuperadmin()
-        || (isStaff()
-          && 'facultyId' in resource.data
-          && resource.data.facultyId == request.auth.uid);
+        || (isStaff() && isAssignedFaculty(resource.data));
     }
 
     match /testPapers/{docId} {
@@ -935,8 +976,7 @@ service cloud.firestore {
     // here failed the entire batch, so attendance could never be saved.
     match /attendanceSummary/{docId} {
       allow read: if isSignedIn() && (isSuperadmin() || isStaff());
-      allow write: if isSuperadmin()
-        || (isCollegeStaff() && sameCollege(request.resource.data));
+      allow write: if tenantWrite(request.resource.data);
     }
 
     // -- Fees and library ------------------------------------------------------
