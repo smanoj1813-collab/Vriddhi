@@ -322,11 +322,16 @@ export async function listCurriculumDocs(options: ListCurriculumOptions = {}): P
     } else {
       q = query(collection(db, "curriculum"), orderBy("createdAt", "desc"), limit(options.limit || 50));
     }
-    if (options.status && options.status !== "all") {
-      q = query(q, where("status", "==", options.status));
-    }
+    // NOTE: status is filtered client-side. Adding a second equality filter on
+    // top of orderBy(createdAt) requires a (collegeId, status, createdAt)
+    // composite index; when it is missing Firestore rejects the query and the
+    // college sees an empty curriculum list (and "Invalid selection" when
+    // editing a faculty assignment).
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToCurriculumDoc);
+    if (options.status && options.status !== "all") {
+      items = items.filter((c) => c.status === options.status);
+    }
     if (options.branch) items = items.filter((c) => c.branch === options.branch);
     if (options.semester) items = items.filter((c) => c.semester === options.semester);
     if (options.search) {

@@ -136,6 +136,10 @@ const AdminCurriculum: React.FC = () => {
     selectedCurriculumData ? getUnmappedCourses(selectedCurriculumData) : [],
   [selectedCurriculumData, getUnmappedCourses])
 
+  const editingMappingData = useMemo(() =>
+    editingMapping ? mappings.find(m => m.id === editingMapping) : undefined,
+  [editingMapping, mappings])
+
   const curriculumMappings = useMemo(() =>
     selectedCurriculumData ? getCurriculumMappings(selectedCurriculumData.id) : [],
   [selectedCurriculumData, getCurriculumMappings])
@@ -208,12 +212,15 @@ const AdminCurriculum: React.FC = () => {
     const course = curriculum?.courses.find(c => c.id === formData.courseId)
     const faculty = facultyList.find(f => f.id === formData.facultyId)
 
-    if (!curriculum || !course || !faculty) {
-      setSnackbar({ open: true, message: 'Invalid selection', severity: 'error' })
+    if (!faculty) {
+      setSnackbar({ open: true, message: 'Please select a faculty member', severity: 'error' })
       return
     }
 
     if (editingMapping) {
+      // An edit keeps the mapping's curriculum/course and only changes who
+      // teaches it (and batch/division/section), so it must not depend on the
+      // curriculum list having loaded.
       const result = await updateFacultyAssignment(editingMapping, {
         // Same rule as create: the Auth uid is the canonical faculty key, so
         // an edit cannot silently re-key the mapping back to the profile doc
@@ -232,6 +239,10 @@ const AdminCurriculum: React.FC = () => {
         setSnackbar({ open: true, message: error || 'Failed to update', severity: 'error' })
       }
     } else {
+      if (!curriculum || !course) {
+        setSnackbar({ open: true, message: 'Please select a curriculum and course', severity: 'error' })
+        return
+      }
       const result = await assignFaculty(
         curriculum,
         course,
@@ -571,6 +582,9 @@ const AdminCurriculum: React.FC = () => {
                 {curriculumList.map(c => (
                   <MenuItem key={c.id} value={c.id}>{c.title}</MenuItem>
                 ))}
+                {editingMapping && formData.curriculumId && !curriculumList.some(c => c.id === formData.curriculumId) && (
+                  <MenuItem value={formData.curriculumId}>{editingMappingData ? `${editingMappingData.branch} · Sem ${editingMappingData.semester}` : formData.curriculumId}</MenuItem>
+                )}
               </Select>
             </FormControl>
             <FormControl size="small" sx={{ minWidth: 140 }}>
@@ -729,6 +743,9 @@ const AdminCurriculum: React.FC = () => {
                 {curriculumList.map(c => (
                   <MenuItem key={c.id} value={c.id}>{c.title}</MenuItem>
                 ))}
+                {editingMapping && formData.curriculumId && !curriculumList.some(c => c.id === formData.curriculumId) && (
+                  <MenuItem value={formData.curriculumId}>{editingMappingData ? `${editingMappingData.branch} · Sem ${editingMappingData.semester}` : formData.curriculumId}</MenuItem>
+                )}
               </Select>
             </FormControl>
 
@@ -751,6 +768,12 @@ const AdminCurriculum: React.FC = () => {
                   unmappedCourses.map(c => (
                     <MenuItem key={c.id} value={c.id}>{c.name} ({c.code})</MenuItem>
                   ))
+                )}
+                {editingMapping && formData.courseId
+                  && !curriculumList.find(c => c.id === formData.curriculumId)?.courses.some(c => c.id === formData.courseId) && (
+                  <MenuItem value={formData.courseId}>
+                    {editingMappingData ? `${editingMappingData.courseName} (${editingMappingData.courseCode})` : formData.courseId}
+                  </MenuItem>
                 )}
                 {unmappedCourses.length === 0 && !editingMapping && (
                   <MenuItem value="" disabled>All courses already mapped</MenuItem>
