@@ -80,7 +80,7 @@ export default function FacultyTopics() {
   const collegeId = user?.collegeId || ''
 
   const {
-    topics, stats, loading, error, readStats,
+    topics, allTopics, stats, loading, error, readStats,
     search, setSearch,
     statusFilter, setStatusFilter,
     refresh,
@@ -112,6 +112,24 @@ export default function FacultyTopics() {
   React.useEffect(() => {
     void loadBankTopics()
   }, [loadBankTopics])
+
+  // Combined counters. `stats` from useTopics counts only the faculty's own
+  // ledger rows, so a teacher whose whole syllabus came from the college's
+  // curriculum bank saw "Total Topics 0" above a page full of topics. Bank
+  // topics count as Planned (Completed when a session covered them); a bank
+  // topic that also has a ledger row is counted once, via the ledger status.
+  const combinedStats: TopicStats = React.useMemo(() => {
+    const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+    const ledgerKeys = new Set(allTopics.map((t) => norm(t.title)))
+    const out = { ...stats }
+    for (const b of bankTopics) {
+      if (ledgerKeys.has(norm(b.title))) continue
+      out.total += 1
+      if (b.covered) out.completed += 1
+      else out.planned += 1
+    }
+    return out
+  }, [stats, allTopics, bankTopics])
 
   const visibleBankTopics = React.useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -309,23 +327,23 @@ export default function FacultyTopics() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         <div className="p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Topics</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{combinedStats.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
           <p className="text-xs text-blue-400 mb-1">Planned</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.planned}</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{combinedStats.planned}</p>
         </div>
         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <p className="text-xs text-amber-400 mb-1">In Progress</p>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.inProgress}</p>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{combinedStats.inProgress}</p>
         </div>
         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
           <p className="text-xs text-emerald-400 mb-1">Completed</p>
-          <p className="text-2xl font-bold text-emerald-400">{stats.completed}</p>
+          <p className="text-2xl font-bold text-emerald-400">{combinedStats.completed}</p>
         </div>
         <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20">
           <p className="text-xs text-rose-400 mb-1">Delayed</p>
-          <p className="text-2xl font-bold text-rose-400">{stats.delayed}</p>
+          <p className="text-2xl font-bold text-rose-400">{combinedStats.delayed}</p>
         </div>
       </div>
 
@@ -334,7 +352,7 @@ export default function FacultyTopics() {
         <div className="flex items-center gap-2 flex-wrap">
           {(['all', 'planned', 'in-progress', 'completed', 'delayed'] as StatusFilter[]).map(status => {
             const config = statusConfig[status]
-            const count = getStatusCount(status, stats)
+            const count = getStatusCount(status, combinedStats)
             return (
               <button
                 key={status}

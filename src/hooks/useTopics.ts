@@ -49,6 +49,8 @@ export interface ReadStats {
 
 export interface UseTopicsReturn {
   topics: Topic[];
+  /** Every ledger row, before search/status filtering. */
+  allTopics: Topic[];
   stats: TopicStats;
   loading: boolean;
   error: string | null;
@@ -193,6 +195,7 @@ export function useTopics(facultyId?: string): UseTopicsReturn {
 
   return {
     topics,
+    allTopics,
     stats,
     loading,
     error,
