@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  DEFAULT_INTAKE_DEFAULTS,
   DEFAULT_MERIT_WEIGHTS,
+  MAPPABLE_FIELDS,
   STUDENT_CSV_COLUMNS,
   allowedTransitions,
+  buildAppsScriptSnippet,
   canTransition,
+  coerceApplicantNumbers,
   computeMeritScore,
+  generateIngestToken,
+  hashToken,
+  intakeDocumentId,
+  mapFormAnswers,
   toCsv,
   toStudentCsvRow,
 } from '../src/admissions'
@@ -237,5 +245,172 @@ describe('CSV escaping', () => {
   it('produces a header-only file when there are no rows', () => {
     const csv = toCsv([])
     assert.equal(csv.split('\n').length, 1)
+  })
+})
+
+// ─── Google Form intake ─────────────────────────────────────────────────────
+
+const FORM_DEFAULTS = { ...DEFAULT_INTAKE_DEFAULTS, program: 'B.Tech CSE', batch: '2026' }
+
+describe('form answer mapping', () => {
+  it('matches question titles ignoring case and whitespace', () => {
+    // A college retyping "Full  Name" on the form must not silently start
+    // dropping every applicant name.
+    const { applicant } = mapFormAnswers(
+      { 'FULL   NAME ': 'Asha Verma', 'phone Number': '9876543210' },
+      { applicantName: 'Full Name', phone: 'Phone Number' },
+      FORM_DEFAULTS
+    )
+    assert.equal(applicant.applicantName, 'Asha Verma')
+    assert.equal(applicant.phone, '9876543210')
+  })
+
+  it('joins array answers and skips blanks', () => {
+    const { applicant } = mapFormAnswers(
+      { Q1: ['B.Tech', 'CSE'], Q2: '   ' },
+      { program: 'Q1', city: 'Q2' },
+      FORM_DEFAULTS
+    )
+    assert.equal(applicant.program, 'B.Tech, CSE')
+    // A blank answer is skipped, not stored as an empty string.
+    assert.equal(applicant.city, undefined)
+  })
+
+  it('fills program, batch and department from the college defaults', () => {
+    const { applicant } = mapFormAnswers(
+      { 'Full name': 'Asha' },
+      { applicantName: 'Full name' },
+      { program: 'B.Tech CSE', batch: '2026', source: 'Google Form', department: 'Computer Science' }
+    )
+    assert.equal(applicant.program, 'B.Tech CSE')
+    assert.equal(applicant.batch, '2026')
+    assert.equal(applicant.department, 'Computer Science')
+  })
+
+  it('lets an explicit form answer override the default', () => {
+    const { applicant } = mapFormAnswers(
+      { 'Full name': 'Asha', 'Which program?': 'B.Tech ECE' },
+      { applicantName: 'Full name', program: 'Which program?' },
+      { program: 'B.Tech CSE', batch: '2026', source: 'Google Form', department: 'Computer Science' }
+    )
+    assert.equal(applicant.program, 'B.Tech ECE')
+  })
+
+  it('reports unmapped questions instead of guessing', () => {
+    const { applicant, unmappedQuestions } = mapFormAnswers(
+      { 'Full name': 'Asha', 'Favourite colour': 'Teal' },
+      { applicantName: 'Full name' },
+      FORM_DEFAULTS
+    )
+    assert.deepEqual(unmappedQuestions, ['Favourite colour'])
+    assert.equal(applicant.applicantName, 'Asha')
+  })
+
+  it('forces the configured source label over whatever the form says', () => {
+    const { applicant } = mapFormAnswers(
+      { Name: 'Asha', Src: 'Walk-in' },
+      { applicantName: 'Name' },
+      { ...FORM_DEFAULTS, source: 'Google Form' }
+    )
+    assert.equal(applicant.source, 'Google Form')
+  })
+
+  it('returns no applicant name when nothing maps to it', () => {
+    const { applicant } = mapFormAnswers({ Junk: 'x' }, {}, FORM_DEFAULTS)
+    assert.equal(String(applicant.applicantName || '').trim(), '')
+  })
+
+  it('exposes every mappable field', () => {
+    assert.equal(MAPPABLE_FIELDS.length, 18)
+    assert.ok(MAPPABLE_FIELDS.includes('applicantName'))
+    assert.ok(MAPPABLE_FIELDS.includes('entranceMaxScore'))
+  })
+})
+
+describe('numeric coercion', () => {
+  it('parses scores with stray units and separators', () => {
+    const applicant = coerceApplicantNumbers({
+      qualifyingPercentage: '85%',
+      entranceScore: '142 / 180',
+      entranceMaxScore: '180',
+    })
+    assert.equal(applicant.qualifyingPercentage, 85)
+    assert.equal(applicant.entranceScore, 142)
+    assert.equal(applicant.entranceMaxScore, 180)
+  })
+
+  it('leaves unparseable values empty rather than inventing zero', () => {
+    const applicant = coerceApplicantNumbers({
+      qualifyingPercentage: 'awaiting results',
+      entranceScore: '',
+    })
+    assert.equal(applicant.qualifyingPercentage, null)
+    assert.equal(applicant.entranceScore, '')
+  })
+
+  it('keeps already-numeric values intact', () => {
+    const applicant = coerceApplicantNumbers({ qualifyingPercentage: 92.5 })
+    assert.equal(applicant.qualifyingPercentage, 92.5)
+  })
+})
+
+describe('ingest tokens', () => {
+  it('generates a distinct 32-character token each time', () => {
+    const a = generateIngestToken()
+    const b = generateIngestToken()
+    assert.equal(a.length, 32)
+    assert.notEqual(a, b)
+  })
+
+  it('stores only a hash, never the plaintext', () => {
+    const token = generateIngestToken()
+    const digest = hashToken(token)
+    assert.equal(digest.length, 64)
+    assert.equal(/^[0-9a-f]{64}$/.test(digest), true)
+    assert.equal(digest.includes(token), false)
+    assert.equal(hashToken(token), digest)
+  })
+})
+
+describe('idempotent intake ids', () => {
+  it('is stable for a re-delivered submission', () => {
+    assert.equal(
+      intakeDocumentId('college-1', 'resp-42'),
+      intakeDocumentId('college-1', 'resp-42')
+    )
+  })
+
+  it('differs per submission and per college', () => {
+    assert.notEqual(intakeDocumentId('college-1', 'resp-42'), intakeDocumentId('college-1', 'resp-43'))
+    assert.notEqual(intakeDocumentId('college-1', 'resp-42'), intakeDocumentId('college-2', 'resp-42'))
+  })
+
+  it('stays within Firestore document id limits', () => {
+    const id = intakeDocumentId('college-1', 'resp-42')
+    assert.equal(id.length, 40)
+    assert.equal(/^[0-9a-f]+$/.test(id), true)
+  })
+})
+
+describe('Apps Script snippet', () => {
+  const script = buildAppsScriptSnippet(
+    'https://asia-south1-vriddhi-academic.cloudfunctions.net/api/admissions/ingest',
+    'tok_123'
+  )
+
+  it('emits an on-form-submit handler that posts to the endpoint', () => {
+    assert.ok(script.includes('function onFormSubmit('), 'missing onFormSubmit')
+    assert.ok(script.includes('UrlFetchApp.fetch'), 'missing UrlFetchApp.fetch')
+    assert.ok(
+      script.includes('https://asia-south1-vriddhi-academic.cloudfunctions.net/api/admissions/ingest'),
+      'missing endpoint'
+    )
+    assert.ok(script.includes('tok_123'), 'missing token')
+  })
+
+  it('escapes single quotes so the script stays valid JS', () => {
+    const escaped = buildAppsScriptSnippet("https://x/api/o'reilly/ingest", "to'ken")
+    assert.equal(escaped.includes("o'reilly"), false)
+    assert.equal(escaped.includes("to'ken"), false)
   })
 })

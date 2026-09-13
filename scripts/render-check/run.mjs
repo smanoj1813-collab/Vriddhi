@@ -42,6 +42,12 @@ async function mount(file, props) {
 
   return {
     text: () => host.textContent.replace(/\s+/g, ' ').trim(),
+    // <input> values never appear in textContent, so form state has to be read
+    // off the elements themselves.
+    value: (id) => {
+      const el = host.querySelector(`#${id}`);
+      return el ? el.value : null;
+    },
     unmount: async () => { await act(async () => reactRoot.unmount()); host.remove(); },
   };
 }
@@ -56,7 +62,7 @@ let crashes = 0;
 async function section(label, file, props, assertions) {
   try {
     const view = await mount(file, props);
-    assertions(view.text());
+    assertions(view.text(), view);
     await view.unmount();
   } catch (err) {
     crashes++;
@@ -221,6 +227,66 @@ await section('student journey (no grades published)', '/src/modules/student/pag
   check('journey (empty): does not claim a placement band', !/Strong band/.test(t), t);
   check('journey (empty): still renders the stage timeline', /Placement ready/.test(t), t);
 });
+
+// ── Admission settings ───────────────────────────────────────────────────────
+// The merit weights and the Google Form mapping are per-college, so the panel
+// must render the college's own values. A panel that quietly showed the Vriddhi
+// defaults would let an office believe its scoring policy was different from
+// what the server actually applies.
+globalThis.__RC_CALLABLE_DATA = {
+  getAdmissionConfig: {
+    weights: { qualifying: 60, entrance: 30, interview: 10 },
+    weightsCustomised: true,
+    intake: {
+      enabled: true,
+      hasToken: true,
+      fieldMapping: { applicantName: 'Full name', phone: 'Phone Number' },
+      defaults: {
+        program: 'B.Tech CSE',
+        batch: '2026',
+        source: 'Google Form',
+        department: 'Computer Science',
+      },
+      endpoint: 'https://asia-south1-vriddhi-academic.cloudfunctions.net/api/admissions/ingest',
+      mappableFields: ['applicantName', 'phone'],
+      lastSubmissionAt: '2026-09-10T09:30:00.000Z',
+      submissionCount: 17,
+      rejectedCount: 2,
+    },
+  },
+};
+
+const SETTINGS = '/src/modules/admin/components/AdmissionSettings.tsx';
+const settingsProps = { collegeId: 'college-a', onClose: () => {}, onChanged: () => {} };
+
+await section('admission settings', SETTINGS, settingsProps, (t, view) => {
+  check('settings: mounts without throwing', true);
+  check('settings: shows the college\'s own weights (60 / 30 / 10), not the 50/40/10 defaults',
+    view.value('weight-qualifying') === '60'
+    && view.value('weight-entrance') === '30'
+    && view.value('weight-interview') === '10',
+    `qualifying=${view.value('weight-qualifying')} entrance=${view.value('weight-entrance')} interview=${view.value('weight-interview')}`);
+  check('settings: confirms the weights add up to 100%', t.includes('Total 100% — valid'), t);
+  check('settings: reports the real submission counts (17 received, 2 rejected)',
+    t.includes('17') && /Submissions received/.test(t) && /Rejected/.test(t), t);
+  check('settings: shows the ingest endpoint the Apps Script must post to',
+    t.includes('/api/admissions/ingest'), t);
+  check('settings: echoes the mapped form question titles back to the college',
+    view.value('map-applicantName') === 'Full name' && view.value('map-phone') === 'Phone Number',
+    `applicantName=${view.value('map-applicantName')} phone=${view.value('map-phone')}`);
+  check('settings: shows the per-college intake defaults',
+    view.value('default-program') === 'B.Tech CSE'
+    && view.value('default-department') === 'Computer Science'
+    && view.value('default-batch') === '2026',
+    `program=${view.value('default-program')} department=${view.value('default-department')}`);
+  check('settings: does not display a plaintext token — it is shown once, at generation only',
+    !/[A-Za-z0-9_-]{32}/.test(t) && t.includes('rotate it to see a new one'), t);
+  check('settings: offers both rotate and revoke',
+    /Rotate token/.test(t) && /Revoke/.test(t), t);
+  check('settings: tells the college the trigger they must add',
+    /On form submit/.test(t), t);
+});
+
 
 await server.close();
 

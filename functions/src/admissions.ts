@@ -20,6 +20,7 @@
 // ------------------------------------------------------------------
 
 import * as admin from 'firebase-admin'
+import * as crypto from 'crypto'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 // ─── Stages ─────────────────────────────────────────────────────────────────
@@ -322,7 +323,7 @@ function optionalNumber(value: unknown, min: number, max: number): number | null
   return Math.min(max, Math.max(min, parsed))
 }
 
-async function loadWeights(collegeId: string): Promise<MeritWeights> {
+export async function loadWeights(collegeId: string): Promise<MeritWeights> {
   const doc = await admin.firestore().collection('colleges').doc(collegeId).collection('config').doc('admission').get()
   const data = doc.data()
   if (!data) return { ...DEFAULT_MERIT_WEIGHTS }
@@ -406,7 +407,7 @@ export type SerializedApplication = ReturnType<typeof serialize>
 
 // ─── Callables ──────────────────────────────────────────────────────────────
 
-async function nextApplicationNo(db: admin.firestore.Firestore, collegeId: string, year: number): Promise<string> {
+export async function nextApplicationNo(db: admin.firestore.Firestore, collegeId: string, year: number): Promise<string> {
   const snap = await db
     .collection('admissionApplications')
     .where('collegeId', '==', collegeId)
@@ -744,3 +745,480 @@ export const markAdmissionExported = onCall(
     return { marked }
   }
 )
+
+// ─── Form intake ────────────────────────────────────────────────────────────
+//
+// Colleges collect enquiries with their own Google Form and an Apps Script
+// trigger that POSTs each submission here. There is no OAuth and no Google
+// Cloud project to provision: the college pastes a script we generate, and the
+// only shared secret is a per-college token.
+//
+// The token is stored HASHED. The plaintext is returned exactly once, when it
+// is generated, so a database read cannot recover a live token — and rotating
+// invalidates the old one outright.
+
+/** Vriddhi fields a form answer can be mapped onto. */
+export const MAPPABLE_FIELDS = [
+  'applicantName',
+  'email',
+  'phone',
+  'dateOfBirth',
+  'gender',
+  'guardianName',
+  'guardianPhone',
+  'city',
+  'program',
+  'batch',
+  'previousSchool',
+  'previousQualification',
+  'yearOfPassing',
+  'qualifyingPercentage',
+  'entranceExamType',
+  'entranceRegistrationNo',
+  'entranceScore',
+  'entranceMaxScore',
+] as const
+
+export type MappableField = (typeof MAPPABLE_FIELDS)[number]
+
+/** Vriddhi field -> the exact Google Form question title. */
+export type FieldMapping = Partial<Record<MappableField, string>>
+
+export interface IntakeDefaults {
+  program: string
+  batch: string
+  source: string
+  department: string
+}
+
+export const DEFAULT_INTAKE_DEFAULTS: IntakeDefaults = {
+  program: '',
+  batch: '',
+  source: 'Google Form',
+  department: '',
+}
+
+export function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex')
+}
+
+export function generateIngestToken(): string {
+  return crypto.randomBytes(24).toString('base64url')
+}
+
+/**
+ * Maps raw form answers onto applicant fields using the college's mapping.
+ *
+ * Question titles are matched case- and whitespace-insensitively, because a
+ * college editing "Full  Name" to "Full Name" must not silently start dropping
+ * every applicant's name. Answers for questions the college never mapped are
+ * ignored rather than guessed at.
+ */
+export function mapFormAnswers(
+  answers: Record<string, unknown>,
+  mapping: FieldMapping,
+  defaults: IntakeDefaults
+): { applicant: Record<string, unknown>; unmappedQuestions: string[] } {
+  const normalized = new Map<string, unknown>()
+  // Kept alongside so `unmappedQuestions` can quote the question exactly as the
+  // college typed it — that is the only form the staff can search their form for.
+  const originalTitles = new Map<string, string>()
+  Object.entries(answers || {}).forEach(([question, value]) => {
+    const key = question.trim().toLowerCase().replace(/\s+/g, ' ')
+    normalized.set(key, value)
+    if (!originalTitles.has(key)) originalTitles.set(key, question.trim())
+  })
+
+  const applicant: Record<string, unknown> = {}
+  const mappedTitles = new Set<string>()
+
+  for (const field of MAPPABLE_FIELDS) {
+    const title = (mapping as Record<string, unknown>)[field]
+    if (typeof title !== 'string' || !title.trim()) continue
+    const key = title.trim().toLowerCase().replace(/\s+/g, ' ')
+    mappedTitles.add(key)
+    if (!normalized.has(key)) continue
+    const raw = normalized.get(key)
+    const value = Array.isArray(raw) ? raw.join(', ') : raw
+    if (value === null || value === undefined || String(value).trim() === '') continue
+    applicant[field] = String(value).trim()
+  }
+
+  const unmappedQuestions = [...normalized.keys()]
+    .filter((key) => !mappedTitles.has(key))
+    .map((key) => originalTitles.get(key) || key)
+
+  // Defaults fill what the form does not ask, so a college running one form for
+  // a single program does not have to ask the same question of everyone.
+  if (!applicant.program && defaults.program) applicant.program = defaults.program
+  if (!applicant.batch && defaults.batch) applicant.batch = defaults.batch
+  if (!applicant.department && defaults.department) applicant.department = defaults.department
+  applicant.source = defaults.source || 'Google Form'
+
+  return { applicant, unmappedQuestions }
+}
+
+/** Google Form answers arrive as strings; these three need numbers. */
+export function coerceApplicantNumbers(applicant: Record<string, unknown>): Record<string, unknown> {
+  const numeric = ['qualifyingPercentage', 'entranceScore', 'entranceMaxScore'] as const
+  const out = { ...applicant }
+  for (const key of numeric) {
+    const raw = out[key]
+    if (raw === undefined || raw === null || raw === '') continue
+    // Take the first number in the string, so "85%" and "85" both mean 85.
+    // "142 / 180" is a score with its maximum attached; stripping separators
+    // would fuse the two into 142180, so only the leading number is read.
+    const match = String(raw).match(/[0-9]*\.?[0-9]+/)
+    // Free text like "awaiting results" has no number at all. Treat that as
+    // unrecorded, not as a score of zero — a zero here would drag the merit
+    // score down and read as a real result to the admissions office.
+    const parsed = match ? Number(match[0]) : Number.NaN
+    out[key] = Number.isFinite(parsed) ? parsed : null
+  }
+  return out
+}
+
+/**
+ * The Apps Script the college pastes into their form. Generated rather than
+ * documented, so the endpoint and token can never drift from what is deployed.
+ */
+export function buildAppsScriptSnippet(endpointUrl: string, token: string): string {
+  // Both values are interpolated into single-quoted JS string literals.
+  const quote = (value: string) => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+  return `// Vriddhi Admission Center — paste into your Google Form's Apps Script editor,
+// then add a trigger: function onFormSubmit, event source "From form",
+// event type "On form submit".
+var ENDPOINT_URL = ${quote(endpointUrl)};
+var INGEST_TOKEN = ${quote(token)};
+
+function onFormSubmit(e) {
+  var payload = {
+    token: INGEST_TOKEN,
+    responseId: e.response.getId(),
+    submittedAt: e.response.getTimestamp().toISOString(),
+    answers: {}
+  };
+  e.response.getItemResponses().forEach(function (item) {
+    var answer = item.getResponse();
+    payload.answers[item.getItem().getTitle()] =
+      Array.isArray(answer) ? answer : String(answer);
+  });
+
+  UrlFetchApp.fetch(ENDPOINT_URL, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+}
+`
+}
+
+/** Deterministic document id so a re-delivered submission cannot duplicate. */
+export function intakeDocumentId(collegeId: string, responseId: string): string {
+  return crypto
+    .createHash('sha256')
+    .update(`${collegeId}\u0000${responseId}`)
+    .digest('hex')
+    .slice(0, 40)
+}
+
+// ─── Admission config (merit weights + form intake) ─────────────────────────
+
+/**
+ * Where the intake endpoint lives. Mirrors `DEFAULT_API_BASE_URL` in
+ * src/shared/api/apiBase.ts so the generated Apps Script posts to the same
+ * function the rest of the app talks to; `API_BASE_URL` overrides it for
+ * staging deployments.
+ */
+const DEFAULT_API_BASE = 'https://asia-south1-vriddhi-academic.cloudfunctions.net/api'
+
+function intakeEndpoint(): string {
+  const base = String(process.env.API_BASE_URL || DEFAULT_API_BASE).replace(/\/+$/, '')
+  return `${base}/admissions/ingest`
+}
+
+async function loadAdmissionConfig(collegeId: string): Promise<admin.firestore.DocumentData> {
+  const doc = await admin
+    .firestore()
+    .collection('colleges')
+    .doc(collegeId)
+    .collection('config')
+    .doc('admission')
+    .get()
+  return doc.data() || {}
+}
+
+function serializeMapping(value: unknown): FieldMapping {
+  if (!value || typeof value !== 'object') return {}
+  const out: FieldMapping = {}
+  Object.entries(value as Record<string, unknown>).forEach(([field, title]) => {
+    if (!(MAPPABLE_FIELDS as readonly string[]).includes(field)) return
+    if (typeof title !== 'string' || !title.trim()) return
+    ;(out as Record<string, string>)[field] = title.trim()
+  })
+  return out
+}
+
+function serializeDefaults(value: unknown): IntakeDefaults {
+  const source = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>
+  return {
+    program: String(source.program || DEFAULT_INTAKE_DEFAULTS.program).slice(0, 80),
+    batch: String(source.batch || DEFAULT_INTAKE_DEFAULTS.batch).slice(0, 32),
+    source: String(source.source || DEFAULT_INTAKE_DEFAULTS.source).slice(0, 60),
+    department: String(source.department || DEFAULT_INTAKE_DEFAULTS.department).slice(0, 80),
+  }
+}
+
+export const getAdmissionConfig = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    const collegeId = await resolveCollegeId(staff, (request.data as Record<string, unknown>)?.collegeId)
+    const config = await loadAdmissionConfig(collegeId)
+
+    return {
+      weights: {
+        qualifying: optionalNumber(config.qualifyingWeight, 0, 100) ?? DEFAULT_MERIT_WEIGHTS.qualifying,
+        entrance: optionalNumber(config.entranceWeight, 0, 100) ?? DEFAULT_MERIT_WEIGHTS.entrance,
+        interview: optionalNumber(config.interviewWeight, 0, 100) ?? DEFAULT_MERIT_WEIGHTS.interview,
+      },
+      weightsCustomised: Boolean(config.qualifyingWeight ?? config.entranceWeight ?? config.interviewWeight),
+      intake: {
+        enabled: config.intakeEnabled === true,
+        hasToken: Boolean(config.activeTokenHash),
+        fieldMapping: serializeMapping(config.fieldMapping),
+        defaults: serializeDefaults(config.intakeDefaults),
+        endpoint: intakeEndpoint(),
+        mappableFields: [...MAPPABLE_FIELDS],
+        lastSubmissionAt: iso(config.lastSubmissionAt),
+        submissionCount: Number(config.submissionCount) || 0,
+        rejectedCount: Number(config.rejectedCount) || 0,
+      },
+    }
+  }
+)
+
+export const saveAdmissionConfig = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    const input = (request.data || {}) as Record<string, unknown>
+    const collegeId = await resolveCollegeId(staff, input.collegeId)
+
+    const update: admin.firestore.DocumentData = {
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedBy: staff.name,
+    }
+
+    if (input.weights !== undefined) {
+      const weights = (input.weights && typeof input.weights === 'object' ? input.weights : {}) as Record<
+        string,
+        unknown
+      >
+      const qualifying = optionalNumber(weights.qualifying, 0, 100)
+      const entrance = optionalNumber(weights.entrance, 0, 100)
+      const interview = optionalNumber(weights.interview, 0, 100)
+      if (qualifying === null || entrance === null || interview === null) {
+        throw new HttpsError('invalid-argument', 'Weights must be numbers between 0 and 100')
+      }
+      const total = qualifying + entrance + interview
+      if (total <= 0) {
+        throw new HttpsError('invalid-argument', 'At least one weight must be greater than zero')
+      }
+      if (Math.abs(total - 100) > 0.01) {
+        throw new HttpsError(
+          'invalid-argument',
+          `Weights must add up to 100 (currently ${Math.round(total * 100) / 100})`
+        )
+      }
+      update.qualifyingWeight = qualifying
+      update.entranceWeight = entrance
+      update.interviewWeight = interview
+    }
+
+    if (input.fieldMapping !== undefined) update.fieldMapping = serializeMapping(input.fieldMapping)
+    if (input.intakeDefaults !== undefined) update.intakeDefaults = serializeDefaults(input.intakeDefaults)
+    if (input.intakeEnabled !== undefined) update.intakeEnabled = input.intakeEnabled === true
+
+    const ref = admin
+      .firestore()
+      .collection('colleges')
+      .doc(collegeId)
+      .collection('config')
+      .doc('admission')
+    await ref.set(update, { merge: true })
+
+    // Changing the weights changes every merit score, so existing applications
+    // carry the weights they were scored under. Re-stamp them so the score
+    // shown for an applicant is always computed from the current policy.
+    if (update.qualifyingWeight !== undefined) {
+      const snap = await admin
+        .firestore()
+        .collection('admissionApplications')
+        .where('collegeId', '==', collegeId)
+        .limit(1000)
+        .get()
+      const batch = admin.firestore().batch()
+      snap.docs.forEach((doc) => {
+        batch.update(doc.ref, {
+          meritWeights: {
+            qualifying: update.qualifyingWeight,
+            entrance: update.entranceWeight,
+            interview: update.interviewWeight,
+          },
+        })
+      })
+      await batch.commit()
+    }
+
+    return { saved: true }
+  }
+)
+
+export const rotateAdmissionIngestToken = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    const input = (request.data || {}) as Record<string, unknown>
+    const collegeId = await resolveCollegeId(staff, input.collegeId)
+
+    const db = admin.firestore()
+    const config = await loadAdmissionConfig(collegeId)
+
+    // Revoke the previous token so a leaked one stops working immediately.
+    const previousHash = String(config.activeTokenHash || '')
+    if (previousHash) {
+      await db.collection('admissionIngestTokens').doc(previousHash).delete().catch(() => undefined)
+    }
+
+    const token = generateIngestToken()
+    const tokenHash = hashToken(token)
+    await db.collection('admissionIngestTokens').doc(tokenHash).set({
+      collegeId,
+      createdBy: uid,
+      createdByName: staff.name,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      revoked: false,
+    })
+
+    const ref = db.collection('colleges').doc(collegeId).collection('config').doc('admission')
+    await ref.set(
+      {
+        activeTokenHash: tokenHash,
+        intakeEnabled: true,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: staff.name,
+      },
+      { merge: true }
+    )
+
+    // The plaintext is returned once and never stored, so it cannot be read
+    // back later — copy it into the Apps Script now or rotate again.
+    return {
+      token,
+      endpoint: intakeEndpoint(),
+      script: buildAppsScriptSnippet(intakeEndpoint(), token),
+    }
+  }
+)
+
+export const disableAdmissionIntake = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    const collegeId = await resolveCollegeId(staff, (request.data as Record<string, unknown>)?.collegeId)
+
+    const db = admin.firestore()
+    const config = await loadAdmissionConfig(collegeId)
+    const previousHash = String(config.activeTokenHash || '')
+    if (previousHash) {
+      await db.collection('admissionIngestTokens').doc(previousHash).delete().catch(() => undefined)
+    }
+    await db
+      .collection('colleges')
+      .doc(collegeId)
+      .collection('config')
+      .doc('admission')
+      .set(
+        {
+          activeTokenHash: admin.firestore.FieldValue.delete(),
+          intakeEnabled: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedBy: staff.name,
+        },
+        { merge: true }
+      )
+    return { disabled: true }
+  }
+)
+
+// ─── Intake document construction ───────────────────────────────────────────
+
+/**
+ * Builds the Firestore document for an application arriving from a form.
+ *
+ * Exported so the Express intake route and the callable-backed create path
+ * cannot drift apart on which fields exist — `serialize()` reads a fixed set,
+ * and a field written under a different name here would silently render as
+ * blank in the Admission Center.
+ */
+export function buildIntakeApplication(
+  applicant: Record<string, unknown>,
+  context: { collegeId: string; applicationNo: string; cycleYear: number; weights: MeritWeights; source: string }
+): admin.firestore.DocumentData {
+  const now = admin.firestore.FieldValue.serverTimestamp()
+  return {
+    collegeId: context.collegeId,
+    applicationNo: context.applicationNo,
+    cycleYear: context.cycleYear,
+    status: 'enquiry' as AdmissionStatus,
+    applicantName: text(applicant.applicantName),
+    email: text(applicant.email, 160).toLowerCase(),
+    phone: text(applicant.phone, 32),
+    dateOfBirth: text(applicant.dateOfBirth, 32),
+    gender: text(applicant.gender, 32),
+    bloodGroup: '',
+    guardianName: text(applicant.guardianName),
+    guardianPhone: text(applicant.guardianPhone, 32),
+    city: text(applicant.city),
+    program: text(applicant.program, 80),
+    department: text(applicant.department, 80),
+    batch: text(applicant.batch, 32),
+    division: '',
+    regNo: '',
+    mentorId: '',
+    previousSchool: text(applicant.previousSchool),
+    previousQualification: text(applicant.previousQualification, 120),
+    yearOfPassing: text(applicant.yearOfPassing, 16),
+    source: context.source,
+    assignedTo: '',
+    assignedToName: '',
+    entranceExamType: text(applicant.entranceExamType, 60),
+    entranceRegistrationNo: text(applicant.entranceRegistrationNo, 64),
+    interviewNotes: '',
+    qualifyingPercentage: optionalNumber(applicant.qualifyingPercentage, 0, 100),
+    entranceScore: optionalNumber(applicant.entranceScore, 0, 100000),
+    entranceMaxScore: optionalNumber(applicant.entranceMaxScore, 0, 100000),
+    interviewRating: null,
+    meritWeights: context.weights,
+    feeAmount: 0,
+    feePaid: 0,
+    notes: [
+      { at: new Date().toISOString(), by: 'Google Form intake', text: 'Created from a form submission' },
+    ],
+    stageHistory: [{ stage: 'enquiry', at: new Date().toISOString(), by: 'Google Form intake' }],
+    createdBy: 'form-intake',
+    createdByName: 'Google Form intake',
+    createdAt: now,
+    updatedAt: now,
+  }
+}

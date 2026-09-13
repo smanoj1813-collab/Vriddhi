@@ -815,6 +815,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // -- Google Form ingest tokens ---------------------------------------------
+    // The intake secret for `POST /api/admissions/ingest`. Only a hash is ever
+    // stored, and only the Admin SDK may read or rotate it — a client that
+    // could list this collection could hand the hash to an attacker, so there
+    // is no signed-in path in either direction.
+    match /admissionIngestTokens/{id} {
+      allow read: if false;
+      allow write: if false;
+    }
+
     // -- Curriculum, topics, and test papers ----------------------------------
     // Read by the curriculum, topics, and dashboard flows in
     // src/modules/superadmin/api/curriculumApi.ts and

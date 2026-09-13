@@ -25,3 +25,16 @@ export const generalLimiter = rateLimit({
     error: 'Too many requests. Please slow down.',
   },
 });
+/**
+ * Public Google Form intake. Unauthenticated by design, so it gets a far
+ * tighter budget than the general limiter: a real college form receives a
+ * handful of submissions a minute at peak, and a leaked token should not turn
+ * into a firehose of enquiry documents.
+ */
+export const intakeLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: { error: 'Too many form submissions. Please retry shortly.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

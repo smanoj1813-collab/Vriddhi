@@ -3,6 +3,7 @@ import {
   Users, UserPlus, Search, X, Loader2, Download, Trash2, RefreshCw,
   ChevronRight, AlertTriangle, CheckCircle2, FileSpreadsheet, ArrowRight,
   Inbox, ClipboardList, Filter as FilterIcon, HandCoins, GraduationCap, Star,
+  Settings,
 } from 'lucide-react';
 import {
   ADMISSION_STAGES,
@@ -27,6 +28,7 @@ import {
   type AdmissionFilters,
 } from '../hooks/useAdmissions';
 import { DEFAULT_PROGRAMS } from '@/shared/constants/academicPrograms';
+import AdmissionSettings from '../components/AdmissionSettings';
 
 // ------------------------------------------------------------------
 // Admission Center — the funnel in front of enrolment.
@@ -108,6 +110,7 @@ export default function AdmissionCenter() {
 
   const [selected, setSelected] = useState<AdmissionApplication | null>(null);
   const [composing, setComposing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [formError, setFormError] = useState('');
@@ -192,6 +195,12 @@ export default function AdmissionCenter() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <Settings className="w-4 h-4" /> Settings
           </button>
           <button
             onClick={() => void handleExport()}
@@ -571,6 +580,14 @@ export default function AdmissionCenter() {
               refresh();
             });
           }}
+        />
+      )}
+
+      {settingsOpen && (
+        <AdmissionSettings
+          collegeId={collegeId}
+          onClose={() => setSettingsOpen(false)}
+          onChanged={refresh}
         />
       )}
     </div>

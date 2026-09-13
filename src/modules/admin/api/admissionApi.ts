@@ -226,3 +226,96 @@ export async function markExported(applicationIds: string[], collegeId?: string)
   const result = await call({ applicationIds, collegeId });
   return Number(result.data.marked) || 0;
 }
+
+// ─── Admission config: merit weights + Google Form intake ───────────────────
+
+export const MAPPABLE_FIELDS = [
+  'applicantName',
+  'email',
+  'phone',
+  'dateOfBirth',
+  'gender',
+  'guardianName',
+  'guardianPhone',
+  'city',
+  'program',
+  'batch',
+  'previousSchool',
+  'previousQualification',
+  'yearOfPassing',
+  'qualifyingPercentage',
+  'entranceExamType',
+  'entranceRegistrationNo',
+  'entranceScore',
+  'entranceMaxScore',
+] as const;
+
+export type MappableField = (typeof MAPPABLE_FIELDS)[number];
+
+/** Vriddhi field -> the exact Google Form question title. */
+export type FieldMapping = Partial<Record<MappableField, string>>;
+
+export interface IntakeDefaults {
+  program: string;
+  batch: string;
+  source: string;
+  department: string;
+}
+
+export interface AdmissionConfig {
+  weights: MeritWeights;
+  weightsCustomised: boolean;
+  intake: {
+    enabled: boolean;
+    hasToken: boolean;
+    fieldMapping: FieldMapping;
+    defaults: IntakeDefaults;
+    endpoint: string;
+    mappableFields: string[];
+    lastSubmissionAt: string | null;
+    submissionCount: number;
+    rejectedCount: number;
+  };
+}
+
+export interface IngestTokenResult {
+  token: string;
+  endpoint: string;
+  script: string;
+}
+
+export async function getAdmissionConfig(collegeId?: string): Promise<AdmissionConfig> {
+  const call = httpsCallable<{ collegeId?: string }, AdmissionConfig>(functions, 'getAdmissionConfig');
+  const result = await call({ collegeId });
+  return result.data;
+}
+
+export async function saveAdmissionConfig(
+  payload: {
+    collegeId?: string;
+    weights?: MeritWeights;
+    fieldMapping?: FieldMapping;
+    intakeDefaults?: IntakeDefaults;
+    intakeEnabled?: boolean;
+  }
+): Promise<void> {
+  const call = httpsCallable<typeof payload, { saved: boolean }>(functions, 'saveAdmissionConfig');
+  await call(payload);
+}
+
+export async function rotateIngestToken(collegeId?: string): Promise<IngestTokenResult> {
+  const call = httpsCallable<{ collegeId?: string }, IngestTokenResult>(
+    functions,
+    'rotateAdmissionIngestToken'
+  );
+  const result = await call({ collegeId });
+  return result.data;
+}
+
+export async function disableIntake(collegeId?: string): Promise<void> {
+  const call = httpsCallable<{ collegeId?: string }, { disabled: boolean }>(
+    functions,
+    'disableAdmissionIntake'
+  );
+  await call({ collegeId });
+}
