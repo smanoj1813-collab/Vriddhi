@@ -21,6 +21,7 @@ import { router as questionsRouter } from './routes/questions'
 import { router as papersRouter } from './routes/papers'
 import { router as configRouter } from './routes/config'
 import { generalLimiter } from './middleware/rateLimit'
+import { router as admissionIntakeRouter } from './routes/admissionIntake'
 
 // ═══════ Student Auth callable functions ═══════
 import {
@@ -82,6 +83,31 @@ import {
   completeClassSession,
   getCurriculumProgress,
 } from './classSchedule'
+// ─── Announcements: server-authoritative targeting + per-recipient reads ───
+import {
+  sendAnnouncement,
+  listCollegeAnnouncements,
+  deleteAnnouncement,
+  setAnnouncementPinned,
+  getMyNotifications,
+  markMyNotificationRead,
+  markAllMyNotificationsRead,
+} from './notifications'
+// ─── Student journey: real CGPA, cohort standing, readiness ───
+import { getMyAcademicJourney } from './studentJourney'
+// ─── Admission Center: the funnel before a student record exists ───
+import {
+  saveAdmissionApplication,
+  transitionAdmissionStage,
+  listAdmissionApplications,
+  deleteAdmissionApplication,
+  exportAdmittedApplicants,
+  markAdmissionExported,
+  getAdmissionConfig,
+  saveAdmissionConfig,
+  rotateAdmissionIngestToken,
+  disableAdmissionIntake,
+} from './admissions'
 
 const app = express()
 
@@ -127,6 +153,9 @@ app.use('/questions', questionsRouter)
 app.use('/api/papers', papersRouter)
 app.use('/papers', papersRouter)
 app.use('/api/config', configRouter)
+
+// Public Google Form intake — token-gated, no Firebase auth.
+app.use('/api/admissions', admissionIntakeRouter)
 app.use('/config', configRouter)
 
 app.use((req, res) => {
@@ -214,4 +243,22 @@ export {
   ensureClassSession,
   completeClassSession,
   getCurriculumProgress,
+  sendAnnouncement,
+  listCollegeAnnouncements,
+  deleteAnnouncement,
+  setAnnouncementPinned,
+  getMyNotifications,
+  markMyNotificationRead,
+  markAllMyNotificationsRead,
+  getMyAcademicJourney,
+  saveAdmissionApplication,
+  transitionAdmissionStage,
+  listAdmissionApplications,
+  deleteAdmissionApplication,
+  exportAdmittedApplicants,
+  markAdmissionExported,
+  getAdmissionConfig,
+  saveAdmissionConfig,
+  rotateAdmissionIngestToken,
+  disableAdmissionIntake,
 }

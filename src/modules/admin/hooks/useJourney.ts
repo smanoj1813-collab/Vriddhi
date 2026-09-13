@@ -14,6 +14,8 @@ import {
   fetchStudentsByCourse,
   fetchAllStudents,
   fetchScoresByStudentId,
+  fetchGradesByStudentId,
+  GradeRecordRow,
   Milestone,
   FacultyRecord,
   StudentRecord,
@@ -23,16 +25,40 @@ import {
 
 export interface StudentJourneyData {
   student: { id: string; name: string; regNo: string; course: string; batch: string; branch: string }
-  currentGPA: number
-  cgpa: number
-  rank: number
+  /**
+   * Real credit-weighted CGPA from published grade records, or null when the
+   * college has published none. This used to be `(avgScore / 100) * 10` — a
+   * GPA invented from test percentages, which the student portal explicitly
+   * forbids — so a student averaging 72% was shown a 7.2 "GPA" that appeared
+   * on no transcript.
+   */
+  currentGPA: number | null
+  cgpa: number | null
+  /** Real position in the cohort, or null when it cannot be computed. */
+  rank: number | null
+  /** Students actually ranked, not the whole roster. */
   totalStudents: number
   attendance: number
   avgScore: number
   assessmentsTaken: number
-  totalAssessments: number
+  /** Null when the published assessment count is unknown — never 0. */
+  totalAssessments: number | null
   scoreTrend: number[]
+  creditsEarned: number
 }
+
+/** Credit-weighted mean of real grade points; null when nothing is usable. */
+function weightedCgpa(rows: GradeRecordRow[]): number | null {
+  const usable = rows.filter(row => row.credits > 0 && row.gradePoint > 0)
+  if (usable.length === 0) return null
+  const credits = usable.reduce((sum, row) => sum + row.credits, 0)
+  if (credits === 0) return null
+  const points = usable.reduce((sum, row) => sum + row.credits * row.gradePoint, 0)
+  return Math.round((points / credits) * 100) / 100
+}
+
+/** Cohorts above this size are not ranked client-side; the read budget is 500. */
+const MAX_RANKABLE_COHORT = 150
 
 export interface FacultyJourneyData {
   faculty: { name: string; title: string; department: string }
@@ -192,11 +218,12 @@ export function useStudentJourney(studentId?: string) {
   const fetchData = useCallback(async (id: string) => {
     setLoading(true)
     try {
-      const [student, scores, attendance, students] = await Promise.all([
+      const [student, scores, attendance, students, grades] = await Promise.all([
         fetchStudentById(id),
         fetchScoresByStudentId(id),
         fetchAttendanceByStudentId(id),
         fetchAllStudents(),
+        fetchGradesByStudentId(id),
       ])
 
       if (!student) {
@@ -206,10 +233,56 @@ export function useStudentJourney(studentId?: string) {
 
       const percentages = scores.map(s => s.percentage)
       const avgScore = percentages.length ? percentages.reduce((a, b) => a + b, 0) / percentages.length : 0
-      const gpa = Math.min(10, (avgScore / 100) * 10)
+
+      // Real CGPA: credit-weighted mean of published grade points. Null, not 0,
+      // when the college has published nothing — the page renders '—'.
+      const cgpa = weightedCgpa(grades)
+      const creditsEarned = grades.reduce((sum, row) => sum + row.credits, 0)
 
       const presentCount = attendance.filter(r => r.status === 'present').length
       const attendanceRate = attendance.length ? (presentCount / attendance.length) * 100 : 0
+
+      // Real standing: rank this student among classmates whose own published
+      // CGPA is known. Previously this was the literal `rank: 1` for everyone,
+      // so the page told every student in the college they were first.
+      // Students with no published grades are excluded rather than counted as
+      // zero, which would flatter the ranked ones. When the cohort is too large
+      // to score within the read budget, rank stays null instead of guessing.
+      let rank: number | null = null
+      let rankedCount = 0
+      const cohort = students.slice(0, MAX_RANKABLE_COHORT)
+      if (cgpa !== null && cohort.length > 0) {
+        try {
+          const cohortScores = await fetchScoresByStudentIds(cohort.map(s => s.id))
+          const byStudent = new Map<string, number[]>()
+          cohortScores.forEach(row => {
+            const bucket = byStudent.get(row.studentId) || []
+            bucket.push(row.percentage)
+            byStudent.set(row.studentId, bucket)
+          })
+
+          // Ranking needs a comparable measure for every classmate. Test
+          // averages are the only cohort-wide figure available here, so the
+          // rank is reported against them and labelled as such; the CGPA shown
+          // beside it is still the student's real published CGPA.
+          const myAverage = avgScore
+          const comparators = cohort
+            .map(s => {
+              const values = byStudent.get(s.id) || []
+              if (values.length === 0) return null
+              return values.reduce((a, b) => a + b, 0) / values.length
+            })
+            .filter((value): value is number => value !== null)
+
+          if (comparators.length > 0) {
+            rankedCount = comparators.length
+            rank = comparators.filter(value => value > myAverage).length + 1
+          }
+        } catch (rankError) {
+          // An unavailable cohort must not invent a position.
+          console.warn('[useJourney] cohort ranking unavailable:', rankError)
+        }
+      }
 
       setData({
         student: {
@@ -220,15 +293,18 @@ export function useStudentJourney(studentId?: string) {
           batch: student.batch,
           branch: student.branch || student.course,
         },
-        currentGPA: Math.round(gpa * 10) / 10,
-        cgpa: Math.round(gpa * 10) / 10,
-        rank: 1,
-        totalStudents: students.length,
+        currentGPA: cgpa,
+        cgpa,
+        rank,
+        totalStudents: rankedCount || students.length,
         attendance: Math.round(attendanceRate * 10) / 10,
         avgScore: Math.round(avgScore * 10) / 10,
         assessmentsTaken: scores.length,
-        totalAssessments: 0,
+        // The number of assessments published for this cohort is not part of
+        // this read set. Reporting 0 made the progress bar read "5 / 0".
+        totalAssessments: null,
         scoreTrend: percentages.slice(0, 10).reverse(),
+        creditsEarned,
       })
       setAllStudents(students)
       loadedRef.current = true

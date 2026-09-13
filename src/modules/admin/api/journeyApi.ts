@@ -29,6 +29,20 @@ function collegeRef(path: string) {
   return collection(db, 'colleges', getCollegeId(), path)
 }
 
+/**
+ * Top-level, college-scoped collections.
+ *
+ * The journey page originally read `colleges/{id}/scores` and
+ * `colleges/{id}/attendance`. Nothing in the codebase writes either: scores
+ * are produced by the test flow into the top-level `studentAssessments`
+ * collection, and attendance lives in the top-level `attendanceRecords`
+ * collection. Reading the subcollections returned zero rows, so every student
+ * was shown a 0 average, a 0 GPA and 0% attendance.
+ */
+function scopedRef(path: string) {
+  return collection(db, path)
+}
+
 // ─── Types ──────────────────────────────────────────────
 
 export interface Milestone {
@@ -68,11 +82,28 @@ export interface StudentRecord {
 export interface ScoreRecord {
   id: string
   studentId: string
-  assessmentId: string
+  assessmentId?: string
+  testId?: string
+  collegeId?: string
   percentage: number
   grade: string
   status: string
+  title?: string
+  subject?: string
+  submittedAt?: string
   createdAt?: string
+}
+
+export interface GradeRecordRow {
+  id: string
+  studentId: string
+  collegeId?: string
+  code: string
+  subject: string
+  semester: number
+  credits: number
+  gradePoint: number
+  grade: string
 }
 
 export interface AttendanceRecord {
@@ -130,7 +161,12 @@ export async function fetchFacultyByEmail(email: string): Promise<FacultyRecord 
 
 export async function fetchStudentsByMentor(mentorName: string): Promise<StudentRecord[]> {
   const snap = await getDocs(
-    query(collegeRef('students'), where('mentor', '==', mentorName), limit(MAX_READS))
+    query(
+      scopedRef('students'),
+      where('collegeId', '==', getCollegeId()),
+      where('mentor', '==', mentorName),
+      limit(MAX_READS)
+    )
   )
   if (!trackRead(snap.size)) return []
 
@@ -149,12 +185,19 @@ export async function fetchScoresByStudentIds(studentIds: string[]): Promise<Sco
   }
 
   const allScores: ScoreRecord[] = []
+  const collegeId = getCollegeId()
   for (const batch of batches) {
     const snap = await getDocs(
-      query(collegeRef('scores'), where('studentId', 'in', batch), limit(MAX_READS))
+      query(scopedRef('studentAssessments'), where('studentId', 'in', batch), limit(MAX_READS))
     )
     if (!trackRead(snap.size)) continue
-    allScores.push(...snap.docs.map(d => ({ id: d.id, ...d.data() }) as ScoreRecord))
+    allScores.push(
+      ...snap.docs
+        .map(d => ({ id: d.id, ...d.data() }) as ScoreRecord)
+        // Only graded attempts carry a defensible percentage, and only rows
+        // belonging to this college may contribute to a journey.
+        .filter(r => r.collegeId === collegeId && r.status === 'graded')
+    )
   }
 
   return allScores.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
@@ -162,7 +205,12 @@ export async function fetchScoresByStudentIds(studentIds: string[]): Promise<Sco
 
 export async function fetchAttendanceByStudentId(studentId: string): Promise<AttendanceRecord[]> {
   const snap = await getDocs(
-    query(collegeRef('attendance'), where('studentId', '==', studentId), limit(MAX_READS))
+    query(
+      scopedRef('attendanceRecords'),
+      where('collegeId', '==', getCollegeId()),
+      where('studentId', '==', studentId),
+      limit(MAX_READS)
+    )
   )
   if (!trackRead(snap.size)) return []
 
@@ -171,7 +219,12 @@ export async function fetchAttendanceByStudentId(studentId: string): Promise<Att
 
 export async function fetchStudentById(studentId: string): Promise<StudentRecord | null> {
   const snap = await getDocs(
-    query(collegeRef('students'), where('__name__', '==', studentId), limit(1))
+    query(
+      scopedRef('students'),
+      where('collegeId', '==', getCollegeId()),
+      where('__name__', '==', studentId),
+      limit(1)
+    )
   )
   if (!trackRead(snap.size)) return null
 
@@ -182,7 +235,12 @@ export async function fetchStudentById(studentId: string): Promise<StudentRecord
 
 export async function fetchStudentsByCourse(course: string): Promise<StudentRecord[]> {
   const snap = await getDocs(
-    query(collegeRef('students'), where('course', '==', course), limit(MAX_READS))
+    query(
+      scopedRef('students'),
+      where('collegeId', '==', getCollegeId()),
+      where('course', '==', course),
+      limit(MAX_READS)
+    )
   )
   if (!trackRead(snap.size)) return []
 
@@ -192,7 +250,9 @@ export async function fetchStudentsByCourse(course: string): Promise<StudentReco
 }
 
 export async function fetchAllStudents(): Promise<StudentRecord[]> {
-  const snap = await getDocs(query(collegeRef('students'), limit(MAX_READS)))
+  const snap = await getDocs(
+    query(scopedRef('students'), where('collegeId', '==', getCollegeId()), limit(MAX_READS))
+  )
   if (!trackRead(snap.size)) return []
 
   return snap.docs
@@ -202,11 +262,48 @@ export async function fetchAllStudents(): Promise<StudentRecord[]> {
 
 export async function fetchScoresByStudentId(studentId: string): Promise<ScoreRecord[]> {
   const snap = await getDocs(
-    query(collegeRef('scores'), where('studentId', '==', studentId), limit(50))
+    query(scopedRef('studentAssessments'), where('studentId', '==', studentId), limit(200))
   )
   if (!trackRead(snap.size)) return []
 
+  const collegeId = getCollegeId()
   return snap.docs
     .map(d => ({ id: d.id, ...d.data() }) as ScoreRecord)
+    .filter(r => r.collegeId === collegeId && r.status === 'graded')
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+}
+
+/**
+ * Published transcript grades for one student.
+ *
+ * The journey must never present a GPA derived from test percentages — the
+ * student portal states that rule explicitly in fetchGrades(). Real credit
+ * weights and grade points live here, so a GPA shown anywhere is the real one.
+ */
+export async function fetchGradesByStudentId(studentId: string): Promise<GradeRecordRow[]> {
+  const snap = await getDocs(
+    query(
+      scopedRef('gradeRecords'),
+      where('collegeId', '==', getCollegeId()),
+      where('studentId', '==', studentId),
+      where('status', '==', 'published'),
+      limit(300)
+    )
+  )
+  if (!trackRead(snap.size)) return []
+
+  return snap.docs.map(d => {
+    const row = d.data()
+    return {
+      id: d.id,
+      studentId: String(row.studentId || ''),
+      collegeId: String(row.collegeId || ''),
+      code: String(row.code || ''),
+      subject: String(row.subject || row.courseName || ''),
+      semester: Number(row.semester) || 0,
+      credits: Number(row.credits) || 0,
+      gradePoint: Number(row.gradePoint) || 0,
+      grade: String(row.grade || ''),
+    } as GradeRecordRow
+  })
 }

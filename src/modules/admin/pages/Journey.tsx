@@ -236,11 +236,32 @@ const FacultyJourney = () => {
     { label: 'Classes This Week', value: data.classesThisWeek ?? 0, icon: <BookOpen className="w-5 h-5" />, color: 'text-emerald-400' },
   ]
 
-  const predictions = [
-    { label: 'Expected Promotion', value: 'Professor by 2027', trend: 'up' as const, confidence: 85 },
-    { label: 'Research Output', value: '12 papers by 2026', trend: 'up' as const, confidence: 78 },
-    { label: 'Student Performance', value: 'Avg 85% next year', trend: 'up' as const, confidence: 72 },
-    { label: 'Department Growth', value: '3 new faculty hires', trend: 'up' as const, confidence: 65 },
+  // "Expected Promotion: Professor by 2027", "12 papers by 2026", "3 new
+  // faculty hires" with 85/78/72/65% confidence were pure invention — nothing in
+  // the system tracks promotions, publications or hiring plans. Replaced with
+  // figures the records actually support.
+  const covered = data.topicsCovered
+  const totalTopics = data.topicsCovered + data.topicsPending
+  const facts = [
+    {
+      label: 'Syllabus coverage',
+      value: totalTopics > 0 ? `${covered} of ${totalTopics} topics` : 'No topics mapped',
+      detail: totalTopics > 0 ? `${Math.round((covered / totalTopics) * 100)}% of the mapped syllabus delivered` : 'Map the syllabus to track coverage',
+    },
+    {
+      label: 'Mentee outcomes',
+      value: data.totalStudents > 0 ? `${data.avgStudentScore}% average` : 'No mentees',
+      detail: data.totalStudents > 0
+        ? `${data.goodStudentsCount} strong · ${data.studentPerformanceDistribution.average} average · ${data.weakStudentsCount} needing support`
+        : 'No students are assigned to this mentor',
+    },
+    {
+      label: 'Class attendance',
+      value: data.avgAttendance > 0 ? `${data.avgAttendance}%` : 'Not marked',
+      detail: data.avgAttendance > 0
+        ? `${data.classesThisWeek} class${data.classesThisWeek === 1 ? '' : 'es'} per week on average`
+        : 'No attendance marked for these classes',
+    },
   ]
 
   const pieData = [
@@ -300,14 +321,13 @@ const FacultyJourney = () => {
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Career Forecast</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Teaching Record</h3>
             <div className="space-y-3">
-              {predictions.map((p, i) => (
-                <div key={i} className="p-3 rounded-lg glass-card/30">
-                  <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">{p.label}</span><TrendIcon trend={p.trend} /></div>
-                  <p className="text-slate-900 dark:text-white font-medium text-sm">{p.value}</p>
-                  <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mt-2"><div className="h-full bg-amber-400 rounded-full" style={{ width: `${p.confidence}%` }} /></div>
-                  <p className="text-xs text-slate-500 mt-1">{p.confidence}% confidence</p>
+              {facts.map((item) => (
+                <div key={item.label} className="p-3 rounded-lg glass-card/30">
+                  <span className="text-xs text-slate-600 dark:text-slate-400">{item.label}</span>
+                  <p className="text-slate-900 dark:text-white font-medium text-sm mt-1">{item.value}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{item.detail}</p>
                 </div>
               ))}
             </div>
@@ -358,32 +378,69 @@ const StudentJourney = () => {
   }
 
   const stats = [
-    { label: 'Current GPA', value: studentData.currentGPA, icon: <Star className="w-5 h-5" />, color: 'text-amber-400', suffix: '/10' },
-    { label: 'Class Rank', value: `#${studentData.rank}`, icon: <Trophy className="w-5 h-5" />, color: 'text-purple-400', suffix: `/${studentData.totalStudents}` },
+    {
+      label: 'CGPA',
+      value: studentData.currentGPA !== null ? studentData.currentGPA : '—',
+      icon: <Star className="w-5 h-5" />,
+      color: 'text-amber-400',
+      suffix: studentData.currentGPA !== null ? '/10' : '',
+    },
+    {
+      label: 'Class Rank',
+      value: studentData.rank !== null ? `#${studentData.rank}` : '—',
+      icon: <Trophy className="w-5 h-5" />,
+      color: 'text-purple-400',
+      suffix: studentData.rank !== null ? `/${studentData.totalStudents}` : '',
+    },
     { label: 'Attendance', value: `${studentData.attendance}%`, icon: <CheckCircle className="w-5 h-5" />, color: 'text-emerald-400', suffix: '' },
-    { label: 'Avg Score', value: `${studentData.avgScore}%`, icon: <TrendingUp className="w-5 h-5" />, color: 'text-blue-400', suffix: '' },
+    {
+      label: studentData.assessmentsTaken > 0 ? 'Avg Score' : 'Avg Score',
+      value: studentData.assessmentsTaken > 0 ? `${studentData.avgScore}%` : '—',
+      icon: <TrendingUp className="w-5 h-5" />,
+      color: 'text-blue-400',
+      suffix: '',
+    },
   ]
 
+  // Standing is read from the student's real cohort position. The previous
+  // version inferred "Top 5%" / "Top 25%" from a GPA threshold alone, so it
+  // labelled a student top-5% with no comparison to their classmates at all.
+  const percentile =
+    studentData.rank !== null && studentData.totalStudents > 1
+      ? Math.round(((studentData.totalStudents - studentData.rank) / (studentData.totalStudents - 1)) * 100)
+      : null
+
   const getEndGoal = () => {
-    if (studentData.currentGPA >= 8.5) return { standing: 'Top Performer - Top 5%', outcome: 'First Class with Distinction', path: 'Honors → Internship → Placement', color: 'green' }
-    if (studentData.currentGPA >= 7) return { standing: 'Strong Performer - Top 25%', outcome: 'First Class', path: 'Good Internship → Placement', color: 'blue' }
-    if (studentData.currentGPA >= 6) return { standing: 'Average Performer - Middle 50%', outcome: 'Second Class', path: 'Regular Placement → Higher Studies', color: 'amber' }
-    if (studentData.currentGPA >= 4) return { standing: 'Below Average - Needs Improvement', outcome: 'Pass Class', path: 'Remedial → Pass → Rebuild', color: 'orange' }
-    return { standing: 'At Risk - Critical Intervention', outcome: 'Backlog / Repeat Year', path: 'Remedial → Counseling → Recovery', color: 'red' }
+    if (percentile === null) {
+      return {
+        standing: 'Not yet ranked',
+        outcome: studentData.currentGPA !== null ? 'Awaiting cohort results' : 'Awaiting published grades',
+        path: 'Grades must be published before standing can be measured',
+        color: 'slate',
+      }
+    }
+    if (percentile >= 95) return { standing: `Top ${100 - percentile}% of cohort`, outcome: 'First Class with Distinction', path: 'Honors → Internship → Placement', color: 'green' }
+    if (percentile >= 75) return { standing: `Top ${100 - percentile}% of cohort`, outcome: 'First Class', path: 'Good Internship → Placement', color: 'blue' }
+    if (percentile >= 50) return { standing: `Top ${100 - percentile}% of cohort`, outcome: 'Second Class', path: 'Regular Placement → Higher Studies', color: 'amber' }
+    if (percentile >= 25) return { standing: `Lower ${100 - percentile}% of cohort`, outcome: 'Pass Class', path: 'Remedial → Pass → Rebuild', color: 'orange' }
+    return { standing: `Bottom ${100 - percentile}% of cohort`, outcome: 'Backlog / Repeat Year', path: 'Remedial → Counseling → Recovery', color: 'red' }
   }
 
   const endGoal = getEndGoal()
 
   const suggestions: Suggestion[] = useMemo(() => {
     const result: Suggestion[] = []
-    if (studentData.avgScore >= 80) {
-      result.push({ type: 'strength', title: 'Excellent Academic Performance', description: `Maintaining ${studentData.avgScore}% average across assessments.`, action: 'Apply for merit scholarships' })
+    if (studentData.assessmentsTaken > 0 && studentData.avgScore >= 80) {
+      result.push({ type: 'strength', title: 'Excellent Academic Performance', description: `Maintaining ${studentData.avgScore}% average across ${studentData.assessmentsTaken} graded assessment${studentData.assessmentsTaken === 1 ? '' : 's'}.`, action: 'Apply for merit scholarships' })
     }
     if (studentData.attendance < 75) {
       result.push({ type: 'warning', title: 'Low Attendance Alert', description: `Current attendance is ${studentData.attendance}%, below the 75% threshold.`, action: 'Meet your mentor immediately' })
     }
-    if (studentData.assessmentsTaken < studentData.totalAssessments * 0.5) {
-      result.push({ type: 'opportunity', title: 'Complete Pending Assessments', description: `Only ${studentData.assessmentsTaken} of ${studentData.totalAssessments} assessments completed.`, action: 'Schedule remaining exams' })
+    if (studentData.currentGPA === null) {
+      result.push({ type: 'opportunity', title: 'No Published Grades Yet', description: 'CGPA cannot be calculated until grade records are published for this student.', action: 'Publish grade records' })
+    }
+    if (studentData.assessmentsTaken === 0) {
+      result.push({ type: 'opportunity', title: 'No Graded Assessments', description: 'This student has no graded assessment attempts on record.', action: 'Schedule an assessment' })
     }
     if (result.length === 0) {
       result.push({ type: 'strength', title: 'On Track', description: 'You are maintaining good academic standing.', action: 'Keep up the good work' })
@@ -391,16 +448,48 @@ const StudentJourney = () => {
     return result
   }, [studentData])
 
-  const predictions = [
-    { label: 'Projected GPA', value: `${Math.min(10, studentData.currentGPA * 1.05).toFixed(1)} by end of semester`, trend: 'up' as const, confidence: 78 },
-    { label: 'Placement Readiness', value: studentData.currentGPA >= 7 ? 'High' : 'Moderate', trend: studentData.currentGPA >= 7 ? 'up' as const : 'stable' as const, confidence: 82 },
-    { label: 'Scholarship Eligibility', value: studentData.currentGPA >= 8 ? 'Eligible' : 'Not Eligible', trend: studentData.currentGPA >= 8 ? 'up' as const : 'down' as const, confidence: 90 },
+  // Previously this showed a "Projected GPA" of currentGPA * 1.05 with fixed
+  // 78% / 82% / 90% "confidence" bars. There is no model behind those numbers
+  // — they were decorative fiction presented as measurement, so they are gone.
+  // What remains is computed from records that actually exist.
+  const cgpa = studentData.currentGPA
+  const facts = [
+    {
+      label: 'Published CGPA',
+      value: cgpa !== null ? `${cgpa} / 10` : 'Not published',
+      detail: cgpa !== null ? `${studentData.creditsEarned} credits on transcript` : 'Awaiting grade records',
+    },
+    {
+      label: 'Cohort position',
+      value:
+        studentData.rank !== null && percentile !== null
+          ? `Rank ${studentData.rank} of ${studentData.totalStudents}`
+          : 'Not ranked',
+      detail: percentile !== null ? `Top ${100 - percentile}% of the ranked cohort` : 'Needs cohort results',
+    },
+    {
+      label: 'Attendance gate',
+      value: `${studentData.attendance}%`,
+      detail:
+        studentData.attendance >= 75
+          ? 'Meets the 75% requirement'
+          : `${Math.round(75 - studentData.attendance)}% short of the 75% requirement`,
+    },
   ]
 
+  // Earned from records only. "Consistent Performer" used to be awarded
+  // unconditionally with a hardcoded 2026 date, so every student in the college
+  // held the same badge regardless of their results.
   const achievements = [
-    { title: 'Consistent Performer', description: 'Maintained above average scores', date: '2026' },
-    ...(studentData.avgScore >= 90 ? [{ title: "Dean's List", description: 'Top 10% of the class', date: '2026' }] : []),
-    ...(studentData.attendance >= 95 ? [{ title: 'Perfect Attendance', description: '100% attendance record', date: '2026' }] : []),
+    ...(studentData.assessmentsTaken >= 3 && studentData.avgScore >= 75
+      ? [{ title: 'Consistent Performer', description: `Above 75% across ${studentData.assessmentsTaken} graded assessments` }]
+      : []),
+    ...(percentile !== null && percentile >= 90
+      ? [{ title: "Dean's List", description: `Top ${100 - percentile}% of the ranked cohort` }]
+      : []),
+    ...(studentData.attendance >= 95 && studentData.assessmentsTaken > 0
+      ? [{ title: 'Attendance Record', description: `${studentData.attendance}% attendance` }]
+      : []),
   ]
 
   return (
@@ -442,24 +531,23 @@ const StudentJourney = () => {
             <div className="space-y-3">
               <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Program</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.course} - Batch {studentData.student.batch}</p></div>
               <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Branch</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.branch}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">CGPA</p><p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{studentData.cgpa}</p></div>
+              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">CGPA</p><p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{studentData.cgpa !== null ? studentData.cgpa : '—'}</p></div>
               <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <p className="text-xs text-emerald-400 mb-1">Assessments</p>
-                <p className="text-slate-900 dark:text-white font-medium">{studentData.assessmentsTaken} / {studentData.totalAssessments} completed</p>
-                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${studentData.totalAssessments > 0 ? (studentData.assessmentsTaken / studentData.totalAssessments) * 100 : 0}%` }} /></div>
+                <p className="text-slate-900 dark:text-white font-medium">{studentData.assessmentsTaken} graded attempt{studentData.assessmentsTaken === 1 ? '' : 's'}</p>
+                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${studentData.assessmentsTaken > 0 ? 100 : 0}%` }} /></div>
               </div>
             </div>
           </div>
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Future Predictions</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Measured Standing</h3>
             <div className="space-y-3">
-              {predictions.map((p, i) => (
-                <div key={i} className="p-3 rounded-lg glass-card/30">
-                  <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">{p.label}</span><TrendIcon trend={p.trend} /></div>
-                  <p className="text-slate-900 dark:text-white font-medium text-sm">{p.value}</p>
-                  <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mt-2"><div className="h-full bg-amber-400 rounded-full" style={{ width: `${p.confidence}%` }} /></div>
-                  <p className="text-xs text-slate-500 mt-1">{p.confidence}% confidence</p>
+              {facts.map((item) => (
+                <div key={item.label} className="p-3 rounded-lg glass-card/30">
+                  <span className="text-xs text-slate-600 dark:text-slate-400">{item.label}</span>
+                  <p className="text-slate-900 dark:text-white font-medium text-sm mt-1">{item.value}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{item.detail}</p>
                 </div>
               ))}
             </div>
@@ -474,7 +562,7 @@ const StudentJourney = () => {
                   <div>
                     <p className="font-medium text-slate-900 dark:text-white text-sm">{a.title}</p>
                     <p className="text-xs text-slate-600 dark:text-slate-400">{a.description}</p>
-                    <span className="text-xs text-slate-500 mt-0.5">{a.date}</span>
+                    <span className="text-xs text-slate-500 mt-0.5">From published records</span>
                   </div>
                 </div>
               ))}
@@ -512,17 +600,17 @@ const StudentJourney = () => {
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Current Standing</p>
               <p className="text-slate-900 dark:text-white font-medium">{endGoal.standing}</p>
-              <div className="mt-2 flex items-center gap-2"><div className={`w-2 h-2 rounded-full bg-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>GPA: {studentData.currentGPA} | Rank: #{studentData.rank}/{studentData.totalStudents}</span></div>
+              <div className="mt-2 flex items-center gap-2"><div className={`w-2 h-2 rounded-full bg-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>CGPA: {studentData.currentGPA !== null ? studentData.currentGPA : '—'} | Rank: {studentData.rank !== null ? `#${studentData.rank}/${studentData.totalStudents}` : '—'}</span></div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Projected Outcome</p>
               <p className="text-slate-900 dark:text-white font-medium">{endGoal.outcome}</p>
-              <div className="mt-2 flex items-center gap-2"><TrendingUp className={`w-4 h-4 text-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>{studentData.currentGPA >= 7 ? 'On track for honors' : 'Recovery possible with effort'}</span></div>
+              <div className="mt-2 flex items-center gap-2"><TrendingUp className={`w-4 h-4 text-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>{percentile === null ? 'Publish grades to measure outcome' : percentile >= 75 ? 'On track for honors' : 'Recovery possible with effort'}</span></div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Next Path</p>
               <p className="text-slate-900 dark:text-white font-medium">{endGoal.path}</p>
-              <div className="mt-2 flex items-center gap-2"><ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-blue-600 dark:text-blue-400">{studentData.currentGPA >= 8 ? 'Apply for summer internships' : studentData.currentGPA >= 6 ? 'Focus on weak subjects' : 'Meet mentor immediately'}</span></div>
+              <div className="mt-2 flex items-center gap-2"><ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-blue-600 dark:text-blue-400">{percentile === null ? 'Awaiting published results' : percentile >= 75 ? 'Apply for summer internships' : percentile >= 40 ? 'Focus on weak subjects' : 'Meet mentor immediately'}</span></div>
             </div>
           </div>
         </div>

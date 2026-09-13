@@ -7,6 +7,7 @@ const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
 const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'));
+const AdmissionCenter = lazy(() => import('./pages/AdmissionCenter'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
 const Analytics = lazy(() => import('./pages/Analytics'));
@@ -113,6 +114,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'ai-agent', element: <LazyPage><AIAgentPage /></LazyPage> },
       { path: 'ai-questions', element: <LazyPage><AIQuestionsPage /></LazyPage> },
       { path: 'onboarding', element: <LazyPage><CollegeOnboarding /></LazyPage> },
+      { path: 'admissions', element: <LazyPage><AdmissionCenter /></LazyPage> },
       { path: 'papers/builder', element: <LazyPage><PaperBuilder /></LazyPage> },
       { path: 'papers/generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
     ],

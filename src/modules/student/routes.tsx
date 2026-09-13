@@ -21,6 +21,7 @@ const TestResultPage = lazy(() => import('./pages/TestResultPage'));
 const AttendancePage = lazy(() => import('./components/AttendancePage'));
 const StudentAssignments = lazy(() => import('./pages/StudentAssignments'));
 const StudentFacultyConnectPage = lazy(() => import('./pages/StudentFacultyConnectPage'));
+const StudentJourneyPage = lazy(() => import('./pages/StudentJourneyPage'));
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -44,6 +45,7 @@ export const studentRoutes: RouteObject[] = [
       { path: 'assessments', element: <StudentTestDashboard /> },
       { path: 'assignments', element: <StudentAssignments /> },
       { path: 'grades', element: <StudentGrades /> },
+      { path: 'journey', element: <StudentJourneyPage /> },
       { path: 'faculty-connect', element: <StudentFacultyConnectPage /> },
       { path: 'mentorship', element: <StudentFacultyConnectPage /> },
 

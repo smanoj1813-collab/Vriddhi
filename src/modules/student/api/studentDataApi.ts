@@ -115,9 +115,14 @@ export interface StudentNotificationData {
   message: string;
   type: string;
   timestamp: string;
+  /** ISO send time from the callable; `timestamp` mirrors it. */
+  createdAt?: string;
   read: boolean;
   priority?: string;
-  actionUrl?: string;
+  category?: string;
+  sentByName?: string;
+  pinned?: boolean;
+  recipientCount?: number;
 }
 
 export interface StudentGradeData {
@@ -518,29 +523,31 @@ export async function fetchTodaySchedule(
 
 // ─── Notifications ─────────────────────────────────────────────────────
 
-export async function fetchNotifications(studentId: string): Promise<StudentNotificationData[]> {
-  if (!studentId) return [];
-  return safeQuery<StudentNotificationData>(
-    query(
-      collection(db, 'notifications'),
-      where('studentId', '==', studentId),
-      orderBy('timestamp', 'desc'),
-      limit(50)
-    ),
-    (d) => {
-      const data = d.data() as Record<string, any>;
-      return {
-        id: d.id,
-        title: data.title || '',
-        message: data.message || data.body || '',
-        type: data.type || 'info',
-        timestamp: toIso(data.timestamp || data.createdAt),
-        read: Boolean(data.read),
-        priority: data.priority,
-        actionUrl: data.actionUrl,
-      };
-    }
-  );
+/**
+ * Announcements addressed to the signed-in student.
+ *
+ * This used to query `notifications where studentId == <me>`, but the faculty
+ * composer never wrote a `studentId` — it wrote `target`/`batchFilter` for a
+ * cohort — so this feed was permanently empty and the sidebar badge never
+ * moved off zero. Targeting is a decision about who a message reaches, so the
+ * `getMyNotifications` callable now makes it against the student's real
+ * batch/branch profile and returns per-recipient read state with it.
+ */
+export async function fetchNotifications(_studentId: string): Promise<StudentNotificationData[]> {
+  const getMyNotifications = httpsCallable<
+    Record<string, never>,
+    { notifications: StudentNotificationData[]; unreadCount: number }
+  >(functions, 'getMyNotifications');
+  const result = await getMyNotifications({});
+  return result.data.notifications.map((n) => ({
+    id: n.id,
+    title: n.title || '',
+    message: n.message || '',
+    type: n.type || 'info',
+    timestamp: n.createdAt || n.timestamp || '',
+    read: Boolean(n.read),
+    priority: n.priority,
+  }));
 }
 
 // ─── Official grades ──────────────────────────────────────────────────
@@ -579,33 +586,33 @@ export async function fetchGrades(collegeId: string | undefined, studentId: stri
 }
 
 // ─── Notifications: mark read ─────────────────────────────────────────
+//
+// Read state is per recipient. These used to set `read: true` on the shared
+// announcement document, so one student clearing their badge cleared it for
+// every other student in the college. The callables write a marker under
+// `notifications/{id}/reads/{uid}` and keep `readCount` accurate.
 
 export async function markNotificationRead(notificationId: string): Promise<void> {
   if (!notificationId) return;
   try {
-    const { updateDoc } = await import('firebase/firestore');
-    await updateDoc(doc(db, 'notifications', notificationId), { read: true });
+    const markMyNotificationRead = httpsCallable<{ announcementId: string }, { read: boolean }>(
+      functions,
+      'markMyNotificationRead'
+    );
+    await markMyNotificationRead({ announcementId: notificationId });
   } catch (err) {
     console.error('[markNotificationRead] failed:', err);
   }
 }
 
-export async function markAllNotificationsRead(studentId: string): Promise<number> {
-  if (!studentId) return 0;
+export async function markAllNotificationsRead(_studentId: string): Promise<number> {
   try {
-    const { writeBatch } = await import('firebase/firestore');
-    const q = query(
-      collection(db, 'notifications'),
-      where('studentId', '==', studentId),
-      where('read', '==', false),
-      limit(100)
+    const markAllMyNotificationsRead = httpsCallable<Record<string, never>, { marked: number }>(
+      functions,
+      'markAllMyNotificationsRead'
     );
-    const snap = await getDocs(q);
-    if (snap.empty) return 0;
-    const batch = writeBatch(db);
-    snap.docs.forEach((d) => batch.update(d.ref, { read: true }));
-    await batch.commit();
-    return snap.size;
+    const result = await markAllMyNotificationsRead({});
+    return Number(result.data.marked) || 0;
   } catch (err) {
     console.error('[markAllNotificationsRead] failed:', err);
     return 0;
