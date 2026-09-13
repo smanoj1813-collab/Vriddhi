@@ -4,7 +4,7 @@ import { useStudentData } from '../hooks/useStudentData';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings,
-  GraduationCap, Sparkles, User, CalendarDays
+  GraduationCap, Sparkles, User, CalendarDays, BookMarked
 } from 'lucide-react';
 import type { Assessment, ClassSchedule } from '../types/student';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
@@ -66,16 +66,39 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
 }
 
 function ScheduleCard({ session }: { session: ClassSchedule }) {
+  // `status` and `topic` come from the merged classSessions row (see
+  // fetchTodaySchedule) — a class the faculty completed or cancelled, and the
+  // topics they covered/planned, used to be dropped on the floor here.
+  const status = String(session.status || 'scheduled');
+  const statusMeta: Record<string, { label: string; cls: string }> = {
+    completed: { label: 'Taught', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+    ongoing: { label: 'In class', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+    cancelled: { label: 'Cancelled', cls: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' },
+  };
+  const badge = statusMeta[status];
+  const topics = session.topic ? session.topic.split(',').map((t) => t.trim()).filter(Boolean) : [];
   return (
-    <div className="flex items-center gap-3 p-3.5 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-300 dark:hover:border-teal-700 transition-all">
+    <div className="flex items-start gap-3 p-3.5 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-300 dark:hover:border-teal-700 transition-all">
       <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 shrink-0">
         <Clock className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{session.subject}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{session.subject}</p>
+          {badge && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${badge.cls}`}>{badge.label}</span>}
+        </div>
         <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 truncate font-medium">
           {session.teacher || session.facultyName || 'Faculty Member'}
         </p>
+        {topics.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {topics.map((t, i) => (
+              <span key={i} className="text-[11px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">{t}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[11px] italic text-slate-400 mt-1">Topic not announced yet</p>
+        )}
       </div>
       <div className="text-right shrink-0">
         <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200">{session.startTime}</p>
@@ -273,6 +296,7 @@ export default function StudentDashboard() {
           <QuickAction to="/student/grades" icon={TrendingUp} label={t('student.gradesGpa')} color="emerald" />
           <QuickAction to="/student/materials" icon={Library} label={t('student.studyNotes')} color="violet" />
           <QuickAction to="/student/timetable" icon={Clock} label={t('nav.timetable')} color="rose" />
+          <QuickAction to="/student/curriculum" icon={BookMarked} label={t('nav.curriculum')} color="violet" />
           <QuickAction to="/student/fees" icon={CreditCard} label={t('student.feePortal')} color="teal" />
           <QuickAction to="/student/library" icon={BookOpen} label={t('student.eLibrary')} color="blue" />
           <QuickAction to="/student/events" icon={CalendarDays} label={t('student.campusEvents')} color="amber" />

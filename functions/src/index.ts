@@ -97,6 +97,7 @@ import {
 } from './notifications'
 // ─── Student journey: real CGPA, cohort standing, readiness ───
 import { getMyAcademicJourney } from './studentJourney'
+import { getMyCurriculum } from './studentCurriculum'
 // ─── Admission Center: the funnel before a student record exists ───
 import {
   saveAdmissionApplication,
@@ -255,6 +256,7 @@ export {
   markMyNotificationRead,
   markAllMyNotificationsRead,
   getMyAcademicJourney,
+  getMyCurriculum,
   saveAdmissionApplication,
   transitionAdmissionStage,
   listAdmissionApplications,
