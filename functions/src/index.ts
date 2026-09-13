@@ -36,6 +36,7 @@ import { resetUserPassword, syncIdentityClaims } from './accountManagement'
 import { auditAndRepairIdentities } from './identityRepair'
 import { syncMyIdentity } from './selfIdentity'
 import { resetCollegeData } from './collegeCleanup'
+import { relinkFacultyToCollege } from './collegeLinks'
 import {
   beginMyAssignmentSubmission,
   cancelMyAssignmentSubmission,
@@ -202,6 +203,7 @@ export {
   auditAndRepairIdentities,
   syncMyIdentity,
   resetCollegeData,
+  relinkFacultyToCollege,
   updateMyStudentProfile,
   listMentorDirectory,
   getMyAssignments,

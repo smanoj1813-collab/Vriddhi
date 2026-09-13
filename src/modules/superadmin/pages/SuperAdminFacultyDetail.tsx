@@ -323,11 +323,20 @@ const SuperAdminFacultyDetail: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-900 dark:text-white">{college?.name || faculty.collegeName}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{faculty.collegeCode}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{college?.code || faculty.collegeCode}</p>
               </div>
             </div>
+            {!college && (
+              <div className="mb-3 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5 text-xs text-amber-700 dark:text-amber-300">
+                <span className="font-semibold">Not linked to a college.</span>{' '}
+                {faculty.collegeId
+                  ? <>This profile points at college id <code className="font-mono break-all">{faculty.collegeId}</code>, which no longer exists, so it does not appear on any college page.</>
+                  : <>This profile has no college link, so it does not appear on any college page.</>}
+                {' '}Open the intended college → Faculty tab → <em>Scan for unlinked faculty</em> to relink it.
+              </div>
+            )}
             <button
-              onClick={() => navigate(`/superadmin/colleges`)}
+              onClick={() => navigate(college ? `/superadmin/colleges/${college.id}` : `/superadmin/colleges`)}
               className="w-full py-2 text-xs text-blue-400 bg-blue-500/10 hover:bg-blue-100 dark:bg-blue-900/30 rounded-lg transition-colors"
             >
               View College

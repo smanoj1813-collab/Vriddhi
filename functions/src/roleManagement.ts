@@ -48,6 +48,24 @@ export const grantUserRole = onCall(
       throw new HttpsError('invalid-argument', 'Password must be at least 10 characters')
     }
 
+    // The College ID is free text on the Access Control form. Accepting an
+    // unknown id used to create a profile that no college page could ever
+    // list (they all query by collegeId). Resolve it up front so the profile
+    // is written with a live id plus the denormalised name/code the list
+    // pages display.
+    let college: { name: string; code: string } | null = null
+    if (collegeId) {
+      const collegeSnap = await db.doc(`colleges/${collegeId}`).get()
+      if (!collegeSnap.exists) {
+        throw new HttpsError(
+          'not-found',
+          `College "${collegeId}" does not exist. Use the college's document id (Colleges → View Details → the id in the URL), not its name or code.`
+        )
+      }
+      const c = collegeSnap.data() || {}
+      college = { name: String(c.name || ''), code: String(c.code || '') }
+    }
+
     let authUser: admin.auth.UserRecord
     let created = false
     let generatedPassword: string | undefined
@@ -151,6 +169,7 @@ export const grantUserRole = onCall(
         name: resolvedName,
         role,
         collegeId,
+        ...(college ? { collegeName: college.name, collegeCode: college.code } : {}),
         status: 'active',
         updatedAt: now,
         ...(existingProfile && existingProfile.createdAt ? {} : { createdAt: now }),

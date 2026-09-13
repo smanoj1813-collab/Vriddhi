@@ -112,7 +112,12 @@ const FacultyImport: React.FC = () => {
         email: row.email,
         phone: row.phone || '',
         gender: row.gender || '',
-        collegeCode: row.collegeCode || selectedCollegeCode || 'VA-001',
+        // Tenancy always comes from the selected college — never from the CSV
+        // and never from a hardcoded default. A row-level code that differs
+        // from the selected college is exactly how faculty ended up labelled
+        // with one college while linked (collegeId) to another.
+        collegeCode: selectedCollegeCode,
+        collegeName: selectedCollegeName,
         department: row.department || '',
         designation: row.designation || '',
         employmentType: (row.employmentType ? normalizeEmploymentType(row.employmentType) : 'FULL_TIME') as 'FULL_TIME' | 'PART_TIME' | 'VISITING' | 'ADJUNCT',
