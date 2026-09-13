@@ -29,13 +29,18 @@ Target: ≈ 60–80 k reads, < 10 k writes (≈ 97 % cut).
   - `logMyStudentTestEvent` L869-902 (`proctoringLogs` add, `MAX_PROCTOR_DETAILS_BYTES` 4000)
 - `src/modules/student/pages/ActiveTestPage.tsx` — `runAutosave` L186-201, interval L203-208, `recordProctorEvent` L116-127, `handleAnswer` L293, `doSubmit` ~L129, buffers `answersRef` / `proctorEventsRef` (last 200 events)
 - `src/modules/student/api/testApi.ts` — `autosaveStudentAssessment` L84 (sends full keyed answer map), `logProctorEvent` L144; `call()` wrapper for httpsCallable
-- Tests: `functions/test/*.test.ts` run with `node --import tsx --test` (NB: module-level `admin.firestore()` breaks imports — use lazy getters). Front-end render checks: `npm run test:render` (58).
+- Tests: `functions/test/*.test.ts` run with `node --import tsx --test` (NB: module-level `admin.firestore()` breaks imports — use lazy getters). `functions/test/autosaveIndex.test.ts` (new) pins index-validation ≡ legacy-validation, merge, and proctor-event bounds. Front-end render checks: `npm run test:render` (58).
 - Rules: `current-firestore.rules` (students never write `studentAssessments` directly — all via callables; keep it that way).
 
 ## Plan (agreed with user)
 
 1. **Client: dirty flag.** Set `dirtyRef = true` in `handleAnswer`/`toggleFlag`; `runAutosave` returns early when clean. Reset after a successful save.
-2. **Client: interval 15 s → 30 s + 3 s debounce after last change.** Also flush on `visibilitychange` (hidden) and `pagehide` (use `keepalive`-safe path: just call the callable; if it fails, it retries on next tick).
+2. **Client: interval 15 s → 60 s + 3 s debounce after last change.** Also flush on `visibilitychange` (hidden) and `pagehide` (use `keepalive`-safe path: just call the callable; if it fails, it retries on next tick).
+
+   *(60 s chosen over 30 s by the user, 2026-09-13. With the dirty flag the interval is only a
+   safety net — the 3 s debounce covers active answering and the pagehide/visibilitychange
+   flush covers normal exit. Cost: worst-case unsaved window on a hard crash/force-quit
+   widens from ~30 s to ~60 s. The ≈97 % read cut is independent of this choice.)*
 3. **Client → server: send only the delta** (answers changed since last ack, keyed by questionId). Server merges into existing `answers` array/map; keep `answers` shape identical to today so `submitMyStudentTest` / `getMyStudentTestResult` are untouched.
 4. **Server: stop loading questions on autosave.** In `startMyStudentTest`, after `loadTestQuestions`, write a compact `answerIndex: { [questionId]: { optionIds: string[], type } }` on the attempt doc (bounded: 400 q × ~10 opts ≈ well under 1 MiB, but check size; if > ~200 KB store in `studentAssessments/{id}/meta/answerIndex` instead). `autosaveMyStudentTest` validates via a new `sanitizeAnswersWithIndex(delta, answerIndex)` — no `scheduledTests` read, no question reads. Fallback: if index missing (attempts started before deploy), use the old path.
 5. **Server: skip `resolveStudent` on autosave/log.** Attempt row already has `studentUid` (written at start, L579). Check `row.studentUid === request.auth.uid` (and status `in_progress`) — 1 read total. Keep `resolveStudent` for start/submit.
@@ -44,7 +49,7 @@ Target: ≈ 60–80 k reads, < 10 k writes (≈ 97 % cut).
 
 ## Acceptance
 
-- Same 50-question test: autosave with no changes → **0** calls; with continuous answering → ≤ 1 call / 30 s, each ≤ 3 reads + 1 write.
+- Same 50-question test: autosave with no changes → **0** calls; with continuous answering → ≤ 1 call / 60 s from the safety tick (debounce-driven saves may add ≤ 1 per 3 s burst while actively answering), each ≤ 3 reads + 1 write.
 - Submit/grade result identical to before (unit test: same answers → same `autoScore`).
 - Attempt started **before** deploy still autosaves and submits (fallback path).
 - Answers are not lost when the student backgrounds the app right after answering (pagehide flush).

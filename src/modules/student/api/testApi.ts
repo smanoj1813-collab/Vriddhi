@@ -99,6 +99,37 @@ export async function autosaveStudentAssessment(
   );
 }
 
+/**
+ * Delta autosave: sends only the answers changed since the last ack, plus the
+ * proctor events buffered since the last flush. The server validates against
+ * the attempt's compact answer index (no question-document reads) and merges
+ * into the stored answers.
+ */
+export async function autosaveDelta(
+  studentAssessmentId: string,
+  delta: Record<string, Partial<StudentAnswer>>,
+  proctorEvents?: BasicProctorEvent[]
+): Promise<void> {
+  if (!studentAssessmentId) return;
+  if (Object.keys(delta).length === 0 && (proctorEvents?.length ?? 0) === 0) return;
+  await call<
+    {
+      studentAssessmentId: string;
+      delta: Record<string, Partial<StudentAnswer>>;
+      proctorEvents?: BasicProctorEvent[];
+    },
+    { success: boolean }
+  >(
+    'autosaveMyStudentTest',
+    {
+      studentAssessmentId,
+      delta,
+      ...(proctorEvents && proctorEvents.length > 0 ? { proctorEvents } : {}),
+    },
+    'Answers could not be saved.'
+  );
+}
+
 export async function submitStudentAssessment(params: {
   collegeId: string;
   testId: string;

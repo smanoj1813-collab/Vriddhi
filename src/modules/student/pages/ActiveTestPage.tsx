@@ -13,7 +13,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import {
   fetchActiveTest,
-  autosaveStudentAssessment,
+  autosaveDelta,
   submitStudentAssessment,
   logProctorEvent,
 } from '../api/testApi';
@@ -21,7 +21,13 @@ import QuestionRenderer from '../components/QuestionRenderer';
 import { MathRenderer } from '../components/MathRenderer';
 import type { ActiveTest, BasicProctorEvent, StudentAnswer } from '../types/assessment';
 
-const AUTOSAVE_INTERVAL_MS = 15_000;
+// Autosave cadence: saves only when something changed (dirty flag / pending
+// delta), 3 s after the last change, with the 60 s tick as a safety net.
+const AUTOSAVE_INTERVAL_MS = 60_000;
+const AUTOSAVE_DEBOUNCE_MS = 3_000;
+// Severity-high proctor events are still logged per-event (faculty live view);
+// every other type rides along in the next autosave payload.
+const DIRECT_LOG_PROCTOR_TYPES = new Set(['fullscreen_exit', 'auto_submit', 'fullscreen_denied']);
 
 const ActiveTestPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -55,10 +61,21 @@ const ActiveTestPage: React.FC = () => {
   const proctorEventsRef = useRef<BasicProctorEvent[]>([]);
   const timeRemainingRef = useRef(0);
   const activeTestRef = useRef<ActiveTest | null>(null);
+  // Autosave state: answers changed since the last server ack, proctor events
+  // not yet flushed, and the in-flight save (concurrent triggers must not stack).
+  const dirtyRef = useRef(false);
+  const pendingDeltaRef = useRef<Record<string, Partial<StudentAnswer>>>({});
+  const pendingProctorRef = useRef<BasicProctorEvent[]>([]);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingPromiseRef = useRef<Promise<void> | null>(null);
+  const submittedRef = useRef(false);
+  const runAutosaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const scheduleDebouncedAutosaveRef = useRef<() => void>(() => {});
 
   useEffect(() => { answersRef.current = answers; }, [answers]);
   useEffect(() => { timeRemainingRef.current = timeRemaining; }, [timeRemaining]);
   useEffect(() => { activeTestRef.current = activeTest; }, [activeTest]);
+  useEffect(() => { submittedRef.current = submitted; }, [submitted]);
 
   /* ─── load ─── */
   useEffect(() => {
@@ -112,15 +129,20 @@ const ActiveTestPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId, collegeId, studentId]);
 
-  /* ─── proctoring: event buffer + immediate log ─── */
+  /* ─── proctoring: buffer + batched flush (high-severity types log direct) ─── */
   const recordProctorEvent = useCallback(
     (type: BasicProctorEvent['type'], details?: Record<string, unknown>) => {
       const event: BasicProctorEvent = { type, at: new Date().toISOString(), details };
       proctorEventsRef.current = [...proctorEventsRef.current.slice(-199), event];
       const t = activeTestRef.current;
-      if (t?.enableProctoring && t.studentAssessmentId) {
-        // best-effort immediate log; buffered copy persists with autosave/submit
+      if (!t?.enableProctoring || !t.studentAssessmentId) return;
+      if (DIRECT_LOG_PROCTOR_TYPES.has(type)) {
+        // best-effort immediate log for the faculty live view
         void logProctorEvent(t.collegeId, t.testId, t.studentAssessmentId, studentId, event).catch(() => undefined);
+      } else {
+        // batched: flushed with the next autosave (one doc, not one per event)
+        pendingProctorRef.current = [...pendingProctorRef.current.slice(-199), event];
+        scheduleDebouncedAutosaveRef.current();
       }
     },
     [studentId]
@@ -154,6 +176,11 @@ const ActiveTestPage: React.FC = () => {
           proctorEvents: proctorEventsRef.current,
           autoSubmitted: auto,
         });
+        // Submit carries the full answer set: drop the pending delta/events so
+        // the unmount flush can't replay them against a closed attempt.
+        pendingDeltaRef.current = {};
+        pendingProctorRef.current = [];
+        dirtyRef.current = false;
         setSubmitted(true);
         setShowSubmitConfirm(false);
         setTimeout(() => navigate(`/student/test/${t.testId}/result`, { replace: true }), 1200);
@@ -182,30 +209,82 @@ const ActiveTestPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [activeTest, submitted, doSubmit]);
 
-  /* ─── autosave ─── */
+  /* ─── autosave: dirty flag + delta + 3 s debounce + 60 s safety tick ─── */
   const runAutosave = useCallback(async () => {
     const t = activeTestRef.current;
     if (!t || !t.studentAssessmentId || submitted || submitLock.current) return;
-    const durationSec = (t.duration || 0) * 60;
-    const timeSpent = Math.max(0, durationSec - timeRemainingRef.current);
-    try {
-      await autosaveStudentAssessment(
-        t.studentAssessmentId,
-        Object.values(answersRef.current).filter((a): a is StudentAnswer => !!a?.questionId),
-        timeSpent,
-        proctorEventsRef.current
-      );
-      setLastSavedAt(new Date());
-    } catch {
-      recordProctorEvent('autosave_error');
-    }
+    // Clean: nothing changed since the last ack — no call, no reads.
+    if (Object.keys(pendingDeltaRef.current).length === 0 && pendingProctorRef.current.length === 0) return;
+    if (savingPromiseRef.current) return; // in flight: pending stays, next trigger retries
+    const delta = { ...pendingDeltaRef.current };
+    const events = pendingProctorRef.current.slice();
+    const promise = autosaveDelta(t.studentAssessmentId, delta, events)
+      .then(() => {
+        pendingDeltaRef.current = {};
+        pendingProctorRef.current = [];
+        dirtyRef.current = false;
+        setLastSavedAt(new Date());
+      })
+      .catch(() => {
+        // Pending answers/events are kept and retried on the next trigger.
+        recordProctorEvent('autosave_error');
+      })
+      .finally(() => { savingPromiseRef.current = null; });
+    savingPromiseRef.current = promise;
+    await promise;
   }, [submitted, recordProctorEvent]);
+
+  useEffect(() => { runAutosaveRef.current = runAutosave; });
+
+  const scheduleDebouncedAutosave = useCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => { void runAutosaveRef.current(); }, AUTOSAVE_DEBOUNCE_MS);
+  }, []);
+
+  useEffect(() => { scheduleDebouncedAutosaveRef.current = scheduleDebouncedAutosave; });
+
+  // Final flush for pagehide / tab hidden: waits for any in-flight save, then
+  // sends what is still pending so a backgrounded/closed tab loses no answers.
+  const flushNow = useCallback(async () => {
+    const inFlight = savingPromiseRef.current;
+    if (inFlight) {
+      try { await inFlight; } catch { /* failure keeps the data pending */ }
+    }
+    await runAutosave();
+  }, [runAutosave]);
 
   useEffect(() => {
     if (!activeTest || submitted) return;
     const id = setInterval(() => void runAutosave(), AUTOSAVE_INTERVAL_MS);
     return () => clearInterval(id);
   }, [activeTest, submitted, runAutosave]);
+
+  useEffect(() => {
+    if (!activeTest || submitted) return;
+    const onPageHide = () => { void flushNow(); };
+    window.addEventListener('pagehide', onPageHide);
+    return () => {
+      window.removeEventListener('pagehide', onPageHide);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [activeTest, submitted, flushNow]);
+
+  // In-app navigation never fires pagehide, but the document (and its network
+  // connection) survives: a fire-and-forget flush usually lands in time.
+  useEffect(() => {
+    return () => {
+      const t = activeTestRef.current;
+      if (
+        t?.studentAssessmentId
+        && !submittedRef.current
+        && !submitLock.current
+        && (Object.keys(pendingDeltaRef.current).length > 0 || pendingProctorRef.current.length > 0)
+      ) {
+        void autosaveDelta(t.studentAssessmentId, { ...pendingDeltaRef.current }, pendingProctorRef.current.slice())
+          .catch(() => undefined);
+      }
+    };
+  }, []);
 
   /* ─── proctoring listeners (mounted while a test is active) ─── */
   useEffect(() => {
@@ -221,6 +300,9 @@ const ActiveTestPage: React.FC = () => {
       if (document.hidden) {
         setTabSwitchCount((c) => c + 1);
         recordProctorEvent('tab_switch', { hidden: true });
+        // The browser may suspend this tab shortly: flush pending answers +
+        // the tab_switch event before that can happen.
+        void flushNow();
         if (proctored) warn('Tab switch detected and logged. Stay on the test window.');
       }
     };
@@ -281,7 +363,7 @@ const ActiveTestPage: React.FC = () => {
       document.removeEventListener('contextmenu', onContextMenu);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [activeTest, submitted, recordProctorEvent]);
+  }, [activeTest, submitted, recordProctorEvent, flushNow]);
 
   /* ─── helpers ─── */
   const formatTime = (seconds: number) => {
@@ -291,28 +373,35 @@ const ActiveTestPage: React.FC = () => {
   };
 
   const handleAnswer = (questionId: string, answer: Partial<StudentAnswer>) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: {
+    setAnswers((prev) => {
+      const merged = {
         ...prev[questionId],
         ...answer,
         questionId,
         visitedAt: prev[questionId]?.visitedAt || new Date().toISOString(),
         answeredAt: new Date().toISOString(),
-      },
-    }));
+      };
+      // Track the change so the next autosave sends only this delta.
+      pendingDeltaRef.current = { ...pendingDeltaRef.current, [questionId]: merged };
+      dirtyRef.current = true;
+      return { ...prev, [questionId]: merged };
+    });
+    scheduleDebouncedAutosave();
   };
 
   const toggleFlag = (questionId: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: {
+    setAnswers((prev) => {
+      const merged = {
         ...prev[questionId],
         questionId,
         isFlagged: !prev[questionId]?.isFlagged,
         visitedAt: prev[questionId]?.visitedAt || new Date().toISOString(),
-      },
-    }));
+      };
+      pendingDeltaRef.current = { ...pendingDeltaRef.current, [questionId]: merged };
+      dirtyRef.current = true;
+      return { ...prev, [questionId]: merged };
+    });
+    scheduleDebouncedAutosave();
   };
 
   const enterTest = async () => {
@@ -412,7 +501,7 @@ const ActiveTestPage: React.FC = () => {
                 <Typography variant="caption" color="text.secondary">
                   {answeredCount} answered • {unansweredCount} unanswered • {flaggedCount} flagged
                 </Typography>
-                <Button size="small" startIcon={<Save />} onClick={() => void runAutosave()} sx={{ mt: 1 }}>
+                <Button size="small" startIcon={<Save />} onClick={() => void flushNow()} sx={{ mt: 1 }}>
                   Save now
                 </Button>
               </Box>
