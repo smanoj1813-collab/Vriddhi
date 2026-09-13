@@ -116,6 +116,112 @@ await section('admin page', '/src/modules/admin/pages/FacultyAttendanceAdmin.tsx
   check('admin page: renders the analysis panel inside it', t.includes('5.8%'), t);
 });
 
+// ── Student journey page ─────────────────────────────────────────────────────
+// The fixture is the exact payload shape `getMyAcademicJourney` returns, so the
+// page, its hook and buildJourneyStages are all the shipped source. The numbers
+// are chosen to be checkable by hand:
+//   credits/grade points  4×9, 3×8, 2×7, 3×9  → 101 points / 12 credits
+//   CGPA                  8.42 (round(8.4166…, 2))
+//   semester 1 SGPA       (36+24)/7  = 8.57
+//   semester 2 SGPA       (14+27)/5  = 8.2
+//   rank 4 of 40          percentile (40-4)/(40-1) = 92.3 → "Top 7.7%"
+//   band                  8.42 clears the 8.0 cut-off → "Strong band"
+//   gap to next band      9.0 - 8.42 = 0.58
+const journeyFixture = {
+  profile: {
+    name: 'Asha Verma', regNo: '1VE21CS012', course: 'B.E.', branch: 'CSE',
+    batch: '2026', division: 'A', semester: 5,
+  },
+  attendance: { percentage: 82, totalClasses: 210, present: 160, late: 12, absent: 38, requiredPercentage: 75 },
+  assessments: {
+    attempted: 6, graded: 5, awaitingGrading: 1, averagePercentage: 78.4,
+    recent: [
+      { title: 'Internal Assessment 2', subject: 'Data Structures', percentage: 84, grade: 'A', submittedAt: '2026-09-02T10:00:00.000Z' },
+      { title: 'Internal Assessment 1', subject: 'Data Structures', percentage: 61, grade: 'C', submittedAt: '2026-08-02T10:00:00.000Z' },
+    ],
+  },
+  grades: {
+    published: true,
+    subjects: [
+      { code: 'CS301', subject: 'Data Structures', credits: 4, gradePoint: 9, grade: 'A', total: 88, semester: 1 },
+      { code: 'CS302', subject: 'DMS', credits: 3, gradePoint: 8, grade: 'B+', total: 79, semester: 1 },
+      { code: 'CS401', subject: 'Design and Analysis', credits: 2, gradePoint: 7, grade: 'B', total: 72, semester: 2 },
+      { code: 'CS402', subject: 'Operating Systems', credits: 3, gradePoint: 9, grade: 'A', total: 91, semester: 2 },
+    ],
+    semesters: [
+      { semester: 1, sgpa: 8.57, credits: 7 },
+      { semester: 2, sgpa: 8.2, credits: 5 },
+    ],
+    cgpa: 8.42,
+    creditsEarned: 12,
+  },
+  standing: { branch: 'CSE', batch: '2026', cohortSize: 40, rank: 4, percentile: 92.3 },
+  readiness: {
+    hasCgpa: true,
+    band: {
+      id: 'tier2', label: 'Strong band',
+      outlook: 'Clears most campus drive cut-offs, including the majority of core and product roles posted by recruiters.',
+    },
+    minCgpaForBand: 8,
+    nextBand: { id: 'tier1', label: 'Distinction band', minCgpa: 9, gap: 0.58 },
+    attendanceGate: 75,
+    attendanceShortfall: 0,
+    bands: [
+      { id: 'tier1', minCgpa: 9, label: 'Distinction band', outlook: 'Clears the highest academic cut-offs.' },
+      { id: 'tier2', minCgpa: 8, label: 'Strong band', outlook: 'Clears most campus drive cut-offs.' },
+      { id: 'tier3', minCgpa: 7, label: 'Competitive band', outlook: 'Meets the common 7.0 cut-off.' },
+      { id: 'tier4', minCgpa: 6.5, label: 'Eligible band', outlook: 'Meets the widely used 6.5 cut-off.' },
+      { id: 'tier5', minCgpa: 6, label: 'Minimum band', outlook: 'Meets the baseline 6.0 cut-off.' },
+      { id: 'below', minCgpa: 0, label: 'Below common cut-off', outlook: 'Below the 6.0 cut-off most recruiters publish.' },
+    ],
+  },
+};
+
+globalThis.__RC_CALLABLE_DATA = { getMyAcademicJourney: journeyFixture };
+
+await section('student journey', '/src/modules/student/pages/StudentJourneyPage.tsx', {}, (t) => {
+  check('journey: mounts without throwing', true);
+  check('journey: shows the credit-weighted CGPA (8.42), not a percentage-derived one', t.includes('8.42'), t);
+  check('journey: shows the real cohort rank (#4 of 40), not a hardcoded #1',
+    t.includes('#4') && t.includes('40'), t);
+  check('journey: derives the percentile from the cohort (Top 7.7%)', t.includes('Top 7.7%'), t);
+  check('journey: names the readiness band for 8.42 (Strong band)', t.includes('Strong band'), t);
+  check('journey: states the measured gap to the next band (0.58)', t.includes('0.58'), t);
+  check('journey: renders all five stages from enrolment to placement',
+    /Enrolled/.test(t) && /Attending & learning/.test(t) && /Assessed/.test(t)
+    && /Results published/.test(t) && /Placement ready/.test(t), t);
+  check('journey: renders the real per-semester SGPA (8.57 and 8.2)',
+    t.includes('8.57') && t.includes('8.2'), t);
+  check('journey: reports attendance against the gate without a false warning',
+    t.includes('82') && t.includes('Meets the 75% gate'), t);
+  check('journey: lists real graded assessments with their scores',
+    t.includes('Internal Assessment 2') && t.includes('84'), t);
+  check('journey: does not invent an employer name or an offer',
+    !/TCS|Infosys|Wipro|guaranteed placement/i.test(t), t);
+});
+
+// ── Same page when the college has published nothing ─────────────────────────
+// The honest empty states matter more than the happy path: a student with no
+// transcript must see "not published", never a 0 CGPA or an invented band.
+globalThis.__RC_CALLABLE_DATA = {
+  getMyAcademicJourney: {
+    ...journeyFixture,
+    grades: { published: false, subjects: [], semesters: [], cgpa: null, creditsEarned: 0 },
+    standing: { branch: 'CSE', batch: '2026', cohortSize: 0, rank: null, percentile: null },
+    readiness: { ...journeyFixture.readiness, hasCgpa: false, band: null, minCgpaForBand: null, nextBand: null },
+  },
+};
+
+await section('student journey (no grades published)', '/src/modules/student/pages/StudentJourneyPage.tsx', {}, (t) => {
+  check('journey (empty): mounts without throwing', true);
+  check('journey (empty): renders an em dash for CGPA rather than 0', t.includes('—'), t);
+  check('journey (empty): says grades are not published', t.includes('Not published yet'), t);
+  check('journey (empty): explains that readiness needs published grades',
+    t.includes('Readiness needs published grades'), t);
+  check('journey (empty): does not claim a placement band', !/Strong band/.test(t), t);
+  check('journey (empty): still renders the stage timeline', /Placement ready/.test(t), t);
+});
+
 await server.close();
 
 const failed = checks.filter((c) => !c.ok);

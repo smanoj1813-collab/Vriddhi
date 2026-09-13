@@ -25,6 +25,7 @@ export default defineConfig({
       { find: '@/shared/api/staffAttendanceApi', replacement: stub('staffAttendanceApi.ts') },
       { find: '@/Firebase/config', replacement: stub('firebaseConfig.ts') },
       { find: /^firebase\/firestore$/, replacement: stub('firestore.ts') },
+      { find: /^firebase\/functions$/, replacement: stub('functions.ts') },
       { find: /^react-router-dom$/, replacement: stub('react-router-dom.tsx') },
       { find: '@', replacement: path.resolve(root, './src') },
     ],

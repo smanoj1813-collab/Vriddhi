@@ -28,6 +28,7 @@ import {
   School,
   ArrowUpRight,
   UserCheck,
+  Milestone,
 } from 'lucide-react';
 
 interface NavItem {
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
   { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen },
   { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText },
   { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp },
+  { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone },
   { id: 'faculty-connect', label: 'Faculty Connect', path: '/student/faculty-connect', icon: UserCheck },
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library },
   { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock },
@@ -60,6 +62,7 @@ const STUDENT_NAV_KEYS: Record<string, TranslationKey> = {
   assessments: 'nav.assessments',
   assignments: 'nav.assignments',
   grades: 'nav.grades',
+  journey: 'nav.journey',
   'faculty-connect': 'nav.mentoredStudents' as any,
   materials: 'nav.materials',
   timetable: 'nav.timetable',

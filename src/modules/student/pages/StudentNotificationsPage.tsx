@@ -1,24 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, Check, Trash2, ArrowLeft,
-  Calendar, BookOpen, AlertTriangle, Info, CheckCircle
+  Bell, Check, ArrowLeft, Pin,
+  Calendar, BookOpen, AlertTriangle, Info, CheckCircle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
-import { useAuth } from '../../auth/context/AuthContext';
-import { useStudentProfile } from '../hooks/useStudentProfile';
+import { useStudentData } from '../hooks/useStudentData';
+import { markNotificationRead, markAllNotificationsRead } from '../api/studentDataApi';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'event' | 'academic';
-  read: boolean;
-  createdAt: string;
-  link?: string;
-}
+// ------------------------------------------------------------------
+// The full notification panel.
+//
+// This page used to query `colleges/{collegeId}/notifications` directly, a
+// subcollection that nothing in the codebase ever wrote — the faculty
+// composer writes top-level `notifications` — so the panel rendered its empty
+// state forever while the composer happily reported "Sent to N students".
+// It now reads the same feed as the dashboard card and the sidebar badge
+// (useStudentData → getMyNotifications), so the three can no longer disagree.
+// ------------------------------------------------------------------
 
 const typeIcons: Record<string, React.ReactNode> = {
   info: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
@@ -36,94 +35,69 @@ const typeColors: Record<string, string> = {
   academic: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800',
 };
 
+function formatWhen(iso: string | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export default function StudentNotificationsPage() {
-  const { user } = useAuth();
-  const { profile } = useStudentProfile(user?.uid);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, unreadNotifications, studentId, loading, refresh } = useStudentData();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!profile?.collegeId || !profile?.id) return;
-    let cancelled = false;
-    setLoading(true);
-
-    (async () => {
-      try {
-        const q = query(
-          collection(db, 'colleges', profile.collegeId!, 'notifications'),
-          where('recipientId', 'in', [profile.id, 'all', profile.batch || ''])
-        );
-        const snap = await getDocs(q);
-        if (cancelled) return;
-
-        const items: Notification[] = snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-          createdAt: d.data().createdAt?.toDate?.()?.toISOString() || d.data().createdAt || new Date().toISOString(),
-        } as Notification));
-
-        items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setNotifications(items);
-      } catch (err) {
-        console.error('[StudentNotifications] load failed:', err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [profile?.collegeId, profile?.id, profile?.batch]);
-
-  const markAsRead = async (id: string) => {
-    if (!profile?.collegeId) return;
-    try {
-      await updateDoc(doc(db, 'colleges', profile.collegeId, 'notifications', id), { read: true });
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    } catch (err) {
-      console.error('[StudentNotifications] markAsRead failed:', err);
-    }
+  const handleMarkRead = async (id: string) => {
+    setBusy(true);
+    await markNotificationRead(id);
+    await refresh();
+    setBusy(false);
   };
 
-  const markAllAsRead = async () => {
-    if (!profile?.collegeId) return;
-    try {
-      const batch = writeBatch(db);
-      notifications.filter((n) => !n.read).forEach((n) => {
-        batch.update(doc(db, 'colleges', profile.collegeId!, 'notifications', n.id), { read: true });
-      });
-      await batch.commit();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch (err) {
-      console.error('[StudentNotifications] markAllAsRead failed:', err);
-    }
+  const handleMarkAllRead = async () => {
+    setBusy(true);
+    await markAllNotificationsRead(studentId);
+    await refresh();
+    setBusy(false);
   };
 
   const filtered = filter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate('/student/dashboard')}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+            aria-label="Back to dashboard"
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
           >
             <ArrowLeft size={18} />
           </button>
-          <div>
-            <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Notifications</h1>
-            <p className="text-xs text-slate-500">{unreadCount} unread announcements and reminders</p>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Notifications
+            </h1>
+            <p className="text-xs text-slate-500">
+              {unreadNotifications > 0
+                ? `${unreadNotifications} unread announcement${unreadNotifications === 1 ? '' : 's'}`
+                : 'You are all caught up'}
+            </p>
           </div>
         </div>
 
-        {unreadCount > 0 && (
+        {unreadNotifications > 0 && (
           <button
-            onClick={markAllAsRead}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200/80 dark:border-teal-800 transition-colors"
+            onClick={handleMarkAllRead}
+            disabled={busy}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200/80 dark:border-teal-800 transition-colors disabled:opacity-50 shrink-0"
           >
             <Check size={14} /> Mark all read
           </button>
@@ -150,13 +124,13 @@ export default function StudentNotificationsPage() {
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          Unread ({unreadCount})
+          Unread ({unreadNotifications})
         </button>
       </div>
 
       {/* Notifications List */}
       <div className="space-y-3">
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {filtered.map((notification) => (
             <motion.div
               key={notification.id}
@@ -170,43 +144,76 @@ export default function StudentNotificationsPage() {
               }`}
             >
               <div className="flex items-start gap-3.5">
-                <div className={`p-2.5 rounded-xl shrink-0 ${typeColors[notification.type] || 'bg-slate-100 text-slate-600'}`}>
+                <div
+                  className={`p-2.5 rounded-xl shrink-0 ${typeColors[notification.type] || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}
+                >
                   {typeIcons[notification.type] || <Bell className="w-5 h-5" />}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
-                      {notification.title}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                      {notification.title || 'Announcement'}
                     </h3>
-                    <span className="text-[11px] font-medium text-slate-400 shrink-0">
-                      {new Date(notification.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    <span className="text-[11px] font-medium text-slate-400 shrink-0 whitespace-nowrap">
+                      {formatWhen(notification.timestamp)}
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed whitespace-pre-line">
                     {notification.message}
                   </p>
 
-                  {!notification.read && (
-                    <button
-                      onClick={() => markAsRead(notification.id)}
-                      className="mt-3 text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline flex items-center gap-1"
-                    >
-                      <Check size={12} /> Mark as read
-                    </button>
-                  )}
+                  <div className="mt-3 flex items-center gap-3 flex-wrap">
+                    {notification.priority === 'urgent' || notification.priority === 'high' ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800">
+                        {notification.priority}
+                      </span>
+                    ) : null}
+
+                    {notification.read ? (
+                      <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                        <Check size={12} /> Read
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleMarkRead(notification.id)}
+                        disabled={busy}
+                        className="text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <Check size={12} /> Mark as read
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
           ))}
         </AnimatePresence>
 
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-16 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-sm">
+            <Pin className="w-6 h-6 text-slate-300 mx-auto mb-3" />
             <Bell className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-            <p className="text-slate-900 dark:text-white font-bold text-sm">No notifications found</p>
-            <p className="text-xs text-slate-500 mt-0.5">You're all caught up with your updates.</p>
+            <p className="text-slate-900 dark:text-white font-bold text-sm">
+              {filter === 'unread' ? 'Nothing unread' : 'No notifications yet'}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {filter === 'unread'
+                ? 'Every announcement addressed to you has been read.'
+                : 'Announcements from your college for your batch and branch appear here.'}
+            </p>
+          </div>
+        )}
+
+        {loading && notifications.length === 0 && (
+          <div className="space-y-3">
+            {[0, 1, 2].map((key) => (
+              <div
+                key={key}
+                className="h-24 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] animate-pulse"
+              />
+            ))}
           </div>
         )}
       </div>

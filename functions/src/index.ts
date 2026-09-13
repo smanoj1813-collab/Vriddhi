@@ -82,6 +82,18 @@ import {
   completeClassSession,
   getCurriculumProgress,
 } from './classSchedule'
+// ─── Announcements: server-authoritative targeting + per-recipient reads ───
+import {
+  sendAnnouncement,
+  listCollegeAnnouncements,
+  deleteAnnouncement,
+  setAnnouncementPinned,
+  getMyNotifications,
+  markMyNotificationRead,
+  markAllMyNotificationsRead,
+} from './notifications'
+// ─── Student journey: real CGPA, cohort standing, readiness ───
+import { getMyAcademicJourney } from './studentJourney'
 
 const app = express()
 
@@ -214,4 +226,12 @@ export {
   ensureClassSession,
   completeClassSession,
   getCurriculumProgress,
+  sendAnnouncement,
+  listCollegeAnnouncements,
+  deleteAnnouncement,
+  setAnnouncementPinned,
+  getMyNotifications,
+  markMyNotificationRead,
+  markAllMyNotificationsRead,
+  getMyAcademicJourney,
 }

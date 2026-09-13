@@ -769,25 +769,36 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // -- Announcements ---------------------------------------------------------
+    // Targeting is by cohort (batch/branch), so an announcement has no single
+    // recipient: `isRecipient` can never be true for a broadcast and the old
+    // per-document `read` flag was shared by the whole college. Read state now
+    // lives in the `reads` subcollection below, one document per recipient.
+    //
+    // Students read their feed through the `getMyNotifications` callable, which
+    // resolves the signed-in student's real batch/branch server-side; they need
+    // no direct list permission here. Admin SDK writes from the callables
+    // bypass these rules entirely, so these grants only govern browser access.
     match /notifications/{id} {
-      allow read: if isSignedIn() && (
-        isSuperadmin()
-        || isStaff()
-        || resource.data.userId == request.auth.uid
-        || ownsStudentId(resource.data.studentId)
-      );
-      // Recipients may only flip their own read flag (see markNotificationRead
-      // in src/modules/student/api/studentDataApi.ts). Everything else is
-      // college staff, scoped to their own tenant.
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isSuperadmin()
         || (isCollegeStaff() && sameCollege(request.resource.data));
       allow update: if isSuperadmin()
-        || (isCollegeStaff() && sameCollege(resource.data))
-        || (isSignedIn()
-          && isRecipient(resource.data)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']));
+        || (isCollegeStaff() && sameCollege(resource.data));
       allow delete: if isSuperadmin()
         || (isCollegeStaff() && sameCollege(resource.data));
+
+      // Per-recipient read marker written by `markMyNotificationRead`, which
+      // increments `readCount` in the same transaction. Client writes are
+      // refused so the counter cannot be inflated by direct document updates.
+      match /reads/{readId} {
+        allow get, list: if isSignedIn() && (
+          isSuperadmin()
+          || isStaff()
+          || readId == request.auth.uid
+        );
+        allow write: if false;
+      }
     }
 
     // -- Curriculum, topics, and test papers ----------------------------------

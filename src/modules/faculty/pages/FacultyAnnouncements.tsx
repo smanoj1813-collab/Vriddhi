@@ -3,44 +3,51 @@ import { Link } from 'react-router-dom'
 import {
   ChevronLeft, Bell, Send, X, Check, AlertCircle, Info,
   Megaphone, Calendar, Users, Trash2, Eye, Clock,
-  Search, Pin, Loader2
+  Search, Pin, Loader2, GraduationCap, Layers
 } from 'lucide-react'
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  orderBy,
-  limit
-} from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
+import { db, functions } from '@/Firebase/config'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 
-type Priority = 'high' | 'normal' | 'low'
-type TargetAudience = 'all' | 'batch' | 'weak' | 'good'
+// ------------------------------------------------------------------
+// Faculty announcements composer.
+//
+// Writes and reads go through the `notifications` callables, which resolve
+// targeting against the students' real batch/branch profiles and keep
+// per-recipient read state. The previous version wrote `target`/`batchFilter`
+// to `notifications` with no recipient field, so neither student reader could
+// find the message, and it estimated delivery with
+// `Math.round(studentCount * 0.2)` — the "Sent to N" figure was invented.
+// ------------------------------------------------------------------
+
+type Priority = 'high' | 'normal' | 'low' | 'urgent'
+type TargetAudience = 'all' | 'cohort'
 
 interface Announcement {
   id: string
   title: string
   message: string
   priority: Priority
-  target: TargetAudience
-  batchFilter?: string
-  sentBy: string
-  sentAt: string
+  type: string
+  audience: TargetAudience
+  cohort: { branches: string[]; batches: string[]; division: string; semester: number } | null
+  sentByName: string
+  createdAt: string | null
   readCount: number
-  totalCount: number
+  recipientCount: number
   pinned: boolean
-  category: 'general' | 'exam' | 'assignment' | 'schedule' | 'urgent'
-  collegeId?: string
+  category: string
+}
+
+interface CohortOptions {
+  batches: string[]
+  branches: string[]
+  studentCount: number
 }
 
 const priorityConfig: Record<Priority, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
+  urgent: { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', icon: <AlertCircle className="w-4 h-4" />, label: 'Urgent' },
   high: { color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20', icon: <AlertCircle className="w-4 h-4" />, label: 'High' },
   normal: { color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: <Info className="w-4 h-4" />, label: 'Normal' },
   low: { color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', icon: <Clock className="w-4 h-4" />, label: 'Low' },
@@ -51,7 +58,33 @@ const categoryConfig: Record<string, { color: string; label: string }> = {
   exam: { color: 'bg-rose-500/10 text-rose-400 border-rose-500/20', label: 'Exam' },
   assignment: { color: 'bg-amber-500/10 text-amber-400 border-amber-500/20', label: 'Assignment' },
   schedule: { color: 'bg-teal-500/10 text-teal-400 border-teal-500/20', label: 'Schedule' },
-  urgent: { color: 'bg-red-500/10 text-red-400 border-red-500/20', label: 'Urgent' },
+  event: { color: 'bg-purple-500/10 text-purple-400 border-purple-500/20', label: 'Event' },
+  placement: { color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'Placement' },
+}
+
+/**
+ * Callable failures carry a readable `message` (the server throws
+ * `HttpsError`, which is not part of the client SDK's public types); surface it
+ * instead of a generic toast.
+ */
+function describeError(err: unknown): string {
+  const message = (err as { message?: unknown })?.message
+  return typeof message === 'string' && message.length > 0
+    ? message
+    : 'Something went wrong. Please try again.'
+}
+
+function formatSent(iso: string | null): string {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export default function FacultyAnnouncements() {
@@ -60,10 +93,12 @@ export default function FacultyAnnouncements() {
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
-  const [batches, setBatches] = useState<string[]>([])
-  const [studentCount, setStudentCount] = useState<number>(0)
+  const [loadError, setLoadError] = useState('')
+  const [cohorts, setCohorts] = useState<CohortOptions>({ batches: [], branches: [], studentCount: 0 })
   const [showCompose, setShowCompose] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [deliveryNotice, setDeliveryNotice] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterPriority, setFilterPriority] = useState<Priority | 'all'>('all')
@@ -72,112 +107,121 @@ export default function FacultyAnnouncements() {
   const [composeTitle, setComposeTitle] = useState('')
   const [composeMessage, setComposeMessage] = useState('')
   const [composePriority, setComposePriority] = useState<Priority>('normal')
-  const [composeTarget, setComposeTarget] = useState<TargetAudience>('all')
-  const [composeBatch, setComposeBatch] = useState('All Batches')
-  const [composeCategory, setComposeCategory] = useState<Announcement['category']>('general')
+  const [composeTarget, setComposeTarget] = useState<TargetAudience>('cohort')
+  const [composeBatches, setComposeBatches] = useState<string[]>([])
+  const [composeBranches, setComposeBranches] = useState<string[]>([])
+  const [composeCategory, setComposeCategory] = useState<string>('general')
 
   const fetchAnnouncements = useCallback(async () => {
     if (!collegeId) {
       setLoading(false)
+      setLoadError('No college is linked to this sign-in.')
       return
     }
     setLoading(true)
+    setLoadError('')
     try {
-      const q = query(
-        collection(db, 'notifications'),
-        where('collegeId', '==', collegeId),
-        limit(100)
+      const list = httpsCallable<{ collegeId: string }, { announcements: Announcement[] }>(
+        functions,
+        'listCollegeAnnouncements'
       )
-      const snap = await getDocs(q)
-      const items: Announcement[] = snap.docs.map(docSnap => {
-        const d = docSnap.data()
-        return {
-          id: docSnap.id,
-          title: d.title || 'Announcement',
-          message: d.message || '',
-          priority: d.priority || 'normal',
-          target: d.target || 'all',
-          batchFilter: d.batchFilter,
-          sentBy: d.sentBy || d.createdByName || 'Faculty',
-          sentAt: d.sentAt || (d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()),
-          readCount: d.readCount || 0,
-          totalCount: d.totalCount || 1,
-          pinned: Boolean(d.pinned),
-          category: d.category || 'general',
-          collegeId: d.collegeId,
-        }
-      })
-      setAnnouncements(items)
+      const result = await list({ collegeId })
+      setAnnouncements(result.data.announcements)
     } catch (err) {
-      console.error('[FacultyAnnouncements] fetch error:', err)
+      setLoadError(describeError(err))
+      setAnnouncements([])
     } finally {
       setLoading(false)
     }
   }, [collegeId])
 
+  /** Distinct batches and branches, read from the real roster. */
   const fetchCohortData = useCallback(async () => {
     if (!collegeId) return
     try {
-      const q = query(collection(db, 'students'), where('collegeId', '==', collegeId), limit(200))
-      const snap = await getDocs(q)
-      setStudentCount(snap.size)
-      const uniqueBatches = Array.from(new Set(snap.docs.map(d => d.data().batch).filter(Boolean))) as string[]
-      setBatches(uniqueBatches.length > 0 ? uniqueBatches : ['2026', '2027', '2028'])
+      const snap = await getDocs(
+        query(collection(db, 'students'), where('collegeId', '==', collegeId), limit(1000))
+      )
+      const batches = new Set<string>()
+      const branches = new Set<string>()
+      snap.docs.forEach((docSnap) => {
+        const row = docSnap.data()
+        const batch = String(row.batch || row.academicYear || '').trim()
+        const branch = String(row.branch || row.department || '').trim()
+        if (batch) batches.add(batch)
+        if (branch) branches.add(branch)
+      })
+      setCohorts({
+        batches: [...batches].sort(),
+        branches: [...branches].sort(),
+        studentCount: snap.size,
+      })
     } catch (err) {
+      // Honest failure beats a fabricated year list: a guessed batch menu lets
+      // faculty address a cohort that does not exist.
       console.error('[FacultyAnnouncements] cohort fetch error:', err)
-      setBatches(['2026', '2027', '2028'])
+      setCohorts({ batches: [], branches: [], studentCount: 0 })
     }
   }, [collegeId])
 
   useEffect(() => {
-    fetchAnnouncements()
-    fetchCohortData()
+    void fetchAnnouncements()
+    void fetchCohortData()
   }, [fetchAnnouncements, fetchCohortData])
+
+  const toggleValue = (list: string[], value: string, setter: (next: string[]) => void) => {
+    setter(list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value])
+  }
+
+  const cohortSelected = composeBatches.length > 0 || composeBranches.length > 0
+
+  const resetCompose = () => {
+    setComposeTitle('')
+    setComposeMessage('')
+    setComposePriority('normal')
+    setComposeTarget('cohort')
+    setComposeBatches([])
+    setComposeBranches([])
+    setComposeCategory('general')
+    setFormError('')
+  }
 
   const handleSend = async () => {
     if (!composeTitle.trim() || !composeMessage.trim() || !collegeId) return
+    if (composeTarget === 'cohort' && !cohortSelected) {
+      setFormError('Choose at least one batch or branch.')
+      return
+    }
 
     setSubmitting(true)
+    setFormError('')
     try {
-      const targetCount = composeTarget === 'all' ? Math.max(studentCount, 1) :
-        composeTarget === 'batch' ? Math.max(Math.round(studentCount / Math.max(batches.length, 1)), 1) :
-        Math.max(Math.round(studentCount * 0.2), 1)
+      const send = httpsCallable<
+        Record<string, unknown>,
+        { id: string; recipientCount: number }
+      >(functions, 'sendAnnouncement')
 
-      const payload = {
+      const result = await send({
+        collegeId,
         title: composeTitle.trim(),
         message: composeMessage.trim(),
         priority: composePriority,
-        target: composeTarget,
-        batchFilter: composeTarget === 'batch' ? composeBatch : null,
-        sentBy: user?.name || 'Faculty',
-        createdBy: user?.uid || user?.id || '',
-        collegeId,
-        sentAt: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        readCount: 0,
-        totalCount: targetCount,
-        pinned: false,
-        read: false,
         category: composeCategory,
-        createdAt: serverTimestamp(),
-      }
+        type: composeCategory === 'exam' ? 'warning' : composeCategory === 'event' ? 'event' : 'info',
+        audience: composeTarget,
+        ...(composeTarget === 'cohort'
+          ? { cohort: { batches: composeBatches, branches: composeBranches } }
+          : {}),
+      })
 
-      const docRef = await addDoc(collection(db, 'notifications'), payload)
-      const newAnnouncement: Announcement = {
-        id: docRef.id,
-        ...payload,
-        batchFilter: payload.batchFilter || undefined,
-      }
-
-      setAnnouncements(prev => [newAnnouncement, ...prev])
+      // The server returns the real recipient count it computed from the
+      // roster, so the composer reports a number that is actually true.
+      await fetchAnnouncements()
       setShowCompose(false)
-      setComposeTitle('')
-      setComposeMessage('')
-      setComposePriority('normal')
-      setComposeTarget('all')
-      setComposeBatch('All Batches')
-      setComposeCategory('general')
+      resetCompose()
+      setDeliveryNotice(`Delivered to ${result.data.recipientCount} student${result.data.recipientCount === 1 ? '' : 's'}.`)
     } catch (err) {
-      console.error('[FacultyAnnouncements] send error:', err)
+      setFormError(describeError(err))
     } finally {
       setSubmitting(false)
     }
@@ -185,56 +229,69 @@ export default function FacultyAnnouncements() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'notifications', id))
-      setAnnouncements(prev => prev.filter(a => a.id !== id))
+      const remove = httpsCallable<{ announcementId: string }, { deleted: boolean }>(
+        functions,
+        'deleteAnnouncement'
+      )
+      await remove({ announcementId: id })
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id))
     } catch (err) {
-      console.error('[FacultyAnnouncements] delete error:', err)
-      setAnnouncements(prev => prev.filter(a => a.id !== id))
+      setFormError(describeError(err))
     }
   }
 
   const handlePin = async (id: string) => {
-    const item = announcements.find(a => a.id === id)
+    const item = announcements.find((a) => a.id === id)
     if (!item) return
-    const nextPinned = !item.pinned
     try {
-      await updateDoc(doc(db, 'notifications', id), { pinned: nextPinned })
-      setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, pinned: nextPinned } : a))
+      const pin = httpsCallable<{ announcementId: string; pinned: boolean }, { pinned: boolean }>(
+        functions,
+        'setAnnouncementPinned'
+      )
+      const result = await pin({ announcementId: id, pinned: !item.pinned })
+      setAnnouncements((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, pinned: result.data.pinned } : a))
+      )
     } catch (err) {
-      console.error('[FacultyAnnouncements] pin error:', err)
-      setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, pinned: nextPinned } : a))
+      setFormError(describeError(err))
     }
   }
 
   const filtered = useMemo(() => {
-    return announcements.filter(a => {
-      const matchesSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            a.message.toLowerCase().includes(searchQuery.toLowerCase())
+    return announcements.filter((a) => {
+      const haystack = `${a.title} ${a.message}`.toLowerCase()
+      const matchesSearch = haystack.includes(searchQuery.toLowerCase())
       const matchesCategory = filterCategory === 'all' || a.category === filterCategory
       const matchesPriority = filterPriority === 'all' || a.priority === filterPriority
       return matchesSearch && matchesCategory && matchesPriority
-    }).sort((a, b) => {
-      if (a.pinned && !b.pinned) return -1
-      if (!a.pinned && b.pinned) return 1
-      return 0
     })
   }, [announcements, searchQuery, filterCategory, filterPriority])
 
   const stats = useMemo(() => {
     const totalSent = announcements.length
-    const highPriority = announcements.filter(a => a.priority === 'high').length
-    const pinned = announcements.filter(a => a.pinned).length
-    const avgReadRate = totalSent === 0
-      ? 0
-      : Math.round(announcements.reduce((acc, a) => acc + (a.totalCount > 0 ? (a.readCount / a.totalCount) * 100 : 0), 0) / totalSent)
+    const highPriority = announcements.filter((a) => a.priority === 'high' || a.priority === 'urgent').length
+    const pinned = announcements.filter((a) => a.pinned).length
+    // Real read rate: recipients who opened it over recipients addressed.
+    const addressed = announcements.reduce((acc, a) => acc + (a.recipientCount || 0), 0)
+    const opened = announcements.reduce((acc, a) => acc + (a.readCount || 0), 0)
+    const avgReadRate = addressed > 0 ? Math.round((opened / addressed) * 100) : 0
 
     return [
       { label: 'Total Sent', value: totalSent, color: 'text-teal-400' },
       { label: 'High Priority', value: highPriority, color: 'text-rose-400' },
       { label: 'Pinned', value: pinned, color: 'text-amber-400' },
-      { label: 'Avg Read Rate', value: `${avgReadRate}%`, color: 'text-blue-400' },
+      { label: 'Read Rate', value: `${avgReadRate}%`, color: 'text-blue-400' },
     ]
   }, [announcements])
+
+  const audienceLabel = (a: Announcement): string => {
+    if (a.audience === 'all') return 'All students'
+    if (!a.cohort) return 'Targeted'
+    const parts: string[] = []
+    if (a.cohort.batches.length > 0) parts.push(a.cohort.batches.join(', '))
+    if (a.cohort.branches.length > 0) parts.push(a.cohort.branches.join(', '))
+    return parts.length > 0 ? parts.join(' · ') : 'Targeted'
+  }
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
@@ -261,160 +318,138 @@ export default function FacultyAnnouncements() {
         </button>
       </div>
 
+      {deliveryNotice && (
+        <div className="mb-6 flex items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+          <span className="flex items-center gap-2"><Check className="w-4 h-4" />{deliveryNotice}</span>
+          <button onClick={() => setDeliveryNotice('')} aria-label="Dismiss"><X className="w-4 h-4" /></button>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+          {loadError}
+        </div>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4 shadow-sm">
-            <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-1">{stat.label}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat) => (
+          <div key={stat.label} className="p-4 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      {/* Filters */}
+      <div className="flex flex-col lg:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            type="text"
-            placeholder="Search announcements..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search announcements..."
+            className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500"
           />
         </div>
         <select
           value={filterCategory}
-          onChange={e => setFilterCategory(e.target.value)}
-          className="bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="px-3 py-2.5 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
         >
-          <option value="all">All Categories</option>
-          <option value="general">General</option>
-          <option value="exam">Exam</option>
-          <option value="assignment">Assignment</option>
-          <option value="schedule">Schedule</option>
-          <option value="urgent">Urgent</option>
+          <option value="all">All categories</option>
+          {Object.entries(categoryConfig).map(([key, cfg]) => (
+            <option key={key} value={key}>{cfg.label}</option>
+          ))}
         </select>
         <select
           value={filterPriority}
-          onChange={e => setFilterPriority(e.target.value as Priority | 'all')}
-          className="bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+          onChange={(e) => setFilterPriority(e.target.value as Priority | 'all')}
+          className="px-3 py-2.5 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
         >
-          <option value="all">All Priorities</option>
-          <option value="high">High</option>
-          <option value="normal">Normal</option>
-          <option value="low">Low</option>
+          <option value="all">All priorities</option>
+          {Object.entries(priorityConfig).map(([key, cfg]) => (
+            <option key={key} value={key}>{cfg.label}</option>
+          ))}
         </select>
       </div>
 
-      {/* Announcements List */}
+      {/* List */}
       {loading ? (
-        <div className="py-16 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-400 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">Loading announcements...</p>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-7 h-7 animate-spin text-teal-500" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+          <Bell className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-900 dark:text-white font-semibold text-sm">No announcements yet</p>
+          <p className="text-xs text-slate-500 mt-1">Compose one to reach students by batch and branch.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.length === 0 ? (
-            <div className="bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 rounded-2xl p-12 text-center">
-              <Bell className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-600 dark:text-slate-400">No announcements found</p>
-            </div>
-          ) : (
-            filtered.map(item => {
-              const pConfig = priorityConfig[item.priority]
-              const cConfig = categoryConfig[item.category]
-              const readRate = item.totalCount > 0 ? Math.round((item.readCount / item.totalCount) * 100) : 0
-
-              return (
-                <div
-                  key={item.id}
-                  className={`bg-white dark:bg-slate-800/50 border rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm ${
-                    item.pinned ? 'border-amber-500/30 dark:border-amber-500/20 bg-amber-500/[0.02]' : 'border-slate-200 dark:border-slate-700/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        {item.pinned && (
-                          <span className="flex items-center gap-1 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
-                            <Pin className="w-3 h-3" /> Pinned
-                          </span>
-                        )}
-                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${pConfig.bg} ${pConfig.color}`}>
-                          {pConfig.icon} {pConfig.label}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${cConfig.color}`}>
-                          {cConfig.label}
-                        </span>
-                        {item.batchFilter && (
-                          <span className="text-xs bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full">
-                            Batch: {item.batchFilter}
-                          </span>
-                        )}
-                      </div>
-
-                      <h3 className="font-semibold text-slate-900 dark:text-white text-base mb-1">{item.title}</h3>
-                      <p className="text-slate-600 dark:text-slate-300 text-sm mb-3 whitespace-pre-wrap">{item.message}</p>
-
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5" />
-                          By {item.sentBy}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {item.sentAt}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3.5 h-3.5" />
-                          {item.readCount}/{item.totalCount} read ({readRate}%)
-                        </span>
-                        <div className="flex-1" />
-                        <div className="w-24 bg-slate-100 dark:bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${readRate >= 80 ? 'bg-emerald-500' : readRate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
-                            style={{ width: `${readRate}%` }}
-                          />
-                        </div>
-                      </div>
+          {filtered.map((a) => {
+            const priority = priorityConfig[a.priority] || priorityConfig.normal
+            const category = categoryConfig[a.category] || categoryConfig.general
+            const readRate = a.recipientCount > 0 ? Math.round((a.readCount / a.recipientCount) * 100) : 0
+            return (
+              <div
+                key={a.id}
+                className="p-4 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:border-teal-500/30 transition-all"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      {a.pinned && <Pin className="w-3.5 h-3.5 text-amber-400" />}
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{a.title}</h3>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${priority.bg} ${priority.color}`}>
+                        {priority.label}
+                      </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${category.color}`}>
+                        {category.label}
+                      </span>
                     </div>
-
-                    <div className="flex flex-col gap-1 shrink-0">
-                      <button
-                        onClick={() => handlePin(item.id)}
-                        className={`p-2 rounded-lg transition-all ${item.pinned ? 'bg-amber-500/20 text-amber-500 dark:text-amber-400' : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500'}`}
-                        title={item.pinned ? 'Unpin' : 'Pin'}
-                      >
-                        <Pin className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 rounded-lg hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-all"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line line-clamp-2">
+                      {a.message}
+                    </p>
+                    <div className="flex items-center gap-4 mt-2.5 flex-wrap text-[11px] text-slate-500">
+                      <span className="flex items-center gap-1"><Layers className="w-3 h-3" />{audienceLabel(a)}</span>
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />{a.recipientCount} recipients</span>
+                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{a.readCount} read ({readRate}%)</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatSent(a.createdAt)}</span>
+                      <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{a.sentByName || 'Faculty'}</span>
                     </div>
                   </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => void handlePin(a.id)}
+                      title={a.pinned ? 'Unpin' : 'Pin'}
+                      className="p-2 rounded-lg hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 transition-colors"
+                    >
+                      <Pin className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => void handleDelete(a.id)}
+                      title="Delete"
+                      className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              )
-            })
-          )}
+              </div>
+            )
+          })}
         </div>
       )}
 
-      {/* Compose Modal */}
+      {/* Compose modal */}
       {showCompose && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-teal-400" />
-                New Announcement
-              </h2>
-              <button onClick={() => setShowCompose(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                <X className="w-5 h-5 text-slate-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">New Announcement</h2>
+              <button onClick={() => setShowCompose(false)} disabled={submitting} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
 
@@ -422,11 +457,11 @@ export default function FacultyAnnouncements() {
               <div>
                 <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Title</label>
                 <input
-                  type="text"
                   value={composeTitle}
-                  onChange={e => setComposeTitle(e.target.value)}
-                  placeholder="Enter announcement title..."
-                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+                  onChange={(e) => setComposeTitle(e.target.value)}
+                  maxLength={160}
+                  placeholder="e.g. Internal Assessment 2 schedule released"
+                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 text-sm"
                 />
               </div>
 
@@ -434,10 +469,11 @@ export default function FacultyAnnouncements() {
                 <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Message</label>
                 <textarea
                   value={composeMessage}
-                  onChange={e => setComposeMessage(e.target.value)}
+                  onChange={(e) => setComposeMessage(e.target.value)}
+                  maxLength={4000}
                   rows={4}
-                  placeholder="Write your announcement..."
-                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm resize-none"
+                  placeholder="Write the notice students will see..."
+                  className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 text-sm resize-none"
                 />
               </div>
 
@@ -446,79 +482,137 @@ export default function FacultyAnnouncements() {
                   <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Category</label>
                   <select
                     value={composeCategory}
-                    onChange={e => setComposeCategory(e.target.value as Announcement['category'])}
-                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+                    onChange={(e) => setComposeCategory(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 text-sm"
                   >
-                    <option value="general">General</option>
-                    <option value="exam">Exam</option>
-                    <option value="assignment">Assignment</option>
-                    <option value="schedule">Schedule</option>
-                    <option value="urgent">Urgent</option>
+                    {Object.entries(categoryConfig).map(([key, cfg]) => (
+                      <option key={key} value={key}>{cfg.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Priority</label>
                   <select
                     value={composePriority}
-                    onChange={e => setComposePriority(e.target.value as Priority)}
-                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
+                    onChange={(e) => setComposePriority(e.target.value as Priority)}
+                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 text-sm"
                   >
-                    <option value="high">High</option>
-                    <option value="normal">Normal</option>
-                    <option value="low">Low</option>
+                    {Object.entries(priorityConfig).map(([key, cfg]) => (
+                      <option key={key} value={key}>{cfg.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Target Audience</label>
+                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Audience</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { value: 'all', label: 'All Students', icon: Users },
-                    { value: 'batch', label: 'Specific Batch', icon: Users },
-                    { value: 'weak', label: 'Weak Performers', icon: AlertCircle },
-                    { value: 'good', label: 'Good Performers', icon: Check },
-                  ] as const).map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setComposeTarget(opt.value)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
-                        composeTarget === opt.value
-                          ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
-                          : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/50'
-                      }`}
-                    >
-                      <opt.icon className="w-4 h-4" />
-                      {opt.label}
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setComposeTarget('cohort')}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
+                      composeTarget === 'cohort'
+                        ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                        : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/50'
+                    }`}
+                  >
+                    <Users className="w-4 h-4" />
+                    Batch &amp; Branch
+                  </button>
+                  <button
+                    onClick={() => setComposeTarget('all')}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
+                      composeTarget === 'all'
+                        ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                        : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/50'
+                    }`}
+                  >
+                    <Megaphone className="w-4 h-4" />
+                    Whole college
+                  </button>
                 </div>
               </div>
 
-              {composeTarget === 'batch' && (
-                <div>
-                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Select Batch</label>
-                  <select
-                    value={composeBatch}
-                    onChange={e => setComposeBatch(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm"
-                  >
-                    <option value="All Batches">All Batches</option>
-                    {batches.map(b => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </select>
-                </div>
+              {composeTarget === 'cohort' && (
+                <>
+                  <div>
+                    <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">
+                      Batches <span className="text-slate-400">(select any)</span>
+                    </label>
+                    {cohorts.batches.length === 0 ? (
+                      <p className="text-xs text-amber-400 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        No batches found on student records for this college. Add batch values to student
+                        profiles before targeting a cohort.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {cohorts.batches.map((batch) => (
+                          <button
+                            key={batch}
+                            onClick={() => toggleValue(composeBatches, batch, setComposeBatches)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                              composeBatches.includes(batch)
+                                ? 'bg-teal-500/20 text-teal-400 border-teal-500/40'
+                                : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                            }`}
+                          >
+                            {batch}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">
+                      Branches <span className="text-slate-400">(select any)</span>
+                    </label>
+                    {cohorts.branches.length === 0 ? (
+                      <p className="text-xs text-amber-400 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        No branches found on student records for this college.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {cohorts.branches.map((branch) => (
+                          <button
+                            key={branch}
+                            onClick={() => toggleValue(composeBranches, branch, setComposeBranches)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                              composeBranches.includes(branch)
+                                ? 'bg-teal-500/20 text-teal-400 border-teal-500/40'
+                                : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                            }`}
+                          >
+                            {branch}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
               <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-200 dark:border-slate-700/50">
                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                  <span className="text-slate-800 dark:text-slate-300 font-medium">Recipients:</span>{' '}
-                  {composeTarget === 'all' ? `${studentCount || 'All'} students` :
-                   composeTarget === 'batch' ? `${composeBatch} cohort` :
-                   `${composeTarget} students`}
+                  <span className="text-slate-800 dark:text-slate-300 font-medium">Delivery:</span>{' '}
+                  {composeTarget === 'all'
+                    ? `Every student in the college (${cohorts.studentCount} on record). Leadership roles only.`
+                    : cohortSelected
+                      ? [
+                          composeBatches.length > 0 ? composeBatches.join(', ') : 'all batches',
+                          composeBranches.length > 0 ? composeBranches.join(', ') : 'all branches',
+                        ].join(' · ')
+                      : 'Choose a batch or branch to address a cohort.'}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  The exact recipient count is computed from student records when you send.
                 </p>
               </div>
+
+              {formError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                  {formError}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -530,7 +624,7 @@ export default function FacultyAnnouncements() {
                 Cancel
               </button>
               <button
-                onClick={handleSend}
+                onClick={() => void handleSend()}
                 disabled={submitting || !composeTitle.trim() || !composeMessage.trim()}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
               >
