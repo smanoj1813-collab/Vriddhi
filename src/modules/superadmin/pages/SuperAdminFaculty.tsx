@@ -5,7 +5,7 @@ import { useNotification } from '../../../shared/providers/NotificationProvider'
 import {
   Users, Search, Filter, ArrowLeft, Trash2, Eye,
   GraduationCap, Mail, Phone, MapPin, Key,
-  CheckCircle, XCircle, Download, KeyRound
+  CheckCircle, XCircle, Download, KeyRound, AlertTriangle
 } from 'lucide-react'
 import type { Faculty } from '../api/superAdminApi'
 import { sendPasswordResetEmail } from 'firebase/auth'
@@ -387,7 +387,28 @@ const SuperAdminFaculty: React.FC = () => {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{f.employmentType.replace('_', ' ')}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{f.collegeName || f.collegeCode}</span>
+                    {(() => {
+                      // Show the college the record is actually LINKED to (by
+                      // collegeId — what every college page queries), not the
+                      // label stored on the profile. A stale label with a dead
+                      // or different collegeId is exactly the state where a
+                      // faculty appears here but not on the college's page.
+                      const linked = colleges.find((c: any) => c.id === f.collegeId)
+                      if (linked) {
+                        return <span className="text-sm text-slate-700 dark:text-slate-300">{linked.name}</span>
+                      }
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full"
+                          title={f.collegeId
+                            ? `Linked to college id "${f.collegeId}", which no longer exists. Open the intended college → Faculty tab → "Scan for unlinked faculty" to fix.`
+                            : 'This profile has no college link. Open the intended college → Faculty tab → "Scan for unlinked faculty" to fix.'}
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          {f.collegeName || f.collegeCode || 'No college'} · not linked
+                        </span>
+                      )
+                    })()}
                   </td>
                   <td className="px-4 py-3">
                     <button

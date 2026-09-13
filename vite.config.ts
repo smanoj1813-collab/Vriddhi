@@ -2,9 +2,73 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
-  const plugins = [react()]
+  const plugins = [
+    react(),
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
+      manifest: {
+        id: '/',
+        name: 'Vriddhi Academic Cloud',
+        short_name: 'Vriddhi',
+        description: 'Vriddhi — Academic Management System for Colleges',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#ffffff',
+        theme_color: '#0d9488',
+        lang: 'en',
+        categories: ['education', 'productivity'],
+        icons: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        // Hashed build assets + index.html are precached. sw.js is served
+        // with no-cache (firebase.json), so every new deploy is detected on
+        // the next open and PwaPrompts offers a one-tap reload — users are
+        // never stuck on a stale build.
+        globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        globIgnores: ['**/stats.html'],
+        navigateFallback: '/index.html',
+        // Never intercept API / Firebase traffic — the SPA fallback would
+        // otherwise answer callable-function and auth-helper URLs with HTML.
+        navigateFallbackDenylist: [/^\/api\//, /^\/__\//],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: false,
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-stylesheets' },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Firestore / Functions / Auth are never served from cache.
+            urlPattern: /^https:\/\/(firestore|identitytoolkit|securetoken|.*cloudfunctions)\.googleapis\.com\/.*/i,
+            handler: 'NetworkOnly',
+          },
+        ],
+      },
+      devOptions: { enabled: false },
+    }),
+  ]
   const env = loadEnv(mode, process.cwd(), '')
 
   // Bundle analyzer only when ANALYZE=true

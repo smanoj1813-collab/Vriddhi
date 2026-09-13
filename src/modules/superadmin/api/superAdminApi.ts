@@ -282,6 +282,21 @@ function generateTempPassword(): string {
 export async function createCollege(input: CreateCollegeInput): Promise<College> {
   const now = Timestamp.now();
 
+  // Two colleges with the same code is how faculty get imported into one
+  // "Vriddhi Demo College" while the operator opens the other one. Codes are
+  // the human key on every CSV, so they must be unique.
+  const code = String(input.code || "").trim();
+  if (code) {
+    const dup = await getDocs(query(collection(db, "colleges"), where("code", "==", code), limit(1)));
+    if (!dup.empty) {
+      const existing = dup.docs[0].data();
+      throw new SuperAdminApiError(
+        `College code "${code}" is already used by "${existing.name || dup.docs[0].id}". ` +
+        `Open that college instead of creating a duplicate, or choose a different code.`
+      );
+    }
+  }
+
   const collegeData = {
     ...stripUndefined(input),
     plan: input.plan || "standard",
@@ -400,8 +415,29 @@ export async function updateCollege(collegeId: string, updates: Partial<College>
 
 export async function deleteCollege(collegeId: string): Promise<void> {
   try {
+    // A bare deleteDoc left every student/faculty/admin pointing at a college
+    // id that no longer existed. Re-creating the college (new auto-id) then
+    // produced the "faculty says Vriddhi Demo College, college page shows no
+    // faculty" split. Refuse while people are still linked; the operator must
+    // reset the college data first (Danger Zone) or relink the people.
+    const [studentsSnap, facultySnap, adminsSnap] = await Promise.all([
+      getDocs(query(collection(db, "students"), where("collegeId", "==", collegeId), limit(1))),
+      getDocs(query(collection(db, "faculty"), where("collegeId", "==", collegeId), limit(1))),
+      getDocs(query(collection(db, "admins"), where("collegeId", "==", collegeId), limit(1))),
+    ]);
+    const linked: string[] = [];
+    if (!studentsSnap.empty) linked.push("students");
+    if (!facultySnap.empty) linked.push("faculty");
+    if (!adminsSnap.empty) linked.push("admins");
+    if (linked.length) {
+      throw new SuperAdminApiError(
+        `This college still has ${linked.join(", ")} linked to it. Use "Reset College Data" on the college page first, ` +
+        `otherwise those people become orphans that no college page can list.`
+      );
+    }
     await deleteDoc(doc(db, "colleges", collegeId));
   } catch (error) {
+    if (error instanceof SuperAdminApiError) throw error;
     throw new SuperAdminApiError(error instanceof Error ? error.message : "Failed to delete college");
   }
 }
@@ -1618,6 +1654,70 @@ export async function resetCollegeData(
     console.error("Error resetting college data:", error);
     throw new SuperAdminApiError(
       error instanceof Error ? error.message : "Failed to reset college data"
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FACULTY ↔ COLLEGE LINK REPAIR
+//
+// The college page lists faculty by `collegeId`; the faculty page shows the
+// stored `collegeName`. When they disagree a person is visible in one place
+// and missing from the other. This callable finds faculty whose label points
+// at a college but whose collegeId does not (deleted/re-created college,
+// duplicate college, CSV code override) and — outside dry-run — rewrites the
+// profile, users/{uid}, the Auth claim and the HOD directory together.
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface RelinkCandidate {
+  facultyDocId: string;
+  facultyId: string;
+  name: string;
+  email: string;
+  uid: string | null;
+  department: string;
+  previousCollegeId: string;
+  previousCollegeName: string;
+  previousCollegeCode: string;
+  previousCollegeExists: boolean;
+  reason: "orphaned-college" | "matching-code" | "matching-name" | "explicit";
+}
+
+export interface RelinkFacultyResult {
+  apiVersion: string;
+  dryRun: boolean;
+  collegeId: string;
+  collegeName: string;
+  collegeCode: string;
+  scanned: number;
+  candidates: RelinkCandidate[];
+  relinked: number;
+  claimsUpdated: number;
+  usersDocsUpdated: number;
+  hodDocsMoved: number;
+  facultyCount: number;
+  errors: string[];
+}
+
+export async function relinkFacultyToCollege(input: {
+  collegeId: string;
+  facultyDocIds?: string[];
+  dryRun?: boolean;
+}): Promise<RelinkFacultyResult> {
+  try {
+    const fn = httpsCallable<
+      { collegeId: string; facultyDocIds?: string[]; dryRun: boolean },
+      RelinkFacultyResult
+    >(functions, "relinkFacultyToCollege");
+    const result = await fn({
+      collegeId: input.collegeId,
+      ...(input.facultyDocIds?.length ? { facultyDocIds: input.facultyDocIds } : {}),
+      dryRun: input.dryRun !== false,
+    });
+    return result.data;
+  } catch (error) {
+    throw new SuperAdminApiError(
+      error instanceof Error ? error.message : "Failed to relink faculty"
     );
   }
 }

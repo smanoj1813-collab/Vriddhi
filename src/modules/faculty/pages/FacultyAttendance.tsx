@@ -371,26 +371,26 @@ export default function FacultyAttendance() {
       </div>
 
       <div className="mb-6 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 sm:flex-wrap">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
+            <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="flex-1 sm:flex-none bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 sm:py-1.5 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
-          <div className="h-4 w-px bg-slate-300 dark:bg-slate-600" />
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">Class:</span>
+          <div className="hidden sm:block h-4 w-px bg-slate-300 dark:bg-slate-600" />
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 shrink-0">Class:</span>
             <select
               value={selectedClass?.id || ""}
               onChange={(e) => {
                 const cls = classSessions.find((c: FacultyClassSession) => c.id === e.target.value)
                 if (cls) setSelectedClass(cls)
               }}
-              className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 min-w-[280px]"
+              className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-full min-w-0 sm:w-auto sm:min-w-[280px] sm:max-w-md py-2 sm:py-1.5"
             >
               {classSessions.map((c: FacultyClassSession) => (
                 <option key={c.id} value={c.id}>
@@ -399,17 +399,19 @@ export default function FacultyAttendance() {
               ))}
             </select>
           </div>
-          <div className="h-4 w-px bg-slate-300 dark:bg-slate-600" />
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-600 dark:text-slate-400">
-            <Users className="w-4 h-4" />
-            <span className="text-sm">{students.length} students</span>
+          <div className="hidden sm:block h-4 w-px bg-slate-300 dark:bg-slate-600" />
+          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-600 dark:text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <Users className="w-4 h-4" />
+              <span className="text-sm">{students.length} students</span>
+            </span>
+            {selectedClass?.room && (
+              <>
+                <span className="h-4 w-px bg-slate-300 dark:bg-slate-600" />
+                <span className="text-sm">Room: {selectedClass.room}</span>
+              </>
+            )}
           </div>
-          {selectedClass?.room && (
-            <>
-              <div className="h-4 w-px bg-slate-300 dark:bg-slate-600" />
-              <span className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">Room: {selectedClass.room}</span>
-            </>
-          )}
         </div>
         {selectedClass?.topicsPlanned && selectedClass.topicsPlanned.length > 0 && (
           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 flex-wrap">
@@ -632,7 +634,55 @@ export default function FacultyAttendance() {
         <RosterDiagnosticPanel diagnostics={rosterDiagnostics} />
       ) : (
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6 shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile roster: one tappable card per student (table below is md+) */}
+        <ul className="md:hidden divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800/40">
+          {filteredStudents.map((student: FacultyStudent, index: number) => {
+            const status: AttendanceStatus = attendance[student.id]?.status || 'Present'
+            const config = statusConfig[status]
+            const StatusIcon = config.icon
+            const pct = student.attendancePercentage
+            const pctColor = pct >= 85 ? 'text-emerald-600 dark:text-emerald-400' : pct >= 75 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+            return (
+              <li key={student.id} className="px-3 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-600 dark:text-slate-300">
+                    {student.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                      <span className="text-slate-400 mr-1.5">{index + 1}.</span>{student.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                      {student.usn || student.regNo || '—'} · {student.batch}{student.division ? ` · ${student.division}` : ''} · <span className={pctColor}>{pct}%</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextIndex = (allStatuses.indexOf(status) + 1) % allStatuses.length
+                      updateStudentStatus(student.id, allStatuses[nextIndex])
+                    }}
+                    className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-lg text-xs font-medium border transition-all active:scale-95 ${config.bg} ${config.color} ${config.border}`}
+                    aria-label={`Status for ${student.name}: ${config.label}. Tap to change.`}
+                  >
+                    <StatusIcon className="w-3.5 h-3.5" />
+                    {config.label}
+                  </button>
+                </div>
+                {(attendance[student.id]?.notes || status !== 'Present') && (
+                  <input
+                    type="text"
+                    placeholder="Add a note (optional)"
+                    value={attendance[student.id]?.notes || ''}
+                    onChange={(e) => updateStudentNotes(student.id, e.target.value)}
+                    className="mt-2 w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                )}
+              </li>
+            )
+          })}
+        </ul>
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
@@ -736,7 +786,7 @@ export default function FacultyAttendance() {
       </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-slate-50/95 dark:bg-[#0b0f19]/95 sm:bg-transparent sm:dark:bg-transparent backdrop-blur sm:backdrop-blur-none border-t border-slate-200 dark:border-slate-800 sm:border-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         <div className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">
           Marked: {stats.present + stats.absent + stats.late + stats.leave + stats.onDuty + stats.medicalLeave} / {stats.total} students
           {isAttendanceAlreadySaved && existingAttendance && (
@@ -748,7 +798,7 @@ export default function FacultyAttendance() {
         <button
           onClick={handleSave}
           disabled={saving || students.length === 0}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 text-slate-900 dark:text-white hover:bg-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="w-full sm:w-auto justify-center flex items-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? 'Saving...' : isAttendanceAlreadySaved ? 'Update Attendance' : 'Save Attendance'}
@@ -756,14 +806,14 @@ export default function FacultyAttendance() {
       </div>
 
       {saveSuccess && (
-        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-lg">
+        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-lg">
           <Check className="w-4 h-4" />
           <span className="text-sm font-medium">Attendance saved successfully!</span>
         </div>
       )}
 
       {error && (
-        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 shadow-lg">
+        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 shadow-lg">
           <AlertTriangle className="w-4 h-4" />
           <span className="text-sm font-medium">{error}</span>
         </div>

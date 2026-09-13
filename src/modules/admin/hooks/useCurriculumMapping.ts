@@ -26,7 +26,7 @@ import {
   getMappingStats,
 } from '../api/curriculumMappingApi';
 
-import { listCurriculumDocs } from '../../../modules/superadmin/api/syllabusCurriculumApi';
+import { listCurriculumDocs, getCurriculumById } from '../../../modules/superadmin/api/syllabusCurriculumApi';
 
 // ─── Faculty type from Firestore ───────────────────────────────────────
 export interface FacultyOption {
@@ -105,7 +105,21 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     setLoading(true);
     try {
       const result = await listCurriculumDocs({ collegeId, status: 'active', limit: 100 });
-      setCurriculumList(result.items);
+      let items = result.items as unknown as CurriculumDoc[];
+      if (items.length === 0) {
+        // Fallback: the college's mappings already name the curriculum docs
+        // they came from. If the list query returned nothing (tenancy field
+        // mismatch, non-'active' status, …) load those docs directly so the
+        // page still reflects what is actually assigned.
+        const mapped = await listMappings({ collegeId, status: 'active' });
+        const ids = [...new Set(mapped.map(m => m.curriculumId).filter(Boolean))];
+        const docs = await Promise.all(ids.map(id => getCurriculumById(id)));
+        items = docs.filter((d) => !!d) as unknown as CurriculumDoc[];
+        if (ids.length > 0 && items.length === 0) {
+          console.warn('[useCurriculumMapping] mappings reference curriculum docs that could not be read', ids);
+        }
+      }
+      setCurriculumList(items);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load curriculum');
     } finally {

@@ -7,6 +7,7 @@ import {
   updateCollege,
   deleteCollege,
   resetCollegeData,
+  relinkFacultyToCollege,
   createAdmin,
   promoteToAdmin,
   listAdmins,
@@ -52,6 +53,7 @@ import {
   type BulkResetOutcome,
   SuperAdminApiError,
   type ResetCollegeDataResult,
+  type RelinkFacultyResult,
   type CreateAdminResult,
 } from "../api/superAdminApi";
 import type { BatchProgress } from "@/shared/utils/batchedImport";
@@ -641,6 +643,23 @@ export const useResetFacultyPassword = () => {
 // ═══════════════════════════════════════════════════════════════════════
 // COLLEGE RESET HOOK
 // ═══════════════════════════════════════════════════════════════════════
+export const useRelinkFacultyToCollege = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    RelinkFacultyResult,
+    SuperAdminApiError,
+    { collegeId: string; facultyDocIds?: string[]; dryRun?: boolean }
+  >({
+    mutationFn: relinkFacultyToCollege,
+    onSuccess: (result) => {
+      if (result.dryRun) return;
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.colleges() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.faculty() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.dashboard() });
+    },
+  });
+};
+
 export const useResetCollegeData = () => {
   const queryClient = useQueryClient();
   return useMutation<

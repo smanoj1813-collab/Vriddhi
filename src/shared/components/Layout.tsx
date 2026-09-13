@@ -1124,7 +1124,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           }),
         }}
       >
-        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+        <div className="p-3 sm:p-6 lg:p-8 max-w-[1600px] mx-auto min-w-0" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           {children || <Outlet />}
         </div>
       </Box>

@@ -29,6 +29,7 @@ import {
   ArrowUpRight,
   UserCheck,
   Milestone,
+  BookMarked,
 } from 'lucide-react';
 
 interface NavItem {
@@ -45,6 +46,7 @@ const navItems: NavItem[] = [
   { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen },
   { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText },
   { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp },
+  { id: 'curriculum', label: 'Curriculum', path: '/student/curriculum', icon: BookMarked },
   { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone },
   { id: 'faculty-connect', label: 'Faculty Connect', path: '/student/faculty-connect', icon: UserCheck },
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library },
@@ -62,6 +64,7 @@ const STUDENT_NAV_KEYS: Record<string, TranslationKey> = {
   assessments: 'nav.assessments',
   assignments: 'nav.assignments',
   grades: 'nav.grades',
+  curriculum: 'nav.curriculum',
   journey: 'nav.journey',
   'faculty-connect': 'nav.mentoredStudents' as any,
   materials: 'nav.materials',
@@ -109,7 +112,7 @@ export default function StudentSidebar() {
   return (
     <>
       {/* ═══ Mobile Header ═══ */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between shadow-sm">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-sm">
             <School className="w-5 h-5 text-white" />
@@ -221,7 +224,7 @@ export default function StudentSidebar() {
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
                 title={isCollapsed ? translatedLabel : undefined}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-150 group
+                className={`flex items-center gap-3 px-3 py-2.5 md:py-2 min-h-[44px] md:min-h-0 rounded-xl text-sm transition-all duration-150 group
                   ${active
                     ? 'bg-teal-600 text-white font-semibold shadow-sm shadow-teal-600/20'
                     : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium'

@@ -287,6 +287,67 @@ await section('admission settings', SETTINGS, settingsProps, (t, view) => {
     /On form submit/.test(t), t);
 });
 
+// ── Student "My Curriculum" page ─────────────────────────────────────────────
+// The fixture is the exact payload `getMyCurriculum` returns. The page must
+// show all three states, the per-subject percentage, the module being taught,
+// the next scheduled classes WITH their planned topics, and behave sensibly
+// when the college has mapped nothing yet.
+const curriculumFixture = {
+  generatedAt: '2026-09-13T00:00:00.000Z',
+  student: { branch: 'BBA', batch: '2027', semester: 3, division: 'A' },
+  noCurriculumAssigned: false,
+  totals: { subjects: 1, topics: 5, completed: 2, current: 1, upcoming: 2, pct: 40 },
+  upcomingClasses: [{
+    id: 's1', date: '2099-01-05', dayOfWeek: 'Monday', startTime: '09:00', endTime: '10:00',
+    subject: 'Financial Accounting', subjectCode: 'BBA101', facultyName: 'Vivek Ramesh', room: 'R-12',
+    status: 'scheduled', topics: ['Journals'],
+  }],
+  subjects: [{
+    curriculumId: 'cur-1', courseCode: 'BBA101', courseName: 'Financial Accounting', facultyName: 'Vivek Ramesh',
+    credits: 4, totalHours: 40,
+    totals: { total: 5, completed: 2, current: 1, upcoming: 2, pct: 40 },
+    recentSessions: [], upcomingSessions: [],
+    modules: [
+      { moduleNo: '1', moduleName: 'Introduction', hours: 8, total: 3, completed: 2, current: 1, upcoming: 0, pct: 67, state: 'current', topics: [
+        { title: 'What is Accounting', state: 'completed', coveredOn: '2026-09-01', plannedOn: null },
+        { title: 'Double Entry', state: 'completed', coveredOn: '2026-09-05', plannedOn: null },
+        { title: 'Journals', state: 'current', coveredOn: null, plannedOn: '2099-01-05' },
+      ]},
+      { moduleNo: '2', moduleName: 'Ledgers', hours: 10, total: 2, completed: 0, current: 0, upcoming: 2, pct: 0, state: 'upcoming', topics: [
+        { title: 'Posting', state: 'upcoming', coveredOn: null, plannedOn: null },
+        { title: 'Trial Balance', state: 'upcoming', coveredOn: null, plannedOn: null },
+      ]},
+    ],
+  }],
+};
+globalThis.__RC_CALLABLE_DATA = { getMyCurriculum: curriculumFixture };
+await section('curriculum', '/src/modules/student/pages/StudentCurriculumPage.tsx', {}, (t) => {
+  check('curriculum: mounts without throwing', true);
+  check('curriculum: identifies the cohort', /BBA/.test(t) && /Batch 2027/.test(t) && /Semester 3/.test(t), t);
+  check('curriculum: lists the subject with its faculty and coverage %',
+    t.includes('Financial Accounting') && t.includes('Vivek Ramesh') && t.includes('40%'), t);
+  check('curriculum: shows Completed / Current / Upcoming states',
+    /Completed/.test(t) && /Current/.test(t) && /Upcoming/.test(t), t);
+  check('curriculum: the module being taught is expanded and marks taught topics with their date',
+    t.includes('Module 1: Introduction') && t.includes('What is Accounting') && /Taught on 1 Sept?/.test(t), t);
+  check('curriculum: "Currently studying" names the in-progress topic', /Currently studying/.test(t) && t.includes('Journals'), t);
+  check('curriculum: next classes show the planned topic, faculty and room',
+    /Next classes/.test(t) && t.includes('R-12') && t.includes('Journals'), t);
+  check('curriculum: links to the timetable', /Full timetable/.test(t), t);
+});
+
+globalThis.__RC_CALLABLE_DATA = { getMyCurriculum: { ...curriculumFixture, subjects: [], upcomingClasses: [], noCurriculumAssigned: true,
+  totals: { subjects: 0, topics: 0, completed: 0, current: 0, upcoming: 0, pct: 0 } } };
+await section('curriculum (unmapped)', '/src/modules/student/pages/StudentCurriculumPage.tsx', {}, (t) => {
+  check('curriculum (unmapped): explains that nothing is mapped instead of showing zeros',
+    /No curriculum has been mapped/.test(t) && !/0%/.test(t), t);
+});
+
+globalThis.__RC_CALLABLE_DATA = {};
+await section('curriculum (error)', '/src/modules/student/pages/StudentCurriculumPage.tsx', {}, (t) => {
+  check('curriculum (error): surfaces the callable failure with a retry', /Could not load your curriculum/.test(t) && /Try again/.test(t), t);
+});
+
 
 await server.close();
 

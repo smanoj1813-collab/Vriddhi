@@ -130,7 +130,7 @@ const StudentTestDashboard: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((tab) => {
           const count = tests.filter((t) => matchesTab(t, tab.key)).length;
           const active = activeTab === tab.key;
@@ -208,7 +208,7 @@ const TestRow: React.FC<{
   const pct = test.percentage ?? (test.totalMarks && test.marksObtained ? (test.marksObtained / test.totalMarks) * 100 : undefined);
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-5 shadow-sm hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700 transition-all">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700 transition-all">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-sm md:text-base text-slate-900 dark:text-white truncate">
@@ -232,11 +232,11 @@ const TestRow: React.FC<{
           </div>
         </div>
 
-        <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-2 shrink-0">
+        <div className="flex flex-wrap md:flex-col items-center md:items-end gap-3 md:gap-2 shrink-0 w-full md:w-auto">
           {test.canResume && (
             <button
               onClick={() => onStart(test.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm shadow-amber-500/20"
+              className="w-full md:w-auto justify-center min-h-[44px] md:min-h-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm shadow-amber-500/20"
             >
               <PlayArrow fontSize="small" /> Resume Test
             </button>
@@ -244,7 +244,7 @@ const TestRow: React.FC<{
           {isActive && !test.canResume && test.canStart && (
             <button
               onClick={() => onStart(test.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-sm shadow-teal-600/20"
+              className="w-full md:w-auto justify-center min-h-[44px] md:min-h-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-sm shadow-teal-600/20"
             >
               <PlayArrow fontSize="small" /> Start Test
             </button>

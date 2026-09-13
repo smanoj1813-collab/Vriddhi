@@ -71,7 +71,7 @@ export default function StudentLayout() {
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       <StudentSidebar />
-      <main className="flex-1 overflow-x-hidden overflow-y-auto pb-12 pt-16 md:pt-0">
+      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-12 pt-[calc(4rem+env(safe-area-inset-top))] md:pt-0" style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}>
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           <Suspense fallback={<PageLoader />}>
             <Outlet />

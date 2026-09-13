@@ -312,21 +312,22 @@ export async function listCurriculumDocs(options: ListCurriculumOptions = {}): P
 }> {
   try {
     let q: Query<DocumentData>;
+    const max = options.limit || 50;
     if (options.collegeId) {
-      q = query(
-        collection(db, "curriculum"),
-        where("collegeId", "==", options.collegeId),
-        orderBy("createdAt", "desc"),
-        limit(options.limit || 50)
-      );
+      // College-scoped: a plain equality query. No orderBy — Firestore's
+      // orderBy(createdAt) silently DROPS documents that lack a createdAt
+      // field, and no extra where(status) — that would need a composite index
+      // the project may not have. Sorting and status filtering are done here.
+      q = query(collection(db, "curriculum"), where("collegeId", "==", options.collegeId), limit(max));
     } else {
-      q = query(collection(db, "curriculum"), orderBy("createdAt", "desc"), limit(options.limit || 50));
-    }
-    if (options.status && options.status !== "all") {
-      q = query(q, where("status", "==", options.status));
+      q = query(collection(db, "curriculum"), orderBy("createdAt", "desc"), limit(max));
     }
     const snapshot = await getDocs(q);
     let items = snapshot.docs.map(docToCurriculumDoc);
+    if (options.status && options.status !== "all") {
+      items = items.filter((c) => c.status === options.status);
+    }
+    items.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
     if (options.branch) items = items.filter((c) => c.branch === options.branch);
     if (options.semester) items = items.filter((c) => c.semester === options.semester);
     if (options.search) {

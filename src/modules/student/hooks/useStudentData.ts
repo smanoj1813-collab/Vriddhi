@@ -288,7 +288,7 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
         pendingAssignments,
         upcomingTests,
         upcomingAssessments: upcomingTests,
-        upcomingClasses: scheduleData.length,
+        upcomingClasses: scheduleData.filter((s) => s.status !== 'cancelled' && s.status !== 'completed').length,
         feeDue: feeData?.pendingFees,
         newNotifications: notificationData.filter((n) => !n.read).length,
         overdueAssignments: assignmentData.filter((a) => a.status === 'overdue').length,

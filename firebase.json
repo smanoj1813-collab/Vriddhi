@@ -1,5 +1,8 @@
 {
   "hosting": {
+    "predeploy": [
+      "npm run build"
+    ],
     "public": "dist",
     "ignore": [
       "firebase.json",
@@ -13,6 +16,32 @@
       }
     ],
     "headers": [
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=0, no-cache, no-store, must-revalidate"
+          },
+          {
+            "key": "Service-Worker-Allowed",
+            "value": "/"
+          }
+        ]
+      },
+      {
+        "source": "/manifest.webmanifest",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/manifest+json"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "max-age=0, no-cache, must-revalidate"
+          }
+        ]
+      },
       {
         "source": "**/*.js",
         "headers": [
@@ -45,6 +74,15 @@
           {
             "key": "Content-Type",
             "value": "application/wasm"
+          }
+        ]
+      },
+      {
+        "source": "/icons/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
           }
         ]
       }

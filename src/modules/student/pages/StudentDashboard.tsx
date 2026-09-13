@@ -4,7 +4,7 @@ import { useStudentData } from '../hooks/useStudentData';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings,
-  GraduationCap, Sparkles, User, CalendarDays
+  GraduationCap, Sparkles, User, CalendarDays, BookMarked
 } from 'lucide-react';
 import type { Assessment, ClassSchedule } from '../types/student';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
@@ -66,16 +66,39 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
 }
 
 function ScheduleCard({ session }: { session: ClassSchedule }) {
+  // `status` and `topic` come from the merged classSessions row (see
+  // fetchTodaySchedule) — a class the faculty completed or cancelled, and the
+  // topics they covered/planned, used to be dropped on the floor here.
+  const status = String(session.status || 'scheduled');
+  const statusMeta: Record<string, { label: string; cls: string }> = {
+    completed: { label: 'Taught', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+    ongoing: { label: 'In class', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+    cancelled: { label: 'Cancelled', cls: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' },
+  };
+  const badge = statusMeta[status];
+  const topics = session.topic ? session.topic.split(',').map((t) => t.trim()).filter(Boolean) : [];
   return (
-    <div className="flex items-center gap-3 p-3.5 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-300 dark:hover:border-teal-700 transition-all">
+    <div className="flex items-start gap-3 p-3.5 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-300 dark:hover:border-teal-700 transition-all">
       <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 shrink-0">
         <Clock className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{session.subject}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{session.subject}</p>
+          {badge && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${badge.cls}`}>{badge.label}</span>}
+        </div>
         <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 truncate font-medium">
           {session.teacher || session.facultyName || 'Faculty Member'}
         </p>
+        {topics.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {topics.map((t, i) => (
+              <span key={i} className="text-[11px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">{t}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[11px] italic text-slate-400 mt-1">Topic not announced yet</p>
+        )}
       </div>
       <div className="text-right shrink-0">
         <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200">{session.startTime}</p>
@@ -197,10 +220,10 @@ export default function StudentDashboard() {
       ))}
 
       {/* Welcome Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-slate-900 dark:text-white p-6 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
+      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-white p-5 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-slate-900 dark:text-white shadow-inner shrink-0">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-white shadow-inner shrink-0">
               {profile?.name?.charAt(0) || 'S'}
             </div>
             <div>
@@ -219,7 +242,7 @@ export default function StudentDashboard() {
           <div className="flex items-center gap-2">
             <Link
               to="/student/assessments"
-              className="px-4 py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+              className="w-full sm:w-auto justify-center px-4 py-3 sm:py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
             >
               <BookOpen size={16} />
               {t('student.takeTests')}
@@ -273,6 +296,7 @@ export default function StudentDashboard() {
           <QuickAction to="/student/grades" icon={TrendingUp} label={t('student.gradesGpa')} color="emerald" />
           <QuickAction to="/student/materials" icon={Library} label={t('student.studyNotes')} color="violet" />
           <QuickAction to="/student/timetable" icon={Clock} label={t('nav.timetable')} color="rose" />
+          <QuickAction to="/student/curriculum" icon={BookMarked} label={t('nav.curriculum')} color="violet" />
           <QuickAction to="/student/fees" icon={CreditCard} label={t('student.feePortal')} color="teal" />
           <QuickAction to="/student/library" icon={BookOpen} label={t('student.eLibrary')} color="blue" />
           <QuickAction to="/student/events" icon={CalendarDays} label={t('student.campusEvents')} color="amber" />
@@ -282,7 +306,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Main Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {[
           { id: 'overview', label: t('student.overview') },
           { id: 'schedule', label: t('student.todaySchedule') },
@@ -293,7 +317,7 @@ export default function StudentDashboard() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-teal-600 text-slate-900 dark:text-white shadow-sm shadow-teal-600/20'
+                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
                 : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >

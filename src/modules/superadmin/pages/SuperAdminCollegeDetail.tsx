@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { resetCollegeData } from '../api/superAdminApi';
 import BulkCredentialReset from '../components/BulkCredentialReset';
+import FacultyLinkRepair from '../components/FacultyLinkRepair';
 import { downloadCsv } from '@/shared/utils/parseCSV';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -641,6 +642,12 @@ const SuperAdminCollegeDetail: React.FC = () => {
         {/* ── FACULTY TAB ────────────────────────────────────────────── */}
         {activeTab === "faculty" && (
           <div className="space-y-4">
+            <FacultyLinkRepair
+              collegeId={college.id}
+              collegeName={college.name}
+              linkedCount={faculty.length}
+              onRelinked={() => { void refetchFaculty(); void refetchCollege(); }}
+            />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => exportCollegeFaculty(college.name, college.code, faculty)}

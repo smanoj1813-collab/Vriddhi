@@ -413,9 +413,15 @@ export const bulkProvisionStaff = onCall(
           email,
           phone: String(row.phone || '').trim(),
           gender: String(row.gender || '').trim(),
+          // The selected college is authoritative for every tenancy field.
+          // These used to prefer the CSV row's collegeName/collegeCode, which
+          // is how a profile ended up labelled with one college while its
+          // collegeId (the field every college page queries) pointed at
+          // another — visible in the global faculty list, missing from the
+          // college it claimed to belong to.
           collegeId,
-          collegeName: String(row.collegeName || college.name || '').trim(),
-          collegeCode: String(row.collegeCode || college.code || '').trim(),
+          collegeName: String(college.name || '').trim(),
+          collegeCode: String(college.code || '').trim(),
           department,
           designation: String(row.designation || (role === 'principal' ? 'Principal' : 'Assistant Professor')),
           employmentType: String(row.employmentType || 'FULL_TIME'),
@@ -468,7 +474,7 @@ export const bulkProvisionStaff = onCall(
             name,
             role,
             collegeId,
-            collegeCode: String(row.collegeCode || college.code || '').trim(),
+            collegeCode: String(college.code || '').trim(),
             department,
             phone: String(row.phone || '').trim(),
             avatar: String(row.profilePhotoUrl || ''),

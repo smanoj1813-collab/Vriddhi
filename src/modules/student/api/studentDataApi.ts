@@ -488,8 +488,11 @@ export async function fetchTodaySchedule(
   const matchedDaily = daily.filter((row) => matchesCohort(row));
   const legacySlotKey = (row: any) =>
     `${row.subjectCode || row.subject || ''}|${row.startTime || ''}`;
+  // Cancelled rows are KEPT (status: 'cancelled') rather than dropped: the
+  // recurring slot below is suppressed for any daily row, so dropping the
+  // cancellation made the class silently vanish from the student's day
+  // instead of telling them it was called off.
   const overrides = matchedDaily
-    .filter((row) => row.status !== 'cancelled')
     .map((row) => ({
       id: row.id,
       subject: row.subject || '',
