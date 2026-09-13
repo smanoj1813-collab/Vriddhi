@@ -204,7 +204,7 @@ function SubjectCard({ subject, filter }: { subject: StudentSubject; filter: Fil
 
   return (
     <section className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] shadow-sm overflow-hidden">
-      <header className="p-5 border-b border-slate-100 dark:border-slate-800">
+      <header className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">{subject.courseCode || 'Subject'}</p>
@@ -215,8 +215,8 @@ function SubjectCard({ subject, filter }: { subject: StudentSubject; filter: Fil
               {subject.totalHours ? ` · ${subject.totalHours} hrs` : ''}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white">{subject.totals.pct}%</p>
+          <div className="text-right shrink-0">
+            <p className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">{subject.totals.pct}%</p>
             <p className="text-[11px] text-slate-500">syllabus covered</p>
           </div>
         </div>
@@ -231,7 +231,7 @@ function SubjectCard({ subject, filter }: { subject: StudentSubject; filter: Fil
             <button
               key={k}
               onClick={() => setTab(k)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${tab === k ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+              className={`px-3 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 rounded-lg text-xs font-semibold transition-colors ${tab === k ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
             >
               {k === 'topics' ? `Topics (${subject.totals.total})` : `Classes (${subject.upcomingSessions.length} upcoming)`}
             </button>
@@ -315,7 +315,7 @@ export default function StudentCurriculumPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-teal-600 dark:text-teal-400" /> My Curriculum
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -347,7 +347,7 @@ export default function StudentCurriculumPage() {
 
           {/* Now studying + next classes */}
           <div className="grid gap-4 lg:grid-cols-5">
-            <div className="lg:col-span-2 rounded-3xl border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-5">
+            <div className="lg:col-span-2 rounded-3xl border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300 flex items-center gap-1.5"><PlayCircle className="w-4 h-4" /> Currently studying</p>
               {currentTopics.length === 0 ? (
                 <p className="text-sm text-slate-500 mt-3">Nothing is in progress right now.</p>
@@ -362,7 +362,7 @@ export default function StudentCurriculumPage() {
                 </ul>
               )}
             </div>
-            <div className="lg:col-span-3 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-5">
+            <div className="lg:col-span-3 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-4 sm:p-5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Next classes (14 days)</p>
                 <button onClick={() => navigate('/student/timetable')} className="text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline">Full timetable →</button>
@@ -384,7 +384,7 @@ export default function StudentCurriculumPage() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === f ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                className={`px-3 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 rounded-full text-xs font-semibold transition-colors ${filter === f ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
               >
                 {f === 'all' ? 'All topics' : STATE_META[f].label}
               </button>

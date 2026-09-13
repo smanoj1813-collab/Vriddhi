@@ -220,10 +220,10 @@ export default function StudentDashboard() {
       ))}
 
       {/* Welcome Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-slate-900 dark:text-white p-6 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
+      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-white p-5 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-slate-900 dark:text-white shadow-inner shrink-0">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-white shadow-inner shrink-0">
               {profile?.name?.charAt(0) || 'S'}
             </div>
             <div>
@@ -242,7 +242,7 @@ export default function StudentDashboard() {
           <div className="flex items-center gap-2">
             <Link
               to="/student/assessments"
-              className="px-4 py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+              className="w-full sm:w-auto justify-center px-4 py-3 sm:py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
             >
               <BookOpen size={16} />
               {t('student.takeTests')}
@@ -306,7 +306,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Main Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {[
           { id: 'overview', label: t('student.overview') },
           { id: 'schedule', label: t('student.todaySchedule') },
@@ -317,7 +317,7 @@ export default function StudentDashboard() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-teal-600 text-slate-900 dark:text-white shadow-sm shadow-teal-600/20'
+                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
                 : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useMediaQuery, useTheme } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -110,6 +111,14 @@ const StudentTimetable: React.FC = () => {
 
   const { weeklySchedule, todayClasses: weeklyToday, isLoading, error: scheduleError } = useStudentSchedule(studentProfile);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  // On phones the weekly grid becomes a day picker; default to today
+  // (Sunday falls back to Monday).
+  const [mobileDay, setMobileDay] = useState<DayOfWeek>(() => {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }) as DayOfWeek;
+    return DAYS.includes(today) ? today : 'Monday';
+  });
 
   // Today's list merges the recurring template with the actual `classSessions`
   // rows (cancellations, in-progress/completed status, topics taught) — the
@@ -199,7 +208,7 @@ const StudentTimetable: React.FC = () => {
   const todayDayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box sx={{ p: { xs: 0, md: 1 } }}>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 500 }}>
@@ -317,13 +326,32 @@ const StudentTimetable: React.FC = () => {
         Weekly Timetable
       </Typography>
 
+      {isMobile && (
+        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1, mb: 1, mx: -2, px: 2, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+          {DAYS.map(day => {
+            const isToday = day.toLowerCase() === todayDayName.toLowerCase()
+            const active = day === mobileDay
+            return (
+              <Chip
+                key={day}
+                label={`${day.slice(0, 3)}${isToday ? ' •' : ''}`}
+                color={active ? 'primary' : 'default'}
+                variant={active ? 'filled' : 'outlined'}
+                onClick={() => setMobileDay(day)}
+                sx={{ textTransform: 'capitalize', fontWeight: 600, minHeight: 36, flexShrink: 0 }}
+              />
+            )
+          })}
+        </Box>
+      )}
+
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-        {DAYS.map(day => {
+        {(isMobile ? DAYS.filter(d => d === mobileDay) : DAYS).map(day => {
           const classes: ClassSchedule[] = weeklySchedule[day] || []
           const isToday = day.toLowerCase() === todayDayName.toLowerCase()
 
           return (
-            <Box key={day} sx={{ flex: '1 1 300px', minWidth: 280 }}>
+            <Box key={day} sx={{ flex: '1 1 300px', minWidth: { xs: 0, sm: 280 }, width: '100%' }}>
               <Box
                 sx={{
                   display: 'flex',

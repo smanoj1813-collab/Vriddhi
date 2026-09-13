@@ -231,19 +231,19 @@ export default function FacultyDashboard() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
+    <Box sx={{ p: { xs: 0, md: 2 } }}>
       {/* Header */}
-      <Paper sx={{ p: 3, mb: 3, bgcolor: 'primary.main', color: 'white', borderRadius: 3 }}>
+      <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3, bgcolor: 'primary.main', color: 'white', borderRadius: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
               Welcome back, {user?.name?.split(' ')[0] || 'Faculty'}
             </Typography>
             <Typography variant="body1" sx={{ opacity: 0.9 }}>
               {user?.department || 'Department'} · {stats.totalClasses} classes today
             </Typography>
           </Box>
-          <Avatar sx={{ width: 56, height: 56, bgcolor: 'rgba(255,255,255,0.2)', fontSize: 24, fontWeight: 700 }}>
+          <Avatar sx={{ width: 56, height: 56, bgcolor: 'rgba(255,255,255,0.2)', fontSize: 24, fontWeight: 700, display: { xs: 'none', sm: 'flex' } }}>
             {user?.name?.charAt(0) || 'F'}
           </Avatar>
         </Box>
@@ -252,7 +252,7 @@ export default function FacultyDashboard() {
       {/* Quick Actions */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {quickActions.map((action) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={action.label}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }} key={action.label}>
             <Card
               sx={{
                 cursor: 'pointer',
@@ -261,15 +261,15 @@ export default function FacultyDashboard() {
               }}
               onClick={() => navigate(action.path)}
             >
-              <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: `${action.color}20`, color: action.color }}>
+              <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 1.5, md: 2 }, '&:last-child': { pb: { xs: 1.5, md: 2 } }, minHeight: 72 }}>
+                <Avatar sx={{ bgcolor: `${action.color}20`, color: action.color, width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 } }}>
                   {action.icon}
                 </Avatar>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: action.color }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: action.color, fontSize: { xs: '0.95rem', md: '1.25rem' }, lineHeight: 1.2 }} noWrap>
                     {action.value}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.72rem', md: '0.875rem' } }} noWrap>
                     {action.label}
                   </Typography>
                 </Box>
@@ -282,8 +282,8 @@ export default function FacultyDashboard() {
       <Grid container spacing={3}>
         {/* Today's Schedule */}
         <Grid size={{ xs: 12, md: 7 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, height: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CalendarToday color="primary" />
                 Today's Schedule
@@ -307,7 +307,13 @@ export default function FacultyDashboard() {
                       bgcolor: item.status === 'ongoing' ? 'success.light' : 'background.paper',
                       border: '1px solid',
                       borderColor: item.status === 'ongoing' ? 'success.main' : 'divider',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
+                      gap: 1,
+                      px: { xs: 1.5, md: 2 },
+                      cursor: 'pointer',
                     }}
+                    onClick={() => navigate('/faculty/attendance-marking')}
                   >
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: item.status === 'ongoing' ? 'success.main' : 'primary.main' }}>
@@ -321,8 +327,13 @@ export default function FacultyDashboard() {
                         </Typography>
                       }
                       secondary={
-                        <Typography variant="body2" color="text.secondary">
-                          {item.course} {item.batch} · Div {item.division} · {item.time} · Room {item.room}
+                        <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                          <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{item.time}</Box>
+                          {' · '}Room {item.room}
+                          <Box component="span" sx={{ display: { xs: 'block', sm: 'inline' } }}>
+                            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{' · '}</Box>
+                            {item.course} {item.batch} · Div {item.division}
+                          </Box>
                         </Typography>
                       }
                     />
@@ -341,7 +352,7 @@ export default function FacultyDashboard() {
 
         {/* Announcements */}
         <Grid size={{ xs: 12, md: 5 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, height: '100%' }}>
+          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Announcement color="primary" />
