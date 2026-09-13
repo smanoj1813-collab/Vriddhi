@@ -67,7 +67,7 @@ export default function StudentFacultyConnect() {
       setAppointments(appts);
       setFacultyList(faculties);
     } catch (err) {
-      showToast('Failed to load appointments', 'error');
+      showToast('Failed to load mentors and requests — sign out and in again if the problem persists.', 'error');
     } finally {
       setLoading(false);
     }

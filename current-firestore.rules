@@ -528,6 +528,61 @@ service cloud.firestore {
         allow delete: if isSuperadmin()
           || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId);
       }
+
+      // "Connect with mentors" (src/api/facultyAppointmentApi.ts). Neither
+      // collection had a rule before this block, so the catch-all denied every
+      // read AND write: faculty availability could never be saved, and no
+      // appointment could be filed or answered. The identity both rows carry
+      // is the auth UID — AuthContext exposes user.id === uid — so ownership
+      // is provable without any profile read.
+      match /facultyAvailability/{facultyId} {
+        // Office hours are directory information for the college's students;
+        // only the owning faculty account (or college management) writes them.
+        // The facultyId==path check keeps a manager from silently writing a
+        // document whose field points at a different teacher.
+        allow get: if isSignedIn() && collegeId() == collegeId
+          && (isCollegeStaff() || role() == 'student');
+        allow list: if isSignedIn() && isCollegeStaff() && collegeId() == collegeId;
+        allow create, update: if isSignedIn() && collegeId() == collegeId
+          && (facultyId == request.auth.uid
+              || claimedRole() in ['admin', 'hod', 'principal'])
+          && request.resource.data.facultyId == facultyId;
+        allow delete: if isSignedIn() && collegeId() == collegeId
+          && claimedRole() in ['admin', 'hod', 'principal'];
+      }
+
+      match /facultyAppointments/{appointmentId} {
+        allow get, list: if isSignedIn() && collegeId() == collegeId
+          && (isCollegeStaff()
+              || resource.data.studentId == request.auth.uid
+              || resource.data.facultyId == request.auth.uid);
+        // A request is filed by the student it names, into the student's own
+        // college, and always starts pending — nobody can pre-confirm
+        // themselves.
+        allow create: if isSignedIn() && role() == 'student' && collegeId() == collegeId
+          && request.resource.data.collegeId == collegeId
+          && request.resource.data.studentId == request.auth.uid
+          && request.resource.data.facultyId is string
+          && request.resource.data.facultyId != ''
+          && request.resource.data.status == 'pending';
+        // Faculty answer only the requests addressed to them and only through
+        // the response fields; a student may cancel their own and nothing
+        // else; college management moderates.
+        allow update: if isSignedIn() && collegeId() == collegeId
+          && request.resource.data.collegeId == resource.data.collegeId
+          && (
+            claimedRole() in ['admin', 'hod', 'principal']
+            || (resource.data.facultyId == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+                ['status', 'facultyRemarks', 'meetingLocation', 'updatedAt']))
+            || (resource.data.studentId == request.auth.uid
+              && request.resource.data.status == 'cancelled'
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+                ['status', 'updatedAt']))
+          );
+        allow delete: if isSignedIn() && collegeId() == collegeId
+          && claimedRole() in ['admin', 'hod', 'principal'];
+      }
     }
 
     match /questions/{id} {

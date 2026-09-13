@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
+import { normalizeRole } from './identityShared'
 
 interface NotificationPreferences {
   exams: boolean
@@ -1043,5 +1044,94 @@ export const getAssignmentSubmissionDownload = onCall(
       name: String(file.name || 'submission'),
       contentType: String(file.contentType || ''),
     }
+  }
+)
+
+// ─── Mentor directory ("Connect with mentors") ──────────────────────────────
+//
+// Students pick a faculty member through this projection instead of reading
+// the faculty/{id} documents directly: profile documents also carry a person's
+// notification preferences, 2FA settings and appearance choices (see
+// src/modules/faculty/pages/FacultySettings.tsx), so they are not a directory.
+// Returning only the contact-safe subset from a callable keeps the profile
+// documents staff-only and costs no new read rules.
+//
+// Entries are keyed by the faculty UID — NOT the profile document id — because
+// that is what colleges/{collegeId}/facultyAvailability/{facultyId} documents
+// are written under and what the facultyAppointments rules compare against
+// request.auth.uid. AuthContext exposes user.id === uid for every role.
+
+export interface MentorDirectoryEntry {
+  id: string
+  name: string
+  email: string
+  department: string
+  designation: string
+  subjects: string[]
+}
+
+export function mentorDirectoryEntry(
+  fallbackId: string,
+  data: admin.firestore.DocumentData
+): MentorDirectoryEntry | null {
+  const nameParts = [data.firstName, data.lastName]
+    .filter((part) => typeof part === 'string' && part.trim())
+    .map((part) => String(part).trim())
+    .join(' ')
+  const name = String(data.name || data.displayName || nameParts || '').trim()
+  if (!name) return null
+  const subjects = Array.isArray(data.subjects)
+    ? data.subjects.map((subject) => String(subject).trim()).filter(Boolean)
+    : typeof data.subject === 'string' && data.subject.trim()
+      ? [data.subject.trim()]
+      : []
+  return {
+    id: String(data.uid || fallbackId),
+    name,
+    email: String(data.email || '').trim().toLowerCase(),
+    department: String(data.department || data.branch || '').trim(),
+    designation: String(data.designation || '').trim(),
+    subjects,
+  }
+}
+
+export const listMentorDirectory = onCall(
+  {
+    region: 'asia-south1',
+    memory: '256MiB',
+    timeoutSeconds: 30,
+    minInstances: 0,
+    maxInstances: 30,
+  },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const token = request.auth.token
+    if (normalizeRole(token.role, '') !== 'student') {
+      throw new HttpsError(
+        'permission-denied',
+        'The mentor directory is a student view; staff manage faculty from their own pages.'
+      )
+    }
+    // Tenancy is the claim only — never a client argument, never a profile doc.
+    const collegeId = String(token.collegeId || '')
+    if (!collegeId) {
+      throw new HttpsError(
+        'failed-precondition',
+        'This sign-in carries no college to scope the directory to. Sign out and back in so the ' +
+          'token is refreshed; if it persists, an administrator must link this account to a ' +
+          'college (Access Control → Identity repair).'
+      )
+    }
+    const snapshot = await admin
+      .firestore()
+      .collection('faculty')
+      .where('collegeId', '==', collegeId)
+      .limit(300)
+      .get()
+    const faculty = snapshot.docs
+      .map((doc) => mentorDirectoryEntry(doc.id, doc.data()))
+      .filter((entry): entry is MentorDirectoryEntry => entry !== null)
+      .sort((a, b) => a.name.localeCompare(b.name))
+    return { faculty }
   }
 )

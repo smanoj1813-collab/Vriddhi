@@ -30,7 +30,7 @@ export default function FacultyAppointmentsManager() {
   // Modal for Confirming/Rejecting
   const [selectedAppt, setSelectedAppt] = useState<FacultyAppointment | null>(null);
   const [actionType, setActionType] = useState<'confirm' | 'reject' | null>(null);
-  const [meetingLocation, setMeetingLocation] = useState('Faculty Cabin 204');
+  const [meetingLocation, setMeetingLocation] = useState('');
   const [remarks, setRemarks] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
 
@@ -73,7 +73,7 @@ export default function FacultyAppointmentsManager() {
       dayOfWeek: 'Monday',
       startTime: '15:00',
       endTime: '16:30',
-      location: 'Faculty Cabin 204',
+      location: '',
       isAcceptingRequests: true,
     };
     setAvailabilitySlots(prev => [...prev, newSlot]);
