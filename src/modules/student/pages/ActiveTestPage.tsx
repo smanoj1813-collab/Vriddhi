@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Button, Card, CardContent, Chip, Dialog, DialogTitle,
   DialogContent, DialogActions, Alert, LinearProgress, Paper, CircularProgress,
+  Drawer, useMediaQuery, useTheme,
 } from '@mui/material';
 import {
   Timer, NavigateNext, NavigateBefore, Send, PlayArrow,
-  Warning, Fullscreen, Security, Save,
+  Warning, Fullscreen, Security, Save, GridView,
 } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentProfile } from '../hooks/useStudentProfile';
@@ -26,6 +27,9 @@ const ActiveTestPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const { profile } = useStudentProfile(user?.uid);
 
   const [activeTest, setActiveTest] = useState<ActiveTest | null>(null);
@@ -377,6 +381,44 @@ const ActiveTestPage: React.FC = () => {
   const isLast = currentQIndex === questions.length - 1;
   const progress = ((currentQIndex + 1) / questions.length) * 100;
 
+  // Palette body shared by the desktop sidebar card and the phone bottom sheet.
+  const paletteContent = (
+            <CardContent>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Question Palette</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                {questions.map((q, idx) => {
+                  const answered = isAnswered(q.id);
+                  const flagged = !!answers[q.id]?.isFlagged;
+                  const isCurrent = idx === currentQIndex;
+                  return (
+                    <Button key={q.id} onClick={() => { setCurrentQIndex(idx); setPaletteOpen(false); }} sx={{
+                      minWidth: 44, height: 44, borderRadius: 2, fontWeight: 700,
+                      border: isCurrent ? 2 : 1, borderColor: isCurrent ? 'primary.main' : 'divider',
+                      bgcolor: answered ? 'success.main' : flagged ? 'warning.light' : 'grey.100',
+                      color: answered ? 'white' : 'text.primary',
+                      '&:hover': { bgcolor: answered ? 'success.dark' : 'primary.100' },
+                    }}>{idx + 1}</Button>
+                  );
+                })}
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <LegendItem color="success.main" label="Answered" />
+                <LegendItem color="warning.light" label="Flagged" />
+                <LegendItem color="grey.100" label="Not visited" />
+                <LegendItem color="primary.main" label="Current" outline />
+              </Box>
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>Summary</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {answeredCount} answered • {unansweredCount} unanswered • {flaggedCount} flagged
+                </Typography>
+                <Button size="small" startIcon={<Save />} onClick={() => void runAutosave()} sx={{ mt: 1 }}>
+                  Save now
+                </Button>
+              </Box>
+            </CardContent>
+  );
+
   if (showEnterGate) {
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
@@ -408,20 +450,22 @@ const ActiveTestPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <Paper elevation={2} sx={{ position: 'sticky', top: 0, zIndex: 50, px: { xs: 2, md: 4 }, py: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2, borderRadius: 0 }}>
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>{activeTest.title}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Question {currentQIndex + 1} of {questions.length}
-            {lastSavedAt && ` · saved ${lastSavedAt.toLocaleTimeString('en-IN')}`}
+      <Paper elevation={2} sx={{ position: 'sticky', top: 0, zIndex: 50, px: { xs: 1.5, md: 4 }, py: { xs: 1, md: 2 }, pt: { xs: 'calc(8px + env(safe-area-inset-top))', md: 2 }, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: { xs: 1, md: 2 }, borderRadius: 0 }}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '0.95rem', md: '1.25rem' } }} noWrap>{activeTest.title}</Typography>
+          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+            Q {currentQIndex + 1}/{questions.length}
+            {lastSavedAt && ` · saved ${lastSavedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 }, flexShrink: 0 }}>
           {activeTest.enableProctoring && tabSwitchCount > 0 && (
-            <Chip icon={<Warning />} label={`${tabSwitchCount} warning${tabSwitchCount > 1 ? 's' : ''}`} color="warning" size="small" />
+            <Chip icon={<Warning />} label={isMobile ? String(tabSwitchCount) : `${tabSwitchCount} warning${tabSwitchCount > 1 ? 's' : ''}`} color="warning" size="small" />
           )}
-          <Chip icon={<Timer />} label={formatTime(timeRemaining)} color={timeRemaining < 300 ? 'error' : 'primary'} sx={{ fontWeight: 700, fontSize: '1rem', px: 1 }} />
-          <Button variant="contained" color="success" startIcon={<Send />} onClick={() => setShowSubmitConfirm(true)} disabled={submitting}>Submit</Button>
+          <Chip icon={<Timer />} label={formatTime(timeRemaining)} color={timeRemaining < 300 ? 'error' : 'primary'} sx={{ fontWeight: 700, fontSize: { xs: '0.9rem', md: '1rem' }, px: { xs: 0, md: 1 }, fontVariantNumeric: 'tabular-nums' }} />
+          {!isMobile && (
+            <Button variant="contained" color="success" startIcon={<Send />} onClick={() => setShowSubmitConfirm(true)} disabled={submitting}>Submit</Button>
+          )}
         </Box>
       </Paper>
 
@@ -431,10 +475,10 @@ const ActiveTestPage: React.FC = () => {
         </Alert>
       )}
 
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 4 }, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-        <Box sx={{ flex: '1 1 600px' }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 1.5, md: 4 }, pb: { xs: 'calc(96px + env(safe-area-inset-bottom))', md: 4 }, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        <Box sx={{ flex: '1 1 600px', minWidth: 0 }}>
           <Card sx={{ borderRadius: 3, mb: 3 }}>
-            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+            <CardContent sx={{ p: { xs: 2, md: 4 } }}>
               <QuestionRenderer
                 question={currentQ}
                 answer={answers[currentQ.id]}
@@ -444,14 +488,16 @@ const ActiveTestPage: React.FC = () => {
                 questionNumber={currentQIndex + 1}
               />
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                <Button variant="outlined" startIcon={<NavigateBefore />} disabled={currentQIndex === 0} onClick={() => setCurrentQIndex((p) => p - 1)}>Previous</Button>
-                {isLast ? (
-                  <Button variant="contained" color="success" endIcon={<Send />} onClick={() => setShowSubmitConfirm(true)}>Finish &amp; Submit</Button>
-                ) : (
-                  <Button variant="contained" endIcon={<NavigateNext />} onClick={() => setCurrentQIndex((p) => p + 1)}>Next</Button>
-                )}
-              </Box>
+              {!isMobile && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                  <Button variant="outlined" startIcon={<NavigateBefore />} disabled={currentQIndex === 0} onClick={() => setCurrentQIndex((p) => p - 1)}>Previous</Button>
+                  {isLast ? (
+                    <Button variant="contained" color="success" endIcon={<Send />} onClick={() => setShowSubmitConfirm(true)}>Finish &amp; Submit</Button>
+                  ) : (
+                    <Button variant="contained" endIcon={<NavigateNext />} onClick={() => setCurrentQIndex((p) => p + 1)}>Next</Button>
+                  )}
+                </Box>
+              )}
             </CardContent>
           </Card>
 
@@ -464,45 +510,43 @@ const ActiveTestPage: React.FC = () => {
           </Box>
         </Box>
 
+        {isMobile ? (
+          <Drawer
+            anchor="bottom"
+            open={paletteOpen}
+            onClose={() => setPaletteOpen(false)}
+            slotProps={{ paper: { sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '75vh', pb: 'env(safe-area-inset-bottom)' } } }}
+          >
+            <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: 'grey.300', mx: 'auto', mt: 1 }} />
+            {paletteContent}
+          </Drawer>
+        ) : (
         <Box sx={{ flex: '0 0 280px' }}>
           <Card sx={{ borderRadius: 3, position: 'sticky', top: 100 }}>
-            <CardContent>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Question Palette</Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                {questions.map((q, idx) => {
-                  const answered = isAnswered(q.id);
-                  const flagged = !!answers[q.id]?.isFlagged;
-                  const isCurrent = idx === currentQIndex;
-                  return (
-                    <Button key={q.id} onClick={() => setCurrentQIndex(idx)} sx={{
-                      minWidth: 44, height: 44, borderRadius: 2, fontWeight: 700,
-                      border: isCurrent ? 2 : 1, borderColor: isCurrent ? 'primary.main' : 'divider',
-                      bgcolor: answered ? 'success.main' : flagged ? 'warning.light' : 'grey.100',
-                      color: answered ? 'white' : 'text.primary',
-                      '&:hover': { bgcolor: answered ? 'success.dark' : 'primary.100' },
-                    }}>{idx + 1}</Button>
-                  );
-                })}
-              </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                <LegendItem color="success.main" label="Answered" />
-                <LegendItem color="warning.light" label="Flagged" />
-                <LegendItem color="grey.100" label="Not visited" />
-                <LegendItem color="primary.main" label="Current" outline />
-              </Box>
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Summary</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {answeredCount} answered • {unansweredCount} unanswered • {flaggedCount} flagged
-                </Typography>
-                <Button size="small" startIcon={<Save />} onClick={() => void runAutosave()} sx={{ mt: 1 }}>
-                  Save now
-                </Button>
-              </Box>
-            </CardContent>
+            {paletteContent}
           </Card>
         </Box>
+        )}
       </Box>
+
+      {/* Mobile: thumb-reachable Prev / Palette / Next / Submit bar */}
+      {isMobile && (
+        <Paper elevation={8} sx={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 60, px: 1.5, py: 1, pb: 'calc(8px + env(safe-area-inset-bottom))', display: 'flex', alignItems: 'center', gap: 1, borderRadius: 0 }}>
+          <Button variant="outlined" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} disabled={currentQIndex === 0} onClick={() => setCurrentQIndex((p) => p - 1)} aria-label="Previous question"><NavigateBefore /></Button>
+          <Button variant="outlined" startIcon={<GridView />} sx={{ flex: 1, minHeight: 44 }} onClick={() => setPaletteOpen(true)}>
+            {answeredCount}/{questions.length}
+          </Button>
+          {isLast ? (
+            <Button variant="contained" color="success" endIcon={<Send />} sx={{ flex: 1, minHeight: 44 }} onClick={() => setShowSubmitConfirm(true)} disabled={submitting}>Submit</Button>
+          ) : (
+            <>
+              <Button variant="contained" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} onClick={() => setCurrentQIndex((p) => p + 1)} aria-label="Next question"><NavigateNext /></Button>
+              <Button variant="contained" color="success" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} onClick={() => setShowSubmitConfirm(true)} disabled={submitting} aria-label="Submit test"><Send fontSize="small" /></Button>
+            </>
+          )}
+        </Paper>
+      )}
+
 
       <Dialog open={showSubmitConfirm} onClose={() => setShowSubmitConfirm(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Warning color="warning" />Submit Test?</DialogTitle>

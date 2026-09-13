@@ -195,7 +195,7 @@ const TestResultPage: React.FC = () => {
 
         {/* Tab 0: Overview */}
         <TabPanel value={activeTab} index={0}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, px: 2, pb: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, px: { xs: 1, md: 2 }, pb: 2 }}>
             <Box sx={{ flex: '1 1 300px' }}>
               <Typography variant="h6" sx={{ fontWeight: 700 }} gutterBottom>Performance Summary</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -287,7 +287,20 @@ const TestResultPage: React.FC = () => {
                 ))}
               </Box>
             </Box>
-            <Box sx={{ flex: 1, minWidth: 300 }}>
+            <Box sx={{ flex: 1, minWidth: { xs: 0, sm: 300 }, width: '100%' }}>
+              {/* Phones: horizontal question strip replaces the hidden side palette */}
+              <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, overflowX: 'auto', pb: 1, mb: 2, mx: -2, px: 2, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+                {result.questionResults.map((q: any, idx: number) => (
+                  <Button key={q.questionId} onClick={() => setSelectedQuestion(idx)} sx={{
+                    minWidth: 40, width: 40, height: 40, p: 0, borderRadius: 1, flexShrink: 0,
+                    bgcolor: q.status === 'correct' ? 'success.main' : q.status === 'pending' || q.status === 'partial' ? 'warning.main' : q.yourAnswer || q.studentAnswer ? 'error.main' : 'grey.300',
+                    color: 'white', fontWeight: 700, fontSize: '0.75rem',
+                    border: selectedQuestion === idx ? 2 : 0, borderColor: 'primary.main',
+                  }}>
+                    {idx + 1}
+                  </Button>
+                ))}
+              </Box>
               {result.questionResults[selectedQuestion] && (
                 <QuestionDetailCard question={result.questionResults[selectedQuestion]} questionNumber={selectedQuestion + 1} />
               )}
