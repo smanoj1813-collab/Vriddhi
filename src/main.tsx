@@ -8,6 +8,7 @@ import { AuthProvider } from './modules/auth/context/AuthContext'
 import { AppThemeProvider } from './shared/contexts/ThemeProvider'
 import { LanguageProvider } from './shared/contexts/LanguageProvider'
 import { NotificationProvider } from './shared/providers/NotificationProvider'
+import { PwaPrompts } from './shared/pwa/PwaPrompts'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <LanguageProvider>
               <NotificationProvider>
                 <App />
+                <PwaPrompts />
               </NotificationProvider>
             </LanguageProvider>
           </AppThemeProvider>
