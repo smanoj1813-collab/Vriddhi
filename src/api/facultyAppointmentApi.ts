@@ -1,5 +1,6 @@
 // src/api/facultyAppointmentApi.ts
-import { db } from '@/Firebase/config';
+import { functions, db } from '@/Firebase/config';
+import { httpsCallable } from 'firebase/functions';
 import {
   collection,
   doc,
@@ -162,17 +163,16 @@ export async function getFacultyAvailabilitySlots(
   if (!collegeId || !facultyId) return [];
 
   try {
+    // No fake office hours: this read was unruled before the availability
+    // block, and the fallback the old code fabricated here invented three
+    // slots ("Faculty Cabin 204", ...) pointing at a nonexistent office. A teacher who has
+    // saved nothing has no listed hours — the request form then takes a
+    // free-text preferred slot instead.
     const docRef = doc(db, 'colleges', collegeId, 'facultyAvailability', facultyId);
     const snap = await getDoc(docRef);
 
-    if (snap.exists() && snap.data()?.slots) {
-      return snap.data().slots as FacultyAvailabilitySlot[];
-    }
-    return [
-      { id: '1', dayOfWeek: 'Monday', startTime: '15:00', endTime: '16:30', location: 'Faculty Cabin 204', isAcceptingRequests: true },
-      { id: '2', dayOfWeek: 'Wednesday', startTime: '15:00', endTime: '16:30', location: 'Faculty Cabin 204', isAcceptingRequests: true },
-      { id: '3', dayOfWeek: 'Friday', startTime: '14:00', endTime: '15:30', location: 'Google Meet', isAcceptingRequests: true },
-    ];
+    const slots = snap.exists() ? snap.data()?.slots : null;
+    return Array.isArray(slots) ? (slots as FacultyAvailabilitySlot[]) : [];
   } catch (err) {
     console.warn('Failed to load faculty availability:', err);
     return [];
@@ -196,29 +196,22 @@ export async function saveFacultyAvailabilitySlots(
 
 // ─── LIST COLLEGE FACULTY ───
 
+// This used to read `colleges/{collegeId}/faculty` — a collection NOTHING in
+// the codebase ever wrote to (the canonical directory is the top-level
+// `faculty/{uid}` docs, which students must not read wholesale: those profiles
+// carry notification prefs and 2FA settings). The list was therefore always
+// empty, and even the empty read was permission-denied. It now calls the
+// listMentorDirectory callable, which filters the real directory by the
+// caller's COLLEGE CLAIM and returns only contact-safe fields keyed by the
+// faculty uid — the same key facultyAvailability documents and the
+// facultyAppointments rules use.
 export async function listCollegeFaculty(collegeId: string): Promise<FacultyProfileOption[]> {
   if (!collegeId) return [];
 
-  try {
-    const ref = collection(db, 'colleges', collegeId, 'faculty');
-    const snap = await getDocs(ref);
-
-    const facultyList: FacultyProfileOption[] = [];
-    snap.forEach((d) => {
-      const data = d.data();
-      facultyList.push({
-        id: d.id,
-        name: data.name || data.fullName || 'Faculty Member',
-        email: data.email || '',
-        department: data.department || data.branch || '',
-        designation: data.designation || 'Assistant Professor',
-        subjects: Array.isArray(data.subjects) ? data.subjects : (data.subject ? [data.subject] : []),
-      });
-    });
-
-    return facultyList;
-  } catch (err) {
-    console.error('Failed to list college faculty:', err);
-    return [];
-  }
+  const call = httpsCallable<Record<string, never>, { faculty: FacultyProfileOption[] }>(
+    functions,
+    'listMentorDirectory'
+  );
+  const result = await call();
+  return result.data.faculty;
 }

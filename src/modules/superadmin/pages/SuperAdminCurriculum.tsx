@@ -19,7 +19,7 @@ import SyllabusUploader from '../components/SyllabusUploader';
 import { CurriculumReviewTable } from '../components/CurriculumReviewTable';
 import { CurriculumAssignmentDialog } from '../components/CurriculumAssignmentDialog';
 import { useSyllabusExtracts, useCurriculumStats } from '../hooks/useSyllabusCurriculum';
-import { assignCurriculumToCollege, updateExtractCourse, updateExtractModule } from '../api/curriculumApi';
+import { assignCurriculumToCollege, updateExtractCourse, updateExtractModule } from '../api/syllabusCurriculumApi';
 import type { SyllabusExtract, CollegeOption, ParsedCourse, ParsedModule } from '../types/curriculum';
 import StandardizedCurriculumUploader from '../components/StandardizedCurriculumUploader';
 

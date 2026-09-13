@@ -387,6 +387,33 @@ function facultyContext() {
   })
 }
 
+function adminContext() {
+  return testEnv.authenticatedContext('admin-a', {
+    role: 'admin',
+    collegeId: COLLEGE_A,
+  })
+}
+
+function principalContext() {
+  return testEnv.authenticatedContext('principal-a', {
+    role: 'principal',
+    collegeId: COLLEGE_A,
+  })
+}
+
+function superadminContext() {
+  return testEnv.authenticatedContext('platform-root', { role: 'superadmin' })
+}
+
+// Faculty of the OTHER college, whose uid also owns one row in college A —
+// exercises the owner branch of the curriculum mapping rules.
+function facultyBContext() {
+  return testEnv.authenticatedContext('faculty-b', {
+    role: 'faculty',
+    collegeId: COLLEGE_B,
+  })
+}
+
 describe('student identity and profile isolation', () => {
   it('resolves the provisioned profile by canonical userId', async () => {
     const db = studentContext().firestore()
@@ -1046,17 +1073,22 @@ describe('legacy no-claim faculty reads', () => {
 })
 
 describe('notification identity & access', () => {
-  it('lets a student read only notifications addressed to their own identity', async () => {
+  // The direct student read these tests asserted was REMOVED on purpose when
+  // the panel was rewired: students now receive their feed through the
+  // `getMyNotifications` callable (which resolves batch/branch server-side
+  // and can scope per-recipient reads the rules cannot express). Rules for the
+  // collection are superadmin+staff only — any browser path a student tries
+  // must fail, addressed to their own id or not.
+  it('refuses students every direct notification read', async () => {
     const db = studentContext().firestore()
-    await assertSucceeds(getDoc(doc(db, 'notifications', 'notif-own')))
+    await assertFails(getDoc(doc(db, 'notifications', 'notif-own')))
     await assertFails(getDoc(doc(db, 'notifications', 'notif-other')))
-    // A same-college broadcast is no longer readable by arbitrary students.
     await assertFails(getDoc(doc(db, 'notifications', 'notif-broadcast')))
   })
 
-  it('authorizes the student notification list query by canonical studentId', async () => {
+  it('refuses the student notification list query outright', async () => {
     const db = studentContext().firestore()
-    const result = await assertSucceeds(
+    await assertFails(
       getDocs(
         query(
           collection(db, 'notifications'),
@@ -1065,8 +1097,6 @@ describe('notification identity & access', () => {
         )
       )
     )
-    assert.equal(result.size, 1)
-    assert.equal(result.docs[0].id, 'notif-own')
   })
 
   it('keeps same-college staff able to read notifications but not students at large', async () => {
@@ -1136,5 +1166,138 @@ describe('assignment submission storage', () => {
         { contentType: 'text/html' }
       )
     )
+  })
+})
+
+// ─── "Connect with mentors" — colleges/{id}/facultyAvailability +
+// colleges/{id}/facultyAppointments. Before these rules existed, the
+// catch-all denied every read and write, so faculty could not save office
+// hours and students could not file or see requests. The rows name auth UIDs
+// (AuthContext exposes user.id === uid); these tests seed through the
+// sanctioned client paths themselves, so they pin the write rules too.
+describe('connect with mentors (faculty availability & appointments)', () => {
+  const slot = {
+    id: '1',
+    dayOfWeek: 'Monday',
+    startTime: '15:00',
+    endTime: '16:30',
+    location: 'Cabin 12',
+    isAcceptingRequests: true,
+  }
+
+  function appointmentPayload(overrides: Record<string, unknown> = {}) {
+    return {
+      collegeId: COLLEGE_A,
+      studentId: STUDENT_UID,
+      studentName: 'Student A',
+      studentEmail: 'student-a@example.edu',
+      facultyId: 'faculty-a',
+      facultyName: 'Dr. A',
+      subject: 'Thermodynamics',
+      topic: 'Entropy balances',
+      doubtDescription: 'How does the open-system entropy balance handle mass flow?',
+      meetingType: 'doubt_clearing',
+      preferredDate: '2026-09-21',
+      preferredTimeSlot: '15:00 - 16:30',
+      status: 'pending',
+      createdAt: '2026-09-13T09:00:00.000Z',
+      updatedAt: '2026-09-13T09:00:00.000Z',
+      ...overrides,
+    }
+  }
+
+  it('faculty save their own office hours; the row cannot mislabel or impersonate', async () => {
+    const fDb = facultyContext().firestore()
+    const own = doc(fDb, 'colleges', COLLEGE_A, 'facultyAvailability', 'faculty-a')
+    await assertSucceeds(setDoc(own, { facultyId: 'faculty-a', slots: [slot], updatedAt: '2026-09-13T09:00:00.000Z' }))
+    // A facultyId field pointing at someone else cannot live under this key.
+    await assertFails(setDoc(own, { facultyId: 'faculty-z', slots: [slot] }))
+    // And the key itself cannot be another person's uid.
+    await assertFails(setDoc(
+      doc(fDb, 'colleges', COLLEGE_A, 'facultyAvailability', 'admin-a'),
+      { facultyId: 'admin-a', slots: [slot] }
+    ))
+    // Only college management may remove the row; the faculty owner may not.
+    await assertFails(deleteDoc(own))
+    const adminDb = adminContext().firestore()
+    await assertSucceeds(setDoc(own, { facultyId: 'faculty-a', slots: [] }))
+    await assertSucceeds(deleteDoc(doc(adminDb, 'colleges', COLLEGE_A, 'facultyAvailability', 'faculty-a')))
+  })
+
+  it('students read their college office hours but never write or list them', async () => {
+    const fDb = facultyContext().firestore()
+    await assertSucceeds(setDoc(
+      doc(fDb, 'colleges', COLLEGE_A, 'facultyAvailability', 'faculty-a'),
+      { facultyId: 'faculty-a', slots: [slot] }
+    ))
+    const sDb = studentContext().firestore()
+    const hours = doc(sDb, 'colleges', COLLEGE_A, 'facultyAvailability', 'faculty-a')
+    await assertSucceeds(getDoc(hours))
+    await assertFails(setDoc(doc(sDb, 'colleges', COLLEGE_A, 'facultyAvailability', STUDENT_UID), { facultyId: STUDENT_UID, slots: [slot] }))
+    await assertFails(updateDoc(hours, { slots: [] }))
+    await assertFails(getDocs(collection(sDb, 'colleges', COLLEGE_A, 'facultyAvailability')))
+    const foreignStudent = testEnv.authenticatedContext('student-auth-c', {
+      role: 'student',
+      collegeId: COLLEGE_B,
+    }).firestore()
+    await assertFails(getDoc(doc(foreignStudent, 'colleges', COLLEGE_A, 'facultyAvailability', 'faculty-a')))
+    await assertFails(getDoc(doc(facultyBContext().firestore(), 'colleges', COLLEGE_A, 'facultyAvailability', 'faculty-a')))
+  })
+
+  it('students file pending requests for themselves only', async () => {
+    const sDb = studentContext().firestore()
+    const ref = collection(sDb, 'colleges', COLLEGE_A, 'facultyAppointments')
+    await assertSucceeds(addDoc(ref, appointmentPayload()))
+    await assertFails(addDoc(ref, appointmentPayload({ studentId: OTHER_UID })))
+    await assertFails(addDoc(ref, appointmentPayload({ status: 'confirmed' })))
+    await assertFails(addDoc(ref, appointmentPayload({ facultyId: null })))
+    // A student's college is the claim; neither the path nor the field may
+    // point at another college.
+    await assertFails(addDoc(
+      collection(sDb, 'colleges', COLLEGE_B, 'facultyAppointments'),
+      appointmentPayload({ collegeId: COLLEGE_B })
+    ))
+    const mine = await assertSucceeds(
+      getDocs(query(ref, where('studentId', '==', STUDENT_UID)))
+    )
+    assert.equal(mine.size, 1)
+  })
+
+  it('the named faculty answer, other students stay silent, management moderates', async () => {
+    const sDb = studentContext().firestore()
+    const created = await assertSucceeds(
+      addDoc(collection(sDb, 'colleges', COLLEGE_A, 'facultyAppointments'), appointmentPayload())
+    )
+    const id = created.id
+    const appt = doc(sDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)
+
+    const fDb = facultyContext().firestore()
+    const addressed = doc(fDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)
+    await assertSucceeds(getDoc(addressed))
+    await assertSucceeds(updateDoc(addressed, {
+      status: 'confirmed',
+      facultyRemarks: 'Come to Monday office hours.',
+      meetingLocation: 'Cabin 12',
+      updatedAt: '2026-09-13T10:00:00.000Z',
+    }))
+    // The answer fields only — the request text belongs to the student.
+    await assertFails(updateDoc(addressed, { studentName: 'Someone Else' }))
+
+    await assertSucceeds(updateDoc(appt, { status: 'cancelled', updatedAt: '2026-09-13T10:05:00.000Z' }))
+    await assertFails(updateDoc(appt, { status: 'completed' }))
+
+    const otherDb = testEnv.authenticatedContext(OTHER_UID, {
+      role: 'student',
+      collegeId: COLLEGE_A,
+    }).firestore()
+    await assertFails(getDoc(doc(otherDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)))
+    await assertFails(updateDoc(doc(otherDb, 'colleges', COLLEGE_A, 'facultyAppointments', id), { status: 'cancelled' }))
+
+    await assertFails(getDoc(doc(facultyBContext().firestore(), 'colleges', COLLEGE_A, 'facultyAppointments', id)))
+
+    const pDb = principalContext().firestore()
+    await assertSucceeds(getDoc(doc(pDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)))
+    await assertFails(deleteDoc(appt))
+    await assertSucceeds(deleteDoc(doc(pDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)))
   })
 })

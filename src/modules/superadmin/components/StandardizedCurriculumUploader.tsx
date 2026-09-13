@@ -27,7 +27,7 @@ import {
   type TemplateValidationError,
 } from '../../superadmin/services/standardizedTemplate';
 
-import { createSyllabusExtract } from '../../superadmin/api/curriculumApi';
+import { createSyllabusExtract } from '../../superadmin/api/syllabusCurriculumApi';
 import type { ParsedCourse } from '../../superadmin/types/curriculum';
 
 interface StandardizedCurriculumUploaderProps {

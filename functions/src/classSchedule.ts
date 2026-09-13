@@ -1260,10 +1260,24 @@ export function mergeUnique(existing: unknown, incoming: unknown, cap = MAX_TOPI
   return merged
 }
 
+/** One attached topic: an optional id plus the display title. */
+export interface CompletionTopicPair {
+  topicId: string
+  title: string
+}
+
 export interface CompleteSessionInput {
   sessionId: string
   topicIds: string[]
   topicTitles: string[]
+  /**
+   * Preferred payload: id+title pairs straight from the picker. Curriculum
+   * topics selected from an ASSIGNED curriculum document carry a composite
+   * id (`curriculumId__module__topicKey`), which cannot be resolved against
+   * the `topics/*` bank — so the title must ride along with the id. Older
+   * clients that send only topicIds/topicTitles keep working.
+   */
+  topics: CompletionTopicPair[]
   notes: string
 }
 
@@ -1284,14 +1298,71 @@ export function validateCompleteInput(data: unknown): CompleteSessionInput {
     }
     return value.map((item) => String(item ?? '').trim()).filter(Boolean).slice(0, MAX_TOPICS_PER_SESSION)
   }
+  const collectTopics = (value: unknown): CompletionTopicPair[] => {
+    if (value === undefined || value === null || value === '') return []
+    if (!Array.isArray(value)) throw new HttpsError('invalid-argument', 'topics must be a list')
+    if (value.length > MAX_TOPICS_PER_SESSION) {
+      throw new HttpsError(
+        'invalid-argument',
+        `At most ${MAX_TOPICS_PER_SESSION} topics can be attached to one session`
+      )
+    }
+    return value
+      .map((item) => {
+        const record = (item || {}) as Record<string, unknown>
+        return {
+          topicId: String(record.topicId ?? '').trim().slice(0, 300),
+          title: String(record.title ?? '').trim().slice(0, 300),
+        }
+      })
+      .filter((pair) => pair.topicId || pair.title)
+      .slice(0, MAX_TOPICS_PER_SESSION)
+  }
   return {
     sessionId,
     topicIds: collect(raw.topicIds, 'topicIds'),
     // The handoff keeps free text as the display fallback, so a faculty member
     // can always type "Integration by parts" even with no curriculum topic.
     topicTitles: collect(raw.topicTitles, 'topicTitles'),
+    topics: collectTopics(raw.topics),
     notes: optionalFilter(raw.notes, 'notes', 2000),
   }
+}
+
+/**
+ * Collapse the three ways a client can express "topics taught in this class"
+ * into one ordered, de-duplicated list:
+ *
+ *   1. `pairs`       — id+title pairs from the current picker. Curriculum rows
+ *                      win here because only they know the composite id.
+ *   2. `resolvedIds` — topicIds the handler resolved against `topics/*`
+ *                      (legacy clients, or pairs sent with an empty title).
+ *   3. `legacyTitles`— free-text titles (the typed fallback).
+ *
+ * Deduplication is on the normalized title, so the same topic arriving twice
+ * (e.g. as a bank id AND its title) is attached — and ledger-matched — once.
+ * Entries whose title resolves to nothing are dropped: an id alone cannot be
+ * counted as coverage.
+ */
+export function mergeCompletionTopics(
+  pairs: CompletionTopicPair[],
+  resolvedIds: CompletionTopicPair[],
+  legacyTitles: string[]
+): CompletionTopicPair[] {
+  const out: CompletionTopicPair[] = []
+  const seen = new Set<string>()
+  const push = (topicId: string, title: unknown) => {
+    const clean = String(title ?? '').trim()
+    if (!clean) return
+    const key = normalizeTopicKey(clean)
+    if (key && seen.has(key)) return
+    if (key) seen.add(key)
+    out.push({ topicId: String(topicId ?? '').trim(), title: clean })
+  }
+  for (const pair of pairs) push(pair.topicId, pair.title)
+  for (const pair of resolvedIds) push(pair.topicId, pair.title)
+  for (const title of legacyTitles) push('', title)
+  return out.slice(0, MAX_TOPICS_PER_SESSION)
 }
 
 /**
@@ -1386,16 +1457,36 @@ export const completeClassSession = onCall(
       throw new HttpsError('permission-denied', 'You can only complete your own class sessions')
     }
 
-    // Resolve each requested curriculum topic to a title. `topics/*` names the
+    // Resolve every requested topic to {topicId, title}. `topics/*` names the
     // field `name`; the ledger and sessions call the same thing `title`.
-    const topics: Array<{ topicId: string; title: string }> = []
-    for (const topicId of input.topicIds) {
+    // Pairs from the current client carry their own title, so a curriculum
+    // topic with a composite id (not a bank doc) resolves without a lookup;
+    // bare ids — legacy clients, or a pair sent without a title — still fall
+    // back to the bank read. Unresolvable ids are dropped by the merge below.
+    const pairIds = new Set(input.topics.map((pair) => pair.topicId).filter(Boolean))
+    const needsLookup = [
+      ...new Set([
+        ...input.topics.filter((pair) => !pair.title && pair.topicId).map((pair) => pair.topicId),
+        ...input.topicIds.filter((id) => !pairIds.has(id)),
+      ]),
+    ].slice(0, MAX_TOPICS_PER_SESSION)
+    const titleById = new Map<string, string>()
+    for (const topicId of needsLookup) {
       const topicSnap = await db.collection('topics').doc(topicId).get()
       const data = topicSnap.data()
       const title = String(data?.name || data?.title || '').trim()
-      if (topicSnap.exists && title) topics.push({ topicId, title })
+      if (topicSnap.exists && title) titleById.set(topicId, title)
     }
-    input.topicTitles.forEach((title) => topics.push({ topicId: '', title }))
+    const topics = mergeCompletionTopics(
+      input.topics.map((pair) => ({
+        topicId: pair.topicId,
+        title: pair.title || titleById.get(pair.topicId) || '',
+      })),
+      input.topicIds
+        .filter((id) => titleById.has(id))
+        .map((id) => ({ topicId: id, title: String(titleById.get(id)) })),
+      input.topicTitles
+    )
 
     // Candidate ledger rows are found before the transaction (Firestore
     // transactions cannot run a fresh query), then re-read inside it.
@@ -1505,6 +1596,50 @@ export const MAX_PROGRESS_FACULTIES = 40
 export const MAX_PROGRESS_SESSIONS = 2000
 export const MAX_PROGRESS_MAPPINGS = 500
 export const MAX_PROGRESS_TOPICS = 300
+export const MAX_PROGRESS_CURRICULUM_DOCS = 10
+
+/**
+ * The planned topics for a faculty member, flattened out of the ASSIGNED
+ * curriculum documents referenced by their active mappings — the same source
+ * src/modules/faculty/api/sessionTopicsApi.ts uses for the picker. Course
+ * matching mirrors the picker: id first, then code, then name, so a mapping
+ * created before the id work still resolves.
+ */
+export function plannedTopicsFromCurriculum(
+  mappings: Array<Record<string, unknown>>,
+  curriculumDocs: Array<{ id: string; data: admin.firestore.DocumentData }>
+): Array<{ title: string; moduleNo: string; moduleName: string }> {
+  const docById = new Map(curriculumDocs.map((entry) => [entry.id, entry.data]))
+  const out: Array<{ title: string; moduleNo: string; moduleName: string }> = []
+  const seen = new Set<string>()
+  for (const mapping of mappings) {
+    const curriculum = docById.get(String(mapping.curriculumId || ''))
+    if (!curriculum) continue
+    const courses: any[] = Array.isArray(curriculum.courses) ? curriculum.courses : []
+    const course =
+      (String(mapping.courseId || '') && courses.find((c) => String(c?.id || '') === String(mapping.courseId))) ||
+      (String(mapping.courseCode || '') && courses.find((c) => String(c?.code || '') === String(mapping.courseCode))) ||
+      (String(mapping.courseName || '') && courses.find((c) => String(c?.name || '') === String(mapping.courseName)))
+    if (!course) continue
+    const modules: any[] = Array.isArray(course.modules) ? course.modules : []
+    for (const mod of modules) {
+      const topics: unknown[] = Array.isArray(mod?.topics) ? mod.topics : []
+      for (const raw of topics) {
+        const title = String(raw ?? '').trim()
+        if (!title) continue
+        const key = normalizeTopicKey(title)
+        if (!key || seen.has(key)) continue
+        seen.add(key)
+        out.push({
+          title,
+          moduleNo: String(mod?.moduleNo ?? ''),
+          moduleName: String(mod?.moduleName || mod?.title || ''),
+        })
+      }
+    }
+  }
+  return out
+}
 
 export interface ModuleProgress {
   moduleNo: string
@@ -1845,17 +1980,28 @@ export const getCurriculumProgress = onCall(
       const facultyMappings = mappings.filter((m) => String(m.facultyId || '') === facultyId)
       const facultySessions = sessions.filter((s) => String(s.facultyId || '') === facultyId)
 
-      // Ledger + curriculum bank, both filtered to this faculty.
+      // The faculty's own planner ledger. The curriculum PLAN is fetched
+      // below from the assigned documents — the old second input here was a
+      // query on the shared `topics` bank by facultyId, and since bank rows
+      // carry no facultyId it returned nothing for every faculty member
+      // (progress rendered 0 planned topics unless they hand-created rows).
       const ledgerSnap = await db
         .collection('facultyTopics')
         .where('facultyId', '==', facultyId)
         .limit(MAX_PROGRESS_TOPICS)
         .get()
-      const bankSnap = await db
-        .collection('topics')
-        .where('facultyId', '==', facultyId)
-        .limit(MAX_PROGRESS_TOPICS)
-        .get()
+
+      const curriculumIds = [
+        ...new Set(
+          facultyMappings.map((m) => String(m.curriculumId || '')).filter(Boolean)
+        ),
+      ].slice(0, MAX_PROGRESS_CURRICULUM_DOCS)
+      const curriculumSnaps = curriculumIds.length
+        ? await db.getAll(...curriculumIds.map((id) => db.collection('curriculum').doc(id)))
+        : []
+      const curriculumDocs = curriculumSnaps
+        .filter((snap): snap is admin.firestore.DocumentSnapshot => Boolean(snap && snap.exists))
+        .map((snap) => ({ id: snap.id, data: snap.data() || {} }))
 
       // Titles the faculty has actually taught, from completed sessions.
       const coveredTitles = new Set<string>()
@@ -1871,20 +2017,18 @@ export const getCurriculumProgress = onCall(
           void ids
         })
 
+      // Curriculum rows lead so they contribute module numbers/names; a title
+      // that ALSO has a ledger row keeps its covered flag through the merge
+      // (mergeTopicCoverage ORs coverage across every row with that key).
       const rows: ProgressTopicRow[] = [
+        ...plannedTopicsFromCurriculum(facultyMappings, curriculumDocs).map((row) => ({
+          ...row,
+          covered: false,
+        })),
         ...ledgerSnap.docs.map((doc) => {
           const data = doc.data()
           return {
             title: String(data.title || data.name || ''),
-            moduleNo: String(data.moduleNo || ''),
-            moduleName: String(data.moduleName || data.unit || ''),
-            covered: isTopicCovered(data.status),
-          }
-        }),
-        ...bankSnap.docs.map((doc) => {
-          const data = doc.data()
-          return {
-            title: String(data.name || data.title || ''),
             moduleNo: String(data.moduleNo || ''),
             moduleName: String(data.moduleName || data.unit || ''),
             covered: isTopicCovered(data.status),

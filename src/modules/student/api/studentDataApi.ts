@@ -500,7 +500,17 @@ export async function fetchTodaySchedule(
       room: row.room,
       type: row.type,
       date: row.date,
-      topic: (row.topicsPlanned || []).join?.(', ') || row.topic,
+      // Class sessions record the ACTUAL topics under `topicsCovered`
+      // (title strings written by completeClassSession); `topicsPlanned` is the
+      // older planner field and `topic` the pre-curriculum free-text one. The
+      // admin readers already fall back in this order (scheduleApi.ts) — the
+      // student timetable was skipping straight past the covered list, so the
+      // curriculum topics never reached the portal.
+      topic:
+        (row.topicsCovered?.length ? row.topicsCovered : row.topicsPlanned || [])
+          .map((t: unknown) => (typeof t === 'string' ? t : ((t as { title?: string })?.title ?? '')))
+          .filter(Boolean)
+          .join(', ') || row.topic,
       status: row.status || 'scheduled',
     }));
 
