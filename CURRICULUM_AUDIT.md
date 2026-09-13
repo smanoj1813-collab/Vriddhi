@@ -122,13 +122,15 @@ different flat nav.
    superadmin to survive the facultyId-immutability clause). Heuristic estimate
    of the parse-tree size drops ~34; the emulator deploy check is the final
    word (run `npm run test:rules`, then `npm run deploy:rules`).
-2. **classSessions composite indexes:** `listClassSessions` +
-   `subscribeClassSessions` (the principal attendance list) sort
-   `date DESC, startTime DESC` behind `collegeId ==` — the other filters
-   (branch/batch/facultyId/date/status) are equality-only and merge with
-   single-field indexes, so ONE composite covers both failing queries: added
-   `collegeId ASC, date DESC, startTime DESC` to `firestore.indexes.json`
-   (`npm run deploy:indexes`).
+2. **classSessions composite indexes:** the principal attendance list sorts
+   `date DESC, startTime DESC` behind `collegeId ==`; the class-schedule view
+   sorts `date ASC, timeSlot ASC` behind `collegeId ==`. Each needs its own
+   composite (a query with TWO sorts cannot auto-merge), but the optional
+   branch/batch/facultyId/status filters are pure equalities that merge with
+   single-field indexes — so exactly the two indexes the console links pointed
+   at are now in `firestore.indexes.json`
+   (`collegeId ASC + date DESC + startTime DESC`, and
+   `collegeId ASC + date ASC + timeSlot ASC`). `npm run deploy:indexes`.
 3. **stale notification rules tests:** the two tests asserting the pre-PR
    direct-student-read contract now assert `assertFails` (students go through
    the `getMyNotifications` callable), with a comment explaining why.
@@ -147,6 +149,17 @@ superadmin-only.
 - frontend `tsc` clean, `vite build` clean, unit **119/119**, render **48/48**,
   dead-code **274 files / 262 reachable / 0 unlisted orphans** (the deleted
   legacy API file drops out of both counts)
+- GitHub Actions on PR #50: Frontend build ✓, Functions build ✓
+
+The rules suite could NOT be executed in the agent sandbox: this environment's
+egress allowlist reaches only `registry.npmjs.org` + `api.github.com`
+(GitHub release binaries on `objects.githubusercontent.com` are blocked), and
+the system package manager is rootless-locked — no JRE can be obtained by any
+of: apt, Temurin direct download, or npm packages that claim to bundle a
+runtime (`@vscjava/java-ls-jre-linux-x64` published without its `jre/` dir;
+`pmd-bin`/`jdeploy` fetch theirs at install time). `firebase-tools` bundles the
+emulator JARs but not Java itself, so `npm run test:rules` stays a
+user-machine gate.
 
 ## Deploy order (unchanged) + notes
 1. `npm run test:rules` on a machine with Java, then `npm run deploy:functions`

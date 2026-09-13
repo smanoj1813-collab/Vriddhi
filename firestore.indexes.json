@@ -189,6 +189,24 @@
       ]
     },
     {
+      "collectionGroup": "classSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timeSlot",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "curriculum",
       "queryScope": "COLLECTION",
       "fields": [
