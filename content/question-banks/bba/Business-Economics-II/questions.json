@@ -1,0 +1,1079 @@
+{
+  "program": "BBA",
+  "subject": "Business Economics II",
+  "semester": 2,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Macroeconomics core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "be2-01",
+      "text": "Macroeconomics is the study of the economy as a whole including aggregates such as",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "National income and employment",
+        "Individual firm pricing",
+        "Single consumer demand",
+        "One industry output"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Macroeconomics deals with economy wide aggregates such as national income and total employment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-02",
+      "text": "The total market value of all final goods and services produced within a country in a year is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Gross Domestic Product",
+        "Gross National Product",
+        "Personal Income",
+        "Disposable Income"
+      ],
+      "correctAnswer": "A",
+      "explanation": "GDP measures production within the domestic territory regardless of who owns the factors.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-03",
+      "text": "GDP measured at current year prices is called nominal GDP while at base year prices it is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "real GDP",
+      "explanation": "Real GDP uses constant base year prices to remove the effect of inflation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-04",
+      "text": "National income is measured by the product income and expenditure methods which should give the same result",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The three methods measure the same flow and therefore should yield equal totals.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-05",
+      "text": "List the three methods of measuring national income",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "The product or value added method the income method and the expenditure method.",
+      "explanation": "Each measures the same national income from a different angle.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-06",
+      "text": "Explain the difficulties in measuring national income",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Difficulties include the large non monetised sector double counting lack of reliable data and the treatment of depreciation and indirect taxes especially in developing countries.",
+      "explanation": "Cover conceptual and statistical problems in national income estimation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-07",
+      "text": "Money serves primarily as a medium of exchange a measure of value and a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Store of value",
+        "Source of income",
+        "Tax instrument",
+        "Factor of production"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The functions of money are medium of exchange unit of account and store of value.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-08",
+      "text": "The central bank of India is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Reserve Bank of India",
+        "State Bank of India",
+        "NITI Aayog",
+        "SEBI"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Reserve Bank of India is the central bank and monetary authority of India.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-09",
+      "text": "The rate at which the central bank lends to commercial banks against securities is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "repo rate",
+      "explanation": "The repo rate is the rate at which the RBI lends to banks short term.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-10",
+      "text": "An increase in the cash reserve ratio reduces the lending capacity of banks",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A higher CRR locks more deposits with the central bank leaving less to lend.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-11",
+      "text": "List the quantitative instruments of monetary policy",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Bank rate repo rate cash reserve ratio statutory liquidity ratio and open market operations.",
+      "explanation": "These instruments regulate the quantity and cost of credit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-12",
+      "text": "Explain the functions of the central bank",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The central bank issues currency acts as banker to the government and banks controls credit and manages foreign exchange. It is the lender of last resort and custodian of reserves.",
+      "explanation": "Cover note issue government and banker functions and credit control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-13",
+      "text": "A sustained rise in the general price level over time is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Inflation",
+        "Deflation",
+        "Recession",
+        "Depreciation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Inflation is a persistent increase in the general price level.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-14",
+      "text": "Inflation caused by excessive aggregate demand is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "demand pull inflation",
+      "explanation": "Demand pull inflation occurs when demand exceeds the economys capacity to supply.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-15",
+      "text": "A business cycle has four phases peak recession trough and recovery",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The business cycle alternates between expansion and contraction through these phases.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-16",
+      "text": "State the causes of inflation",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Demand side pressures and cost side pressures such as rising wages and input prices drive inflation.",
+      "explanation": "Inflation is classified as demand pull or cost push by its cause.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-17",
+      "text": "Explain the effects of inflation on the economy",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Inflation redistributes income from creditors to debtors distorts saving and investment and erodes the value of money. It hurts fixed income groups and can reduce international competitiveness.",
+      "explanation": "Cover effects on income distribution saving and external trade.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-18",
+      "text": "The policy of government taxation and public expenditure to influence the economy is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Fiscal policy and public finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Fiscal policy",
+        "Monetary policy",
+        "Trade policy",
+        "Industrial policy"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Fiscal policy uses taxation and spending to manage aggregate demand.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-19",
+      "text": "A budget in which government expenditure exceeds revenue is called a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Fiscal policy and public finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "deficit budget",
+      "explanation": "A deficit budget spends more than it receives in revenue.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-20",
+      "text": "A progressive tax takes a higher percentage of income from higher income earners",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Fiscal policy and public finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A progressive tax rises as a share of income as income rises.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-21",
+      "text": "List the objectives of fiscal policy",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Fiscal policy and public finance",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Full employment price stability economic growth and equitable distribution of income.",
+      "explanation": "These goals guide the use of taxation and expenditure.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-22",
+      "text": "Explain the difference between direct and indirect taxes",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Fiscal policy and public finance",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Direct taxes such as income tax are paid by the person on whom they are levied and cannot be shifted. Indirect taxes such as GST are levied on goods and can be shifted to consumers.",
+      "explanation": "The key difference is the shifting of the tax burden.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-23",
+      "text": "The exchange of goods and services between countries is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "International trade",
+        "Domestic trade",
+        "Barter",
+        "Distribution"
+      ],
+      "correctAnswer": "A",
+      "explanation": "International trade is the exchange of goods and services across national borders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-24",
+      "text": "The record of all economic transactions between a country and the rest of the world is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "balance of payments",
+      "explanation": "The balance of payments records all external transactions over a period.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-25",
+      "text": "The theory that a country should specialise in goods it can produce at a lower opportunity cost is comparative advantage",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Comparative advantage is the basis for beneficial specialisation and trade.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-26",
+      "text": "Distinguish between balance of trade and balance of payments",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Balance of trade records only merchandise exports and imports. Balance of payments records all transactions including services capital and financial flows.",
+      "explanation": "Balance of payments is broader than the balance of trade.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-27",
+      "text": "Explain the arguments for free trade and protection",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Free trade raises efficiency and consumer choice through specialisation. Protection defends infant industries and employment and corrects balance of payments deficits.",
+      "explanation": "Present both sides of the trade policy debate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-28",
+      "text": "Economic growth refers to an increase in the economys real output over time",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Economic growth and development",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False",
+        "Only during inflation",
+        "Only in developed countries"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Economic growth is a sustained rise in real national output.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-29",
+      "text": "Economic development is a broader concept than economic growth because it includes",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Economic growth and development",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Social and structural change",
+        "Only price changes",
+        "Only population change",
+        "Only export change"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Development includes growth plus improvements in welfare distribution and structure.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-30",
+      "text": "The indicator that combines income education and life expectancy to measure development is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Economic growth and development",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "Human Development Index",
+      "explanation": "The HDI combines per capita income education and life expectancy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-31",
+      "text": "Distinguish between economic growth and economic development",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Economic growth and development",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Growth is a quantitative rise in output while development is a qualitative process that improves living standards and economic structure.",
+      "explanation": "Development is growth plus social and structural progress.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-32",
+      "text": "Explain the factors that determine economic development",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Economic growth and development",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Development depends on natural resources capital technology human capital and institutional factors such as stable government and property rights.",
+      "explanation": "Cover economic and non economic determinants of development.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-33",
+      "text": "Assertion: Deficit financing can cause inflation. Reason: It increases the money supply faster than the supply of goods",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Fiscal policy and public finance (assertion reason)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Deficit financing injects money without matching goods causing demand pull inflation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-34",
+      "text": "Match the instrument to the policy",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy (matching)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Repo rate - monetary policy",
+        "Income tax - monetary policy",
+        "Public spending - monetary policy",
+        "Open market operations - fiscal policy"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The repo rate is a monetary tool while taxes and spending are fiscal tools.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-35",
+      "text": "The phase of the business cycle marked by falling output and rising unemployment is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Recession",
+        "Recovery",
+        "Boom",
+        "Peak"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A recession is a period of declining output and rising unemployment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-36",
+      "text": "The ratio that links the money supply to high powered money is the money",
+      "type": "fill_in_blank",
+      "difficulty": "hard",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "multiplier",
+      "explanation": "The money multiplier shows how much money supply expands per unit of reserve money.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-37",
+      "text": "The currency that a country uses in international transactions and reserves is called hard currency",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Hard currency is freely convertible and widely accepted internationally.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-38",
+      "text": "If the exchange rate of the rupee falls against the dollar Indian exports become",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "apply",
+      "options": [
+        "Cheaper abroad",
+        "Costlier abroad",
+        "Unaffected",
+        "Impossible to sell"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A weaker rupee makes Indian goods cheaper in foreign currency terms.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-39",
+      "text": "State the phases of the business cycle",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Expansion or boom peak recession or contraction trough and recovery.",
+      "explanation": "These phases repeat over the course of the business cycle.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-40",
+      "text": "Read the case: A country is experiencing high inflation and a central bank wants to slow it down. Identify the policy and two instruments the bank can use",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The bank should use contractionary monetary policy. It can raise the repo rate and the cash reserve ratio to reduce money supply and cool demand.",
+      "explanation": "Apply tight money tools to reduce aggregate demand and control inflation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-41",
+      "text": "Read the case: A country imports more than it exports and faces a falling currency. Explain the problem and two measures to correct it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The country has a trade deficit weakening its currency. It can promote exports and restrict imports through tariffs and exchange rate management.",
+      "explanation": "Diagnose the trade deficit and propose corrective trade measures.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-42",
+      "text": "The total income available to households after paying direct taxes is called",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Disposable income",
+        "National income",
+        "Personal income",
+        "Gross income"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Disposable income is personal income minus direct taxes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-43",
+      "text": "GNP equals GDP plus net factor income from abroad",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "GNP adds net factor income earned from abroad to GDP.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-44",
+      "text": "A country produces final goods worth 1000 and intermediate goods worth 400. GDP measured by the value added method should count",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "1000",
+      "explanation": "Only final goods are counted to avoid double counting intermediate goods.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-45",
+      "text": "If nominal GDP is 1200 and the price index is 120 the real GDP is",
+      "type": "numerical",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Macroeconomic concepts and national income",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "1000",
+      "explanation": "Real GDP equals nominal GDP divided by the price index times 100 so 1200 divided by 120 times 100 equals 1000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-46",
+      "text": "The purchasing power of money falls when the price level rises",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics II",
+      "topic": "Inflation and business cycles",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "As prices rise each unit of money buys fewer goods so its value falls.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-47",
+      "text": "Explain the functions of money",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Money acts as a medium of exchange a unit of account a store of value and a standard of deferred payment. These functions overcome the drawbacks of barter.",
+      "explanation": "Describe each function and how money overcomes barter limitations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-48",
+      "text": "Explain the meaning and components of the balance of payments",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "International trade and balance of payments",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The balance of payments has a current account covering trade and income and a capital account covering financial flows. The two together must balance with official reserves.",
+      "explanation": "Describe the current and capital accounts and the balancing mechanism.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-49",
+      "text": "Describe the characteristics of a developing economy",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics II",
+      "topic": "Economic growth and development",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A developing economy shows low per capita income heavy dependence on agriculture high population growth unemployment and dualism between modern and traditional sectors.",
+      "explanation": "Cover income structure demographic and dualistic features.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be2-50",
+      "text": "A bank receives a fresh deposit of 10000 and the reserve requirement is twenty percent. The maximum additional credit it can create under the simple multiplier is",
+      "type": "numerical",
+      "difficulty": "hard",
+      "subject": "Business Economics II",
+      "topic": "Money banking and monetary policy",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "40000",
+      "explanation": "The money multiplier is one divided by the reserve ratio so one divided by 0.2 equals 5 and 5 times 10000 equals 50000 total less the initial 10000 gives 40000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,1071 @@
+{
+  "program": "BBA",
+  "subject": "Marketing Management",
+  "semester": 2,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Marketing core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "mm-01",
+      "text": "The process of creating communicating and delivering value to customers is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Marketing",
+        "Production",
+        "Finance",
+        "Auditing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Marketing is the activity of creating communicating delivering and exchanging offerings of value.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-02",
+      "text": "The marketing concept holds that the firm should focus on",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Customer needs",
+        "Production volume",
+        "Selling pressure",
+        "Internal efficiency only"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The marketing concept centres the firm on satisfying customer needs profitably.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-03",
+      "text": "The set of controllable marketing variables the firm combines is called the marketing",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "mix",
+      "explanation": "The marketing mix combines product price place and promotion.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-04",
+      "text": "The selling concept focuses on aggressive promotion rather than customer satisfaction",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The selling concept pushes products regardless of whether they fully satisfy needs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-05",
+      "text": "List the four Ps of the marketing mix",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Product price place and promotion.",
+      "explanation": "These four controllable variables form the core marketing mix.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-06",
+      "text": "Explain the marketing environment and its components",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The marketing environment has a microenvironment of suppliers customers and competitors and a macroenvironment of demographic economic political technological and cultural forces that the firm cannot control.",
+      "explanation": "Distinguish the micro and macro environments with examples.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-07",
+      "text": "The stage of the buyer decision process in which the consumer recognises a gap is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Consumer and buyer behaviour",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Need recognition",
+        "Purchase",
+        "Post purchase evaluation",
+        "Information search"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The process begins when the buyer recognises an unmet need.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-08",
+      "text": "Consumers who buy products for the first time after information gathering are called",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Consumer and buyer behaviour",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "New buyers",
+        "Loyal customers",
+        "Non users",
+        "Switchers"
+      ],
+      "correctAnswer": "A",
+      "explanation": "New buyers enter a product category after evaluating information.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-09",
+      "text": "The feeling of discomfort after a purchase that makes the buyer question the decision is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Consumer and buyer behaviour",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "cognitive dissonance",
+      "explanation": "Post purchase dissonance is doubt about whether the right choice was made.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-10",
+      "text": "Cultural and social factors influence consumer buying behaviour",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Consumer and buyer behaviour",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Culture social class family and reference groups shape what and how consumers buy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-11",
+      "text": "List the stages of the consumer decision process",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Consumer and buyer behaviour",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Need recognition information search evaluation of alternatives purchase decision and post purchase behaviour.",
+      "explanation": "These five stages describe how consumers reach buying decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-12",
+      "text": "Explain the factors influencing consumer behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Consumer and buyer behaviour",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Consumer behaviour is shaped by cultural social personal and psychological factors such as culture family age occupation motivation perception and attitudes.",
+      "explanation": "Cover each category of influence with examples.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-13",
+      "text": "Dividing a market into distinct groups of buyers with different needs is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Market segmentation",
+        "Product differentiation",
+        "Positioning",
+        "Branding"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Segmentation divides a heterogeneous market into homogeneous buyer groups.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-14",
+      "text": "Segmentation based on age income and occupation is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "demographic segmentation",
+      "explanation": "Demographic segmentation uses measurable population characteristics.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-15",
+      "text": "A firm that ignores segment differences and offers one offer to the whole market uses undifferentiated marketing",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Undifferentiated marketing treats the whole market as one segment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-16",
+      "text": "Distinguish between market segmentation and targeting",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Segmentation divides the market into groups while targeting selects which group or groups the firm will serve.",
+      "explanation": "Segmentation precedes the choice of target segments.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-17",
+      "text": "Explain the bases of market segmentation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Markets are segmented on geographic demographic psychographic and behavioural bases. Each divides buyers by location personal traits lifestyles or usage behaviour.",
+      "explanation": "Describe each base with examples of the variables used.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-18",
+      "text": "The product element that distinguishes one brand from another is its",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Brand",
+        "Price",
+        "Channel",
+        "Advertisement"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A brand is a name term symbol or design that identifies a seller.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-19",
+      "text": "The pricing method that adds a fixed margin to the cost of the product is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "cost plus pricing",
+      "explanation": "Cost plus pricing adds a standard markup to the unit cost.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-20",
+      "text": "A channel of distribution with no intermediaries between producer and consumer is direct",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A direct channel sells straight from producer to consumer.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-21",
+      "text": "List the stages of the product life cycle",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Introduction growth maturity and decline.",
+      "explanation": "Sales and profits follow a predictable path through these four stages.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-22",
+      "text": "Explain the factors to consider when setting a price",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Pricing considers costs demand competition and marketing objectives. Costs set the floor demand sets the ceiling and competitors prices anchor the range.",
+      "explanation": "Cover internal cost objectives and external demand and competition.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-23",
+      "text": "The process of gathering analysing and reporting marketing information is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing research and MIS",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Marketing research",
+        "Sales forecasting",
+        "Advertising",
+        "Personal selling"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Marketing research systematically gathers and analyses data for marketing decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-24",
+      "text": "Data collected first hand for a specific research problem is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing research and MIS",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "primary data",
+      "explanation": "Primary data is original data collected for the current purpose.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-25",
+      "text": "A sample is a subset of the population selected for study",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing research and MIS",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Sampling studies a representative subset to draw conclusions about the whole.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-26",
+      "text": "Distinguish between primary and secondary data",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing research and MIS",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Primary data is collected fresh for the study while secondary data already exists having been collected earlier for another purpose.",
+      "explanation": "The difference lies in the origin and purpose of the data.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-27",
+      "text": "Explain the steps in the marketing research process",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing research and MIS",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Research proceeds from defining the problem through developing the plan collecting data analysing data and presenting findings to decision makers.",
+      "explanation": "Trace each step from problem definition to report.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-28",
+      "text": "Marketing of intangible activities rather than physical goods is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Services marketing and recent trends",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Services marketing",
+        "Product marketing",
+        "Industrial marketing",
+        "Commodity marketing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Services marketing deals with intangible offerings like banking travel and healthcare.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-29",
+      "text": "The characteristic of services meaning they cannot be stored is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Services marketing and recent trends",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "perishability",
+      "explanation": "Perishability means services cannot be inventoried for later sale.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-30",
+      "text": "The characteristics of services include intangibility inseparability variability and perishability",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Services marketing and recent trends",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "These four characteristics distinguish services from goods.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-31",
+      "text": "List the characteristics of services",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Services marketing and recent trends",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Intangibility inseparability variability and perishability.",
+      "explanation": "These four features shape services marketing strategy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-32",
+      "text": "Explain the recent trends in marketing",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Services marketing and recent trends",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Recent trends include digital and social media marketing influencer marketing personalisation green marketing and data driven marketing. Technology and customer expectations are reshaping strategy.",
+      "explanation": "Cover digitalisation personalisation and sustainability trends.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-33",
+      "text": "Assertion: Market segmentation enables a firm to serve customers more effectively. Reason: Different segments have different needs that require tailored offerings",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning (assertion reason)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Tailoring offerings to distinct needs is exactly how segmentation improves effectiveness.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-34",
+      "text": "Match the mix element to its activity",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion (matching)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Place - distribution channels",
+        "Price - product design",
+        "Product - advertising",
+        "Promotion - logistics"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Place concerns distribution while promotion concerns communication.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-35",
+      "text": "The added value that a brand gives a product beyond its functional benefits is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Brand equity",
+        "Markup",
+        "Margin",
+        "Cost"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Brand equity is the extra value a strong brand adds to the product.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-36",
+      "text": "A pricing strategy that sets a high initial price to skim maximum revenue from early buyers is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "price skimming",
+      "explanation": "Skimming targets less price sensitive early adopters with a high launch price.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-37",
+      "text": "Setting a low initial price to gain market share quickly is called penetration pricing",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Penetration pricing uses a low price to attract many buyers and capture share.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-38",
+      "text": "Explain the concept of the product life cycle and its marketing implications",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "The product life cycle traces sales from introduction through growth and maturity to decline and each stage needs a different marketing strategy.",
+      "explanation": "Strategy shifts as the product moves through its life stages.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-39",
+      "text": "Read the case: A new organic juice brand wants to launch but is unsure which segment to target. Suggest segmentation bases and a positioning approach",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Marketing Management",
+      "topic": "Market segmentation targeting and positioning",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Segment by demographic health conscious and psychographic lifestyle variables. Position the juice as a premium natural and healthy choice distinct from sugary drinks.",
+      "explanation": "Apply segmentation bases and craft a clear positioning statement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-40",
+      "text": "Read the case: A retailer notices falling sales of a mature product line and rising customer complaints about features. Identify the life cycle stage and recommend a marketing response",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The product is in maturity moving toward decline. The retailer should modify the product repackage or reposition it and adjust promotion to revive demand.",
+      "explanation": "Diagnose the stage and propose product and promotion modifications.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-41",
+      "text": "Which of the following is a non controllable element of the marketing environment",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Competitors",
+        "Product design",
+        "Price",
+        "Promotion"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Competitors are part of the external environment outside the firms control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-42",
+      "text": "The philosophy that the best way to satisfy customers is through continuous quality improvement is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "total quality management",
+      "explanation": "TQM makes quality a central part of delivering customer value.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-43",
+      "text": "Relationship marketing focuses on building long term relationships with customers rather than single transactions",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Relationship marketing aims to retain customers and build loyalty.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-44",
+      "text": "Explain the difference between marketing and selling",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Selling focuses on the needs of the seller and pushing the product while marketing focuses on customer needs and creating value.",
+      "explanation": "Marketing is customer centred while selling is product centred.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-45",
+      "text": "Explain the importance of branding to a marketer",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Branding differentiates the product builds customer loyalty commands premium prices and simplifies the buyers choice. A strong brand is a durable competitive asset.",
+      "explanation": "Cover differentiation loyalty pricing power and ease of choice.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-46",
+      "text": "Describe the methods of sales promotion",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Sales promotion includes consumer tools like samples coupons and contests and trade tools like dealer discounts and allowances that stimulate short term buying.",
+      "explanation": "Distinguish consumer oriented and trade oriented promotion tools.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-47",
+      "text": "A market where buyers outnumber sellers and prices are set by supply and demand is a competitive market",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "In competitive markets no single buyer or seller controls the price.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-48",
+      "text": "Explain the role of marketing information systems in decision making",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Marketing research and MIS",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A marketing information system collects stores and analyses internal and external data and supplies managers with timely information for planning control and decisions.",
+      "explanation": "Cover the components and how MIS supports decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-49",
+      "text": "List any four functions of marketing",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Marketing Management",
+      "topic": "Marketing concepts and environment",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Buying selling transportation storage financing and risk bearing.",
+      "explanation": "These exchange and physical distribution functions move goods to consumers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mm-50",
+      "text": "Explain the advantages and disadvantages of advertising",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Marketing Management",
+      "topic": "Product price place and promotion",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Advertising reaches a mass audience builds awareness and brand image economically. Its drawbacks are high total cost impersonal nature and difficulty measuring direct effect on sales.",
+      "explanation": "Balance reach and image building against cost and measurability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

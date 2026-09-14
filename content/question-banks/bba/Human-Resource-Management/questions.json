@@ -1,0 +1,1065 @@
+{
+  "program": "BBA",
+  "subject": "Human Resource Management",
+  "semester": 3,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "HRM core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "hrm-01",
+      "text": "The process of managing people in an organisation to achieve goals is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "HRM concepts and functions",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Human resource management",
+        "Financial management",
+        "Materials management",
+        "Operations"
+      ],
+      "correctAnswer": "A",
+      "explanation": "HRM is concerned with acquiring developing and retaining people effectively.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-02",
+      "text": "Which of the following is a function of HRM",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "HRM concepts and functions",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Recruitment and selection",
+        "Preparing balance sheets",
+        "Market pricing",
+        "Debt collection"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Recruitment selection training and compensation are core HRM functions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-03",
+      "text": "The systematic process of determining the skills duties and knowledge required for a job is job",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "analysis",
+      "explanation": "Job analysis yields job descriptions and job specifications.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-04",
+      "text": "Human resource planning ensures the right number of people with the right skills are available at the right time",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "HRP forecasts demand and supply of people to avoid shortages or surpluses.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-05",
+      "text": "Distinguish between job description and job specification",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A job description states the duties and responsibilities of a job while a job specification states the qualifications and qualities required of the person doing it.",
+      "explanation": "Description is about the job while specification is about the job holder.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-06",
+      "text": "Explain the objectives of human resource planning",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "HRP aims to forecast manpower needs match supply with demand prevent shortages and surpluses and support organisational growth while controlling labour costs.",
+      "explanation": "Cover forecasting balancing supply and supporting strategic plans.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-07",
+      "text": "The process of attracting a pool of qualified applicants is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Recruitment",
+        "Selection",
+        "Induction",
+        "Appraisal"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Recruitment attracts candidates while selection chooses the best among them.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-08",
+      "text": "Recruitment from within the organisation through promotion or transfer is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "internal recruitment",
+      "explanation": "Internal sources fill vacancies from existing employees.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-09",
+      "text": "Selection is a negative process because it rejects unsuitable candidates",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Selection screens out unqualified applicants while recruitment is positive.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-10",
+      "text": "List the steps in the selection process",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Screening applications tests interviews reference checks medical examination and job offer.",
+      "explanation": "These steps narrow the applicant pool to the best candidate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-11",
+      "text": "Explain the sources of recruitment",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Recruitment sources are internal such as promotion and transfer or external such as advertisements campus and employment agencies. Internal sources motivate staff while external sources bring fresh talent.",
+      "explanation": "Contrast internal and external sources with their merits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-12",
+      "text": "The process of improving the skills of employees for their current job is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Training",
+        "Development",
+        "Placement",
+        "Compensation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Training builds skills for the present job while development prepares for future roles.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-13",
+      "text": "The systematic evaluation of an employees performance against standards is performance",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "appraisal",
+      "explanation": "Performance appraisal assesses how well an employee meets job standards.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-14",
+      "text": "Training is a short term process while development is long term",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Training is job focused and short term while development is career focused and long term.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-15",
+      "text": "List any four methods of training",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "On the job training classroom lectures simulation role playing and case study.",
+      "explanation": "These methods develop employee skills in different ways.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-16",
+      "text": "Explain the process of performance appraisal",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Appraisal begins with setting standards then measuring performance comparing it with standards and giving feedback followed by corrective action and development planning.",
+      "explanation": "Trace the appraisal cycle from standards to feedback.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-17",
+      "text": "The reward paid to employees for their work in the form of wages salary and benefits is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Compensation",
+        "Recruitment",
+        "Training",
+        "Appraisal"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Compensation includes all monetary and non monetary rewards for work.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-18",
+      "text": "Wages paid to workers on the basis of units produced is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "piece wage",
+      "explanation": "Piece wage links payment to output rather than time worked.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-19",
+      "text": "Fringe benefits are non monetary benefits such as housing and medical facilities",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Fringe benefits supplement wages with facilities like housing medical care and transport.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-20",
+      "text": "Distinguish between time wage and piece wage systems",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Time wages pay for the hours worked while piece wages pay for the quantity produced.",
+      "explanation": "Time rate rewards attendance while piece rate rewards output.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-21",
+      "text": "Explain the importance of employee welfare measures",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Welfare measures like canteens medical care and housing improve employee morale health and commitment reduce absenteeism and help attract and retain talent.",
+      "explanation": "Cover morale health and retention benefits of welfare.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-22",
+      "text": "The relationship between employers and employees through unions and collective bargaining is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Industrial relations",
+        "Marketing relations",
+        "Public relations",
+        "Customer relations"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Industrial relations cover the employer employee union relationship.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-23",
+      "text": "The negotiation between employers and unions over wages and conditions is collective",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "bargaining",
+      "explanation": "Collective bargaining settles terms of employment through negotiation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-24",
+      "text": "Employee engagement reflects the emotional commitment of employees to their organisation",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Engaged employees are committed enthusiastic and willing to go the extra mile.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-25",
+      "text": "List the causes of industrial disputes",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Wage demands working conditions retrenchment union recognition and poor management practices cause disputes.",
+      "explanation": "Economic and managerial issues underlie most industrial disputes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-26",
+      "text": "Explain the importance of employee engagement",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Engaged employees are more productive loyal and innovative which reduces turnover and improves customer satisfaction and profitability.",
+      "explanation": "Link engagement to performance retention and business outcomes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-27",
+      "text": "Assertion: Induction helps new employees settle quickly. Reason: Induction familiarises them with the organisation and their role",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection (assertion reason)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Induction reduces anxiety by explaining policies and the role to newcomers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-28",
+      "text": "Match the HRM activity to its purpose",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HRM concepts and functions (matching)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Recruitment - attract applicants",
+        "Selection - attract applicants",
+        "Training - evaluate performance",
+        "Appraisal - choose candidates"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Recruitment attracts while selection chooses and appraisal evaluates.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-29",
+      "text": "The process of introducing a new employee to the organisation and its culture is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Induction",
+        "Recruitment",
+        "Selection",
+        "Promotion"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Induction orients new employees to the organisation and their colleagues.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-30",
+      "text": "The upward movement of an employee to a higher position with more responsibility is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "promotion",
+      "explanation": "Promotion moves an employee to a higher post with more pay and responsibility.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-31",
+      "text": "Job rotation moves employees between jobs to broaden their skills",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Job rotation is a training and development technique that widens experience.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-32",
+      "text": "Explain the merits and demerits of internal sources of recruitment",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Internal recruitment is cheaper and faster and motivates existing staff. Its drawbacks are limited choice possible inbreeding and missed fresh ideas from outside.",
+      "explanation": "Balance morale and cost benefits against limited talent pool.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-33",
+      "text": "Explain the factors influencing wage and salary administration",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Compensation is influenced by ability to pay prevailing market rates cost of living productivity and government legislation along with union pressure.",
+      "explanation": "Cover internal and external determinants of pay.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-34",
+      "text": "Read the case: A company has high turnover and employees complain of poor growth opportunities. Suggest HR measures to improve retention",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The company should introduce clear career paths training and development fair appraisal and recognition to improve engagement and reduce turnover.",
+      "explanation": "Propose engagement and development measures addressing the stated complaints.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-35",
+      "text": "Read the case: A department hires a skilled worker who then underperforms because he never received orientation. Diagnose the problem and suggest a solution",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Human Resource Management",
+      "topic": "Recruitment and selection",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The employee lacked induction so he did not understand expectations and culture. The firm should provide structured induction and on the job support to integrate him.",
+      "explanation": "Link poor onboarding to underperformance and propose induction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-36",
+      "text": "Which appraisal method compares each employee against every other employee",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Paired comparison",
+        "Graphic rating",
+        "Essay",
+        "Checklist"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Paired comparison ranks employees by comparing them in pairs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-37",
+      "text": "A job description focuses on the person while a job specification focuses on the job",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "The description focuses on the job while the specification focuses on the person.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-38",
+      "text": "The process of assessing the relative worth of jobs to determine pay is job",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "evaluation",
+      "explanation": "Job evaluation ranks jobs by difficulty to establish fair pay.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-39",
+      "text": "Explain the objectives of training and development",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Training develops skills reduces errors and builds confidence while development prepares employees for future responsibilities and supports succession planning.",
+      "explanation": "Distinguish short term skill building from long term development.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-40",
+      "text": "List the principles of wage and salary administration",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Compensation and welfare",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Internal equity external competitiveness performance linkage simplicity and flexibility.",
+      "explanation": "These principles ensure a fair and motivating pay structure.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-41",
+      "text": "The voluntary separation of an employee from the organisation is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Resignation",
+        "Retrenchment",
+        "Dismissal",
+        "Layoff"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Resignation is a voluntary separation initiated by the employee.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-42",
+      "text": "Dismissal is termination of employment initiated by the employer due to misconduct",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Dismissal is employer initiated termination often for misconduct.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-43",
+      "text": "Explain the importance of human resource management in modern organisations",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HRM concepts and functions",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "HRM attracts develops and retains talent aligning people with strategy. It improves productivity morale and competitiveness and manages change and diversity.",
+      "explanation": "Link HRM to organisational performance and competitive advantage.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-44",
+      "text": "Define grievance and list the stages of the grievance procedure",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A grievance is an employee complaint about work conditions. It is handled through supervisor then higher management then arbitration stages.",
+      "explanation": "The procedure escalates the complaint through successive levels.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-45",
+      "text": "Explain the difference between personnel management and human resource management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HRM concepts and functions",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Personnel management is a reactive administrative function focused on employees as a cost. HRM is a proactive strategic function treating people as assets to be developed.",
+      "explanation": "Contrast the scope philosophy and strategic role of the two.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-46",
+      "text": "The process of identifying and developing internal people to fill key positions is succession",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "planning",
+      "explanation": "Succession planning prepares internal candidates for future leadership roles.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-47",
+      "text": "Explain the methods of performance appraisal",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "Training development and performance appraisal",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Appraisal methods include traditional ones like graphic rating and essay and modern ones like management by objectives and 360 degree feedback.",
+      "explanation": "Contrast traditional and modern appraisal techniques.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-48",
+      "text": "Explain the role of HRM in building organisational culture",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HRM concepts and functions",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "HRM shapes culture through hiring values aligned people induction training reward systems and leadership development reinforcing desired behaviours.",
+      "explanation": "Link HR practices to reinforcing cultural values.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-49",
+      "text": "A strike is a temporary stoppage of work by employees to press their demands",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Human Resource Management",
+      "topic": "Industrial relations and engagement",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A strike is a collective work stoppage by employees during a dispute.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "hrm-50",
+      "text": "Explain the concept and importance of job design",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Human Resource Management",
+      "topic": "HR planning job analysis and design",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Job design structures the tasks duties and responsibilities of a job to improve motivation and efficiency through techniques like job rotation enlargement and enrichment.",
+      "explanation": "Cover the meaning and the techniques of job design.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,1071 @@
+{
+  "program": "BBA",
+  "subject": "Organisational Behaviour",
+  "semester": 2,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "OB core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "ob-01",
+      "text": "Organisational behaviour is the study of human behaviour in",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Organisational settings",
+        "Laboratory conditions",
+        "Isolation",
+        "Markets"
+      ],
+      "correctAnswer": "A",
+      "explanation": "OB studies how individuals and groups behave within organisations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-02",
+      "text": "OB draws knowledge from psychology sociology and",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Anthropology",
+        "Astronomy",
+        "Botany",
+        "Zoology"
+      ],
+      "correctAnswer": "A",
+      "explanation": "OB is interdisciplinary drawing on psychology sociology anthropology and political science.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-03",
+      "text": "The three levels of analysis in OB are individual group and",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "organisational",
+      "explanation": "OB analyses behaviour at the individual group and organisational levels.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-04",
+      "text": "Organisational behaviour is a purely theoretical field with no practical application",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "OB is applied and helps managers improve productivity satisfaction and effectiveness.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-05",
+      "text": "State the disciplines that contribute to organisational behaviour",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Psychology sociology social psychology anthropology and political science.",
+      "explanation": "Each discipline contributes insights at different levels of analysis.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-06",
+      "text": "Explain the models of organisational behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The main models are autocratic custodial supportive and collegial. They differ in the basis of control and in employee orientation moving from obedience to self direction.",
+      "explanation": "Describe each model and how employee orientation evolves across them.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-07",
+      "text": "The process by which individuals organise and interpret sensory impressions is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Perception",
+        "Motivation",
+        "Learning",
+        "Attitude"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Perception is how people select organise and interpret their sensory environment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-08",
+      "text": "Judging someone based on a single characteristic is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Halo effect",
+        "Stereotyping",
+        "Projection",
+        "Selective perception"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The halo effect lets one trait colour the overall impression of a person.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-09",
+      "text": "A relatively stable set of characteristics that determines how a person thinks feels and behaves is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "personality",
+      "explanation": "Personality is the stable pattern of traits that shapes behaviour.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-10",
+      "text": "Attitudes have three components cognitive affective and behavioural",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Attitudes consist of belief feeling and intention to act.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-11",
+      "text": "What are the components of an attitude",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "The cognitive component is the belief the affective component is the feeling and the behavioural component is the intention to act.",
+      "explanation": "These three components together make up an attitude.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-12",
+      "text": "Explain the determinants of personality",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Personality is shaped by heredity environment family social and situational factors. Both inherited traits and life experiences combine to form personality.",
+      "explanation": "Cover the heredity versus environment debate and situational influences.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-13",
+      "text": "The theory that links effort to performance to reward is called",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Expectancy theory",
+        "Classical conditioning",
+        "Trait theory",
+        "Attribution theory"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Expectancy theory says motivation depends on expectancy instrumentality and valence.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-14",
+      "text": "Learning through observing others and imitating their behaviour is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "social learning",
+      "explanation": "Social learning theory emphasises learning through observation and modelling.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-15",
+      "text": "Job satisfaction is the positive feeling about a job resulting from evaluating its characteristics",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Job satisfaction is an affective response to the job and its characteristics.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-16",
+      "text": "Distinguish between intrinsic and extrinsic motivation",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Intrinsic motivation comes from the work itself such as interest and achievement. Extrinsic motivation comes from external rewards such as pay and promotion.",
+      "explanation": "The source of the drive internal or external distinguishes the two.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-17",
+      "text": "Explain the reinforcement theory of learning",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Reinforcement theory states that behaviour is a function of its consequences. Positive and negative reinforcement strengthen behaviour while punishment and extinction weaken it.",
+      "explanation": "Describe each type of consequence and its effect on behaviour.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-18",
+      "text": "The stage of group development marked by conflict over roles is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Storming",
+        "Forming",
+        "Norming",
+        "Performing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "In the storming stage members experience conflict as they establish roles.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-19",
+      "text": "The tendency of group members to suppress disagreement to maintain harmony is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "groupthink",
+      "explanation": "Groupthink occurs when the desire for consensus overrides realistic appraisal of alternatives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-20",
+      "text": "A group is a set of people who interact to achieve individual rather than shared goals",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "A group interacts to achieve shared goals; a team is a group with complementary skills and mutual accountability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-21",
+      "text": "List the stages of group development",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Forming storming norming performing and adjourning.",
+      "explanation": "These are the five stages in Tuckmans model of group development.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-22",
+      "text": "Explain the difference between a group and a team",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A group has a common interest and individual accountability while a team has complementary skills shared goals and mutual accountability. Teams achieve synergy that groups may not.",
+      "explanation": "Cover goals skills accountability and the synergy of teams.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-23",
+      "text": "The ability to influence others toward the achievement of goals is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Leadership",
+        "Management",
+        "Delegation",
+        "Authority"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Leadership is the process of influencing people to pursue goals willingly.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-24",
+      "text": "Power that comes from a persons formal position in the hierarchy is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "legitimate power",
+      "explanation": "Legitimate power derives from the formal authority of a position.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-25",
+      "text": "A leader who consults followers before deciding uses a democratic style",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Democratic leaders involve followers in decision making.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-26",
+      "text": "List the bases of power identified by French and Raven",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Legitimate reward coercive expert and referent power.",
+      "explanation": "These five bases explain the different sources of a leaders power.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-27",
+      "text": "Explain the trait and behavioural approaches to leadership",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The trait approach seeks qualities that distinguish leaders from non leaders. The behavioural approach studies what leaders do such as task orientation and people orientation rather than what they are.",
+      "explanation": "Contrast the two approaches and give examples of each.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-28",
+      "text": "The shared beliefs values and norms that guide behaviour in an organisation form its",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Organisational culture",
+        "Strategy",
+        "Structure",
+        "Budget"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Organisational culture is the shared values and assumptions of members.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-29",
+      "text": "The physical or psychological response to demands that exceed a persons capacity is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "stress",
+      "explanation": "Stress is the strain from demands that exceed available coping resources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-30",
+      "text": "Positive stress that motivates and improves performance is called eustress",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Eustress is beneficial stress that energises while distress is harmful.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-31",
+      "text": "Define organisational culture",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Organisational culture is the set of shared values beliefs and norms that members learn and pass on and that distinguish one organisation from another.",
+      "explanation": "It shapes how members behave and interact.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-32",
+      "text": "Explain the sources and consequences of stress",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Stress arises from organisational factors like role ambiguity work overload and poor relationships and personal factors. It can cause low performance absenteeism burnout and health problems.",
+      "explanation": "Cover organisational and personal sources and their consequences.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-33",
+      "text": "Assertion: Employees with high job satisfaction tend to have lower turnover. Reason: Satisfied employees are more committed and less likely to leave",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction (assertion reason)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Satisfaction builds commitment which reduces the desire to leave.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-34",
+      "text": "Match the concept to its meaning",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality (matching)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Stereotyping - judging based on group membership",
+        "Halo effect - judging each trait independently",
+        "Projection - accurate self assessment",
+        "Perception - ignoring sensory data"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Stereotyping judges a person by their group while the halo effect generalises one trait.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-35",
+      "text": "The process of changing an organisation from its current state to a desired future state is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Organisational change",
+        "Job analysis",
+        "Selection",
+        "Appraisal"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Organisational change moves the organisation toward a planned future state.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-36",
+      "text": "Lewins three step model of change consists of unfreezing moving and",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "refreezing",
+      "explanation": "Lewins model has unfreezing the change and refreezing stages.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-37",
+      "text": "Resistance to change is always irrational and never justified",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Resistance may reflect genuine concerns about loss and can be a useful signal.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-38",
+      "text": "Explain the reasons why employees resist change",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Organisational culture change and stress",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Fear of the unknown habit loss of security and status and mistrust of management cause resistance to change.",
+      "explanation": "Understanding these reasons helps managers manage change.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-39",
+      "text": "Read the case: A team misses deadlines because members rarely share information and avoid discussing disagreements to keep peace. Identify the group problem and suggest how to fix it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The team is suffering from groupthink which suppresses dissent. The leader should encourage open debate appoint a devils advocate and seek outside opinions before deciding.",
+      "explanation": "Diagnose groupthink and propose structural remedies to encourage dissent.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-40",
+      "text": "Read the case: A talented employee has low motivation because she feels her effort does not affect rewards which she does not value. Use expectancy theory to diagnose and suggest a solution",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Expectancy is low because effort does not clearly lead to performance or valued rewards. The manager should clarify the performance reward link and offer rewards the employee actually values.",
+      "explanation": "Apply expectancy instrumentality and valence to the described symptoms.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-41",
+      "text": "A managers belief about whether employees are inherently lazy or self motivated is the basis of",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Theory X and Theory Y",
+        "Trait theory",
+        "Path goal theory",
+        "Fiedler model"
+      ],
+      "correctAnswer": "A",
+      "explanation": "McGregors Theory X assumes people dislike work while Theory Y assumes they seek responsibility.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-42",
+      "text": "The Ohio State studies identified two leader behaviours initiating structure and",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Leadership and power",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "consideration",
+      "explanation": "Initiating structure is task oriented while consideration is people oriented.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-43",
+      "text": "The Big Five personality traits include openness conscientiousness extraversion agreeableness and neuroticism",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "These five dimensions are the widely accepted Big Five model of personality.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-44",
+      "text": "The extent to which a person identifies with a job and considers performance important is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "job involvement",
+      "explanation": "Job involvement reflects psychological identification with the job.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-45",
+      "text": "Explain the relationship between attitudes and behaviour",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Attitudes influence behaviour through intentions but the link is moderated by situational constraints and the strength and specificity of the attitude.",
+      "explanation": "Specific strong attitudes predict behaviour better than general ones.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-46",
+      "text": "Explain the importance of organisational behaviour for managers",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Foundations of OB",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "OB helps managers understand predict and influence behaviour. It improves motivation teamwork leadership and the management of change and diversity leading to higher productivity and satisfaction.",
+      "explanation": "Link OB concepts to practical managerial outcomes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-47",
+      "text": "Describe the process of perception and the errors in it",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Perception proceeds through selection organisation and interpretation of stimuli. Errors include stereotyping halo effect projection and selective perception which distort judgement.",
+      "explanation": "Trace the perceptual process then explain the common perceptual distortions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-48",
+      "text": "Job satisfaction is measured only through salary levels",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Organisational Behaviour",
+      "topic": "Learning motivation and job satisfaction",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Satisfaction depends on many factors including the work itself supervision peers and growth.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-49",
+      "text": "Explain the types of teams in an organisation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Group dynamics and team building",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Teams include problem solving teams self managed teams cross functional teams and virtual teams. They differ in autonomy scope and how members coordinate.",
+      "explanation": "Describe each team type with its purpose and features.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ob-50",
+      "text": "Explain the importance of emotional intelligence in the workplace",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Organisational Behaviour",
+      "topic": "Perception attitudes and personality",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Emotional intelligence is the ability to recognise and manage ones own emotions and those of others. It improves leadership teamwork conflict resolution and customer relations.",
+      "explanation": "Cover the components of EI and their workplace benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

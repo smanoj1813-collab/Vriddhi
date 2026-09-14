@@ -1,0 +1,1063 @@
+{
+  "program": "BBA",
+  "subject": "Business Law",
+  "semester": 3,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Legal core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "bl-01",
+      "text": "An agreement enforceable by law is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Contract",
+        "Promise",
+        "Proposal",
+        "Invitation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A contract is an agreement that creates legal obligations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-02",
+      "text": "The minimum age at which a person can enter into a valid contract in India is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "18 years",
+        "16 years",
+        "21 years",
+        "25 years"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Under the Indian Majority Act a person attains majority at eighteen.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-03",
+      "text": "A proposal when accepted becomes a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "promise",
+      "explanation": "Acceptance of an offer converts the proposal into a promise.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-04",
+      "text": "An agreement without consideration is always void",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "There are exceptions such as gifts and natural love and affection where consideration is not required.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-05",
+      "text": "List the essential elements of a valid contract",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Offer and acceptance lawful consideration capacity free consent lawful object and certainty.",
+      "explanation": "These elements must all be present for a valid contract.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-06",
+      "text": "Explain the modes of discharge of a contract",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A contract is discharged by performance mutual agreement impossibility lapse of time operation of law and breach. Each brings the obligations to an end.",
+      "explanation": "Cover the various ways contractual obligations terminate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-07",
+      "text": "A contract to compensate a party for loss caused by another is a contract of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Indemnity",
+        "Guarantee",
+        "Bailment",
+        "Agency"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Indemnity promises to make good a loss suffered by another.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-08",
+      "text": "The person whose goods are delivered to another for a purpose on return is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "bailor",
+      "explanation": "In bailment the bailor delivers goods to the bailee for a purpose on return.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-09",
+      "text": "A contract of guarantee involves three parties",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Guarantee involves the creditor principal debtor and surety.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-10",
+      "text": "Distinguish between indemnity and guarantee",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Indemnity involves two parties and one promise while guarantee involves three parties and a secondary liability of the surety.",
+      "explanation": "Guarantee has an extra party and a contingent liability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-11",
+      "text": "Explain the rights and duties of a bailee",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A bailee must take reasonable care of the goods and return them as agreed and has the right to recover expenses and claim a lien for unpaid charges.",
+      "explanation": "Cover the duties of care and return and the rights of reimbursement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-12",
+      "text": "The Act that governs contracts for the sale of movable goods is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Sale of Goods Act",
+        "Companies Act",
+        "Partnership Act",
+        "Contract Act"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Sale of Goods Act 1930 governs contracts for the sale of goods.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-13",
+      "text": "The transfer of ownership of goods for a price is called a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "sale",
+      "explanation": "A sale transfers property in goods from seller to buyer for a price.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-14",
+      "text": "In a contract of sale property in the goods passes immediately to the buyer",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "In a sale ownership passes at once while in an agreement to sell it passes later.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-15",
+      "text": "Distinguish between a sale and an agreement to sell",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "In a sale property in goods transfers immediately while in an agreement to sell it transfers at a future time or on a condition.",
+      "explanation": "The timing of ownership transfer is the key difference.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-16",
+      "text": "Explain the doctrine of caveat emptor and its exceptions",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Caveat emptor means let the buyer beware so the buyer must examine goods before purchase. Exceptions arise for fitness for purpose merchantable quality and sale by sample.",
+      "explanation": "State the rule then the exceptions protecting the buyer.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-17",
+      "text": "A written promise to pay a fixed sum of money on demand is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Promissory note",
+        "Receipt",
+        "Invoice",
+        "Voucher"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A promissory note is an unconditional written promise to pay a fixed sum.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-18",
+      "text": "A bill of exchange contains an order to pay whereas a promissory note contains a",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "promise",
+      "explanation": "A bill orders payment while a note promises payment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-19",
+      "text": "A cheque is a bill of exchange drawn on a banker and payable on demand",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A cheque is a special bill of exchange drawn on a banker payable on demand.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-20",
+      "text": "Define a negotiable instrument and list its types",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "A negotiable instrument is freely transferable by delivery and includes promissory notes bills of exchange and cheques.",
+      "explanation": "These instruments can pass from person to person freely.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-21",
+      "text": "Explain the distinction between a bill of exchange and a cheque",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A cheque is always drawn on a banker and payable on demand while a bill may be drawn on any person and may be payable after time. A cheque needs no acceptance but a bill usually requires it.",
+      "explanation": "Cover the drawee payable on demand and acceptance differences.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-22",
+      "text": "A company is an artificial legal person created by",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Law",
+        "Shareholders",
+        "Directors",
+        "Government"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A company is a legal person created by law distinct from its members.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-23",
+      "text": "The document that defines the external objects and powers of a company is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "memorandum of association",
+      "explanation": "The memorandum states the objects and scope of the company.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-24",
+      "text": "A company has perpetual succession meaning its existence continues regardless of member changes",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Perpetual succession means the company continues despite changes in membership.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-25",
+      "text": "State the characteristics of a company",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Separate legal entity perpetual succession limited liability common seal and transferable shares.",
+      "explanation": "These features distinguish a company from other forms of business.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-26",
+      "text": "Explain the doctrine of separate legal entity with reference to a leading case",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A company is distinct from its members as held in Salomon versus Salomon. Shareholders are not personally liable for company debts beyond their shares.",
+      "explanation": "Explain the corporate veil and the Salomon principle.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-27",
+      "text": "The Act that protects consumers against unfair trade practices is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Consumer Protection Act",
+        "Contract Act",
+        "Sale of Goods Act",
+        "Companies Act"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Consumer Protection Act safeguards consumer rights and provides redressal.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-28",
+      "text": "The three tier consumer dispute redressal machinery ends at the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "National Commission",
+      "explanation": "District State and National Commissions form the three tiers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-29",
+      "text": "The Competition Act aims to prevent anti competitive agreements and abuse of dominance",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Competition Act 2002 regulates anti competitive practices and combinations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-30",
+      "text": "List any four consumer rights",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Right to safety information choice to be heard and redressal.",
+      "explanation": "These rights protect consumers in the marketplace.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-31",
+      "text": "Explain the objectives of the Consumer Protection Act",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The Act protects consumers from unfair trade practices and defective goods and services and provides simple speedy and inexpensive redressal of grievances.",
+      "explanation": "Cover protection and the redressal machinery.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-32",
+      "text": "Assertion: A minor cannot enter into a valid contract. Reason: The law presumes a minor lacks the capacity to contract",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act (assertion reason)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Incapacity of minors makes their agreements void ab initio.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-33",
+      "text": "Match the instrument to its nature",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act (matching)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Cheque - drawn on a banker",
+        "Promissory note - an order to pay",
+        "Bill of exchange - a promise to pay",
+        "Receipt - a negotiable instrument"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A cheque is drawn on a banker while a note is a promise and a bill is an order.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-34",
+      "text": "Consent obtained by threatening harm is obtained by",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Coercion",
+        "Undue influence",
+        "Misrepresentation",
+        "Fraud"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Coercion involves threats to obtain consent unlawfully.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-35",
+      "text": "The person who is represented by an agent is called the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "principal",
+      "explanation": "The principal authorises the agent to act on his behalf.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-36",
+      "text": "The Sale of Goods Act applies to immovable property",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "The Act applies only to movable goods and not to immovable property.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-37",
+      "text": "Explain the conditions and warranties in a contract of sale",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A condition is essential to the contract and its breach allows repudiation while a warranty is collateral and its breach only allows damages.",
+      "explanation": "The remedy differs because conditions are more fundamental.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-38",
+      "text": "Explain the types of companies under the Companies Act",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Companies may be classified by incorporation as chartered statutory or registered by liability as limited or unlimited and as private or public.",
+      "explanation": "Classify companies on the bases of incorporation liability and membership.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-39",
+      "text": "Read the case: A offers to sell his car to B for 200000 but B replies accepting at 180000. Explain the legal position of Bs reply",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Bs reply is a counter offer which rejects the original offer. No contract is formed and B cannot later accept the original offer unless A renews it.",
+      "explanation": "A counter offer destroys the original offer.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-40",
+      "text": "Read the case: A company sells a defective machine that injures a worker despite a disclaimer in the contract. Explain whether the consumer can claim under consumer law",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The consumer can claim for a defective product and unfair practice as the right to safety and redressal cannot be excluded by a disclaimer under the Consumer Protection Act.",
+      "explanation": "Statutory consumer rights override contractual disclaimers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-41",
+      "text": "The concept of a company having a personality distinct from its members is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "corporate veil",
+      "explanation": "The corporate veil separates the company from its shareholders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-42",
+      "text": "Explain the concept of free consent and the factors vitiating it",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Free consent means agreeing without coercion undue influence fraud misrepresentation or mistake. Any of these factors makes consent not free and may make the contract voidable.",
+      "explanation": "Cover each vitiating factor and its effect on the contract.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-43",
+      "text": "A contract entered into by an agent within authority binds the principal",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "An agent acting within authority binds the principal to third parties.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-44",
+      "text": "Explain the rights of an unpaid seller",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Sale of Goods Act",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "An unpaid seller has rights against the goods including lien stoppage in transit and resale and rights against the buyer for the price and damages.",
+      "explanation": "Distinguish rights against goods from rights against the buyer.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-45",
+      "text": "Define consideration and state its legal rules",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Indian Contract Act",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Consideration is something of value given in return for a promise and must be real lawful and need not be adequate.",
+      "explanation": "Consideration must move at the desire of the promisor and be lawful.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-46",
+      "text": "Explain the procedure for the incorporation of a company",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Incorporation requires filing the memorandum and articles with the registrar paying fees and obtaining the certificate of incorporation which gives the company legal existence.",
+      "explanation": "Trace the steps from documents to the certificate of incorporation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-47",
+      "text": "The winding up of a company brings its existence to an end",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Law",
+      "topic": "Companies Act",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Winding up liquidates assets and ends the companys existence.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-48",
+      "text": "Explain the meaning and kinds of agency",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Special contracts",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Agency is the relationship where an agent acts for a principal. It may arise by express or implied agreement ratification or necessity.",
+      "explanation": "Describe the modes by which agency is created.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-49",
+      "text": "A bill of exchange that is payable at sight is called a demand bill",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Negotiable Instruments Act",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A demand bill is payable immediately on presentation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bl-50",
+      "text": "Explain the remedies available to a consumer under the Consumer Protection Act",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Law",
+      "topic": "Consumer Protection and competition law",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Consumers may seek removal of defects replacement refund of price compensation and cessation of unfair practices through the district state or national commissions.",
+      "explanation": "Cover the remedies and the redressal forums.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,1081 @@
+{
+  "program": "BBA",
+  "subject": "Business Communication",
+  "semester": 1,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Communication skills core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "bc-01",
+      "text": "The process of exchanging ideas facts and feelings between two or more people is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Communication",
+        "Motivation",
+        "Delegation",
+        "Coordination"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Communication is the transfer and understanding of meaning between people.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-02",
+      "text": "In the communication process the person who initiates the message is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Sender",
+        "Receiver",
+        "Decoder",
+        "Feedback"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The sender encodes and transmits the message to the receiver.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-03",
+      "text": "The response of the receiver that confirms whether the message was understood is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "feedback",
+      "explanation": "Feedback completes the communication loop and lets the sender verify understanding.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-04",
+      "text": "Communication is a two way process",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Effective communication involves both sending and receiving with feedback.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-05",
+      "text": "State the elements of the communication process",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Sender message encoding channel decoding receiver and feedback.",
+      "explanation": "These seven elements make up the complete communication cycle.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-06",
+      "text": "Explain the importance of communication in business",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Communication helps in planning decision making coordination and motivation. It builds relationships with customers and suppliers and is essential for leadership and change management.",
+      "explanation": "Cover internal coordination and external stakeholder relations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-07",
+      "text": "Noise in communication refers to",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Any interference that distorts the message",
+        "The sender of the message",
+        "The feedback",
+        "The channel"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Noise is any barrier that distorts or interrupts the message.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-08",
+      "text": "Using jargon that the receiver does not understand is which type of barrier",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Semantic barrier",
+        "Physical barrier",
+        "Psychological barrier",
+        "Organisational barrier"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Semantic barriers arise from words and symbols having different meanings.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-09",
+      "text": "The C of communication that means the message should contain all the facts the receiver needs is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "completeness",
+      "explanation": "Completeness ensures the receiver has everything required to act or decide.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-10",
+      "text": "Selective perception is a psychological barrier to communication",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "People filter information through their own attitudes and expectations causing selective perception.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-11",
+      "text": "List the seven Cs of effective communication",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Completeness conciseness consideration concreteness clarity courtesy and correctness.",
+      "explanation": "These seven Cs guide effective message construction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-12",
+      "text": "Explain the barriers to effective communication and how to overcome them",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Barriers may be semantic physical psychological or organisational. They are overcome by using simple language active listening empathy the right channel and encouraging feedback.",
+      "explanation": "Cover each barrier type and the matching remedy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-13",
+      "text": "A formal written message sent inside an organisation is called a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Memorandum",
+        "Circular",
+        "Notice",
+        "Newsletter"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A memorandum or memo is used for internal written communication.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-14",
+      "text": "The part of a business letter that contains the main message is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Body",
+        "Salutation",
+        "Heading",
+        "Subject line"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The body carries the main content between the salutation and the close.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-15",
+      "text": "A report that is prepared in a prescribed form at regular intervals is a",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "routine report",
+      "explanation": "Routine reports are submitted periodically in a standard format.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-16",
+      "text": "A memo is usually addressed to people outside the organisation",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Memos are internal documents; external messages use letters.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-17",
+      "text": "What are the parts of a formal business letter",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Heading date inside address salutation subject body complimentary close and signature.",
+      "explanation": "These standard parts give a letter its formal structure.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-18",
+      "text": "Explain the different types of business reports",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Reports may be routine or special formal or informal and informational or analytical. They differ in frequency format and whether they merely present facts or also interpret them.",
+      "explanation": "Classify reports by frequency form and purpose.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-19",
+      "text": "The style of communication in which a speaker addresses a live audience is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Presentation",
+        "Memo",
+        "Report",
+        "Circular"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A presentation is a structured oral communication to an audience.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-20",
+      "text": "Non verbal communication that studies body movement is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "kinesics",
+      "explanation": "Kinesics is the study of gestures posture and body language.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-21",
+      "text": "Eye contact is an important element of effective public speaking",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Eye contact engages the audience and builds credibility and rapport.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-22",
+      "text": "List the characteristics of effective presentation",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Clear objective logical structure confident delivery audience awareness and effective use of visual aids.",
+      "explanation": "These characteristics keep the audience engaged and informed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-23",
+      "text": "Explain the importance of non verbal communication",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Non verbal cues such as facial expression gestures posture and tone often convey more than words and can reinforce or contradict the spoken message. They build trust and express emotions.",
+      "explanation": "Cover the types of non verbal cues and their impact on meaning.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-24",
+      "text": "Electronic mail is an example of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Business correspondence and e-communication",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Electronic communication",
+        "Oral communication",
+        "Non verbal communication",
+        "Grapevine"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Email is a form of electronic written communication.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-25",
+      "text": "The informal communication network that spreads by word of mouth is called the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Business correspondence and e-communication",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "grapevine",
+      "explanation": "The grapevine is the unofficial channel of communication within an organisation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-26",
+      "text": "An email should have a clear and relevant subject line",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Business correspondence and e-communication",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A clear subject line helps the receiver prioritise and understand the message.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-27",
+      "text": "Differentiate between formal and informal communication",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Business correspondence and e-communication",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Formal communication follows the official chain of command and is documented. Informal communication is unofficial and spontaneous and moves through the grapevine.",
+      "explanation": "The difference lies in official structure and documentation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-28",
+      "text": "Explain the advantages and limitations of email communication",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Business correspondence and e-communication",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Email is fast inexpensive and provides a written record with easy sharing. Its limits include misinterpretation lack of non verbal cues and information overload.",
+      "explanation": "Balance the speed and record benefits against the loss of personal touch.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-29",
+      "text": "A group discussion is an effective tool used mainly for",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Group discussion and interview skills",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Assessing communication and teamwork",
+        "Writing reports",
+        "Filing documents",
+        "Calculating accounts"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Group discussions evaluate communication leadership and team skills.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-30",
+      "text": "The first formal stage of a selection interview is usually the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Group discussion and interview skills",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "screening interview",
+      "explanation": "A screening interview is the preliminary stage to shortlist candidates.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-31",
+      "text": "In a group discussion dominating others and not allowing them to speak is a positive trait",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Group discussion and interview skills",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Dominating a discussion is negative; balanced participation and listening are valued.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-32",
+      "text": "List any four do s for a successful job interview",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Group discussion and interview skills",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Arrive on time dress appropriately maintain eye contact and answer clearly with relevant examples.",
+      "explanation": "These behaviours create a positive impression on the interviewer.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-33",
+      "text": "Explain the skills required to succeed in a group discussion",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Group discussion and interview skills",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Success requires listening analytical thinking clarity of expression leadership and the ability to cooperate. A candidate must present views logically and respect others while steering the discussion.",
+      "explanation": "Cover the communication and behavioural skills assessed in a GD.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-34",
+      "text": "Assertion: Listening is as important as speaking in communication. Reason: Communication is complete only when the receiver accurately understands the message",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication (assertion reason)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Understanding depends on listening so listening is central to complete communication.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-35",
+      "text": "Match the communication element to its role",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication (matching)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Encoding - converting idea into message",
+        "Decoding - sending the message",
+        "Channel - interpreting the message",
+        "Feedback - originating the idea"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Encoding converts the idea into a message while decoding interprets it.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-36",
+      "text": "A meeting notice that is displayed on a board for all employees is called a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Notice",
+        "Memo",
+        "Circular",
+        "Agenda"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A notice is a public written announcement displayed for information.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-37",
+      "text": "The list of items to be discussed at a meeting is called the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "agenda",
+      "explanation": "An agenda lists the topics in the order they will be taken up at the meeting.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-38",
+      "text": "Minutes of a meeting are a written record of what was discussed and decided",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Minutes are the official record of proceedings and resolutions of a meeting.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-39",
+      "text": "State the difference between a notice and a circular",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Written communication",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A notice is displayed publicly for a wide audience while a circular is distributed to a specific group or department.",
+      "explanation": "The difference is in the audience and the method of distribution.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-40",
+      "text": "Read the case: A manager sends a long email full of technical jargon to a new intern who misreads an important deadline. Identify the barriers and suggest how the message could be improved",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The barriers are semantic from jargon and possible overload from length. The manager should use simple language a clear subject line and highlight the deadline explicitly then request confirmation.",
+      "explanation": "Apply the seven Cs to rewrite the message for clarity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-41",
+      "text": "Read the case: During a presentation the audience looks confused when the speaker uses a technical chart with no labels. Suggest how the speaker could improve the visual aid and delivery",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The speaker should label the chart clearly simplify it and explain each part while facing the audience. Pausing to check understanding and inviting questions would also help.",
+      "explanation": "Improve clarity of the visual aid and use audience feedback during delivery.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-42",
+      "text": "Which of the following is an example of downward communication",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "A manager giving instructions to staff",
+        "An employee suggesting an idea to the boss",
+        "Two departments sharing data",
+        "A worker complaining to a supervisor"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Downward communication flows from superiors to subordinates.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-43",
+      "text": "Upward communication flows from subordinates to superiors",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Upward communication carries feedback and reports from lower to higher levels.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-44",
+      "text": "A concise message expresses the idea using the fewest possible words without losing meaning",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Conciseness removes unnecessary words while retaining the full message.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-45",
+      "text": "The study of personal space in communication is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "proxemics",
+      "explanation": "Proxemics studies how distance and personal space affect communication.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-46",
+      "text": "The study of the role of time in communication is called chronemics",
+      "type": "true_false",
+      "difficulty": "hard",
+      "subject": "Business Communication",
+      "topic": "Oral communication and presentation skills",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Chronemics examines how the use of time conveys meaning in communication.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-47",
+      "text": "Explain the difference between hearing and listening",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Hearing is the passive physical reception of sound while listening is actively paying attention and interpreting meaning.",
+      "explanation": "Listening requires conscious effort and understanding unlike mere hearing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-48",
+      "text": "List any four barriers to effective listening",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Communication",
+      "topic": "Barriers to communication and 7 Cs",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Noise distractions prejudgement lack of interest and information overload.",
+      "explanation": "These barriers prevent the receiver from attending to and understanding the message.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-49",
+      "text": "Describe the types of communication on the basis of direction",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Communication may flow downward upward or horizontally. Downward carries orders and policies upward carries feedback and reports and horizontal links peers across departments.",
+      "explanation": "Explain each direction with examples and its purpose.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bc-50",
+      "text": "Describe the process of communication with a diagram in words",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Communication",
+      "topic": "Nature and importance of communication",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The sender encodes an idea into a message and transmits it through a channel. The receiver decodes it and sends feedback which may be affected by noise at any stage.",
+      "explanation": "Trace the flow from sender through encoding channel decoding receiver and feedback.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,1065 @@
+{
+  "program": "BBA",
+  "subject": "Business Research Methods",
+  "semester": 4,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Research methodology core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "brm-01",
+      "text": "The systematic investigation to discover new facts and solve problems is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Research",
+        "Marketing",
+        "Accounting",
+        "Production"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Research is a systematic enquiry to establish facts and solve problems.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-02",
+      "text": "Research that aims to solve a specific practical problem is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Applied research",
+        "Pure research",
+        "Historical research",
+        "Descriptive research"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Applied research addresses immediate practical problems.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-03",
+      "text": "Research conducted to expand fundamental knowledge is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "basic or pure research",
+      "explanation": "Basic research seeks knowledge for its own sake without immediate use.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-04",
+      "text": "Research always begins with defining the problem",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Defining the problem clearly is the first and most important step.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-05",
+      "text": "List the steps in the research process",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Defining the problem review of literature formulating hypotheses research design data collection analysis and reporting.",
+      "explanation": "These steps guide the research from problem to report.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-06",
+      "text": "Explain the types of research",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Research may be basic or applied exploratory descriptive or causal and quantitative or qualitative depending on purpose and approach.",
+      "explanation": "Classify research by purpose design and data type.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-07",
+      "text": "A tentative answer to a research question that is tested is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research problem and literature review",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Hypothesis",
+        "Sample",
+        "Variable",
+        "Report"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A hypothesis is a testable statement of expected relationship.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-08",
+      "text": "The review of existing studies on a topic is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research problem and literature review",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "literature review",
+      "explanation": "The literature review surveys prior work to frame the study.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-09",
+      "text": "A null hypothesis states that there is no relationship between variables",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research problem and literature review",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The null hypothesis asserts no effect or relationship.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-10",
+      "text": "State the characteristics of a good research problem",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research problem and literature review",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A good problem is clear significant researchable and feasible within time and resources.",
+      "explanation": "These qualities make the problem worth studying and solvable.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-11",
+      "text": "Explain the importance of a literature review",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research problem and literature review",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A literature review avoids duplication identifies gaps refines the problem and provides a theoretical foundation and context for the study.",
+      "explanation": "Cover gap identification and theoretical grounding.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-12",
+      "text": "The overall plan for conducting the research is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Research design",
+        "Hypothesis",
+        "Questionnaire",
+        "Report"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Research design is the blueprint for data collection and analysis.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-13",
+      "text": "The process of selecting a subset of a population for study is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "sampling",
+      "explanation": "Sampling selects a representative group from the population.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-14",
+      "text": "In simple random sampling every member of the population has an equal chance of selection",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Random sampling gives every unit an equal and independent chance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-15",
+      "text": "List the types of sampling methods",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Probability methods like random stratified and cluster sampling and non probability methods like convenience and judgement sampling.",
+      "explanation": "Sampling methods divide into probability and non probability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-16",
+      "text": "Explain the essentials of a good research design",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A good design is flexible appropriate efficient and economical and minimises bias and error while answering the research question reliably.",
+      "explanation": "Cover flexibility efficiency and bias reduction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-17",
+      "text": "Data collected directly from respondents for the study is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Primary data",
+        "Secondary data",
+        "Published data",
+        "Historical data"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Primary data is gathered first hand for the current research.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-18",
+      "text": "The tool consisting of a set of questions for respondents is a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "questionnaire",
+      "explanation": "A questionnaire is a structured set of questions for data collection.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-19",
+      "text": "Observation is a method of collecting data by watching behaviour",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Observation records behaviour directly without questioning respondents.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-20",
+      "text": "Distinguish between primary and secondary data",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Primary data is original and collected for the study while secondary data already exists from earlier sources.",
+      "explanation": "The difference lies in who collects and the original purpose.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-21",
+      "text": "Explain the methods of collecting primary data",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Primary data is collected by observation interview questionnaire and schedule each with its own strengths and limitations for different situations.",
+      "explanation": "Describe each method and when it is appropriate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-22",
+      "text": "The process of examining data to draw conclusions is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Data analysis",
+        "Data collection",
+        "Sampling",
+        "Report writing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Data analysis transforms raw data into meaningful findings.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-23",
+      "text": "The test used to determine whether sample results support the hypothesis is a",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "significance test",
+      "explanation": "Significance tests assess whether results could occur by chance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-24",
+      "text": "A type one error occurs when a true null hypothesis is rejected",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Type one error rejects a null hypothesis that is actually true.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-25",
+      "text": "Define hypothesis testing",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Hypothesis testing is a statistical procedure to decide whether sample evidence supports or rejects a null hypothesis.",
+      "explanation": "It accepts or rejects the null hypothesis at a significance level.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-26",
+      "text": "Explain the types of errors in hypothesis testing",
+      "type": "long_answer",
+      "difficulty": "hard",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Type one error rejects a true null hypothesis while type two error accepts a false null hypothesis. Lowering one tends to raise the other for a fixed sample.",
+      "explanation": "Define both errors and their trade off.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-27",
+      "text": "The final document that presents the research findings is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Research report",
+        "Questionnaire",
+        "Hypothesis",
+        "Sample"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The research report communicates the findings and conclusions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-28",
+      "text": "Presenting another persons work as ones own is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "plagiarism",
+      "explanation": "Plagiarism is using others work without acknowledgement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-29",
+      "text": "Research ethics require obtaining informed consent from participants",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Informed consent protects participants and is an ethical requirement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-30",
+      "text": "List the characteristics of a good research report",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Clarity accuracy objectivity proper structure and appropriate presentation of data.",
+      "explanation": "These qualities make the report useful and credible.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-31",
+      "text": "Explain the importance of research ethics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Research ethics protects participants ensures honesty and integrity builds public trust and safeguards the credibility of findings.",
+      "explanation": "Cover participant protection and research integrity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-32",
+      "text": "Assertion: Sampling is preferred to a census for large populations. Reason: Sampling saves time and cost while giving reliable results",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling (assertion reason)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Sampling gives reliable results faster and cheaper than studying everyone.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-33",
+      "text": "Match the tool to its use",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools (matching)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Questionnaire - self administered questions",
+        "Observation - asking questions",
+        "Interview - watching behaviour",
+        "Schedule - secondary data"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A questionnaire is self administered while interviews ask and observation watches.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-34",
+      "text": "Research that seeks to discover cause and effect relationships is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Causal research",
+        "Exploratory research",
+        "Descriptive research",
+        "Historical research"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Causal research tests cause and effect relationships between variables.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-35",
+      "text": "The entire group of interest to the researcher is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "population",
+      "explanation": "The population is the total group from which a sample is drawn.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-36",
+      "text": "Explain the significance of research in business decisions",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Research reduces uncertainty provides evidence for decisions identifies opportunities and problems and improves the quality and success of business choices.",
+      "explanation": "Cover evidence based decision making and risk reduction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-37",
+      "text": "A variable that the researcher manipulates is an independent variable",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Research problem and literature review",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The independent variable is manipulated to observe its effect on the dependent variable.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-38",
+      "text": "Explain the advantages and limitations of questionnaires",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Questionnaires are cheap cover wide areas and standardise responses but suffer from low response rates and the risk of misunderstanding questions.",
+      "explanation": "Balance reach and cost against response and clarity problems.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-39",
+      "text": "Read the case: A company wants to know why its sales fell but has no clear idea of the cause. Recommend a type of research to begin with and justify it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The company should start with exploratory research using interviews and focus groups to understand the situation before designing a formal descriptive or causal study.",
+      "explanation": "Exploratory research clarifies an unclear problem first.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-40",
+      "text": "Read the case: A researcher finds a strong association between advertising and sales in a sample. Explain what hypothesis testing would tell him and the risk of error",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Hypothesis testing determines whether the association is statistically significant or could be due to chance with the risk of type one error if the finding is actually random.",
+      "explanation": "Link significance testing to the risk of false conclusions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-41",
+      "text": "The research design that studies the same subjects over time is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Longitudinal study",
+        "Cross sectional study",
+        "Case study",
+        "Exploratory study"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Longitudinal research follows the same subjects over an extended period.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-42",
+      "text": "Explain the contents of a research report",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A report contains the title page introduction review of literature methodology findings conclusions and recommendations followed by references and appendices.",
+      "explanation": "Describe the standard structure of a research report.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-43",
+      "text": "The selection of a sample based on the researchers judgement is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "judgement sampling",
+      "explanation": "Judgement sampling is a non probability method using expert choice.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-44",
+      "text": "Explain the criteria for evaluating a research report",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Report writing and research ethics",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A report is evaluated on clarity of objectives soundness of method adequacy of data validity of analysis and the logic of conclusions and recommendations.",
+      "explanation": "Cover each criterion for assessing quality.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-45",
+      "text": "Secondary data is generally cheaper and faster to obtain than primary data",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Secondary data already exists so it is cheaper and quicker to collect.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-46",
+      "text": "Explain the importance of sampling in research",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Research design and sampling",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Sampling makes research feasible for large populations saving time and cost and can be more accurate than a census through careful control of data collection.",
+      "explanation": "Cover feasibility cost and accuracy advantages.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-47",
+      "text": "List the sources of secondary data",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Books journals government publications company records and the internet.",
+      "explanation": "These published and internal sources provide secondary data.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-48",
+      "text": "Explain the steps in hypothesis testing",
+      "type": "long_answer",
+      "difficulty": "hard",
+      "subject": "Business Research Methods",
+      "topic": "Data analysis and hypothesis testing",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Hypothesis testing proceeds from stating the null and alternative hypotheses through choosing a significance level and test statistic to comparing and deciding to accept or reject.",
+      "explanation": "Trace the formal steps of a significance test.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-49",
+      "text": "A pilot study is a small scale trial run of the research instrument",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Research Methods",
+      "topic": "Data collection methods and tools",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A pilot study tests the questionnaire on a small sample before the main study.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "brm-50",
+      "text": "Explain the difference between exploratory and descriptive research",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Research Methods",
+      "topic": "Meaning types and process of research",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Exploratory research investigates an unclear problem to generate insights while descriptive research describes characteristics of a population or phenomenon precisely.",
+      "explanation": "Contrast the purpose and flexibility of the two designs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

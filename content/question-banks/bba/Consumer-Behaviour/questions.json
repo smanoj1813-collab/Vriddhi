@@ -1,0 +1,1061 @@
+{
+  "program": "BBA",
+  "subject": "Consumer Behaviour",
+  "semester": 4,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Marketing elective-core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "cb-01",
+      "text": "The study of how individuals select buy use and dispose of goods is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Consumer behaviour",
+        "Production management",
+        "Financial analysis",
+        "Operations research"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Consumer behaviour studies the full cycle from selection to disposal.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-02",
+      "text": "The stimulus response model of consumer behaviour treats the buyer as a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Black box",
+        "Open system",
+        "Static unit",
+        "Producer"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The buyer black box transforms stimuli into purchase responses.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-03",
+      "text": "The study of consumer behaviour is important for market",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "segmentation",
+      "explanation": "Understanding buyers helps marketers segment and target them effectively.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-04",
+      "text": "Consumer behaviour is a static field that does not change over time",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Consumer behaviour evolves with culture technology and social trends.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-05",
+      "text": "State the importance of studying consumer behaviour",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "It helps design products set prices choose channels and create effective promotion to satisfy customers.",
+      "explanation": "Marketers use consumer insights across the marketing mix.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-06",
+      "text": "Explain the Howard Sheth model of consumer behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The Howard Sheth model explains buying as a process of inputs perceptual and learning constructs and outputs where information processing and learning shape the purchase decision.",
+      "explanation": "Cover inputs information processing learning and output variables.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-07",
+      "text": "The broadest social factor shaping consumer values and wants is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Culture",
+        "Reference group",
+        "Family",
+        "Opinion leader"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Culture is the most fundamental determinant of wants and behaviour.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-08",
+      "text": "Groups that a person compares themselves with and that influence attitudes are",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "reference groups",
+      "explanation": "Reference groups set norms that individuals adopt in their buying.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-09",
+      "text": "The family is a major influence on consumer buying decisions",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Family members especially parents and spouse strongly shape buying.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-10",
+      "text": "Define social class and its influence on buying",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Social class is a relatively homogeneous division of society and members of a class show similar brand preferences and buying patterns.",
+      "explanation": "Social class affects what and where people buy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-11",
+      "text": "Explain the cultural influences on consumer behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Culture subculture and social class transmit values norms and preferences that shape what consumers consider acceptable and desirable.",
+      "explanation": "Cover culture subculture and social class influences.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-12",
+      "text": "The stage of life that shapes buying such as single or married with children is the",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Family life cycle",
+        "Culture",
+        "Social class",
+        "Personality"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The family life cycle affects consumption needs at each stage.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-13",
+      "text": "The process by which people select organise and interpret information is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "perception",
+      "explanation": "Perception shapes how consumers notice and interpret marketing stimuli.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-14",
+      "text": "Personality and self concept influence the brands consumers prefer",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Consumers choose brands whose image matches their self concept.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-15",
+      "text": "List the personal factors influencing consumer behaviour",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Age occupation economic situation lifestyle and personality.",
+      "explanation": "These personal characteristics shape individual buying decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-16",
+      "text": "Explain the role of motivation in consumer behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Motivation is the inner drive that activates and directs behaviour toward satisfying needs. Maslows hierarchy and Freuds theory explain the conscious and unconscious motives behind buying.",
+      "explanation": "Cover need arousal and the main motivational theories.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-17",
+      "text": "The stage of the decision process where the consumer gathers product information is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Information search",
+        "Need recognition",
+        "Purchase",
+        "Evaluation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Information search follows need recognition in the decision process.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-18",
+      "text": "The set of brands a consumer considers when making a choice is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "evoked set",
+      "explanation": "The evoked set is the subset of brands the consumer actively considers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-19",
+      "text": "Routine purchases require extensive information search by the consumer",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Routine low involvement purchases need little or no information search.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-20",
+      "text": "Distinguish between routine and extensive problem solving",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Routine problem solving uses little effort for low involvement goods while extensive problem solving involves deep search for high involvement purchases.",
+      "explanation": "The degree of involvement determines the effort expended.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-21",
+      "text": "Explain the stages of the consumer decision process",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The process moves from need recognition through information search and evaluation of alternatives to purchase and post purchase evaluation with feedback affecting future behaviour.",
+      "explanation": "Trace each stage and its link to the next.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-22",
+      "text": "A learned predisposition to respond favourably or unfavourably to an object is an",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Attitude formation and change",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Attitude",
+        "Motive",
+        "Perception",
+        "Habit"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Attitudes are learned tendencies to evaluate objects consistently.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-23",
+      "text": "The three components of attitude are cognitive affective and",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Attitude formation and change",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "behavioural",
+      "explanation": "Attitudes consist of belief feeling and intention components.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-24",
+      "text": "Attitudes are learned and can be changed through marketing communication",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Attitude formation and change",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Since attitudes are learned they can be modified through new information and experience.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-25",
+      "text": "Explain the functions of attitudes",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Attitude formation and change",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Attitudes serve utilitarian value expressive ego defensive and knowledge functions for consumers.",
+      "explanation": "Each function explains why consumers hold particular attitudes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-26",
+      "text": "Explain the strategies for changing consumer attitudes",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Attitude formation and change",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Marketers change attitudes by altering beliefs about the brand adding new attributes changing the importance of attributes or repositioning the brand relative to competitors.",
+      "explanation": "Cover belief change and repositioning strategies.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-27",
+      "text": "The evaluation a consumer makes after purchase that determines satisfaction is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Post purchase evaluation",
+        "Need recognition",
+        "Information search",
+        "Brand choice"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Post purchase evaluation compares expectations with performance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-28",
+      "text": "The doubt a buyer feels after a purchase is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "cognitive dissonance",
+      "explanation": "Post purchase dissonance is anxiety about whether the right choice was made.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-29",
+      "text": "Customer satisfaction results when perceived performance meets or exceeds expectations",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Satisfaction is the gap between expectation and actual performance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-30",
+      "text": "Explain the importance of post purchase behaviour for marketers",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Post purchase satisfaction determines repeat purchase loyalty and word of mouth so marketers must manage expectations and after sales service.",
+      "explanation": "Satisfaction drives retention and recommendation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-31",
+      "text": "Explain how marketers can reduce post purchase dissonance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Marketers reduce dissonance through reassuring communication guarantees easy returns and after sales support that confirm the buyers decision.",
+      "explanation": "Cover reassurance guarantees and support mechanisms.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-32",
+      "text": "Assertion: Satisfied customers are more likely to be loyal. Reason: Satisfaction leads to repeat purchase and positive word of mouth",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction (assertion reason)",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Satisfaction builds loyalty through repeat buying and recommendations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-33",
+      "text": "Match the influence to its type",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences (matching)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Family - social influence",
+        "Personality - social influence",
+        "Social class - personal influence",
+        "Culture - personal influence"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Family and social class are social influences while personality is personal.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-34",
+      "text": "A consumer who spreads product information to others informally is an",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Opinion leader",
+        "Adopter",
+        "Producer",
+        "Distributor"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Opinion leaders influence others through informal word of mouth.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-35",
+      "text": "The process by which people acquire skills knowledge and attitudes is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "learning",
+      "explanation": "Learning produces relatively permanent changes in behaviour.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-36",
+      "text": "Explain the adoption process for a new product",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Adoption proceeds through awareness interest evaluation trial and adoption as the consumer learns about and accepts the new product.",
+      "explanation": "Trace the stages from first awareness to final adoption.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-37",
+      "text": "Read the case: A brand of premium watch sells poorly despite high quality because young buyers see it as old fashioned. Diagnose the issue and suggest an attitude change strategy",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Consumer Behaviour",
+      "topic": "Attitude formation and change",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Young buyers hold an unfavourable brand attitude. The brand should reposition through modern design celebrity endorsement and digital marketing to change beliefs and associations.",
+      "explanation": "Apply attitude change strategies to the unfavourable perception.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-38",
+      "text": "Read the case: A customer buys a smartphone and then sees a competitor advertise better features at a lower price and feels regret. Explain the phenomenon and how the seller should respond",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Consumer Behaviour",
+      "topic": "Post purchase behaviour and satisfaction",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The customer is experiencing cognitive dissonance. The seller should reinforce the decision with reassurance warranty support and follow up communication to reduce doubt.",
+      "explanation": "Diagnose dissonance and propose reassurance measures.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-39",
+      "text": "Explain the relationship between consumer behaviour and marketing strategy",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Consumer behaviour insights guide segmentation targeting positioning and the marketing mix ensuring products prices channels and promotion match consumer needs.",
+      "explanation": "Link consumer understanding to each element of strategy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-40",
+      "text": "Distinguish between high involvement and low involvement purchases",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "High involvement purchases are expensive risky and infrequent requiring deep evaluation while low involvement purchases are routine and need little thought.",
+      "explanation": "Risk and cost determine the level of involvement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-41",
+      "text": "The theory that consumers pass through innovators early adopters and laggards is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "diffusion of innovation",
+      "explanation": "Diffusion theory classifies adopters by how quickly they accept innovations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-42",
+      "text": "Explain the factors that determine the level of consumer involvement",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Involvement depends on price risk self image social visibility and emotional appeal of the product with higher stakes producing higher involvement.",
+      "explanation": "Cover the product and situational factors raising involvement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-43",
+      "text": "A consumer buys the same brand habitually without evaluation. This is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Routine response behaviour",
+        "Extensive problem solving",
+        "Limited problem solving",
+        "Impulse buying"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Routine response behaviour involves little search and habitual choice.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-44",
+      "text": "Explain the psychological factors influencing consumer behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Motivation perception learning and attitudes are the key psychological factors that drive and shape how consumers interpret and respond to marketing.",
+      "explanation": "Cover each psychological factor and its effect.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-45",
+      "text": "The process of giving meaning to sensory stimuli is called perception",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Perception is selecting organising and interpreting stimuli into meaning.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-46",
+      "text": "Explain the social factors influencing consumer behaviour",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Reference groups family roles and status and opinion leaders shape consumer choices by setting norms providing information and exerting pressure to conform.",
+      "explanation": "Cover reference groups family and opinion leaders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-47",
+      "text": "List the types of buying decisions",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Consumer Behaviour",
+      "topic": "Consumer decision making process",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Routine limited problem solving and extensive problem solving decisions.",
+      "explanation": "The types differ by the effort and risk involved.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-48",
+      "text": "Explain the concept and determinants of lifestyle",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Personal and psychological influences",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Lifestyle is a persons pattern of living expressed in activities interests and opinions and is shaped by culture social class and personality affecting consumption choices.",
+      "explanation": "Cover the AIO framework and its determinants.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-49",
+      "text": "The group a person aspires to join is called an aspirational reference group",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Cultural and social influences",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Aspirational groups are those the individual wishes to belong to.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "cb-50",
+      "text": "Explain the importance of consumer behaviour in service marketing",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Consumer Behaviour",
+      "topic": "Nature and models of consumer behaviour",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Services are intangible and inseparable so understanding consumer expectations perceptions and satisfaction is essential to design and deliver quality service experiences.",
+      "explanation": "Link the special features of services to consumer understanding.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

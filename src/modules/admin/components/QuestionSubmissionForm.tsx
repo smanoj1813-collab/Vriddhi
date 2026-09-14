@@ -45,7 +45,7 @@ import {
   Image as ImageIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
-import { createQuestion } from '../api/questionBankApi';
+import { questionStorageApi } from '../api/cloudStorageApi';
 import {
   type DifficultyLevel,
   type QuestionType,
@@ -459,31 +459,78 @@ export function QuestionSubmissionForm({ onClose, onSuccess }: QuestionSubmissio
 
     try {
       const collegeId = user.collegeId || localStorage.getItem('vriddhi_college_id') || 'default';
-      const created = await createQuestion(collegeId, {
-        text: questionText,
-        type: questionType as any,
-        difficulty: difficulty as any,
-        subject: subjectId || 'General',
-        topic: topicId || 'General',
-        chapter: subTopicId || '',
-        marks,
-        options: options.map((o) => ({
-          id: o.id,
-          text: o.text,
-          isCorrect: o.isCorrect || o.id === correctAnswer,
-        })),
-        correctAnswer: correctAnswer || options.find((o) => o.isCorrect)?.text || '',
-        explanation,
-        tags,
-        status: 'draft',
-        bloomLevel: 'understand' as any,
-        createdBy: user.uid || user.id || '',
-        createdByName: user.name || 'Faculty',
-      } as any);
+      const isSuperadmin = user.role === 'superadmin';
 
-      setSubmittedQuestionId(created.id);
+      // College submissions are tagged `college-contributed` and private to the
+      // college until reviewed; superadmin submissions are platform-curated,
+      // free, public and trusted (auto-approved). See design §6.
+      const ownershipTags = isSuperadmin
+        ? ['vriddhi-curated', 'free']
+        : ['college-contributed'];
+
+      const createdBy = {
+        userId: user.uid || user.id || '',
+        userName: user.name || (isSuperadmin ? 'Vriddhi' : 'Faculty'),
+        collegeId: isSuperadmin ? null : collegeId,
+        collegeName: (user as any)?.collegeName || (isSuperadmin ? 'Vriddhi' : 'Unknown College'),
+        role: (isSuperadmin ? 'superadmin' : (user.role as any) || 'faculty') as 'superadmin' | 'admin' | 'faculty',
+      };
+
+      const resolvedOptions = options.map((o) => ({
+        id: o.id,
+        text: o.text,
+        isCorrect: o.isCorrect || o.id === correctAnswer,
+      }));
+
+      const resolvedAnswer =
+        correctAnswer || resolvedOptions.find((o) => o.isCorrect)?.text || '';
+
+      const result = await questionStorageApi.createQuestion({
+        meta: {
+          subjectId: subjectId || 'General',
+          topicId: topicId || 'General',
+          subTopicId: subTopicId || '',
+          difficulty: difficulty as any,
+          questionType: questionType as any,
+          marks,
+          language: 'en',
+          tags: [...new Set([...tags, ...ownershipTags])],
+          status: isSuperadmin ? 'approved' : 'pending',
+          visibility: isSuperadmin ? 'public' : 'college_only',
+          sharedWith: [],
+          source: isSuperadmin ? 'platform' : 'college',
+          storagePath: '',
+          hasImage: images.length > 0,
+          qualityRating: 0,
+          usageCount: 0,
+          createdBy,
+        },
+        content: {
+          questionText,
+          options: resolvedOptions,
+          correctAnswer: resolvedAnswer,
+          explanation,
+          hint,
+          difficulty: difficulty as any,
+          questionType: questionType as any,
+          marks,
+          language: 'en',
+          tags: [...new Set([...tags, ...ownershipTags])],
+          images: [],
+          hasImage: images.length > 0,
+          subjectId: subjectId || 'General',
+          topicId: topicId || 'General',
+          subTopicId: subTopicId || '',
+        },
+      });
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Failed to submit question');
+      }
+
+      setSubmittedQuestionId(result.data.id);
       setSuccessOpen(true);
-      if (onSuccess) onSuccess(created.id);
+      if (onSuccess) onSuccess(result.data.id);
     } catch (error) {
       setSubmitError((error as Error).message);
     } finally {

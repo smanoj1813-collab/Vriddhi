@@ -1,0 +1,1057 @@
+{
+  "program": "BBA",
+  "subject": "Project Management",
+  "semester": 6,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Project management core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "pm-01",
+      "text": "A temporary endeavour undertaken to create a unique product or service is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Project",
+        "Routine operation",
+        "Programme",
+        "Policy"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A project is temporary and produces a unique deliverable.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-02",
+      "text": "The first phase of the project life cycle is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Initiation",
+        "Execution",
+        "Monitoring",
+        "Closure"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Initiation defines the project and its objectives first.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-03",
+      "text": "The person responsible for delivering the project objectives is the project",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "manager",
+      "explanation": "The project manager leads planning and execution to meet objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-04",
+      "text": "A project is a continuous ongoing operation like production",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "A project is temporary and unique unlike ongoing operations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-05",
+      "text": "List the phases of the project life cycle",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Initiation planning execution monitoring and control and closure.",
+      "explanation": "These five phases take a project from idea to completion.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-06",
+      "text": "Explain the characteristics of a project",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A project has defined objectives a fixed duration unique output limited resources and cross functional teamwork and progresses through a life cycle.",
+      "explanation": "Cover the temporary unique and resource bound nature of projects.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-07",
+      "text": "The statement of what the project will deliver is the project",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Scope",
+        "Budget",
+        "Schedule",
+        "Risk"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Scope defines the deliverables and boundaries of the project.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-08",
+      "text": "Breaking a project into smaller manageable parts is the work breakdown",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "structure",
+      "explanation": "The work breakdown structure decomposes work into tasks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-09",
+      "text": "Project planning is the first and most important function of project management",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Planning sets objectives scope schedule and resources for the project.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-10",
+      "text": "List the steps in project planning",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Defining objectives identifying activities sequencing estimating resources and scheduling.",
+      "explanation": "These steps build the project plan.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-11",
+      "text": "Explain the importance of project planning",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Planning clarifies objectives allocates resources sets the schedule and provides the baseline for control reducing uncertainty and risk.",
+      "explanation": "Cover clarity resource allocation and control baseline.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-12",
+      "text": "The network technique used to schedule project activities is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "CPM and PERT",
+        "Ratio analysis",
+        "Break even analysis",
+        "Regression"
+      ],
+      "correctAnswer": "A",
+      "explanation": "CPM and PERT are network techniques for scheduling projects.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-13",
+      "text": "The longest path of activities through a project network is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "critical path",
+      "explanation": "The critical path determines the shortest project completion time.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-14",
+      "text": "PERT is used when activity durations are certain while CPM is used when they are uncertain",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "PERT handles uncertain durations while CPM uses deterministic durations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-15",
+      "text": "List the differences between CPM and PERT",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "CPM is activity oriented with deterministic times while PERT is event oriented with probabilistic time estimates.",
+      "explanation": "The difference lies in orientation and certainty of durations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-16",
+      "text": "Explain the steps in drawing a project network",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A network is built by listing activities determining their sequence and dependencies drawing nodes and arrows and then computing earliest and latest times.",
+      "explanation": "Cover activity listing sequencing and time computation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-17",
+      "text": "The estimation and control of project costs is project",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Costing",
+        "Scheduling",
+        "Staffing",
+        "Reporting"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Project costing estimates and controls the money spent on a project.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-18",
+      "text": "The document that details the financial plan of a project is the project",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "budget",
+      "explanation": "The project budget allocates funds across activities and time.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-19",
+      "text": "Cost overrun occurs when actual cost exceeds the budget",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Cost overrun is spending more than the planned budget.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-20",
+      "text": "List the sources of project finance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Equity debt term loans grants and internal accruals.",
+      "explanation": "These sources provide capital for project investment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-21",
+      "text": "Explain the techniques of project cost estimation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Cost estimation uses analogous parametric and bottom up methods ranging from quick historical estimates to detailed activity by activity costing.",
+      "explanation": "Describe each technique and when it is used.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-22",
+      "text": "The process of tracking project progress against the plan is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Monitoring",
+        "Initiation",
+        "Closure",
+        "Feasibility"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Monitoring tracks progress against the project plan.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-23",
+      "text": "The chance of an event that could harm the project is a project",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "risk",
+      "explanation": "Project risk is uncertainty that may affect objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-24",
+      "text": "Risk management aims to eliminate all risks from a project",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Risk cannot be eliminated only identified assessed and managed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-25",
+      "text": "List the steps in project control",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Setting standards measuring performance comparing with standards and taking corrective action.",
+      "explanation": "This control cycle keeps the project on track.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-26",
+      "text": "Explain the process of project risk management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Risk management identifies risks assesses their likelihood and impact develops responses and monitors them throughout the project.",
+      "explanation": "Trace risk identification assessment response and monitoring.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-27",
+      "text": "The structure that brings people from different functions to work on a project is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Matrix organisation",
+        "Line organisation",
+        "Functional organisation",
+        "Division structure"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A matrix organisation combines functional and project authority.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-28",
+      "text": "The formal completion and handover of the project is project",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "closure",
+      "explanation": "Project closure completes the work and hands over the deliverable.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-29",
+      "text": "A project can be terminated early if its objectives are no longer viable",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Projects may end early due to failure or changed objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-30",
+      "text": "List the types of project organisation",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Functional project and matrix organisations.",
+      "explanation": "These structures differ in where project authority resides.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-31",
+      "text": "Explain the responsibilities of a project manager",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project concepts and life cycle",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The project manager plans organises leads and controls the project managing scope time cost quality risk and the team to meet objectives.",
+      "explanation": "Cover planning leadership and control responsibilities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-32",
+      "text": "Assertion: The critical path has zero float. Reason: Any delay on the critical path delays the whole project",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques (assertion reason)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Critical activities have no slack so their delay extends the project.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-33",
+      "text": "Match the concept to its meaning",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques (matching)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Float - spare time in an activity",
+        "Critical path - shortest path",
+        "Network - a budget",
+        "Milestone - a resource"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Float is spare time while the critical path is the longest path.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-34",
+      "text": "The slack time available in a non critical activity is called float",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Float is the spare time an activity can be delayed without delaying the project.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-35",
+      "text": "Explain the meaning and importance of feasibility analysis of a project",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Feasibility analysis assesses technical economic financial and social viability before commitment to avoid investing in unworkable projects.",
+      "explanation": "Cover the dimensions of feasibility and its importance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-36",
+      "text": "Read the case: A construction project is falling behind schedule because two activities on the critical path are delayed. Explain the consequence and a corrective measure",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Delays on the critical path delay the whole project. The manager should crash the critical activities by adding resources to shorten their duration.",
+      "explanation": "Apply critical path logic and propose crashing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-37",
+      "text": "Read the case: A software project has a fixed deadline and a team with limited skills in a new technology. Identify the risk and suggest a mitigation",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The risk is skill shortage causing schedule slippage. The manager should provide training or hire specialists early to mitigate it.",
+      "explanation": "Identify the skill risk and propose early mitigation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-38",
+      "text": "A project has three activities of duration 4 6 and 8 days that must run in sequence. The total project duration is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "18 days",
+      "explanation": "Sequential activities sum to 4 plus 6 plus 8 which equals 18 days.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-39",
+      "text": "Explain the causes of project failure",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Projects fail due to poor planning unclear objectives inadequate resources poor communication and weak risk management.",
+      "explanation": "Cover the planning and management causes of failure.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-40",
+      "text": "The process of closing out all project activities is project termination",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Termination completes and closes the project formally.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-41",
+      "text": "Explain the steps in project termination",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Termination involves completing remaining work handing over deliverables releasing resources documenting lessons and closing accounts.",
+      "explanation": "Cover handover resource release and documentation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-42",
+      "text": "List the benefits of using CPM and PERT",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Better planning identifying the critical path resource optimisation and progress control.",
+      "explanation": "These benefits improve scheduling and control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-43",
+      "text": "Explain the concept and types of project appraisal",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Project appraisal evaluates technical economic financial and managerial feasibility using methods like net present value and internal rate of return.",
+      "explanation": "Cover the appraisal dimensions and financial techniques.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-44",
+      "text": "The expected time in PERT is calculated from optimistic pessimistic and most likely times",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "CPM and PERT techniques",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "PERT computes expected time as a weighted average of the three estimates.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-45",
+      "text": "Explain the importance of project organisation structure",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The organisation structure defines authority and coordination affecting communication and control so the right structure improves project delivery.",
+      "explanation": "Link structure to authority communication and control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-46",
+      "text": "The estimate of costs based on a similar past project is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project costing budgeting and finance",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "analogous estimating",
+      "explanation": "Analogous estimating uses historical project data for a quick estimate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-47",
+      "text": "Explain the tools used for project monitoring",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project monitoring control and risk",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Monitoring uses Gantt charts network diagrams milestone reports and earned value analysis to track progress and detect deviations.",
+      "explanation": "Describe each tool and its use in tracking.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-48",
+      "text": "A milestone is a significant point or event in a project schedule",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Milestones mark important events with zero duration in a schedule.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-49",
+      "text": "Explain the importance of project scheduling",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project planning scope and scheduling",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Scheduling sequences activities sets timelines allocates resources and provides the basis for monitoring and controlling project progress.",
+      "explanation": "Cover sequencing timelines and control baseline.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pm-50",
+      "text": "Explain the concept and importance of project team building",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Project Management",
+      "topic": "Project organisation and termination",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Team building develops cooperation trust and shared goals among project members improving communication and performance.",
+      "explanation": "Cover cooperation communication and performance benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

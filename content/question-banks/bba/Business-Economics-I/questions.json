@@ -1,0 +1,1079 @@
+{
+  "program": "BBA",
+  "subject": "Business Economics I",
+  "semester": 1,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Microeconomics core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "be1-01",
+      "text": "Business economics is best described as the application of economic theory to",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Nature and scope of Business Economics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Business decision making",
+        "Government budgeting",
+        "Political analysis",
+        "Social welfare"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Business economics applies microeconomic analysis to the decisions of the firm.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-02",
+      "text": "The problem of what to produce how to produce and for whom to produce arises due to",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Nature and scope of Business Economics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Scarcity of resources",
+        "Government policy",
+        "Perfect information",
+        "Unlimited resources"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Scarcity forces every economy to choose among competing uses of limited resources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-03",
+      "text": "Opportunity cost is the value of the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Nature and scope of Business Economics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "next best alternative forgone",
+      "explanation": "Opportunity cost measures what is sacrificed when a choice is made.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-04",
+      "text": "Microeconomics studies individual firms and households rather than the whole economy",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Nature and scope of Business Economics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Microeconomics focuses on individual economic units while macroeconomics studies aggregates.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-05",
+      "text": "State the central problems of an economy",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Nature and scope of Business Economics",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "What to produce how to produce and for whom to produce.",
+      "explanation": "These three allocation problems follow from the scarcity of resources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-06",
+      "text": "Explain the nature of business economics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Nature and scope of Business Economics",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Business economics is microeconomic in nature and decision oriented. It is normative as it prescribes what the firm should do and uses tools like demand cost and profit analysis to guide managerial decisions.",
+      "explanation": "Cover its micro basis decision focus normative character and use of economic tools.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-07",
+      "text": "The law of demand states that other things remaining equal the quantity demanded of a good",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Falls when price rises",
+        "Rises when price rises",
+        "Is unaffected by price",
+        "Rises when income falls"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Demand varies inversely with price under the law of demand.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-08",
+      "text": "If a ten percent fall in price raises quantity demanded by twenty percent demand is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "apply",
+      "options": [
+        "Elastic",
+        "Inelastic",
+        "Unitary elastic",
+        "Perfectly inelastic"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Percentage change in quantity exceeds the percentage change in price so demand is elastic.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-09",
+      "text": "Goods whose demand falls when income rises are called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "inferior goods",
+      "explanation": "Inferior goods are replaced by better substitutes as income rises.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-10",
+      "text": "A movement along the demand curve is caused by a change in price while a shift is caused by other factors",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Own price causes movement along the curve; income tastes and related prices shift it.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-11",
+      "text": "Distinguish between a shift and a movement along the demand curve",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A change in own price moves along the same demand curve. A change in income tastes or related prices shifts the whole curve to a new position.",
+      "explanation": "Movement is a quantity response to price; a shift is a change in demand itself.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-12",
+      "text": "Explain the determinants of price elasticity of demand",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Elasticity depends on availability of substitutes the proportion of income spent the nature of the good and time period. More substitutes and higher budget share make demand more elastic.",
+      "explanation": "Cover substitutes income share necessity versus luxury and time.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-13",
+      "text": "When price falls from 20 to 16 and quantity demanded rises from 40 to 48 units the price elasticity of demand is",
+      "type": "numerical",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "1",
+      "explanation": "Percentage change in quantity is 8 over 40 or twenty percent and in price is 4 over 20 or twenty percent so elasticity equals one.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-14",
+      "text": "The law of diminishing marginal utility explains why the demand curve slopes",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Consumer behaviour and utility",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Downward",
+        "Upward",
+        "Horizontal",
+        "Vertical"
+      ],
+      "correctAnswer": "A",
+      "explanation": "As marginal utility falls with each extra unit the consumer pays less so the curve slopes down.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-15",
+      "text": "Total utility is maximum when marginal utility becomes",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Consumer behaviour and utility",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "zero",
+      "explanation": "Total utility peaks when marginal utility reaches zero; beyond that it becomes negative.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-16",
+      "text": "An indifference curve shows combinations of two goods giving equal satisfaction to the consumer",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Consumer behaviour and utility",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "All points on an indifference curve yield the same level of total utility.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-17",
+      "text": "State the law of equi-marginal utility",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Consumer behaviour and utility",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "A consumer maximises satisfaction by spending so that the marginal utility per rupee is equal across all goods consumed.",
+      "explanation": "Equilibrium requires the last rupee spent on every good to yield equal marginal utility.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-18",
+      "text": "Describe the properties of indifference curves",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Consumer behaviour and utility",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Indifference curves slope downward are convex to the origin and never intersect each other. Higher curves represent higher utility levels.",
+      "explanation": "Cover the negative slope convexity and non intersection properties.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-19",
+      "text": "In the short run when one factor is fixed and others vary the firm is operating under the law of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Variable proportions",
+        "Constant proportions",
+        "Diminishing returns to scale",
+        "Increasing returns to scale"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The law of variable proportions applies when one input is fixed and others vary.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-20",
+      "text": "Costs that do not change with the level of output are called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "fixed costs",
+      "explanation": "Fixed costs remain constant in the short run regardless of output.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-21",
+      "text": "When marginal product is at its maximum the marginal cost is at its minimum",
+      "type": "true_false",
+      "difficulty": "hard",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Marginal cost and marginal product are inversely related.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-22",
+      "text": "Define fixed cost and variable cost with one example each",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Fixed costs such as rent do not vary with output. Variable costs such as raw materials vary directly with output.",
+      "explanation": "The distinction holds only in the short run.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-23",
+      "text": "Explain the law of variable proportions and its three stages",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The law shows output change as more units of a variable factor combine with a fixed factor. It has increasing then diminishing then negative returns stages. Production is rational only in stage two.",
+      "explanation": "Describe each stage and identify the rational stage for production.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-24",
+      "text": "Total fixed cost is 5000 and total variable cost at ten units is 3000. The total cost is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "8000",
+      "explanation": "Total cost equals fixed cost plus variable cost so 5000 plus 3000 equals 8000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-25",
+      "text": "A market with many sellers selling differentiated products is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Monopolistic competition",
+        "Perfect competition",
+        "Monopoly",
+        "Oligopoly"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Monopolistic competition has many firms each selling a slightly differentiated product.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-26",
+      "text": "A market with a single seller and no close substitutes is a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "monopoly",
+      "explanation": "A monopoly is a single seller with barriers to entry and no close substitutes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-27",
+      "text": "In perfect competition the firm is a price taker",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "With many small firms none can influence the market price.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-28",
+      "text": "List the features of perfect competition",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Large number of buyers and sellers homogeneous product free entry and exit and perfect knowledge.",
+      "explanation": "These features make each firm a price taker.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-29",
+      "text": "Explain how price and output are determined under monopoly",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A monopolist faces the whole market demand and maximises profit where marginal revenue equals marginal cost. It sets a price on the demand curve above marginal cost so output is lower and price higher than competition.",
+      "explanation": "Cover the MR equals MC rule and the resulting higher price and restricted output.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-30",
+      "text": "Assertion: A monopolist can earn abnormal profits in the long run. Reason: Barriers to entry prevent new firms from entering the market",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination (assertion reason)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Barriers to entry protect the monopolist from competition allowing persistent abnormal profit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-31",
+      "text": "The payment made for the use of land is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Theory of distribution",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Rent",
+        "Wages",
+        "Interest",
+        "Profit"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Rent is the reward to land wages to labour interest to capital and profit to the entrepreneur.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-32",
+      "text": "The reward paid to the entrepreneur for bearing risk and uncertainty is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Theory of distribution",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "profit",
+      "explanation": "Profit rewards the entrepreneur for organisation and risk bearing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-33",
+      "text": "According to Ricardian theory rent arises due to the differing fertility of land",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Theory of distribution",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Ricardo attributed rent to the superior productivity of better land over the marginal land.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-34",
+      "text": "Define wages and explain the difference between nominal and real wages",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Theory of distribution",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Wages are the payment to labour. Nominal wages are money paid while real wages are the goods and services that money wages can buy.",
+      "explanation": "Real wages adjust nominal wages for the price level.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-35",
+      "text": "Explain the marginal productivity theory of distribution",
+      "type": "long_answer",
+      "difficulty": "hard",
+      "subject": "Business Economics I",
+      "topic": "Theory of distribution",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Under perfect competition each factor is paid the value of its marginal product. A firm employs a factor until its marginal revenue product equals its price so every factor is rewarded according to its contribution.",
+      "explanation": "Cover the MRP equals factor price condition and its assumptions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-36",
+      "text": "If the market demand curve for a firm is horizontal the firm operates under",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Perfect competition",
+        "Monopoly",
+        "Monopolistic competition",
+        "Oligopoly"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A perfectly elastic horizontal demand curve means the firm cannot change the market price.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-37",
+      "text": "Two firms control an entire market between them. This market structure is a",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Duopoly",
+        "Monopoly",
+        "Perfect competition",
+        "Monopsony"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A duopoly is a special case of oligopoly with only two firms.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-38",
+      "text": "Match the term to its definition",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination (matching)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Oligopoly - few interdependent firms",
+        "Monopoly - many price takers",
+        "Perfect competition - single seller",
+        "Monopolistic competition - no product differentiation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Oligopoly is few interdependent firms while monopoly is a single seller.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-39",
+      "text": "A good for which demand rises as its price rises is called a",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Giffen good",
+        "Normal good",
+        "Inferior good",
+        "Complementary good"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Giffen goods have a positive price-demand relationship because their income effect outweighs substitution.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-40",
+      "text": "Read the case: A bakery finds that raising the price of cakes reduces its total revenue while raising the price of bread raises total revenue. Compare the elasticity of demand for the two products",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Demand for cakes is elastic because a price rise lowers total revenue as quantity falls sharply. Demand for bread is inelastic because a price rise raises total revenue as quantity falls only slightly.",
+      "explanation": "Relate the total revenue test to the elasticity of each product.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-41",
+      "text": "Read the case: A firm produces 100 units at an average cost of 50 and a market price of 80. Calculate total revenue total cost and profit per unit",
+      "type": "case_based",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Total revenue is 100 times 80 which equals 8000. Total cost is 100 times 50 which equals 5000. Profit is 3000 and profit per unit is 30.",
+      "explanation": "Profit equals total revenue minus total cost.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-42",
+      "text": "The responsiveness of quantity demanded to a change in income is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Income elasticity",
+        "Price elasticity",
+        "Cross elasticity",
+        "Arc elasticity"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Income elasticity measures how demand responds to changes in consumer income.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-43",
+      "text": "Cross elasticity of demand between complementary goods is positive",
+      "type": "true_false",
+      "difficulty": "hard",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Complements have negative cross elasticity while substitutes have positive cross elasticity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-44",
+      "text": "The output where marginal cost equals marginal revenue is called the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "equilibrium output",
+      "explanation": "A firm maximises profit by producing where marginal cost equals marginal revenue.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-45",
+      "text": "When average cost falls as output rises the firm enjoys economies of",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "scale",
+      "explanation": "Economies of scale reduce long run average cost as output expands.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-46",
+      "text": "A consumer buys 30 units of a good at a price of 10 per unit. Total expenditure is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "300",
+      "explanation": "Total expenditure equals price times quantity so 10 times 30 equals 300.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-47",
+      "text": "The demand curve of a monopolist is the market demand curve itself",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Market structures and price determination",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A monopolist is the only seller so it faces the entire downward sloping market demand.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-48",
+      "text": "State the assumptions of the law of demand",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Economics I",
+      "topic": "Demand analysis and elasticity",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Income tastes and prices of related goods remain constant and there is no expectation of future price change.",
+      "explanation": "These ceteris paribus assumptions keep the law of demand valid.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-49",
+      "text": "Explain the concept of production function",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Production and cost analysis",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A production function shows the maximum output obtainable from given quantities of inputs with a given technology. It relates inputs to output and underlies the analysis of returns and costs.",
+      "explanation": "Cover the input output relationship and the role of technology.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "be1-50",
+      "text": "Total utility from consuming units is 0 20 35 45 50 50 45 for seven successive units. Marginal utility of the fourth unit is",
+      "type": "numerical",
+      "difficulty": "medium",
+      "subject": "Business Economics I",
+      "topic": "Consumer behaviour and utility",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "10",
+      "explanation": "Marginal utility of the fourth unit is total utility of four units minus that of three units so 45 minus 35 equals 10.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

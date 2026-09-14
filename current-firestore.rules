@@ -1068,6 +1068,13 @@ service cloud.firestore {
       allow write: if isSuperadmin() || isCollegeStaff();
     }
 
+    // Full question payload (text / options / explanation / images). Paired 1:1
+    // with questionBank_meta/{docId} — read on preview/use only, never in lists.
+    match /questionBank_content/{docId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if isSuperadmin() || isCollegeStaff();
+    }
+
     match /papers_universal/{docId} {
       allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin() || isCollegeStaff();
