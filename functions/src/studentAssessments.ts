@@ -14,6 +14,17 @@ const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
 const MAX_QUESTIONS = 400
 const MAX_ANSWER_TEXT = 20_000
 const MAX_PROCTOR_DETAILS_BYTES = 4_000
+// Bounded size of the compact answer index (400 q x ~10 options). Larger indexes
+// move to a studentAssessments/{id}/meta/answerIndex subdocument.
+const MAX_ANSWER_INDEX_BYTES = 200_000
+// Caps for the proctor-event batching path.
+const MAX_BATCH_PROCTOR_EVENTS = 100
+const MAX_STORED_PROCTOR_EVENTS = 500
+const MAX_LOGGED_BATCH_EVENTS = 50
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
 
 interface StudentIdentity {
   uid: string
@@ -333,7 +344,67 @@ function rowRef(testId: string, studentId: string): FirebaseFirestore.DocumentRe
   return admin.firestore().collection('studentAssessments').doc(`${testId}_${studentId}`)
 }
 
-function sanitizeAnswers(value: unknown, questions: ServerQuestion[]): ServerAnswer[] {
+/**
+ * Compact per-question validation data frozen on the attempt at start:
+ * `{ [key]: { id, optionIds, type } }` where key is the canonical question id
+ * (plus the `questionId` alias when it differs). Autosave validates deltas
+ * against this instead of loading all N question documents.
+ */
+export interface AnswerIndexEntry {
+  id: string
+  optionIds: string[]
+  type: string
+}
+
+export function questionsToIndex(questions: ServerQuestion[]): Record<string, AnswerIndexEntry> {
+  const index: Record<string, AnswerIndexEntry> = {}
+  questions.forEach((question) => {
+    const entry: AnswerIndexEntry = {
+      id: question.id,
+      optionIds: question.options.map((option) => option.id),
+      type: question.type,
+    }
+    index[question.id] = entry
+    if (question.questionId && question.questionId !== question.id) index[question.questionId] = entry
+  })
+  return index
+}
+
+function buildSanitizedAnswer(
+  canonicalId: string,
+  input: Record<string, unknown>,
+  optionIds: string[]
+): ServerAnswer {
+  const optionIdSet = new Set(optionIds)
+  const selectedOptionId = input.selectedOptionId && optionIdSet.has(String(input.selectedOptionId))
+    ? String(input.selectedOptionId)
+    : undefined
+  const selectedOptionIds = Array.isArray(input.selectedOptionIds)
+    ? [...new Set(input.selectedOptionIds.map(String).filter((id) => optionIdSet.has(id)))].slice(0, optionIdSet.size)
+    : undefined
+  const textAnswer = typeof input.textAnswer === 'string'
+    ? input.textAnswer.trim().slice(0, MAX_ANSWER_TEXT)
+    : undefined
+  const numeric = input.numericalAnswer === undefined ? undefined : Number(input.numericalAnswer)
+  const numericalAnswer = numeric !== undefined && Number.isFinite(numeric) ? numeric : undefined
+  const matchedPairs = Array.isArray(input.matchedPairs)
+    ? input.matchedPairs.slice(0, 100).map((pair: unknown) => {
+        const value = (pair || {}) as Record<string, unknown>
+        return { left: String(value.left || '').slice(0, 500), right: String(value.right || '').slice(0, 500) }
+      })
+    : undefined
+  return {
+    questionId: canonicalId,
+    ...(selectedOptionId ? { selectedOptionId } : {}),
+    ...(selectedOptionIds?.length ? { selectedOptionIds } : {}),
+    ...(textAnswer ? { textAnswer } : {}),
+    ...(numericalAnswer === undefined ? {} : { numericalAnswer }),
+    ...(matchedPairs?.length ? { matchedPairs } : {}),
+    isFlagged: Boolean(input.isFlagged),
+  }
+}
+
+export function sanitizeAnswers(value: unknown, questions: ServerQuestion[]): ServerAnswer[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return []
   const source = value as Record<string, unknown>
   const knownQuestions = new Map<string, ServerQuestion>()
@@ -350,35 +421,97 @@ function sanitizeAnswers(value: unknown, questions: ServerQuestion[]): ServerAns
     const question = knownQuestions.get(String(input.questionId || mapId))
     if (!question || seen.has(question.id)) return
     seen.add(question.id)
-    const optionIds = new Set(question.options.map((option) => option.id))
-    const selectedOptionId = input.selectedOptionId && optionIds.has(String(input.selectedOptionId))
-      ? String(input.selectedOptionId)
-      : undefined
-    const selectedOptionIds = Array.isArray(input.selectedOptionIds)
-      ? [...new Set(input.selectedOptionIds.map(String).filter((id) => optionIds.has(id)))].slice(0, optionIds.size)
-      : undefined
-    const textAnswer = typeof input.textAnswer === 'string'
-      ? input.textAnswer.trim().slice(0, MAX_ANSWER_TEXT)
-      : undefined
-    const numeric = input.numericalAnswer === undefined ? undefined : Number(input.numericalAnswer)
-    const numericalAnswer = numeric !== undefined && Number.isFinite(numeric) ? numeric : undefined
-    const matchedPairs = Array.isArray(input.matchedPairs)
-      ? input.matchedPairs.slice(0, 100).map((pair: unknown) => {
-          const value = (pair || {}) as Record<string, unknown>
-          return { left: String(value.left || '').slice(0, 500), right: String(value.right || '').slice(0, 500) }
-        })
-      : undefined
-    answers.push({
-      questionId: question.id,
-      ...(selectedOptionId ? { selectedOptionId } : {}),
-      ...(selectedOptionIds?.length ? { selectedOptionIds } : {}),
-      ...(textAnswer ? { textAnswer } : {}),
-      ...(numericalAnswer === undefined ? {} : { numericalAnswer }),
-      ...(matchedPairs?.length ? { matchedPairs } : {}),
-      isFlagged: Boolean(input.isFlagged),
-    })
+    answers.push(buildSanitizedAnswer(question.id, input, question.options.map((option) => option.id)))
   })
   return answers
+}
+
+/**
+ * Validates answers against the compact answer index stored on the attempt.
+ * Output is byte-identical to `sanitizeAnswers` for the same input, so grades
+ * are unaffected — it just avoids the question-document reads.
+ */
+export function sanitizeAnswersWithIndex(
+  value: unknown,
+  index: Record<string, AnswerIndexEntry>
+): ServerAnswer[] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return []
+  const source = value as Record<string, unknown>
+  const answers: ServerAnswer[] = []
+  const seen = new Set<string>()
+
+  Object.entries(source).forEach(([mapId, raw]) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return
+    const input = raw as Record<string, unknown>
+    const entry = index[String(input.questionId || mapId)]
+    if (!entry || seen.has(entry.id)) return
+    seen.add(entry.id)
+    answers.push(buildSanitizedAnswer(entry.id, input, entry.optionIds))
+  })
+  return answers
+}
+
+/** Merges incoming answers into the stored set keyed by questionId (latest wins). */
+export function mergeAnswers(existing: ServerAnswer[], incoming: ServerAnswer[]): ServerAnswer[] {
+  const byQuestion = new Map<string, ServerAnswer>()
+  existing.forEach((answer) => {
+    if (answer?.questionId) byQuestion.set(answer.questionId, answer)
+  })
+  incoming.forEach((answer) => {
+    if (answer?.questionId) byQuestion.set(answer.questionId, answer)
+  })
+  return [...byQuestion.values()]
+}
+
+interface SanitizedProctorEvent {
+  type: string
+  at: string
+  details: Record<string, unknown>
+}
+
+/** Bounds each client-provided proctor event before it is stored on the attempt. */
+export function sanitizeProctorEvents(value: unknown): SanitizedProctorEvent[] {
+  if (!Array.isArray(value)) return []
+  const events: SanitizedProctorEvent[] = []
+  for (const raw of value.slice(0, MAX_BATCH_PROCTOR_EVENTS)) {
+    if (!isPlainObject(raw)) continue
+    const type = String(raw.type || '').slice(0, 80)
+    if (!type) continue
+    const details = isPlainObject(raw.details) ? raw.details : {}
+    const boundedDetails = Buffer.byteLength(JSON.stringify(details), 'utf8') > MAX_PROCTOR_DETAILS_BYTES
+      ? {}
+      : details
+    events.push({ type, at: String(raw.at || '').slice(0, 40), details: boundedDetails })
+  }
+  return events
+}
+
+/**
+ * Reads the compact answer index for an attempt: inline field on the row, or
+ * the meta/answerIndex subdocument for oversized indexes. Null for attempts
+ * started before the index existed (caller falls back to the question load).
+ */
+async function readAnswerIndex(
+  assessmentId: string,
+  row: admin.firestore.DocumentData
+): Promise<Record<string, AnswerIndexEntry> | null> {
+  const inline = row.answerIndex
+  if (isPlainObject(inline) && Object.keys(inline).length > 0) {
+    return inline as Record<string, AnswerIndexEntry>
+  }
+  if (row.answerIndexRef) {
+    const sub = await admin.firestore()
+      .collection('studentAssessments')
+      .doc(assessmentId)
+      .collection('meta')
+      .doc(String(row.answerIndexRef))
+      .get()
+    const index = sub.data()?.index
+    if (isPlainObject(index) && Object.keys(index).length > 0) {
+      return index as Record<string, AnswerIndexEntry>
+    }
+  }
+  return null
 }
 
 function answerText(question: ServerQuestion, answer: ServerAnswer | undefined): string {
@@ -549,6 +682,21 @@ export const startMyStudentTest = onCall(
     if (questions.length === 0) throw new HttpsError('failed-precondition', 'Test has no published questions')
 
     const assessmentRef = rowRef(resolved.testId, student.id)
+    // Compact validation data frozen at start so autosave never has to load
+    // the N question documents. Oversized indexes go to a meta subdocument.
+    const answerIndex = questionsToIndex(questions)
+    const answerIndexExternal = Buffer.byteLength(JSON.stringify(answerIndex), 'utf8') > MAX_ANSWER_INDEX_BYTES
+    const answerIndexSubRef = answerIndexExternal
+      ? assessmentRef.collection('meta').doc('answerIndex')
+      : null
+    const writeAnswerIndex = (transaction: FirebaseFirestore.Transaction) => {
+      if (answerIndexExternal && answerIndexSubRef) {
+        transaction.set(answerIndexSubRef, {
+          index: answerIndex,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+      }
+    }
     const result = await admin.firestore().runTransaction(async (transaction) => {
       const [freshTest, existingRow] = await Promise.all([
         transaction.get(resolved.testRef),
@@ -563,6 +711,17 @@ export const startMyStudentTest = onCall(
         throw new HttpsError('already-exists', 'This test has already been submitted')
       }
       if (row?.status === 'in_progress') {
+        // One-time heal for attempts started before the answer index existed:
+        // the fast autosave path becomes available from the next save onward.
+        const hasIndex = (isPlainObject(row?.answerIndex) && Object.keys(row.answerIndex).length > 0)
+          || Boolean(row?.answerIndexRef)
+        if (!hasIndex) {
+          writeAnswerIndex(transaction)
+          transaction.update(assessmentRef, {
+            ...(answerIndexExternal ? { answerIndexRef: 'meta/answerIndex' } : { answerIndex }),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          })
+        }
         return {
           startedAt: iso(row.startedAt),
           endsAt: iso(row.endsAt),
@@ -586,6 +745,7 @@ export const startMyStudentTest = onCall(
         duration,
         status: 'in_progress',
         answers: [],
+        ...(answerIndexExternal ? { answerIndexRef: 'meta/answerIndex' } : { answerIndex }),
         startedAt: admin.firestore.Timestamp.fromDate(now),
         endsAt: admin.firestore.Timestamp.fromDate(endsAt),
         autoSubmitAt: admin.firestore.Timestamp.fromDate(
@@ -593,6 +753,7 @@ export const startMyStudentTest = onCall(
         ),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }
+      writeAnswerIndex(transaction)
       if (existingRow.exists) {
         transaction.update(assessmentRef, attemptData)
       } else {
@@ -667,41 +828,134 @@ export const getMyActiveStudentTest = onCall(
   }
 )
 
+/**
+ * Identity check for autosave/log: the attempt row already carries `studentUid`
+ * (written at start), so the common path costs 1 read instead of the
+ * resolveStudent pair. Rows predating that field fall back to the legacy lookup.
+ */
+async function assertAttemptOwnership(
+  uid: string,
+  token: Record<string, unknown>,
+  row: admin.firestore.DocumentData
+): Promise<{ legacyStudentId: string | null }> {
+  if (row.studentUid) {
+    if (String(row.studentUid) !== uid || row.status !== 'in_progress') {
+      throw new HttpsError('permission-denied', 'Active attempt not found')
+    }
+    return { legacyStudentId: null }
+  }
+  const student = await resolveStudent(uid, token)
+  if (row.studentId !== student.id || row.status !== 'in_progress') {
+    throw new HttpsError('permission-denied', 'Active attempt not found')
+  }
+  return { legacyStudentId: student.id }
+}
+
+/**
+ * Saves answer deltas (or, for pre-deploy clients, the full keyed map) plus
+ * batched proctor events.
+ *
+ * Cost profile per call:
+ *  - fast path (attempt has an answerIndex): 1 attempt read + 1 txn read + 1
+ *    write (+1 write for the proctoringLogs summary when the batch is non-empty).
+ *    No scheduledTests read, no question reads, no resolveStudent pair.
+ *  - legacy path (attempt predates the answer index, or an old client sends
+ *    the full `answers` map): same as before — test + N question reads.
+ */
 export const autosaveMyStudentTest = onCall(
-  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 80 },
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 40 },
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const student = await resolveStudent(uid, request.auth?.token || {})
     const assessmentId = String(request.data?.studentAssessmentId || '')
     if (!assessmentId || assessmentId.includes('/')) throw new HttpsError('invalid-argument', 'Invalid attempt ID')
-    const assessmentRef = admin.firestore().collection('studentAssessments').doc(assessmentId)
+    const db = admin.firestore()
+    const assessmentRef = db.collection('studentAssessments').doc(assessmentId)
     const assessment = await assessmentRef.get()
     const row = assessment.data()
-    if (!assessment.exists || row?.studentId !== student.id || row.status !== 'in_progress') {
-      throw new HttpsError('permission-denied', 'Active attempt not found')
+    if (!assessment.exists || !row) throw new HttpsError('permission-denied', 'Active attempt not found')
+    const { legacyStudentId } = await assertAttemptOwnership(uid, request.auth?.token || {}, row)
+
+    const proctorEvents = sanitizeProctorEvents(request.data?.proctorEvents)
+    const deltaRaw = request.data?.delta
+    const legacyRaw = request.data?.answers
+    const hasDelta = isPlainObject(deltaRaw)
+    const hasLegacy = isPlainObject(legacyRaw)
+
+    let validated: ServerAnswer[] = []
+    let replaceAll = false
+    if (hasDelta) {
+      const index = await readAnswerIndex(assessmentId, row)
+      if (index) {
+        validated = sanitizeAnswersWithIndex(deltaRaw, index)
+      } else {
+        // Attempt started before the answer index existed: fall back to the
+        // question load so validation stays authoritative.
+        const testRef = db.collection('scheduledTests').doc(String(row.testId || ''))
+        const test = await testRef.get()
+        const testData = test.data()
+        if (!test.exists || !testData) throw new HttpsError('failed-precondition', 'Scheduled test not found')
+        if (testData.status === 'cancelled') throw new HttpsError('failed-precondition', 'This test has been cancelled')
+        const questions = await loadTestQuestions(test.id, testData)
+        validated = sanitizeAnswersWithIndex(deltaRaw, questionsToIndex(questions))
+      }
+    } else if (hasLegacy) {
+      // Pre-deploy client sends the full keyed answer map: unchanged semantics
+      // (full replace, validated against the live questions).
+      const testRef = db.collection('scheduledTests').doc(String(row.testId || ''))
+      const test = await testRef.get()
+      const testData = test.data()
+      if (!test.exists || !testData) throw new HttpsError('failed-precondition', 'Scheduled test not found')
+      if (testData.status === 'cancelled') throw new HttpsError('failed-precondition', 'This test has been cancelled')
+      const questions = await loadTestQuestions(test.id, testData)
+      validated = sanitizeAnswers(legacyRaw, questions)
+      replaceAll = true
     }
-    const testRef = admin.firestore().collection('scheduledTests').doc(String(row.testId || ''))
-    const test = await testRef.get()
-    const testData = test.data()
-    if (!test.exists || !testData) throw new HttpsError('failed-precondition', 'Scheduled test not found')
-    if (testData.status === 'cancelled') throw new HttpsError('failed-precondition', 'This test has been cancelled')
-    const questions = await loadTestQuestions(test.id, testData)
-    const answers = sanitizeAnswers(request.data?.answers, questions)
+
     const startedAt = timestampToDate(row.startedAt)
     const timeSpent = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000)) : 0
-    await admin.firestore().runTransaction(async (transaction) => {
+    await db.runTransaction(async (transaction) => {
       const freshAttempt = await transaction.get(assessmentRef)
       const freshRow = freshAttempt.data()
-      if (!freshAttempt.exists || freshRow?.studentId !== student.id || freshRow.status !== 'in_progress') {
+      if (!freshAttempt.exists || !freshRow || freshRow.status !== 'in_progress') {
         throw new HttpsError('failed-precondition', 'Attempt is no longer active')
       }
-      transaction.update(assessmentRef, {
-        answers,
+      if (legacyStudentId
+        ? freshRow.studentId !== legacyStudentId
+        : String(freshRow.studentUid || '') !== uid) {
+        throw new HttpsError('failed-precondition', 'Attempt is no longer active')
+      }
+      const existing = Array.isArray(freshRow.answers) ? (freshRow.answers as ServerAnswer[]) : []
+      const update: admin.firestore.DocumentData = {
+        answers: replaceAll ? validated : mergeAnswers(existing, validated),
         timeSpent,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      })
+      }
+      if (proctorEvents.length > 0) {
+        const stored = Array.isArray(freshRow.proctorEvents) ? (freshRow.proctorEvents as unknown[]) : []
+        update.proctorEvents = [...stored, ...proctorEvents].slice(-MAX_STORED_PROCTOR_EVENTS)
+      }
+      transaction.update(assessmentRef, update)
     })
+
+    if (proctorEvents.length > 0) {
+      // One summary doc per flush (was: one doc per event). `proctoringLogs`
+      // has no readers today; the `kind` marker keeps future queries able to
+      // tell batches apart from the high-severity direct-log docs.
+      await db.collection('proctoringLogs').add({
+        kind: 'autosave_batch',
+        collegeId: String(row.collegeId || ''),
+        testId: String(row.testId || ''),
+        studentAssessmentId: assessmentId,
+        studentId: String(row.studentId || ''),
+        studentUid: uid,
+        count: proctorEvents.length,
+        events: proctorEvents.slice(0, MAX_LOGGED_BATCH_EVENTS),
+        firstOccurredAt: proctorEvents[0]?.at || '',
+        lastOccurredAt: proctorEvents[proctorEvents.length - 1]?.at || '',
+        receivedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    }
     return { success: true, savedAt: new Date().toISOString(), timeSpent }
   }
 )
@@ -866,12 +1120,16 @@ export const submitMyStudentTest = onCall(
   }
 )
 
+/**
+ * Direct log for severity-high proctor events (fullscreen_exit, auto_submit,
+ * fullscreen_denied) — the faculty live view reads these. All other event
+ * types are batched into autosave. Cost: 1 attempt read + 1 write.
+ */
 export const logMyStudentTestEvent = onCall(
-  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 15, minInstances: 0, maxInstances: 80 },
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 15, minInstances: 0, maxInstances: 40 },
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const student = await resolveStudent(uid, request.auth?.token || {})
     const assessmentId = String(request.data?.studentAssessmentId || '')
     const type = String(request.data?.event?.type || '').slice(0, 80)
     const details = request.data?.event?.details
@@ -884,14 +1142,15 @@ export const logMyStudentTestEvent = onCall(
     }
     const attempt = await admin.firestore().collection('studentAssessments').doc(assessmentId).get()
     const row = attempt.data()
-    if (!attempt.exists || row?.studentId !== student.id || row.status !== 'in_progress') {
+    if (!attempt.exists || !row) {
       throw new HttpsError('permission-denied', 'Active attempt not found')
     }
+    await assertAttemptOwnership(uid, request.auth?.token || {}, row)
     await admin.firestore().collection('proctoringLogs').add({
-      collegeId: student.collegeId,
+      collegeId: String(row.collegeId || ''),
       testId: String(row.testId || ''),
       studentAssessmentId: assessmentId,
-      studentId: student.id,
+      studentId: String(row.studentId || ''),
       studentUid: uid,
       eventType: type,
       details: JSON.parse(serializedDetails),
