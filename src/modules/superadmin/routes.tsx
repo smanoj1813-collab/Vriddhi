@@ -23,6 +23,10 @@ const SystemManagement = lazy(() => import('./pages/SystemManagement'));
 const UserImport = lazy(() => import('./pages/UserImport'));
 const AccessControl = lazy(() => import('./pages/AccessControl'));
 const BulkCredentialResetPage = lazy(() => import('./pages/BulkCredentialResetPage'));
+// Internal Employee Portal — platform-level people management.
+const SuperAdminEmployees = lazy(() => import('./pages/SuperAdminEmployees'));
+const SuperAdminEmployeeAttendance = lazy(() => import('./pages/SuperAdminEmployeeAttendance'));
+const SuperAdminAuditLog = lazy(() => import('./pages/SuperAdminAuditLog'));
 
 export const superadminRoutes: RouteObject[] = [
   {
@@ -49,6 +53,9 @@ export const superadminRoutes: RouteObject[] = [
       { path: 'faculty/:id', element: <SuperAdminFacultyDetail /> },
       { path: 'faculty/import', element: <FacultyImport /> },
       { path: 'credentials/regenerate', element: <BulkCredentialResetPage /> },
+      { path: 'employees', element: <SuperAdminEmployees /> },
+      { path: 'employee-attendance', element: <SuperAdminEmployeeAttendance /> },
+      { path: 'audit-log', element: <SuperAdminAuditLog /> },
       { path: 'curriculum', element: <SuperAdminCurriculum /> },
       { path: 'comparison', element: <MultiCollegeComparison /> },
       { path: 'billing', element: <SubscriptionBilling /> },

@@ -349,6 +349,65 @@ await section('curriculum (error)', '/src/modules/student/pages/StudentCurriculu
 });
 
 
+// ── Internal Employee Portal pages (superadmin) ──────────────────────────────
+// The callables are the server-side source of truth
+// (functions/src/employeePortal.ts); the fixtures below mirror exactly the
+// shapes those callables return, and the colleges fixture feeds the
+// superadmin college picker (a single college auto-selects).
+const employeeFixture = {
+  employees: [
+    { id: 'emp_college-a__ravi_x_edu', uid: 'emp-uid-1', email: 'ravi@x.edu', name: 'Ravi Kumar', role: 'faculty', collegeId: 'college-a', department: 'CSE', designation: 'Assistant Professor', employmentType: 'full-time', joiningDate: '2026-06-01', status: 'active', mustChangePassword: true },
+    { id: 'emp_college-a__meera_x_edu', uid: 'emp-uid-2', email: 'meera@x.edu', name: 'Meera Nair', role: 'hod', collegeId: 'college-a', department: 'ECE', designation: 'Professor & HOD', status: 'inactive' },
+  ],
+  total: 2,
+};
+const attendanceFixture = {
+  rows: [
+    { id: 'att_1', employeeId: 'emp_college-a__ravi_x_edu', employeeUid: 'emp-uid-1', employeeName: 'Ravi Kumar', employeeEmail: 'ravi@x.edu', department: 'CSE', date: new Date().toISOString().slice(0, 10), status: 'present', checkIn: '09:02', checkOut: '', source: 'self' },
+  ],
+  summary: { total: 1, present: 1, absent: 0, late: 0, halfDay: 0, leave: 0, attendanceRate: 100 },
+};
+
+globalThis.__RC_FIRESTORE_DATA = {
+  colleges: [{ id: 'college-a', name: 'Vriddhi College' }],
+};
+globalThis.__RC_CALLABLE_DATA = {
+  listEmployees: employeeFixture,
+  listEmployeeAttendance: attendanceFixture,
+};
+await section('employee directory (superadmin)', '/src/modules/superadmin/pages/SuperAdminEmployees.tsx', {}, (t) => {
+  check('employee directory: mounts without throwing', true);
+  check('employee directory: auto-selects the only college and lists its employees',
+    t.includes('Ravi Kumar') && t.includes('ravi@x.edu'), t);
+  check('employee directory: flags the temporary-password state', /temp password/.test(t), t);
+  check('employee directory: surfaces provisioning, import and export actions',
+    /Add Employee/.test(t) && /Export CSV/.test(t) && /Import existing staff/.test(t), t);
+});
+
+await section('employee attendance (superadmin)', '/src/modules/superadmin/pages/SuperAdminEmployeeAttendance.tsx', {}, (t) => {
+  check('employee attendance: mounts without throwing', true);
+  check('employee attendance: renders the day roster', t.includes('Ravi Kumar') && t.includes('Meera Nair'), t);
+  check('employee attendance: shows the recorded summary chips', /1 present/.test(t) && /100% rate/.test(t), t);
+  check('employee attendance: offers the CSV download', /Download CSV/.test(t), t);
+});
+
+globalThis.__RC_CALLABLE_DATA = {
+  ...globalThis.__RC_CALLABLE_DATA,
+  listAuditLogs: {
+    entries: [
+      { id: 'log-1', action: 'employee.provision', actorUid: 'admin-1', actorName: 'Admin One', actorRole: 'admin', collegeId: 'college-a', targetUid: 'emp-uid-1', targetEmail: 'ravi@x.edu', targetId: 'emp_college-a__ravi_x_edu', targetType: 'employee', details: { role: 'faculty', created: true }, createdAt: '2026-09-10T04:00:00.000Z' },
+    ],
+    hasMore: false,
+    nextCursor: null,
+  },
+};
+await section('audit log (superadmin)', '/src/modules/superadmin/pages/SuperAdminAuditLog.tsx', {}, (t) => {
+  check('audit log: mounts without throwing', true);
+  check('audit log: renders the recorded action', /employee\.provision/.test(t), t);
+  check('audit log: names the actor and the target', t.includes('Admin One') && t.includes('ravi@x.edu'), t);
+  check('audit log: shows each entry\'s college for the platform-wide view', t.includes('college-a'), t);
+});
+
 await server.close();
 
 const failed = checks.filter((c) => !c.ok);

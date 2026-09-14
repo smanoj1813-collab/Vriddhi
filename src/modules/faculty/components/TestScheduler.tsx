@@ -13,6 +13,7 @@ import {
   AccessTime as TimeIcon, People as PeopleIcon, Send as PublishIcon,
   Cancel as CancelIcon, CheckCircle as CheckIcon, School as SchoolIcon,
   Lock as LockIcon, Videocam as ProctorIcon, Save as SaveIcon,
+  ContentCopy as DuplicateIcon,
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -53,7 +54,7 @@ const toDate = (value: unknown): Date => {
 
 const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   const { papers, loading: papersLoading, error: papersError } = usePapers(collegeId);
-  const { tests, schedule, publish, cancel, loading: testsLoading, error: testsError } = useScheduledTests(collegeId);
+  const { tests, schedule, publish, cancel, duplicate, loading: testsLoading, error: testsError } = useScheduledTests(collegeId);
 
   const [showScheduler, setShowScheduler] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -259,6 +260,54 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     }
   };
 
+  // ── Duplication: copy a test (with its frozen questions) onto a new window ──
+  const [duplicateSource, setDuplicateSource] = useState<ScheduledTest | null>(null);
+  const [dupTitle, setDupTitle] = useState('');
+  const [dupStart, setDupStart] = useState<Date | null>(null);
+  const [dupEnd, setDupEnd] = useState<Date | null>(null);
+  const [dupDuration, setDupDuration] = useState(30);
+  const [dupBusy, setDupBusy] = useState(false);
+  const [dupError, setDupError] = useState<string | null>(null);
+
+  const openDuplicate = (test: ScheduledTest) => {
+    const duration = Number(test.durationMinutes ?? test.duration ?? 30) || 30;
+    const originalStart = toDate(test.startDateTime ?? test.scheduledAt);
+    // Default the copy to the same wall-clock time one day later; if that is
+    // already past, use tomorrow at the same time instead.
+    let start = new Date(originalStart.getTime() + 86_400_000);
+    if (start.getTime() <= Date.now()) {
+      const tomorrow = new Date(Date.now() + 86_400_000);
+      tomorrow.setHours(originalStart.getHours(), originalStart.getMinutes(), 0, 0);
+      start = tomorrow;
+    }
+    setDuplicateSource(test);
+    setDupTitle(`${test.title} (Copy)`);
+    setDupStart(start);
+    setDupEnd(new Date(start.getTime() + Math.max(duration, 30) * 60_000));
+    setDupDuration(duration);
+    setDupError(null);
+  };
+
+  const confirmDuplicate = async () => {
+    if (!duplicateSource || !dupStart || !dupEnd) return;
+    setDupBusy(true);
+    setDupError(null);
+    try {
+      await duplicate({
+        testId: duplicateSource.id,
+        title: dupTitle,
+        startDateTime: dupStart,
+        endDateTime: dupEnd,
+        durationMinutes: dupDuration,
+      });
+      setDuplicateSource(null);
+    } catch (err) {
+      setDupError((err as Error)?.message || 'Could not duplicate the test.');
+    } finally {
+      setDupBusy(false);
+    }
+  };
+
   const getStatusColor = (status: string): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
     switch (status) {
       case 'scheduled': return 'warning';
@@ -321,6 +370,9 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <Chip size="small" icon={<PeopleIcon fontSize="small" />} label={((test as any).visibility || 'all').replace(/_/g, ' ')} />
                     </Stack>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+                      <Button size="small" variant="outlined" startIcon={<DuplicateIcon />} onClick={() => openDuplicate(test)}>
+                        Duplicate
+                      </Button>
                       {test.status === 'scheduled' && (
                         <Button size="small" variant="outlined" startIcon={<PublishIcon />} onClick={() => handlePublishTest(test.id)}>
                           Publish
@@ -547,6 +599,35 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
             </Stepper>
           </Paper>
         )}
+
+        {/* ── Duplicate test dialog ─────────────────────────────────────── */}
+        <Dialog open={Boolean(duplicateSource)} onClose={() => setDuplicateSource(null)} maxWidth="sm" fullWidth>
+          <DialogTitle>Duplicate Test</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Copies “{duplicateSource?.title}” with its frozen question snapshot into a new scheduled test.
+              Live counters are reset and the copy starts unpublished-ready in the <em>scheduled</em> state.
+            </Typography>
+            {dupError && <Alert severity="error" sx={{ mb: 2 }}>{dupError}</Alert>}
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField label="New title" fullWidth value={dupTitle} onChange={(e) => setDupTitle(e.target.value)} />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <DateTimePicker label="Start" value={dupStart} onChange={(v) => setDupStart(v)} sx={{ flex: '1 1 220px' }} />
+                <DateTimePicker label="End" value={dupEnd} onChange={(v) => setDupEnd(v)} sx={{ flex: '1 1 220px' }} />
+                <TextField
+                  label="Duration (min)" type="number" value={dupDuration} sx={{ flex: '1 1 130px' }}
+                  onChange={(e) => setDupDuration(Number(e.target.value))}
+                />
+              </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDuplicateSource(null)}>Cancel</Button>
+            <Button variant="contained" startIcon={<DuplicateIcon />} onClick={confirmDuplicate} disabled={dupBusy}>
+              {dupBusy ? 'Duplicating…' : 'Duplicate'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </LocalizationProvider>
   );

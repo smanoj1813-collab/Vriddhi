@@ -43,6 +43,9 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Analytics & "View 360"** student insights, plus a superadmin multi-college comparison.
 - **Multi-college / multi-university** support managed at the superadmin level, including
   subscription billing and a system health monitor.
+- **Internal Employee Portal** — audited single-employee provisioning (Auth + claims + profiles
+  in one operation), HR directory with CSV export, day attendance with manager corrections,
+  audited question-bank writes, one-click test duplication, and a college audit-log viewer.
 - **South Indian language support** — Kannada, Tamil, Telugu, and Malayalam (plus English and
   Hindi) for the UI and for AI question generation in native Unicode scripts.
 
@@ -62,6 +65,27 @@ fees, timetables, and more — powered by Firebase and modern React.
 Role-based route protection is handled by `RoleRoute` / `RoleGuard` under `src/modules/auth/`,
 and the root redirect maps each role to its dashboard in `src/routes/index.tsx`.
 
+## Internal Employee Portal
+
+The people a college employs (faculty, HODs, mentors, principals, admins) are managed through a
+server-authoritative portal operated at the **platform (superadmin) level** — the superadmin
+picks the college, and the backend re-verifies every operation claim-first
+(`functions/src/employeePortal.ts` + `functions/src/authorization.ts`) and records it in the
+shared `logs` audit collection:
+
+| Page                  | Route                              | Backing callables                                             |
+| --------------------- | ---------------------------------- | ------------------------------------------------------------- |
+| Employees             | `/superadmin/employees`            | `provisionEmployee`, `listEmployees`, `updateEmployee`, `setEmployeeStatus`, `exportEmployeesCsv`, `backfillEmployeeDirectory` |
+| Employee Attendance   | `/superadmin/employee-attendance`  | `markEmployeeAttendance`, `listEmployeeAttendance`, `exportEmployeeAttendanceCsv` |
+| Audit Log             | `/superadmin/audit-log`            | `listAuditLogs`                                                |
+| Test duplication      | Test Scheduler (faculty)           | `duplicateAssessmentTest`                                      |
+| Question bank writes  | (callable-level)                   | `upsertQuestionBankItem`, `deleteQuestionBankItem`             |
+
+`employees` and `employeeAttendance` are closed to client writes in `current-firestore.rules` —
+the callables are the only writers, so every change is claim-authorized and audited. Provisioning
+returns a one-time temporary password and sets `mustChangePassword`; the employee must sign in
+again for their new claims to take effect. Details in
+`docs/HANDOFF_employee_portal.md`.
 ## Tech stack
 
 **Frontend**

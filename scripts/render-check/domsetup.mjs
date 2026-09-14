@@ -1,6 +1,19 @@
 // Scratch jsdom bootstrap for the render check. Installed via --import so the
 // DOM globals exist BEFORE react-dom is loaded.
-import { JSDOM } from 'jsdom';
+//
+// Node-version shim (must run before jsdom loads): jsdom's transitive
+// undici@8 calls `worker_threads.markAsUncloneable`, which only exists on
+// Node ≥ 22. On Node 20 sandboxes the render check would die at import time.
+// Nothing in the render checks depends on structured-clone semantics, so a
+// no-op keeps the harness honest about what it actually tests.
+import workerThreads from 'node:worker_threads';
+if (typeof workerThreads.markAsUncloneable !== 'function') {
+  Object.defineProperty(workerThreads, 'markAsUncloneable', {
+    value: () => {}, configurable: true, writable: true,
+  });
+}
+
+const { JSDOM } = await import('jsdom');
 
 const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', {
   url: 'http://localhost/',

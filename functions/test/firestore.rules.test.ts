@@ -1301,3 +1301,173 @@ describe('connect with mentors (faculty availability & appointments)', () => {
     await assertSucceeds(deleteDoc(doc(pDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)))
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Internal Employee Portal — employees directory, employeeAttendance, logs
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// These collections are written EXCLUSIVELY by Cloud Functions
+// (provisionEmployee / markEmployeeAttendance, Admin SDK bypasses rules), so
+// the security story here is: client writes are closed for everyone — even a
+// superadmin — and reads are claim-tenanted exactly like the rules promise:
+// managers see their college, an employee sees their own row(s), nobody sees
+// another college's data.
+describe('employee portal (employees, employeeAttendance, logs)', () => {
+  const RAVI = 'emp-ravi'
+  const MEERA = 'emp-meera'
+
+  function employeeContext(uid = RAVI, collegeId = COLLEGE_A) {
+    return testEnv.authenticatedContext(uid, { role: 'faculty', collegeId })
+  }
+
+  async function seedPortal() {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'employees', 'emp_college-a__ravi_x_edu'), {
+          id: 'emp_college-a__ravi_x_edu', uid: RAVI, email: 'ravi@x.edu',
+          name: 'Ravi Kumar', role: 'faculty', collegeId: COLLEGE_A, status: 'active',
+        }),
+        setDoc(doc(db, 'employees', 'emp_college-a__meera_x_edu'), {
+          id: 'emp_college-a__meera_x_edu', uid: MEERA, email: 'meera@x.edu',
+          name: 'Meera Nair', role: 'hod', collegeId: COLLEGE_A, status: 'active',
+        }),
+        setDoc(doc(db, 'employees', 'emp_college-b__sonu_y_edu'), {
+          id: 'emp_college-b__sonu_y_edu', uid: 'emp-sonu', email: 'sonu@y.edu',
+          name: 'Sonu Yadav', role: 'faculty', collegeId: COLLEGE_B, status: 'active',
+        }),
+        setDoc(doc(db, 'employeeAttendance', 'att_college-a__emp-ravi__2026-09-01'), {
+          id: 'att_college-a__emp-ravi__2026-09-01', employeeUid: RAVI, employeeName: 'Ravi Kumar',
+          collegeId: COLLEGE_A, date: '2026-09-01', status: 'present', source: 'self',
+        }),
+        setDoc(doc(db, 'employeeAttendance', 'att_college-a__emp-meera__2026-09-01'), {
+          id: 'att_college-a__emp-meera__2026-09-01', employeeUid: MEERA, employeeName: 'Meera Nair',
+          collegeId: COLLEGE_A, date: '2026-09-01', status: 'late', source: 'manager',
+        }),
+        setDoc(doc(db, 'logs', 'log-portal-a'), {
+          action: 'employee.provision', actorUid: 'admin-a', actorRole: 'admin',
+          collegeId: COLLEGE_A, targetUid: RAVI, targetEmail: 'ravi@x.edu',
+          createdAt: Timestamp.fromDate(new Date('2026-09-10T04:00:00Z')),
+        }),
+        setDoc(doc(db, 'logs', 'log-portal-b'), {
+          action: 'employee.provision', actorUid: 'admin-b', actorRole: 'admin',
+          collegeId: COLLEGE_B, targetUid: 'emp-sonu', targetEmail: 'sonu@y.edu',
+          createdAt: Timestamp.fromDate(new Date('2026-09-11T04:00:00Z')),
+        }),
+      ])
+    })
+  }
+
+  it('gives an employee their own directory row and nothing else', async () => {
+    await seedPortal()
+    const db = employeeContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'employees', 'emp_college-a__ravi_x_edu')))
+    // A colleague's row in the SAME college is not theirs to read.
+    await assertFails(getDoc(doc(db, 'employees', 'emp_college-a__meera_x_edu')))
+    // And neither is another college's.
+    await assertFails(getDoc(doc(db, 'employees', 'emp_college-b__sonu_y_edu')))
+    // The unfiltered directory list is a management read.
+    await assertFails(getDocs(query(collection(db, 'employees'), where('collegeId', '==', COLLEGE_A))))
+  })
+
+  it('lets college management list only their own college directory', async () => {
+    await seedPortal()
+    const db = adminContext().firestore()
+    const own = await assertSucceeds(
+      getDocs(query(collection(db, 'employees'), where('collegeId', '==', COLLEGE_A)))
+    )
+    assert.equal(own.size, 2)
+    await assertFails(getDocs(query(collection(db, 'employees'), where('collegeId', '==', COLLEGE_B))))
+    // HOD may read the directory (they manage their department's people)…
+    const hodDb = employeeContext(MEERA).firestore()
+    await assertSucceeds(getDoc(doc(hodDb, 'employees', 'emp_college-a__meera_x_edu')))
+  })
+
+  it('closes client writes to employees and employeeAttendance for EVERYONE', async () => {
+    await seedPortal()
+    // Not a manager…
+    const empDb = employeeContext().firestore()
+    await assertFails(setDoc(doc(empDb, 'employees', 'emp_college-a__hack'), {
+      uid: RAVI, collegeId: COLLEGE_A, role: 'principal', status: 'active',
+    }))
+    await assertFails(setDoc(doc(empDb, 'employeeAttendance', 'att_college-a__emp-ravi__2026-09-02'), {
+      employeeUid: RAVI, collegeId: COLLEGE_A, date: '2026-09-02', status: 'present',
+    }))
+    await assertFails(updateDoc(doc(empDb, 'employees', 'emp_college-a__ravi_x_edu'), { status: 'suspended' }))
+    // …not a manager of the college…
+    const adminDb = adminContext().firestore()
+    await assertFails(setDoc(doc(adminDb, 'employees', 'emp_college-a__hack2'), {
+      uid: 'x', collegeId: COLLEGE_A, role: 'faculty', status: 'active',
+    }))
+    await assertFails(deleteDoc(doc(adminDb, 'employees', 'emp_college-a__ravi_x_edu')))
+    // …and not even the platform owner: the callables (Admin SDK) are the only
+    // writers, which is what makes every mutation auditable.
+    const rootDb = superadminContext().firestore()
+    await assertFails(setDoc(doc(rootDb, 'employees', 'emp_college-a__hack3'), {
+      uid: 'x', collegeId: COLLEGE_A, role: 'faculty', status: 'active',
+    }))
+    await assertFails(setDoc(doc(rootDb, 'employeeAttendance', 'att_x'), {
+      employeeUid: RAVI, collegeId: COLLEGE_A, date: '2026-09-02', status: 'present',
+    }))
+  })
+
+  it('scopes attendance reads: own rows for the employee, the college window for managers', async () => {
+    await seedPortal()
+    const empDb = employeeContext().firestore()
+    const mine = await assertSucceeds(
+      getDocs(query(collection(empDb, 'employeeAttendance'), where('employeeUid', '==', RAVI)))
+    )
+    assert.equal(mine.size, 1)
+    // The college-wide window is a management read, not an employee read.
+    await assertFails(getDocs(query(
+      collection(empDb, 'employeeAttendance'),
+      where('collegeId', '==', COLLEGE_A),
+      where('date', '>=', '2026-09-01'),
+      where('date', '<=', '2026-09-30')
+    )))
+
+    const adminDb = adminContext().firestore()
+    const college = await assertSucceeds(getDocs(query(
+      collection(adminDb, 'employeeAttendance'),
+      where('collegeId', '==', COLLEGE_A),
+      where('date', '>=', '2026-09-01'),
+      where('date', '<=', '2026-09-30')
+    )))
+    assert.equal(college.size, 2)
+    // Cross-college stays closed.
+    await assertFails(getDocs(query(
+      collection(adminDb, 'employeeAttendance'),
+      where('collegeId', '==', COLLEGE_B),
+      where('date', '>=', '2026-09-01'),
+      where('date', '<=', '2026-09-30')
+    )))
+  })
+
+  it('keeps the audit trail management-read, superadmin-write, and nobody else', async () => {
+    await seedPortal()
+    const adminDb = adminContext().firestore()
+    const own = await assertSucceeds(
+      getDocs(query(collection(adminDb, 'logs'), where('collegeId', '==', COLLEGE_A), limit(10)))
+    )
+    assert.ok(own.docs.some((d) => d.id === 'log-portal-a'))
+    await assertFails(getDocs(query(collection(adminDb, 'logs'), where('collegeId', '==', COLLEGE_B), limit(10))))
+
+    // A principal reads their college's trail too (AUDIT_READER_ROLES parity).
+    const pDb = principalContext().firestore()
+    await assertSucceeds(getDocs(query(collection(pDb, 'logs'), where('collegeId', '==', COLLEGE_A), limit(10))))
+
+    // An ordinary employee never reads it — it carries credential lifecycle events.
+    await assertFails(getDocs(query(
+      collection(employeeContext().firestore(), 'logs'),
+      where('collegeId', '==', COLLEGE_A), limit(10)
+    )))
+
+    // The trail is unfalsifiable: no client creates or edits rows…
+    await assertFails(setDoc(doc(adminDb, 'logs', 'log-forged'), { action: 'x', actorUid: 'admin-a' }))
+    await assertFails(updateDoc(doc(adminDb, 'logs', 'log-portal-a'), { action: 'forged' }))
+    // …except the platform owner correcting a row.
+    const rootDb = superadminContext().firestore()
+    await assertSucceeds(updateDoc(doc(rootDb, 'logs', 'log-portal-a'), { action: 'employee.provision' }))
+    await assertSucceeds(getDocs(query(collection(rootDb, 'logs'), where('collegeId', '==', COLLEGE_B), limit(10))))
+  })
+})
