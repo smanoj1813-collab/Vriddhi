@@ -111,6 +111,22 @@ import {
   rotateAdmissionIngestToken,
   disableAdmissionIntake,
 } from './admissions'
+// ─── Internal Employee Portal: provisioning, directory, attendance, bank, duplication, audit ───
+import {
+  provisionEmployee,
+  listEmployees,
+  updateEmployee,
+  setEmployeeStatus,
+  exportEmployeesCsv,
+  markEmployeeAttendance,
+  listEmployeeAttendance,
+  exportEmployeeAttendanceCsv,
+  upsertQuestionBankItem,
+  deleteQuestionBankItem,
+  duplicateAssessmentTest,
+  listAuditLogs,
+  backfillEmployeeDirectory,
+} from './employeePortal'
 
 const app = express()
 
@@ -267,4 +283,17 @@ export {
   saveAdmissionConfig,
   rotateAdmissionIngestToken,
   disableAdmissionIntake,
+  provisionEmployee,
+  listEmployees,
+  updateEmployee,
+  setEmployeeStatus,
+  exportEmployeesCsv,
+  markEmployeeAttendance,
+  listEmployeeAttendance,
+  exportEmployeeAttendanceCsv,
+  upsertQuestionBankItem,
+  deleteQuestionBankItem,
+  duplicateAssessmentTest,
+  listAuditLogs,
+  backfillEmployeeDirectory,
 }

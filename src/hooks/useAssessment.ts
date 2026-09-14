@@ -554,6 +554,14 @@ export interface UseScheduledTestsReturn {
   schedule: (input: ScheduleTestInput) => Promise<void>;
   publish: (testId: string) => Promise<void>;
   cancel: (testId: string, reason: string) => Promise<void>;
+  /** Deep-copy a test (with its frozen question snapshot) onto a new window. */
+  duplicate: (input: {
+    testId: string;
+    title?: string;
+    startDateTime: Date;
+    endDateTime: Date;
+    durationMinutes: number;
+  }) => Promise<void>;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -630,7 +638,26 @@ export const useScheduledTests = (collegeId?: string): UseScheduledTestsReturn =
     );
   }, [runMutation]);
 
-  return { tests, schedule, publish, cancel, loading, error, refresh: () => { void fetchData(); } };
+  const duplicate = useCallback(async (input: {
+    testId: string;
+    title?: string;
+    startDateTime: Date;
+    endDateTime: Date;
+    durationMinutes: number;
+  }) => {
+    await runMutation(
+      () => callable('duplicateAssessmentTest', {
+        testId: input.testId,
+        title: input.title,
+        startDateTime: toWireDate(input.startDateTime),
+        endDateTime: toWireDate(input.endDateTime),
+        durationMinutes: input.durationMinutes,
+      }),
+      'Could not duplicate the test.'
+    );
+  }, [runMutation]);
+
+  return { tests, schedule, publish, cancel, duplicate, loading, error, refresh: () => { void fetchData(); } };
 };
 
 export default useStudentTests;

@@ -859,7 +859,7 @@ service cloud.firestore {
     // bypasses rules), so client creates are closed to keep the trail
     // unfalsifiable.
     match /logs/{id} {
-      allow read: if isSuperadmin() || (role() == 'admin' && sameCollege(resource.data));
+      allow read: if isSuperadmin() || (role() in ['admin', 'principal'] && sameCollege(resource.data));
       allow create: if false;
       allow update, delete: if isSuperadmin();
     }
@@ -1087,6 +1087,41 @@ service cloud.firestore {
     // src/modules/admin/api/assessmentsApi.ts.
     match /reviewQueue/{docId} {
       allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if false;
+    }
+
+    // -- Internal Employee Portal ----------------------------------------------
+    // `employees` and `employeeAttendance` are written exclusively by Cloud
+    // Functions (provisionEmployee, updateEmployee, setEmployeeStatus,
+    // markEmployeeAttendance) with the Admin SDK, so client writes are closed:
+    // every mutation is claim-authorised and lands in the `logs` audit trail.
+    // Reads stay claim-tenanted: managers see their college, an employee sees
+    // their own row(s), and nobody else sees anything.
+    match /employees/{docId} {
+      function isOwnEmployeeRow(data) {
+        return isSignedIn() && 'uid' in data && data.uid == request.auth.uid;
+      }
+      function isEmployeeManager(data) {
+        return isSignedIn() && claimedRole() in ['admin', 'principal', 'hod'] && sameCollege(data);
+      }
+
+      allow get: if isSuperadmin() || isOwnEmployeeRow(resource.data) || isEmployeeManager(resource.data);
+      // A list is authorised per candidate document, so a manager's
+      // collegeId-scoped query admits exactly their college's rows.
+      allow list: if isSuperadmin() || isOwnEmployeeRow(resource.data) || isEmployeeManager(resource.data);
+      allow write: if false;
+    }
+
+    match /employeeAttendance/{docId} {
+      function isOwnAttendanceRow(data) {
+        return isSignedIn() && 'employeeUid' in data && data.employeeUid == request.auth.uid;
+      }
+      function isAttendanceManager(data) {
+        return isSignedIn() && claimedRole() in ['admin', 'principal', 'hod'] && sameCollege(data);
+      }
+
+      allow get: if isSuperadmin() || isOwnAttendanceRow(resource.data) || isAttendanceManager(resource.data);
+      allow list: if isSuperadmin() || isOwnAttendanceRow(resource.data) || isAttendanceManager(resource.data);
       allow write: if false;
     }
 
