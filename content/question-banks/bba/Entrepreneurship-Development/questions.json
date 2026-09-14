@@ -1,0 +1,1061 @@
+{
+  "program": "BBA",
+  "subject": "Entrepreneurship Development",
+  "semester": 4,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Entrepreneurship core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "ed-01",
+      "text": "A person who starts a business and bears the risk for profit is an",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Entrepreneur",
+        "Manager",
+        "Employee",
+        "Auditor"
+      ],
+      "correctAnswer": "A",
+      "explanation": "An entrepreneur organises resources and bears risk for profit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-02",
+      "text": "The process of setting up a business enterprise is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Entrepreneurship",
+        "Management",
+        "Administration",
+        "Organising"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Entrepreneurship is the process of creating a new business venture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-03",
+      "text": "An entrepreneur who starts a business within an existing organisation is an",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "intrapreneur",
+      "explanation": "An intrapreneur innovates inside an established company.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-04",
+      "text": "Entrepreneurs are born and cannot be developed through training",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Entrepreneurial skills and attitudes can be developed through education and training.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-05",
+      "text": "List the characteristics of a successful entrepreneur",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Initiative risk bearing innovation self confidence and perseverance.",
+      "explanation": "These traits enable entrepreneurs to succeed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-06",
+      "text": "Explain the functions of an entrepreneur",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The entrepreneur identifies opportunities innovates organises resources bears risk and makes decisions to build and grow the venture.",
+      "explanation": "Cover innovation risk bearing and resource mobilisation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-07",
+      "text": "An entrepreneur who merely imitates existing businesses is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Imitative entrepreneur",
+        "Innovative entrepreneur",
+        "Fabian entrepreneur",
+        "Drone entrepreneur"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Imitative entrepreneurs copy successful ventures rather than innovate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-08",
+      "text": "Entrepreneurs who are cautious and adopt innovations slowly are called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "Fabian entrepreneurs",
+      "explanation": "Fabian entrepreneurs imitate only when not adopting would threaten them.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-09",
+      "text": "A woman entrepreneur is one who owns and runs an enterprise with at least half ownership",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A woman entrepreneur owns and manages an enterprise with majority stake.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-10",
+      "text": "Distinguish between an entrepreneur and a manager",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "An entrepreneur is an owner who bears risk and innovates while a manager is an employee who executes plans for a salary.",
+      "explanation": "The difference is in ownership risk bearing and innovation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-11",
+      "text": "Explain the role of entrepreneurship in economic development",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Entrepreneurship creates jobs promotes innovation mobilises resources reduces regional imbalances and raises national income and exports.",
+      "explanation": "Cover employment innovation and balanced development.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-12",
+      "text": "The process of scanning the environment to discover business possibilities is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Opportunity identification",
+        "Planning",
+        "Controlling",
+        "Staffing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Opportunity identification finds viable business ideas in the environment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-13",
+      "text": "The study that assesses whether a business idea is technically financially and economically viable is a",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "feasibility study",
+      "explanation": "A feasibility study tests the viability of a proposed venture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-14",
+      "text": "A business opportunity exists only when there is customer demand and profit potential",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A real opportunity combines demand with the ability to serve it profitably.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-15",
+      "text": "List the steps in identifying a business opportunity",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Idea generation scanning the environment screening ideas and evaluating feasibility.",
+      "explanation": "These steps convert raw ideas into viable opportunities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-16",
+      "text": "Explain the components of a feasibility study",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A feasibility study covers market technical financial and economic aspects assessing demand production methods costs profitability and social impact.",
+      "explanation": "Cover each dimension of feasibility assessment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-17",
+      "text": "The written document that describes the business idea and its execution plan is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Business plan",
+        "Balance sheet",
+        "Feasibility report",
+        "Budget"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A business plan is the roadmap for starting and running the venture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-18",
+      "text": "The section of a business plan that summarises the whole plan is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "executive summary",
+      "explanation": "The executive summary gives a concise overview of the entire plan.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-19",
+      "text": "A business plan is useful only for large companies not for startups",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Startups especially need business plans to guide them and attract finance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-20",
+      "text": "List the main components of a business plan",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Executive summary description of business market plan operations plan and financial plan.",
+      "explanation": "These sections together describe and justify the venture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-21",
+      "text": "Explain the importance of a business plan",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A business plan guides the entrepreneur attracts investors and lenders clarifies objectives and helps monitor progress against targets.",
+      "explanation": "Cover guidance finance raising and control benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-22",
+      "text": "The organisation that provides financial and non financial support to small industries in India is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "MSME Development Institute",
+        "RBI only",
+        "SEBI only",
+        "Stock exchange"
+      ],
+      "correctAnswer": "A",
+      "explanation": "MSME Development Institutes support micro small and medium enterprises.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-23",
+      "text": "The apex institution that provides long term finance to small industries is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "SIDBI",
+      "explanation": "The Small Industries Development Bank of India finances small industries.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-24",
+      "text": "The Pradhan Mantri Mudra Yojana provides loans to small and micro enterprises",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Mudra Yojana offers loans to micro enterprises without collateral.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-25",
+      "text": "List the institutions supporting entrepreneurs in India",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "SIDBI DIC NSIC SIDO and state financial corporations.",
+      "explanation": "These institutions provide finance training and marketing support.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-26",
+      "text": "Explain the role of SIDBI in promoting small industries",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "SIDBI provides refinance direct finance and promotional support to small industries and coordinates the flow of credit to the MSME sector.",
+      "explanation": "Cover refinancing direct lending and developmental support.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-27",
+      "text": "A newly established business with high growth potential based on innovation is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Startup",
+        "Public company",
+        "Government enterprise",
+        "Cooperative"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A startup is a new innovative venture designed for rapid growth.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-28",
+      "text": "MSME stands for Micro Small and Medium",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "Enterprises",
+      "explanation": "MSMEs are classified by investment in plant and machinery and turnover.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-29",
+      "text": "Women entrepreneurs face unique challenges including limited access to finance",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Access to finance mobility and social attitudes challenge women entrepreneurs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-30",
+      "text": "State the problems faced by women entrepreneurs",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Lack of finance limited mobility family responsibilities and social attitudes.",
+      "explanation": "These constraints hinder the growth of women owned businesses.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-31",
+      "text": "Explain the importance of MSMEs in the Indian economy",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "MSMEs generate employment promote regional balance use local resources and contribute significantly to exports and industrial output.",
+      "explanation": "Cover employment output exports and balanced regional growth.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-32",
+      "text": "Assertion: Entrepreneurship creates employment opportunities. Reason: New ventures hire people to produce and sell goods and services",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise (assertion reason)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "New ventures generate jobs directly and indirectly through their operations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-33",
+      "text": "Match the type of entrepreneur to the description",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs (matching)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Innovative - introduces new ideas",
+        "Imitative - resists all change",
+        "Fabian - adopts quickly",
+        "Drone - imitates others"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Innovative entrepreneurs introduce new ideas while imitative ones copy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-34",
+      "text": "The analysis of strengths weaknesses opportunities and threats before starting a venture is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "SWOT analysis",
+        "Ratio analysis",
+        "Variance analysis",
+        "Break even analysis"
+      ],
+      "correctAnswer": "A",
+      "explanation": "SWOT analysis evaluates internal and external factors affecting the venture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-35",
+      "text": "The stage of entrepreneurial development that motivates people to become entrepreneurs is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "motivational training",
+      "explanation": "Entrepreneurship development programmes begin by motivating potential entrepreneurs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-36",
+      "text": "Explain the stages of entrepreneurial development programmes",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "EDPs proceed through pre training to identify and motivate participants training to develop skills and post training follow up support for project implementation.",
+      "explanation": "Cover the pre training training and post training phases.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-37",
+      "text": "A business owned and run entirely by one person who bears all risk is a sole proprietorship",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A sole proprietorship is owned by one person with unlimited liability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-38",
+      "text": "Explain the sources of finance for a new venture",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Own funds family and friends bank loans venture capital angel investors and government schemes.",
+      "explanation": "These sources provide capital at different stages of the venture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-39",
+      "text": "Read the case: An aspiring entrepreneur has an idea for an organic food outlet but limited funds and no market data. Suggest the first three steps she should take",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Entrepreneurship Development",
+      "topic": "Identifying opportunities and feasibility",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "She should first conduct market research to test demand then prepare a feasibility study and finally develop a business plan to guide execution and raise finance.",
+      "explanation": "Sequence market research feasibility and business planning.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-40",
+      "text": "Read the case: A small manufacturing unit has good orders but cannot get a bank loan due to lack of collateral. Suggest a government scheme and an institution that can help",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The unit can use the Mudra Yojana for collateral free loans and approach SIDBI or a state financial corporation for refinance and guarantee support.",
+      "explanation": "Match the collateral problem to suitable schemes and institutions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-41",
+      "text": "The liability of an entrepreneur in a sole proprietorship is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Business plan preparation",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Unlimited",
+        "Limited to capital",
+        "Zero",
+        "Limited to profits"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A sole proprietor has unlimited liability for business debts.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-42",
+      "text": "Explain the role of entrepreneurship in employment generation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Entrepreneurs create direct jobs in their ventures and indirect jobs in suppliers and service providers reducing unemployment and raising incomes.",
+      "explanation": "Cover direct and indirect employment effects.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-43",
+      "text": "The full form of DIC is District Industries",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Institutional support and government schemes",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "Centre",
+      "explanation": "District Industries Centres promote small industries at the district level.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-44",
+      "text": "Explain the problems faced by entrepreneurs in India",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Entrepreneurs face problems of finance infrastructure raw materials marketing competition and bureaucratic procedures in India.",
+      "explanation": "Cover financial infrastructural and market related constraints.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-45",
+      "text": "The entrepreneurship development programmes in India were pioneered by the Entrepreneurship Development Institute of India",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Entrepreneurship Development Institute of India pioneered EDPs in India.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-46",
+      "text": "Explain the concept and importance of innovation in entrepreneurship",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Entrepreneur entrepreneurship and enterprise",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Innovation is introducing new products processes or methods and it gives the entrepreneur competitive advantage and growth. Schumpeter saw innovation as the core of entrepreneurship.",
+      "explanation": "Link innovation to competitive advantage and Schumpeters view.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-47",
+      "text": "List the types of entrepreneurs on the basis of scale",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Small scale and large scale entrepreneurs based on the size of investment and operations.",
+      "explanation": "Scale of operations distinguishes these categories.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-48",
+      "text": "The scheme that supports startups with funding mentorship and incubation in India is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "Startup India",
+      "explanation": "Startup India provides funding incubation and regulatory support to startups.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-49",
+      "text": "Explain the role of women entrepreneurs in economic development",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Startups MSMEs and women entrepreneurs",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Women entrepreneurs create employment empower women raise household income and bring diversity to business contributing to inclusive economic growth.",
+      "explanation": "Cover employment empowerment and inclusive growth benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ed-50",
+      "text": "Distinguish between entrepreneurship and intrapreneurship",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Entrepreneurship Development",
+      "topic": "Types of entrepreneurs",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Entrepreneurship creates a new independent venture while intrapreneurship innovates within an existing organisation using its resources.",
+      "explanation": "The setting and ownership of the risk distinguish the two.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

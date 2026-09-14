@@ -1,0 +1,1059 @@
+{
+  "program": "BBA",
+  "subject": "Business Statistics",
+  "semester": 2,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Statistics core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "bs-01",
+      "text": "The science of collecting organising analysing and interpreting data is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Statistics",
+        "Accounting",
+        "Marketing",
+        "Finance"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Statistics is the discipline of handling data for decision making.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-02",
+      "text": "Data collected first hand for a specific purpose is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Primary data",
+        "Secondary data",
+        "Tertiary data",
+        "Raw data"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Primary data is original data gathered for the current study.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-03",
+      "text": "A characteristic that can take different values is called a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "variable",
+      "explanation": "A variable is a quantity or attribute that varies among units.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-04",
+      "text": "Data that can be counted but not measured continuously such as number of students is discrete",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Discrete data takes only countable whole number values.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-05",
+      "text": "Distinguish between primary and secondary data",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Primary data is collected first hand for the current purpose while secondary data already exists having been collected earlier by others.",
+      "explanation": "The difference is in who collects it and for what purpose.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-06",
+      "text": "Explain the importance and limitations of statistics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Statistics aids planning decision making and comparison by summarising large data. It is limited because it deals with aggregates not individuals and can be misused if the data is biased.",
+      "explanation": "Cover the uses and the limitations of statistical methods.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-07",
+      "text": "The number that occurs most frequently in a data set is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Mode",
+        "Mean",
+        "Median",
+        "Range"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The mode is the value with the highest frequency.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-08",
+      "text": "The middle value that divides an ordered data set into two equal halves is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "median",
+      "explanation": "The median is the central value when data are arranged in order.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-09",
+      "text": "The arithmetic mean is affected by extreme values but the median is not",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The mean uses every value so outliers distort it while the median is positional.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-10",
+      "text": "List the three measures of central tendency",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Mean median and mode.",
+      "explanation": "These three averages summarise the centre of a data set.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-11",
+      "text": "Explain the merits and demerits of the arithmetic mean",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The mean is simple to compute and uses all observations making it suitable for further analysis. Its drawback is that extreme values distort it.",
+      "explanation": "Cover its mathematical soundness and sensitivity to outliers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-12",
+      "text": "The values 4 6 8 10 and 12 have an arithmetic mean of",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "8",
+      "explanation": "The sum is 40 and dividing by five gives 8.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-13",
+      "text": "The difference between the largest and smallest value in a data set is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Range",
+        "Mean deviation",
+        "Variance",
+        "Quartile deviation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The range is the simplest measure of spread.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-14",
+      "text": "The square root of the variance is the standard",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "deviation",
+      "explanation": "Standard deviation is the positive square root of the variance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-15",
+      "text": "Dispersion measures how spread out the values of a data set are",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Dispersion measures the variability or spread of observations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-16",
+      "text": "Define standard deviation and its significance",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Standard deviation measures the average distance of observations from the mean and is the most reliable measure of dispersion.",
+      "explanation": "A lower standard deviation means the data cluster closely around the mean.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-17",
+      "text": "Explain the difference between absolute and relative measures of dispersion",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Absolute measures like range and standard deviation are expressed in the original units. Relative measures like the coefficient of variation express dispersion as a ratio allowing comparison across data sets.",
+      "explanation": "Relative measures enable comparison between series with different units.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-18",
+      "text": "For the values 2 4 6 and 8 the range is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "6",
+      "explanation": "The range is the largest minus the smallest so 8 minus 2 equals 6.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-19",
+      "text": "The statistical measure of the strength and direction of a linear relationship between two variables is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Correlation and regression",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Correlation",
+        "Dispersion",
+        "Skewness",
+        "Sampling"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Correlation measures the degree of association between two variables.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-20",
+      "text": "The correlation coefficient can take values between minus one and",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Correlation and regression",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "plus one",
+      "explanation": "The coefficient r ranges from minus one perfect negative to plus one perfect positive.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-21",
+      "text": "A correlation coefficient of zero indicates a perfect linear relationship",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Correlation and regression",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Zero correlation means no linear relationship between the variables.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-22",
+      "text": "Distinguish between correlation and regression",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Correlation and regression",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Correlation measures the strength and direction of association while regression estimates the functional relationship to predict one variable from another.",
+      "explanation": "Correlation is symmetric while regression specifies cause and effect.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-23",
+      "text": "Explain the methods of studying correlation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Correlation and regression",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Correlation is studied by scatter diagram Karl Pearsons coefficient and Spearmans rank method. Each reveals the direction and strength of the relationship.",
+      "explanation": "Describe the graphical and numerical methods of measuring correlation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-24",
+      "text": "The method that measures the change in a variable relative to a base period is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Index numbers",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Index numbers",
+        "Correlation",
+        "Dispersion",
+        "Probability"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Index numbers measure relative change over time such as price or quantity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-25",
+      "text": "The base period value of an index number is conventionally set at",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Index numbers",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "100",
+      "explanation": "The base period is assigned an index value of one hundred for comparison.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-26",
+      "text": "The consumer price index measures changes in the cost of living",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Index numbers",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The CPI tracks the price of a basket of consumer goods over time.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-27",
+      "text": "State the uses of index numbers",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Index numbers",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Index numbers measure price changes cost of living production trends and help in policy and business decisions.",
+      "explanation": "They condense many changes into a single comparable figure.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-28",
+      "text": "Explain the methods of constructing index numbers",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Index numbers",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Index numbers may be unweighted such as the simple aggregative method or weighted such as Laspeyres and Paasche indices which give different weights to items.",
+      "explanation": "Contrast simple and weighted methods of construction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-29",
+      "text": "The price of a good is 50 in the base year and 60 in the current year. Its price relative index is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Index numbers",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "120",
+      "explanation": "Price relative equals current price divided by base price times 100 so 60 divided by 50 times 100 equals 120.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-30",
+      "text": "A set of observations recorded over successive periods of time is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Time series and probability",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Time series",
+        "Cross section data",
+        "Panel data",
+        "Index"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A time series records a variable at regular intervals over time.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-31",
+      "text": "The long term general tendency of a time series is called the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Time series and probability",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "trend",
+      "explanation": "The secular trend shows the long term direction of the series.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-32",
+      "text": "The four components of a time series are trend seasonal cyclical and irregular",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Time series and probability",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "These four components together make up the movement of a series.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-33",
+      "text": "Define probability and give its range",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Time series and probability",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Probability is the numerical measure of the likelihood of an event and ranges from zero for impossibility to one for certainty.",
+      "explanation": "All probabilities lie between zero and one inclusive.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-34",
+      "text": "Explain the components of a time series",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Time series and probability",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A time series comprises the long term trend seasonal variation cyclical fluctuation and irregular variation. Each reflects a different source of movement in the data.",
+      "explanation": "Describe each component and its cause.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-35",
+      "text": "Assertion: The median is a better average than the mean for skewed data. Reason: The median is not affected by extreme values",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency (assertion reason)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Skewed data have outliers that distort the mean so the median is more representative.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-36",
+      "text": "Match the measure to what it describes",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion (matching)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Standard deviation - average spread from the mean",
+        "Mean - spread of the data",
+        "Mode - middle value",
+        "Range - centre of the data"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Standard deviation measures spread while the mean and mode measure central tendency.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-37",
+      "text": "When two variables move in opposite directions their correlation is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Correlation and regression",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Negative",
+        "Positive",
+        "Zero",
+        "Perfect"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Negative correlation means one variable rises as the other falls.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-38",
+      "text": "A histogram is a graphical representation of a frequency distribution using bars",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A histogram uses adjacent bars to show the frequency of class intervals.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-39",
+      "text": "Explain the difference between a histogram and a bar diagram",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A histogram represents a continuous frequency distribution with adjacent bars while a bar diagram shows discrete categories with gaps between bars.",
+      "explanation": "The difference lies in the nature of data and bar spacing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-40",
+      "text": "Read the case: A shop records daily sales of 20 25 22 28 30 and 25. Calculate the mean median and mode of the sales",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The mean is 25 the median is 25 and the mode is 25. The sum is 150 divided by 6 gives 25 and 25 appears most often.",
+      "explanation": "Compute all three averages and note they coincide for this data.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-41",
+      "text": "Read the case: Two machines pack sugar into bags with the same mean weight but one has higher standard deviation. Explain which machine is more consistent",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The machine with the lower standard deviation is more consistent because its bag weights cluster closer to the mean with less variability.",
+      "explanation": "Lower dispersion means more uniform output for the same mean.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-42",
+      "text": "A fair six sided die is rolled. The probability of rolling an even number is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Time series and probability",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "0.5",
+      "explanation": "Three even outcomes out of six equally likely outcomes gives a probability of one half.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-43",
+      "text": "The value that divides the distribution into four equal parts is a quartile",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Quartiles split an ordered data set into four equal parts.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-44",
+      "text": "The sum of all observations divided by the number of observations is the arithmetic",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "mean",
+      "explanation": "The arithmetic mean is the sum of values divided by their count.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-45",
+      "text": "Explain the concept of skewness and its types",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Skewness measures the asymmetry of a distribution. Positive skew has a long right tail while negative skew has a long left tail and a symmetric distribution has zero skew.",
+      "explanation": "Describe the direction of the tail for each type of skew.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-46",
+      "text": "The weights of five items are 10 12 14 16 and 18 kg. The mean weight is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Measures of central tendency",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "14",
+      "explanation": "The sum is 70 and dividing by five gives 14 kg.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-47",
+      "text": "Explain the importance of sampling in statistics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Sampling studies a representative subset to draw conclusions about a population at lower cost and time and with greater accuracy when the population is large or destructive testing is involved.",
+      "explanation": "Cover cost time and feasibility advantages of sampling.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-48",
+      "text": "List the methods of collecting primary data",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Statistics",
+      "topic": "Introduction to statistics",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Direct personal interview questionnaire schedule and observation.",
+      "explanation": "These methods gather fresh data directly from respondents.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-49",
+      "text": "A distribution with a long tail extending to the right is positively skewed",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A right tail with a few high values indicates positive skew.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bs-50",
+      "text": "Explain the uses of the coefficient of variation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Statistics",
+      "topic": "Measures of dispersion",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The coefficient of variation expresses standard deviation as a percentage of the mean allowing comparison of variability across data sets with different units or averages.",
+      "explanation": "It is a relative measure ideal for comparing consistency across series.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

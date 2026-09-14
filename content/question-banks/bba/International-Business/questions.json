@@ -1,0 +1,1059 @@
+{
+  "program": "BBA",
+  "subject": "International Business",
+  "semester": 5,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "International business core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "ib-01",
+      "text": "The exchange of goods services and capital across national borders is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "International business",
+        "Domestic business",
+        "Local trade",
+        "Retailing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "International business involves cross border trade and investment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-02",
+      "text": "The increasing interconnection of world economies is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Globalisation",
+        "Nationalisation",
+        "Privatisation",
+        "Liberalisation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Globalisation is the growing integration of economies and markets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-03",
+      "text": "A business that operates in multiple countries is called a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "multinational company",
+      "explanation": "A multinational company operates and invests in several countries.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-04",
+      "text": "International business is riskier than purely domestic business",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Cross border business adds currency political and cultural risks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-05",
+      "text": "List the drivers of international business",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Market seeking resource seeking efficiency seeking and strategic asset seeking motives.",
+      "explanation": "These motives drive firms to internationalise.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-06",
+      "text": "Explain the importance of international business",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "International business expands markets diversifies risk accesses resources and technology and enhances competitiveness and growth for firms and nations.",
+      "explanation": "Cover market expansion and resource access benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-07",
+      "text": "The theory that nations should produce goods they can make most efficiently is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Theories of international trade",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Absolute advantage",
+        "Comparative advantage",
+        "Product life cycle",
+        "New trade theory"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Adam Smiths absolute advantage holds that nations export what they make most efficiently.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-08",
+      "text": "The theory that nations should specialise where their opportunity cost is lowest is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Theories of international trade",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "comparative advantage",
+      "explanation": "Ricardo comparative advantage justifies trade on relative efficiency.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-09",
+      "text": "The Heckscher Ohlin theory explains trade by differences in factor endowments",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Theories of international trade",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Heckscher Ohlin links trade to relative abundance of factors of production.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-10",
+      "text": "State the theory of comparative advantage",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Theories of international trade",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A nation benefits by specialising in goods it produces at a lower opportunity cost and trading for the rest.",
+      "explanation": "Comparative advantage is the basis of mutually beneficial trade.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-11",
+      "text": "Explain the mercantilist theory of trade",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Theories of international trade",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Mercantilism held that a nation gains by maximising exports and minimising imports to accumulate gold and silver treating trade as a zero sum game.",
+      "explanation": "Cover the export surplus and bullion accumulation doctrine.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-12",
+      "text": "Exporting goods directly to foreign customers is an entry mode of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Exporting",
+        "Licensing",
+        "Franchising",
+        "Joint venture"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Exporting is selling goods produced domestically to foreign markets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-13",
+      "text": "Granting a foreign firm the right to use technology for a fee is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "licensing",
+      "explanation": "Licensing transfers rights to technology or brand for a royalty.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-14",
+      "text": "A wholly owned subsidiary is the entry mode requiring the highest investment",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A wholly owned subsidiary involves full ownership and high commitment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-15",
+      "text": "List the modes of entering foreign markets",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Exporting licensing franchising joint venture and wholly owned subsidiary.",
+      "explanation": "These modes differ in control investment and risk.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-16",
+      "text": "Explain the factors determining the choice of entry mode",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Entry mode choice depends on firm resources market size risk tolerance control desired and host country regulations.",
+      "explanation": "Cover internal capability and external market factors.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-17",
+      "text": "The international body that regulates world trade is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "World Trade Organization",
+        "World Bank",
+        "IMF",
+        "ASEAN"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The WTO sets and enforces rules of international trade.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-18",
+      "text": "The institution that provides short term finance for balance of payments problems is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "International Monetary Fund",
+      "explanation": "The IMF assists countries with balance of payments support.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-19",
+      "text": "A tariff is a tax imposed on imported goods",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Tariffs are taxes on imports used to protect domestic industry.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-20",
+      "text": "List the types of trade barriers",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Tariff barriers and non tariff barriers such as quotas subsidies and technical standards.",
+      "explanation": "Trade barriers divide into tariff and non tariff types.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-21",
+      "text": "Explain the functions of the World Trade Organization",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The WTO administers trade agreements provides a forum for negotiation settles disputes and monitors trade policies to ensure free and fair trade.",
+      "explanation": "Cover rule making dispute settlement and trade monitoring.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-22",
+      "text": "The policy document that governs Indias exports and imports is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "EXIM policy",
+        "Budget",
+        "Monetary policy",
+        "Industrial policy"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The EXIM policy sets the framework for exports and imports.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-23",
+      "text": "The document that evidences the contract of carriage in shipping is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "bill of lading",
+      "explanation": "The bill of lading is a receipt and contract of carriage.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-24",
+      "text": "A letter of credit is a guarantee of payment by the importers bank",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A letter of credit assures the exporter of payment by the bank.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-25",
+      "text": "List the documents used in export trade",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Commercial invoice bill of lading certificate of origin and letter of credit.",
+      "explanation": "These documents complete an export transaction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-26",
+      "text": "Explain the objectives of the EXIM policy",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The EXIM policy promotes exports facilitates imports and balances trade to earn foreign exchange and support economic growth.",
+      "explanation": "Cover export promotion and trade balance objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-27",
+      "text": "The price of one currency in terms of another is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Exchange rate",
+        "Interest rate",
+        "Inflation rate",
+        "Tax rate"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The exchange rate is the price of one currency in another.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-28",
+      "text": "The market where currencies are bought and sold is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "foreign exchange market",
+      "explanation": "The forex market facilitates currency trading.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-29",
+      "text": "Cultural differences can create barriers in international business",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Language customs and values differ across countries affecting business.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-30",
+      "text": "Distinguish between a fixed and a floating exchange rate",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A fixed rate is set by the government while a floating rate is determined by market demand and supply.",
+      "explanation": "The difference is who determines the exchange rate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-31",
+      "text": "Explain the role of culture in international business",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Culture shapes consumer behaviour negotiation styles and management practices so firms must adapt products communication and management to local cultures.",
+      "explanation": "Cover adaptation of marketing and management across cultures.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-32",
+      "text": "Assertion: A weaker domestic currency boosts exports. Reason: A weaker currency makes domestic goods cheaper for foreign buyers",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture (assertion reason)",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A weaker currency lowers the foreign price of exports raising demand.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-33",
+      "text": "Match the entry mode to its characteristic",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry (matching)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Exporting - lowest investment",
+        "Wholly owned subsidiary - lowest control",
+        "Licensing - highest investment",
+        "Joint venture - no shared risk"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Exporting requires the least investment while a subsidiary gives full control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-34",
+      "text": "The global institution that lends for long term development projects is the",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "World Bank",
+        "WTO",
+        "IMF",
+        "OPEC"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The World Bank finances long term development projects.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-35",
+      "text": "The set of agreements promoting free trade among member countries is a",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "free trade area",
+      "explanation": "A free trade area removes barriers among members.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-36",
+      "text": "Explain the stages of internationalisation of a firm",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Firms internationalise through stages from exporting and licensing to joint ventures and wholly owned subsidiaries increasing commitment and control at each step.",
+      "explanation": "Trace the escalation of commitment across stages.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-37",
+      "text": "Read the case: A firm exporting goods faces payment risk from a foreign buyer. Recommend a payment mechanism that reduces the risk",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The firm should use an irrevocable letter of credit where the buyers bank guarantees payment against compliant documents.",
+      "explanation": "Apply the letter of credit to mitigate payment risk.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-38",
+      "text": "Read the case: A company plans to enter a foreign market but lacks capital and local knowledge. Recommend an entry mode and justify it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "A joint venture or licensing is best because it shares capital and risk and taps the local partners market knowledge.",
+      "explanation": "Match limited resources to a shared risk entry mode.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-39",
+      "text": "Explain the advantages and disadvantages of globalisation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Globalisation expands markets lowers costs and spreads technology but also increases competition interdependence and inequality between countries.",
+      "explanation": "Balance economic integration benefits against its costs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-40",
+      "text": "The risk that a foreign government may seize assets is political risk",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Political risk includes expropriation and policy changes abroad.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-41",
+      "text": "Explain the factors affecting exchange rates",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Global finance forex and culture",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Exchange rates are affected by inflation interest rates balance of payments political stability and market speculation.",
+      "explanation": "Cover economic and political determinants of exchange rates.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-42",
+      "text": "List the risks in international business",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Political risk commercial risk currency risk and cultural risk.",
+      "explanation": "These risks make international business more complex.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-43",
+      "text": "Explain the meaning and importance of balance of payments",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The balance of payments records all external transactions and reveals a countrys trade position currency pressures and need for policy adjustment.",
+      "explanation": "Cover the current and capital accounts and their significance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-44",
+      "text": "The term FOB means the seller bears cost up to the ship named by the buyer",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "FOB means free on board where the seller delivers goods on board the vessel.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-45",
+      "text": "Explain the role of export promotion councils in India",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "EXIM policy and trade documentation",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Export promotion councils assist exporters with market information trade fairs quality and policy inputs to boost exports of specific products.",
+      "explanation": "Cover the support functions of export councils.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-46",
+      "text": "A company whose global strategy adapts products to each local market follows",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Globalisation and market entry",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "localisation",
+      "explanation": "Localisation adapts offerings to local preferences and conditions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-47",
+      "text": "Explain the concept and types of trade blocs",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Trade blocs range from free trade areas and customs unions to common markets and economic unions with increasing integration among members.",
+      "explanation": "Describe the levels of regional economic integration.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-48",
+      "text": "The duty levied on imports to protect domestic industry is a protective tariff",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Protective tariffs shield domestic producers from foreign competition.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-49",
+      "text": "Explain the stages of economic integration",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Trade environment and organisations",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Economic integration proceeds from free trade area and customs union through common market to economic union with increasing harmonisation of policies.",
+      "explanation": "Trace the progression of integration stages.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ib-50",
+      "text": "Explain the factors that determine international competitiveness",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "International Business",
+      "topic": "Nature and drivers of international business",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Competitiveness depends on cost quality technology innovation and supporting institutions as captured in Porters diamond of factor conditions demand and related industries.",
+      "explanation": "Cover cost technology and Porters diamond determinants.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,1055 @@
+{
+  "program": "BBA",
+  "subject": "Production and Operations Management",
+  "semester": 4,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Operations core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "pom2-01",
+      "text": "The function concerned with converting inputs into outputs of goods and services is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Production management",
+        "Marketing management",
+        "Financial management",
+        "Personnel management"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Production management transforms inputs into valuable outputs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-02",
+      "text": "The system that produces standardised goods in large volume is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Mass production",
+        "Job production",
+        "Batch production",
+        "Project production"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Mass production makes large volumes of standardised products.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-03",
+      "text": "The production of goods one at a time to customer specification is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "job production",
+      "explanation": "Job production makes unique items to order.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-04",
+      "text": "Production management and operations management are entirely different concepts",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Operations management is the broader term that includes services as well as goods.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-05",
+      "text": "List the objectives of production management",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Right quality right quantity right time and minimum cost.",
+      "explanation": "These objectives ensure efficient and customer satisfying production.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-06",
+      "text": "Explain the scope of production and operations management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The scope covers product design process planning plant location and layout production planning and control quality and maintenance management.",
+      "explanation": "Cover the activities from design to control and improvement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-07",
+      "text": "The decision about where to set up a plant is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Plant location",
+        "Product design",
+        "Quality control",
+        "Maintenance"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Plant location chooses the site for the production facility.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-08",
+      "text": "The physical arrangement of machines and departments within a plant is the plant",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "layout",
+      "explanation": "Plant layout arranges facilities for efficient flow of work.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-09",
+      "text": "A product layout is best suited for continuous mass production",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Product layout arranges machines in the sequence of operations for mass output.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-10",
+      "text": "List the factors affecting plant location",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Nearness to raw materials market transport labour power and government incentives.",
+      "explanation": "These factors influence the cost and convenience of a site.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-11",
+      "text": "Explain the types of plant layout",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Layouts include product layout process layout fixed position layout and cellular layout each suited to different types of production and volume.",
+      "explanation": "Describe each layout and the production setting it suits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-12",
+      "text": "The process of deciding what when and how much to produce is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Production planning and control",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Production planning",
+        "Quality control",
+        "Maintenance",
+        "Purchasing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Production planning determines what and how much to produce and when.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-13",
+      "text": "The document that lists the materials and operations required to make a product is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Production planning and control",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "bill of materials",
+      "explanation": "The bill of materials details all components needed for a product.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-14",
+      "text": "Routing determines the sequence of operations for a job",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Production planning and control",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Routing fixes the path and sequence of operations for production.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-15",
+      "text": "List the steps in production planning and control",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Production planning and control",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Routing scheduling dispatching and follow up.",
+      "explanation": "These steps plan and control the flow of production.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-16",
+      "text": "Explain the importance of production planning and control",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Production planning and control",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Production planning and control ensures optimum use of resources timely delivery reduced costs and smooth workflow by planning scheduling and monitoring production.",
+      "explanation": "Cover resource use delivery and cost benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-17",
+      "text": "The function that ensures materials are available in the right quantity at the right time is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Materials management",
+        "Marketing",
+        "Finance",
+        "Recruitment"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Materials management handles procurement storage and issue of materials.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-18",
+      "text": "The level of inventory at which a new order must be placed is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "reorder level",
+      "explanation": "The reorder level triggers replenishment before stock runs out.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-19",
+      "text": "Total quality management makes quality the responsibility of every employee",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "TQM involves everyone in continuous improvement of quality.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-20",
+      "text": "List the techniques of inventory control",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "ABC analysis economic order quantity reorder level and just in time.",
+      "explanation": "These techniques balance inventory cost with availability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-21",
+      "text": "Explain the objectives of quality management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Quality management aims to meet customer requirements prevent defects reduce waste and improve reliability through standards inspection and continuous improvement.",
+      "explanation": "Cover customer satisfaction and defect prevention.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-22",
+      "text": "The function that keeps machines and equipment in working condition is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Maintenance",
+        "Production",
+        "Marketing",
+        "Finance"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Maintenance keeps plant and machinery in good working order.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-23",
+      "text": "Maintenance carried out before a breakdown occurs is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "preventive maintenance",
+      "explanation": "Preventive maintenance is scheduled to avoid breakdowns.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-24",
+      "text": "Work study combines method study and work measurement",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Work study analyses methods and measures work to improve efficiency.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-25",
+      "text": "List the types of maintenance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Breakdown preventive predictive and corrective maintenance.",
+      "explanation": "These approaches differ in when maintenance is performed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-26",
+      "text": "Explain the objectives of work study",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Work study improves productivity by eliminating waste simplifying methods and setting fair time standards for planning and incentives.",
+      "explanation": "Cover method improvement and standard setting.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-27",
+      "text": "The philosophy of producing only what is needed when it is needed is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Just in time",
+        "Mass production",
+        "Batch production",
+        "Job production"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Just in time minimises inventory by producing to demand.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-28",
+      "text": "The network of organisations involved in producing and delivering a product is the supply",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "chain",
+      "explanation": "The supply chain links suppliers producers and distributors.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-29",
+      "text": "Lean production aims to eliminate waste in all forms",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Lean production continuously removes non value adding activities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-30",
+      "text": "List the benefits of just in time production",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Lower inventory reduced waste better quality and faster response to demand.",
+      "explanation": "JIT cuts costs and improves responsiveness.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-31",
+      "text": "Explain the objectives of supply chain management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Supply chain management coordinates suppliers producers and distributors to reduce cost improve service and respond quickly to customers.",
+      "explanation": "Cover cost service and responsiveness objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-32",
+      "text": "Assertion: Just in time reduces inventory holding costs. Reason: JIT produces only when demand arises so stock levels stay low",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management (assertion reason)",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Low stock from demand driven production directly cuts holding costs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-33",
+      "text": "Match the concept to its focus",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Lean JIT and supply chain management (matching)",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "JIT - minimise inventory",
+        "Supply chain - reduce quality",
+        "Lean - increase waste",
+        "Quality - ignore customers"
+      ],
+      "correctAnswer": "A",
+      "explanation": "JIT minimises inventory while lean eliminates waste and quality satisfies customers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-34",
+      "text": "The annual demand is 12000 units and each order costs 200. The economic order quantity with holding cost 3 per unit is",
+      "type": "numerical",
+      "difficulty": "hard",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "1265 units",
+      "explanation": "EOQ equals the square root of two times demand times ordering cost divided by holding cost so square root of two times 12000 times 200 divided by 3 equals about 1265 units.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-35",
+      "text": "The time taken by a worker to complete a job is studied in",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Time study",
+        "Motion study",
+        "Method study",
+        "Fatigue study"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Time study measures the time required to perform a task.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-36",
+      "text": "The study of the movements of workers to eliminate unnecessary motion is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "motion study",
+      "explanation": "Motion study improves methods by removing wasteful movements.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-37",
+      "text": "Explain the factors determining the choice of production system",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The choice depends on product variety volume customer specification and capital requirements with job batch and mass systems suiting different combinations.",
+      "explanation": "Relate product volume and variety to the production system.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-38",
+      "text": "Read the case: A garment factory receives large orders for many different styles. Recommend the most suitable production system and justify it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Batch production is best because it handles moderate volumes of many product styles in runs switching between them efficiently.",
+      "explanation": "Match the variety and volume to batch production.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-39",
+      "text": "Read the case: A plant faces frequent machine breakdowns that halt production. Recommend a maintenance strategy to reduce downtime",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The plant should adopt preventive and predictive maintenance with scheduled inspections and monitoring to fix problems before they cause breakdowns.",
+      "explanation": "Propose planned maintenance to replace reactive repairs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-40",
+      "text": "A factory produces 5000 units in 50 hours. Its production rate per hour is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "100 units",
+      "explanation": "Production rate equals output divided by time so 5000 divided by 50 equals 100 units per hour.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-41",
+      "text": "Explain the importance of plant location",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Plant location affects cost of raw materials and distribution availability of labour and utilities and long term profitability so it is a strategic and hard to reverse decision.",
+      "explanation": "Cover cost labour and long term impact of location.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-42",
+      "text": "Capacity refers to the maximum output a plant can produce in a period",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Capacity is the maximum sustainable output per period.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-43",
+      "text": "Explain the techniques of quality control",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Quality control uses inspection statistical quality control control charts and acceptance sampling to detect and correct defects and maintain standards.",
+      "explanation": "Cover inspection and statistical techniques of quality control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-44",
+      "text": "The classification of inventory items into A B and C categories by value is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "ABC analysis",
+      "explanation": "ABC analysis focuses control on the high value A items.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-45",
+      "text": "Explain the difference between product and process layout",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Plant location layout and capacity",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Product layout arranges machines by the sequence of operations while process layout groups similar machines together by function.",
+      "explanation": "Product layout suits mass production and process layout suits variety.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-46",
+      "text": "Explain the steps in purchasing procedure",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Purchasing proceeds from identifying the need through supplier selection placing the order receiving and inspecting goods to payment and record keeping.",
+      "explanation": "Trace the purchasing cycle from requisition to payment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-47",
+      "text": "A lead time is the gap between placing an order and receiving the goods",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Lead time is the delay between ordering and delivery.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-48",
+      "text": "Explain the importance of materials management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Materials inventory and quality management",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Materials management ensures uninterrupted production at minimum cost by buying storing and issuing materials efficiently and controlling inventory.",
+      "explanation": "Cover availability cost and inventory control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-49",
+      "text": "List the objectives of maintenance management",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Production and Operations Management",
+      "topic": "Maintenance and work study",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Minimise breakdowns reduce downtime extend equipment life and ensure safety.",
+      "explanation": "These objectives keep production running smoothly.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom2-50",
+      "text": "Explain the benefits and limitations of automation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Production and Operations Management",
+      "topic": "Overview of production and operations",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Automation raises speed consistency and quality and lowers unit cost but requires high capital and skilled staff and reduces flexibility.",
+      "explanation": "Balance productivity gains against cost and flexibility.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

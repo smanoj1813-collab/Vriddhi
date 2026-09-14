@@ -1,0 +1,1059 @@
+{
+  "program": "BBA",
+  "subject": "Management Accounting",
+  "semester": 3,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Accounting core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "ma-01",
+      "text": "The branch of accounting that provides information to managers for decision making is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Management accounting",
+        "Financial accounting",
+        "Cost accounting",
+        "Tax accounting"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Management accounting supplies internal information for planning and control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-02",
+      "text": "Management accounting is primarily meant for",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Internal managers",
+        "External investors",
+        "Tax authorities",
+        "The public"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Management accounting serves internal management needs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-03",
+      "text": "Management accounting is forward looking while financial accounting is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "historical",
+      "explanation": "Financial accounting records the past while management accounting plans the future.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-04",
+      "text": "Management accounting is mandatory by law like financial accounting",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Management accounting is voluntary while financial accounting is legally required.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-05",
+      "text": "Distinguish between management accounting and financial accounting",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Financial accounting is historical external and mandatory while management accounting is forward looking internal and voluntary.",
+      "explanation": "The users purpose and legal status differ between the two.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-06",
+      "text": "Explain the functions of management accounting",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Management accounting analyses data plans controls coordinates and communicates information to help managers make decisions and evaluate performance.",
+      "explanation": "Cover analysis planning control and communication functions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-07",
+      "text": "The statement that shows the relationship between items of financial statements is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Financial statement analysis",
+        "Journal",
+        "Ledger",
+        "Trial balance"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Analysis studies the relationships among financial statement items.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-08",
+      "text": "The ratio of current assets to current liabilities is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "current ratio",
+      "explanation": "The current ratio measures short term liquidity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-09",
+      "text": "The debt equity ratio measures a firms long term solvency",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The debt equity ratio shows the proportion of debt to equity financing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-10",
+      "text": "List the types of financial ratios",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Liquidity profitability activity and solvency ratios.",
+      "explanation": "These categories assess different aspects of financial performance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-11",
+      "text": "Explain the importance of ratio analysis",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Ratio analysis summarises financial statements into comparable measures of liquidity profitability and solvency enabling comparison over time and across firms and aiding decisions.",
+      "explanation": "Cover simplification comparison and decision support.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-12",
+      "text": "Current assets are 100000 and current liabilities are 50000. The current ratio is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "2",
+      "explanation": "Current ratio equals current assets divided by current liabilities so 100000 divided by 50000 equals two.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-13",
+      "text": "The statement that explains changes in working capital over a period is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Funds flow statement",
+        "Trading account",
+        "Balance sheet",
+        "Profit and loss account"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The funds flow statement shows sources and uses of funds.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-14",
+      "text": "The statement that summarises actual cash receipts and payments is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "cash flow statement",
+      "explanation": "The cash flow statement reports inflows and outflows of cash.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-15",
+      "text": "Depreciation is added back to net profit in a funds flow statement because it is a non fund item",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Depreciation involves no outflow of funds so it is added back to profit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-16",
+      "text": "Distinguish between a funds flow statement and a cash flow statement",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A funds flow statement is based on the broader concept of working capital while a cash flow statement deals only with actual cash movements.",
+      "explanation": "Cash flow is narrower and cash based while funds flow uses working capital.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-17",
+      "text": "Explain the uses of a cash flow statement",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A cash flow statement shows how cash is generated and used and reveals liquidity solvency and the ability to meet obligations and fund growth.",
+      "explanation": "Cover liquidity assessment and cash planning uses.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-18",
+      "text": "The technique that separates costs into fixed and variable components is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Marginal costing",
+        "Standard costing",
+        "Absorption costing",
+        "Budgeting"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Marginal costing charges only variable costs to products.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-19",
+      "text": "The point at which total revenue equals total cost and profit is zero is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "break even point",
+      "explanation": "At the break even point there is neither profit nor loss.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-20",
+      "text": "Contribution equals sales minus variable cost",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Contribution is sales revenue less variable costs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-21",
+      "text": "Define contribution and explain its importance",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Contribution is sales minus variable cost and it first covers fixed costs then yields profit. It is used in break even and profit planning.",
+      "explanation": "Contribution is central to marginal costing decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-22",
+      "text": "Explain the assumptions and limitations of break even analysis",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Break even analysis assumes costs can be split into fixed and variable and that price and cost remain constant. These assumptions limit its accuracy in a changing environment.",
+      "explanation": "Cover the assumptions and where they break down.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-23",
+      "text": "Fixed cost is 40000 selling price is 10 and variable cost per unit is 6. The break even point in units is",
+      "type": "numerical",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "10000 units",
+      "explanation": "Break even units equal fixed cost divided by contribution per unit so 40000 divided by 4 equals 10000 units.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-24",
+      "text": "The financial plan expressed in quantitative terms for a future period is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Budget",
+        "Variance",
+        "Standard",
+        "Forecast"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A budget is a financial plan for a future period.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-25",
+      "text": "The difference between actual and budgeted performance is a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "variance",
+      "explanation": "A variance is the deviation of actual results from the budget.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-26",
+      "text": "A flexible budget changes with the level of activity unlike a fixed budget",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Flexible budgets adjust to different activity levels for better control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-27",
+      "text": "List the types of budgets",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Sales production cash master flexible and zero based budgets.",
+      "explanation": "These budgets serve different planning and control purposes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-28",
+      "text": "Explain the advantages of budgetary control",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Budgetary control forces planning coordinates activities communicates targets and enables performance comparison through variances so corrective action can be taken.",
+      "explanation": "Cover planning coordination communication and control benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-29",
+      "text": "The predetermined cost of producing a unit under specified conditions is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Standard cost",
+        "Actual cost",
+        "Historical cost",
+        "Marginal cost"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A standard cost is a planned benchmark cost per unit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-30",
+      "text": "The difference between standard cost and actual cost is called a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "cost variance",
+      "explanation": "Cost variance is the deviation of actual cost from standard cost.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-31",
+      "text": "A favourable variance occurs when actual cost is less than standard cost",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Lower actual than standard cost produces a favourable variance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-32",
+      "text": "Define standard costing and its objectives",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Standard costing sets predetermined costs and compares them with actual costs to measure variances and control efficiency.",
+      "explanation": "It provides a benchmark for cost control and performance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-33",
+      "text": "Explain the types of variances in standard costing",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Variances include material price and usage labour rate and efficiency and overhead variances. Each isolates the cause of deviation for corrective action.",
+      "explanation": "Classify material labour and overhead variances.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-34",
+      "text": "Assertion: A high current ratio always means good liquidity. Reason: A high current ratio may hide slow moving or obsolete inventory",
+      "type": "mcq",
+      "difficulty": "hard",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios (assertion reason)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Assertion is false but reason is true",
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A high current ratio can be misleading because it may include illiquid inventory.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-35",
+      "text": "Match the statement to its purpose",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements (matching)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Cash flow statement - actual cash movements",
+        "Funds flow statement - actual cash movements",
+        "Balance sheet - cash receipts",
+        "Trading account - sources of funds"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The cash flow statement tracks cash while the funds flow statement tracks working capital.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-36",
+      "text": "Net profit is 50000 and depreciation is 10000. Funds from operations are",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "60000",
+      "explanation": "Depreciation is added back to net profit so 50000 plus 10000 equals 60000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-37",
+      "text": "The ratio of net profit to sales measures",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Profitability",
+        "Liquidity",
+        "Solvency",
+        "Turnover"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Net profit margin is a profitability ratio.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-38",
+      "text": "The inventory turnover ratio measures how quickly inventory is sold",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Inventory turnover is an activity ratio measuring the speed of stock movement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-39",
+      "text": "Explain the limitations of ratio analysis",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Ratios are limited by inflation differences in accounting policies and window dressing and must be interpreted with care.",
+      "explanation": "A single ratio in isolation can mislead without context.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-40",
+      "text": "Read the case: A firm has a break even point of 20000 units and expects demand of 15000 units. Explain the situation and suggest two ways to reach break even",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The firm will incur a loss because expected demand is below break even. It can raise the selling price lower variable cost or reduce fixed cost to lower the break even point.",
+      "explanation": "Apply the break even formula and propose margin improving measures.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-41",
+      "text": "Read the case: Actual material cost exceeds standard cost because both the price paid and quantity used were higher. Identify the two variances and who is responsible for each",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "There is an adverse material price variance usually the purchasing departments responsibility and an adverse material usage variance usually the production departments responsibility.",
+      "explanation": "Separate price and usage variances and assign accountability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-42",
+      "text": "Sales are 200000 and variable cost is 120000. The contribution is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Marginal costing and break even analysis",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "80000",
+      "explanation": "Contribution equals sales minus variable cost so 200000 minus 120000 equals 80000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-43",
+      "text": "Explain the meaning and importance of funds flow analysis",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Funds flow and cash flow statements",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Funds flow analysis shows where funds came from and where they were used revealing how working capital changed and whether long term funds financed long term uses.",
+      "explanation": "Cover sources and uses of funds and working capital changes.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-44",
+      "text": "The budget that combines all functional budgets into one is the master budget",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The master budget consolidates all functional budgets into one plan.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-45",
+      "text": "Explain the process of zero based budgeting",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Budgeting and budgetary control",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Zero based budgeting starts each budget from zero and requires every expense to be justified afresh rather than carrying forward past levels.",
+      "explanation": "Contrast ZBB with incremental budgeting and its justification process.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-46",
+      "text": "The difference between standard and actual hours multiplied by the standard rate gives the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Standard costing and variance analysis",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "labour efficiency variance",
+      "explanation": "Labour efficiency variance isolates the effect of hours used.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-47",
+      "text": "Explain the uses and limitations of management accounting",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Management accounting aids planning control and decision making. Its limits are dependence on historical data subjectivity and the cost of installation.",
+      "explanation": "Cover the benefits and the constraints of the discipline.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-48",
+      "text": "List the tools and techniques of management accounting",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Accounting",
+      "topic": "Nature and scope of management accounting",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Ratio analysis funds and cash flow analysis marginal costing budgeting and standard costing.",
+      "explanation": "These techniques support analysis planning and control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-49",
+      "text": "A firm has a debt equity ratio of one which means debt and equity are equal",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A ratio of one means debt equals equity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "ma-50",
+      "text": "Explain the objectives of ratio analysis",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Accounting",
+      "topic": "Financial statement analysis and ratios",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Ratio analysis measures liquidity profitability solvency and efficiency to assess financial health and support decisions by lenders investors and managers.",
+      "explanation": "Cover the diagnostic and decision support objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,309 @@
+{
+  "program": "BBA",
+  "programName": "Bachelor of Business Administration",
+  "description": "Core subject index for the BBA question bank. Units follow the standard 6-semester Indian BBA (NEP/SEP) core curriculum.",
+  "totalCoreSubjects": 22,
+  "subjects": [
+    {
+      "semester": 1,
+      "subjects": [
+        {
+          "id": "pom",
+          "name": "Principles of Management",
+          "units": [
+            "Introduction to Management — nature, functions, levels, skills",
+            "Evolution of Management Thought — classical, behavioural, quantitative, modern",
+            "Planning and Decision Making",
+            "Organising — structure, authority, delegation, decentralisation",
+            "Staffing and Directing — recruitment, training, motivation, leadership",
+            "Controlling and Coordination"
+          ]
+        },
+        {
+          "id": "fa",
+          "name": "Financial Accounting",
+          "units": [
+            "Introduction to Accounting — concepts, conventions, accounting equation",
+            "Journal, Ledger and Trial Balance",
+            "Subsidiary Books and Cash Book",
+            "Bank Reconciliation Statement",
+            "Final Accounts — Trading, P&L, Balance Sheet with adjustments",
+            "Depreciation and Single Entry"
+          ]
+        },
+        {
+          "id": "be1",
+          "name": "Business Economics I (Micro)",
+          "units": [
+            "Nature and scope of Business Economics",
+            "Demand analysis and elasticity",
+            "Production and cost analysis",
+            "Market structures and price determination",
+            "Theory of distribution — rent, wages, interest, profit",
+            "Consumer behaviour and utility"
+          ]
+        },
+        {
+          "id": "bc",
+          "name": "Business Communication",
+          "units": [
+            "Nature, importance and process of communication",
+            "Barriers to communication and 7 Cs",
+            "Written communication — letters, memos, reports",
+            "Oral communication and presentation skills",
+            "Business correspondence and e-communication",
+            "Group discussion and interview skills"
+          ]
+        }
+      ]
+    },
+    {
+      "semester": 2,
+      "subjects": [
+        {
+          "id": "ob",
+          "name": "Organisational Behaviour",
+          "units": [
+            "Foundations of OB and individual behaviour",
+            "Perception, attitudes and personality",
+            "Learning, motivation and job satisfaction",
+            "Group dynamics and team building",
+            "Leadership and power",
+            "Organisational culture, change and stress"
+          ]
+        },
+        {
+          "id": "be2",
+          "name": "Business Economics II (Macro)",
+          "units": [
+            "Macroeconomic concepts and national income",
+            "Money, banking and monetary policy",
+            "Inflation and business cycles",
+            "Fiscal policy and public finance",
+            "International trade and balance of payments",
+            "Economic growth and development"
+          ]
+        },
+        {
+          "id": "mm",
+          "name": "Marketing Management",
+          "units": [
+            "Marketing concepts and environment",
+            "Consumer and buyer behaviour",
+            "Market segmentation, targeting and positioning",
+            "Product, price, place and promotion (4 Ps)",
+            "Marketing research and MIS",
+            "Services marketing and recent trends"
+          ]
+        },
+        {
+          "id": "bs",
+          "name": "Business Statistics",
+          "units": [
+            "Introduction — data, classification, presentation",
+            "Measures of central tendency",
+            "Measures of dispersion",
+            "Correlation and regression",
+            "Index numbers",
+            "Time series and probability"
+          ]
+        }
+      ]
+    },
+    {
+      "semester": 3,
+      "subjects": [
+        {
+          "id": "hrm",
+          "name": "Human Resource Management",
+          "units": [
+            "HRM concepts, functions and environment",
+            "HR planning, job analysis and design",
+            "Recruitment and selection",
+            "Training, development and performance appraisal",
+            "Compensation and welfare",
+            "Industrial relations and employee engagement"
+          ]
+        },
+        {
+          "id": "fm",
+          "name": "Financial Management",
+          "units": [
+            "Nature and scope of financial management",
+            "Time value of money and valuation",
+            "Capital budgeting and investment decisions",
+            "Cost of capital and capital structure",
+            "Working capital management",
+            "Dividend policy and sources of finance"
+          ]
+        },
+        {
+          "id": "bl",
+          "name": "Business Law",
+          "units": [
+            "Indian Contract Act — essentials and discharge",
+            "Special contracts — indemnity, guarantee, bailment, agency",
+            "Sale of Goods Act",
+            "Negotiable Instruments Act",
+            "Companies Act — formation and management",
+            "Consumer Protection Act and competition law"
+          ]
+        },
+        {
+          "id": "ma",
+          "name": "Management Accounting",
+          "units": [
+            "Nature and scope of management accounting",
+            "Financial statement analysis and ratios",
+            "Funds flow and cash flow statements",
+            "Marginal costing and break-even analysis",
+            "Budgeting and budgetary control",
+            "Standard costing and variance analysis"
+          ]
+        }
+      ]
+    },
+    {
+      "semester": 4,
+      "subjects": [
+        {
+          "id": "ed",
+          "name": "Entrepreneurship Development",
+          "units": [
+            "Entrepreneur, entrepreneurship and enterprise",
+            "Types of entrepreneurs and their traits",
+            "Identifying opportunities and feasibility",
+            "Business plan preparation",
+            "Institutional support and government schemes",
+            "Startups, MSMEs and women entrepreneurs"
+          ]
+        },
+        {
+          "id": "cb",
+          "name": "Consumer Behaviour",
+          "units": [
+            "Consumer behaviour — nature and models",
+            "Cultural and social influences",
+            "Personal and psychological influences",
+            "Consumer decision-making process",
+            "Attitude formation and change",
+            "Post-purchase behaviour and satisfaction"
+          ]
+        },
+        {
+          "id": "pom2",
+          "name": "Production and Operations Management",
+          "units": [
+            "Production and operations management overview",
+            "Plant location, layout and capacity",
+            "Production planning and control",
+            "Materials, inventory and quality management",
+            "Maintenance and work study",
+            "Lean, JIT and supply chain management"
+          ]
+        },
+        {
+          "id": "brm",
+          "name": "Business Research Methods",
+          "units": [
+            "Meaning, types and process of research",
+            "Research problem and literature review",
+            "Research design and sampling",
+            "Data collection methods and tools",
+            "Data analysis and hypothesis testing",
+            "Report writing and research ethics"
+          ]
+        }
+      ]
+    },
+    {
+      "semester": 5,
+      "subjects": [
+        {
+          "id": "sm",
+          "name": "Strategic Management",
+          "units": [
+            "Strategy — concepts, levels and process",
+            "Environmental scanning and SWOT",
+            "Strategy formulation — corporate and business",
+            "Strategy implementation and structure",
+            "Strategy evaluation and control",
+            "Corporate governance and ethics"
+          ]
+        },
+        {
+          "id": "ib",
+          "name": "International Business",
+          "units": [
+            "International business — nature and drivers",
+            "Theories of international trade",
+            "Globalisation and foreign market entry modes",
+            "International trade environment and organisations",
+            "EXIM policy and trade documentation",
+            "Global finance, forex and culture"
+          ]
+        },
+        {
+          "id": "mis",
+          "name": "Management Information Systems",
+          "units": [
+            "MIS — concepts, components and types",
+            "Information systems in business functions",
+            "Decision support and executive systems",
+            "Database and data resource management",
+            "System development and security",
+            "E-business, ERP and emerging technologies"
+          ]
+        }
+      ]
+    },
+    {
+      "semester": 6,
+      "subjects": [
+        {
+          "id": "becg",
+          "name": "Business Ethics and Corporate Governance",
+          "units": [
+            "Business ethics — concepts and values",
+            "Ethical decision making and dilemmas",
+            "Ethics in functional areas",
+            "Corporate governance — principles and boards",
+            "CSR and sustainability",
+            "Whistleblowing and ethical culture"
+          ]
+        },
+        {
+          "id": "bi",
+          "name": "Banking and Insurance",
+          "units": [
+            "Banking — types, structure and functions",
+            "Central banking and RBI",
+            "Commercial bank operations and lending",
+            "Negotiable instruments and digital banking",
+            "Insurance — principles and types",
+            "IRDAI, claims and risk management"
+          ]
+        },
+        {
+          "id": "pm",
+          "name": "Project Management",
+          "units": [
+            "Project management — concepts and life cycle",
+            "Project planning, scope and scheduling",
+            "CPM and PERT techniques",
+            "Project costing, budgeting and finance",
+            "Project monitoring, control and risk",
+            "Project organisation and termination"
+          ]
+        }
+      ]
+    }
+  ],
+  "electives": [
+    "Marketing — Services Marketing, Retail Management, Advertising and Brand Management, Digital Marketing",
+    "Finance — Investment Analysis, Portfolio Management, Taxation, International Finance, Derivatives",
+    "HRM — Labour Laws, Organisational Development, Compensation Management, Training and Development",
+    "Operations — Supply Chain Management, Logistics, Six Sigma, Total Quality Management",
+    "IT/Systems — E-Commerce, Data Analytics, Business Intelligence"
+  ]
+}

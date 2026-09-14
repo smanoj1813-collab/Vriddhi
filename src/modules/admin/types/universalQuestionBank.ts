@@ -7,7 +7,17 @@
 // ============================================================
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
-export type QuestionType = 'mcq' | 'true_false' | 'short_answer' | 'long_answer' | 'fill_in_blank' | 'match';
+export type QuestionType =
+  | 'mcq'
+  | 'true_false'
+  | 'short_answer'
+  | 'long_answer'
+  | 'fill_in_blank'
+  | 'match'
+  | 'matching'
+  | 'numerical'
+  | 'case_based'
+  | 'assertion_reason';
 export type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'needs_revision';
 export type Visibility = 'public' | 'college_only' | 'shared_with';
 export type PaperStatus = 'draft' | 'published' | 'archived';
@@ -64,6 +74,8 @@ export interface QuestionContent {
   createdBy: CreatedBy;
   source: string;
   status: ReviewStatus;
+  visibility: Visibility;
+  sharedWith: string[];
   quality: {
     rating: number;
     reviewCount: number;
@@ -96,6 +108,10 @@ export interface QuestionMetadata {
   language: string;
   tags: string[];
   status: ReviewStatus;
+  visibility: Visibility;
+  sharedWith: string[];
+  /** Origin of the question: 'platform' (Vriddhi-curated, free) or 'college'. */
+  source: string;
   storagePath: string;
   hasImage: boolean;
   qualityRating: number;

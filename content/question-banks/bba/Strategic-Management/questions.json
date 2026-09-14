@@ -1,0 +1,1063 @@
+{
+  "program": "BBA",
+  "subject": "Strategic Management",
+  "semester": 5,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Strategy core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "sm-01",
+      "text": "The long term direction and scope of an organisation to gain advantage is its",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Strategy",
+        "Tactic",
+        "Policy",
+        "Procedure"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Strategy is the long term direction and scope of an organisation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-02",
+      "text": "Strategy formulated for the whole organisation is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Corporate strategy",
+        "Business strategy",
+        "Functional strategy",
+        "Operational strategy"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Corporate strategy covers the entire organisation and its portfolio.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-03",
+      "text": "The first stage of strategic management is environmental",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "scanning",
+      "explanation": "Environmental scanning identifies opportunities and threats.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-04",
+      "text": "Strategic management is a one time activity rather than a continuous process",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Strategic management is a continuous process of formulation implementation and evaluation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-05",
+      "text": "List the three levels of strategy",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Corporate strategy business strategy and functional strategy.",
+      "explanation": "Strategy operates at these three organisational levels.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-06",
+      "text": "Explain the strategic management process",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The process moves from defining mission and objectives through environmental analysis strategy formulation and implementation to evaluation and control.",
+      "explanation": "Trace the stages from mission to evaluation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-07",
+      "text": "The analysis of strengths weaknesses opportunities and threats is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "SWOT analysis",
+        "Ratio analysis",
+        "Trend analysis",
+        "Variance analysis"
+      ],
+      "correctAnswer": "A",
+      "explanation": "SWOT analyses internal strengths and weaknesses and external opportunities and threats.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-08",
+      "text": "The external factors affecting a firm such as competition and technology form its",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "environment",
+      "explanation": "The environment provides opportunities and threats to the firm.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-09",
+      "text": "Strengths and weaknesses are internal while opportunities and threats are external",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "SW and OT reflect internal and external factors respectively.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-10",
+      "text": "State the components of a SWOT analysis",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Strengths weaknesses opportunities and threats.",
+      "explanation": "These four components summarise the firms strategic position.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-11",
+      "text": "Explain the importance of environmental scanning",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Environmental scanning helps anticipate change identify opportunities and threats and align strategy with the external environment for competitive advantage.",
+      "explanation": "Cover anticipation and strategic alignment benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-12",
+      "text": "A strategy of expanding into new markets with existing products is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Market development",
+        "Market penetration",
+        "Product development",
+        "Diversification"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Market development takes existing products into new markets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-13",
+      "text": "The strategy of increasing sales of existing products in existing markets is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "market penetration",
+      "explanation": "Market penetration grows share within current markets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-14",
+      "text": "Diversification is a growth strategy of entering new products and new markets",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Diversification moves into new products and markets simultaneously.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-15",
+      "text": "List the generic strategies of Porter",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Cost leadership differentiation and focus.",
+      "explanation": "These generic strategies give competitive advantage.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-16",
+      "text": "Explain the Ansoff growth matrix",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The Ansoff matrix offers four growth options combining products and markets namely market penetration market development product development and diversification.",
+      "explanation": "Describe each quadrant of the matrix.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-17",
+      "text": "The process of putting chosen strategies into action is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy implementation and structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Strategy implementation",
+        "Strategy formulation",
+        "Environmental scanning",
+        "Evaluation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Implementation translates strategy into action through structure and resources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-18",
+      "text": "The structure that follows strategy according to Chandler means structure is determined by",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy implementation and structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "strategy",
+      "explanation": "Chandlers thesis is that organisational structure follows strategy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-19",
+      "text": "Strategy implementation is usually easier than strategy formulation",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy implementation and structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Implementation is often harder because it involves people culture and coordination.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-20",
+      "text": "List the factors affecting strategy implementation",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy implementation and structure",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Organisational structure culture leadership resources and systems.",
+      "explanation": "These factors determine how well strategy is executed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-21",
+      "text": "Explain the relationship between strategy and organisational structure",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy implementation and structure",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Strategy determines the structure needed to execute it so changes in strategy require matching structural adjustments as Chandlers structure follows strategy thesis holds.",
+      "explanation": "Link strategy changes to structural adaptation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-22",
+      "text": "The process of monitoring results and comparing them with goals is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy evaluation and control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Strategy evaluation",
+        "Formulation",
+        "Scanning",
+        "Implementation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Evaluation measures performance against strategic objectives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-23",
+      "text": "The tool that measures performance across financial customer internal and learning perspectives is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy evaluation and control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "balanced scorecard",
+      "explanation": "The balanced scorecard evaluates four perspectives of performance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-24",
+      "text": "Strategic evaluation should be a continuous process not just at the end",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy evaluation and control",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Continuous evaluation allows timely corrective action.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-25",
+      "text": "List the criteria for evaluating strategy",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy evaluation and control",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Consistency consonance feasibility and advantage.",
+      "explanation": "These Rumelt criteria assess the quality of a strategy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-26",
+      "text": "Explain the steps in strategic evaluation and control",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy evaluation and control",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Evaluation sets standards measures performance compares results with standards and takes corrective action to keep strategy on track.",
+      "explanation": "Trace the control cycle for strategy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-27",
+      "text": "The system of rules and practices by which companies are directed is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Corporate governance and ethics",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Corporate governance",
+        "Marketing",
+        "Production",
+        "Finance"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Corporate governance is the system by which companies are directed and controlled.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-28",
+      "text": "The moral principles that guide business conduct are business",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Corporate governance and ethics",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "ethics",
+      "explanation": "Business ethics are the standards of right and wrong in business.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-29",
+      "text": "Good corporate governance protects the interests of all stakeholders",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Corporate governance and ethics",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Governance balances the interests of shareholders and other stakeholders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-30",
+      "text": "State the principles of corporate governance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Corporate governance and ethics",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Transparency accountability fairness and responsibility.",
+      "explanation": "These principles underpin sound corporate governance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-31",
+      "text": "Explain the importance of corporate governance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Corporate governance and ethics",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Corporate governance builds investor confidence ensures accountability reduces risk and fraud and supports long term value creation.",
+      "explanation": "Cover investor trust accountability and value creation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-32",
+      "text": "Assertion: A clear mission statement guides strategic decisions. Reason: The mission defines the purpose and scope of the organisation",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process (assertion reason)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A mission clarifies purpose and scope thereby directing strategy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-33",
+      "text": "Match the strategy to its direction",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation (matching)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Market penetration - existing markets existing products",
+        "Market development - new products existing markets",
+        "Product development - new markets existing products",
+        "Diversification - existing markets existing products"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Market penetration grows share with existing products in existing markets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-34",
+      "text": "The vision statement describes what the organisation aspires to become in the future",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Vision",
+        "Mission",
+        "Objective",
+        "Policy"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A vision is the desired future state of the organisation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-35",
+      "text": "The framework that analyses industry competition through five forces was given by",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "Michael Porter",
+      "explanation": "Porter proposed the five forces model of industry competition.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-36",
+      "text": "Explain the five forces model of competition",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Porter five forces are rivalry among competitors threat of new entrants bargaining power of buyers bargaining power of suppliers and threat of substitutes which determine industry profitability.",
+      "explanation": "Describe each force and its effect on competition.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-37",
+      "text": "Read the case: A company wants to grow but its current market is saturated. Using the Ansoff matrix suggest two growth options",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The company could pursue market development by entering new markets or product development by offering new products in existing markets.",
+      "explanation": "Apply two Ansoff options to the saturated market situation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-38",
+      "text": "Read the case: A firm has strong technology but weak distribution and faces rising demand. Recommend a strategy based on a SWOT analysis",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The firm should exploit its technology strength and rising demand opportunity while fixing weak distribution through partnerships or investment to capture growth.",
+      "explanation": "Link internal strengths and weaknesses to external opportunities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-39",
+      "text": "Strategy that focuses on a narrow market segment is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Focus strategy",
+        "Cost leadership",
+        "Differentiation",
+        "Diversification"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Focus strategy targets a specific segment or niche.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-40",
+      "text": "Explain the difference between vision and mission",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "A vision is the future aspiration while a mission is the present purpose and scope of the organisation.",
+      "explanation": "Vision is future oriented and mission is present oriented.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-41",
+      "text": "Explain the role of leadership in strategy implementation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy implementation and structure",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Leadership communicates the vision aligns people allocates resources and motivates change to translate strategy into action and overcome resistance.",
+      "explanation": "Cover communication alignment and change management.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-42",
+      "text": "The cost of following one strategic option instead of another is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "opportunity cost",
+      "explanation": "Choosing one strategy means forgoing the benefits of alternatives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-43",
+      "text": "Explain the importance of strategy evaluation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy evaluation and control",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Evaluation detects deviations from plans assesses whether strategy is achieving goals and triggers corrective action in a changing environment.",
+      "explanation": "Cover deviation detection and corrective action.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-44",
+      "text": "List the tools for strategic analysis",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Environmental scanning and SWOT",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "SWOT analysis PEST analysis Porter five forces and value chain analysis.",
+      "explanation": "These tools analyse internal and external strategic factors.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-45",
+      "text": "Explain the importance of ethics in strategic management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Corporate governance and ethics",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Ethics builds trust and reputation guides responsible decisions and sustains long term success by aligning strategy with societal values.",
+      "explanation": "Cover reputation trust and long term sustainability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-46",
+      "text": "A conglomerate strategy of entering unrelated businesses is",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Unrelated diversification",
+        "Related diversification",
+        "Concentric diversification",
+        "Horizontal integration"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Unrelated diversification enters businesses with no common link.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-47",
+      "text": "Merging with or acquiring a competitor is horizontal integration",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Horizontal integration combines firms at the same stage of the industry.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-48",
+      "text": "Explain the factors influencing strategic choice",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Strategic choice is influenced by internal resources and capabilities external environment risk managers attitudes and stakeholder expectations.",
+      "explanation": "Cover internal and external determinants of strategy choice.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-49",
+      "text": "The core competences that give a firm a lasting edge are its",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy formulation",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "distinctive competences",
+      "explanation": "Distinctive competences are capabilities competitors cannot easily copy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "sm-50",
+      "text": "Explain the relationship between corporate and business strategy",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Strategic Management",
+      "topic": "Strategy concepts levels and process",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Corporate strategy decides which businesses to be in while business strategy decides how to compete within each chosen business so corporate strategy sets the frame for business strategy.",
+      "explanation": "Contrast the scope of the two levels and their linkage.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

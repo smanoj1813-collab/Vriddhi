@@ -1,0 +1,1059 @@
+{
+  "program": "BBA",
+  "subject": "Management Information Systems",
+  "semester": 5,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "MIS core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "mis-01",
+      "text": "The system that provides information to managers for decision making is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Management Information System",
+        "Transaction system",
+        "Accounting system",
+        "Inventory system"
+      ],
+      "correctAnswer": "A",
+      "explanation": "MIS supplies managers with information for planning and control.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-02",
+      "text": "Data that has been processed into a meaningful form is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Information",
+        "Raw data",
+        "Input",
+        "Noise"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Information is processed data that is meaningful and useful.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-03",
+      "text": "The physical components of a computer system are called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "hardware",
+      "explanation": "Hardware is the physical equipment of an information system.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-04",
+      "text": "An MIS is used only by top management and not by other levels",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "MIS serves all management levels with appropriate information.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-05",
+      "text": "List the components of an information system",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Hardware software data procedures and people.",
+      "explanation": "These five components together form an information system.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-06",
+      "text": "Explain the characteristics of good information",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Good information is accurate timely complete relevant and accessible and supports the decisions it is meant for.",
+      "explanation": "Cover accuracy timeliness completeness and relevance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-07",
+      "text": "The system that records day to day business transactions is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Information systems in business functions",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Transaction processing system",
+        "Decision support system",
+        "Executive system",
+        "Expert system"
+      ],
+      "correctAnswer": "A",
+      "explanation": "TPS records and processes routine transactions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-08",
+      "text": "The system that automates order processing billing and inventory is the",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Information systems in business functions",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "transaction processing system",
+      "explanation": "TPS handles the routine data of daily operations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-09",
+      "text": "Enterprise resource planning integrates all business functions into one system",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "ERP integrates finance HR production and other functions in one system.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-10",
+      "text": "List the types of information systems",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Transaction processing management information decision support and executive information systems.",
+      "explanation": "These systems serve different managerial levels and needs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-11",
+      "text": "Explain the role of information systems in business functions",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Information systems in business functions",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Information systems support marketing finance human resources and operations by automating transactions and providing information for decisions in each function.",
+      "explanation": "Cover how systems support each functional area.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-12",
+      "text": "The system that supports semi structured decisions with models and analysis is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Decision support and executive systems",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Decision support system",
+        "Transaction system",
+        "Payroll system",
+        "Inventory system"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A DSS helps managers analyse alternatives for semi structured decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-13",
+      "text": "The system designed for senior executives with summarised data is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Decision support and executive systems",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "executive information system",
+      "explanation": "An EIS gives executives a high level view of performance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-14",
+      "text": "A decision support system makes decisions for the manager automatically",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Decision support and executive systems",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "A DSS supports the manager but the final decision remains with the manager.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-15",
+      "text": "List the components of a decision support system",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Decision support and executive systems",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Database model base and user interface.",
+      "explanation": "These three components enable analysis and what if modelling.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-16",
+      "text": "Explain the features of an executive information system",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Decision support and executive systems",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "An EIS provides summarised graphical and easy to use access to key performance indicators and drill down capability for senior executives.",
+      "explanation": "Cover summarisation graphics and drill down features.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-17",
+      "text": "The organised collection of related data is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Database",
+        "Spreadsheet",
+        "Report",
+        "File"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A database is an organised collection of related data.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-18",
+      "text": "The software that manages a database is called a database management",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "system",
+      "explanation": "A DBMS stores retrieves and manages data in a database.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-19",
+      "text": "A data warehouse stores historical data for analysis",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A data warehouse consolidates historical data for reporting and analysis.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-20",
+      "text": "Distinguish between data and information",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Data are raw unprocessed facts while information is data that has been processed into a meaningful useful form.",
+      "explanation": "Processing transforms data into information.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-21",
+      "text": "Explain the advantages of database management systems",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A DBMS reduces data redundancy ensures consistency security and integrity and allows easy sharing and retrieval of data across users.",
+      "explanation": "Cover redundancy reduction consistency and sharing benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-22",
+      "text": "The process of creating and building information systems is system",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Development",
+        "Operation",
+        "Audit",
+        "Maintenance"
+      ],
+      "correctAnswer": "A",
+      "explanation": "System development designs and builds information systems.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-23",
+      "text": "The series of phases in building a system is the system development life",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "cycle",
+      "explanation": "The SDLC is the structured process of system development.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-24",
+      "text": "Protecting information from unauthorised access is information security",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Information security protects confidentiality integrity and availability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-25",
+      "text": "List the phases of the system development life cycle",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Feasibility analysis design development testing implementation and maintenance.",
+      "explanation": "These phases take a system from idea to operation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-26",
+      "text": "Explain the importance of information system security",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Security protects data from loss theft and unauthorised access ensuring confidentiality integrity and availability and maintaining trust and legal compliance.",
+      "explanation": "Cover the CIA triad and trust and compliance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-27",
+      "text": "Conducting business electronically over the internet is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "E business",
+        "Telephone business",
+        "Mail order",
+        "Traditional retail"
+      ],
+      "correctAnswer": "A",
+      "explanation": "E business uses the internet for business processes and commerce.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-28",
+      "text": "The system that integrates all departments of an organisation is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "enterprise resource planning",
+      "explanation": "ERP unifies finance HR production and supply chain data.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-29",
+      "text": "Artificial intelligence enables systems to mimic human reasoning",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "AI gives systems the ability to learn and reason like humans.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-30",
+      "text": "List the advantages of e commerce",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Wider reach lower cost convenience and round the clock availability.",
+      "explanation": "E commerce expands market access and reduces operating costs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-31",
+      "text": "Explain the benefits and challenges of ERP systems",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "ERP integrates data and processes improving efficiency and decision making but is costly complex and disruptive to implement.",
+      "explanation": "Balance integration benefits against implementation cost and risk.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-32",
+      "text": "Assertion: A database reduces data redundancy. Reason: Data is stored once and shared across applications",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management (assertion reason)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Single storage and shared access eliminate duplicate copies.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-33",
+      "text": "Match the system to its user",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types (matching)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Executive system - top management",
+        "Transaction system - top management",
+        "Decision support - clerks",
+        "MIS - only external users"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Executive systems serve top management while transaction systems serve operations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-34",
+      "text": "The detailed description of how a system will be built is the",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "System design",
+        "Feasibility study",
+        "Maintenance",
+        "Audit"
+      ],
+      "correctAnswer": "A",
+      "explanation": "System design specifies how the system meets requirements.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-35",
+      "text": "The study of whether a proposed system is technically and economically possible is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "feasibility study",
+      "explanation": "A feasibility study assesses technical economic and operational viability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-36",
+      "text": "Explain the impact of information technology on organisations",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "IT flattens structures speeds communication enables new business models and improves decision making while demanding new skills and security.",
+      "explanation": "Cover structural communication and decision benefits and challenges.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-37",
+      "text": "Read the case: A retailer has inventory data scattered across three separate systems causing overstocking. Recommend a solution",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The retailer should implement an ERP system to integrate the three systems into one database giving a single accurate view of inventory.",
+      "explanation": "Apply ERP to consolidate fragmented data.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-38",
+      "text": "Read the case: A manager must decide whether to open a new store but data is scattered in reports. Suggest a system to help analyse the decision",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Management Information Systems",
+      "topic": "Decision support and executive systems",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "A decision support system would let the manager model sales and costs under different scenarios to compare the options before deciding.",
+      "explanation": "Apply DSS modelling to support the what if analysis.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-39",
+      "text": "Explain the types of e commerce",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "E commerce includes business to consumer business to business consumer to consumer and consumer to business transactions each linking different parties.",
+      "explanation": "Describe each type by the parties involved.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-40",
+      "text": "A primary key uniquely identifies each record in a database table",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A primary key uniquely identifies each row in a table.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-41",
+      "text": "Explain the role of MIS in decision making",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "MIS provides accurate timely and relevant information that reduces uncertainty and supports structured semi structured and strategic decisions across management levels.",
+      "explanation": "Link information provision to better decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-42",
+      "text": "List the threats to information systems",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Hacking viruses malware insider misuse and natural disasters.",
+      "explanation": "These threats compromise data and system availability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-43",
+      "text": "Explain the measures for securing information systems",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "System development and security",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Security measures include access control passwords encryption firewalls backups and antivirus software combined with policies and user training.",
+      "explanation": "Cover technical and administrative safeguards.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-44",
+      "text": "The data that describes other data is called metadata",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Metadata is data about data describing its structure and meaning.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-45",
+      "text": "Explain the evolution of MIS",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "MIS evolved from transaction processing through management reporting and decision support to enterprise and strategic systems integrated by the internet.",
+      "explanation": "Trace the stages from TPS to modern integrated systems.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-46",
+      "text": "The process of extracting useful patterns from large data sets is data",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "mining",
+      "explanation": "Data mining discovers patterns and relationships in large data sets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-47",
+      "text": "Explain the importance of data quality in information systems",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "Database and data resource management",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Poor data quality leads to wrong decisions so accuracy completeness timeliness and consistency of data are essential for reliable information and systems.",
+      "explanation": "Link data quality to decision reliability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-48",
+      "text": "Cloud computing delivers computing services over the internet on demand",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Cloud computing provides on demand internet based computing resources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-49",
+      "text": "Explain the benefits of cloud computing for business",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "E business ERP and emerging technologies",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Cloud computing reduces capital cost offers scalability and flexibility and enables remote access and collaboration with pay per use pricing.",
+      "explanation": "Cover cost scalability and accessibility benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "mis-50",
+      "text": "Explain the limitations of management information systems",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Management Information Systems",
+      "topic": "MIS concepts components and types",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "MIS limitations include high cost dependence on quality input resistance to change and the inability to handle all unstructured decisions.",
+      "explanation": "Cover cost data quality and human limitations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

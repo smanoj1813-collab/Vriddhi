@@ -21,12 +21,15 @@ import type {
   ApiResponse,
   QuestionContent,
   QuestionMetadata,
+  QuestionReview,
   Paper,
   PaperTemplate,
   PaperGenerationConfig,
   PaperGenerationResult,
   PaperQuestionRef,
   CreatedBy,
+  ReviewStatus,
+  Visibility,
 } from '../types/universalQuestionBank';
 
 const META_COLLECTION = 'questionBank_meta';
@@ -68,6 +71,8 @@ function normalizeQuestionContent(data: any, id: string): QuestionContent {
     },
     source: data.source || 'manual',
     status: data.status || 'pending',
+    visibility: (data.visibility as Visibility) || 'college_only',
+    sharedWith: data.sharedWith || [],
     quality: data.quality || { rating: 0, reviewCount: 0, flagged: false },
     usageStats: data.usageStats || { usedInPapers: 0, usedInAssessments: 0, collegesUsing: [] },
     versions: data.versions || [],
@@ -83,6 +88,28 @@ function idFromStoragePath(path: string): string {
   const parts = path.split('/');
   const last = parts[parts.length - 1] || '';
   return last.replace(/\.json$/i, '');
+}
+
+/**
+ * Visibility gate used everywhere questions are surfaced to a college.
+ * A question is visible when it is:
+ *   - public (platform-curated / free, shared with every college), or
+ *   - college_only and authored by that same college, or
+ *   - shared_with and the college id is listed in sharedWith.
+ * Superadmin sees everything (collegeId omitted/empty).
+ */
+export function isVisibleToCollege(
+  meta: Pick<QuestionMetadata, 'visibility' | 'sharedWith' | 'createdBy'>,
+  collegeId?: string | null,
+  isSuperadmin = false,
+): boolean {
+  if (isSuperadmin) return true;
+  const vis = meta.visibility || 'college_only';
+  if (vis === 'public') return true;
+  if (!collegeId) return false;
+  if (vis === 'college_only') return meta.createdBy?.collegeId === collegeId;
+  if (vis === 'shared_with') return (meta.sharedWith || []).includes(collegeId);
+  return false;
 }
 
 export const questionStorageApi = {
@@ -140,6 +167,116 @@ export const questionStorageApi = {
       }
 
       return { success: false, error: 'Question content not found' };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
+
+  /**
+   * Two-way input door: writes a question into the shared pool as THREE linked
+   * documents (meta + content + review). Platform/superadmin writes are trusted
+   * and land as `approved`; college/faculty writes land as `pending` and flow
+   * through the ReviewQueue. Origin is tagged at the source (see design §6).
+   */
+  async createQuestion(input: {
+    meta: Omit<QuestionMetadata, 'id' | 'createdAt' | 'updatedAt'>;
+    content: Partial<QuestionContent> & { questionText: string };
+  }): Promise<ApiResponse<{ id: string }>> {
+    try {
+      const now = new Date().toISOString();
+      const id = doc(collection(db, META_COLLECTION)).id;
+
+      const status: ReviewStatus = input.meta.status || 'pending';
+      const createdBy = input.meta.createdBy || {
+        userId: '',
+        userName: 'Unknown',
+        collegeId: null,
+        collegeName: '',
+        role: 'faculty',
+      };
+      const visibility: Visibility = input.meta.visibility || 'college_only';
+      const source = input.meta.source || 'college';
+      const tags = [...new Set([...(input.meta.tags || [])])];
+      const subjectId = input.meta.subjectId || 'General';
+      const topicId = input.meta.topicId || 'General';
+      const questionType = input.meta.questionType || 'mcq';
+      const difficulty = input.meta.difficulty || 'medium';
+      const marks = input.meta.marks ?? 1;
+      const language = input.meta.language || 'en';
+
+      const meta: QuestionMetadata = {
+        ...input.meta,
+        id,
+        subjectId,
+        topicId,
+        questionType,
+        difficulty,
+        marks,
+        language,
+        tags,
+        status,
+        visibility,
+        sharedWith: input.meta.sharedWith || [],
+        source,
+        createdBy,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const content: QuestionContent = {
+        ...(input.content as Partial<QuestionContent>),
+        id,
+        version: input.content.version || 1,
+        questionText: input.content.questionText,
+        options: input.content.options || [],
+        correctAnswer: input.content.correctAnswer || '',
+        explanation: input.content.explanation || '',
+        hint: input.content.hint || '',
+        subjectId,
+        topicId,
+        subTopicId: input.content.subTopicId || input.meta.subTopicId || '',
+        difficulty,
+        questionType,
+        marks,
+        language,
+        tags,
+        images: input.content.images || [],
+        hasImage: !!input.content.hasImage,
+        createdBy,
+        source,
+        status,
+        visibility,
+        sharedWith: meta.sharedWith,
+        quality: input.content.quality || { rating: 0, reviewCount: 0, flagged: false },
+        usageStats: input.content.usageStats || { usedInPapers: 0, usedInAssessments: 0, collegesUsing: [] },
+        versions: input.content.versions || [],
+        storagePath: input.content.storagePath || `${CONTENT_COLLECTION}/${id}.json`,
+        metadataDocId: id,
+        createdAt: input.content.createdAt || now,
+        updatedAt: now,
+      };
+
+      const review: QuestionReview = {
+        id: doc(collection(db, 'questionReviews')).id,
+        questionId: id,
+        submittedBy: createdBy,
+        submittedAt: now,
+        status,
+        reviewedAt: status === 'approved' ? now : undefined,
+        reviewerId: status === 'approved' ? createdBy.userId : undefined,
+        reviewerName: status === 'approved' ? createdBy.userName : undefined,
+        reviewComment: status === 'approved' ? 'Trusted platform submission (auto-approved).' : '',
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const batch = writeBatch(db);
+      batch.set(doc(db, META_COLLECTION, id), meta);
+      batch.set(doc(db, CONTENT_COLLECTION, id), content);
+      batch.set(doc(db, 'questionReviews', review.id), review);
+      await batch.commit();
+
+      return { success: true, data: { id } };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }
@@ -241,6 +378,11 @@ export const paperGeneratorApi = {
       if (config.excludeQuestionIds?.length) {
         candidates = candidates.filter((q) => !config.excludeQuestionIds!.includes(q.id));
       }
+      // Enforce visibility so a college only ever pulls public questions plus
+      // its own college_only / shared_with questions. See design §2/§6.
+      candidates = candidates.filter((q) =>
+        isVisibleToCollege(q, createdBy?.collegeId || null, createdBy?.role === 'superadmin'),
+      );
 
       const shuffled = candidates.sort(() => Math.random() - 0.5);
       const needed = config.totalQuestions || config.totalMarks;

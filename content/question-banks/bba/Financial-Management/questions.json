@@ -1,0 +1,1059 @@
+{
+  "program": "BBA",
+  "subject": "Financial Management",
+  "semester": 3,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Finance core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "fm-01",
+      "text": "The management of the acquisition and use of funds to maximise firm value is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Financial management",
+        "Marketing management",
+        "HRM",
+        "Operations management"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Financial management plans and controls the procurement and use of funds.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-02",
+      "text": "The primary objective of financial management is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Maximising shareholders wealth",
+        "Maximising sales only",
+        "Minimising employees",
+        "Avoiding all risk"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Wealth maximisation increases the market value of shareholders equity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-03",
+      "text": "The three major decisions of financial management are investment financing and",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "dividend",
+      "explanation": "Investment financing and dividend decisions form the core of finance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-04",
+      "text": "Profit maximisation and wealth maximisation always lead to the same decision",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Profit maximisation ignores timing and risk while wealth maximisation accounts for both.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-05",
+      "text": "Distinguish between profit maximisation and wealth maximisation",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Profit maximisation seeks short term accounting profit ignoring risk and timing while wealth maximisation seeks long term market value considering both.",
+      "explanation": "Wealth maximisation is the superior and more modern objective.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-06",
+      "text": "Explain the functions of a financial manager",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The financial manager forecasts funds acquires finance allocates it to investments manages working capital and pays dividends while balancing risk and return.",
+      "explanation": "Cover fund raising allocation and the dividend decision.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-07",
+      "text": "A rupee received today is worth more than a rupee received in future because of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Time value of money and valuation",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Time value of money",
+        "Depreciation",
+        "Inflation only",
+        "Taxation only"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Money today can be invested to earn interest so early receipt has value.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-08",
+      "text": "The process of finding the present value of a future amount is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Time value of money and valuation",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "discounting",
+      "explanation": "Discounting converts a future value back to its present value.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-09",
+      "text": "An annuity is a series of equal payments made at equal intervals",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Time value of money and valuation",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "An annuity is a stream of equal periodic payments.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-10",
+      "text": "Define compound interest",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Time value of money and valuation",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Compound interest is interest earned on both the original principal and the interest accumulated in earlier periods.",
+      "explanation": "Compounding causes money to grow at an increasing rate.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-11",
+      "text": "Explain the techniques of capital budgeting",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Techniques include traditional methods like payback and accounting rate of return and discounted methods like net present value and internal rate of return which consider the time value of money.",
+      "explanation": "Contrast traditional and discounted cash flow techniques.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-12",
+      "text": "If 1000 is invested at ten percent compound interest for one year the amount is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Time value of money and valuation",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "1100",
+      "explanation": "Amount equals principal times one plus rate so 1000 times 1.1 equals 1100.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-13",
+      "text": "The process of evaluating and selecting long term investment projects is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Capital budgeting",
+        "Working capital management",
+        "Dividend policy",
+        "Costing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Capital budgeting evaluates long term investment proposals.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-14",
+      "text": "The time taken to recover the original investment is the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "payback period",
+      "explanation": "The payback period measures how long the investment takes to repay itself.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-15",
+      "text": "Net present value is the difference between the present value of cash inflows and the initial investment",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "NPV discounts all cash flows and subtracts the initial outlay.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-16",
+      "text": "Explain the importance of capital budgeting",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Capital budgeting involves large irreversible long term commitments that determine the firms future profitability and risk so careful evaluation is essential.",
+      "explanation": "Cover size irreversibility and long term impact of investment decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-17",
+      "text": "A project costs 50000 and earns a constant 10000 per year. Its payback period is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "5 years",
+      "explanation": "Payback equals investment divided by annual inflow so 50000 divided by 10000 equals five years.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-18",
+      "text": "The rate a firm must pay to obtain funds is its",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Cost of capital",
+        "Dividend rate",
+        "Payback rate",
+        "Growth rate"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The cost of capital is the minimum return required by suppliers of funds.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-19",
+      "text": "The mix of debt and equity used to finance a firm is its capital",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "structure",
+      "explanation": "Capital structure is the proportion of debt and equity financing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-20",
+      "text": "Financial leverage is the use of fixed cost debt to magnify returns to shareholders",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Leverage uses debt whose fixed interest amplifies both gains and losses.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-21",
+      "text": "Define cost of capital and its significance",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Cost of capital is the minimum return a firm must earn to satisfy its investors and it is used as the discount rate and investment hurdle.",
+      "explanation": "It is the benchmark for accepting investments.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-22",
+      "text": "Explain the factors determining capital structure",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Capital structure depends on trading on equity tax benefits cost of debt financial risk control considerations and market conditions balancing cheaper debt against the risk of fixed charges.",
+      "explanation": "Cover the benefits of debt against its financial risk.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-23",
+      "text": "The management of current assets and current liabilities is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Working capital management",
+        "Capital budgeting",
+        "Dividend policy",
+        "Portfolio management"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Working capital management handles day to day current assets and liabilities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-24",
+      "text": "Current assets minus current liabilities equals",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "net working capital",
+      "explanation": "Net working capital is the excess of current assets over current liabilities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-25",
+      "text": "Excessive working capital is as harmful as inadequate working capital",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Too much working capital ties up funds unproductively while too little causes insolvency.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-26",
+      "text": "List the components of working capital",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Cash inventory receivables and short term investments on the asset side and payables on the liability side.",
+      "explanation": "These current items must be managed for liquidity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-27",
+      "text": "Explain the factors determining working capital requirements",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Working capital needs depend on the nature of business operating cycle seasonality credit policy inventory turnover and growth. Longer cycles and slower turnover raise the requirement.",
+      "explanation": "Cover the business and policy factors affecting the level of working capital.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-28",
+      "text": "If current assets are 80000 and current liabilities are 50000 the net working capital is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "30000",
+      "explanation": "Net working capital equals current assets minus current liabilities so 80000 minus 50000 equals 30000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-29",
+      "text": "The decision on how much profit to distribute to shareholders is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Dividend decision",
+        "Investment decision",
+        "Financing decision",
+        "Working capital decision"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The dividend decision determines how much earnings are paid out versus retained.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-30",
+      "text": "A dividend paid in the form of additional shares rather than cash is a",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "stock dividend",
+      "explanation": "A stock or bonus dividend distributes shares instead of cash.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-31",
+      "text": "Retained earnings are an internal source of finance",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Retained earnings are profits ploughed back making them an internal source.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-32",
+      "text": "List the sources of long term finance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Equity shares preference shares debentures retained earnings and term loans.",
+      "explanation": "These provide long term capital for the firm.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-33",
+      "text": "Explain the theories of dividend policy",
+      "type": "long_answer",
+      "difficulty": "hard",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The relevance theory argues dividends affect value while the irrelevance theory of Modigliani and Miller holds that value depends only on investment policy under perfect markets.",
+      "explanation": "Present both the relevance and irrelevance positions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-34",
+      "text": "Assertion: Debt is cheaper than equity as a source of finance. Reason: Interest on debt is tax deductible while dividends are not",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure (assertion reason)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The tax shield on interest makes the effective cost of debt lower than equity.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-35",
+      "text": "Match the decision to its question",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management (matching)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Investment decision - where to invest funds",
+        "Financing decision - how much profit to pay",
+        "Dividend decision - which assets to buy",
+        "Working capital - long term borrowing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The investment decision concerns where to deploy funds.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-36",
+      "text": "The internal rate of return is the discount rate at which net present value becomes",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "zero",
+      "explanation": "IRR is the rate that equates the present value of inflows with the outlay.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-37",
+      "text": "A project with a positive net present value should be accepted",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Positive NPV means the project earns more than the cost of capital.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-38",
+      "text": "Explain the difference between gross and net working capital",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Gross working capital is total current assets while net working capital is current assets minus current liabilities.",
+      "explanation": "Gross focuses on assets while net shows the liquidity cushion.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-39",
+      "text": "Read the case: A firm must choose between a machine costing 100000 with a five year life and another costing 150000 with a ten year life both with equal annual savings. Which appraisal technique best handles the unequal lives and why",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Net present value with equivalent annual cost comparison is best because the projects have unequal lives and simple NPV comparison is misleading.",
+      "explanation": "Use equivalent annual cost to compare projects with different lives.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-40",
+      "text": "Read the case: A firm has high fixed interest charges and faces falling sales. Explain its financial risk and one measure to reduce it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The firm has high financial leverage so falling sales sharply reduce earnings available to shareholders. It should reduce debt and shift toward equity to lower fixed charges.",
+      "explanation": "Diagnose leverage risk and propose deleveraging.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-41",
+      "text": "The rate of return that shareholders require on their equity investment is the",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Cost of equity",
+        "Cost of debt",
+        "Coupon rate",
+        "Tax rate"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The cost of equity is the return demanded by shareholders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-42",
+      "text": "Explain the importance of working capital management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Working capital management",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Working capital management maintains liquidity for day to day operations avoids insolvency and idle funds and supports profitability and creditworthiness.",
+      "explanation": "Cover liquidity profitability and solvency trade offs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-43",
+      "text": "The cost of issuing new securities is called",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "flotation cost",
+      "explanation": "Flotation costs are underwriting and issue expenses of new securities.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-44",
+      "text": "Explain the advantages of retained earnings as a source of finance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Retained earnings are an internal source with no issue costs or dilution and are always available. They strengthen the firms capital base and credit standing.",
+      "explanation": "Cover cost savings no dilution and financial stability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-45",
+      "text": "A perpetuity is an annuity that continues forever",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Time value of money and valuation",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A perpetuity pays a fixed amount every period indefinitely.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-46",
+      "text": "Explain the concept of leverage and its types",
+      "type": "long_answer",
+      "difficulty": "hard",
+      "subject": "Financial Management",
+      "topic": "Cost of capital and capital structure",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Leverage is the use of fixed costs to magnify returns. Operating leverage arises from fixed operating costs and financial leverage from fixed interest charges; together they form combined leverage.",
+      "explanation": "Distinguish operating financial and combined leverage.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-47",
+      "text": "List the factors affecting the dividend policy of a firm",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Earnings liquidity growth opportunities shareholders preferences tax and legal restrictions.",
+      "explanation": "These factors determine the level of dividend payout.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-48",
+      "text": "The value of a firm that maximises shareholder wealth is best measured by its share price",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Financial Management",
+      "topic": "Nature and scope of financial management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Share price reflects the market value of the firm and thus shareholder wealth.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-49",
+      "text": "Explain the merits and demerits of the payback period method",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Capital budgeting and investment decisions",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Payback is simple and useful for liquidity and risk screening. Its drawbacks are ignoring the time value of money and the cash flows after the payback period.",
+      "explanation": "Cover simplicity against the neglect of later flows and timing.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "fm-50",
+      "text": "A firm pays a dividend of 2 per share on earnings of 8 per share. The payout ratio is",
+      "type": "numerical",
+      "difficulty": "medium",
+      "subject": "Financial Management",
+      "topic": "Dividend policy and sources of finance",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "25 percent",
+      "explanation": "Payout ratio equals dividend per share divided by earnings per share so 2 divided by 8 equals 0.25 or twenty five percent.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

@@ -1,0 +1,1055 @@
+{
+  "program": "BBA",
+  "subject": "Business Ethics and Corporate Governance",
+  "semester": 6,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Ethics and governance core. No numerical questions apply; extra objective and case items included.",
+  "questions": [
+    {
+      "id": "becg-01",
+      "text": "The moral principles that guide business conduct are",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Business ethics",
+        "Business law",
+        "Economics",
+        "Accounting"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Business ethics are the standards of right and wrong in business.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-02",
+      "text": "The principles of honesty fairness and integrity form the core of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Ethical values",
+        "Legal rules",
+        "Market forces",
+        "Tax laws"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Honesty fairness and integrity are fundamental ethical values.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-03",
+      "text": "A written statement of an organisations ethical principles is a code of",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "ethics",
+      "explanation": "A code of ethics guides employee conduct in an organisation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-04",
+      "text": "Ethics and law are identical because all legal actions are ethical",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Some actions are legal but unethical and some ethical actions may go beyond law.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-05",
+      "text": "State the sources of business ethics",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Religion culture law society and personal values shape business ethics.",
+      "explanation": "Ethical standards emerge from these social and personal sources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-06",
+      "text": "Explain the importance of business ethics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Business ethics builds trust and reputation attracts customers and talent reduces legal risk and supports long term sustainability and social legitimacy.",
+      "explanation": "Cover trust reputation and long term sustainability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-07",
+      "text": "The process of choosing between right and wrong alternatives is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethical decision making and dilemmas",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Ethical decision making",
+        "Legal compliance",
+        "Profit maximisation",
+        "Risk taking"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Ethical decision making evaluates alternatives by moral standards.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-08",
+      "text": "A situation with two conflicting but valid moral choices is an ethical",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethical decision making and dilemmas",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "dilemma",
+      "explanation": "An ethical dilemma forces a choice between conflicting moral principles.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-09",
+      "text": "Utilitarianism judges actions by their consequences for overall happiness",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethical decision making and dilemmas",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Utilitarianism evaluates actions by their consequences for the greatest good.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-10",
+      "text": "List the stages of ethical decision making",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethical decision making and dilemmas",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Identifying the issue gathering facts evaluating alternatives deciding and reviewing the outcome.",
+      "explanation": "These steps structure an ethical decision.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-11",
+      "text": "Explain the theories of business ethics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethical decision making and dilemmas",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The main theories are utilitarianism deontology and virtue ethics which judge actions by consequences duties or the character of the agent respectively.",
+      "explanation": "Contrast consequentialist duty based and virtue approaches.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-12",
+      "text": "Ethics applied to marketing advertising and pricing is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Marketing ethics",
+        "Financial ethics",
+        "HR ethics",
+        "Production ethics"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Marketing ethics governs honest advertising pricing and selling.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-13",
+      "text": "Misleading or false advertising is an unethical marketing practice",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Deceptive advertising misleads consumers and violates ethics.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-14",
+      "text": "Manipulating financial statements to mislead investors is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "window dressing",
+      "explanation": "Window dressing presents a misleadingly favourable financial picture.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-15",
+      "text": "List ethical issues in human resource management",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Discrimination favouritism unsafe conditions and unfair compensation.",
+      "explanation": "These issues raise ethical concerns in managing people.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-16",
+      "text": "Explain the ethical issues in marketing",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Marketing ethics covers deceptive advertising unsafe products misleading pricing and manipulative selling all of which harm consumers and breach trust.",
+      "explanation": "Describe each marketing ethics issue and its harm.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-17",
+      "text": "The system by which companies are directed and controlled is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Corporate governance",
+        "Marketing management",
+        "Operations",
+        "Auditing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Corporate governance is the framework for directing and controlling companies.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-18",
+      "text": "The body elected by shareholders to oversee management is the board of",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "directors",
+      "explanation": "The board of directors represents shareholders and oversees management.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-19",
+      "text": "Transparency accountability fairness and responsibility are principles of good governance",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "These four pillars underpin sound corporate governance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-20",
+      "text": "List the pillars of corporate governance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Transparency accountability fairness and responsibility.",
+      "explanation": "These pillars guide how companies should be governed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-21",
+      "text": "Explain the role of the board of directors in governance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The board sets strategy oversees management ensures accountability protects shareholder interests and monitors risk and compliance.",
+      "explanation": "Cover strategy oversight accountability and risk monitoring.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-22",
+      "text": "The commitment of business to contribute to sustainable development is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Corporate social responsibility",
+        "Profit maximisation",
+        "Market share",
+        "Branding"
+      ],
+      "correctAnswer": "A",
+      "explanation": "CSR is a firms commitment to society beyond its legal and economic duties.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-23",
+      "text": "Meeting present needs without compromising future generations is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "sustainability",
+      "explanation": "Sustainable development balances present needs and future resources.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-24",
+      "text": "In India CSR spending is mandatory for large companies above specified thresholds",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Companies Act mandates CSR spending for qualifying companies.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-25",
+      "text": "List the arguments for corporate social responsibility",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Improved reputation customer loyalty employee morale and long term profitability.",
+      "explanation": "CSR builds goodwill that supports business success.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-26",
+      "text": "Explain the benefits of corporate social responsibility",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "CSR enhances reputation attracts customers and talent reduces regulatory risk and creates long term value by aligning business with societal interests.",
+      "explanation": "Cover reputation talent and long term value benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-27",
+      "text": "Reporting misconduct within an organisation is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Whistleblowing",
+        "Espionage",
+        "Lobbying",
+        "Negotiation"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Whistleblowing is disclosing wrongdoing within an organisation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-28",
+      "text": "The shared values and norms that guide ethical behaviour form the",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "ethical culture",
+      "explanation": "Ethical culture is the environment of shared ethical values and practices.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-29",
+      "text": "Whistleblowers should be protected from retaliation",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Protection encourages reporting of wrongdoing without fear of reprisal.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-30",
+      "text": "List the ways to build an ethical culture in an organisation",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Leadership example codes of ethics training open communication and fair enforcement.",
+      "explanation": "These practices embed ethics in organisational life.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-31",
+      "text": "Explain the importance of whistleblowing in organisations",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Whistleblowing exposes fraud and misconduct early protecting stakeholders and the public and reinforcing accountability and ethical standards.",
+      "explanation": "Cover early detection and accountability benefits.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-32",
+      "text": "Assertion: Ethical leadership promotes an ethical culture. Reason: Employees model their behaviour on the example set by leaders",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture (assertion reason)",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Leaders set the ethical tone that employees follow.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-33",
+      "text": "Match the concept to its meaning",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values (matching)",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Ethics - moral principles",
+        "Law - voluntary standards",
+        "CSR - profit only",
+        "Governance - marketing rules"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Ethics are moral principles while law is binding and CSR is societal commitment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-34",
+      "text": "The philosophy that the only obligation of business is to increase profits is the",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Shareholder theory",
+        "Stakeholder theory",
+        "Virtue theory",
+        "Deontology"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Shareholder theory holds that profit maximisation is the sole business duty.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-35",
+      "text": "The theory that business should serve all parties affected by it is",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "stakeholder theory",
+      "explanation": "Stakeholder theory says firms should balance the interests of all stakeholders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-36",
+      "text": "Explain the relationship between ethics and corporate governance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Ethics provides the values that governance structures enforce so good governance institutionalises ethical behaviour through boards codes and accountability.",
+      "explanation": "Link ethical values to governance mechanisms.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-37",
+      "text": "Read the case: A sales manager is tempted to overstate product benefits to meet targets. Explain the ethical dilemma and the right course",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethical decision making and dilemmas",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The dilemma is between meeting targets and honest marketing. The right course is to be truthful about benefits because misleading customers is unethical and harms trust.",
+      "explanation": "Apply ethical reasoning to the conflict between targets and honesty.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-38",
+      "text": "Read the case: An employee discovers fraudulent accounting but fears losing his job if he reports it. Explain his options and the protection available",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The employee should report through the whistleblower channel and is protected by whistleblower policies and law against retaliation.",
+      "explanation": "Apply whistleblowing and the protections that encourage reporting.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-39",
+      "text": "Explain the factors that influence ethical behaviour in organisations",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Ethical behaviour is shaped by individual values the ethical climate leadership example codes and reward systems of the organisation.",
+      "explanation": "Cover individual and organisational determinants of ethics.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-40",
+      "text": "List the benefits of good corporate governance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Investor confidence better access to capital reduced risk and long term value.",
+      "explanation": "Good governance attracts investment and reduces risk.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-41",
+      "text": "Explain the corporate governance framework in India",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Indian governance is set by the Companies Act SEBI regulations and clause 49 covering board composition audit committees and disclosure requirements.",
+      "explanation": "Cover the legal and regulatory framework of governance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-42",
+      "text": "The conflict of interest between shareholders and managers is the agency",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Corporate governance principles and boards",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "problem",
+      "explanation": "The agency problem is the conflict between owners and managers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-43",
+      "text": "Explain the arguments against corporate social responsibility",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Critics argue CSR raises costs dilutes the profit focus and imposes social duties on business that belong to government.",
+      "explanation": "Present the cost and role dilution arguments against CSR.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-44",
+      "text": "A company that is ethical in all dealings with stakeholders follows an ethics based approach",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "An ethics based approach applies moral standards to all stakeholder dealings.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-45",
+      "text": "Explain the ethical issues in finance and accounting",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Finance ethics covers insider trading fraud window dressing and misrepresentation of accounts all of which mislead investors and breach trust.",
+      "explanation": "Describe each financial ethics issue and its impact.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-46",
+      "text": "Trading shares using confidential information is insider trading",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Ethics in functional areas",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Insider trading is using non public information for personal gain.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-47",
+      "text": "Explain the role of leadership in promoting business ethics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Leaders model ethical behaviour set the tone communicate values and reward integrity thereby embedding ethics in the organisation culture.",
+      "explanation": "Cover modelling tone setting and reinforcement.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-48",
+      "text": "List the elements of an effective code of ethics",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Business ethics concepts and values",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Clear values specific guidance examples reporting procedures and enforcement.",
+      "explanation": "These elements make a code practical and enforceable.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-49",
+      "text": "Explain the concept of sustainable development",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "CSR and sustainability",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Sustainable development meets present needs without compromising future generations by balancing economic environmental and social goals.",
+      "explanation": "Cover the three pillars of sustainability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "becg-50",
+      "text": "Explain the steps an organisation can take to institutionalise ethics",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Business Ethics and Corporate Governance",
+      "topic": "Whistleblowing and ethical culture",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Institutionalising ethics requires leadership commitment a code of ethics training communication and enforcement through reward and sanction.",
+      "explanation": "Cover the mechanisms that embed ethics organisationally.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

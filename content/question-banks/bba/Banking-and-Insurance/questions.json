@@ -1,0 +1,1061 @@
+{
+  "program": "BBA",
+  "subject": "Banking and Insurance",
+  "semester": 6,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "source": "platform",
+  "visibility": "public",
+  "notes": "Banking and insurance core. Numerical answers are stated in correctAnswer with working in explanation.",
+  "questions": [
+    {
+      "id": "bi-01",
+      "text": "An institution that accepts deposits and lends money is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Banking types structure and functions",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Bank",
+        "Stock exchange",
+        "Insurance company",
+        "Brokerage firm"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A bank accepts deposits and grants loans and advances.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-02",
+      "text": "The bank that acts as banker to the government and other banks is the",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Central banking and RBI",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Central bank",
+        "Commercial bank",
+        "Cooperative bank",
+        "Investment bank"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The central bank acts as banker to the government and commercial banks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-03",
+      "text": "The central bank of India is the Reserve Bank of",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Central banking and RBI",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "India",
+      "explanation": "The Reserve Bank of India is the countrys central bank.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-04",
+      "text": "Commercial banks create credit by lending more than their cash reserves",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Banks create credit through the deposit and lending multiplier.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-05",
+      "text": "List the functions of commercial banks",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Banking types structure and functions",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Accepting deposits granting loans and advances and agency and utility services.",
+      "explanation": "These are the primary and secondary functions of banks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-06",
+      "text": "Explain the functions of the Reserve Bank of India",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Central banking and RBI",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The RBI issues currency acts as banker to government and banks controls credit manages foreign exchange and supervises the banking system.",
+      "explanation": "Cover note issue banker functions credit control and supervision.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-07",
+      "text": "A deposit that cannot be withdrawn before a fixed maturity is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Fixed deposit",
+        "Current account",
+        "Savings account",
+        "Recurring deposit"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Fixed deposits are repayable only after a fixed term.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-08",
+      "text": "The account that allows deposits and withdrawals at any time for business is a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "current account",
+      "explanation": "A current account permits frequent transactions for business.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-09",
+      "text": "A savings account usually pays interest while a current account usually does not",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Savings accounts earn interest while current accounts typically do not.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-10",
+      "text": "List the types of bank deposits",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Savings current fixed and recurring deposits.",
+      "explanation": "These deposit types suit different customer needs.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-11",
+      "text": "Explain the principles of sound lending",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Sound lending follows the principles of safety liquidity profitability purpose and security ensuring loans are recoverable and productive.",
+      "explanation": "Cover the five principles guiding bank lending.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-12",
+      "text": "The written promise to pay a fixed sum on demand is a",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Promissory note",
+        "Passbook",
+        "Receipt",
+        "Voucher"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A promissory note is an unconditional promise to pay a fixed sum.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-13",
+      "text": "Banking conducted through the internet and mobile devices is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "digital banking",
+      "explanation": "Digital banking provides banking services electronically.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-14",
+      "text": "A cheque is a bill of exchange drawn on a banker payable on demand",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A cheque is a special bill of exchange drawn on a bank.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-15",
+      "text": "List the types of negotiable instruments",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Promissory notes bills of exchange and cheques.",
+      "explanation": "These are the main negotiable instruments.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-16",
+      "text": "Explain the benefits of digital banking",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Digital banking offers convenience round the clock access lower cost faster transactions and wider reach though it raises security concerns.",
+      "explanation": "Balance the convenience and cost benefits against security risks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-17",
+      "text": "The mechanism by which losses are shared among many who face similar risk is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Insurance",
+        "Banking",
+        "Investment",
+        "Savings"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Insurance pools risks so losses are shared among many policyholders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-18",
+      "text": "The principle that the insured must have a financial interest in the subject is",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "insurable interest",
+      "explanation": "Insurable interest is the legal financial stake in the insured subject.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-19",
+      "text": "The principle of utmost good faith requires full disclosure of material facts",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Utmost good faith requires both parties to disclose all material facts.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-20",
+      "text": "List the principles of insurance",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Utmost good faith insurable interest indemnity subrogation contribution and proximate cause.",
+      "explanation": "These principles govern the insurance contract.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-21",
+      "text": "Explain the different types of insurance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Insurance includes life fire marine health and general insurance each covering different risks of life property and liability.",
+      "explanation": "Describe each type and the risk it covers.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-22",
+      "text": "The regulator of the insurance sector in India is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "IRDAI",
+        "RBI",
+        "SEBI",
+        "NABARD"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Insurance Regulatory and Development Authority of India regulates insurance.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-23",
+      "text": "The formal demand by the insured for payment of loss is an insurance",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "claim",
+      "explanation": "A claim is the request for compensation of a covered loss.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-24",
+      "text": "The process of identifying and controlling risks is risk management",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Risk management identifies assesses and controls risks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-25",
+      "text": "List the methods of handling risk",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Avoidance reduction retention and transfer of risk.",
+      "explanation": "These are the four basic ways of dealing with risk.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-26",
+      "text": "Explain the functions of IRDAI",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "IRDAI regulates the insurance industry protects policyholders issues licences and sets rules for products pricing and solvency of insurers.",
+      "explanation": "Cover regulation and policyholder protection functions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-27",
+      "text": "Assertion: Life insurance is a contract of indemnity. Reason: The insured is compensated exactly for the loss suffered",
+      "type": "mcq",
+      "difficulty": "hard",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types (assertion reason)",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are false",
+        "Both assertion and reason are true and reason explains assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Life insurance is not indemnity because a life cannot be valued; the sum assured is paid regardless of loss.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-28",
+      "text": "Match the principle to its meaning",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types (matching)",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Subrogation - insurer takes over rights after paying",
+        "Contribution - sharing loss among insureds",
+        "Indemnity - profit from loss",
+        "Insurable interest - full disclosure"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Subrogation transfers the insureds recovery rights to the insurer after a claim.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-29",
+      "text": "The account opened by two or more persons jointly is a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "joint account",
+      "explanation": "A joint account is operated by two or more account holders.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-30",
+      "text": "Explain the types of banks in India",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Banking types structure and functions",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Indian banking includes the central bank commercial banks cooperative banks and development banks each serving different sectors and purposes.",
+      "explanation": "Describe each type and its role in the banking system.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-31",
+      "text": "A loan secured by pledging goods or property is a secured loan",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A secured loan is backed by collateral pledged to the bank.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-32",
+      "text": "Read the case: A shop is damaged by fire and the owner claims more than the loss expecting to profit. Which insurance principle prevents this",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The principle of indemnity prevents profit because the insured is compensated only for the actual loss not more.",
+      "explanation": "Apply indemnity to cap the claim at the actual loss.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-33",
+      "text": "Read the case: A customer wants convenient banking without visiting a branch and is concerned about security. Recommend a banking option and a safeguard",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The customer should use digital banking and protect it with strong passwords two factor authentication and vigilance against phishing.",
+      "explanation": "Recommend digital banking with security safeguards.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-34",
+      "text": "The proportion of deposits banks must keep with the RBI is the",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Central banking and RBI",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Cash reserve ratio",
+        "Repo rate",
+        "Bank rate",
+        "Reverse repo rate"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The CRR is the share of deposits banks must keep with the RBI.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-35",
+      "text": "Explain the credit creation process of commercial banks",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Banks create credit by lending a multiple of their reserves because each loan redeposited allows further lending limited by the reserve ratio.",
+      "explanation": "Explain the deposit multiplier and its limit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-36",
+      "text": "The policy premium is the amount paid by the insured for coverage",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The premium is the consideration paid for the insurance cover.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-37",
+      "text": "Explain the importance of insurance to business",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Insurance protects business from losses of assets and income provides certainty encourages investment and supports credit by covering risks.",
+      "explanation": "Cover risk transfer certainty and credit support.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-38",
+      "text": "List the instruments of credit control used by the RBI",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Central banking and RBI",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Bank rate repo rate cash reserve ratio statutory liquidity ratio and open market operations.",
+      "explanation": "These tools regulate the cost and quantity of credit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-39",
+      "text": "Explain the difference between life insurance and general insurance",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Life insurance covers human life and pays on death or maturity while general insurance covers property liability and other non life risks usually annually.",
+      "explanation": "Contrast the subject matter and duration of the two.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-40",
+      "text": "The bank that lends mainly for agricultural and rural development is NABARD",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Banking types structure and functions",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "NABARD is the apex institution for agricultural and rural credit.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-41",
+      "text": "A bank pays simple interest of 5 percent on a fixed deposit of 20000 for one year. The interest earned is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "1000",
+      "explanation": "Interest equals principal times rate so 20000 times 0.05 equals 1000.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-42",
+      "text": "Explain the factors to consider before granting a loan",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "A bank considers the borrowers character capacity capital conditions and collateral the five Cs to assess ability and willingness to repay.",
+      "explanation": "Cover the five Cs of credit appraisal.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-43",
+      "text": "The policy that covers the policyholders own life is a life insurance policy",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Life insurance covers the risk of death of the insured life.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-44",
+      "text": "Explain the procedure for settlement of an insurance claim",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Claim settlement involves notifying the insurer filing documents survey and assessment of loss and payment after verifying the claim is covered.",
+      "explanation": "Trace the steps from notification to payment.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-45",
+      "text": "The rate at which the RBI lends to banks against securities is the repo rate",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Central banking and RBI",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The repo rate is the RBIs lending rate to banks.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-46",
+      "text": "Explain the importance of banks in economic development",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Banking types structure and functions",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Banks mobilise savings channel funds to productive uses create credit and facilitate trade thereby supporting investment and economic growth.",
+      "explanation": "Cover savings mobilisation and credit creation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-47",
+      "text": "List the risks faced by banks",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Commercial bank operations and lending",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Credit risk liquidity risk market risk and operational risk.",
+      "explanation": "These risks must be managed for bank stability.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-48",
+      "text": "Explain the role of insurance in risk management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "IRDAI claims and risk management",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Insurance is the main method of transferring risk to an insurer which pools risks and compensates losses providing financial certainty.",
+      "explanation": "Link insurance to risk transfer and pooling.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-49",
+      "text": "The facility that lets customers withdraw cash using a card is an ATM",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Banking and Insurance",
+      "topic": "Negotiable instruments and digital banking",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "ATMs allow cash withdrawal and other services using a card.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "bi-50",
+      "text": "Explain the types of life insurance policies",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Banking and Insurance",
+      "topic": "Insurance principles and types",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Life policies include whole life endowment term and annuity policies differing in coverage period and whether they combine protection with savings.",
+      "explanation": "Describe each policy type and its features.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ]
+}

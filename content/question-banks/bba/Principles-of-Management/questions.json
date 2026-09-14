@@ -1,0 +1,1109 @@
+{
+  "program": "BBA",
+  "subject": "Principles of Management",
+  "semester": 1,
+  "totalQuestions": 50,
+  "batch": "2026-27",
+  "branch": "BBA",
+  "notes": "Comma-free fields for safe paste-CSV import. Numerical questions are not applicable to this subject; matching and assertion-reason items are expressed as MCQs and labelled in topic.",
+  "questions": [
+    {
+      "id": "pom-01",
+      "text": "Management is best defined as the process of",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Getting work done through and with people",
+        "Working alone to achieve personal goals",
+        "Avoiding responsibility for results",
+        "Issuing orders without planning"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Management is achieving objectives efficiently and effectively through and with other people.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-02",
+      "text": "Which function of management involves setting objectives and deciding the course of action in advance",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Planning",
+        "Directing",
+        "Controlling",
+        "Staffing"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Planning is deciding in advance what to do how to do it when to do it and who will do it.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-03",
+      "text": "Management is called a science because it",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Has systematised knowledge and principles",
+        "Deals only with experiments in labs",
+        "Never changes over time",
+        "Ignores human behaviour"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Management has an organised body of knowledge and principles which gives it a scientific character.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-04",
+      "text": "Management is considered an art because it",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Requires personal skill and creativity",
+        "Is a rigid set of rules",
+        "Works only in factories",
+        "Eliminates human judgement"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Applying knowledge with personal skill judgement and creativity makes management an art.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-05",
+      "text": "The three levels of management are top middle and",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "lower",
+      "explanation": "Management is divided into top middle and lower (supervisory) levels.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-06",
+      "text": "Conceptual skills are most important at the top level of management",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Top managers need conceptual skills to see the organisation as a whole and plan long term.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-07",
+      "text": "State any four functions of management",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Planning organising staffing directing and controlling.",
+      "explanation": "These five functions form the core of the management process.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-08",
+      "text": "Distinguish between efficiency and effectiveness in management",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Efficiency is doing things right with minimum waste; effectiveness is doing the right things to achieve goals.",
+      "explanation": "Efficiency focuses on inputs while effectiveness focuses on achieving the objective.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-09",
+      "text": "Explain the importance of management in modern organisations",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Introduction to Management",
+      "unit": "1",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Management achieves group goals through optimal use of resources reduces costs improves efficiency and coordinates efforts. It helps organisations adapt to a dynamic environment and provides innovation and growth.",
+      "explanation": "A complete answer should cover goal achievement efficiency coordination adaptation and innovation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-10",
+      "text": "F W Taylor is regarded as the father of scientific management",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Taylor pioneered scientific management through time and motion study.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-11",
+      "text": "Which thinker is associated with the fourteen principles of management",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Henri Fayol",
+        "Elton Mayo",
+        "Max Weber",
+        "Peter Drucker"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Henri Fayol proposed fourteen principles of management such as division of work and unity of command.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-12",
+      "text": "The Hawthorne studies gave rise to which school of management",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Human relations school",
+        "Scientific management",
+        "Bureaucracy school",
+        "Systems school"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Elton Mayos Hawthorne experiments highlighted social factors and worker morale.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-13",
+      "text": "The principle of unity of command means a subordinate should receive orders from",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "one superior",
+      "explanation": "Unity of command avoids confusion by giving each subordinate a single boss.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-14",
+      "text": "List any four principles of management given by Fayol",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Division of work authority and responsibility unity of command unity of direction discipline and esprit de corps.",
+      "explanation": "Any four of Fayols fourteen principles are acceptable.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-15",
+      "text": "Briefly explain the systems approach to management",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "The systems approach views an organisation as a set of interrelated parts working together to convert inputs into outputs within an environment.",
+      "explanation": "It stresses interdependence of subsystems and feedback.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-16",
+      "text": "Describe the contributions of the behavioural school of management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "The behavioural school shifted attention from rules to people. Elton Mayo showed that social needs morale and informal groups affect output. It led to better leadership motivation and participative management.",
+      "explanation": "Cover the Hawthorne studies and the emphasis on human relations and motivation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-17",
+      "text": "Match the thinker to the idea",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought (matching)",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Taylor - scientific management",
+        "Weber - scientific management",
+        "Mayo - bureaucracy",
+        "Fayol - systems theory"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Taylor is linked with scientific management while Weber is linked with bureaucracy and Fayol with administrative principles.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-18",
+      "text": "Every business should have a bureaucracy with clear hierarchy is Weber",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Evolution of Management Thought",
+      "unit": "2",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Max Weber described bureaucracy as an ideal organisation based on rules and hierarchy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-19",
+      "text": "A plan that is broad and sets the overall direction of an organisation is a",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "strategy",
+      "explanation": "A strategy is a long term plan that guides the whole organisation toward its mission.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-20",
+      "text": "SWOT analysis examines strengths weaknesses opportunities and",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Threats",
+        "Trends",
+        "Targets",
+        "Teams"
+      ],
+      "correctAnswer": "A",
+      "explanation": "SWOT stands for strengths weaknesses opportunities and threats.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-21",
+      "text": "Which of the following is a single use plan",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Budget",
+        "Policy",
+        "Procedure",
+        "Rule"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Budgets and programmes are single use plans while policies and procedures are standing plans.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-22",
+      "text": "Decision making under certainty means all outcomes of each alternative are known",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Under certainty the manager has complete information about every alternative and its result.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-23",
+      "text": "List the steps in the planning process",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Setting objectives developing premises identifying alternatives evaluating alternatives selecting a plan and follow up.",
+      "explanation": "Planning proceeds step by step from objectives to implementation and review.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-24",
+      "text": "Explain the concept of MBO and its benefits",
+      "type": "long_answer",
+      "difficulty": "hard",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Management by Objectives is a process where managers and subordinates jointly set measurable goals and review performance against them. Benefits include clarity of goals motivation participation and better performance appraisal.",
+      "explanation": "Cover joint goal setting periodic review and the motivational effect of participation.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-25",
+      "text": "In decision making choosing the first satisfactory alternative rather than the best is called satisficing",
+      "type": "true_false",
+      "difficulty": "hard",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Herbert Simon proposed bounded rationality where managers satisfice instead of optimising.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-26",
+      "text": "Which decision making technique uses a group of experts who respond anonymously",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Delphi technique",
+        "Nominal group",
+        "Brainstorming",
+        "Benchmarking"
+      ],
+      "correctAnswer": "A",
+      "explanation": "The Delphi technique gathers expert opinion through repeated anonymous questionnaires.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-27",
+      "text": "Assertion: Planning is the primary function of management. Reason: All other functions depend on plans set in advance",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Planning and Decision Making (assertion reason)",
+      "unit": "3",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Planning precedes organising staffing directing and controlling so it is primary and the reason explains this.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-28",
+      "text": "Which term refers to the grouping of activities and the assignment of authority",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Organising",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Organising",
+        "Planning",
+        "Staffing",
+        "Motivating"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Organising involves dividing work into departments and establishing authority relationships.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-29",
+      "text": "The number of subordinates a manager can effectively supervise is called span of",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Organising",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "control",
+      "explanation": "Span of control refers to how many people report directly to a manager.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-30",
+      "text": "Delegation of authority always transfers final responsibility to the subordinate",
+      "type": "true_false",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Organising",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Authority can be delegated but ultimate responsibility always remains with the manager.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-31",
+      "text": "Which structure groups activities by product region or customer",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Organising",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Divisional structure",
+        "Functional structure",
+        "Matrix structure",
+        "Line structure"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A divisional structure creates semi-autonomous units around products or markets.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-32",
+      "text": "Distinguish between centralisation and decentralisation",
+      "type": "short_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Organising",
+      "unit": "4",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Centralisation concentrates decision making at the top while decentralisation spreads it to lower levels. Neither is absolute and both exist in every organisation.",
+      "explanation": "The difference is the degree to which lower levels participate in decisions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-33",
+      "text": "Explain the principles of delegation of authority",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Organising",
+      "unit": "4",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Delegation involves assigning duties granting authority and creating accountability. Principles include parity of authority and responsibility unity of command and scalar chain. Authority can be delegated but responsibility cannot.",
+      "explanation": "Cover the three elements of delegation and the key principles that govern it.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-34",
+      "text": "Assertion: A flat organisation has few levels. Reason: A wide span of control reduces the number of hierarchy levels",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Organising (assertion reason)",
+      "unit": "4",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A wide span of control means each manager supervises more people so fewer levels are needed.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-35",
+      "text": "The first step in staffing is",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Manpower planning",
+        "Selection",
+        "Performance appraisal",
+        "Promotion"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Staffing begins with estimating manpower needs through human resource planning.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-36",
+      "text": "The process of choosing the most suitable candidate from applicants is called",
+      "type": "fill_in_blank",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "correctAnswer": "selection",
+      "explanation": "Selection picks the best candidate while recruitment attracts a pool of applicants.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-37",
+      "text": "Maslow placed self-actualisation at the bottom of his hierarchy of needs",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "B",
+      "explanation": "Physiological needs are at the bottom and self-actualisation is at the top of the hierarchy.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-38",
+      "text": "Which leadership style allows full participation of subordinates in decisions",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "Democratic",
+        "Autocratic",
+        "Free rein",
+        "Bureaucratic"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A democratic leader consults subordinates and encourages participation in decision making.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-39",
+      "text": "Explain the difference between recruitment and selection",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 2,
+      "bloomLevel": "understand",
+      "correctAnswer": "Recruitment is a positive process that attracts a large pool of candidates. Selection is a negative process that rejects unsuitable applicants and picks the best one.",
+      "explanation": "Recruitment precedes selection in the staffing sequence.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-40",
+      "text": "Describe Herzbergs two-factor theory of motivation",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Herzberg divided factors into hygiene factors like salary and working conditions which prevent dissatisfaction and motivators like achievement and recognition which create satisfaction. Hygiene factors do not motivate by themselves.",
+      "explanation": "Cover the distinction between hygiene factors and motivators and their effect on job satisfaction.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-41",
+      "text": "Assertion: Directing initiates action. Reason: Directing guides people toward execution of plans",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing (assertion reason)",
+      "unit": "5",
+      "marks": 1,
+      "bloomLevel": "analyze",
+      "options": [
+        "Both assertion and reason are true and reason explains assertion",
+        "Both are true but reason does not explain assertion",
+        "Assertion is true but reason is false",
+        "Assertion is false but reason is true"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Directing is the executive function that converts plans into action through people.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-42",
+      "text": "The process of measuring actual performance against standards is called",
+      "type": "mcq",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "remember",
+      "options": [
+        "Controlling",
+        "Planning",
+        "Directing",
+        "Organising"
+      ],
+      "correctAnswer": "A",
+      "explanation": "Controlling compares actual performance with planned standards and corrects deviations.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-43",
+      "text": "A standard expressed in money such as sales target or cost limit is a budget",
+      "type": "true_false",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "A",
+      "explanation": "A budget is a quantitative standard usually expressed in monetary terms.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-44",
+      "text": "Controlling that takes place while an activity is in progress is called control",
+      "type": "fill_in_blank",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "correctAnswer": "concurrent",
+      "explanation": "Concurrent control monitors activities as they happen while feedback control occurs after the event.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-45",
+      "text": "Which tool of control analyses a project into activities and shows their sequence and timing",
+      "type": "mcq",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 1,
+      "bloomLevel": "understand",
+      "options": [
+        "PERT and CPM",
+        "Ratio analysis",
+        "Break even analysis",
+        "Budgetary control"
+      ],
+      "correctAnswer": "A",
+      "explanation": "PERT and CPM are network techniques used to plan and control project schedules.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-46",
+      "text": "Explain the steps in the controlling process",
+      "type": "short_answer",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "remember",
+      "correctAnswer": "Establishing standards measuring actual performance comparing performance with standards and taking corrective action.",
+      "explanation": "These four steps form the control cycle.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-47",
+      "text": "Why is coordination called the essence of management",
+      "type": "long_answer",
+      "difficulty": "medium",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "analyze",
+      "correctAnswer": "Coordination unites the efforts of all departments toward common goals. It is needed in every function of management so it is not a separate function but the thread that runs through all of them.",
+      "explanation": "Explain how planning organising staffing directing and controlling each require coordination.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-48",
+      "text": "A firm sets a standard of ten units per worker per day. A worker produces eight units. The deviation that must be corrected is",
+      "type": "numerical",
+      "difficulty": "easy",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 2,
+      "bloomLevel": "apply",
+      "correctAnswer": "2 units",
+      "explanation": "Deviation equals standard minus actual performance so 10 minus 8 gives 2 units.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-49",
+      "text": "Read the case: A call centre sets a target of answering calls within twenty seconds. Actual average is forty five seconds and customers complain. Identify the control standard and the corrective action needed",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Principles of Management",
+      "topic": "Controlling and Coordination",
+      "unit": "6",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "The standard is answering calls within twenty seconds. Actual performance of forty five seconds shows a negative deviation. Corrective action includes more staff better training or improved technology to reduce response time.",
+      "explanation": "Relate the standard to the measured performance and propose realistic corrections.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    },
+    {
+      "id": "pom-50",
+      "text": "Read the case: A manager notices that output rises whenever he praises workers in team meetings. Using motivation theory explain why recognition improves performance and suggest how to use it",
+      "type": "case_based",
+      "difficulty": "hard",
+      "subject": "Principles of Management",
+      "topic": "Staffing and Directing",
+      "unit": "5",
+      "marks": 5,
+      "bloomLevel": "apply",
+      "correctAnswer": "Recognition satisfies the esteem need in Maslows hierarchy and acts as a motivator in Herzbergs theory so it raises morale and output. The manager should give regular specific and genuine recognition to sustain motivation.",
+      "explanation": "Link the observed behaviour to motivation theories and give practical suggestions.",
+      "tags": [
+        "vriddhi-curated",
+        "free"
+      ],
+      "source": "platform",
+      "visibility": "public"
+    }
+  ],
+  "source": "platform",
+  "visibility": "public"
+}
