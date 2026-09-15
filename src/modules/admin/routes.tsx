@@ -25,7 +25,11 @@ const PaperBuilder = lazy(() => import('./pages/PaperBuilder'));
 const PaperGeneratorAdmin = lazy(() => import('./pages/PaperGeneratorPage'));
 const PaperReview = lazy(() => import('../faculty/pages/FacultyPapers'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
-const ReviewQueuePage = lazy(() => import('./pages/ReviewQueuePage'));
+// Aliases kept temporarily for legacy deep-links; routes below point to QuestionBank with initialTab instead.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _LegacyReviewQueuePage = lazy(() => import('./pages/ReviewQueuePage'));
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _LegacyAdminUniversalBank = lazy(() => import('./pages/AdminUniversalBank'));
 const Settings = lazy(() => import('./pages/Settings'));
 const View360 = lazy(() => import('./pages/View360'));
 
@@ -100,8 +104,10 @@ export const adminRoutes: RouteObject[] = [
       { path: 'assessments', element: <LazyPage><Assessments /></LazyPage> },
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
-      { path: 'question-bank', element: <LazyPage><QuestionBank /></LazyPage> },
-      { path: 'review-queue', element: <LazyPage><ReviewQueuePage /></LazyPage> },
+      { path: 'question-bank', element: <LazyPage><QuestionBank initialTab="college" /></LazyPage> },
+      // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
+      { path: 'universal-bank', element: <LazyPage><QuestionBank initialTab="universal" /></LazyPage> },
+      { path: 'review-queue', element: <LazyPage><QuestionBank initialTab="review" /></LazyPage> },
       { path: 'paper-review', element: <LazyPage><PaperReview /></LazyPage> },
       { path: 'paper-generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
       { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },

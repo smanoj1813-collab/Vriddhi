@@ -53,6 +53,33 @@ router.post('/chat', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedR
         try {
           const papersSnap = await db.collection(`colleges/${collegeId}/papers`).where('createdBy', '==', user.uid).limit(10).get()
           contextSummary += `\nFaculty Context:\n- Created Papers: ${papersSnap.size}`
+          // Curriculum context — show assigned courses so answers can be grounded
+          try {
+            const mapSnap = await db.collection('curriculumFacultyMappings').where('facultyId', '==', user.uid).where('collegeId', '==', collegeId).limit(12).get()
+            if (!mapSnap.empty) {
+              const courses = mapSnap.docs.map(d => {
+                const data = d.data() as any
+                return `${data.courseName || data.courseCode || 'Course'} (${data.branch || ''} Sem ${data.semester || ''} ${data.batch || ''})`.trim()
+              }).slice(0, 8).join('; ')
+              contextSummary += `\n- Assigned Curriculum: ${courses}`
+            } else {
+              // Fallback: many mappings were stored with the faculty profile doc id rather than uid — try profile resolution
+              const facSnap = await db.collection('faculty').where('uid', '==', user.uid).limit(1).get()
+              const profileId = facSnap.docs[0]?.id
+              if (profileId) {
+                const altSnap = await db.collection('curriculumFacultyMappings').where('facultyId', '==', profileId).where('collegeId', '==', collegeId).limit(12).get()
+                if (!altSnap.empty) {
+                  const courses = altSnap.docs.map(d => {
+                    const data = d.data() as any
+                    return `${data.courseName || data.courseCode || 'Course'} (${data.branch || ''} Sem ${data.semester || ''})`.trim()
+                  }).slice(0, 8).join('; ')
+                  contextSummary += `\n- Assigned Curriculum (via profile id): ${courses}`
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[AI Chat] Failed to load faculty curriculum context', e)
+          }
         } catch (e) {
           console.warn('[AI Chat] Failed to load faculty live context', e)
         }
@@ -176,6 +203,16 @@ function generateGroundedFallbackResponse(role: string, query: string, contextSu
       return `### 💳 Fee Status & Receipts\n\nYou can review pending semester fees, view past receipts, and download fee clearance certificates directly in the **Student Fee Portal**.`
     }
     return `### 💳 Institutional Fee Tracking\n\nFee collections and pending balances across batches can be monitored in **Admin Fee Management** and **Subscription Billing** with CSV export options.`
+  }
+
+  if (q.includes('curriculum') || q.includes('my course') || q.includes('assigned course') || q.includes('module') || q.includes('learning outcome') || q.includes('syllabus mapping')) {
+    if (role === 'faculty') {
+      return `### 📘 Your Assigned Curriculum\n\nYour courses are mapped in **My Curriculum** — branch, semester, batch, credits, hours and the full module tree.\n- Each module's topics appear under **Topics** as *Planned* (or *Covered* once a class session marks it).\n- Tap **Ask AI** on any topic for an explanation or **Generate Questions** to open the AI Studio prefilled with that subject + topic.\n\n> **Key takeaway**: keep *My Curriculum* as the source of truth — if a course disappears, the admin removed its mapping in **Admin → Curriculum**.`
+    }
+    if (['admin','principal','hod','superadmin'].includes(role)) {
+      return `### 📘 Curriculum Mapping — Admin\n\nCurricula arrive from the syllabus parser; **Curriculum → Curriculum** shows each doc and how many courses are mapped.\n- **Assign Faculty** on a course row — faculty are ranked by matching subjects they teach.\n- Any active mapping can **Schedule Class** into **Class Schedule**; the faculty’s **My Curriculum** and **Topics** plus their AI question generation update instantly.\n\n> **Key takeaway**: one owner per course/batch/division — duplicate assignments create split schedules.`
+    }
+    return `### 📘 Curriculum & Syllabus\n\nYour syllabus is the curriculum your college assigned, split into courses → modules → topics.\n- Open **My Curriculum** (or **Study Material** for notes) and ask your professor during office hours if something isn’t covered.\n\n> **Key takeaway**: name the topic when you ask — specific questions get far better AI answers.`
   }
 
   if (q.includes('office hour') || q.includes('appointment') || q.includes('book a') || q.includes('booking') || q.includes('slot') || q.includes('mentor')) {

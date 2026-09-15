@@ -34,6 +34,7 @@ const FacultyCalendar = lazy(() => import('./pages/FacultyCalendar'));
 const FacultyCurriculum = lazy(() => import('./pages/FacultyCurriculum'));
 const FacultySchedule = lazy(() => import('./pages/FacultySchedule'));
 const FacultyAIQuestions = lazy(() => import('./pages/FacultyAIQuestions'));
+const FacultyUniversalBank = lazy(() => import('./pages/FacultyUniversalBank'));
 const FacultySettings = lazy(() => import('./pages/FacultySettings'));
 const FacultyAppointmentsPage = lazy(() => import('./pages/FacultyAppointmentsPage'));
 const View360 = lazy(() => import('../admin/pages/View360'));
@@ -132,6 +133,7 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'topics', element: <LazyPage label="faculty/topics"><FacultyTopics /></LazyPage> },
       { path: 'papers', element: <LazyPage label="faculty/papers"><FacultyPapers /></LazyPage> },
       { path: 'question-bank', element: <LazyPage label="faculty/question-bank"><FacultyQuestionBank /></LazyPage> },
+      { path: 'universal-bank', element: <LazyPage label="faculty/universal-bank"><FacultyUniversalBank /></LazyPage> },
       { path: 'paper-generator', element: <LazyPage label="faculty/paper-generator"><FacultyPaperGenerator /></LazyPage> },
       { path: 'student-analysis', element: <LazyPage label="faculty/student-analysis"><FacultyStudentAnalysis /></LazyPage> },
       { path: 'appointments', element: <LazyPage label="faculty/appointments"><FacultyAppointmentsPage /></LazyPage> },

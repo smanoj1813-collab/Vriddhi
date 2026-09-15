@@ -723,10 +723,11 @@ export const findDuplicateQuestions = async (
   text: string,
   threshold: number = 0.85
 ): Promise<Question[]> => {
+  const keyword = (text || '').toLowerCase().substring(0, 20);
   const q = query(
     collection(db, QUESTIONS_COLLECTION),
     where('collegeId', '==', collegeId),
-    where('searchKeywords', 'array-contains', text.toLowerCase().substring(0, 20)),
+    where('searchKeywords', 'array-contains', keyword),
     limit(50)
   );
 
@@ -750,9 +751,9 @@ export const findDuplicateQuestions = async (
     } as Question);
   });
 
-  const textWords = new Set(text.toLowerCase().split(/\s+/));
+  const textWords = new Set((text || '').toLowerCase().split(/\s+/));
   return candidates.filter(q => {
-    const qWords = new Set(q.text.toLowerCase().split(/\s+/));
+    const qWords = new Set((q.text || '').toLowerCase().split(/\s+/));
     const intersection = new Set([...textWords].filter(x => qWords.has(x)));
     const union = new Set([...textWords, ...qWords]);
     const similarity = intersection.size / union.size;
@@ -769,6 +770,42 @@ export const findDuplicateQuestions = async (
 // is fully built.
 // ============================================================
 
+// --- helpers for universal bank consumption layer ---
+function isVisibleToCollegeGate(
+  meta: QuestionMetadata,
+  viewerCollegeId?: string | null,
+  viewerIsSuperadmin = false,
+): boolean {
+  if (viewerIsSuperadmin) return true;
+  const vis = (meta.visibility as string) || 'college_only';
+  if (vis === 'public') return true;
+  if (!viewerCollegeId) return false;
+  if (vis === 'college_only') return meta.createdBy?.collegeId === viewerCollegeId;
+  if (vis === 'shared_with') return (meta.sharedWith || []).includes(viewerCollegeId);
+  return false;
+}
+
+function matchesSearch(meta: QuestionMetadata, searchQuery: string): boolean {
+  const q = searchQuery.trim().toLowerCase();
+  if (!q) return true;
+  const tokens = q.split(/\s+/).filter(Boolean);
+  // Search across denormalised fields that are always present without reading content.
+  const haystack = [
+    (meta as any).previewText || '',
+    meta.subjectId || '',
+    meta.topicId || '',
+    (meta as any).subTopicId || '',
+    meta.questionType || '',
+    meta.difficulty || '',
+    (meta.tags || []).join(' '),
+    (meta as any).searchKeywords ? (meta as any).searchKeywords.join(' ') : '',
+  ]
+    .join(' ')
+    .toLowerCase();
+  // All tokens must appear (AND). Falls back to substring for old docs without searchKeywords.
+  return tokens.every((tok) => haystack.includes(tok));
+}
+
 // --- Question Metadata API ---
 export const questionMetadataApi = {
   async search(
@@ -784,29 +821,120 @@ export const questionMetadataApi = {
       if (filter.questionType) constraints.push(where('questionType', '==', filter.questionType));
       if (filter.status) constraints.push(where('status', '==', filter.status));
       if (filter.tags?.length) constraints.push(where('tags', 'array-contains-any', filter.tags));
-      if (filter.collegeId) constraints.push(where('createdBy.collegeId', '==', filter.collegeId));
+      // NOTE: we deliberately DO NOT add a Firestore where('createdBy.collegeId','==',collegeId)
+      // filter here — that would hide public platform content (createdBy.collegeId == null) from
+      // colleges. Visibility is enforced client-side via isVisibleToCollegeGate() below so public
+      // + own-college + shared_with are all correctly surfaced. The legacy exact-match filter is
+      // what caused the cross-tenant leak when it was absent; the gate below is what closes it.
+
+      // searchQuery is applied client-side after fetch so old rows that lack searchKeywords still
+      // match, and we avoid a required composite index on searchKeywords + every other filter.
+      // If a keyword index exists Firestore will still benefit when we add it, but the fallback is
+      // correct without it.
 
       constraints.push(orderBy('createdAt', 'desc'));
-      constraints.push(limit(pagination.limit));
+      const page = Math.max(1, pagination.page || 1);
+      const lim = Math.max(1, pagination.limit || 20);
+      // Firestore offset() charges for skipped docs and is not available in all SDK builds;
+      // we emulate pagination by fetching page*limit and slicing. This still makes
+      // \"Load more\" actually advance — the previous impl ignored page and always returned page 1.
+      // The cost is page*limit reads per request, which is bounded (20–40) and well within
+      // free-tier for the bank's scale.
+      constraints.push(limit(page * lim));
 
-      const q = query(collection(db, 'questionBank_meta'), ...constraints);
-      const snapshot = await getDocs(q);
+      let snapshot;
+      try {
+        const q = query(collection(db, 'questionBank_meta'), ...constraints);
+        snapshot = await getDocs(q);
+      } catch (idxErr: any) {
+        const msg = String(idxErr?.message || '');
+        const isIndex = msg.includes('requires an index') || idxErr?.code === 'failed-precondition';
+        if (!isIndex) throw idxErr;
+        // Fallback: minimal indexed query (status only) and filter the rest in memory.
+        // This keeps the UI functional while the composite index builds, at the cost of
+        // reading up to 100 docs server-side and discarding non-matches.
+        console.warn('[questionMetadataApi.search] composite index missing, falling back:', msg);
+        const fbConstraints: any[] = [];
+        if (filter.status) fbConstraints.push(where('status', '==', filter.status));
+        fbConstraints.push(orderBy('createdAt', 'desc'));
+        fbConstraints.push(limit(100));
+        const fbQ = query(collection(db, 'questionBank_meta'), ...fbConstraints);
+        const fbSnap = await getDocs(fbQ);
+        let docs = fbSnap.docs.map((d) => ({ id: d.id, ...d.data() } as QuestionMetadata));
+        // In-memory filter for the constraints we couldn't apply server-side
+        docs = docs.filter((m) => {
+          if (filter.subjectId && m.subjectId !== filter.subjectId) return false;
+          if (filter.topicId && m.topicId !== filter.topicId) return false;
+          if (filter.subTopicId && (m as any).subTopicId !== filter.subTopicId) return false;
+          if (filter.difficulty && m.difficulty !== filter.difficulty) return false;
+          if (filter.questionType && m.questionType !== filter.questionType) return false;
+          if (filter.tags?.length && !filter.tags.some((t) => (m.tags || []).includes(t))) return false;
+          return true;
+        });
+        // Visibility + search gates
+        const viewerId = (filter as any).collegeId as string | null | undefined;
+        const isSuper = Boolean((filter as any).viewerIsSuperadmin);
+        docs = docs.filter((m) => isVisibleToCollegeGate(m, viewerId, isSuper));
+        if (filter.searchQuery?.trim()) {
+          docs = docs.filter((m) => matchesSearch(m, filter.searchQuery!));
+        }
+        // Manual pagination after filtering (page-scoped total — see handoff §3)
+        const total = docs.length;
+        const paged = docs.slice((page - 1) * lim, (page - 1) * lim + lim);
+        return {
+          success: true,
+          data: {
+            data: paged,
+            page,
+            limit: lim,
+            total,
+            totalPages: Math.ceil(total / lim) || 1,
+            hasNextPage: (page * lim) < total,
+            hasPrevPage: page > 1,
+          },
+        };
+      }
 
-      const data: QuestionMetadata[] = [];
+      let data: QuestionMetadata[] = [];
       snapshot.forEach((docSnap) => {
         data.push({ id: docSnap.id, ...docSnap.data() } as QuestionMetadata);
       });
 
+      // Client-side visibility gate — closes the cross-tenant leak where any staff could
+      // read every college's college_only/shared_with rows. Rules allow the read; this
+      // gate decides what the UI actually surfaces. Superadmin bypasses it.
+      const viewerId = (filter as any).collegeId as string | null | undefined;
+      const isSuper = Boolean((filter as any).viewerIsSuperadmin);
+      const beforeGate = data.length;
+      let filtered = data.filter((m) => isVisibleToCollegeGate(m, viewerId, isSuper));
+
+      // Search gate (client-side substring so old docs without searchKeywords still work)
+      if (filter.searchQuery?.trim()) {
+        filtered = filtered.filter((m) => matchesSearch(m, filter.searchQuery!));
+      }
+
+      // If we filtered heavily, data may be smaller than the page size even though more
+      // matching docs exist beyond the limit window. Totals are therefore page-scoped
+      // (cheap gate) — the handoff calls this out explicitly. The two-query merge
+      // alternative (public + own-college) would give exact totals but needs additional
+      // indexes (visibility, createdAt) and (createdBy.collegeId, createdAt).
+      // We fetched page*lim docs; slice to the requested page window so page 2
+      // doesn't return pages 1+2 together.
+      const totalFiltered = filtered.length;
+      const paged = filtered.slice((page - 1) * lim, (page - 1) * lim + lim);
+      const hasNextPage =
+        paged.length === lim && (snapshot.size === page * lim || totalFiltered > page * lim);
+
       return {
         success: true,
         data: {
-          data,
-          page: pagination.page,
-          limit: pagination.limit,
-          total: data.length,
-          totalPages: Math.ceil(data.length / pagination.limit) || 1,
-          hasNextPage: data.length === pagination.limit,
-          hasPrevPage: pagination.page > 1,
+          data: paged,
+          page,
+          limit: lim,
+          total: totalFiltered,
+          totalPages: Math.ceil(totalFiltered / lim) || 1,
+          hasNextPage,
+          hasPrevPage: page > 1,
         },
       };
     } catch (error) {

@@ -12,6 +12,11 @@
  * `source: platform`, `status: approved` — free and visible to all colleges.
  * See docs/universal-question-bank-design.md §6.
  *
+ * ID scheme: content-addressed sha1(subject + normalized text) → 20 hex chars.
+ * Re-running the script is an idempotent update, not a duplicate-insert. The
+ * previous random-doc() scheme duplicated the bank on every run — never re-run
+ * --write on a main copy that still uses random ids.
+ *
  * Requires the Firebase Admin SDK (declared in functions/package.json) and a
  * service account. Credentials are read from the environment exactly like
  * functions/src/services/questions.ts:
@@ -23,12 +28,14 @@
  *   node functions/scripts/seed-question-bank.mjs            # dry-run preview
  *   node functions/scripts/seed-question-bank.mjs --write    # write to Firestore
  *   node functions/scripts/seed-question-bank.mjs --write --subject "Marketing Management"
+ *   node functions/scripts/seed-question-bank.mjs --write --subject="Business Law"
  *
  * Never commit service-account credentials.
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
@@ -56,6 +63,41 @@ const TYPE_MAP = {
 
 function mapType(t) {
   return TYPE_MAP[t] || t;
+}
+
+function buildPreviewText(text, maxLen = 160) {
+  if (!text) return '';
+  return String(text).replace(/\s+/g, ' ').trim().slice(0, maxLen);
+}
+
+function buildSearchKeywords(text, subjectId, topicId, tags) {
+  const tokens = new Set();
+  const add = (value) => {
+    if (!value) return;
+    String(value)
+      .toLowerCase()
+      .split(/\s+/)
+      .forEach((word) => {
+        const cleaned = word.replace(/[^a-z0-9]/g, '');
+        if (cleaned) tokens.add(cleaned.substring(0, 20));
+        const raw = word.toLowerCase().substring(0, 20);
+        if (raw && raw !== cleaned.substring(0, 20)) tokens.add(raw);
+      });
+  };
+  add(text);
+  add(subjectId);
+  add(topicId);
+  (tags || []).forEach((t) => add(t));
+  return Array.from(tokens).filter(Boolean);
+}
+
+function normalizeForId(text) {
+  return String(text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function idForQuestion(q) {
+  const key = `${q.subject || 'General'}::${normalizeForId(q.text || '')}`;
+  return createHash('sha1').update(key).digest('hex').slice(0, 20);
 }
 
 function loadQuestions() {
@@ -93,15 +135,20 @@ function pushQuestions(dir, out) {
 
 function toMeta(q, id) {
   const now = new Date().toISOString();
+  const subjectId = q.subject || 'General';
+  const topicId = q.topic || 'General';
+  const tags = [...new Set([...(q.tags || []), ...PLATFORM_TAGS])];
+  const previewText = buildPreviewText(q.text || '');
+  const searchKeywords = buildSearchKeywords(q.text || '', subjectId, topicId, tags);
   return {
-    subjectId: q.subject || 'General',
-    topicId: q.topic || 'General',
+    subjectId,
+    topicId,
     subTopicId: q.subTopicId || '',
     difficulty: q.difficulty || 'medium',
     questionType: mapType(q.type || 'mcq'),
     marks: q.marks ?? 1,
     language: q.language || 'en',
-    tags: [...new Set([...(q.tags || []), ...PLATFORM_TAGS])],
+    tags,
     status: 'approved',
     visibility: 'public',
     sharedWith: [],
@@ -113,6 +160,8 @@ function toMeta(q, id) {
     qualityRating: 0,
     usageCount: 0,
     createdBy: CREATED_BY,
+    previewText,
+    searchKeywords,
     createdAt: now,
     updatedAt: now,
   };
@@ -120,6 +169,7 @@ function toMeta(q, id) {
 
 function toContent(q, id) {
   const now = new Date().toISOString();
+  const tags = [...new Set([...(q.tags || []), ...PLATFORM_TAGS])];
   const options = Array.isArray(q.options)
     ? q.options.map((o) => (typeof o === 'string' ? { id: String.fromCharCode(65 + q.options.indexOf(o)), text: o, isCorrect: o === q.correctAnswer || q.options.length === 1 } : o))
     : [];
@@ -142,7 +192,7 @@ function toContent(q, id) {
     questionType: mapType(q.type || 'mcq'),
     marks: q.marks ?? 1,
     language: q.language || 'en',
-    tags: [...new Set([...(q.tags || []), ...PLATFORM_TAGS])],
+    tags,
     images: [],
     hasImage: false,
     createdBy: CREATED_BY,
@@ -185,11 +235,18 @@ function selfCheckIdWiring() {
   const sample = { subject: 'Self-Check', topic: 'Self-Check', text: 'x', type: 'mcq' };
   const meta = toMeta(sample, probeId);
   const content = toContent(sample, probeId);
+  const deterministic = idForQuestion({ subject: 'Business Law', text: '  What is  law?  ' });
+  const deterministic2 = idForQuestion({ subject: 'Business Law', text: 'what is law?' });
   const checks = [
     [meta.storagePath === `${CONTENT}/${probeId}.json`, 'meta.storagePath must interpolate the doc id'],
     [content.storagePath === `${CONTENT}/${probeId}.json`, 'content.storagePath must interpolate the doc id'],
     [content.metadataDocId === probeId, 'content.metadataDocId must equal the meta doc id'],
     [!JSON.stringify(meta).includes('{id}') && !JSON.stringify(content).includes('{id}'), 'no literal {id} placeholder may survive'],
+    [typeof meta.previewText === 'string' && meta.previewText.length <= 160, 'meta.previewText must be ≤160 chars'],
+    [Array.isArray(meta.searchKeywords) && meta.searchKeywords.length > 0, 'meta.searchKeywords must be non-empty'],
+    [meta.searchKeywords.every((k) => k === k.toLowerCase() && k.length <= 20), 'searchKeywords must be lowercased ≤20 chars'],
+    [deterministic === deterministic2, 'idForQuestion must be deterministic (whitespace/case collapsed)'],
+    [deterministic.length === 20 && /^[0-9a-f]+$/.test(deterministic), 'idForQuestion must be 20 hex chars'],
   ];
   const failed = checks.filter(([ok]) => !ok).map(([, msg]) => msg);
   if (failed.length) {
@@ -219,22 +276,38 @@ function buildApp(admin) {
       }),
     });
   }
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  // Also supports gcloud ADC (gcloud auth application-default login) without env var
+  try {
     return admin.initializeApp({ credential: admin.credential.applicationDefault() });
+  } catch (e) {
+    console.error(
+      'No Firebase credentials found. Set FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY, or run: gcloud auth application-default login --project vriddhi-academic'
+    );
+    console.error('  Detail:', e.message);
+    process.exit(1);
   }
-  console.error(
-    'Set FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY, or GOOGLE_APPLICATION_CREDENTIALS.'
-  );
-  process.exit(1);
 }
 
 async function main() {
   selfCheckIdWiring();
   const args = process.argv.slice(2);
   const write = args.includes('--write');
-  const subjectFilter = (args.find((a) => a.startsWith('--subject=')) || '').split('=')[1];
+  // support both --subject="X" and --subject "X"
+  let subjectFilter = (args.find((a) => a.startsWith('--subject=')) || '').split('=')[1];
+  if (!subjectFilter) {
+    const idx = args.indexOf('--subject');
+    if (idx !== -1 && args[idx + 1] && !args[idx + 1].startsWith('--')) subjectFilter = args[idx + 1];
+  }
+  if (subjectFilter) subjectFilter = subjectFilter.trim();
 
-  const all = loadQuestions().filter((q) => !subjectFilter || q.subject === subjectFilter);
+  const allRaw = loadQuestions();
+  const all = allRaw.filter((q) => !subjectFilter || String(q.subject).trim().toLowerCase() === subjectFilter.toLowerCase());
+  if (subjectFilter && !all.length) {
+    console.log(`No questions found for subject "${subjectFilter}". Available subjects:`);
+    const avail = [...new Set(allRaw.map((q) => q.subject))].sort();
+    for (const s of avail) console.log(`  - ${s}`);
+    return;
+  }
   if (!all.length) {
     console.log('No questions found. Check content/question-banks/.');
     return;
@@ -245,8 +318,25 @@ async function main() {
   console.log(`Loaded ${all.length} questions across ${Object.keys(bySubject).length} subjects:`);
   for (const [s, n] of Object.entries(bySubject)) console.log(`  - ${s}: ${n}`);
 
+  // Deduplicate by content-addressed id so a re-run is an update, not a duplicate.
+  const deduped = new Map();
+  for (const q of all) {
+    const id = idForQuestion(q);
+    if (!deduped.has(id)) deduped.set(id, q);
+  }
+  if (deduped.size !== all.length) {
+    console.log(`  (deduped ${all.length - deduped.size} duplicate texts → ${deduped.size} unique)`);
+  }
+  const uniqueQuestions = Array.from(deduped.entries()).map(([id, q]) => ({ id, q }));
+
   if (!write) {
     console.log('\nDry run — pass --write to write to Firestore. (Credentials required only for --write.)');
+    console.log(`Would write ${uniqueQuestions.length} unique questions (content-addressed ids).`);
+    const sample = uniqueQuestions.slice(0, 3);
+    for (const { id, q } of sample) {
+      const meta = toMeta(q, id);
+      console.log(`  sample ${id}: ${q.subject} / ${q.topic} — preview="${meta.previewText.slice(0, 60)}..." keywords=${meta.searchKeywords.slice(0, 4).join(',')}`);
+    }
     return;
   }
 
@@ -255,24 +345,39 @@ async function main() {
   const db = admin.firestore();
   const now = new Date().toISOString();
   const BATCH = 400; // Firestore batch cap is 500 writes
-  let total = 0;
 
-  for (let i = 0; i < all.length; i += Math.floor(BATCH / 3)) {
-    const chunk = all.slice(i, i + Math.floor(BATCH / 3));
+  // Pre-flight: count existing docs so the operator can see idempotency.
+  try {
+    const existing = await db.collection(META).count().get();
+    const count = existing.data().count;
+    console.log(`Pre-flight: ${count} existing docs in ${META} (re-run will update, not duplicate).`);
+  } catch {
+    try {
+      const snap = await db.collection(META).limit(1).get();
+      console.log(`Pre-flight: ${META} readable (count aggregation not available), sample ${snap.size} doc(s) found.`);
+    } catch (e) {
+      console.log(`Pre-flight count skipped: ${e.message}`);
+    }
+  }
+
+  let total = 0;
+  const chunkSize = Math.floor(BATCH / 3);
+  for (let i = 0; i < uniqueQuestions.length; i += chunkSize) {
+    const chunk = uniqueQuestions.slice(i, i + chunkSize);
     const batch = db.batch();
-    for (const q of chunk) {
-      const metaRef = db.collection(META).doc();
-      const metaId = metaRef.id;
-      batch.set(metaRef, toMeta(q, metaId));
-      batch.set(db.collection(CONTENT).doc(metaId), toContent(q, metaId));
-      batch.set(db.collection(REVIEWS).doc(), toReview(metaId, now));
+    for (const { id: metaId, q } of chunk) {
+      // Deterministic ids make re-runs idempotent (set overwrites).
+      batch.set(db.collection(META).doc(metaId), toMeta(q, metaId), { merge: false });
+      batch.set(db.collection(CONTENT).doc(metaId), toContent(q, metaId), { merge: false });
+      // Review doc id is also deterministic (metaId) so re-runs don't create duplicate reviews.
+      batch.set(db.collection(REVIEWS).doc(metaId), toReview(metaId, now), { merge: false });
     }
     await batch.commit();
     total += chunk.length;
-    console.log(`  seeded ${total}/${all.length} questions…`);
+    console.log(`  seeded ${total}/${uniqueQuestions.length} questions…`);
   }
 
-  console.log(`Done. Seeded ${total} questions into the universal question bank (public + free).`);
+  console.log(`Done. Seeded ${total} questions into the universal question bank (public + free, content-addressed).`);
 }
 
 main().catch((e) => {

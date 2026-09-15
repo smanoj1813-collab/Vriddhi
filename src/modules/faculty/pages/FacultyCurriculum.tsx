@@ -6,10 +6,11 @@
 import React, { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, BookOpen, Clock, GraduationCap, Calendar, CheckCircle,
+  ArrowLeft, BookOpen, Clock, GraduationCap, Calendar, CheckCircle, ClipboardList,
   AlertTriangle, ChevronDown, ChevronUp, Layers, MapPin, Users,
-  RefreshCw, Loader2, Search, Play, FileText, Timer
+  RefreshCw, Loader2, Search, Play, FileText, Timer, Sparkles, Wand2
 } from 'lucide-react'
+import { openAIChatWithQuery } from '@/shared/components/FloatingAIChatWidget'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import type { ParsedModule, FacultyCurriculumView, FacultyScheduleItem, FacultyCurriculumStats } from '../types/curriculum'
@@ -67,6 +68,44 @@ export default function FacultyCurriculum() {
 
   const todaySchedule = useMemo(() => getTodaySchedule(), [getTodaySchedule])
   const upcomingSchedule = useMemo(() => getUpcomingSchedule(), [getUpcomingSchedule])
+
+  // ─── AI helpers — one-stop from curriculum to concept help / question generation
+  const askAI = (topic: string, subject: string) => {
+    const t = topic?.trim() || subject
+    openAIChatWithQuery(`Explain "${t}" for ${subject} — definition, intuition, a worked example and common exam traps. Keep it concise with Bloom tags where relevant.`)
+  }
+  const generateFromCurriculum = (subject: string, topic: string) => {
+    navigate(`/faculty/ai-questions?subject=${encodeURIComponent(subject)}&topic=${encodeURIComponent(topic)}`)
+  }
+  // Optional assignment creation from curriculum — not mandatory; pre-fills assignment form via query
+  const createAssignmentFromCurriculum = (course: FacultyCurriculumView, mod?: ParsedModule) => {
+    const params = new URLSearchParams()
+    params.set('create', '1')
+    params.set('courseId', course.courseId)
+    if (course.courseName) params.set('subject', course.courseName)
+    const topic = mod?.title || mod?.moduleName || mod?.topics?.[0] || ''
+    if (topic) params.set('topic', topic)
+    if (mod?.id) params.set('moduleId', mod.id)
+    if (course.branch) params.set('branch', course.branch)
+    if (course.batch) params.set('batch', course.batch)
+    if ((course as any).division) params.set('division', (course as any).division)
+    if ((course as any).semester) params.set('semester', String((course as any).semester))
+    // assignment linker in FacultyAssignments will pick these up and enable curriculum link
+    navigate(`/faculty/assignments?${params.toString()}`)
+  }
+  const createAssignmentFromSchedule = (cls: FacultyScheduleItem) => {
+    const course = curriculum.find((c: FacultyCurriculumView) => c.courseName === cls.subject || c.courseCode === cls.subjectCode)
+    const params = new URLSearchParams()
+    params.set('create', '1')
+    if (course) params.set('courseId', course.courseId)
+    params.set('subject', cls.subject)
+    params.set('branch', cls.branch)
+    params.set('batch', cls.batch)
+    params.set('division', cls.division || '')
+    params.set('topic', (cls.topicsPlanned?.[0] || cls.subject))
+    if ((cls as any).scheduleId) params.set('scheduleId', (cls as any).scheduleId)
+    navigate(`/faculty/assignments?${params.toString()}`)
+  }
 
   // ─── Loading State ───────────────────────────────────────────────────
   if (loading && curriculum.length === 0) {
@@ -184,6 +223,12 @@ export default function FacultyCurriculum() {
                 <div className="mt-2 text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
                   {cls.branch} · {cls.batch} · Sem {cls.semester}
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); createAssignmentFromSchedule(cls) }}
+                  className="mt-2 w-full px-2 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1"
+                >
+                  <ClipboardList className="w-3 h-3" /> Create Assignment (optional)
+                </button>
               </div>
             ))}
           </div>
@@ -308,18 +353,41 @@ export default function FacultyCurriculum() {
                                   {mod.topics && mod.topics.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       {mod.topics.slice(0, 3).map((topic, i) => (
-                                        <span
+                                        <button
                                           key={i}
-                                          className="text-xs px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                                          onClick={(e) => { e.stopPropagation(); askAI(topic, course.courseName) }}
+                                          title={`Ask AI about ${topic}`}
+                                          className="text-xs px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
                                         >
                                           {topic}
-                                        </span>
+                                        </button>
                                       ))}
                                       {mod.topics.length > 3 && (
                                         <span className="text-xs text-slate-500 dark:text-slate-400">+{mod.topics.length - 3} more</span>
                                       )}
                                     </div>
                                   )}
+                                  <div className="flex gap-1.5 mt-2">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); generateFromCurriculum(course.courseName, mod.topics?.[0] || mod.title || mod.moduleName || course.courseName) }}
+                                      className="flex-1 px-2 py-1 rounded-md text-[11px] font-medium bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors flex items-center justify-center gap-1"
+                                    >
+                                      <Wand2 className="w-3 h-3" /> Generate Qs
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); askAI(mod.title || mod.moduleName || course.courseName, course.courseName) }}
+                                      className="flex-1 px-2 py-1 rounded-md text-[11px] font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors flex items-center justify-center gap-1"
+                                    >
+                                      <Sparkles className="w-3 h-3" /> Ask AI
+                                    </button>
+                                  </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); createAssignmentFromCurriculum(course, mod) }}
+                                    title="Create assignment linked to this module (optional — you can still schedule without it)"
+                                    className="mt-1.5 w-full px-2 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1"
+                                  >
+                                    <ClipboardList className="w-3 h-3" /> Create Assignment
+                                  </button>
                                 </div>
                               ))}
                             </div>
@@ -451,22 +519,24 @@ export default function FacultyCurriculum() {
 
                 {mod.topics && mod.topics.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-2">Topics:</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-2">Topics (tap to ask AI):</p>
                     <div className="flex flex-wrap gap-1.5">
                       {mod.topics.map((topic, i) => (
-                        <span
+                        <button
                           key={i}
-                          className="text-xs px-2 py-1 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                          onClick={() => askAI(topic, selectedCourseData.courseName)}
+                          title={`Ask AI about ${topic}`}
+                          className="text-xs px-2 py-1 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
                         >
                           {topic}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   </div>
                 )}
 
                 {mod.learningOutcomes && mod.learningOutcomes.length > 0 && (
-                  <div>
+                  <div className="mb-3">
                     <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-2">Learning Outcomes:</p>
                     <ul className="space-y-1">
                       {mod.learningOutcomes.map((outcome, i) => (
@@ -478,6 +548,27 @@ export default function FacultyCurriculum() {
                     </ul>
                   </div>
                 )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => generateFromCurriculum(selectedCourseData.courseName, mod.topics?.[0] || mod.title || mod.moduleName || selectedCourseData.courseName)}
+                    className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" /> Generate Questions
+                  </button>
+                  <button
+                    onClick={() => askAI(mod.title || mod.moduleName || selectedCourseData.courseName, selectedCourseData.courseName)}
+                    className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> Ask AI
+                  </button>
+                </div>
+                <button
+                  onClick={() => createAssignmentFromCurriculum(selectedCourseData, mod)}
+                  title="Create assignment linked to this module (optional — scheduling without assignment stays valid)"
+                  className="mt-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1"
+                >
+                  <ClipboardList className="w-3.5 h-3.5" /> Create Assignment for this Module (optional)
+                </button>
               </div>
             ))}
           </div>
@@ -601,6 +692,15 @@ export default function FacultyCurriculum() {
                       </div>
                     </div>
                   )}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => createAssignmentFromSchedule(cls)}
+                      className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1"
+                    >
+                      <ClipboardList className="w-3.5 h-3.5" /> Create Assignment (optional)
+                    </button>
+                    <span className="text-[11px] text-slate-500 self-center">Scheduling without assignment is valid</span>
+                  </div>
                 </div>
               ))}
             </div>

@@ -80,6 +80,7 @@ import FacultyPaperLinker from '@/modules/admin/components/question-bank/Faculty
 import QuestionPDFExport from '@/modules/admin/components/question-bank/QuestionPDFExport';
 import QuestionManager from '../components/QuestionManager';
 import QuestionUploadEditor from '@/shared/components/question-paper/QuestionUploadEditor';
+import UniversalQuestionBank from '@/modules/admin/components/UniversalQuestionBank';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -406,12 +407,13 @@ const FacultyQuestionBank: React.FC = () => {
       </Box>
 
       <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(_e, newValue) => setTabValue(newValue)} indicatorColor="primary" textColor="primary">
+        <Tabs value={tabValue} onChange={(_e, newValue) => setTabValue(newValue)} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
           <Tab label="All Questions" />
           <Tab label="My Questions" />
           <Tab label="PYQ Questions" />
           <Tab label="Linked Papers" />
           <Tab label="Assessment Pool" />
+          <Tab label="Universal Bank" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}></TabPanel>
@@ -427,8 +429,17 @@ const FacultyQuestionBank: React.FC = () => {
         <TabPanel value={tabValue} index={4}>
           <QuestionManager collegeId={collegeId} />
         </TabPanel>
+        <TabPanel value={tabValue} index={5}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Browse the platform’s universal pool (public + your college). College-private questions from other colleges are hidden. You can preview and select for papers.
+          </Typography>
+        </TabPanel>
       </Paper>
 
+      {tabValue === 5 ? (
+        <UniversalQuestionBank showSubmitButton={false} />
+      ) : (
+        <>
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
           <Box sx={{ flex: '1 1 300px', minWidth: 200 }}>
@@ -630,7 +641,9 @@ const FacultyQuestionBank: React.FC = () => {
             <Typography variant="body2" color="text.secondary">All {questions.length} questions loaded</Typography>
           )}
         </Box>
-      </Paper>
+        </Paper>
+        </>
+      )}
 
       {/* FacultyQuestionForm in Dialog */}
       <Dialog open={formOpen} onClose={() => { setFormOpen(false); setEditingQuestion(null); }} maxWidth="md" fullWidth>

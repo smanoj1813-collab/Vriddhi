@@ -23,6 +23,7 @@ const SystemManagement = lazy(() => import('./pages/SystemManagement'));
 const UserImport = lazy(() => import('./pages/UserImport'));
 const AccessControl = lazy(() => import('./pages/AccessControl'));
 const BulkCredentialResetPage = lazy(() => import('./pages/BulkCredentialResetPage'));
+const SuperAdminQuestionBank = lazy(() => import('./pages/SuperAdminQuestionBank'));
 
 export const superadminRoutes: RouteObject[] = [
   {
@@ -54,6 +55,7 @@ export const superadminRoutes: RouteObject[] = [
       { path: 'billing', element: <SubscriptionBilling /> },
       { path: 'health', element: <SystemHealthMonitor /> },
       { path: 'system-management', element: <SystemManagement /> },
+      { path: 'question-bank', element: <SuperAdminQuestionBank /> },
     ],
   },
 ];

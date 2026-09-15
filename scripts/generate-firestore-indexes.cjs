@@ -95,6 +95,14 @@ const KNOWN_INDEXES = [
   // ─── QuestionBank Meta ───
   { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
   { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'subjectId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'topicId', order: 'ASCENDING' }, { fieldPath: 'difficulty', order: 'ASCENDING' }, { fieldPath: 'status', order: 'ASCENDING' }] },
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'subjectId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'status', order: 'ASCENDING' }, { fieldPath: 'difficulty', order: 'ASCENDING' }] },
+  // Visibility-gated queries (cheap gate vs exact two-query merge — handoff §3)
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'visibility', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'visibility', order: 'ASCENDING' }, { fieldPath: 'subjectId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'createdBy.collegeId', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
+  { collectionGroup: 'questionBank_meta', fields: [{ fieldPath: 'createdBy.collegeId', order: 'ASCENDING' }, { fieldPath: 'visibility', order: 'ASCENDING' }, { fieldPath: 'createdAt', order: 'DESCENDING' }] },
 ];
 
 function dedupeIndexes(indexes) {

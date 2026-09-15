@@ -83,6 +83,34 @@ function normalizeQuestionContent(data: any, id: string): QuestionContent {
   };
 }
 
+function buildPreviewText(text: string, maxLen = 160): string {
+  if (!text) return '';
+  return text.replace(/\s+/g, ' ').trim().slice(0, maxLen);
+}
+
+function buildSearchKeywords(text: string, subjectId: string, topicId: string, tags: string[]): string[] {
+  const tokens = new Set<string>();
+  const add = (value: string) => {
+    if (!value) return;
+    value
+      .toLowerCase()
+      .split(/\s+/)
+      .forEach((word) => {
+        const cleaned = word.replace(/[^a-z0-9]/g, '');
+        if (cleaned) tokens.add(cleaned.substring(0, 20));
+        // also keep the raw lowercased word truncated (handles non-alphanumeric stripped cases)
+        const raw = word.toLowerCase().substring(0, 20);
+        if (raw && raw !== cleaned.substring(0, 20)) tokens.add(raw);
+      });
+  };
+  add(text);
+  add(subjectId);
+  add(topicId);
+  (tags || []).forEach((t) => add(t));
+  // Also add bigrams? keep minimal. Dedupe done via Set.
+  return Array.from(tokens).filter(Boolean);
+}
+
 function idFromStoragePath(path: string): string {
   if (!path) return '';
   const parts = path.split('/');
@@ -203,6 +231,9 @@ export const questionStorageApi = {
       const difficulty = input.meta.difficulty || 'medium';
       const marks = input.meta.marks ?? 1;
       const language = input.meta.language || 'en';
+      const questionText = input.content.questionText || '';
+      const previewText = buildPreviewText(questionText);
+      const searchKeywords = buildSearchKeywords(questionText, subjectId, topicId, tags);
 
       const meta: QuestionMetadata = {
         ...input.meta,
@@ -219,6 +250,8 @@ export const questionStorageApi = {
         sharedWith: input.meta.sharedWith || [],
         source,
         createdBy,
+        previewText,
+        searchKeywords,
         createdAt: now,
         updatedAt: now,
       };

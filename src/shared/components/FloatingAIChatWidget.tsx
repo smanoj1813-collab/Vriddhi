@@ -57,6 +57,22 @@ Ask me anything in plain language — a concept you want explained, your attenda
     }
   }, [messages, isOpen]);
 
+  // Allow curriculum/topic cards to deep-link into the assistant: dispatch
+  // window event `vriddhi:open-ai-chat` with { query: string }
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { query?: string };
+      const q = detail?.query?.trim();
+      if (!q) return;
+      setIsOpen(true);
+      setInput(q);
+      // Send on next tick so input state settles, or directly invoke handleSend
+      setTimeout(() => handleSend(q), 80);
+    };
+    window.addEventListener('vriddhi:open-ai-chat' as any, handler as EventListener);
+    return () => window.removeEventListener('vriddhi:open-ai-chat' as any, handler as EventListener);
+  }, []);
+
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
     if (!text || loading) return;
@@ -322,14 +338,19 @@ function getWelcomeHint(role: string): string {
     case 'student':
       return 'I explain concepts, point you to study notes and scheduled tests, and help you book office hours with a professor.';
     case 'faculty':
-      return 'Ask about attendance, your schedule and reschedules, question papers, or managing student office-hour requests.';
+      return 'Ask about your curriculum, topic explanations, attendance, schedule/reschedules, question papers, or student office-hour requests.';
     case 'hod':
-      return 'Ask about cohort analytics, pending approvals and departmental intervention options.';
+      return 'Ask about cohort analytics, curriculum coverage, pending approvals and departmental intervention options.';
     case 'principal':
     case 'admin':
     case 'superadmin':
-      return 'Ask about institution-wide attendance, fee collection, exam operations and analytics.';
+      return 'Ask about institution-wide attendance, curriculum mapping, fee collection, exam operations and analytics.';
     default:
       return 'Ask a question and I will point you to the right screen.';
   }
+}
+
+// Helper for inline curriculum cards to open the floating widget with a prefilled query.
+export function openAIChatWithQuery(query: string) {
+  window.dispatchEvent(new CustomEvent('vriddhi:open-ai-chat', { detail: { query } }));
 }

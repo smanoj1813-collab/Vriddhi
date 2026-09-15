@@ -119,6 +119,10 @@ export interface QuestionMetadata {
   createdBy: CreatedBy;
   createdAt: string;
   updatedAt: string;
+  /** Denormalised preview for list views — avoids reading questionBank_content. */
+  previewText?: string;
+  /** Tokenised search index: lowercased words truncated to 20 chars (see questionBankApi search). */
+  searchKeywords?: string[];
 }
 
 // ============================================================
@@ -241,7 +245,10 @@ export interface QuestionFilter {
   status?: ReviewStatus;
   tags?: string[];
   searchQuery?: string;
-  collegeId?: string;
+  /** Viewer context for visibility gating — the college whose view we render. */
+  collegeId?: string | null;
+  /** When true the viewer is a superadmin and sees all visibilities. */
+  viewerIsSuperadmin?: boolean;
 }
 
 export interface PaperFilter {
