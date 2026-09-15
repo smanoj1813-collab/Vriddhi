@@ -61,6 +61,8 @@ import {
   type ReviewStatus,
 } from '../../admin/types/universalQuestionBank';
 import QuestionSubmissionForm from './QuestionSubmissionForm';
+import { paperStorageApi } from '../api/cloudStorageApi';
+import { useNavigate } from 'react-router-dom';
 import QuestionPDFExport from './question-bank/QuestionPDFExport';
 import FacultyBankAdmin from './question-bank/FacultyBankAdmin';
 import * as questionBankService from '../../admin/services/questionBankAPI';
@@ -598,6 +600,17 @@ export function UniversalQuestionBank({
   const [searchText, setSearchText] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  // Internal selection when parent doesn't control it (faculty/principal/superadmin standalone)
+  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
+  const [paperDialogOpen, setPaperDialogOpen] = useState(false);
+  const [paperTitle, setPaperTitle] = useState('');
+  const [paperSubject, setPaperSubject] = useState('');
+  const [paperDuration, setPaperDuration] = useState(60);
+  const [paperCreating, setPaperCreating] = useState(false);
+  const [paperError, setPaperError] = useState<string | null>(null);
+  const [paperSuccess, setPaperSuccess] = useState<{ id: string; title: string } | null>(null);
 
   // Derive picker options from real bank data, not a hardcoded demo list.
   // Falls back to a minimal generic set only before the first load.
@@ -690,10 +703,28 @@ export function UniversalQuestionBank({
     setPreviewOpen(true);
   };
 
+  const isExternallyControlled = typeof onQuestionSelect === 'function';
+  const effectiveSelectedIds: Set<string> = isExternallyControlled
+    ? new Set(selectedQuestionIds)
+    : internalSelectedIds;
+
   const handleQuestionClick = (questionId: string) => {
-    if (onQuestionSelect) {
-      onQuestionSelect(questionId);
+    if (isExternallyControlled) {
+      onQuestionSelect!(questionId);
+      if (onAddToPaper) onAddToPaper(questionId);
+    } else {
+      setInternalSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(questionId)) next.delete(questionId);
+        else next.add(questionId);
+        return next;
+      });
     }
+  };
+
+  // Bookmark button also toggles selection as quick add
+  const handleBookmarkToggle = (questionId: string) => {
+    handleQuestionClick(questionId);
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
@@ -704,7 +735,100 @@ export function UniversalQuestionBank({
     searchUniversalQuestions(buildViewerFilter(filter), 1);
   };
 
-  const isQuestionSelected = (id: string) => selectedQuestionIds.includes(id);
+  const isQuestionSelected = (id: string) => effectiveSelectedIds.has(id);
+
+  const selectedCount = effectiveSelectedIds.size;
+  const selectedIdsArray = Array.from(effectiveSelectedIds);
+
+  const handleClearSelection = () => {
+    if (isExternallyControlled) {
+      selectedIdsArray.forEach((id) => onQuestionSelect!(id));
+    } else {
+      setInternalSelectedIds(new Set());
+    }
+  };
+
+  const handleOpenPaperDialog = () => {
+    const first = questions.find((q: any) => effectiveSelectedIds.has((q as any).id));
+    const subj = (first as any)?.subjectId || filter.subjectId || subjects[0]?.id || 'General';
+    setPaperSubject(subj);
+    setPaperTitle(subj ? `${subj} Paper — ${new Date().toLocaleDateString()}` : 'New Paper');
+    setPaperDuration(60);
+    setPaperError(null);
+    setPaperSuccess(null);
+    setPaperDialogOpen(true);
+  };
+
+  const handleCreatePaperFromSelection = async () => {
+    if (!paperTitle.trim()) {
+      setPaperError('Title is required');
+      return;
+    }
+    if (selectedCount === 0) {
+      setPaperError('Select at least one question');
+      return;
+    }
+    setPaperCreating(true);
+    setPaperError(null);
+    try {
+      const now = new Date().toISOString();
+      const refs = selectedIdsArray.map((qid, idx) => {
+        const meta: any = questions.find((q: any) => (q as any).id === qid);
+        return {
+          questionId: qid,
+          order: idx + 1,
+          marks: meta?.marks || 2,
+          isRequired: true,
+        };
+      });
+      const totalMarks = refs.reduce((s: number, r: any) => s + r.marks, 0);
+      const dist: Record<string, number> = { easy: 0, medium: 0, hard: 0 };
+      const topicDist: Record<string, number> = {};
+      selectedIdsArray.forEach((qid) => {
+        const meta: any = questions.find((q: any) => (q as any).id === qid);
+        if (meta?.difficulty) dist[meta.difficulty] = (dist[meta.difficulty] || 0) + 1;
+        if (meta?.topicId) topicDist[meta.topicId] = (topicDist[meta.topicId] || 0) + 1;
+      });
+      const paper: any = {
+        id: '',
+        title: paperTitle.trim(),
+        description: `Created from Universal Bank selection (${selectedCount} questions)`,
+        subjectId: paperSubject || filter.subjectId || 'General',
+        topicIds: Object.keys(topicDist),
+        questions: refs,
+        totalQuestions: refs.length,
+        totalMarks,
+        duration: paperDuration,
+        difficultyDistribution: dist,
+        topicDistribution: topicDist,
+        createdBy: {
+          userId: user?.uid || user?.id || '',
+          userName: user?.name || user?.displayName || 'Unknown',
+          collegeId: collegeId || null,
+          collegeName: '',
+          role: (user?.role as any) || 'faculty',
+        },
+        visibility: isSuperadmin ? 'public' : 'college_only',
+        sharedWith: [],
+        isTemplate: false,
+        status: 'draft',
+        storagePath: '',
+        usageStats: { timesUsed: 0, collegesUsing: [] },
+        tags: ['universal-selection'],
+        createdAt: now,
+        updatedAt: now,
+      };
+      const res = await paperStorageApi.uploadPaper(paper);
+      if (!res.success || !res.data) throw new Error(res.error || 'Failed to create paper');
+      const newId = res.data.storagePath.split('/')[1] || '';
+      setPaperSuccess({ id: newId, title: paper.title });
+      if (!isExternallyControlled) setInternalSelectedIds(new Set());
+    } catch (e: any) {
+      setPaperError(e.message || 'Failed to create paper');
+    } finally {
+      setPaperCreating(false);
+    }
+  };
 
   const toMetadata = (q: any): QuestionMetadata => ({
     id: q.id || '',
@@ -868,8 +992,8 @@ export function UniversalQuestionBank({
                     isSelected={isQuestionSelected((q as any).id || '')}
                     onSelect={() => handleQuestionClick((q as any).id || '')}
                     onPreview={() => handlePreview((q as any).id || '')}
-                    onAddToCollection={() => {}}
-                    isInCollection={false}
+                    onAddToCollection={() => handleBookmarkToggle((q as any).id || '')}
+                    isInCollection={isQuestionSelected((q as any).id || '')}
                   />
                 </Box>
               ))}
@@ -887,6 +1011,114 @@ export function UniversalQuestionBank({
               />
             </Box>
           )}
+
+          {/* Selection bar — one-stop paper wiring */}
+          {selectedCount > 0 && (
+            <MuiPaper
+              sx={{
+                position: 'sticky',
+                bottom: 16,
+                mt: 3,
+                p: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 1.5,
+                border: '1px solid',
+                borderColor: 'primary.light',
+                bgcolor: 'primary.light',
+                color: 'primary.contrastText',
+                boxShadow: 6,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Chip label={`${selectedCount} selected`} color="primary" sx={{ bgcolor: 'white', color: 'primary.main', fontWeight: 700 }} />
+                <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
+                  {selectedCount === 1 ? '1 question ready for paper' : `${selectedCount} questions ready for paper`}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button size="small" variant="outlined" onClick={handleClearSelection} sx={{ bgcolor: 'white' }}>
+                  Clear
+                </Button>
+                <Button size="small" variant="contained" color="success" onClick={handleOpenPaperDialog}>
+                  Create Paper
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  sx={{ bgcolor: 'white', color: 'primary.main' }}
+                  onClick={() => {
+                    if (collegeId) {
+                      navigate('/admin/paper-generator', { state: { universalSelection: selectedIdsArray } });
+                    } else {
+                      handleOpenPaperDialog();
+                    }
+                  }}
+                >
+                  Go to Generator
+                </Button>
+              </Box>
+            </MuiPaper>
+          )}
+
+          {/* Create Paper from selection — one-stop */}
+          <Dialog open={paperDialogOpen} onClose={() => setPaperDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Create Paper from {selectedCount} questions</DialogTitle>
+            <DialogContent dividers>
+              {paperSuccess ? (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Paper “{paperSuccess.title}” created (ID: {paperSuccess.id}). You can preview it in Papers → Generated.
+                </Alert>
+              ) : null}
+              {paperError && <Alert severity="error" sx={{ mb: 2 }}>{paperError}</Alert>}
+              <Stack spacing={2} sx={{ mt: 1 }}>
+                <TextField label="Paper Title *" value={paperTitle} onChange={(e) => setPaperTitle(e.target.value)} fullWidth autoFocus />
+                <FormControl fullWidth>
+                  <InputLabel>Subject</InputLabel>
+                  <Select value={paperSubject} label="Subject" onChange={(e) => setPaperSubject(e.target.value)}>
+                    {subjects.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField label="Duration (minutes)" type="number" value={paperDuration} onChange={(e) => setPaperDuration(parseInt(e.target.value) || 60)} slotProps={{ htmlInput: { min: 10 } }} />
+                <Typography variant="caption" color="text.secondary">
+                  {selectedCount} questions • Total marks ~{selectedIdsArray.reduce((s, id) => { const m: any = questions.find((q: any) => (q as any).id === id); return s + (m?.marks || 2); }, 0)} • Visibility: {isSuperadmin ? 'public' : 'college_only'}
+                </Typography>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPaperDialogOpen(false)} disabled={paperCreating}>Cancel</Button>
+              {paperSuccess ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      setPaperDialogOpen(false);
+                      if (isSuperadmin) navigate('/superadmin/question-bank');
+                      else if (user?.role === 'faculty') navigate('/faculty/papers');
+                      else navigate('/admin/paper-generator');
+                    }}
+                  >
+                    Done
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      navigate('/admin/paper-generator');
+                    }}
+                  >
+                    View Papers
+                  </Button>
+                </>
+              ) : (
+                <Button variant="contained" onClick={handleCreatePaperFromSelection} disabled={paperCreating || selectedCount === 0}>
+                  {paperCreating ? <CircularProgress size={18} /> : 'Create Paper'}
+                </Button>
+              )}
+            </DialogActions>
+          </Dialog>
 
           {/* Preview Dialog */}
           <QuestionPreviewDialog

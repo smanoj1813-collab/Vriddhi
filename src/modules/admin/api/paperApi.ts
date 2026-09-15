@@ -61,6 +61,41 @@ export async function fetchPapers(
   const snap = await getDocs(q);
   let papers = snap.docs.map((d) => normalizePaper(d.data(), d.id));
 
+  // One-stop: also include universal papers (papers_universal) created from Universal Bank selection
+  try {
+    const universalRef = collection(db, 'papers_universal');
+    let uq: any = query(universalRef, where('createdBy.collegeId', '==', collegeId), orderBy('createdAt', 'desc'));
+    if (filters?.status) {
+      uq = query(universalRef, where('createdBy.collegeId', '==', collegeId), where('status', '==', filters.status), orderBy('createdAt', 'desc'));
+    }
+    const usnap = await getDocs(uq);
+    const universalPapers = usnap.docs.map((d) => {
+      const data: any = d.data();
+      return {
+        ...data,
+        id: d.id,
+        collegeId: data.createdBy?.collegeId || collegeId,
+        createdBy: typeof data.createdBy === 'object' ? data.createdBy?.userId || data.createdBy?.userId : data.createdBy,
+        createdByName: data.createdBy?.userName || data.createdByName || 'Unknown',
+        questionIds: (data.questions || []).map((q: any) => q.questionId),
+        linkedQuestionIds: (data.questions || []).map((q: any) => q.questionId),
+        totalQuestions: data.totalQuestions ?? (data.questions || []).length,
+        status: data.status || 'draft',
+        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
+        updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+      } as unknown as Paper;
+    });
+    papers = [...papers, ...universalPapers].sort((a: any, b: any) => {
+      const at = new Date(a.createdAt).getTime() || 0;
+      const bt = new Date(b.createdAt).getTime() || 0;
+      return bt - at;
+    });
+  } catch (e: any) {
+    if (!String(e?.message || '').includes('requires an index')) {
+      console.warn('[fetchPapers] universal merge skipped:', e?.message);
+    }
+  }
+
   if (filters?.search) {
     const searchLower = filters.search.toLowerCase();
     papers = papers.filter((p) => p.title.toLowerCase().includes(searchLower));
@@ -72,8 +107,28 @@ export async function fetchPapers(
 export async function getPaperById(paperId: string): Promise<Paper | null> {
   const docRef = doc(db, PAPERS_COLLECTION, paperId);
   const snap = await getDoc(docRef);
-  if (!snap.exists()) return null;
-  return normalizePaper(snap.data(), snap.id);
+  if (snap.exists()) return normalizePaper(snap.data(), snap.id);
+  try {
+    const uniRef = doc(db, 'papers_universal', paperId);
+    const uniSnap = await getDoc(uniRef);
+    if (uniSnap.exists()) {
+      const d: any = uniSnap.data();
+      return {
+        ...d,
+        id: uniSnap.id,
+        collegeId: d.createdBy?.collegeId || d.collegeId || '',
+        createdBy: d.createdBy?.userId || d.createdBy || '',
+        createdByName: d.createdBy?.userName || d.createdByName || 'Unknown',
+        questionIds: (d.questions || []).map((q: any) => q.questionId),
+        linkedQuestionIds: (d.questions || []).map((q: any) => q.questionId),
+        totalQuestions: d.totalQuestions ?? (d.questions || []).length,
+        status: d.status || 'draft',
+        createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate().toISOString() : d.createdAt,
+        updatedAt: d.updatedAt instanceof Timestamp ? d.updatedAt.toDate().toISOString() : d.updatedAt,
+      } as unknown as Paper;
+    }
+  } catch {}
+  return null;
 }
 
 export async function createPaper(
@@ -161,7 +216,45 @@ export async function getPaperQuestions(paperId: string): Promise<Question[]> {
     const snap = await getDoc(doc(db, 'questions', qid));
     if (snap.exists()) {
       result.push({ ...snap.data(), id: snap.id } as Question);
+      continue;
     }
+    try {
+      const uniSnap = await getDoc(doc(db, 'questionBank_content', qid));
+      if (uniSnap.exists()) {
+        const d: any = uniSnap.data();
+        result.push({
+          id: uniSnap.id,
+          text: d.questionText || d.text || '',
+          subject: d.subjectId || d.subject || '',
+          topic: d.topicId || d.topic || '',
+          type: d.questionType || d.type || 'mcq',
+          difficulty: d.difficulty || 'medium',
+          marks: d.marks ?? 1,
+          tags: d.tags || [],
+          status: d.status === 'approved' ? 'active' : d.status || 'active',
+          createdBy: d.createdBy?.userId || d.createdBy || '',
+          createdByName: d.createdBy?.userName || d.createdByName || 'Unknown',
+        } as unknown as Question);
+        continue;
+      }
+      const metaSnap = await getDoc(doc(db, 'questionBank_meta', qid));
+      if (metaSnap.exists()) {
+        const d: any = metaSnap.data();
+        result.push({
+          id: metaSnap.id,
+          text: d.previewText || d.text || '',
+          subject: d.subjectId || '',
+          topic: d.topicId || '',
+          type: d.questionType || 'mcq',
+          difficulty: d.difficulty || 'medium',
+          marks: d.marks ?? 1,
+          tags: d.tags || [],
+          status: 'active',
+          createdBy: d.createdBy?.userId || '',
+          createdByName: d.createdBy?.userName || 'Unknown',
+        } as unknown as Question);
+      }
+    } catch {}
   }
   return result;
 }
