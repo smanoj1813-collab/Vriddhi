@@ -1,9 +1,10 @@
 // src/modules/faculty/pages/FacultyAIQuestions.tsx
 // AI Question Studio: generate, EDIT every question, add manually, save to bank.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
-  Sparkles, Wand2, Loader2, Copy, Check, AlertCircle, Save, Plus, Trash2, Edit3, X,
+  Sparkles, Wand2, Loader2, Copy, Check, AlertCircle, Save, Plus, Trash2, Edit3, X, BookOpen, ArrowRight
 } from 'lucide-react';
 import { useAIQuestionGenerator } from '../../admin/hooks/useAIQuestionGenerator';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -33,8 +34,22 @@ export default function FacultyAIQuestions() {
   const { user } = useAuth();
   const { language: uiLanguage, t } = useLanguage();
   const { generate, saveAll, generating, saving, error } = useAIQuestionGenerator();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
+  const [prefilledBanner, setPrefilledBanner] = useState<string | null>(null);
+
+  // Prefill from curriculum → AI one-stop: /faculty/ai-questions?subject=X&topic=Y or location.state
+  useEffect(() => {
+    const qSubject = searchParams.get('subject') || (location.state as any)?.subject || '';
+    const qTopic = searchParams.get('topic') || (location.state as any)?.topic || '';
+    if (qSubject) setSubject(qSubject);
+    if (qTopic) setTopic(qTopic);
+    if (qSubject || qTopic) {
+      setPrefilledBanner(qTopic ? `Prefilled from curriculum: ${qSubject} — ${qTopic}` : `Prefilled from curriculum: ${qSubject}`);
+    }
+  }, [searchParams, location.state]);
   const [language, setLanguage] = useState(uiLanguage);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [count, setCount] = useState(5);
@@ -162,6 +177,21 @@ export default function FacultyAIQuestions() {
           </div>
         </div>
         {user?.name && <p className="text-xs text-slate-500 dark:text-slate-400">Signed in as {user.name}</p>}
+        {prefilledBanner && (
+          <div className="mt-3 p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center gap-2 text-sm text-violet-700 dark:text-violet-300">
+            <BookOpen size={16} className="text-violet-400 shrink-0" />
+            <span>{prefilledBanner}</span>
+            <button onClick={() => setPrefilledBanner(null)} className="ml-auto text-violet-400 hover:text-violet-600">×</button>
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a href="/faculty/curriculum" className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-teal-600 flex items-center gap-1">
+            <BookOpen size={14} /> My Curriculum <ArrowRight size={12} />
+          </a>
+          <a href="/faculty/topics" className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-teal-600 flex items-center gap-1">
+            <BookOpen size={14} /> Topics <ArrowRight size={12} />
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

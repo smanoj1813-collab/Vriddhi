@@ -56,6 +56,7 @@ import {
   Warning as WarningIcon,
   Refresh as RefreshIcon,
   ArrowForward as ArrowIcon,
+  AutoAwesome as AIIcon,
 } from '@mui/icons-material'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
@@ -314,6 +315,13 @@ const AdminCurriculum: React.FC = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<AIIcon />}
+            onClick={() => window.dispatchEvent(new CustomEvent('vriddhi:open-ai-chat', { detail: { query: 'Help me map unmapped curriculum courses to the right faculty — match each course to faculty who list that subject, and advise on batch/division assignment to avoid duplicate mappings. Keep it concise.' } }))}
+          >
+            Ask AI for mapping help
+          </Button>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}

@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { openAIChatWithQuery } from '@/shared/components/FloatingAIChatWidget'
 import { useAuth } from '../../auth/context/AuthContext'
 import {
   ArrowLeft, Plus, Search, BookOpen, Calendar, Clock, CheckCircle,
   AlertTriangle, Edit3, Trash2, Eye, ChevronDown, ChevronUp,
-  FileText, Layers, GraduationCap, RefreshCw, Loader2
+  FileText, Layers, GraduationCap, RefreshCw, Loader2, Sparkles, Wand2
 } from 'lucide-react'
 import { useTopics } from '../../../hooks/useTopics'
 import type { TopicStatus, StatusFilter, Topic, TopicStats, ReadStats } from '../../../hooks/useTopics'
@@ -74,6 +75,7 @@ const statusConfig: Record<StatusFilter, StatusConfigItem> = {
 type TopicFormData = Omit<Topic, 'id'>;
 
 export default function FacultyTopics() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { showError } = useNotification()
   const facultyId = user?.id || user?.uid || ''
@@ -143,6 +145,14 @@ export default function FacultyTopics() {
       return matchesSearch && matchesStatus
     })
   }, [bankTopics, search, statusFilter])
+
+  const askAI = (topic: string, subject: string) => {
+    openAIChatWithQuery(`Explain "${topic}" for ${subject} — definition, intuition, worked example and exam traps.`)
+  }
+  const generateForTopic = (topic: string, subject: string) => {
+    const subj = subject || topic
+    navigate(`/faculty/ai-questions?subject=${encodeURIComponent(subj)}&topic=${encodeURIComponent(topic)}`)
+  }
 
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -539,18 +549,30 @@ export default function FacultyTopics() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); generateForTopic(topic.title, topic.subject || topic.course || ''); }}
+                          className="flex-1 min-w-[110px] px-3 py-2 rounded-lg text-xs bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all flex items-center justify-center gap-1"
+                        >
+                          <Wand2 className="w-3 h-3" /> Generate Qs
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); askAI(topic.title, topic.subject || topic.course || ''); }}
+                          className="flex-1 min-w-[110px] px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-all flex items-center justify-center gap-1"
+                        >
+                          <Sparkles className="w-3 h-3" /> Ask AI
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); openEditModal(topic.id); }}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all flex items-center justify-center gap-1"
+                          className="flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all flex items-center justify-center gap-1"
                         >
                           <Edit3 className="w-3 h-3" /> Edit
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setExpandedTopic(null); }}
-                          className="flex-1 px-3 py-2 rounded-lg text-xs bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-1"
+                          className="px-3 py-2 rounded-lg text-xs bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-1"
                         >
-                          <Eye className="w-3 h-3" /> Collapse
+                          <Eye className="w-3 h-3" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(topic.id); }}
@@ -628,7 +650,7 @@ export default function FacultyTopics() {
             {visibleBankTopics.map((topic) => (
               <div
                 key={topic.id}
-                className="rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm p-4"
+                className="rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm p-4 flex flex-col"
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug">{topic.title}</p>
@@ -640,11 +662,25 @@ export default function FacultyTopics() {
                     {topic.covered ? 'Covered' : 'Active'}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400 mb-3">
                   {topic.subject && <span>Subject: {topic.subject}</span>}
                   {topic.course && <span>Course: {topic.course}</span>}
                   {topic.moduleNo && <span>Module {topic.moduleNo}{topic.moduleName ? ` — ${topic.moduleName}` : ''}</span>}
                   {topic.unit && <span>Unit {topic.unit}</span>}
+                </div>
+                <div className="flex gap-1.5 mt-auto">
+                  <button
+                    onClick={() => generateForTopic(topic.title, topic.subject || topic.course || '')}
+                    className="flex-1 px-2 py-1 rounded-md text-[11px] font-medium bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Wand2 className="w-3 h-3" /> Generate Qs
+                  </button>
+                  <button
+                    onClick={() => askAI(topic.title, topic.subject || topic.course || '')}
+                    className="flex-1 px-2 py-1 rounded-md text-[11px] font-medium bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" /> Ask AI
+                  </button>
                 </div>
               </div>
             ))}

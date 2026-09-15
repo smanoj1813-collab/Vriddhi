@@ -45,6 +45,7 @@ type ChatIntent =
   | 'schedule'
   | 'library'
   | 'facultyConnect'
+  | 'curriculum'
   | 'study'
   | 'general';
 
@@ -76,6 +77,9 @@ function detectIntent(text: string): ChatIntent {
     return 'schedule';
   }
   if (has('library', 'borrow', 'isbn', 'return date', 'due date', 'issued book', 'e-resource')) return 'library';
+  // Curriculum / mapping — must be before generic 'study' so syllabus-mapping queries land here
+  if (has('my curriculum', 'assigned curriculum', 'assigned course', 'course mapping', 'faculty mapping', 'curriculum mapping', 'curriculum map', 'my courses', 'mapped course', 'branch semester', 'semester curriculum')) return 'curriculum';
+  if (has('curriculum', 'syllabus mapping', 'module coverage', 'learning outcome')) return 'curriculum';
   if (has('explain', 'concept', 'understand', 'how does', 'what is', 'difference between', 'example', 'derivation', 'definition', 'revise', 'syllabus', 'notes')) {
     return 'study';
   }
@@ -191,6 +195,21 @@ export function deriveChatActions(query: string, role?: string): ChatAction[] {
         push(act('appointments', 'Manage Office Hours', '/faculty/appointments', 'faculty'));
       } else {
         push(act('appointments', 'Department Overview', '/admin/hod-dashboard', 'faculty'));
+      }
+      break;
+
+    case 'curriculum':
+      if (isStudent) {
+        push(act('curriculum', 'My Curriculum', '/student/curriculum', 'materials'));
+        push(act('faculty', 'Ask Faculty about Syllabus', '/student/faculty-connect', 'faculty'));
+      } else if (isFaculty) {
+        push(act('curriculum', 'My Curriculum', '/faculty/curriculum', 'portal'));
+        push(act('topics', 'Topics & Modules', '/faculty/topics', 'portal'));
+        push(act('ai-questions', 'Generate Questions from Topic', '/faculty/ai-questions', 'paper'));
+      } else {
+        push(act('curriculum', 'Curriculum Mapping', '/admin/curriculum', 'portal'));
+        push(act('schedule', 'Class Schedule', '/admin/class-schedule', 'timetable'));
+        if (canAuthorPapers) push(act('question-bank', 'Question Bank', '/admin/question-bank', 'question-bank'));
       }
       break;
 
@@ -428,6 +447,31 @@ Question-bank curation, paper generation and the review queue are limited to **s
 - Administration does not act on individual student requests — they belong to the assigned professor.
 
 > **Key takeaway**: if a department shows repeated declines for the same subject, that is a mentoring-coverage gap rather than a scheduling problem.`;
+
+    case 'curriculum':
+      if (isFacultyLike) {
+        return `### 📘 Your Assigned Curriculum — Faculty View
+Hello **${name}**, your courses are assigned by the college admin from the central syllabus bank:
+
+- **My Curriculum** lists every course mapped to you — branch, semester, batch/division, credits, hours and the full module tree with topics and learning outcomes.
+- **Topics** merges those curriculum modules with your own lesson-plan ledger: each bank topic appears as *Planned* (or *Covered* once a class session marks it) and your hand-added topics sit alongside.
+- **AI assist — two clicks away**: on any module or topic choose **Ask AI** (explains the concept with an example) or **Generate Questions** (opens the AI Question Studio prefilled with that subject + topic so you can draft Bloom-tagged questions straight into the bank).
+
+> **Key takeaway**: use *My Curriculum* as the source of truth — if a course disappears, the mapping was removed in **Admin → Curriculum**; topics then reappear only after it is reassigned.`;
+      }
+      if (isStudent) {
+        return `### 📘 Curriculum & Syllabus
+- **Your syllabus**: the curriculum assigned to your college, broken into courses → modules → topics and mapped in **My Curriculum** (student view) and **Study Material** where faculty upload notes.
+- **Progress**: completed vs upcoming units are derived from scheduled class sessions.
+
+> **Key takeaway**: open the topic in your material and ask your professor during office hours if the published notes don't cover it.`;
+      }
+      return `### 📘 Curriculum Mapping — Admin View
+- **Assign from bank**: curricula arrive from the superadmin syllabus parser; open **Curriculum → Curriculum** to see each doc, its courses/modules and how many courses are already mapped.
+- **Map to faculty**: in the course row choose **Assign Faculty** — faculty are ranked by matching subjects they teach, and a warning appears if you pick someone who hasn't listed that subject.
+- **Schedule**: any active mapping can **Schedule Class** directly into **Class Schedule**, and the faculty's **My Curriculum** plus **Topics** update instantly — the same topics also seed their AI question generation.
+
+> **Key takeaway**: keep mappings single-owner per course/batch/division — duplicate assignments create split schedules.`;
 
     case 'study':
       return `### 💡 Concept & Study Support
