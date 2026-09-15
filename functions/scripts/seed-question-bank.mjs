@@ -91,7 +91,7 @@ function pushQuestions(dir, out) {
   }
 }
 
-function toMeta(q) {
+function toMeta(q, id) {
   const now = new Date().toISOString();
   return {
     subjectId: q.subject || 'General',
@@ -106,7 +106,9 @@ function toMeta(q) {
     visibility: 'public',
     sharedWith: [],
     source: 'platform',
-    storagePath: `${CONTENT}/{id}.json`,
+    // Must be the real doc id: useQuestionBank.loadQuestionDetail reads this
+    // path and calls downloadQuestion() on it. A literal "{id}" 404s the detail view.
+    storagePath: `${CONTENT}/${id}.json`,
     hasImage: false,
     qualityRating: 0,
     usageCount: 0,
@@ -116,7 +118,7 @@ function toMeta(q) {
   };
 }
 
-function toContent(q) {
+function toContent(q, id) {
   const now = new Date().toISOString();
   const options = Array.isArray(q.options)
     ? q.options.map((o) => (typeof o === 'string' ? { id: String.fromCharCode(65 + q.options.indexOf(o)), text: o, isCorrect: o === q.correctAnswer || q.options.length === 1 } : o))
@@ -151,8 +153,8 @@ function toContent(q) {
     quality: { rating: 0, reviewCount: 0, flagged: false },
     usageStats: { usedInPapers: 0, usedInAssessments: 0, collegesUsing: [] },
     versions: [],
-    storagePath: `${CONTENT}/{id}.json`,
-    metadataDocId: '{id}',
+    storagePath: `${CONTENT}/${id}.json`,
+    metadataDocId: id,
     createdAt: now,
     updatedAt: now,
   };
@@ -171,6 +173,29 @@ function toReview(metaId, now) {
     createdAt: now,
     updatedAt: now,
   };
+}
+
+/**
+ * Guard against the `{id}` placeholder regression: every meta/content doc must
+ * point at the real Firestore doc id, or the question-detail view 404s when it
+ * resolves meta.storagePath through downloadQuestion(). Runs in both modes.
+ */
+function selfCheckIdWiring() {
+  const probeId = 'probe123';
+  const sample = { subject: 'Self-Check', topic: 'Self-Check', text: 'x', type: 'mcq' };
+  const meta = toMeta(sample, probeId);
+  const content = toContent(sample, probeId);
+  const checks = [
+    [meta.storagePath === `${CONTENT}/${probeId}.json`, 'meta.storagePath must interpolate the doc id'],
+    [content.storagePath === `${CONTENT}/${probeId}.json`, 'content.storagePath must interpolate the doc id'],
+    [content.metadataDocId === probeId, 'content.metadataDocId must equal the meta doc id'],
+    [!JSON.stringify(meta).includes('{id}') && !JSON.stringify(content).includes('{id}'), 'no literal {id} placeholder may survive'],
+  ];
+  const failed = checks.filter(([ok]) => !ok).map(([, msg]) => msg);
+  if (failed.length) {
+    console.error(`Seed script self-check FAILED:\n  - ${failed.join('\n  - ')}`);
+    process.exit(1);
+  }
 }
 
 async function getAdmin() {
@@ -204,6 +229,7 @@ function buildApp(admin) {
 }
 
 async function main() {
+  selfCheckIdWiring();
   const args = process.argv.slice(2);
   const write = args.includes('--write');
   const subjectFilter = (args.find((a) => a.startsWith('--subject=')) || '').split('=')[1];
@@ -237,8 +263,8 @@ async function main() {
     for (const q of chunk) {
       const metaRef = db.collection(META).doc();
       const metaId = metaRef.id;
-      batch.set(metaRef, toMeta(q));
-      batch.set(db.collection(CONTENT).doc(metaId), toContent(q));
+      batch.set(metaRef, toMeta(q, metaId));
+      batch.set(db.collection(CONTENT).doc(metaId), toContent(q, metaId));
       batch.set(db.collection(REVIEWS).doc(), toReview(metaId, now));
     }
     await batch.commit();
