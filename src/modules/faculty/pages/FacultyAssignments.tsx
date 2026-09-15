@@ -2,7 +2,8 @@
 // Faculty Assignments Page - Wired to Firestore via assignmentApi
 
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import {
   ChevronLeft, Plus, X, Check, Search, Calendar,
   Clock, Users, FileText, Trash2, CheckCircle2,
@@ -92,9 +93,61 @@ export default function FacultyAssignments() {
   const [gradeRemarks, setGradeRemarks] = useState('')
 
   const collegeId = user?.collegeId || ''
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Optional curriculum linkage — not mandatory; wiring Curriculum ↔ Assignments
+  const facultyIdForCurriculum = user?.uid || (user as any)?.id || ''
+  const { curriculum: facultyCurriculum } = useFacultyCurriculum(facultyIdForCurriculum, collegeId)
+  const [linkCurriculum, setLinkCurriculum] = useState(false)
+  const [linkCourseId, setLinkCourseId] = useState('')
+  const [linkModuleId, setLinkModuleId] = useState('')
+  const [linkScheduleId, setLinkScheduleId] = useState('')
 
   // ─── Load Assignments ──────────────────────────────────────────────────────
   
+  // Derive selected curriculum course/module for link
+  const linkedCourse = facultyCurriculum.find(c => c.courseId === linkCourseId) || null
+  const linkedCourseModules = linkedCourse?.modules || []
+  const linkedModule = linkedCourseModules.find((m: any) => m.id === linkModuleId) || null
+
+  // Auto-prefill subject/cohort from linked curriculum when enabled
+  useEffect(() => {
+    if (!linkCurriculum || !linkedCourse) return
+    if (linkedCourse.courseName && !createSubject) setCreateSubject(linkedCourse.courseName)
+    if (linkedCourse.branch && !createBranch) setCreateBranch(linkedCourse.branch)
+    if (linkedCourse.batch && !createBatch) setCreateBatch(linkedCourse.batch)
+    if ((linkedCourse as any).division && !createDivision) setCreateDivision((linkedCourse as any).division || '')
+    if (linkedModule?.title && !createTopic) setCreateTopic(linkedModule.title || linkedModule.moduleName || '')
+  }, [linkCurriculum, linkedCourse, linkedModule])
+
+  // Prefill from Curriculum / Schedule deep-link (?curriculumId=&courseId=&moduleId=&subject=&topic=) — optional wiring
+  useEffect(() => {
+    const qCourseId = searchParams.get('courseId') || searchParams.get('course') || ''
+    const qModuleId = searchParams.get('moduleId') || ''
+    const qSubject = searchParams.get('subject') || ''
+    const qTopic = searchParams.get('topic') || ''
+    const qBranch = searchParams.get('branch') || ''
+    const qBatch = searchParams.get('batch') || ''
+    const qDivision = searchParams.get('division') || ''
+    const qScheduleId = searchParams.get('scheduleId') || searchParams.get('schedule') || ''
+    const autoOpen = searchParams.get('create') === '1' || qCourseId || qModuleId || qSubject || qTopic || qScheduleId
+    if (autoOpen) {
+      if (qCourseId) { setLinkCurriculum(true); setLinkCourseId(qCourseId) }
+      if (qModuleId) { setLinkCurriculum(true); setLinkModuleId(qModuleId) }
+      if (qScheduleId) { setLinkCurriculum(true); setLinkScheduleId(qScheduleId) }
+      if (qSubject) setCreateSubject(qSubject)
+      if (qTopic) setCreateTopic(qTopic)
+      if (qBranch) setCreateBranch(qBranch)
+      if (qBatch) setCreateBatch(qBatch)
+      if (qDivision) setCreateDivision(qDivision)
+      setShowCreate(true)
+      // clean query so refresh doesn't reopen
+      // keep other params? just remove create flags after open
+      // we won't clear automatically to keep idempotent; user can close
+    }
+  }, [searchParams])
+
   const loadAssignments = useCallback(async () => {
     if (!user?.uid) return
     
@@ -172,7 +225,14 @@ export default function FacultyAssignments() {
           batch: createBatch,
           division: createDivision,
         },
-      })
+        ...(linkCurriculum && (linkedCourse || linkScheduleId || linkCourseId) ? {
+          ...(linkedCourse?.curriculumId ? { curriculumId: linkedCourse.curriculumId } : {}),
+          ...(linkedCourse?.courseId || linkCourseId ? { courseId: linkedCourse?.courseId || linkCourseId } : {}),
+          ...(linkedCourse?.courseName || createSubject ? { courseName: linkedCourse?.courseName || createSubject } : {}),
+          ...(linkedModule ? { moduleId: linkedModule.id, moduleTitle: linkedModule.title || linkedModule.moduleName } : (linkModuleId ? { moduleId: linkModuleId } : {})),
+          ...(linkScheduleId ? { scheduleId: linkScheduleId } : {}),
+        } : {}),
+      } as any)
       
       setAssignments(prev => [{ ...newAssignment, _loading: false, _submissions: [] }, ...prev])
       setShowCreate(false)
@@ -195,6 +255,16 @@ export default function FacultyAssignments() {
     setCreateBatch('')
     setCreateBranch('')
     setCreateDivision('')
+    setLinkCurriculum(false)
+    setLinkCourseId('')
+    setLinkModuleId('')
+    setLinkScheduleId('')
+    // clear assignment deep-link query so next visit is clean
+    if (searchParams.get('courseId') || searchParams.get('moduleId') || searchParams.get('scheduleId') || searchParams.get('create')) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('courseId'); next.delete('course'); next.delete('moduleId'); next.delete('scheduleId'); next.delete('schedule'); next.delete('subject'); next.delete('topic'); next.delete('branch'); next.delete('batch'); next.delete('division'); next.delete('create')
+      setSearchParams(next, { replace: true })
+    }
   }
 
   const handlePublish = async (assignmentId: string) => {
@@ -431,6 +501,11 @@ export default function FacultyAssignments() {
                       {item.cohort?.batch && <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> {item.cohort.batch}</span>}
                       <span className="flex items-center gap-1"><BarChart3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Max: {item.maxScore} pts</span>
                     </div>
+                    {(item as any).courseName && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-full px-2.5 py-1">
+                        <BookOpen className="w-3 h-3" /> Linked: {(item as any).courseName}{(item as any).moduleTitle ? ` → ${(item as any).moduleTitle}` : ''}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button onClick={() => handleViewDetail(item)} className="px-3 py-1.5 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 text-sm font-medium hover:bg-teal-100 dark:bg-teal-900/30 transition-all">
@@ -489,6 +564,41 @@ export default function FacultyAssignments() {
                 <textarea value={createDescription} onChange={e => setCreateDescription(e.target.value)} rows={3} placeholder="Describe the assignment requirements..."
                   className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm resize-none" />
               </div>
+              {/* Optional curriculum / schedule linkage — not mandatory; faculty can attach from My Curriculum one-stop */}
+              <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/15">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input type="checkbox" checked={linkCurriculum} onChange={e => { setLinkCurriculum(e.target.checked); if (!e.target.checked) { setLinkCourseId(''); setLinkModuleId(''); setLinkScheduleId('') } }} className="rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
+                  Link to Curriculum / Schedule (optional)
+                </label>
+                <p className="text-xs text-slate-500 mt-1">Attach this assignment to a course/module from your assigned curriculum so students see the context. Not required — leave unchecked for a standalone assignment.</p>
+                {linkCurriculum && (
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">Course (from My Curriculum)</label>
+                      <select value={linkCourseId} onChange={e => { setLinkCourseId(e.target.value); setLinkModuleId('') }} className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500">
+                        <option value="">Select course (optional)</option>
+                        {facultyCurriculum.map(c => (
+                          <option key={c.courseId} value={c.courseId}>{c.courseName} — {c.courseCode} ({c.branch} Sem {c.semester})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">Module / Topic (optional)</label>
+                      <select value={linkModuleId} onChange={e => setLinkModuleId(e.target.value)} disabled={!linkCourseId} className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 disabled:opacity-50">
+                        <option value="">No specific module</option>
+                        {linkedCourseModules.map((m: any) => (
+                          <option key={m.id} value={m.id}>{m.title || m.moduleName || `Module ${m.moduleNo}`} — {m.hours}h</option>
+                        ))}
+                      </select>
+                    </div>
+                    {(linkedCourse || linkScheduleId) && (
+                      <div className="sm:col-span-2 text-xs text-violet-700 dark:text-violet-300 bg-white dark:bg-slate-800 rounded-lg p-2 border border-violet-500/10">
+                        Linked: <span className="font-medium">{linkedCourse?.courseName || createSubject || 'Schedule linked'}</span> {linkedModule ? `→ ${linkedModule.title || linkedModule.moduleName}` : (linkScheduleId ? `· Schedule ${linkScheduleId.slice(0,8)}` : '')} · Students will be notified with deadline on Publish.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Subject *</label>
@@ -511,6 +621,7 @@ export default function FacultyAssignments() {
                   <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">Deadline *</label>
                   <input type="date" value={createDeadline} onChange={e => setCreateDeadline(e.target.value)}
                     className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 text-sm" />
+                  <p className="text-[11px] text-slate-500 mt-1">Students are notified with this deadline when you Publish (notification includes linked course/module if attached).</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -564,6 +675,11 @@ export default function FacultyAssignments() {
             </div>
 
             <p className="text-slate-700 dark:text-slate-300 text-sm mb-6 bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4">{showDetail.description || 'No description'}</p>
+            {(showDetail as any).courseName && (
+              <div className="mb-4 flex items-center gap-2 text-sm text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-xl px-3 py-2">
+                <BookOpen className="w-4 h-4" /> Linked to curriculum: <span className="font-semibold">{(showDetail as any).courseName}</span>{(showDetail as any).moduleTitle ? ` → ${(showDetail as any).moduleTitle}` : ''} · Students were notified with deadline {formatDeadline(showDetail.deadline)} on publish
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3 mb-6">

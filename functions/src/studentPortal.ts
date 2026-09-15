@@ -816,6 +816,19 @@ async function sanitizeAssignmentAuthoringInput(
     throw new HttpsError('invalid-argument', 'Published assignments require a future deadline')
   }
 
+  // Optional curriculum / schedule linkage — not mandatory; stored if provided so
+  // assignments can be traced back to the course/module/schedule they came from.
+  // Keeping these separate from cohort targeting preserves the existing
+  // assignment flow while letting faculty optionally attach them from
+  // My Curriculum / Schedule one-stop actions.
+  const curriculumId = String((input as any).curriculumId || '').trim().slice(0, 100)
+  const courseId = String((input as any).courseId || '').trim().slice(0, 100)
+  const courseName = String((input as any).courseName || '').trim().slice(0, 200)
+  const moduleId = String((input as any).moduleId || '').trim().slice(0, 100)
+  const moduleTitle = String((input as any).moduleTitle || '').trim().slice(0, 200)
+  const scheduleId = String((input as any).scheduleId || '').trim().slice(0, 100)
+  const classSessionId = String((input as any).classSessionId || '').trim().slice(0, 100)
+
   let cohort: Record<string, unknown> | undefined
   let studentIds: string[] | undefined
   if (targetType === 'cohort') {
@@ -862,6 +875,14 @@ async function sanitizeAssignmentAuthoringInput(
     ...(studentIds ? { studentIds } : {}),
     deadline: admin.firestore.Timestamp.fromDate(deadline),
     allowResubmission: Boolean(input.allowResubmission),
+    // Optional linkage — only persisted when the faculty chose it in the UI.
+    ...(curriculumId ? { curriculumId } : {}),
+    ...(courseId ? { courseId } : {}),
+    ...(courseName ? { courseName } : {}),
+    ...(moduleId ? { moduleId } : {}),
+    ...(moduleTitle ? { moduleTitle } : {}),
+    ...(scheduleId ? { scheduleId } : {}),
+    ...(classSessionId ? { classSessionId } : {}),
   }
 }
 
@@ -941,6 +962,7 @@ export const transitionFacultyAssignment = onCall(
       throw new HttpsError('invalid-argument', 'Assignment or next status is invalid')
     }
     const ref = admin.firestore().collection('assignments').doc(assignmentId)
+    let assignmentData: admin.firestore.DocumentData | undefined
     await admin.firestore().runTransaction(async (transaction) => {
       const current = await transaction.get(ref)
       const data = current.data()
@@ -961,6 +983,7 @@ export const transitionFacultyAssignment = onCall(
           throw new HttpsError('failed-precondition', 'Set a future deadline before publishing')
         }
       }
+      assignmentData = data
       transaction.update(ref, {
         status: nextStatus,
         ...(nextStatus === 'published'
@@ -969,9 +992,142 @@ export const transitionFacultyAssignment = onCall(
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
     })
+    // Notify students when an assignment is published — includes deadline and
+    // curriculum context when the faculty linked it. Best-effort: failures are
+    // logged but do not roll back the publish.
+    if (nextStatus === 'published' && assignmentData) {
+      try {
+        await createAssignmentPublishedNotification(assignmentData, assignmentId, staff.name)
+      } catch (e) {
+        console.warn('[StudentPortal] assignment notification failed (non-blocking):', e)
+      }
+    }
     return { success: true }
   }
 )
+
+
+// ─── Assignment → Notification (optional linkage, deadline-aware) ───────────
+// Publishing an assignment fans out a college notification so students see it
+// in their bell feed with the deadline. Cohort targeting mirrors
+// notifications.ts (branch/batch/division/semester) but is scoped to the
+// assignment's cohort; specific-student assignments target those ids.
+async function createAssignmentPublishedNotification(
+  assignment: admin.firestore.DocumentData,
+  assignmentId: string,
+  facultyName: string
+): Promise<void> {
+  const db = admin.firestore()
+  const collegeId = String(assignment.collegeId || '')
+  if (!collegeId) return
+  const title = `New Assignment: ${String(assignment.title || 'Untitled').slice(0, 80)}`
+  const deadlineDate = (() => {
+    try { return asDate(assignment.deadline, true) } catch { return null }
+  })()
+  const deadlineStr = deadlineDate
+    ? deadlineDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : String(assignment.deadline || '')
+  const subjectLine = String(assignment.subject || assignment.courseName || '').trim()
+  const topicLine = String(assignment.topic || assignment.moduleTitle || '').trim()
+  const curriculumLine = (() => {
+    const parts: string[] = []
+    if (assignment.courseName) parts.push(String(assignment.courseName))
+    if (assignment.moduleTitle) parts.push(`Module: ${assignment.moduleTitle}`)
+    if (assignment.curriculumId) parts.push(`Curriculum linked`)
+    return parts.length ? ` · Linked to ${parts.join(' · ')}` : ''
+  })()
+  const message = [
+    `${facultyName || String(assignment.facultyName || 'Faculty')} published an assignment${subjectLine ? ` for ${subjectLine}` : ''}${topicLine ? ` — ${topicLine}` : ''}${curriculumLine}.`,
+    deadlineStr ? `Deadline: ${deadlineStr}.` : '',
+    `Open Student → Assignments to view details and submit before the deadline.`,
+  ].filter(Boolean).join(' ')
+
+  // Targeting from assignment
+  const targetType = String(assignment.targetType || 'cohort')
+  let audience: 'all' | 'cohort' | 'specific' = 'cohort'
+  let cohort: any = null
+  let studentIds: string[] = []
+  if (targetType === 'specific') {
+    audience = 'specific'
+    studentIds = Array.isArray(assignment.studentIds) ? assignment.studentIds.map(String).filter(Boolean).slice(0, 500) : []
+    if (studentIds.length === 0) return
+  } else {
+    const c = assignment.cohort || {}
+    const branch = String(c.branch || '').trim()
+    const batch = String(c.batch || '').trim()
+    const division = String(c.division || c.section || '').trim()
+    const semester = Number(c.semester) || 0
+    // Map assignment's single-value cohort to notification's multi-value shape
+    cohort = {
+      branches: branch ? [branch] : [],
+      batches: batch ? [batch] : [],
+      division: division || '',
+      semester,
+    }
+    const hasTarget = cohort.branches.length || cohort.batches.length || cohort.division || cohort.semester
+    if (!hasTarget) {
+      // No cohort → treat as college-wide for this notification type only if
+      // assignment truly had no filter (should not happen per validation, but
+      // fall back to not spamming).
+      console.warn('[AssignmentNotification] assignment has empty cohort, skipping broadcast')
+      return
+    }
+  }
+
+  // Recipient count — same roster scan as sendAnnouncement, best-effort
+  let recipientCount = 0
+  try {
+    const roster = await db.collection('students').where('collegeId', '==', collegeId).limit(2000).get()
+    if (audience === 'specific') {
+      const wanted = new Set(studentIds)
+      recipientCount = roster.docs.filter((d: any) => wanted.has(d.id)).length
+    } else if (audience === 'cohort' && cohort) {
+      // Inline minimal cohort matcher (mirrors notifications.ts helpers inline to avoid import)
+      const fold = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ').trim()
+      const normBranch = (v: unknown) => fold(v).replace(/[.,;:'’"·]+/g, '').replace(/\s+/g, ' ').trim()
+      const normToken = (v: unknown) => fold(v).replace(/[.,;:'’"·]+/g, '')
+      const normDiv = (v: unknown) => fold(v).replace(/^div(ision)?[.\s]*/, '').replace(/^sec(tion)?[.\s]*/, '').trim()
+      const wantedBranches = (cohort.branches as string[]).map(normBranch).filter(Boolean)
+      const wantedBatches = (cohort.batches as string[]).map(normToken).filter(Boolean)
+      const wantedDiv = normDiv(cohort.division)
+      const wantedSem = Number(cohort.semester) || 0
+      recipientCount = roster.docs.filter((doc: any) => {
+        const d = doc.data()
+        const sBranch = String(d.branch || d.department || '')
+        const sBatch = String(d.batch || d.academicYear || '')
+        const sDiv = String(d.division || d.section || '')
+        const sSem = Number(d.semester) || 0
+        if (wantedBranches.length && !wantedBranches.includes(normBranch(sBranch))) return false
+        if (wantedBatches.length && !wantedBatches.includes(normToken(sBatch))) return false
+        if (wantedDiv && normDiv(sDiv) !== wantedDiv) return false
+        if (wantedSem && sSem && wantedSem !== sSem) return false
+        return true
+      }).length
+    }
+  } catch {}
+
+  const ref = db.collection('notifications').doc()
+  await ref.create({
+    collegeId,
+    title: title.slice(0, 160),
+    message: message.slice(0, 4000),
+    type: 'academic' as const,
+    category: 'assignment',
+    priority: 'high',
+    audience,
+    ...(cohort ? { cohort } : {}),
+    ...(studentIds.length ? { studentIds } : {}),
+    pinned: false,
+    sentBy: facultyName || String(assignment.facultyName || ''),
+    sentByName: facultyName || String(assignment.facultyName || ''),
+    createdBy: String(assignment.facultyUid || ''),
+    assignmentId,
+    recipientCount,
+    readCount: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  })
+}
+
 
 export const deleteFacultyAssignmentDraft = onCall(
   { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },

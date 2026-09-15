@@ -51,6 +51,16 @@ export interface Assignment {
     type: string
     size: number
   }>
+
+  // Optional curriculum / schedule linkage — not mandatory; faculty can attach
+  // an assignment to a course/module/schedule from My Curriculum / Schedule.
+  curriculumId?: string
+  courseId?: string
+  courseName?: string
+  moduleId?: string
+  moduleTitle?: string
+  scheduleId?: string
+  classSessionId?: string
   
   // Metadata
   createdAt: string
@@ -155,6 +165,13 @@ function docToAssignment(d: any, id: string): Assignment {
     studentIds: d.studentIds || [],
     cohort: d.cohort || {},
     attachments: d.attachments || [],
+    curriculumId: d.curriculumId || undefined,
+    courseId: d.courseId || undefined,
+    courseName: d.courseName || undefined,
+    moduleId: d.moduleId || undefined,
+    moduleTitle: d.moduleTitle || undefined,
+    scheduleId: d.scheduleId || undefined,
+    classSessionId: d.classSessionId || undefined,
     createdAt: toISO(d.createdAt),
     updatedAt: toISO(d.updatedAt),
     publishedAt: d.publishedAt ? toISO(d.publishedAt) : undefined,
@@ -266,7 +283,14 @@ export async function createAssignment(
   const response = await create({
     ...data,
     deadline: data.deadline,
-  })
+    ...(data.curriculumId ? { curriculumId: data.curriculumId } : {}),
+    ...(data.courseId ? { courseId: data.courseId } : {}),
+    ...(data.courseName ? { courseName: data.courseName } : {}),
+    ...(data.moduleId ? { moduleId: data.moduleId } : {}),
+    ...(data.moduleTitle ? { moduleTitle: data.moduleTitle } : {}),
+    ...(data.scheduleId ? { scheduleId: data.scheduleId } : {}),
+    ...(data.classSessionId ? { classSessionId: data.classSessionId } : {}),
+  } as Record<string, unknown>)
   const created = await fetchAssignment(response.data.id)
   if (!created) throw new Error('Assignment was created but could not be reloaded.')
   return created
@@ -313,6 +337,13 @@ export async function updateAssignment(
     targetType: merged.targetType,
     cohort: merged.cohort,
     studentIds: merged.studentIds,
+    ...(merged.curriculumId ? { curriculumId: merged.curriculumId } : {}),
+    ...(merged.courseId ? { courseId: merged.courseId } : {}),
+    ...(merged.courseName ? { courseName: merged.courseName } : {}),
+    ...(merged.moduleId ? { moduleId: merged.moduleId } : {}),
+    ...(merged.moduleTitle ? { moduleTitle: merged.moduleTitle } : {}),
+    ...(merged.scheduleId ? { scheduleId: merged.scheduleId } : {}),
+    ...(merged.classSessionId ? { classSessionId: merged.classSessionId } : {}),
   }
   await update({
     assignmentId,
