@@ -13,14 +13,19 @@
  * superadmin's own login is part of the problem, the Access Control screen is
  * unreachable, and this script still works.
  *
- * USAGE
- *   export GOOGLE_APPLICATION_CREDENTIALS=~/Downloads/vriddhi-serviceAccount.json
- *   npm run identity:doctor -- --college <collegeId>
- *   npm run identity:doctor -- --email aarav@college.edu          # one account
- *   npm run identity:doctor -- --apply --csv /tmp/issued.csv      # repair + export
+ * USAGE (PowerShell — the shell the operators of this project use)
+ *   PS note: '<' and '>' are redirection there, so placeholders written as
+ *   <collegeId> cannot be pasted verbatim. Replace the placeholder, keep the
+ *   quotes, and run everything in ONE window: env vars are per-session here.
+ *   $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\Users\you\Downloads\vriddhi-serviceAccount.json"
+ *   npm run identity:doctor -- --explain aarav.sharma@stan.edu     # one account, read-only
+ *   npm run identity:doctor -- --email aarav.sharma@stan.edu       # one account, in a scan
+ *   npm run identity:doctor -- --college CEG123                    # whole tenant, read-only
+ *   npm run identity:doctor -- --apply --csv "$env:TEMP\issued.csv"          # repair + export
+ *   npm run identity:doctor -- --apply --force-credentials --email aarav.sharma@stan.edu
  *   npm run identity:doctor -- --apply --delivery password --password 'Temp!1234567'
- *   npm run identity:doctor -- --explain aarav@college.edu         # forensic timeline
  *   node scripts/identity-doctor.mjs --self-test                   # no credentials needed
+ *   (bash/zsh equivalent for the first line: export GOOGLE_APPLICATION_CREDENTIALS=~/Downloads/vriddhi-serviceAccount.json)
  *
  * FLAGS
  *   --project <id>            Firebase project id (default: vriddhi-academic)
@@ -117,6 +122,46 @@ const LIMIT = Number(args.limit || 2000)
 const APPLY = Boolean(args.apply)
 const DRY = !APPLY
 const DELIVERY = args.delivery === 'password' ? 'password' : 'reset-email'
+
+/**
+ * Which build of the doctor this is. Printed on every run because this script's
+ * behaviour has diverged between branches: an `--explain`-capable checkout and a
+ * pre-`--explain` one accept the same command line and report completely
+ * different things, which is how a full profile scan gets read as a verdict.
+ * If the banner below is missing from your output, you are running an OLD copy.
+ */
+const DOCTOR_REVISION = 'credential-forensics-2026.09.15-a'
+
+const KNOWN_FLAGS = [
+  'project', 'service-account', 'college', 'collections', 'limit', 'apply', 'delivery',
+  'password', 'csv', 'keep-secrets', 'force-claims', 'explain', 'reset-window-days',
+  'force-credentials', 'self-test',
+]
+// A silently ignored flag is worse than a typo: `--expain` used to mean "scan
+// every collection in the tenant", and `--email` with a mistyped value means
+// "report nothing". Refuse instead.
+const unknownFlags = Object.keys(args).filter((k) => k !== 'emails' && !KNOWN_FLAGS.includes(k))
+if (unknownFlags.length) {
+  console.error(
+    `\nUnknown flag(s): ${unknownFlags.map((k) => `--${k}`).join(', ')}\n` +
+      `Known flags: ${KNOWN_FLAGS.map((k) => `--${k}`).join(', ')}\n` +
+      `Nothing is silently ignored by this script: a mistyped flag stops the run.\n`
+  )
+  process.exit(2)
+}
+// PowerShell reserves `<`, so `<email>` in a docstring is unusable verbatim; and
+// a valueless --explain used to be read as the literal string "true" and reported
+// "no Auth account for true". Fail with the shape of the command instead.
+if (args.explain === true) {
+  console.error(
+    `\n--explain needs an address or uid, e.g.\n` +
+      `  npm run identity:doctor -- --explain principal@stan.edu\n` +
+      `  npm run identity:doctor -- --explain "UID-from-auth-console"\n` +
+      `PowerShell note: do not wrap the value in < > — '<' is redirection there.\n`
+  )
+  process.exit(2)
+}
+console.log(`identity-doctor ${DOCTOR_REVISION}`)
 const COLLECTION_ROLE = {
   students: 'student',
   faculty: 'faculty',
@@ -147,9 +192,31 @@ if (args['self-test']) process.exit(runSelfTest() ? 0 : 1)
 
 // ── admin init ─────────────────────────────────────────────────────────
 const admin = loadAdmin()
-const credential = args['service-account']
-  ? admin.credential.cert(fs.readFileSync(path.resolve(args['service-account']), 'utf8'))
-  : admin.credential.applicationDefault()
+// The raw failure is a 12-frame stack trace out of firebase-admin ending in
+// ENOENT, which reads like a broken script rather than "you have not told me
+// where the key is". Say what to do, and say which path was tried — the usual
+// mistakes are leaving the documentation's placeholder in place, or setting the
+// variable in a different PowerShell window than the one running the script.
+function buildCredential() {
+  try {
+    return args['service-account']
+      ? admin.credential.cert(fs.readFileSync(path.resolve(args['service-account']), 'utf8'))
+      : admin.credential.applicationDefault()
+  } catch (err) {
+    const tried = args['service-account'] || process.env.GOOGLE_APPLICATION_CREDENTIALS || '(nothing set)'
+    console.error(
+      `\nCould not load service-account credentials. Tried: ${tried}\n` +
+        `  • point it at the REAL downloaded file, e.g.\n` +
+        `      $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\\Users\\you\\Downloads\\vriddhi-academic-firebase-admin-sdk.json"\n` +
+        `    or pass --service-account "C:\\path\\to\\key.json" (that flag wins)\n` +
+        `  • PowerShell env vars live per-window: set them in the SAME session that runs the script\n` +
+        `  • the key must be a service account with Editor/Cloud Datastore access, downloaded intact\n` +
+        `  raw: ${String(err?.message || err).split('\n')[0]}\n`
+    )
+    process.exit(2)
+  }
+}
+const credential = buildCredential()
 admin.initializeApp({ credential, projectId: PROJECT, storageBucket: `${PROJECT}.appspot.com` })
 
 const db = admin.firestore()
