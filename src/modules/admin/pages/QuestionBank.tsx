@@ -1,16 +1,26 @@
 // src/modules/admin/pages/QuestionBank.tsx
-// Admin Question Bank page — AI generation, CRUD and paper building.
+// Unified Question Bank hub for Principal/Admin (B revamp)
+// One page with 3 tabs: College Bank | Universal Bank | Review Queue
+// Old routes /admin/universal-bank and /admin/review-queue now redirect here via routes.tsx aliases.
 
 import React, { useEffect, useState } from 'react';
-import { Box, Button, CircularProgress, Typography, Alert, Snackbar } from '@mui/material';
+import { Box, Button, CircularProgress, Typography, Alert, Snackbar, Tabs, Tab, Paper } from '@mui/material';
 import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import QuestionUploadEditor from '@/shared/components/question-paper/QuestionUploadEditor';
 import { useAuth } from '../../auth/context/AuthContext';
 import QuestionBankManager from '../components/question-bank/QuestionBankManager';
+import UniversalQuestionBank from '../components/UniversalQuestionBank';
+import ReviewQueue from '../components/ReviewQueue';
 import { getBatchBranchConfig, getQuestionStats } from '../api/questionBankApi';
 import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
 
-export default function QuestionBank() {
+export type QuestionBankTab = 'college' | 'universal' | 'review';
+
+interface Props {
+  initialTab?: QuestionBankTab;
+}
+
+export default function QuestionBank({ initialTab = 'college' }: Props) {
   const { user } = useAuth();
   const collegeId = user?.collegeId || '';
   const [batches, setBatches] = useState<string[]>([]);
@@ -22,13 +32,19 @@ export default function QuestionBank() {
   const [toast, setToast] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
+  const tabIndex = initialTab === 'universal' ? 1 : initialTab === 'review' ? 2 : 0;
+  const [tab, setTab] = useState(tabIndex);
+
+  useEffect(() => {
+    setTab(initialTab === 'universal' ? 1 : initialTab === 'review' ? 2 : 0);
+  }, [initialTab]);
+
   useEffect(() => {
     if (!collegeId) {
       setError('Not authenticated — missing collegeId');
       setLoading(false);
       return;
     }
-
     Promise.all([
       getBatchBranchConfig(collegeId),
       getQuestionStats(collegeId).catch(() => null),
@@ -62,13 +78,44 @@ export default function QuestionBank() {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>Question Bank & Exam Management</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        College-private questions, the shared Universal pool, and the review queue — one place.
+      </Typography>
+
+      <Paper sx={{ mb: 2 }}>
+        <Tabs value={tab} onChange={(_, v) => setTab(v)} indicatorColor="primary" textColor="primary">
+          <Tab label="College Bank" />
+          <Tab label="Universal Bank" />
+          <Tab label="Review Queue" />
+        </Tabs>
+      </Paper>
+
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadOpen(true)}>
-          Upload Questions
-        </Button>
-      </Box>
-      <QuestionBankManager key={reloadKey} batches={batches} branches={branches} subjects={subjects} />
+
+      {tab === 0 && (
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+            <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadOpen(true)}>
+              Upload Questions
+            </Button>
+          </Box>
+          <QuestionBankManager key={reloadKey} batches={batches} branches={branches} subjects={subjects} />
+        </>
+      )}
+
+      {tab === 1 && (
+        <Box sx={{ mt: 1 }}>
+          <UniversalQuestionBank />
+        </Box>
+      )}
+
+      {tab === 2 && (
+        <Box sx={{ mt: 1 }}>
+          <ReviewQueue />
+        </Box>
+      )}
+
       <QuestionUploadEditor
         open={uploadOpen}
         collegeId={collegeId}
