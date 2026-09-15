@@ -5,7 +5,7 @@
 // Uses Box + flexWrap layout (no MUI Grid)
 // ============================================================
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -419,6 +419,11 @@ function FilterPanel({
 }: FilterPanelProps) {
   const [selectedSubject, setSelectedSubject] = useState(filter.subjectId || '');
 
+  // Keep internal subject in sync when filter is cleared externally
+  useEffect(() => {
+    setSelectedSubject(filter.subjectId || '');
+  }, [filter.subjectId]);
+
   const filteredTopics = topics.filter(
     (t) => !selectedSubject || t.subjectId === selectedSubject
   );
@@ -455,7 +460,7 @@ function FilterPanel({
 
   const handleClear = () => {
     setSelectedSubject('');
-    onFilterChange({});
+    onFilterChange({ status: 'approved' as ReviewStatus });
   };
 
   return (
@@ -561,60 +566,123 @@ export function UniversalQuestionBank({
 }: UniversalQuestionBankProps) {
   const { user } = useAuth();
   const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || '';
+  const isSuperadmin = user?.role === 'superadmin';
 
-  const hookResult = useQuestionBank() as any;
+  // ── Correct universal-store binding (was legacy college store + cast) ──
+  const {
+    universalQuestions,
+    selectedQuestion,
+    loadingUniversal,
+    errorsUniversal,
+    pagination,
+    universalStats,
+    searchUniversalQuestions,
+    loadQuestionDetail,
+    loadUniversalStats,
+  } = useQuestionBank();
 
-  const questions: any[] = hookResult.questions || [];
-  const selectedQuestion = hookResult.selectedQuestion || null;
-  const loading = hookResult.loading || false;
-  const error = hookResult.error || null;
-  const pagination = hookResult.pagination || { total: 0, page: 1, totalPages: 0 };
-  const stats = hookResult.stats || null;
-
-  const searchQuestions = hookResult.searchQuestions || hookResult.loadQuestions || hookResult.fetchQuestions || (() => {});
-  const loadQuestionDetail = hookResult.loadQuestionDetail || (() => {});
-  const loadStats = hookResult.loadStats || hookResult.fetchStats || (() => {});
+  const questions: QuestionMetadata[] = universalQuestions || [];
+  const loading = loadingUniversal.questions || false;
+  const error = errorsUniversal.questions || null;
+  // QuestionBankStats uses totalQuestions; legacy alias keeps total for compat
+  const stats: any = universalStats || null;
 
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [submissionOpen, setSubmissionOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
+  // Approved is the universal enum — 'active' is legacy CollegeQuestion.status and matches nothing.
   const [filter, setFilter] = useState<QuestionFilter>({
-    status: 'active' as ReviewStatus,
+    status: 'approved' as ReviewStatus,
   });
   const [searchText, setSearchText] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
+
+  // Derive picker options from real bank data, not a hardcoded demo list.
+  // Falls back to a minimal generic set only before the first load.
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([
-    { id: 'math', name: 'Mathematics' },
-    { id: 'commerce', name: 'Commerce' },
-    { id: 'management', name: 'Management' },
-    { id: 'computer_applications', name: 'Computer Applications' },
-    { id: 'arts', name: 'Arts & Humanities' },
-    { id: 'science', name: 'Science' },
+    { id: 'General', name: 'General' },
   ]);
-  const [topics, setTopics] = useState<{ id: string; name: string; subjectId: string }[]>([
-    { id: 'financial_accounting', name: 'Financial Accounting', subjectId: 'commerce' },
-    { id: 'business_mgmt', name: 'Business Organization', subjectId: 'management' },
-    { id: 'web_tech', name: 'Web Applications', subjectId: 'computer_applications' },
-  ]);
+  const [topics, setTopics] = useState<{ id: string; name: string; subjectId: string }[]>([]);
 
-  // Load initial data
+  // Build viewer context once per user to enforce the visibility gate in search().
+  // Without this every college saw every other college's college_only rows (see §3).
+  const buildViewerFilter = useCallback(
+    (base: QuestionFilter, query?: string): QuestionFilter => ({
+      ...base,
+      searchQuery: query ?? searchText ?? undefined,
+      collegeId: collegeId || null,
+      viewerIsSuperadmin: isSuperadmin,
+    } as unknown as QuestionFilter),
+    [collegeId, isSuperadmin, searchText]
+  );
+
+  // Load initial data — viewer context decides which visibilities are included.
   useEffect(() => {
-    searchQuestions(filter);
-    loadStats();
-  }, []);
+    searchUniversalQuestions(buildViewerFilter(filter, ''), 1);
+    loadUniversalStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collegeId, isSuperadmin]);
 
-  // Search when filter changes
+  // Derive subject/topic pickers from the loaded page + stats distinct counts.
+  useEffect(() => {
+    if (!questions.length && !stats?.bySubject) return;
+
+    // Subjects: distinct subjectId from current page plus known keys from stats
+    const subjectIds = new Set<string>();
+    questions.forEach((q) => {
+      if (q.subjectId) subjectIds.add(q.subjectId);
+    });
+    if (stats?.bySubject) {
+      Object.keys(stats.bySubject).forEach((k) => subjectIds.add(k));
+    }
+    if (subjectIds.size) {
+      const derived = Array.from(subjectIds)
+        .filter(Boolean)
+        .sort()
+        .map((id) => ({ id, name: id }));
+      setSubjects((prev) => {
+        // Keep any previously seen ids and append new ones; prevents picker thrash
+        const seen = new Set(prev.map((p) => p.id));
+        const next = [...prev];
+        for (const s of derived) if (!seen.has(s.id)) { next.push(s); seen.add(s.id); }
+        // Remove the initial 'General' placeholder once real data arrives, unless it's the only entry
+        if (next.length > 1 && next[0]?.id === 'General' && subjectIds.has('General') === false) {
+          return next.slice(1);
+        }
+        return next;
+      });
+    }
+
+    // Topics: distinct topicId per subject from current page
+    if (questions.length) {
+      const topicMap = new Map<string, { id: string; name: string; subjectId: string }>();
+      questions.forEach((q) => {
+        if (!q.topicId) return;
+        if (!topicMap.has(q.topicId)) {
+          topicMap.set(q.topicId, { id: q.topicId, name: q.topicId, subjectId: q.subjectId || 'General' });
+        }
+      });
+      if (topicMap.size) {
+        const derivedTopics = Array.from(topicMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+        setTopics((prev) => {
+          const seen = new Set(prev.map((t) => t.id));
+          const next = [...prev];
+          for (const t of derivedTopics) if (!seen.has(t.id)) { next.push(t); seen.add(t.id); }
+          return next;
+        });
+      }
+    }
+  }, [questions, stats]);
+
+  // Search when filter or text changes (debounced) — honours viewer context and pagination page 1
   useEffect(() => {
     const timer = setTimeout(() => {
-      searchQuestions({
-        ...filter,
-        searchText: searchText || undefined,
-      });
+      searchUniversalQuestions(buildViewerFilter(filter), 1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [filter, searchText]);
+  }, [filter, searchText, buildViewerFilter, searchUniversalQuestions]);
 
   const handlePreview = (questionId: string) => {
     setPreviewQuestionId(questionId);
@@ -629,7 +697,11 @@ export function UniversalQuestionBank({
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
-    searchQuestions(filter, page);
+    searchUniversalQuestions(buildViewerFilter(filter), page);
+  };
+
+  const handleManualSearch = () => {
+    searchUniversalQuestions(buildViewerFilter(filter), 1);
   };
 
   const isQuestionSelected = (id: string) => selectedQuestionIds.includes(id);
@@ -645,10 +717,17 @@ export function UniversalQuestionBank({
     marks: q.marks || 1,
     bloomLevel: q.bloomLevel || 'understand',
     previewText: q.previewText || q.text || q.questionText || '',
-    status: q.status || 'approved',
-    usageCount: q.usageCount || 0,
+    searchKeywords: q.searchKeywords || [],
+    status: (q.status as ReviewStatus) || 'approved',
+    visibility: q.visibility || 'public',
+    sharedWith: q.sharedWith || [],
+    source: q.source || 'platform',
+    storagePath: q.storagePath || '',
     hasImage: Boolean(q.hasImage || q.imageUrl),
+    qualityRating: q.qualityRating || 0,
+    usageCount: q.usageCount || 0,
     tags: q.tags || [],
+    createdBy: q.createdBy || { userId: '', userName: 'Unknown', collegeId: null, collegeName: '', role: 'faculty' as const },
     createdAt: q.createdAt || new Date().toISOString(),
     updatedAt: q.updatedAt || new Date().toISOString(),
   } as unknown as QuestionMetadata);
@@ -726,7 +805,7 @@ export function UniversalQuestionBank({
             />
             <Button
               variant="outlined"
-              onClick={() => searchQuestions({ ...filter, searchText: searchText || undefined })}
+              onClick={handleManualSearch}
             >
               Search
             </Button>
@@ -752,7 +831,7 @@ export function UniversalQuestionBank({
           {/* Stats bar */}
           {stats && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <Chip label={`Total: ${stats.totalQuestions || stats.total || 0}`} color="primary" />
+              <Chip label={`Total: ${stats.totalQuestions ?? (stats as any).total ?? 0}`} color="primary" />
               <Chip label={`Easy: ${stats.byDifficulty?.easy || 0}`} variant="outlined" />
               <Chip label={`Medium: ${stats.byDifficulty?.medium || 0}`} variant="outlined" />
               <Chip label={`Hard: ${stats.byDifficulty?.hard || 0}`} variant="outlined" />
@@ -785,10 +864,10 @@ export function UniversalQuestionBank({
               {questions.map((q) => (
                 <Box key={q.id || Math.random()} sx={{ flex: '1 1 350px', minWidth: 300, maxWidth: 500 }}>
                   <QuestionCard
-                    metadata={toMetadata(q)}
-                    isSelected={isQuestionSelected(q.id || '')}
-                    onSelect={() => handleQuestionClick(q.id || '')}
-                    onPreview={() => handlePreview(q.id || '')}
+                    metadata={toMetadata(q as any)}
+                    isSelected={isQuestionSelected((q as any).id || '')}
+                    onSelect={() => handleQuestionClick((q as any).id || '')}
+                    onPreview={() => handlePreview((q as any).id || '')}
                     onAddToCollection={() => {}}
                     isInCollection={false}
                   />
@@ -814,7 +893,7 @@ export function UniversalQuestionBank({
             open={previewOpen}
             onClose={() => { setPreviewOpen(false); setPreviewQuestionId(null); }}
             question={selectedQuestion}
-            loading={loading}
+            loading={loadingUniversal.questionDetail || false}
           />
         </>
       )}
@@ -830,12 +909,12 @@ export function UniversalQuestionBank({
           onClose={() => setSubmissionOpen(false)}
           onSuccess={() => {
             setSubmissionOpen(false);
-            searchQuestions(filter);
+            searchUniversalQuestions(buildViewerFilter(filter), 1);
           }}
         />
       </Dialog>
 
-      {/* PDF Export Dialog */}
+      {/* PDF Export Dialog — uses denormalised preview so meta-only rows don't crash */}
       <QuestionPDFExport
         questions={questions as any}
         title={filter.subjectId || 'Question Bank'}

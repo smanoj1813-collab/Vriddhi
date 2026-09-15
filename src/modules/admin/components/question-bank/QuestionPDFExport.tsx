@@ -130,19 +130,24 @@ const QuestionPDFExport: React.FC<QuestionPDFExportProps> = ({
           </Button>
 
           <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-            {questions.map((q) => (
-              <ListItem key={q.id} dense disablePadding>
-                <Checkbox
-                  edge="start"
-                  checked={selected.has(q.id)}
-                  onChange={() => toggleSelect(q.id)}
-                />
-                <ListItemText
-                  primary={q.text.substring(0, 80) + (q.text.length > 80 ? '...' : '')}
-                  secondary={`${q.subject} | ${q.type} | ${q.difficulty} | ${q.marks} marks`}
-                />
-              </ListItem>
-            ))}
+            {questions.map((q) => {
+              const text = (q as any).text || (q as any).previewText || (q as any).questionText || '';
+              const subject = (q as any).subject || (q as any).subjectId || 'Subject';
+              const type = (q as any).type || (q as any).questionType || 'mcq';
+              return (
+                <ListItem key={q.id} dense disablePadding>
+                  <Checkbox
+                    edge="start"
+                    checked={selected.has(q.id)}
+                    onChange={() => toggleSelect(q.id)}
+                  />
+                  <ListItemText
+                    primary={text.substring(0, 80) + (text.length > 80 ? '...' : '')}
+                    secondary={`${subject} | ${type} | ${q.difficulty} | ${q.marks} marks`}
+                  />
+                </ListItem>
+              );
+            })}
           </List>
         </DialogContent>
 

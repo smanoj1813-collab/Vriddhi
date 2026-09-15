@@ -778,7 +778,7 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
                           )}
                         </Box>
                         <Typography variant="body2" sx={{ pl: 3 }}>
-                          {q.text.substring(0, 120)}{q.text.length > 120 ? '...' : ''}
+                          {(q.text || '').substring(0, 120)}{(q.text || '').length > 120 ? '...' : ''}
                         </Typography>
                       </Box>
                     )

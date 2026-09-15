@@ -117,7 +117,7 @@ const PaperLinkageModal: React.FC<PaperLinkageModalProps> = ({
           Question:
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-          {question.text.substring(0, 120)}...
+          {(question.text || '').substring(0, 120)}...
         </Typography>
         <Box sx={{ mt: 1, display: 'flex', gap: 0.5 }}>
           <Chip label={question.subject} size="small" />
