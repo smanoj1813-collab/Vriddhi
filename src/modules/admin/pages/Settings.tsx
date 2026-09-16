@@ -188,7 +188,12 @@ export default function Settings() {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'data', label: 'Data & Backup', icon: Database },
-    { id: 'ai-content', label: 'AI Content & Cost', icon: Sparkles },
+    // AI content & cost data is INTERNAL (platform-level spend and caps):
+    // the tab exists for superadmin only and is never shown to college staff.
+    // (The server enforces this too — the controls endpoints 403 non-superadmin.)
+    ...(user?.role === 'superadmin'
+      ? [{ id: 'ai-content', label: 'AI Content & Cost', icon: Sparkles }]
+      : []),
   ]
 
   // Load initial data
@@ -1138,8 +1143,8 @@ export default function Settings() {
             </SettingsCard>
           )}
 
-          {/* AI Content & Cost — study-pack spend meter, limits, exam freezes, pre-warm */}
-          {activeTab === 'ai-content' && <AiStudyContentTab />}
+          {/* AI Content & Cost — internal (superadmin-only) spend meter, limits, exam freezes, pre-warm */}
+          {activeTab === 'ai-content' && user?.role === 'superadmin' && <AiStudyContentTab />}
         </div>
       </div>
     </div>

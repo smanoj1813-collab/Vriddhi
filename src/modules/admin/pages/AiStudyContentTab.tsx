@@ -1,13 +1,19 @@
 // src/modules/admin/pages/AiStudyContentTab.tsx
 //
-// Admin Settings → "AI Content & Cost" tab.
+// Admin Settings → "AI Content & Cost" tab — INTERNAL PLATFORM VIEW.
 //
-// The staff-facing console for the study-material cost guards in
-// functions/src/routes/ai-chat.ts:
+// This surface (spend meter, token usage, daily caps, exam freezes,
+// pre-warm runner) is visible to SUPERADMIN ONLY. It is deliberately never
+// shown to college staff: cost data is platform-internal. The server
+// enforces this independently — /ai/study-material/controls 403s any
+// non-superadmin — so the tab is convenience, not the boundary.
+//
+// What it manages (guards from functions/src/routes/ai-chat.ts):
 //   - TODAY's spend meter (serves vs generations vs real token counts) — the
-//     provider billing console lags ~24h, this is real time.
+//     provider billing console lags ~24h, this is real time; plus the
+//     per-campus breakdown across every college.
 //   - Per-campus limits: student daily new-topic cap + campus circuit
-//     breaker (admin/principal own campus; superadmin any campus).
+//     breaker (target any campus by collegeId).
 //   - Exam freeze windows: pause ALL new generation during internal
 //     assessments while cached packs keep serving for free.
 //   - Pre-warm: bulk-generate every module of a subject BEFORE the rush so
@@ -26,8 +32,6 @@ import {
   type StudyMaterialControls,
   type PrewarmModuleResult,
 } from '@/shared/services/aiStudyMaterialService';
-
-const EDIT_ROLES = ['admin', 'principal', 'superadmin'];
 
 const fmt = (n?: number) => new Intl.NumberFormat('en-IN').format(Number(n) || 0);
 
@@ -76,7 +80,9 @@ const statusChip = (status: string) => {
 export default function AiStudyContentTab() {
   const { user } = useAuth();
   const role = user?.role || '';
-  const canEdit = EDIT_ROLES.includes(role);
+  // Internal platform view: editing and even READING are superadmin-only
+  // (mirrors the server's 403; college staff must not see cost data).
+  const canEdit = role === 'superadmin';
   const isSuperadmin = role === 'superadmin';
 
   // Superadmin targets a campus explicitly; staff are auto-scoped by claim.
@@ -238,6 +244,11 @@ export default function AiStudyContentTab() {
       setPwRunning(false);
     }
   };
+
+  // Defense in depth: even if this component is ever mounted for a college
+  // role (a route change, a copied link), it renders nothing — cost data is
+  // internal. The server independently 403s the underlying endpoints.
+  if (!isSuperadmin) return null;
 
   if (loading && !controls) {
     return (

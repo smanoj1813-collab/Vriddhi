@@ -1050,15 +1050,16 @@ router.post('/study-material/prewarm', verifyAuth, aiGenerationLimiter, async (r
 
 /**
  * GET /study-material/controls
- * Staff read-only view of TODAY's AI study-material usage (the real-time
- * spend meter — provider billing consoles lag ~24h) plus the campus's
- * effective limits/freeze config. Superadmin additionally receives the
- * global counters and the per-campus breakdown across every college.
+ * INTERNAL platform view (superadmin only) of TODAY's AI study-material
+ * usage — the real-time spend meter (provider billing consoles lag ~24h) —
+ * plus the target campus's effective limits/freeze config and the global
+ * per-campus breakdown. College staff never see cost data: the enforcement
+ * lives here, not in the UI.
  */
 router.get('/study-material/controls', verifyAuth, async (req: AuthenticatedRequest, res: express.Response) => {
   const user = req.user!
-  if (!STUDY_STAFF_ROLES.has(String(user.role || ''))) {
-    res.status(403).json({ error: 'AI content controls are a staff view.' })
+  if (String(user.role || '') !== 'superadmin') {
+    res.status(403).json({ error: 'AI content controls are an internal platform view.' })
     return
   }
   const collegeId = resolveCollegeId(req)
@@ -1077,17 +1078,13 @@ router.get('/study-material/controls', verifyAuth, async (req: AuthenticatedRequ
       tokensIn: count(ownCollege.tokensIn),
       tokensOut: count(ownCollege.tokensOut),
     },
-    ...(String(user.role) === 'superadmin'
-      ? {
-          global: {
-            serves: count(usage.serves),
-            generations: count(usage.generations),
-            tokensIn: count(usage.tokensIn),
-            tokensOut: count(usage.tokensOut),
-            colleges: (usage.colleges as Record<string, unknown>) || {},
-          },
-        }
-      : {}),
+    global: {
+      serves: count(usage.serves),
+      generations: count(usage.generations),
+      tokensIn: count(usage.tokensIn),
+      tokensOut: count(usage.tokensOut),
+      colleges: (usage.colleges as Record<string, unknown>) || {},
+    },
     config,
     defaults: {
       studentDailyGenerationLimit: DEFAULT_STUDENT_DAILY_GENERATION_LIMIT,
@@ -1099,14 +1096,14 @@ router.get('/study-material/controls', verifyAuth, async (req: AuthenticatedRequ
 
 /**
  * PUT /study-material/controls
- * Admin/principal (own campus) or superadmin (any campus via collegeId)
- * update the per-campus cost controls: student daily cap, campus circuit
- * breaker, and exam freeze windows. A limit of 0 disables that tier.
+ * INTERNAL (superadmin only): update a campus's cost controls — student
+ * daily cap, campus circuit breaker, and exam freeze windows. Target any
+ * campus via collegeId. A limit of 0 disables that tier.
  */
 router.put('/study-material/controls', verifyAuth, async (req: AuthenticatedRequest, res: express.Response) => {
   const user = req.user!
-  if (!['superadmin', 'admin', 'principal'].includes(String(user.role || ''))) {
-    res.status(403).json({ error: 'Only admin, principal or superadmin may change AI content controls.' })
+  if (String(user.role || '') !== 'superadmin') {
+    res.status(403).json({ error: 'Only superadmin may change AI content controls — they are internal platform settings.' })
     return
   }
   const collegeId = resolveCollegeId(req)
