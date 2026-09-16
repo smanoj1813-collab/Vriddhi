@@ -58,9 +58,39 @@ interface ChatMessage {
  *     REGENERATE_COOLDOWN window. The key is global across every campus, so
  *     this caps worst-case regeneration spend per topic no matter how many
  *     colleges share it.
+ *  3. CONCURRENCY: a short-lived `generating` lease on the summary doc makes
+ *     exactly one caller pay for a cold key — the 9PM exam-eve stampede
+ *     (100 students opening the same uncached unit at once) produces ONE LLM
+ *     call; everyone else gets HTTP 202 and polls until the pack lands.
+ *  4. NEW-KEY CREATION is capped separately from the generic rate limiter:
+ *     students/parents get STUDENT_DAILY_GENERATION_LIMIT cold-key
+ *     generations per UTC day (a scripted account cycling random topics can
+ *     never be absorbed by the cache, so it needs its own ceiling). Each
+ *     campus additionally has a COLLEGE daily circuit breaker — when it
+ *     trips the campus falls back to cache-only until the day resets.
+ *     Both counters increment ATOMICALLY inside the claim transaction so
+ *     concurrent requests can never slip past the cap together.
+ *  5. EXAM FREEZE WINDOWS (per campus, `ai_config/{collegeId}`) pause all
+ *     generation/regeneration during internal assessments: cached packs
+ *     still serve for free, but no new spend is authorised in the
+ *     highest-abuse window of the academic calendar.
+ *  6. TELEMETRY: every claim increments `ai_usage/{YYYY-MM-DD}` (serves,
+ *     generations, per-campus, per-student) and every commit records the
+ *     provider's real token counts. Billing consoles lag ~24h; these docs
+ *     are the real-time spend meter (see GET /study-material/controls).
  */
 const STUDY_STAFF_ROLES = new Set(['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'])
 const REGENERATE_COOLDOWN_MS = 15 * 60 * 1000
+/** Lease for the in-flight generation lock; stale leases are taken over. */
+const GEN_LOCK_LEASE_MS = 2 * 60 * 1000
+/** Prompt-interpolated free-text fields are capped before they reach the LLM. */
+const STUDY_TEXT_FIELD_MAX = 140
+/** Daily cold-key generation caps (per UTC day; both overridable per campus). */
+const DEFAULT_STUDENT_DAILY_GENERATION_LIMIT = 5
+const DEFAULT_COLLEGE_DAILY_GENERATION_LIMIT = 400
+/** Pre-warm batching keeps a prewarm call well inside the 60s function timeout. */
+const PREWARM_BATCH_SIZE = 2
+const MAX_PREWARM_MODULES = 40
 
 /** Zero-padded version doc id so Firestore console sorts v0001..v9999 naturally. */
 export const studyVersionDocId = (n: number): string => `v${String(n).padStart(4, '0')}`
@@ -100,6 +130,503 @@ export function decideStudyServeTarget(
   return null
 }
 
+// ─── Cost-safety helpers (guards 3–6 from the header comment) ────────────
+
+export interface FreezeState {
+  frozen: boolean
+  until?: string
+  reason?: string
+}
+
+/**
+ * Is a campus's generation freeze active right now? Pure. A window is
+ * [start, end) in parseable date form; malformed windows are ignored (they
+ * must never accidentally freeze a campus).
+ */
+export function isFrozenNow(windows: unknown, nowMs: number): FreezeState {
+  if (!Array.isArray(windows)) return { frozen: false }
+  for (const w of windows) {
+    const start = Date.parse(String((w as any)?.start || ''))
+    const end = Date.parse(String((w as any)?.end || ''))
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue
+    if (nowMs >= start && nowMs < end) {
+      return {
+        frozen: true,
+        until: new Date(end).toISOString(),
+        reason: typeof (w as any)?.reason === 'string' ? (w as any).reason : undefined,
+      }
+    }
+  }
+  return { frozen: false }
+}
+
+export type GenerationLockDecision = { action: 'claim' } | { action: 'wait'; retryAfterMs: number }
+
+/**
+ * In-flight lock decision. Pure. A fresh `generating` lease means another
+ * caller is already paying for this key — the requester must wait and take
+ * the shared result (guard 3). Stale or malformed leases are taken over so a
+ * crashed generator can never wedge a key forever.
+ */
+export function decideGenerationLock(
+  summary: { generating?: unknown } | null | undefined,
+  nowMs: number,
+  leaseMs: number,
+): GenerationLockDecision {
+  const g = (summary as any)?.generating
+  if (g && typeof g === 'object') {
+    const startedAt = Date.parse(String((g as any).startedAt || ''))
+    if (Number.isFinite(startedAt) && nowMs - startedAt < leaseMs) {
+      // Poll comfortably inside the lease so the follower lands right after
+      // the leader's commit in the common case.
+      return { action: 'wait', retryAfterMs: 4000 }
+    }
+  }
+  return { action: 'claim' }
+}
+
+export type DailyLimitDecision = { allowed: true } | { allowed: false; scope: 'student' | 'college' }
+
+/**
+ * Daily cap decision (guard 4). Pure. The campus circuit breaker applies to
+ * EVERYONE including staff; the per-account cap applies only to
+ * students/parents (staff pre-warm many units legitimately). A limit <= 0
+ * disables that tier (documented escape hatch in the campus config).
+ */
+export function evaluateDailyLimits(input: {
+  isStaff: boolean
+  studentGenerationsToday: number
+  collegeGenerationsToday: number
+  studentDailyLimit: number
+  collegeDailyLimit: number
+}): DailyLimitDecision {
+  const { isStaff, studentGenerationsToday, collegeGenerationsToday, studentDailyLimit, collegeDailyLimit } = input
+  if (collegeDailyLimit > 0 && collegeGenerationsToday >= collegeDailyLimit) {
+    return { allowed: false, scope: 'college' }
+  }
+  if (!isStaff && studentDailyLimit > 0 && studentGenerationsToday >= studentDailyLimit) {
+    return { allowed: false, scope: 'student' }
+  }
+  return { allowed: true }
+}
+
+/** UTC-day usage doc id. The daily caps reset at UTC midnight (05:30 IST). */
+function usageDocIdForDay(d = new Date()): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function nextUtcMidnightIso(): string {
+  const d = new Date()
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1)).toISOString()
+}
+
+/**
+ * Builds the merge-payload for `ai_usage/{YYYY-MM-DD}`. Nested-map merge with
+ * increment leaves keeps the global counters, the per-campus breakdown and
+ * the per-student counters in one document — cheap enough to update on every
+ * serve, complete enough to replace the lagging provider billing console.
+ */
+function usageIncrementPayload(
+  collegeId: string | undefined,
+  deltas: { serves?: number; generations?: number; tokensIn?: number; tokensOut?: number; studentUid?: string },
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {}
+  if (deltas.serves) payload.serves = FieldValue.increment(deltas.serves)
+  if (deltas.generations) payload.generations = FieldValue.increment(deltas.generations)
+  if (deltas.tokensIn) payload.tokensIn = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensIn)))
+  if (deltas.tokensOut) payload.tokensOut = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensOut)))
+  if (collegeId) {
+    const perCollege: Record<string, unknown> = {}
+    if (deltas.serves) perCollege.serves = FieldValue.increment(deltas.serves)
+    if (deltas.generations) perCollege.generations = FieldValue.increment(deltas.generations)
+    if (deltas.tokensIn) perCollege.tokensIn = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensIn)))
+    if (deltas.tokensOut) perCollege.tokensOut = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensOut)))
+    if (Object.keys(perCollege).length > 0) payload.colleges = { [collegeId]: perCollege }
+  }
+  if (deltas.studentUid && deltas.generations) {
+    payload.students = { [deltas.studentUid]: FieldValue.increment(deltas.generations) }
+  }
+  if (Object.keys(payload).length > 0) payload.lastEventAt = new Date().toISOString()
+  return payload
+}
+
+interface AiContentConfig {
+  studentDailyGenerationLimit: number
+  collegeDailyGenerationLimit: number
+  freezeWindows: Array<{ start: string; end: string; reason?: string }>
+}
+
+/**
+ * Per-campus cost/governance config from `ai_config/{collegeId}` (server-only
+ * collection, Admin SDK — same pattern as ai_study_materials). Absent fields
+ * fall back to the hard defaults; a missing/corrupt doc must never block a
+ * legitimate serve.
+ */
+async function loadAiContentConfig(collegeId: string | undefined): Promise<AiContentConfig> {
+  const defaults: AiContentConfig = {
+    studentDailyGenerationLimit: DEFAULT_STUDENT_DAILY_GENERATION_LIMIT,
+    collegeDailyGenerationLimit: DEFAULT_COLLEGE_DAILY_GENERATION_LIMIT,
+    freezeWindows: [],
+  }
+  if (!collegeId) return defaults
+  try {
+    const d = (await db.collection('ai_config').doc(String(collegeId)).get()).data() || {}
+    const num = (v: unknown, fallback: number) => {
+      const n = Number(v)
+      return Number.isFinite(n) && n >= 0 ? Math.floor(n) : fallback
+    }
+    return {
+      studentDailyGenerationLimit: num(d.studentDailyGenerationLimit, defaults.studentDailyGenerationLimit),
+      collegeDailyGenerationLimit: num(d.collegeDailyGenerationLimit, defaults.collegeDailyGenerationLimit),
+      freezeWindows: Array.isArray(d.freezeWindows) ? d.freezeWindows : [],
+    }
+  } catch {
+    return defaults
+  }
+}
+
+export type StudyClaimResult =
+  | { action: 'claimed' }
+  | { action: 'wait'; retryAfterMs: number }
+  | { action: 'limited'; scope: 'student' | 'college' }
+
+/**
+ * Atomically claim the right to generate for a key (guard 3 + 4): takes the
+ * in-flight lease AND increments the daily counters in ONE transaction, so 50
+ * concurrent cold-key requests can neither stampede the LLM nor overdraw the
+ * caps. The lease is released by commitStudyGeneration (or lease expiry).
+ */
+async function claimStudyGeneration(
+  cacheDocRef: FirebaseFirestore.DocumentReference,
+  opts: { uid: string; role: string; collegeId: string | undefined; config: AiContentConfig },
+): Promise<StudyClaimResult> {
+  const usageRef = db.collection('ai_usage').doc(usageDocIdForDay())
+  return db.runTransaction(async (tx) => {
+    const summarySnap = await tx.get(cacheDocRef)
+    const lockDecision = decideGenerationLock(summarySnap.data(), Date.now(), GEN_LOCK_LEASE_MS)
+    if (lockDecision.action === 'wait') return lockDecision
+
+    const usageSnap = await tx.get(usageRef)
+    const usage = usageSnap.data() || {}
+    const isStaff = STUDY_STAFF_ROLES.has(String(opts.role || ''))
+    const collegeToday = opts.collegeId
+      ? Number((usage.colleges as any)?.[opts.collegeId]?.generations || 0)
+      : 0
+    const studentToday = Number((usage.students as any)?.[opts.uid] || 0)
+    const limitDecision = evaluateDailyLimits({
+      isStaff,
+      studentGenerationsToday: studentToday,
+      collegeGenerationsToday: opts.collegeId ? collegeToday : 0,
+      studentDailyLimit: opts.config.studentDailyGenerationLimit,
+      collegeDailyLimit: opts.collegeId ? opts.config.collegeDailyGenerationLimit : 0,
+    })
+    if (!limitDecision.allowed) return { action: 'limited', scope: limitDecision.scope } as StudyClaimResult
+
+    tx.set(cacheDocRef, {
+      generating: {
+        startedAt: new Date().toISOString(),
+        byUid: opts.uid,
+        collegeId: opts.collegeId || null,
+      },
+    }, { merge: true })
+    // Count the CLAIM, not the completed call: a failed/aborted LLM attempt
+    // still consumed spend capacity, so caps must drain on attempts.
+    tx.set(usageRef, usageIncrementPayload(opts.collegeId, {
+      generations: 1,
+      studentUid: isStaff ? undefined : opts.uid,
+    }), { merge: true })
+    return { action: 'claimed' } as StudyClaimResult
+  })
+}
+
+/** Best-effort lease release on the failure path; lease expiry is the safety net. */
+async function releaseStudyGenerationLock(
+  cacheDocRef: FirebaseFirestore.DocumentReference,
+  uid: string,
+): Promise<void> {
+  try {
+    const snap = await cacheDocRef.get()
+    if ((snap.data()?.generating as any)?.byUid === uid) {
+      await cacheDocRef.update({ generating: FieldValue.delete() })
+    }
+  } catch {
+    /* expired lease takes over */
+  }
+}
+
+/** Shared prompt for every study-pack generation (main endpoint + pre-warm). */
+function buildStudyPackPrompt(fields: {
+  subject: string
+  topic: string
+  courseName?: string
+  courseCode?: string
+  moduleName?: string
+  moduleNo?: number | string | null
+  branch?: string
+  semester?: number | string
+}): string {
+  const { subject, topic, courseName, courseCode, moduleName, moduleNo, branch, semester } = fields
+  return `You are an expert higher education professor and academic content creator for Indian universities (NEP 2020, CBCS, UOM, Bangalore University, VTU, Delhi University).
+Generate a comprehensive, high-yield academic Study Pack for the subject "${subject}" and topic "${topic}".
+Context: Course: ${courseName || subject} ${courseCode ? `(${courseCode})` : ''} ${branch ? `| Program: ${branch}` : ''} ${semester ? `| Semester: ${semester}` : ''} ${moduleNo ? `| Module No: ${moduleNo}` : ''} ${moduleName ? `| Module: ${moduleName}` : ''}.
+
+You MUST respond ONLY with a valid JSON object matching this exact schema, with NO markdown code fences and NO conversational filler:
+{
+  "title": "${topic}",
+  "subject": "${subject}",
+  "overview": "Clear, intuitive concept explanation in 2-3 short paragraphs using simple English with a relatable real-world business or engineering analogy.",
+  "quickSummaryPoints": [
+    "High-yield core takeaway 1",
+    "High-yield core takeaway 2",
+    "High-yield core takeaway 3",
+    "High-yield core takeaway 4"
+  ],
+  "keyConcepts": [
+    {
+      "term": "Essential Term or Principle",
+      "definition": "Clear concise academic definition",
+      "formulaOrRule": "Mathematical formula, journal entry rule, or governing equation (or N/A)",
+      "importance": "Why this concept is crucial for exams"
+    },
+    {
+      "term": "Key Component / Concept 2",
+      "definition": "Precise definition",
+      "formulaOrRule": "Rule or formula",
+      "importance": "Exam importance"
+    }
+  ],
+  "workedExample": {
+    "scenario": "A realistic practical problem or business case scenario",
+    "steps": [
+      { "step": "Step 1: Identifying given values and formula", "details": "Clear details" },
+      { "step": "Step 2: Step-by-step computation/application", "details": "Detailed working" }
+    ],
+    "solution": "Final numerical solution or managerial conclusion"
+  },
+  "examPrep": [
+    {
+      "question": "Frequently asked university exam question (5 to 10 marks)",
+      "expectedAnswer": "Model point-by-point answer that earns maximum marks",
+      "marks": 5,
+      "bloomLevel": "Application / Analysis",
+      "examTip": "Examiner's tip or common pitfall to avoid"
+    },
+    {
+      "question": "Short conceptual/viva question (2 to 3 marks)",
+      "expectedAnswer": "Crisp 2-sentence answer with key terms",
+      "marks": 2,
+      "bloomLevel": "Understanding",
+      "examTip": "Key definition examiners look for"
+    }
+  ]
+}`
+}
+
+/**
+ * Provider cascade for study packs: Gemini → DeepSeek/OpenAI → deterministic
+ * offline composer (dev fallback when no keys are configured). Returns the
+ * provider's REAL token usage so spend telemetry is measured, not guessed.
+ */
+async function requestStudyPackFromProviders(
+  systemPrompt: string,
+  subject: string,
+  topic: string,
+): Promise<{ pack: any; provider: string; tokensIn: number; tokensOut: number }> {
+  let rawJson = ''
+  let provider = 'gemini'
+  let tokensIn = 0
+  let tokensOut = 0
+
+  const gemini = geminiClient()
+  if (gemini) {
+    try {
+      const model = gemini.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+      })
+      const result = await model.generateContent(systemPrompt)
+      rawJson = result.response.text()
+      const usage = (result.response as any).usageMetadata
+      tokensIn = Number(usage?.promptTokenCount) || 0
+      tokensOut = Number(usage?.candidatesTokenCount) || 0
+    } catch (gemErr) {
+      console.warn('[StudyMaterial] Gemini call failed, trying next provider:', gemErr)
+    }
+  }
+
+  if (!rawJson) {
+    const client = deepseekClient() || openaiClient()
+    if (client) {
+      try {
+        const isDeepseek = !!deepseekClient()
+        const completion = await client.chat.completions.create({
+          model: isDeepseek ? 'deepseek-chat' : 'gpt-4o-mini',
+          messages: [{ role: 'user', content: systemPrompt }],
+          response_format: { type: 'json_object' },
+          temperature: 0.5,
+        })
+        rawJson = completion.choices[0]?.message?.content || ''
+        tokensIn = Number(completion.usage?.prompt_tokens) || 0
+        tokensOut = Number(completion.usage?.completion_tokens) || 0
+        provider = isDeepseek ? 'deepseek' : 'openai'
+      } catch (fallbackErr) {
+        console.warn('[StudyMaterial] LLM fallback failed:', fallbackErr)
+      }
+    }
+  }
+
+  let parsedStudyPack: any = null
+
+  if (rawJson) {
+    let cleaned = rawJson.trim()
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\n/, '').replace(/\n```$/, '')
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\n/, '').replace(/\n```$/, '')
+    }
+    try {
+      parsedStudyPack = JSON.parse(cleaned)
+    } catch (pErr) {
+      console.warn('[StudyMaterial] JSON parse failed, creating fallback:', pErr)
+    }
+  }
+
+  // High quality offline fallback pack if LLM keys are unconfigured in dev
+  if (!parsedStudyPack) {
+    parsedStudyPack = {
+      title: topic,
+      subject,
+      overview: `${topic} is a foundational concept in ${subject}. It provides the framework for analyzing, computing, and decision-making in standard higher education university curricula.`,
+      quickSummaryPoints: [
+        `Core principle of ${topic} aligns with university syllabus requirements.`,
+        `Essential for conceptual understanding and practical problem solving in examinations.`,
+        `Review formulas, rules, and model answer structures before test day.`,
+      ],
+      keyConcepts: [
+        {
+          term: `${topic} Definition`,
+          definition: `The systematic academic formulation of ${topic} within ${subject}.`,
+          formulaOrRule: 'Standard formulation according to university syllabus',
+          importance: 'High-frequency question in unit tests and university examinations.',
+        },
+      ],
+      workedExample: {
+        scenario: `Practical examination illustration for ${topic}:`,
+        steps: [
+          { step: 'Step 1: Understand Problem Statements', details: 'Identify given data and target values.' },
+          { step: 'Step 2: Apply the governing rule/formula', details: 'Solve systematically showing step-by-step working.' },
+        ],
+        solution: 'Final evaluated answer and concluding notes.',
+      },
+      examPrep: [
+        {
+          question: `Explain the fundamental concept of ${topic} and its practical significance in ${subject}.`,
+          expectedAnswer: 'Define the term, explain the main components with an example, and state key assumptions.',
+          marks: 5,
+          bloomLevel: 'Understanding & Application',
+          examTip: 'Draw a schematic diagram or table to secure full marks.',
+        },
+      ],
+    }
+    provider = 'offline-composer'
+    tokensIn = 0
+    tokensOut = 0
+  }
+
+  return { pack: parsedStudyPack, provider, tokensIn, tokensOut }
+}
+
+/**
+ * Append a generated pack as the next immutable version, advance the global
+ * latest pointer, move ONLY this campus's pin, record real token usage (on
+ * the version, cumulatively on the summary, and into the daily usage doc),
+ * and release the in-flight lease when we still own it. Single transaction.
+ */
+async function commitStudyGeneration(
+  cacheDocRef: FirebaseFirestore.DocumentReference,
+  opts: {
+    baseCacheFields: Record<string, unknown>
+    subject: string
+    topic: string
+    pack: any
+    provider: string
+    tokensIn: number
+    tokensOut: number
+    uid: string
+    collegeId: string | undefined
+  },
+): Promise<number> {
+  const now = new Date().toISOString()
+  const usageRef = db.collection('ai_usage').doc(usageDocIdForDay())
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(cacheDocRef)
+    const prev = snap.data() || {}
+
+    // Preserve the pre-versioning pack (if any) as v0001 before adding vN+1.
+    let latest = Number(prev.latestVersion) > 0 ? Number(prev.latestVersion) : 0
+    if (latest === 0 && prev.studyPack) {
+      tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(1)), {
+        version: 1,
+        studyPack: prev.studyPack,
+        provider: prev.provider || 'pre-versioning',
+        createdBy: prev.createdBy || null,
+        collegeId: prev.collegeId || null,
+        createdAt: prev.cachedAt || now,
+        migratedFrom: 'legacy-top-level',
+        subject: prev.subject || opts.subject,
+        topic: prev.topic || opts.topic,
+        canonicalSubject: prev.canonicalSubject || opts.baseCacheFields.canonicalSubject,
+        canonicalTopic: prev.canonicalTopic || opts.baseCacheFields.canonicalTopic,
+      })
+      latest = 1
+    }
+
+    const next = nextStudyVersion(latest)
+    tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(next)), {
+      ...opts.baseCacheFields,
+      version: next,
+      studyPack: opts.pack,
+      provider: opts.provider,
+      tokensIn: opts.tokensIn,
+      tokensOut: opts.tokensOut,
+      createdBy: opts.uid,
+      collegeId: opts.collegeId || null,
+      createdAt: now,
+    })
+
+    const summaryUpdate: Record<string, unknown> = {
+      ...opts.baseCacheFields,
+      // studyPack mirrors LATEST for console legibility; readers never use
+      // it — pinned campuses read their pinned version document.
+      studyPack: opts.pack,
+      latestVersion: next,
+      cachedAt: now,
+      hitCount: Number(prev.hitCount || 0) + (snap.exists ? 0 : 1),
+      regenCount: Number(prev.regenCount || 0) + (snap.exists ? 1 : 0),
+      provider: opts.provider,
+      collegeId: (opts.collegeId || prev.collegeId) || null,
+      createdBy: prev.createdBy || opts.uid,
+      totalTokensIn: Number(prev.totalTokensIn || 0) + opts.tokensIn,
+      totalTokensOut: Number(prev.totalTokensOut || 0) + opts.tokensOut,
+    }
+    if ((prev.generating as any)?.byUid === opts.uid) {
+      summaryUpdate.generating = FieldValue.delete()
+    }
+    tx.set(cacheDocRef, summaryUpdate, { merge: true })
+
+    if (opts.collegeId) {
+      tx.set(cacheDocRef.collection('pins').doc(String(opts.collegeId)), {
+        version: next,
+        pinnedAt: now,
+      })
+    }
+    tx.set(usageRef, usageIncrementPayload(opts.collegeId, {
+      tokensIn: opts.tokensIn,
+      tokensOut: opts.tokensOut,
+    }), { merge: true })
+    return next
+  })
+}
+
 router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {
   const { subject, topic, courseName, courseCode, moduleName, moduleNo, branch, semester, forceRefresh } = req.body as {
     subject: string
@@ -131,6 +658,16 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
     return
   }
 
+  // Length-cap every free-text field that reaches the prompt. The cache key
+  // is already truncated; the prompt is not — an oversized topic string
+  // would multiply input-token spend on every generation.
+  for (const [field, value] of Object.entries({ subject, topic, courseName, courseCode, moduleName, branch })) {
+    if (typeof value === 'string' && value.length > STUDY_TEXT_FIELD_MAX) {
+      res.status(400).json({ error: `${field} is too long (max ${STUDY_TEXT_FIELD_MAX} characters).` })
+      return
+    }
+  }
+
   // Universal Canonical Cache Key (e.g. "cost_accounting__marginal_costing")
   const canonicalSub = cleanKey(courseName || subject)
   const canonicalTop = cleanKey(topic || moduleName || '')
@@ -149,8 +686,12 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
     canonicalTopic: canonicalTop,
   }
 
+  const cacheDocRef = db.collection('ai_study_materials').doc(cacheKey)
+  // Tracks whether THIS request holds the in-flight generation lease, so the
+  // catch block can release it on the failure path.
+  let generationLeaseHeld = false
+
   try {
-    const cacheDocRef = db.collection('ai_study_materials').doc(cacheKey)
 
     /**
      * One-time materialisation of the pre-versioning cache: the original
@@ -232,6 +773,11 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
               hitCount: FieldValue.increment(1),
               lastAccessedAt: new Date().toISOString(),
             }).catch(() => {})
+            // Guard 6: every serve is counted — the serves-to-generations
+            // ratio in ai_usage is the cache cost-efficiency meter.
+            db.collection('ai_usage').doc(usageDocIdForDay())
+              .set(usageIncrementPayload(collegeId, { serves: 1 }), { merge: true })
+              .catch(() => {})
 
             res.json({
               success: true,
@@ -246,8 +792,25 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
           }
         }
       }
-    } else {
-      // Cost guard 2: per-key regeneration cooldown, global across campuses.
+    }
+
+    // ── Everything below this line spends money on an LLM call. ──────────
+
+    // Guard 5: per-campus exam freeze windows — cached packs stay free, new
+    // spend is paused during internal assessments.
+    const config = await loadAiContentConfig(collegeId)
+    const freeze = isFrozenNow(config.freezeWindows, Date.now())
+    if (freeze.frozen) {
+      res.status(403).json({
+        error: `AI study-pack generation is paused at your campus until ${freeze.until}${freeze.reason ? ` (${freeze.reason})` : ''}. Existing cached packs remain available.`,
+        freeze: { until: freeze.until, reason: freeze.reason || null },
+        cacheKey,
+      })
+      return
+    }
+
+    // Cost guard 2: per-key regeneration cooldown, global across campuses.
+    if (wantsRefresh) {
       const existingSnap = await cacheDocRef.get()
       if (existingSnap.exists) {
         const generatedAtMs = Date.parse(String(existingSnap.data()?.cachedAt || ''))
@@ -263,213 +826,55 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
       }
     }
 
-    // 2. Generate with LLM (Gemini 2.5 Flash / 1.5 Flash default)
-    const systemPrompt = `You are an expert higher education professor and academic content creator for Indian universities (NEP 2020, CBCS, UOM, Bangalore University, VTU, Delhi University).
-Generate a comprehensive, high-yield academic Study Pack for the subject "${subject}" and topic "${topic}".
-Context: Course: ${courseName || subject} ${courseCode ? `(${courseCode})` : ''} ${branch ? `| Program: ${branch}` : ''} ${semester ? `| Semester: ${semester}` : ''} ${moduleNo ? `| Module No: ${moduleNo}` : ''} ${moduleName ? `| Module: ${moduleName}` : ''}.
-
-You MUST respond ONLY with a valid JSON object matching this exact schema, with NO markdown code fences and NO conversational filler:
-{
-  "title": "${topic}",
-  "subject": "${subject}",
-  "overview": "Clear, intuitive concept explanation in 2-3 short paragraphs using simple English with a relatable real-world business or engineering analogy.",
-  "quickSummaryPoints": [
-    "High-yield core takeaway 1",
-    "High-yield core takeaway 2",
-    "High-yield core takeaway 3",
-    "High-yield core takeaway 4"
-  ],
-  "keyConcepts": [
-    {
-      "term": "Essential Term or Principle",
-      "definition": "Clear concise academic definition",
-      "formulaOrRule": "Mathematical formula, journal entry rule, or governing equation (or N/A)",
-      "importance": "Why this concept is crucial for exams"
-    },
-    {
-      "term": "Key Component / Concept 2",
-      "definition": "Precise definition",
-      "formulaOrRule": "Rule or formula",
-      "importance": "Exam importance"
-    }
-  ],
-  "workedExample": {
-    "scenario": "A realistic practical problem or business case scenario",
-    "steps": [
-      { "step": "Step 1: Identifying given values and formula", "details": "Clear details" },
-      { "step": "Step 2: Step-by-step computation/application", "details": "Detailed working" }
-    ],
-    "solution": "Final numerical solution or managerial conclusion"
-  },
-  "examPrep": [
-    {
-      "question": "Frequently asked university exam question (5 to 10 marks)",
-      "expectedAnswer": "Model point-by-point answer that earns maximum marks",
-      "marks": 5,
-      "bloomLevel": "Application / Analysis",
-      "examTip": "Examiner's tip or common pitfall to avoid"
-    },
-    {
-      "question": "Short conceptual/viva question (2 to 3 marks)",
-      "expectedAnswer": "Crisp 2-sentence answer with key terms",
-      "marks": 2,
-      "bloomLevel": "Understanding",
-      "examTip": "Key definition examiners look for"
-    }
-  ]
-}`
-
-    let rawJson = ''
-    let usedProvider = 'gemini'
-
-    const gemini = geminiClient()
-    if (gemini) {
-      try {
-        const model = gemini.getGenerativeModel({
-          model: 'gemini-1.5-flash',
-        })
-        const result = await model.generateContent(systemPrompt)
-        rawJson = result.response.text()
-      } catch (gemErr) {
-        console.warn('[StudyMaterial] Gemini call failed, trying next provider:', gemErr)
-      }
-    }
-
-    if (!rawJson) {
-      const client = deepseekClient() || openaiClient()
-      if (client) {
-        try {
-          const completion = await client.chat.completions.create({
-            model: deepseekClient() ? 'deepseek-chat' : 'gpt-4o-mini',
-            messages: [{ role: 'user', content: systemPrompt }],
-            response_format: { type: 'json_object' },
-            temperature: 0.5,
-          })
-          rawJson = completion.choices[0]?.message?.content || ''
-          usedProvider = deepseekClient() ? 'deepseek' : 'openai'
-        } catch (openaiErr) {
-          console.warn('[StudyMaterial] LLM fallback failed:', openaiErr)
-        }
-      }
-    }
-
-    let parsedStudyPack: any = null
-
-    if (rawJson) {
-      let cleaned = rawJson.trim()
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/^```json\n/, '').replace(/\n```$/, '')
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```\n/, '').replace(/\n```$/, '')
-      }
-      try {
-        parsedStudyPack = JSON.parse(cleaned)
-      } catch (pErr) {
-        console.warn('[StudyMaterial] JSON parse failed, creating fallback:', pErr)
-      }
-    }
-
-    // High quality offline fallback pack if LLM keys are unconfigured in dev
-    if (!parsedStudyPack) {
-      parsedStudyPack = {
-        title: topic,
-        subject,
-        overview: `${topic} is a foundational concept in ${subject}. It provides the framework for analyzing, computing, and decision-making in standard higher education university curricula.`,
-        quickSummaryPoints: [
-          `Core principle of ${topic} aligns with university syllabus requirements.`,
-          `Essential for conceptual understanding and practical problem solving in examinations.`,
-          `Review formulas, rules, and model answer structures before test day.`,
-        ],
-        keyConcepts: [
-          {
-            term: `${topic} Definition`,
-            definition: `The systematic academic formulation of ${topic} within ${subject}.`,
-            formulaOrRule: 'Standard formulation according to university syllabus',
-            importance: 'High-frequency question in unit tests and university examinations.',
-          },
-        ],
-        workedExample: {
-          scenario: `Practical examination illustration for ${topic}:`,
-          steps: [
-            { step: 'Step 1: Understand Problem Statements', details: 'Identify given data and target values.' },
-            { step: 'Step 2: Apply the governing rule/formula', details: 'Solve systematically showing step-by-step working.' },
-          ],
-          solution: 'Final evaluated answer and concluding notes.',
-        },
-        examPrep: [
-          {
-            question: `Explain the fundamental concept of ${topic} and its practical significance in ${subject}.`,
-            expectedAnswer: 'Define the term, explain the main components with an example, and state key assumptions.',
-            marks: 5,
-            bloomLevel: 'Understanding & Application',
-            examTip: 'Draw a schematic diagram or table to secure full marks.',
-          },
-        ],
-      }
-      usedProvider = 'offline-composer'
-    }
-
-    const now = new Date().toISOString()
-
-    /**
-     * Append the new pack as the next immutable version, advance the global
-     * "latest" pointer, and move ONLY this campus's pin to it. Every other
-     * campus keeps its pinned version — their students' packs do not change.
-     */
-    const servedVersion = await db.runTransaction(async (tx) => {
-      const snap = await tx.get(cacheDocRef)
-      const prev = snap.data() || {}
-
-      // Preserve the pre-versioning pack (if any) as v0001 before adding vN+1.
-      let latest = Number(prev.latestVersion) > 0 ? Number(prev.latestVersion) : 0
-      if (latest === 0 && prev.studyPack) {
-        tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(1)), {
-          version: 1,
-          studyPack: prev.studyPack,
-          provider: prev.provider || 'pre-versioning',
-          createdBy: prev.createdBy || null,
-          collegeId: prev.collegeId || null,
-          createdAt: prev.cachedAt || now,
-          migratedFrom: 'legacy-top-level',
-          subject: prev.subject || subject,
-          topic: prev.topic || topic,
-          canonicalSubject: prev.canonicalSubject || canonicalSub,
-          canonicalTopic: prev.canonicalTopic || canonicalTop,
-        })
-        latest = 1
-      }
-
-      const next = nextStudyVersion(latest)
-      tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(next)), {
-        ...baseCacheFields,
-        version: next,
-        studyPack: parsedStudyPack,
-        provider: usedProvider,
-        createdBy: user.uid,
-        collegeId: collegeId || null,
-        createdAt: now,
-      })
-      tx.set(cacheDocRef, {
-        ...baseCacheFields,
-        // studyPack mirrors LATEST for console legibility; readers never use
-        // it — pinned campuses read their pinned version document.
-        studyPack: parsedStudyPack,
-        latestVersion: next,
-        cachedAt: now,
-        hitCount: Number(prev.hitCount || 0) + (snap.exists ? 0 : 1),
-        regenCount: Number(prev.regenCount || 0) + (snap.exists ? 1 : 0),
-        provider: usedProvider,
-        collegeId: (collegeId || prev.collegeId) || null,
-        createdBy: prev.createdBy || user.uid,
-      }, { merge: true })
-      if (collegeId) {
-        tx.set(cacheDocRef.collection('pins').doc(String(collegeId)), {
-          version: next,
-          pinnedAt: now,
-        })
-      }
-      return next
+    // Guards 3+4: atomically take the in-flight lease and draw down the
+    // daily caps — one payer per cold key, bounded new-key creation.
+    const claim = await claimStudyGeneration(cacheDocRef, {
+      uid: user.uid,
+      role: String(user.role || ''),
+      collegeId,
+      config,
     })
+    if (claim.action === 'wait') {
+      res.status(202).json({
+        success: false,
+        inProgress: true,
+        retryAfterMs: claim.retryAfterMs,
+        cacheKey,
+        message: 'A study pack for this topic is already being generated. The shared result will be served to you in a few seconds.',
+      })
+      return
+    }
+    if (claim.action === 'limited') {
+      res.status(429).json({
+        error: claim.scope === 'student'
+          ? `Daily new-topic generation limit reached for your account (${config.studentDailyGenerationLimit}/day). Cached packs are always available — for new topics, ask faculty to pre-generate them.`
+          : `Daily AI generation budget reached for your campus (${config.collegeDailyGenerationLimit}/day). Serving existing cached packs only until the day resets.`,
+        scope: claim.scope,
+        resetsAt: nextUtcMidnightIso(),
+        cacheKey,
+      })
+      return
+    }
+
+    generationLeaseHeld = true
+    const now = new Date().toISOString()
+    const llm = await requestStudyPackFromProviders(
+      buildStudyPackPrompt({ subject, topic, courseName, courseCode, moduleName, moduleNo, branch, semester }),
+      subject,
+      topic,
+    )
+    const servedVersion = await commitStudyGeneration(cacheDocRef, {
+      baseCacheFields,
+      subject,
+      topic,
+      pack: llm.pack,
+      provider: llm.provider,
+      tokensIn: llm.tokensIn,
+      tokensOut: llm.tokensOut,
+      uid: user.uid,
+      collegeId,
+    })
+    generationLeaseHeld = false
 
     res.json({
       success: true,
@@ -478,12 +883,293 @@ You MUST respond ONLY with a valid JSON object matching this exact schema, with 
       cacheKey,
       servedVersion,
       pinned: !!collegeId,
-      data: parsedStudyPack,
+      data: llm.pack,
     })
   } catch (err: any) {
+    if (generationLeaseHeld) {
+      generationLeaseHeld = false
+      await releaseStudyGenerationLock(cacheDocRef, user.uid)
+    }
     console.error('[StudyMaterial] Error:', err)
     res.status(500).json({ error: err?.message || 'Failed to generate study material' })
   }
+})
+
+/**
+ * POST /study-material/prewarm
+ * Staff-only BULK pre-generation: warm every module of a subject BEFORE the
+ * semester/exam rush, so students only ever ride free cache hits and the
+ * per-student daily cap never bites legitimate learners. This is the single
+ * biggest cost lever — the generation count is identical to organic first
+ * requests, but it happens once, calmly, under staff governance, instead of
+ * during a stampede.
+ *
+ * To stay comfortably inside the 60s function timeout, each invocation
+ * processes at most PREWARM_BATCH_SIZE modules and returns `nextIndex`; the
+ * client loops with a progress bar. Fully idempotent: modules that already
+ * have a cached pack are skipped ('cached'), so retries and re-runs cost
+ * nothing.
+ */
+router.post('/study-material/prewarm', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {
+  const user = req.user!
+  if (!STUDY_STAFF_ROLES.has(String(user.role || ''))) {
+    res.status(403).json({ error: 'Pre-warming the study-material cache is a staff action.' })
+    return
+  }
+
+  const { subject, courseName, courseCode, branch, semester, modules, startIndex } = req.body as {
+    subject: string
+    courseName?: string
+    courseCode?: string
+    branch?: string
+    semester?: number | string
+    modules?: Array<{ topic?: string; moduleNo?: number | string; moduleName?: string }>
+    startIndex?: number
+  }
+
+  if (!subject || !Array.isArray(modules) || modules.length === 0) {
+    res.status(400).json({ error: 'subject and a non-empty modules array are required' })
+    return
+  }
+  if (modules.length > MAX_PREWARM_MODULES) {
+    res.status(400).json({ error: `At most ${MAX_PREWARM_MODULES} modules per pre-warm run.` })
+    return
+  }
+  for (const [field, value] of Object.entries({ subject, courseName, courseCode, branch })) {
+    if (typeof value === 'string' && value.length > STUDY_TEXT_FIELD_MAX) {
+      res.status(400).json({ error: `${field} is too long (max ${STUDY_TEXT_FIELD_MAX} characters).` })
+      return
+    }
+  }
+  for (let i = 0; i < modules.length; i++) {
+    const t = String(modules[i]?.topic || '').trim()
+    if (!t || t.length > STUDY_TEXT_FIELD_MAX) {
+      res.status(400).json({ error: `modules[${i}].topic is empty or too long (max ${STUDY_TEXT_FIELD_MAX} characters).` })
+      return
+    }
+  }
+
+  const collegeId = resolveCollegeId(req)
+  const config = await loadAiContentConfig(collegeId)
+  const freeze = isFrozenNow(config.freezeWindows, Date.now())
+  if (freeze.frozen) {
+    res.status(403).json({
+      error: `AI study-pack generation is paused at your campus until ${freeze.until}${freeze.reason ? ` (${freeze.reason})` : ''}.`,
+      freeze: { until: freeze.until, reason: freeze.reason || null },
+    })
+    return
+  }
+
+  const start = Math.min(Math.max(Math.floor(Number(startIndex) || 0), 0), modules.length)
+  const batch = modules.slice(start, start + PREWARM_BATCH_SIZE)
+  const results: Array<{ topic: string; status: string; version?: number }> = []
+  let limited: { scope: 'student' | 'college' } | null = null
+
+  for (const m of batch) {
+    const topic = String(m.topic || '').trim()
+    const moduleNo = m.moduleNo ?? null
+    const moduleName = String(m.moduleName || '')
+    const canonicalSub = cleanKey(courseName || subject)
+    const canonicalTop = cleanKey(topic || moduleName)
+    const cacheKey = `${canonicalSub}__${canonicalTop}`.substring(0, 100)
+    const ref = db.collection('ai_study_materials').doc(cacheKey)
+
+    try {
+      const summary = (await ref.get()).data() || null
+      // Any existing pack (versioned or pre-versioning legacy) → skip: pre-warm
+      // never regenerates; that is what the cooldown-guarded refresh is for.
+      if (decideStudyServeTarget(summary, null) || summary?.studyPack) {
+        results.push({ topic, status: 'cached', version: Number(summary?.latestVersion) || 1 })
+        continue
+      }
+
+      const claim = await claimStudyGeneration(ref, {
+        uid: user.uid,
+        role: String(user.role || ''),
+        collegeId,
+        config,
+      })
+      if (claim.action === 'limited') {
+        limited = { scope: claim.scope }
+        results.push({ topic, status: 'limited' })
+        break
+      }
+      if (claim.action === 'wait') {
+        // Another request is generating this key right now; it will land as
+        // cache shortly — skip it this pass (a re-run picks it up for free).
+        results.push({ topic, status: 'in-progress' })
+        continue
+      }
+
+      const llm = await requestStudyPackFromProviders(
+        buildStudyPackPrompt({ subject, topic, courseName, courseCode, branch, semester, moduleNo, moduleName }),
+        subject,
+        topic,
+      )
+      const version = await commitStudyGeneration(ref, {
+        baseCacheFields: {
+          cacheKey,
+          subject,
+          topic,
+          courseName: courseName || subject,
+          courseCode: courseCode || '',
+          moduleName,
+          moduleNo,
+          semester: semester || null,
+          canonicalSubject: canonicalSub,
+          canonicalTopic: canonicalTop,
+        },
+        subject,
+        topic,
+        pack: llm.pack,
+        provider: llm.provider,
+        tokensIn: llm.tokensIn,
+        tokensOut: llm.tokensOut,
+        uid: user.uid,
+        collegeId,
+      })
+      results.push({ topic, status: 'generated', version })
+    } catch (modErr) {
+      console.warn('[StudyMaterial:Prewarm] module failed:', topic, modErr)
+      await releaseStudyGenerationLock(ref, user.uid)
+      results.push({ topic, status: 'error' })
+    }
+  }
+
+  const nextIndex = start + batch.length
+  res.json({
+    success: true,
+    results,
+    nextIndex,
+    done: nextIndex >= modules.length,
+    totalModules: modules.length,
+    limited,
+    ...(limited ? { resetsAt: nextUtcMidnightIso() } : {}),
+  })
+})
+
+/**
+ * GET /study-material/controls
+ * Staff read-only view of TODAY's AI study-material usage (the real-time
+ * spend meter — provider billing consoles lag ~24h) plus the campus's
+ * effective limits/freeze config. Superadmin additionally receives the
+ * global counters and the per-campus breakdown across every college.
+ */
+router.get('/study-material/controls', verifyAuth, async (req: AuthenticatedRequest, res: express.Response) => {
+  const user = req.user!
+  if (!STUDY_STAFF_ROLES.has(String(user.role || ''))) {
+    res.status(403).json({ error: 'AI content controls are a staff view.' })
+    return
+  }
+  const collegeId = resolveCollegeId(req)
+  const config = await loadAiContentConfig(collegeId)
+  const usage = (await db.collection('ai_usage').doc(usageDocIdForDay()).get()).data() || {}
+  const ownCollege = collegeId ? (usage.colleges as any)?.[collegeId] || {} : {}
+  const count = (v: unknown) => Number(v) || 0
+
+  res.json({
+    success: true,
+    date: usageDocIdForDay(),
+    collegeId: collegeId || null,
+    today: {
+      serves: count(ownCollege.serves),
+      generations: count(ownCollege.generations),
+      tokensIn: count(ownCollege.tokensIn),
+      tokensOut: count(ownCollege.tokensOut),
+    },
+    ...(String(user.role) === 'superadmin'
+      ? {
+          global: {
+            serves: count(usage.serves),
+            generations: count(usage.generations),
+            tokensIn: count(usage.tokensIn),
+            tokensOut: count(usage.tokensOut),
+            colleges: (usage.colleges as Record<string, unknown>) || {},
+          },
+        }
+      : {}),
+    config,
+    defaults: {
+      studentDailyGenerationLimit: DEFAULT_STUDENT_DAILY_GENERATION_LIMIT,
+      collegeDailyGenerationLimit: DEFAULT_COLLEGE_DAILY_GENERATION_LIMIT,
+    },
+    freeze: isFrozenNow(config.freezeWindows, Date.now()),
+  })
+})
+
+/**
+ * PUT /study-material/controls
+ * Admin/principal (own campus) or superadmin (any campus via collegeId)
+ * update the per-campus cost controls: student daily cap, campus circuit
+ * breaker, and exam freeze windows. A limit of 0 disables that tier.
+ */
+router.put('/study-material/controls', verifyAuth, async (req: AuthenticatedRequest, res: express.Response) => {
+  const user = req.user!
+  if (!['superadmin', 'admin', 'principal'].includes(String(user.role || ''))) {
+    res.status(403).json({ error: 'Only admin, principal or superadmin may change AI content controls.' })
+    return
+  }
+  const collegeId = resolveCollegeId(req)
+  if (!collegeId) {
+    res.status(400).json({ error: 'A college context is required (superadmin: pass collegeId for the target campus).' })
+    return
+  }
+
+  const { studentDailyGenerationLimit, collegeDailyGenerationLimit, freezeWindows } = req.body as {
+    studentDailyGenerationLimit?: number
+    collegeDailyGenerationLimit?: number
+    freezeWindows?: Array<{ start?: string; end?: string; reason?: string }>
+  }
+
+  const update: Record<string, unknown> = {
+    updatedAt: new Date().toISOString(),
+    updatedBy: user.uid,
+  }
+  const parseLimit = (value: unknown, name: string): number | null => {
+    const n = Number(value)
+    if (!Number.isInteger(n) || n < 0 || n > 100000) return null
+    return n
+  }
+  if (studentDailyGenerationLimit !== undefined) {
+    const n = parseLimit(studentDailyGenerationLimit, 'studentDailyGenerationLimit')
+    if (n === null) {
+      res.status(400).json({ error: 'studentDailyGenerationLimit must be an integer between 0 and 100000 (0 disables the cap).' })
+      return
+    }
+    update.studentDailyGenerationLimit = n
+  }
+  if (collegeDailyGenerationLimit !== undefined) {
+    const n = parseLimit(collegeDailyGenerationLimit, 'collegeDailyGenerationLimit')
+    if (n === null) {
+      res.status(400).json({ error: 'collegeDailyGenerationLimit must be an integer between 0 and 100000 (0 disables the breaker).' })
+      return
+    }
+    update.collegeDailyGenerationLimit = n
+  }
+  if (freezeWindows !== undefined) {
+    if (!Array.isArray(freezeWindows) || freezeWindows.length > 24) {
+      res.status(400).json({ error: 'freezeWindows must be an array of at most 24 windows.' })
+      return
+    }
+    const normalized: Array<{ start: string; end: string; reason?: string }> = []
+    for (let i = 0; i < freezeWindows.length; i++) {
+      const w = freezeWindows[i] || {}
+      const start = Date.parse(String(w.start || ''))
+      const end = Date.parse(String(w.end || ''))
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+        res.status(400).json({ error: `freezeWindows[${i}] needs valid start and end dates with end after start.` })
+        return
+      }
+      const reason = typeof w.reason === 'string' && w.reason.trim() ? w.reason.trim().slice(0, STUDY_TEXT_FIELD_MAX) : undefined
+      normalized.push({ start: new Date(start).toISOString(), end: new Date(end).toISOString(), ...(reason ? { reason } : {}) })
+    }
+    normalized.sort((a, b) => a.start.localeCompare(b.start))
+    update.freezeWindows = normalized
+  }
+
+  await db.collection('ai_config').doc(String(collegeId)).set(update, { merge: true })
+  const config = await loadAiContentConfig(collegeId)
+  res.json({ success: true, collegeId, config })
 })
 
 router.post('/chat', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {

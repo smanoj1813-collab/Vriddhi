@@ -36,6 +36,7 @@ export default function AIStudyCompanionModal({
   const [source, setSource] = useState<'cache' | 'generated' | null>(null);
   const [servedVersion, setServedVersion] = useState<number | null>(null);
   const [cooldownNote, setCooldownNote] = useState<string | null>(null);
+  const [waitingNote, setWaitingNote] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const loadMaterial = async (forceRefresh = false) => {
@@ -43,27 +44,44 @@ export default function AIStudyCompanionModal({
     setLoading(true);
     setError(null);
     setCooldownNote(null);
+    setWaitingNote(null);
 
     try {
-      const res = await fetchAIStudyMaterial({
-        ...context,
-        forceRefresh,
-      });
+      const res = await fetchAIStudyMaterial(
+        {
+          ...context,
+          forceRefresh,
+        },
+        {
+          // Someone else is already paying for this pack's generation — the
+          // service polls and serves the shared result (the concurrency
+          // guard saves a duplicate LLM call; this note just explains the
+          // wait instead of looking stuck).
+          onWaiting: (info) =>
+            setWaitingNote(
+              `A study pack for this topic is already being generated — waiting for the shared copy (attempt ${info.attempt})…`
+            ),
+        }
+      );
       setStudyPack(res.data);
       setSource(res.source);
       setServedVersion(typeof res.servedVersion === 'number' ? res.servedVersion : null);
     } catch (err: any) {
-      if (err?.status === 429) {
-        // Cooldown: the pack on screen is still valid — keep it and say why
-        // the refresh did not happen instead of replacing it with an error.
+      const serverBody = (err as { body?: unknown })?.body as Record<string, unknown> | undefined;
+      if (err?.status === 429 && serverBody?.regenerateAvailableAt) {
+        // Per-key cooldown (staff refresh): the pack on screen is still
+        // valid — keep it and say why the refresh did not happen.
         setCooldownNote(err?.message || 'This pack was generated very recently. Try again later.');
         setTimeout(() => setCooldownNote(null), 8000);
       } else {
+        // Daily caps / exam freeze / real failures surface as hard errors
+        // with the server's own reason text.
         console.error('[AIStudyCompanion] Load failed:', err);
         setError(err?.message || 'Could not load AI study material. Please try again.');
       }
     } finally {
       setLoading(false);
+      setWaitingNote(null);
     }
   };
 
@@ -76,6 +94,7 @@ export default function AIStudyCompanionModal({
       setSource(null);
       setServedVersion(null);
       setCooldownNote(null);
+      setWaitingNote(null);
     }
   }, [isOpen, context.subject, context.topic]);
 
@@ -287,7 +306,7 @@ export default function AIStudyCompanionModal({
                 Crafting Structured Study Pack for {context.topic}...
               </p>
               <p className="text-[11px] text-slate-500">
-                Analyzing university syllabus requirements and generating exam-focused summaries
+                {waitingNote || 'Analyzing university syllabus requirements and generating exam-focused summaries'}
               </p>
             </div>
           )}
