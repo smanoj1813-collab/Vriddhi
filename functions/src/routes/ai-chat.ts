@@ -26,7 +26,20 @@ interface ChatMessage {
 /**
  * POST /study-material
  * Dedicated AI Study Material Generator Agent with Global Multi-College Caching
+ *
+ * COST GUARDS (the cache only saves money if the bypass is not free):
+ *  1. `forceRefresh` (the regenerate button) is a STAFF-only action. Every
+ *     refresh is a paid LLM call, and student accounts pressing it N times
+ *     turned one shared cache entry into N bills — students therefore always
+ *     receive the cached pack; forged student refreshes get 403.
+ *  2. Even for staff, a cache key may be regenerated at most once per
+ *     REGENERATE_COOLDOWN window. The key is global across every campus, so
+ *     this caps worst-case regeneration spend per topic no matter how many
+ *     colleges share it.
  */
+const STUDY_STAFF_ROLES = new Set(['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'])
+const REGENERATE_COOLDOWN_MS = 15 * 60 * 1000
+
 router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {
   const { subject, topic, courseName, courseCode, moduleName, moduleNo, branch, semester, forceRefresh } = req.body as {
     subject: string
@@ -47,6 +60,16 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
 
   const collegeId = resolveCollegeId(req)
   const user = req.user!
+  const wantsRefresh = forceRefresh === true
+
+  // Cost guard 1: regeneration is staff-only (verified role from the
+  // middleware's resolved profile/claims — a student cannot self-assert it).
+  if (wantsRefresh && !STUDY_STAFF_ROLES.has(String(user.role || ''))) {
+    res.status(403).json({
+      error: 'Regenerating study packs is restricted to staff. The shared cached pack is always served for free.',
+    })
+    return
+  }
 
   // Universal Canonical Cache Key (e.g. "cost_accounting__marginal_costing")
   const canonicalSub = cleanKey(courseName || subject)
@@ -57,7 +80,7 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
     const cacheDocRef = db.collection('ai_study_materials').doc(cacheKey)
 
     // 1. Check Global Cache first ($0 Cost / Instant)
-    if (!forceRefresh) {
+    if (!wantsRefresh) {
       const cachedSnap = await cacheDocRef.get()
       if (cachedSnap.exists) {
         const cached = cachedSnap.data() || {}
@@ -75,6 +98,21 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
           data: cached.studyPack,
         })
         return
+      }
+    } else {
+      // Cost guard 2: per-key regeneration cooldown, global across campuses.
+      const existingSnap = await cacheDocRef.get()
+      if (existingSnap.exists) {
+        const generatedAtMs = Date.parse(String(existingSnap.data()?.cachedAt || ''))
+        if (Number.isFinite(generatedAtMs) && Date.now() - generatedAtMs < REGENERATE_COOLDOWN_MS) {
+          const regenerateAvailableAt = new Date(generatedAtMs + REGENERATE_COOLDOWN_MS).toISOString()
+          res.status(429).json({
+            error: `This study pack was generated very recently. Regeneration opens again in a few minutes (after ${regenerateAvailableAt}).`,
+            regenerateAvailableAt,
+            cacheKey,
+          })
+          return
+        }
       }
     }
 
@@ -225,6 +263,9 @@ You MUST respond ONLY with a valid JSON object matching this exact schema, with 
     }
 
     const now = new Date().toISOString()
+    // Preserve cumulative hit/regeneration counters across rewrites.
+    const previousSnap = await cacheDocRef.get()
+    const previous = previousSnap.exists ? previousSnap.data() || {} : {}
     const record = {
       cacheKey,
       subject,
@@ -238,7 +279,8 @@ You MUST respond ONLY with a valid JSON object matching this exact schema, with 
       canonicalTopic: canonicalTop,
       studyPack: parsedStudyPack,
       cachedAt: now,
-      hitCount: 1,
+      hitCount: Number(previous.hitCount || 0) + 1,
+      regenCount: Number(previous.regenCount || 0) + (previousSnap.exists ? 1 : 0),
       provider: usedProvider,
       collegeId: collegeId || null,
       createdBy: user.uid,

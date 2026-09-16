@@ -8,6 +8,10 @@ import {
   type AIStudyPack,
   type FetchStudyMaterialInput
 } from '@/shared/services/aiStudyMaterialService';
+import { useAuth } from '@/modules/auth/context/AuthContext';
+
+/** Mirrors the server-side STUDY_STAFF_ROLES cost guard in functions/src/routes/ai-chat.ts. */
+const REGENERATE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
 
 interface AIStudyCompanionModalProps {
   isOpen: boolean;
@@ -20,17 +24,24 @@ export default function AIStudyCompanionModal({
   onClose,
   context,
 }: AIStudyCompanionModalProps) {
+  const { user } = useAuth();
+  // Regenerating is a paid LLM call — the button is for staff only (the
+  // server independently rejects student refreshes, this just keeps the UI
+  // honest before the request ever leaves the browser).
+  const canRegenerate = REGENERATE_ROLES.includes(user?.role || '');
   const [activeTab, setActiveTab] = useState<'concept' | 'cheatSheet' | 'example' | 'examPrep'>('concept');
   const [studyPack, setStudyPack] = useState<AIStudyPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'cache' | 'generated' | null>(null);
+  const [cooldownNote, setCooldownNote] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const loadMaterial = async (forceRefresh = false) => {
     if (!context.subject || !context.topic) return;
     setLoading(true);
     setError(null);
+    setCooldownNote(null);
 
     try {
       const res = await fetchAIStudyMaterial({
@@ -40,8 +51,15 @@ export default function AIStudyCompanionModal({
       setStudyPack(res.data);
       setSource(res.source);
     } catch (err: any) {
-      console.error('[AIStudyCompanion] Load failed:', err);
-      setError(err?.message || 'Could not load AI study material. Please try again.');
+      if (err?.status === 429) {
+        // Cooldown: the pack on screen is still valid — keep it and say why
+        // the refresh did not happen instead of replacing it with an error.
+        setCooldownNote(err?.message || 'This pack was generated very recently. Try again later.');
+        setTimeout(() => setCooldownNote(null), 8000);
+      } else {
+        console.error('[AIStudyCompanion] Load failed:', err);
+        setError(err?.message || 'Could not load AI study material. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,6 +72,7 @@ export default function AIStudyCompanionModal({
       setStudyPack(null);
       setError(null);
       setSource(null);
+      setCooldownNote(null);
     }
   }, [isOpen, context.subject, context.topic]);
 
@@ -171,14 +190,16 @@ export default function AIStudyCompanionModal({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => loadMaterial(true)}
-              disabled={loading}
-              className="p-2 rounded-xl text-slate-500 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-              title="Regenerate with AI"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            {canRegenerate && (
+              <button
+                onClick={() => loadMaterial(true)}
+                disabled={loading}
+                className="p-2 rounded-xl text-slate-500 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                title="Regenerate with AI (staff only)"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            )}
             <button
               onClick={handlePrint}
               disabled={!studyPack || loading}
@@ -242,6 +263,12 @@ export default function AIStudyCompanionModal({
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {cooldownNote && (
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{cooldownNote}</span>
+            </div>
+          )}
           {loading && (
             <div className="py-16 text-center space-y-3">
               <Loader2 className="w-8 h-8 text-teal-500 animate-spin mx-auto" />
