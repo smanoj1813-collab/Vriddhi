@@ -641,6 +641,376 @@ Depreciation is calculated on the reducing book value at the beginning of each p
     },
   ],
 
+  // ── 3. Principles of Marketing (Sem 1) ──
+  'bba-karnataka-marketing': [
+    {
+      id: 'mkt-mod2-stp',
+      subjectId: 'bba-karnataka-marketing',
+      title: 'Market Segmentation, Targeting & Positioning (STP)',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Consumer Behaviour & STP Framework',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mkt-01'],
+      subtopics: [
+        'Concept of Heterogeneous Markets & Need for Segmentation',
+        'Bases for Consumer Market Segmentation (Geographic, Demographic, Psychographic, Behavioural)',
+        'Target Market Strategies (Undifferentiated, Differentiated, Concentrated / Niche)',
+        'Positioning Strategies, Perceptual Mapping & Unique Selling Proposition (USP)',
+        'Repositioning Case Studies in Karnataka (Nandini Milk, Fastrack, Tanishq)',
+      ],
+      explanationMd: `# Market Segmentation, Targeting & Positioning (STP Framework)
+
+### Core Concept & University Framework
+The STP framework is the cornerstone of modern strategic marketing. Instead of treating the marketplace as a homogeneous mass, businesses divide aggregate demand into distinct sub-groups of consumers sharing identifiable needs, characteristics, or buying behaviours.
+
+In Karnataka, consider how the **Karnataka Milk Federation (Nandini)** segments consumers: everyday household milk buyers (demographic / volume), health-conscious fitness enthusiasts with Nandini Pro-Milk and curd (psychographic / lifestyle), and sweet consumers during festive seasons (behavioural / occasion-based).
+
+---
+
+### 1. Market Segmentation Bases
+- **Geographic**: Region (Tier-1 Bengaluru vs. Tier-2 Hubballi/Mysuru), urban vs. rural, climate.
+- **Demographic**: Age, gender, income tier, occupation, education, family life cycle.
+- **Psychographic**: Social class, lifestyle (aspirational vs. conservative), personality traits.
+- **Behavioural**: Occasions, benefit sought (quality, economy, convenience), user status, loyalty rate.
+
+---
+
+### 2. Targeting Strategies
+1. **Undifferentiated (Mass) Marketing**: Single offer for the whole market (e.g. basic table salt).
+2. **Differentiated (Segmented) Marketing**: Different products for distinct segments (e.g. Maruti Suzuki: Alto, Swift, Nexa Grand Vitara).
+3. **Concentrated (Niche) Marketing**: Substantial share of one or few narrow sub-markets (e.g. luxury wristwatches).
+4. **Micromarketing**: Local or individual customer customization.
+
+---
+
+### 3. Product Positioning
+Positioning is the act of designing the company's offering and brand image to occupy a distinct and valued place in the target customer's mind relative to competitors.
+- **Perceptual Mapping**: Visual 2x2 diagram mapping customer perception of price vs. quality.
+- **USP (Unique Selling Proposition)**: The single compelling benefit no competitor matches.`,
+      formulas: [
+        {
+          id: 'formula-mkt-1',
+          label: 'Customer Value Proposition Equation',
+          formula: 'Customer Perceived Value = Total Customer Benefit - Total Customer Cost',
+          exampleQ: 'A Bengaluru quick-commerce startup charges ₹20 delivery fee for 10-minute grocery delivery compared to free 2-day delivery from supermarkets. How is perceived value created?',
+          exampleA: 'Customer Perceived Value increases because the time and effort savings (benefit) outweigh the nominal delivery fee (cost).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mkt-1',
+          title: 'STP Sequential Hierarchy',
+          trick: 'Remember the strict order: S -> T -> P. You CANNOT target before segmenting, and you CANNOT position before choosing the target segment!',
+          whenToUse: 'Avoids structure errors in 5-mark and 10-mark marketing theory questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mkt-1',
+          step: 'Step 1: Identify the 4 Segmentation Criteria for the Given Case',
+          detail: 'Systematically tabulate Geographic, Demographic, Psychographic, and Behavioural traits of the target group.',
+          questionType: 'Marketing Case Study Question',
+        },
+      ],
+    },
+    {
+      id: 'mkt-mod3-plc-pricing',
+      subjectId: 'bba-karnataka-marketing',
+      title: 'Product Life Cycle (PLC) & Pricing Strategies',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Product Mix & Pricing Decisions',
+      order: 2,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mkt-02'],
+      subtopics: [
+        'Concept of Product Levels (Core, Actual, Augmented)',
+        'Four Stages of Product Life Cycle (Introduction, Growth, Maturity, Decline)',
+        'Marketing Mix Strategies across each PLC Stage',
+        'New Product Pricing: Price Skimming vs. Penetration Pricing',
+        'Cost-Plus, Value-Based, and Psychological Pricing Tactics',
+      ],
+      explanationMd: `# Product Life Cycle (PLC) & Strategic Pricing Methods
+
+### Core Concept & University Framework
+The **Product Life Cycle (PLC)** describes the sales and profit trajectory of a product over time from initial commercialization to eventual obsolescence. University examinations test candidates on matching pricing, advertising, and distribution strategies to each phase.
+
+---
+
+### The Four Stages of the PLC
+1. **Introduction**: Low sales, high promotional costs, negative or negligible profits, heavy informative advertising.
+2. **Growth**: Rapid sales acceleration, entry of competitors, profit peak, expanding distribution channels.
+3. **Maturity**: Peak sales volume, intense price competition, saturation, defensive advertising, brand extension.
+4. **Decline**: Falling sales, technological substitution, minimal promotion, product harvesting or discontinuation.
+
+---
+
+### New Product Pricing Strategies
+- **Price Skimming**: Setting a high introductory price to recover R&D costs from early adopters before lowering prices (e.g. Apple iPhone launches).
+- **Market Penetration**: Setting an aggressively low introductory price to rapidly capture dominant market share and build volume scale (e.g. Reliance Jio 4G launch in India).`,
+      formulas: [
+        {
+          id: 'formula-plc-1',
+          label: 'Cost-Plus Markup Price Formula',
+          formula: 'Selling Price = Total Unit Cost / (1 - Desired Markup on Sales)',
+          exampleQ: 'Unit cost is ₹80 and the firm targets a 20% profit margin on selling price. What is the selling price?',
+          exampleA: 'Selling Price = 80 / (1 - 0.20) = 80 / 0.80 = ₹100.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-plc-1',
+          title: 'Skimming vs Penetration Trigger',
+          trick: 'Use Skimming when demand is inelastic and entry barriers are high. Use Penetration when demand is highly elastic and scale economies are steep!',
+          whenToUse: 'Key distinction required in university pricing strategy questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-plc-1',
+          step: 'Step 1: Draw the Classic S-Curve Diagram for Sales and Profits',
+          detail: 'Label Introduction, Growth, Maturity, Decline on the X-axis and Sales/Profits on the Y-axis. Note that profit peaks during the Growth stage!',
+          questionType: 'Diagram-Driven University Question',
+        },
+      ],
+    },
+  ],
+
+  // ── 4. Organizational Behaviour (Sem 2) ──
+  'bba-karnataka-ob': [
+    {
+      id: 'ob-mod3-motivation-theories',
+      subjectId: 'bba-karnataka-ob',
+      title: 'Motivation Models: Maslow, Herzberg Two-Factor & Vroom',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Motivation, Morale & Work Design',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-ob-01'],
+      subtopics: [
+        'Concept of Motivation and the Motivation Cycle',
+        "Maslow's Hierarchy of Needs (Physiological to Self-Actualization)",
+        "Herzberg's Two-Factor (Motivation-Hygiene) Theory",
+        "McGregor's Theory X and Theory Y Assumptions",
+        "Vroom's Expectancy Theory (Expectancy x Instrumentality x Valence)",
+      ],
+      explanationMd: `# Motivation Theories: Maslow Hierarchy, Herzberg Two-Factor & Vroom
+
+### Core Concept & University Framework
+Organizational Behaviour (KSHEC NEP BBA Semester 2) investigates what drives human productivity in enterprises. Motivation is the psychological force that determines the direction, intensity, and persistence of employee effort.
+
+---
+
+### 1. Maslow's Need Hierarchy
+1. **Physiological Needs**: Basic survival (adequate salary, canteen, basic work environment).
+2. **Safety/Security Needs**: Job tenure security, provident fund, medical insurance.
+3. **Social / Belongingness Needs**: Team camaraderie, supportive peer relationships.
+4. **Esteem Needs**: Job titles, recognition, awards, promotion.
+5. **Self-Actualization Needs**: Creative challenge, achieving full personal potential.
+
+*Core Premise*: A substantially satisfied need ceases to motivate; higher-level needs emerge sequentially.
+
+---
+
+### 2. Herzberg's Two-Factor Theory (Motivation-Hygiene)
+Herzberg proposed that job satisfaction and job dissatisfaction are **not** opposite ends of the same continuum:
+- **Hygiene Factors (Extrinsic)**: Working conditions, salary, company policies, supervision, interpersonal relations. If absent, they cause dissatisfaction; if present, they produce neutral feelings (*no dissatisfaction*), not high motivation.
+- **Motivator Factors (Intrinsic)**: Achievement, recognition, challenging work, responsibility, advancement. These directly cause genuine motivation and superior performance.
+
+---
+
+### 3. Vroom's Expectancy Theory
+$$\\text{Motivation} = \\text{Expectancy} \\times \\text{Instrumentality} \\times \\text{Valence}$$
+If any single component is zero, total motivational drive collapses to zero!`,
+      formulas: [
+        {
+          id: 'formula-ob-1',
+          label: "Vroom's Expectancy Motivation Formulation",
+          formula: 'Motivational Force = Expectancy (E -> P) * Instrumentality (P -> R) * Valence (Value of Reward)',
+          exampleQ: 'An employee believes studying hard for an exam will yield high marks (Expectancy = 0.9), but knows the university grading system assigns random grades regardless of performance (Instrumentality = 0.05). Will the student be motivated?',
+          exampleA: 'Motivational force = 0.9 * 0.05 * Valence ≈ negligible. Low instrumentality collapses motivation.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-ob-1',
+          title: 'Herzberg Hygiene Trap',
+          trick: 'Salary is a HYGIENE factor in Herzberg theory, NOT a motivator! Higher salary only removes dissatisfaction; it does not intrinsically motivate long-term peak performance.',
+          whenToUse: 'Universal trap in multiple-choice and 2-mark university questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-ob-1',
+          step: 'Step 1: Differentiate Content vs. Process Theories of Motivation',
+          detail: 'Categorize Maslow, Herzberg, and McClelland as Content theories (WHAT motivates); categorize Vroom, Adam Equity, and Locke Goal-setting as Process theories (HOW motivation occurs).',
+          questionType: 'Comparative Theory Essay Question',
+        },
+      ],
+    },
+  ],
+
+  // ── 5. Business Mathematics & Quantitative Techniques (Sem 2) ──
+  'bba-karnataka-math': [
+    {
+      id: 'math-mod1-matrices-cramer',
+      subjectId: 'bba-karnataka-math',
+      title: "Matrices, Determinants & Cramer's Rule",
+      moduleNumber: 1,
+      moduleName: 'Module 1: Matrix Algebra & Business Applications',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-math-01'],
+      subtopics: [
+        'Matrix Types (Row, Column, Square, Identity, Transpose)',
+        'Matrix Addition, Subtraction & Scalar/Matrix Multiplication',
+        'Determinant of 2x2 and 3x3 Matrices & Properties',
+        'Adjoint and Inverse of a Square Matrix ($A^{-1} = \\text{adj}(A) / |A|$)',
+        "Solving Linear Equations using Cramer's Rule and Matrix Inversion Method",
+      ],
+      explanationMd: `# Matrices, Determinants & Cramer's Rule for Business Systems
+
+### Core Concept & University Framework
+Matrix algebra is essential in commercial analytics for solving multi-variable cost, production, and pricing systems simultaneously. In Semester 2 BBA under KSHEC, solving a 3-variable simultaneous equation system using **Cramer's Rule** is an almost guaranteed 10-mark examination problem.
+
+---
+
+### Solving Linear Equations via Cramer's Rule
+Consider the system:
+$$a_1 x + b_1 y + c_1 z = d_1$$
+$$a_2 x + b_2 y + c_2 z = d_2$$
+$$a_3 x + b_3 y + c_3 z = d_3$$
+
+1. **Calculate the Coefficient Determinant ($\\Delta$)**:
+   $$\\Delta = \\begin{vmatrix} a_1 & b_1 & c_1 \\\\ a_2 & b_2 & c_2 \\\\ a_3 & b_3 & c_3 \\end{vmatrix}$$
+   *(Note: The system has a unique solution if and only if $\\Delta \\neq 0$)*.
+
+2. **Calculate Column-Substituted Determinants ($\\Delta_x, \\Delta_y, \\Delta_z$)**:
+   Replace column 1 with constant vector $(d_1, d_2, d_3)^T$ for $\\Delta_x$, column 2 for $\\Delta_y$, and column 3 for $\\Delta_z$.
+
+3. **Compute Unknowns**:
+   $$x = \\frac{\\Delta_x}{\\Delta}, \\quad y = \\frac{\\Delta_y}{\\Delta}, \\quad z = \\frac{\\Delta_z}{\\Delta}$$`,
+      formulas: [
+        {
+          id: 'formula-cramer-1',
+          label: "Cramer's Rule Solution Formula",
+          formula: 'x = Det(Ax) / Det(A), y = Det(Ay) / Det(A), z = Det(Az) / Det(A)',
+          exampleQ: 'Solve: 2x + y = 7, 3x - y = 8 using Cramer\'s Rule.',
+          exampleA: 'Det(A) = (2)(-1) - (1)(3) = -2 - 3 = -5. Det(Ax) = (7)(-1) - (1)(8) = -15. Det(Ay) = (2)(8) - (7)(3) = 16 - 21 = -5. x = -15 / -5 = 3, y = -5 / -5 = 1.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-cramer-1',
+          title: 'Singular Matrix Condition',
+          trick: 'If Det(A) = 0, STOP immediately! The matrix is singular. In university questions, state: "Determinant is 0, Cramer\'s rule cannot yield a unique solution."',
+          whenToUse: 'High-frequency exam verification trick.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-cramer-1',
+          step: 'Step 1: Always Write Equations in Standard Form',
+          detail: 'Ensure variables appear in the identical order (ax + by + cz = d) on the left and constants on the right.',
+          questionType: '10-Mark Practical Math Problem',
+        },
+      ],
+    },
+  ],
+
+  // ── 6. Managerial Economics (Sem 2) ──
+  'bba-karnataka-economics': [
+    {
+      id: 'eco-mod1-elasticity-demand',
+      subjectId: 'bba-karnataka-economics',
+      title: 'Elasticity of Demand & Revenue Implications',
+      moduleNumber: 1,
+      moduleName: 'Module 1: Demand Analysis & Elasticity',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-eco-01'],
+      subtopics: [
+        'Law of Demand and Demand Schedules',
+        'Price Elasticity of Demand (Degrees: Perfectly Inelastic to Perfectly Elastic)',
+        'Income Elasticity of Demand (Normal, Inferior & Giffen Goods)',
+        'Cross Elasticity of Demand (Substitutes vs. Complementary Goods)',
+        'Relationship between Price Elasticity, Marginal Revenue (MR), and Total Revenue (TR)',
+      ],
+      explanationMd: `# Elasticity of Demand & Managerial Revenue Strategy
+
+### Core Concept & University Framework
+Managerial economics bridges economic theory and business decision-making. **Price Elasticity of Demand ($E_p$)** measures the responsiveness of quantity demanded to a percentage change in the product's price.
+
+$$\\text{Price Elasticity} (E_p) = \\frac{\\% \\Delta Q}{\\% \\Delta P} = \\frac{\\Delta Q / Q}{\\Delta P / P} = \\frac{\\Delta Q}{\\Delta P} \\times \\frac{P}{Q}$$
+
+---
+
+### Degrees of Price Elasticity
+1. **$E_p = 0$ (Perfectely Inelastic)**: Vertical demand curve (life-saving medicines).
+2. **$E_p < 1$ (Inelastic)**: Quantity changes proportionally less than price (electricity, petrol).
+3. **$E_p = 1$ (Unitary Elastic)**: Percentage change in quantity exactly equals percentage change in price.
+4. **$E_p > 1$ (Elastic)**: Quantity changes proportionally more than price (consumer electronics, restaurant meals).
+5. **$E_p = \\infty$ (Perfectely Elastic)**: Horizontal demand curve under pure competition.
+
+---
+
+### Elasticity & Total Revenue (TR) Managerial Rule
+- When demand is **Elastic ($E_p > 1$)**: Lowering price **increases** Total Revenue; raising price decreases TR.
+- When demand is **Inelastic ($E_p < 1$)**: Raising price **increases** Total Revenue; lowering price decreases TR.
+- When demand is **Unitary ($E_p = 1$)**: Total Revenue is maximized; price changes do not alter TR.`,
+      formulas: [
+        {
+          id: 'formula-eco-1',
+          label: 'Total Revenue & Elasticity Relation (Amoroso-Robinson)',
+          formula: 'Marginal Revenue (MR) = Price * (1 - 1 / Ep)',
+          exampleQ: 'Price is ₹50 and price elasticity is 2. What is Marginal Revenue?',
+          exampleA: 'MR = 50 * (1 - 1/2) = 50 * 0.5 = ₹25.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-eco-1',
+          title: 'Cross Elasticity Sign Rule',
+          trick: 'Cross Elasticity is POSITIVE (+) for Substitutes (Tea and Coffee); NEGATIVE (-) for Complements (Car and Petrol); ZERO for unrelated goods.',
+          whenToUse: 'Quick identification in exam MCQs and 2-mark definitions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-eco-1',
+          step: 'Step 1: Compute Percentage Changes Using Base Values',
+          detail: 'Apply (% change in Q) / (% change in P). Disregard the negative sign when stating magnitude of price elasticity.',
+          questionType: 'Practical Numerical Problem',
+        },
+      ],
+    },
+  ],
+
   // ── 7. Cost Accounting (Sem 3) ──
   'bba-karnataka-cost-accounting': [
     {
@@ -787,6 +1157,225 @@ Where:
     },
   ],
 
+  // ── 8. Business Statistics (Sem 3) ──
+  'bba-karnataka-statistics': [
+    {
+      id: 'stat-mod3-correlation-regression',
+      subjectId: 'bba-karnataka-statistics',
+      title: 'Correlation & Linear Regression Equations',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Correlation & Regression Analysis',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-stat-01'],
+      subtopics: [
+        'Types of Correlation (Positive, Negative, Linear, Non-Linear)',
+        'Karl Pearson Coefficient of Correlation ($r$) Computation',
+        'Spearman Rank Correlation (With & Without Ties)',
+        'Regression Equations ($Y$ on $X$ and $X$ on $Y$)',
+        'Properties of Regression Coefficients ($b_{yx} \\times b_{xy} = r^2$)',
+      ],
+      explanationMd: `# Karl Pearson Correlation & Linear Regression Analysis
+
+### Core Concept & University Framework
+Business Statistics in Karnataka BBA evaluates quantitative associations between commercial variables (e.g. Advertising Expenditure vs. Sales Revenue).
+
+---
+
+### Karl Pearson Correlation Coefficient ($r$)
+$$r = \\frac{N \\sum XY - (\\sum X)(\\sum Y)}{\\sqrt{[N \\sum X^2 - (\\sum X)^2][N \\sum Y^2 - (\\sum Y)^2]}}$$
+- Ranges strictly between $-1 \\le r \\le +1$.
+- $+1$: Perfect positive linear correlation; $-1$: Perfect negative correlation; $0$: No linear relationship.
+
+---
+
+### Regression Lines & Coefficients
+1. **Regression Line of $Y$ on $X$**:
+   $$Y - \\bar{Y} = b_{yx} (X - \\bar{X})$$
+   *Where $b_{yx} = r \\frac{\\sigma_y}{\\sigma_x}$*
+
+2. **Regression Line of $X$ on $Y$**:
+   $$X - \\bar{X} = b_{xy} (Y - \\bar{Y})$$
+   *Where $b_{xy} = r \\frac{\\sigma_x}{\\sigma_y}$*
+
+3. **Key Property**:
+   $$r = \\pm \\sqrt{b_{yx} \\times b_{xy}}$$
+   *(Both regression coefficients and $r$ must always share the identical algebraic sign!)*`,
+      formulas: [
+        {
+          id: 'formula-stat-1',
+          label: 'Correlation Coefficient via Regression Slopes',
+          formula: 'r = sqrt(byx * bxy)',
+          exampleQ: 'If byx = 0.8 and bxy = 0.45, find correlation coefficient r.',
+          exampleA: 'r = sqrt(0.8 * 0.45) = sqrt(0.36) = 0.60. (Positive because both slopes are positive).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-stat-1',
+          title: 'Sign Consistency Trap',
+          trick: 'If byx is negative and bxy is negative, r is ALSO NEGATIVE! Never output a positive correlation when both slopes are negative.',
+          whenToUse: 'Common exam trap in 2-mark viva and MCQ questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-stat-1',
+          step: 'Step 1: Set Up 5 Summary Columns in Tabular Format',
+          detail: 'Columns: X, Y, X^2, Y^2, XY. Sum each column before substituting into Karl Pearson formula.',
+          questionType: 'Practical Statistics 10-Marker',
+        },
+      ],
+    },
+  ],
+
+  // ── 9. Financial Markets & Services (Sem 3) ──
+  'bba-karnataka-fin-markets': [
+    {
+      id: 'fm-mod2-money-market',
+      subjectId: 'bba-karnataka-fin-markets',
+      title: 'Money Market Instruments: T-Bills, CPs & CDs',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Indian Money Market & RBI Monetary Tools',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-fm-01'],
+      subtopics: [
+        'Structure and Functions of the Indian Money Market',
+        'Treasury Bills (91-day, 182-day, 364-day T-Bills issued by RBI)',
+        'Commercial Papers (CP) Eligibility, Tenor & Corporate Working Capital',
+        'Certificates of Deposit (CD) Issued by Commercial Banks',
+        'Call & Notice Money Market and Repo / Reverse Repo Operations',
+      ],
+      explanationMd: `# Indian Money Market Instruments: T-Bills, Commercial Paper & CDs
+
+### Core Concept & University Framework
+The **Money Market** deals in short-term debt instruments having a maturity period of up to one year. Regulated by the Reserve Bank of India (RBI), it enables corporations and financial institutions to manage liquidity deficits and surpluses efficiently.
+
+---
+
+### Major Money Market Instruments
+1. **Treasury Bills (T-Bills)**:
+   - Issued by the RBI on behalf of the Central Government to fund short-term fiscal deficits.
+   - Zero-coupon securities issued at a discount and redeemed at par (face value).
+   - Standard maturities: 91 days, 182 days, and 364 days.
+   - Minimum denomination: ₹25,000 and multiples thereof.
+
+2. **Commercial Paper (CP)**:
+   - Unsecured promissory note issued by highly-rated corporations (credit rating A2 or higher).
+   - Maturity: Minimum 7 days to maximum 1 year.
+   - Denomination: ₹5 lakhs and multiples thereof.
+
+3. **Certificates of Deposit (CD)**:
+   - Negotiable money market receipt issued by commercial banks against term deposits.
+   - Maturity for banks: 7 days to 1 year; for financial institutions: 1 to 3 years.`,
+      formulas: [
+        {
+          id: 'formula-fm-1',
+          label: 'T-Bill Yield / Discount Formulation',
+          formula: 'Yield (%) = ((Face Value - Issue Price) / Issue Price) * (365 / Tenor) * 100',
+          exampleQ: 'A 91-day T-Bill of face value ₹100 is issued at ₹98. Calculate the annualized yield.',
+          exampleA: 'Yield = ((100 - 98) / 98) * (365 / 91) * 100 = (2 / 98) * 4.011 * 100 = 8.18% p.a.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-fm-1',
+          title: 'CP vs CD Issuer Rule',
+          trick: 'Commercial Paper is issued by CORPORATIONS. Certificates of Deposit are issued by COMMERCIAL BANKS.',
+          whenToUse: 'Enables instant accuracy in viva and 2-mark definitions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-fm-1',
+          step: 'Step 1: Compare Instruments Across 4 Dimensions',
+          detail: 'Tabulate Issuer, Minimum Denomination, Maturity Tenor, and Regulatory Guidelines for full marks.',
+          questionType: 'Comparative Essay / 10-Marker',
+        },
+      ],
+    },
+  ],
+
+  // ── 10. Business Law & Commercial Regulations (Sem 4) ──
+  'bba-karnataka-business-law': [
+    {
+      id: 'law-mod1-contract-essentials',
+      subjectId: 'bba-karnataka-business-law',
+      title: 'Indian Contract Act 1872: Essentials of a Valid Contract',
+      moduleNumber: 1,
+      moduleName: 'Module 1: General Principles of Contract Law',
+      order: 1,
+      difficulty: 'basic',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-law-01'],
+      subtopics: [
+        'Definition of Agreement vs. Contract (Section 2(h))',
+        'Essentials of a Valid Contract under Section 10',
+        'Offer & Acceptance Rules and Revocation Timelines',
+        'Consideration ("Quid Pro Quo") & Exceptions to "No Consideration, No Contract"',
+        'Flaws in Free Consent: Coercion, Undue Influence, Fraud, Misrepresentation, Mistake',
+      ],
+      explanationMd: `# Indian Contract Act 1872: Essentials of a Valid Contract
+
+### Core Concept & University Framework
+Section 2(h) of the Indian Contract Act 1872 defines a contract as:
+$$\\text{Contract} = \\text{Agreement} + \\text{Enforceability by Law}$$
+
+All contracts are agreements, but all agreements are not contracts (e.g. social or domestic agreements lack intention to create legal relations, as held in *Balfour v. Balfour*).
+
+---
+
+### Section 10: Mandatory Essentials of a Valid Contract
+1. **Proper Offer and Acceptance**: Definite offer matched by unconditional acceptance.
+2. **Intention to Create Legal Relations**: Commercial presumption of legal obligation.
+3. **Lawful Consideration**: Price paid for the promise (*Quid Pro Quo*), whether in cash, goods, or forbearance.
+4. **Capacity of Parties**: Competent age of majority (18+), sound mind, not disqualified by law. An agreement with a minor is **void ab initio** (*Mohori Bibee v. Dharmodas Ghose*).
+5. **Free Consent (Section 14)**: Consent must not be induced by Coercion (Sec 15), Undue Influence (Sec 16), Fraud (Sec 17), Misrepresentation (Sec 18), or Bilateral Mistake of Fact (Sec 20).
+6. **Lawful Object & Consideration**: Not prohibited by law, immoral, or opposed to public policy.
+7. **Certainty and Possibility of Performance**: Terms must be clear, not vague or impossible.`,
+      formulas: [
+        {
+          id: 'formula-law-1',
+          label: 'Legal Enforceability Formulation',
+          formula: 'Valid Contract = Offer + Acceptance + Lawful Consideration + Free Consent + Competence + Legal Object',
+          exampleQ: 'A father promises to pay his daughter ₹10,000 monthly allowance for pocket expenses. Can the daughter sue her father in court if he stops paying?',
+          exampleA: 'No. Domestic/family arrangements lack intention to create legal relations (Balfour v. Balfour doctrine); hence it is a mere agreement, not an enforceable contract.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-law-1',
+          title: 'Minor Contract Rule',
+          trick: 'Agreements with minors are VOID AB INITIO (void from the very beginning). Doctrine of Estoppel and Ratification do not apply against minors!',
+          whenToUse: 'Universal legal case study question in every Karnataka university exam.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-law-1',
+          step: 'Step 1: Cite the Relevant Section and Landmark Case Precedent',
+          detail: 'Start legal answers with: "Under Section X of the Indian Contract Act 1872, as affirmed in [Case Name]..."',
+          questionType: 'Legal Case Study Analysis',
+        },
+      ],
+    },
+  ],
+
   // ── 11. Corporate Financial Management (Sem 4) ──
   'bba-karnataka-fin-mgmt': [
     {
@@ -855,6 +1444,287 @@ Cost of capital is the minimum required rate of return that a firm must earn on 
           step: 'Step 1: Compute Specific Component Costs (Kd, Kp, Ke)',
           detail: 'Calculate each component percentage cost after tax.',
           questionType: 'Practical Financial Management Problem',
+        },
+      ],
+    },
+  ],
+
+  // ── 12. Human Resource Management (Sem 4) ──
+  'bba-karnataka-hrm': [
+    {
+      id: 'hrm-mod2-job-analysis',
+      subjectId: 'bba-karnataka-hrm',
+      title: 'Job Analysis: Job Description (JD) & Job Specification (JS)',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Human Resource Planning & Talent Acquisition',
+      order: 1,
+      difficulty: 'basic',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-hrm-01'],
+      subtopics: [
+        'Concept, Process and Purpose of Job Analysis',
+        'Job Description (JD: Duties, Tasks, Responsibilities & Working Conditions)',
+        'Job Specification (JS: Human Qualifications, Skills, Experience & Traits)',
+        'Job Design Approaches: Job Enlargement, Job Enrichment, Job Rotation',
+        'Methods of Collecting Job Analysis Data (Observation, Interview, PAQ)',
+      ],
+      explanationMd: `# Job Analysis: Job Description (JD) vs. Job Specification (JS)
+
+### Core Concept & University Framework
+**Job Analysis** is the systematic procedure of collecting, analyzing, and recording comprehensive information about the operations, responsibilities, and required human qualifications of a specific job role.
+
+---
+
+### The Two Major Outputs of Job Analysis
+1. **Job Description (JD — Role Centric)**:
+   - A written statement of what the job holder actually does, how it is done, and under what conditions.
+   - Includes: Job title, department, duties, responsibilities, reporting relationships, machine equipment used, working hazards.
+2. **Job Specification (JS — Person Centric)**:
+   - A statement of the minimum acceptable human qualities and credentials required to perform the job successfully.
+   - Includes: Educational degrees, technical certifications, prior years of experience, cognitive abilities, emotional temperament.`,
+      formulas: [
+        {
+          id: 'formula-hrm-1',
+          label: 'Job Analysis Relationship Equation',
+          formula: 'Job Analysis = Job Description (Role Focus) + Job Specification (Person Focus)',
+          exampleQ: 'A recruitment ad specifies: "Must hold BBA with 2 years experience in Tally Prime." Is this JD or JS?',
+          exampleA: 'Job Specification (JS) because it outlines candidate qualifications and credentials.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-hrm-1',
+          title: 'JD vs JS Distinction Mnemonic',
+          trick: 'JD = What the Job DOES (duties, tasks). JS = What the Person SHOULD HAVE (skills, qualifications).',
+          whenToUse: 'Differentiates the two components in 5-mark university answers.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-hrm-1',
+          step: 'Step 1: Draft a Comparative Two-Column Table',
+          detail: 'Compare Meaning, Focus, Contents, and Purpose side by side for maximum university credit.',
+          questionType: 'Comparative Essay / 10-Marker',
+        },
+      ],
+    },
+  ],
+
+  // ── 13. Management Accounting (Sem 5) ──
+  'bba-karnataka-mgmt-accounting': [
+    {
+      id: 'mgmtacc-mod3-marginal-costing',
+      subjectId: 'bba-karnataka-mgmt-accounting',
+      title: 'Marginal Costing: P/V Ratio, BEP & Margin of Safety',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Marginal Costing & Decision Models',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mgmtacc-01'],
+      subtopics: [
+        'Concept of Marginal Cost and Marginal Cost Equation ($S - V = F + P$)',
+        'Profit-Volume (P/V) Ratio Computation and Significance',
+        'Break-Even Point (BEP in Units and Value)',
+        'Margin of Safety (MOS in Units and Value)',
+        'Managerial Decision Scenarios: Make or Buy, Product Mix Optimization',
+      ],
+      explanationMd: `# Marginal Costing: P/V Ratio, Break-Even Point (BEP) & Margin of Safety
+
+### Core Concept & University Framework
+Marginal Costing is a managerial technique that distinguishes between fixed costs and variable costs. Fixed costs are treated as period costs charged against contribution, making it indispensable for short-term pricing, volume planning, and make-or-buy decisions.
+
+---
+
+### Core Marginal Costing Formulations
+1. **Marginal Cost Equation**:
+   $$\\text{Sales} (S) - \\text{Variable Cost} (V) = \\text{Contribution} (C) = \\text{Fixed Cost} (F) + \\text{Profit} (P)$$
+
+2. **Profit-Volume Ratio (P/V Ratio)**:
+   $$\\text{P/V Ratio} = \\frac{\\text{Contribution}}{\\text{Sales}} \\times 100 = \\frac{\\Delta \\text{Profit}}{\\Delta \\text{Sales}} \\times 100$$
+
+3. **Break-Even Point (BEP)**:
+   $$\\text{BEP (Units)} = \\frac{\\text{Fixed Cost}}{\\text{Contribution per Unit}}$$
+   $$\\text{BEP (Value ₹)} = \\frac{\\text{Fixed Cost}}{\\text{P/V Ratio}}$$
+
+4. **Margin of Safety (MOS)**:
+   $$\\text{MOS (Value ₹)} = \\text{Actual Sales} - \\text{Break-Even Sales} = \\frac{\\text{Profit}}{\\text{P/V Ratio}}$$`,
+      formulas: [
+        {
+          id: 'formula-bep-1',
+          label: 'P/V Ratio Two-Period Change Formula',
+          formula: 'P/V Ratio = (Change in Profit / Change in Sales) * 100',
+          exampleQ: 'Year 2024: Sales ₹3,00,000, Profit ₹30,000. Year 2025: Sales ₹4,00,000, Profit ₹50,000. Find P/V Ratio and Fixed Cost.',
+          exampleA: 'P/V Ratio = (50,000 - 30,000) / (4,00,000 - 3,00,000) * 100 = 20,000 / 1,00,000 * 100 = 20%. Fixed Cost = (3,00,000 * 20%) - 30,000 = 60,000 - 30,000 = ₹30,000.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-bep-1',
+          title: 'Profit Formula via MOS',
+          trick: 'Profit ALWAYS equals Margin of Safety x P/V Ratio! No need to calculate full contribution or fixed costs if MOS is known.',
+          whenToUse: 'Enables 10-second solutions in university exams.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-bep-1',
+          step: 'Step 1: Compute P/V Ratio as the First Calculation',
+          detail: 'P/V Ratio unlocks BEP, Required Sales for Desired Profit, and MOS in seconds.',
+          questionType: 'Practical Management Accounting 10-Marker',
+        },
+      ],
+    },
+  ],
+
+  // ── 14. Income Tax - I (Sem 5) ──
+  'bba-karnataka-income-tax-1': [
+    {
+      id: 'tax1-mod2-residential-status',
+      subjectId: 'bba-karnataka-income-tax-1',
+      title: 'Residential Status & Scope of Total Income (Section 6)',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Residential Status & Tax Incidence',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-tax-01'],
+      subtopics: [
+        'Assessment Year (AY) vs. Previous Year (PY) Definitions',
+        'Basic Conditions for Determining Resident Status (Sec 6(1))',
+        'Additional Conditions for Resident & Ordinarily Resident (ROR vs. RNOR)',
+        'Residential Status of Hindu Undivided Family (HUF) and Companies',
+        'Incidence of Tax: Global vs. Indian Income Scope Matrix',
+      ],
+      explanationMd: `# Residential Status & Scope of Total Income (Section 6)
+
+### Core Concept & University Framework
+Under the Indian Income Tax Act 1961, tax incidence depends upon the **residential status** of an assessee during the relevant Previous Year, regardless of their nationality or citizenship.
+
+---
+
+### Step 1: Basic Conditions for an Individual (Sec 6(1))
+An individual is a **Resident in India** if they satisfy ANY ONE of the following basic conditions:
+- **Condition A**: Stay in India for **182 days or more** during the relevant Previous Year, OR
+- **Condition B**: Stay in India for **60 days or more** in the relevant Previous Year AND **365 days or more** during the 4 preceding Previous Years.
+
+*(Note: The 60-day threshold is expanded to 182 days for Indian citizens leaving India for employment abroad).*
+
+---
+
+### Step 2: Additional Conditions for ROR vs RNOR (Sec 6(6))
+A resident individual is **Resident & Ordinarily Resident (ROR)** if they satisfy **BOTH**:
+1. Resident in India in at least **2 out of 10** preceding Previous Years, AND
+2. Present in India for at least **730 days** in the **7 preceding** Previous Years.
+
+If either condition fails, the assessee is **Resident but Not Ordinarily Resident (RNOR)**.
+
+---
+
+### Tax Incidence Matrix
+| Category of Income | ROR | RNOR | Non-Resident (NR) |
+|---|---|---|---|
+| Income received or accrued in India | Taxable | Taxable | Taxable |
+| Income accruing abroad from a business controlled from India | Taxable | Taxable | Not Taxable |
+| Income accruing abroad from business outside India | Taxable | Not Taxable | Not Taxable |`,
+      formulas: [
+        {
+          id: 'formula-tax-1',
+          label: '730-Day Rule Formulation',
+          formula: 'ROR Status = Basic Condition (182 days or 60+365) AND Both Additional (2 of 10 yrs + 730 days in 7 yrs)',
+          exampleQ: 'An individual was in India for 190 days in PY 2025-26, and 800 days during the preceding 7 years. Resident status?',
+          exampleA: 'Resident (satisfies 182-day condition) and Ordinarily Resident (satisfies 730 days in 7 years).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-tax-1',
+          title: 'Citizenship vs Residence Distinction',
+          trick: 'An Indian citizen can be a NON-RESIDENT for tax purposes; a foreign citizen can be an ORDINARILY RESIDENT in India!',
+          whenToUse: 'Avoids conceptual confusion in direct tax viva questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-tax-1',
+          step: 'Step 1: Test Basic Condition A (182 Days) First',
+          detail: 'If stay >= 182 days, immediately conclude Resident, then proceed to test the two additional conditions.',
+          questionType: 'Practical Tax Problem / 10-Marker',
+        },
+      ],
+    },
+  ],
+
+  // ── 15. Production & Operations Management (Sem 5) ──
+  'bba-karnataka-operations-mgmt': [
+    {
+      id: 'ops-mod2-plant-layout',
+      subjectId: 'bba-karnataka-operations-mgmt',
+      title: 'Plant Layout Types & Line Balancing',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Plant Location & Facility Layout',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-ops-01'],
+      subtopics: [
+        'Factors Influencing Facility / Plant Location Selection',
+        'Product (Line) Layout Characteristics, Pros & Cons',
+        'Process (Functional) Layout Characteristics, Pros & Cons',
+        'Fixed Position Layout & Cellular (Group Technology) Layout',
+        'Line Balancing: Cycle Time, Theoretical Minimum Workstations & Efficiency',
+      ],
+      explanationMd: `# Plant Layout Types & Assembly Line Balancing
+
+### Core Concept & University Framework
+Plant layout involves configuring departments, workstations, machines, and material handling pathways within a facility to maximize operational throughput while minimizing total handling costs.
+
+---
+
+### Classification of Plant Layouts
+1. **Product (Line) Layout**: Machines arranged in sequential order of manufacturing operations. Ideal for standardized mass production (e.g. automotive assembly lines at Toyota Kirloskar Bidadi).
+2. **Process (Functional) Layout**: Similar machines and specialist operations grouped into dedicated departments (e.g. lathe section, drilling section). Ideal for high-variety, low-volume job production.
+3. **Fixed Position Layout**: The product remains stationary while workers, tools, and heavy machinery travel to the site (e.g. aircraft building at HAL Bengaluru, ship building).
+4. **Cellular Layout**: Workstations organized into self-sufficient U-shaped manufacturing cells based on group technology.`,
+      formulas: [
+        {
+          id: 'formula-ops-1',
+          label: 'Line Balancing Efficiency Formulation',
+          formula: 'Efficiency (%) = (Sum of Task Times / (Number of Workstations * Cycle Time)) * 100',
+          exampleQ: 'Total task time is 60 minutes. An assembly line uses 5 workstations with a cycle time of 15 minutes. What is the line balancing efficiency?',
+          exampleA: 'Efficiency = (60 / (5 * 15)) * 100 = (60 / 75) * 100 = 80%. Balance delay = 100% - 80% = 20%.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-ops-1',
+          title: 'Balance Delay Rule',
+          trick: 'Balance Delay = 100% - Line Efficiency! It represents idle operator time on the assembly line.',
+          whenToUse: 'Quick calculation in operations quantitative numericals.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-ops-1',
+          step: 'Step 1: Calculate Cycle Time from Operating Time and Output Demand',
+          detail: 'Cycle Time = Available Operating Time per day / Desired Output Units per day.',
+          questionType: 'Practical Operations Numerical',
         },
       ],
     },
@@ -929,6 +1799,293 @@ Module 2 in the 6th Semester Karnataka BBA syllabus tests analytical skills in m
           step: 'Step 1: Evaluate Each of the 5 Forces as Low, Moderate, or High',
           detail: 'Provide two empirical justifications for each force before concluding overall industry profitability.',
           questionType: 'Industry Analysis Case Study',
+        },
+      ],
+    },
+  ],
+
+  // ── 17. Goods and Services Tax (GST) & Customs Duty (Sem 6) ──
+  'bba-karnataka-gst': [
+    {
+      id: 'gst-mod1-framework-supply',
+      subjectId: 'bba-karnataka-gst',
+      title: 'Dual GST Model & Concept of Supply (Section 7)',
+      moduleNumber: 1,
+      moduleName: 'Module 1: Introduction to Indirect Tax & Constitutional Framework',
+      order: 1,
+      difficulty: 'basic',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-gst-01'],
+      subtopics: [
+        '101st Constitutional Amendment Act 2016 & Article 246A',
+        'Structure of Dual GST: CGST, SGST/UTGST, and IGST',
+        'Taxable Event: Meaning and Scope of Supply under Section 7',
+        'Composite Supply vs. Mixed Supply Distinctions (Sec 8)',
+        'Reverse Charge Mechanism (RCM) under Section 9(3) and 9(4)',
+      ],
+      explanationMd: `# Dual GST Architecture & The Concept of Supply (Section 7)
+
+### Core Concept & University Framework
+Introduced on 1st July 2017 via the 101st Constitutional Amendment, the Goods and Services Tax subsumed multiple cascading central and state indirect levies (Excise, VAT, Service Tax, Octroi) into a unified destination-based consumption tax.
+
+---
+
+### Dual GST Structure in India
+- **Intra-State Supply (Within Karnataka)**:
+  $$\\text{Total GST} = \\text{CGST (Central GST)} + \\text{SGST (State GST)}$$
+  *(Apportioned equally: e.g. 18% GST = 9% CGST + 9% SGST)*.
+- **Inter-State Supply (Between Karnataka and another State/UT)**:
+  $$\\text{Total GST} = \\text{IGST (Integrated GST)}$$
+  *(Collected by the Centre and apportioned to the destination consumer state)*.
+
+---
+
+### The Concept of Supply (Section 7 of CGST Act)
+Under GST, the taxable event is **Supply**, replacing manufacture, sale, or provision of service:
+- All forms of supply of goods or services (sale, transfer, barter, exchange, license, rental, lease).
+- Made or agreed to be made for a **consideration** by a person.
+- In the course or furtherance of **business**.
+- Schedule I exceptions: Specified transactions without consideration (e.g. supplies between related persons or distinct persons in course of business).`,
+      formulas: [
+        {
+          id: 'formula-gst-1',
+          label: 'Composite vs Mixed Supply Tax Rate Rule',
+          formula: 'Composite Supply = Taxed at Principal Supply Rate | Mixed Supply = Taxed at Highest Applicable Rate',
+          exampleQ: 'A hotel offers an executive room with complimentary breakfast (Composite Supply). Room rate is 18%, breakfast is 5%. What rate applies?',
+          exampleA: '18% applies to the entire bundled amount because lodging is the principal supply.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-gst-1',
+          title: 'Destination Principle Rule',
+          trick: 'GST is a DESTINATION-BASED tax! The tax revenue always accrues to the state where goods are consumed, NOT where they are produced.',
+          whenToUse: 'Fundamental concept tested in all university GST examinations.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-gst-1',
+          step: 'Step 1: Determine Intra-State vs. Inter-State',
+          detail: 'Compare Location of Supplier against Place of Supply. If same state -> CGST+SGST; if different states -> IGST.',
+          questionType: 'Practical Tax Computation Problem',
+        },
+      ],
+    },
+  ],
+
+  // ── 18. Entrepreneurship Development (Sem 6) ──
+  'bba-karnataka-entrepreneurship': [
+    {
+      id: 'ent-mod2-bmc',
+      subjectId: 'bba-karnataka-entrepreneurship',
+      title: 'Business Model Canvas (BMC) & Project Feasibility',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Ideation, Business Planning & BMC',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-ent-01'],
+      subtopics: [
+        'Sources of New Business Ideas & Environmental Scanning',
+        'Alexander Osterwalder 9-Building Blocks of Business Model Canvas',
+        'Preparation of Detailed Project Report (DPR)',
+        'Technical, Commercial, Financial, and Legal Feasibility Analysis',
+        'Karnataka Startup Policy & Government Incubator Support (ELEVATE)',
+      ],
+      explanationMd: `# Business Model Canvas (BMC) & Feasibility Studies
+
+### Core Concept & University Framework
+Bengaluru is recognized as the startup capital of India. Under the NEP 2020 BBA curriculum, students learn venture creation frameworks including Alexander Osterwalder's **Business Model Canvas (BMC)**.
+
+---
+
+### The 9 Building Blocks of the Business Model Canvas
+1. **Customer Segments**: Who are we creating value for?
+2. **Value Propositions**: Which customer problems do we solve or needs do we satisfy?
+3. **Channels**: Through which touchpoints do customer segments want to be reached?
+4. **Customer Relationships**: What type of relationship does each segment expect?
+5. **Revenue Streams**: For what value are customers really willing to pay?
+6. **Key Resources**: What physical, intellectual, human, or financial assets are indispensable?
+7. **Key Activities**: What critical operational actions must the venture execute?
+8. **Key Partnerships**: Who are our key suppliers and strategic allies?
+9. **Cost Structure**: What are the most significant costs inherent in our business model?`,
+      formulas: [
+        {
+          id: 'formula-ent-1',
+          label: 'Venture Viability Criterion',
+          formula: 'Viable Model = Customer Lifetime Value (LTV) > 3 * Customer Acquisition Cost (CAC)',
+          exampleQ: 'A SaaS startup acquires customers at ₹5,000 CAC and expects lifetime revenue of ₹20,000. Is this viable?',
+          exampleA: 'Yes. LTV:CAC is 4:1, exceeding the sustainable venture benchmark of 3:1.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-ent-1',
+          title: 'DPR Key Sequence',
+          trick: 'Technical Feasibility ALWAYS precedes Financial Feasibility. If the product cannot be manufactured or built, financial projections are meaningless.',
+          whenToUse: 'Sequential logic in project report formulation.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-ent-1',
+          step: 'Step 1: Sketch the 9-Box Canvas Grid',
+          detail: 'Draw the 9 blocks cleanly, grouping Right Side (Value & Customers) and Left Side (Efficiency & Costs).',
+          questionType: 'Practical Model Presentation',
+        },
+      ],
+    },
+  ],
+
+  // ── 19. Company Law & Secretarial Practice (Sem 6) ──
+  'bba-karnataka-company-law': [
+    {
+      id: 'colaw-mod1-corporate-personality',
+      subjectId: 'bba-karnataka-company-law',
+      title: 'Corporate Personality & Lifting the Corporate Veil',
+      moduleNumber: 1,
+      moduleName: 'Module 1: Incorporation & Corporate Governance',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-colaw-01'],
+      subtopics: [
+        'Characteristics of a Company under Companies Act 2013',
+        'Doctrine of Separate Legal Entity (*Salomon v. Salomon & Co. Ltd.*)',
+        'Perpetual Succession, Common Seal, and Limited Liability',
+        'Statutory Grounds for Lifting the Corporate Veil',
+        'Judicial Grounds for Lifting the Veil (Fraud, Tax Evasion, Enemy Character)',
+      ],
+      explanationMd: `# Corporate Personality & Lifting the Corporate Veil
+
+### Core Concept & University Framework
+Section 2(20) of the Companies Act 2013 defines a company as a company incorporated under this Act or any previous company law. The hallmark of corporate jurisprudence is that upon incorporation, a company becomes an independent legal entity distinct from its shareholders (*Salomon v. Salomon & Co. Ltd. [1897]*).
+
+---
+
+### Characteristics of an Incorporated Company
+- **Separate Legal Personality**: Can own property, sue and be sued in its own corporate name.
+- **Limited Liability**: Liability of members is limited to the unpaid amount on shares held.
+- **Perpetual Succession**: "Members may come and members may go, but the company goes on forever."
+- **Artificial Legal Person**: Created by a legal process; acts through human agents (Directors).
+
+---
+
+### Lifting / Piercing the Corporate Veil
+The "corporate veil" is the legal curtain separating the personality of the company from its controllers. Courts will disregard corporate personality and hold individuals personally liable under:
+1. **Tax Evasion**: *Sir Dinshaw Maneckjee Petit case* (company created as an artificial device to evade income tax).
+2. **Fraud or Sham**: *Gilford Motor Co. v. Horne* (company formed to evade a restrictive covenant).
+3. **Determination of Enemy Character**: *Daimler Co. Ltd. v. Continental Tyre & Rubber Co.* during wartime.
+4. **Statutory Grounds**: Misstatements in prospectus (Sec 35), fraudulent conduct of business (Sec 339).`,
+      formulas: [
+        {
+          id: 'formula-colaw-1',
+          label: 'Salomon Doctrine Formulation',
+          formula: 'Company Legal Identity != Shareholders Personal Identity',
+          exampleQ: 'A sole director and 99% shareholder of a timber company insures timber in his personal name. Timber burns down. Can he claim insurance?',
+          exampleA: 'No (Macaura v. Northern Assurance Co. Ltd.). The timber belonged to the company, not to the shareholder personally; he had no insurable interest.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-colaw-1',
+          title: 'Case Precedent Memorization',
+          trick: 'Remember: Salomon = Separate Entity | Dinshaw Petit = Tax Evasion | Gilford Motor = Sham/Fraud | Macaura = Insurable Interest.',
+          whenToUse: 'Essential case citations for scoring 10/10 in company law.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-colaw-1',
+          step: 'Step 1: State the General Rule First, then Explain Exceptions',
+          detail: 'Start with the separate entity principle, then analyze why the veil should be lifted in the specific scenario.',
+          questionType: 'Case Study / 10-Marker',
+        },
+      ],
+    },
+  ],
+
+  // ── 20. Income Tax - II (Sem 6) ──
+  'bba-karnataka-income-tax-2': [
+    {
+      id: 'tax2-mod4-deductions-80c',
+      subjectId: 'bba-karnataka-income-tax-2',
+      title: 'Chapter VI-A Deductions: 80C, 80D, 80G & 80TTA',
+      moduleNumber: 4,
+      moduleName: 'Module 4: Deductions from Gross Total Income',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-tax2-01'],
+      subtopics: [
+        'Difference between Exemption (Sec 10) and Deduction (Chapter VI-A)',
+        'Section 80C Eligible Investments (PPF, EPF, ELSS, Life Insurance, Housing Principal)',
+        'Section 80D Mediclaim Health Insurance Premiums (Individual, Family, Senior Citizens)',
+        'Section 80G Donations to Approved Charitable Institutions & Relief Funds',
+        'Computation of Total Taxable Income under Old vs. New Tax Regime',
+      ],
+      explanationMd: `# Deductions from Gross Total Income (Chapter VI-A)
+
+### Core Concept & University Framework
+In the final year Karnataka BBA direct taxation syllabus, students calculate Net Total Income by subtracting Chapter VI-A deductions from Gross Total Income (GTI).
+
+$$\\text{Total Taxable Income} = \\text{Gross Total Income (GTI)} - \\text{Deductions u/s 80C to 80U}$$
+
+*(Note: Deductions cannot exceed Gross Total Income; deductions cannot be claimed against Long-Term Capital Gains or lottery winnings).*
+
+---
+
+### Major Chapter VI-A Deductions
+1. **Section 80C (Specified Savings & Investments)**:
+   - Eligible: Employee Provident Fund (EPF), Public Provident Fund (PPF), ELSS mutual funds, Life Insurance Premiums, Sukanya Samriddhi Yojana, National Savings Certificates (NSC), Principal repayment of housing loan.
+   - **Maximum Aggregate Limit**: **₹1,50,000 per financial year**.
+2. **Section 80D (Health Insurance Premiums / Mediclaim)**:
+   - Self, spouse, dependent children: Up to **₹25,000** (₹50,000 if senior citizen).
+   - Parents: Additional **₹25,000** (₹50,000 if senior citizen).
+   - Preventive health checkup included up to **₹5,000** within overall cap.
+3. **Section 80G (Donations for Charity / National Relief)**:
+   - 100% deduction without qualifying limit: PM National Relief Fund, National Defence Fund.
+   - 50% deduction subject to 10% adjusted GTI limit: Approved local charitable trusts.`,
+      formulas: [
+        {
+          id: 'formula-tax2-1',
+          label: 'Total Income Formulation',
+          formula: 'Total Taxable Income = Gross Total Income (GTI) - Deductions (Chapter VI-A)',
+          exampleQ: 'Assessee has GTI ₹8,00,000, invests ₹1,80,000 in PPF and pays ₹20,000 health insurance. Compute Taxable Income.',
+          exampleA: 'Deduction u/s 80C = ₹1,50,000 (capped at statutory ceiling). Deduction u/s 80D = ₹20,000. Total Taxable Income = 8,00,000 - 1,70,000 = ₹6,30,000.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-tax2-1',
+          title: '80C Statutory Ceiling Cap',
+          trick: 'Even if an assessee invests ₹3,00,000 across PPF, ELSS, and insurance, 80C deduction is STRICTLY CAPPED at ₹1,50,000!',
+          whenToUse: 'Primary reason students make numerical calculation errors in exam problems.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-tax2-1',
+          step: 'Step 1: Calculate Gross Total Income Across All 5 Heads First',
+          detail: 'Sum Salary + House Property + PGBP + Capital Gains + Other Sources before applying deductions.',
+          questionType: 'Comprehensive Tax Assessment Problem',
         },
       ],
     },
@@ -1020,6 +2177,106 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     },
   },
   {
+    id: 'q-mkt-01',
+    questionText: 'Which of the following is considered a PSYCHOGRAPHIC basis of consumer market segmentation?',
+    options: [
+      'Age and monthly family income',
+      'Metro city vs Tier-2 town residence',
+      'Lifestyle, social values, and personality traits',
+      'Usage rate and brand loyalty status',
+    ],
+    correctIndex: 2,
+    explanation: 'Psychographic segmentation divides buyers into different groups based on social class, lifestyle, or personality characteristics.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-marketing',
+      topicIds: ['mkt-mod2-stp'],
+      stream: 'management',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-mkt-02',
+    questionText: 'When a company introduces an innovative product with a very high initial price to capture consumer surplus before lowering prices later, what pricing strategy is being used?',
+    options: [
+      'Market Penetration Pricing',
+      'Price Skimming',
+      'Predatory Pricing',
+      'Psychological Pricing',
+    ],
+    correctIndex: 1,
+    explanation: 'Price Skimming involves setting high introductory prices for technological or innovative products to skim maximum revenues layer-by-layer from early adopters.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-marketing',
+      topicIds: ['mkt-mod3-plc-pricing'],
+      stream: 'management',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-ob-01',
+    questionText: "According to Frederick Herzberg's Two-Factor Motivation-Hygiene theory, which of the following is a HYGIENE factor rather than an intrinsic motivator?",
+    options: [
+      'Challenging work responsibility',
+      'Recognition for achievement',
+      'Salary and company policies',
+      'Opportunities for career advancement',
+    ],
+    correctIndex: 2,
+    explanation: 'Salary, company policies, supervision, and working conditions are Hygiene factors. Their presence prevents dissatisfaction but does not intrinsically motivate peak effort.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-ob',
+      topicIds: ['ob-mod3-motivation-theories'],
+      stream: 'management',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-math-01',
+    questionText: "Under Cramer's Rule for solving linear equations, what condition indicates that the system DOES NOT have a unique solution?",
+    options: [
+      'The determinant of the coefficient matrix Det(A) equals 0',
+      'The determinant Det(Ax) is negative',
+      'The number of equations equals 3',
+      'All constant terms are positive',
+    ],
+    correctIndex: 0,
+    explanation: "If Det(A) = 0, division by zero occurs (x = Det(Ax) / 0), meaning Cramer's rule cannot yield a unique solution (the system has either infinite solutions or no solution).",
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-math',
+      topicIds: ['math-mod1-matrices-cramer'],
+      stream: 'aptitude',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-eco-01',
+    questionText: 'If the Price Elasticity of Demand for a brand is 2.5 (Elastic), what managerial action will INCREASE Total Sales Revenue?',
+    options: [
+      'Increasing the selling price',
+      'Decreasing the selling price',
+      'Keeping price unchanged while reducing production',
+      'Increasing fixed costs',
+    ],
+    correctIndex: 1,
+    explanation: 'When demand is price elastic (Ep > 1), a price reduction leads to a proportionally larger increase in quantity demanded, thereby increasing Total Revenue.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-economics',
+      topicIds: ['eco-mod1-elasticity-demand'],
+      stream: 'economics',
+      program: 'bba',
+    },
+  },
+  {
     id: 'q-cost-01',
     questionText: 'Which of the following items must be STRICTLY EXCLUDED when preparing a manufacturing Cost Sheet?',
     options: [
@@ -1060,6 +2317,66 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     },
   },
   {
+    id: 'q-stat-01',
+    questionText: 'If the two linear regression coefficients are byx = -0.8 and bxy = -0.45, what is Karl Pearson correlation coefficient r?',
+    options: [
+      '+0.60',
+      '-0.60',
+      '+0.36',
+      '-0.36',
+    ],
+    correctIndex: 1,
+    explanation: 'r = -sqrt((-0.8) * (-0.45)) = -sqrt(0.36) = -0.60. Both regression coefficients and the correlation coefficient must always carry the same algebraic sign.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-statistics',
+      topicIds: ['stat-mod3-correlation-regression'],
+      stream: 'aptitude',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-fm-01',
+    questionText: 'What is the minimum maturity period for Commercial Paper (CP) issued in the Indian Money Market?',
+    options: [
+      '1 day',
+      '7 days',
+      '14 days',
+      '30 days',
+    ],
+    correctIndex: 1,
+    explanation: 'Under RBI guidelines, Commercial Papers can be issued for maturities ranging from a minimum of 7 days up to a maximum of 1 year.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-fin-markets',
+      topicIds: ['fm-mod2-money-market'],
+      stream: 'finance',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-law-01',
+    questionText: 'In Indian contract law, what is the legal effect of an agreement entered into with a minor (under Mohori Bibee v. Dharmodas Ghose)?',
+    options: [
+      'Voidable at the option of the minor',
+      'Void ab initio (completely void from the beginning)',
+      'Enforceable if ratified upon attaining majority',
+      'Valid if consideration is paid in cash',
+    ],
+    correctIndex: 1,
+    explanation: 'Under the landmark Privy Council ruling in Mohori Bibee v. Dharmodas Ghose (1903), a minor has no legal capacity to contract and any such agreement is void ab initio.',
+    difficulty: 'basic',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-business-law',
+      topicIds: ['law-mod1-contract-essentials'],
+      stream: 'law',
+      program: 'bba',
+    },
+  },
+  {
     id: 'q-fin-01',
     questionText: 'Why is the specific cost of debt (Kd) multiplied by (1 - t) when calculating WACC?',
     options: [
@@ -1080,6 +2397,86 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     },
   },
   {
+    id: 'q-hrm-01',
+    questionText: 'Which document derived from Job Analysis details the educational degrees, technical certifications, and prior work experience required of an applicant?',
+    options: [
+      'Job Description (JD)',
+      'Job Specification (JS)',
+      'Job Evaluation Matrix',
+      'Key Performance Indicator (KPI)',
+    ],
+    correctIndex: 1,
+    explanation: 'Job Specification (JS) defines the human qualities, qualifications, skills, and experience necessary for an individual to perform the role.',
+    difficulty: 'basic',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-hrm',
+      topicIds: ['hrm-mod2-job-analysis'],
+      stream: 'management',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-mgmtacc-01',
+    questionText: 'If a company has Actual Sales of ₹5,00,000 and Break-Even Sales of ₹3,50,000, what is its Margin of Safety (MOS)?',
+    options: [
+      '₹1,50,000',
+      '₹8,50,000',
+      '30%',
+      '₹3,50,000',
+    ],
+    correctIndex: 0,
+    explanation: 'Margin of Safety = Actual Sales - Break-Even Sales = ₹5,00,000 - ₹3,50,000 = ₹1,50,000.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-mgmt-accounting',
+      topicIds: ['mgmtacc-mod3-marginal-costing'],
+      stream: 'commerce',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-tax-01',
+    questionText: 'Under Section 6(1) of the Indian Income Tax Act 1961, an individual is treated as a Resident in India if their physical stay during the relevant Previous Year is at least:',
+    options: [
+      '60 days',
+      '90 days',
+      '182 days',
+      '365 days',
+    ],
+    correctIndex: 2,
+    explanation: 'The primary basic condition under Section 6(1)(a) requires physical presence in India for a minimum of 182 days in the relevant financial previous year.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-income-tax-1',
+      topicIds: ['tax1-mod2-residential-status'],
+      stream: 'taxation',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-ops-01',
+    questionText: 'In a manufacturing facility, which plant layout is most optimal when producing a single standardized product in very large mass volumes?',
+    options: [
+      'Process Layout (Functional Layout)',
+      'Product Layout (Line Layout)',
+      'Fixed Position Layout',
+      'Hybrid Job-Shop Layout',
+    ],
+    correctIndex: 1,
+    explanation: 'A Product (Line) Layout arranges machines in sequential production flow, which is ideal for high-volume, standardized continuous production.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-operations-mgmt',
+      topicIds: ['ops-mod2-plant-layout'],
+      stream: 'operations',
+      program: 'bba',
+    },
+  },
+  {
     id: 'q-strat-01',
     questionText: "In Michael Porter's Five Forces framework, which of the following is considered an external SUBSTITUTE rather than a direct competitor?",
     options: [
@@ -1096,6 +2493,86 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
       subjectId: 'bba-karnataka-strategic-mgmt',
       topicIds: ['strat-mod2-pestle-porter'],
       stream: 'strategy',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-gst-01',
+    questionText: 'When a transaction is an INTRA-STATE supply of goods within the State of Karnataka, how is the GST levy collected?',
+    options: [
+      'Only 100% IGST is collected by the Central Government',
+      'Divided equally between CGST and SGST',
+      'Only SGST is collected by the Karnataka Commercial Taxes Department',
+      'UTGST applies exclusively',
+    ],
+    correctIndex: 1,
+    explanation: 'For intra-state supplies, the dual GST framework mandates that tax is levied concurrently as CGST and SGST, divided equally (e.g. 18% GST = 9% CGST + 9% SGST).',
+    difficulty: 'basic',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-gst',
+      topicIds: ['gst-mod1-framework-supply'],
+      stream: 'taxation',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-ent-01',
+    questionText: 'In Alexander Osterwalder\'s 9-block Business Model Canvas (BMC), which component identifies the specific value delivered to solve customer pain points?',
+    options: [
+      'Key Partnerships',
+      'Value Propositions',
+      'Cost Structure',
+      'Channels',
+    ],
+    correctIndex: 1,
+    explanation: 'The Value Proposition describes the bundle of products and services that create value for a specific customer segment by solving a problem or fulfilling a need.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-entrepreneurship',
+      topicIds: ['ent-mod2-bmc'],
+      stream: 'management',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-colaw-01',
+    questionText: 'Which landmark English judicial case established the fundamental doctrine that an incorporated company has a separate legal personality distinct from its members?',
+    options: [
+      'Balfour v. Balfour (1919)',
+      'Salomon v. Salomon & Co. Ltd. (1897)',
+      'Carlill v. Carbolic Smoke Ball Co. (1893)',
+      'Donoghue v. Stevenson (1932)',
+    ],
+    correctIndex: 1,
+    explanation: 'Salomon v. Salomon & Co. Ltd. (1897) is the foundational English company law ruling establishing that a legally incorporated company is an independent juristic person.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-company-law',
+      topicIds: ['colaw-mod1-corporate-personality'],
+      stream: 'law',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-tax2-01',
+    questionText: 'What is the maximum aggregate deduction limit permitted under Section 80C of Chapter VI-A in a financial year?',
+    options: [
+      '₹1,00,000',
+      '₹1,50,000',
+      '₹2,00,000',
+      '₹2,50,000',
+    ],
+    correctIndex: 1,
+    explanation: 'Under Section 80CCE, the maximum cumulative deduction permissible under Sections 80C, 80CCC, and 80CCD(1) is ₹1,50,000 per financial year.',
+    difficulty: 'core',
+    status: 'approved',
+    prepTags: {
+      subjectId: 'bba-karnataka-income-tax-2',
+      topicIds: ['tax2-mod4-deductions-80c'],
+      stream: 'taxation',
       program: 'bba',
     },
   },
