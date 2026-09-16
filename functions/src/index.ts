@@ -17,6 +17,7 @@ admin.initializeApp()
 // ─── Import routes ───
 import { router as aiQuestionsRouter } from './routes/ai-questions'
 import { router as aiChatRouter } from './routes/ai-chat'
+import { router as prepRouter } from './routes/prep'
 import { router as questionsRouter } from './routes/questions'
 import { router as papersRouter } from './routes/papers'
 import { router as configRouter } from './routes/config'
@@ -157,6 +158,8 @@ app.use('/api/questions', questionsRouter)
 app.use('/questions', questionsRouter)
 app.use('/api/papers', papersRouter)
 app.use('/papers', papersRouter)
+app.use('/api/prep', prepRouter)
+app.use('/prep', prepRouter)
 app.use('/api/config', configRouter)
 
 // Public Google Form intake — token-gated, no Firebase auth.

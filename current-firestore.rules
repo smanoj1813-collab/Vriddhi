@@ -1106,6 +1106,35 @@ service cloud.firestore {
     //   - ai_usage/{YYYY-MM-DD}: real-time spend telemetry (serves,
     //     generations, tokens; per-campus and per-student counters)
 
+    // -- Global Prep Content (B2C & VAS Study Material) -----------------------
+    // Centrally-authored academic preparation content for UG/PG commerce & management.
+    // Any signed-in user (including B2C learners who hold no collegeId claim)
+    // may read published prep content. Superadmins may read drafts/review content.
+    // All writes are server-only through the Admin SDK.
+    match /prep_subjects/{subjectId} {
+      allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
+      allow write: if false;
+
+      match /topics/{topicId} {
+        allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
+        allow write: if false;
+      }
+    }
+
+    // Individual learner topic and quiz completion progress.
+    // Owner-only read and write.
+    match /prep_progress/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Shared universal question bank linked to prep topics via prepTags.topicIds.
+    // Any signed-in user may read approved questions for practice.
+    // Writes are managed centrally by superadmin or Admin SDK.
+    match /universalQuestions/{qid} {
+      allow read: if isSignedIn() && (resource.data.status == 'approved' || isSuperadmin());
+      allow write: if isSuperadmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

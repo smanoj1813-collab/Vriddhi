@@ -24,6 +24,7 @@ import {
   Sparkles, Loader2, RefreshCw, AlertTriangle, Check, Info, Zap,
   Gauge, Snowflake, Plus, Trash2, BookOpen, Globe2, Play, Search, Library,
 } from 'lucide-react';
+import PrepContentStudioTab from '../components/PrepContentStudioTab';
 import { useAuth } from '../../auth/context/AuthContext';
 import {
   getStudyMaterialControls,
@@ -83,6 +84,7 @@ const statusChip = (status: string) => {
 export default function AiStudyContentTab() {
   const { user } = useAuth();
   const role = user?.role || '';
+  const [activeMode, setActiveMode] = useState<'controls' | 'prepStudio'>('controls');
   // Internal platform view: editing and even READING are superadmin-only
   // (mirrors the server's 403; college staff must not see cost data).
   const canEdit = role === 'superadmin';
@@ -339,8 +341,38 @@ export default function AiStudyContentTab() {
 
   return (
     <div className="space-y-5">
-      {/* Superadmin campus targeting */}
-      {isSuperadmin && (
+      {/* Platform Console Sub-Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <button
+          onClick={() => setActiveMode('controls')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeMode === 'controls'
+              ? 'bg-teal-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Gauge className="w-4 h-4" />
+          Spend & Campus Breakers
+        </button>
+        <button
+          onClick={() => setActiveMode('prepStudio')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeMode === 'prepStudio'
+              ? 'bg-teal-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          Prep Content Studio (BBA & Commerce)
+        </button>
+      </div>
+
+      {activeMode === 'prepStudio' ? (
+        <PrepContentStudioTab />
+      ) : (
+        <>
+          {/* Superadmin campus targeting */}
+          {isSuperadmin && (
         <Card>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[220px]">
@@ -730,6 +762,8 @@ export default function AiStudyContentTab() {
         <Sparkles className="w-3.5 h-3.5 text-teal-500" />
         Students always receive the shared cached pack instantly. Content is curated centrally: only this console can regenerate (each topic at most once every 15 minutes), concurrent requests share a single paid generation, and every republish reaches all connected colleges at once.
       </p>
+        </>
+      )}
     </div>
   );
 }
