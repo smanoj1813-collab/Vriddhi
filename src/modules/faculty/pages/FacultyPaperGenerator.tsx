@@ -3,17 +3,20 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckSquare, Square, Eye, Printer, Download,
   Send, CheckCircle, Clock, AlertTriangle, X, Sparkles, Plus, Trash2,
-  Loader2, BookOpen, Calendar, Award, ChevronRight, Save, Pencil, FileUp, RotateCcw
+  Loader2, BookOpen, Calendar, Award, ChevronRight, Save, Pencil, FileUp, RotateCcw,
+  Wand2, Bot, Layers, Check, RefreshCw
 } from 'lucide-react'
-import { useAuth } from '../../auth/context/AuthContext'
+import { useAuth } from '@/modules/auth/context/AuthContext'
 import { DEFAULT_DEPARTMENT } from '@/shared/constants/academicPrograms'
 import { getQuestions, linkQuestionToPaper, updateQuestion, getBatchBranchConfig } from '../../admin/api/questionBankApi'
 import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor'
-import { createPaper, updatePaper } from '../../admin/api/paperApi'
+import { createPaper, updatePaper, generatePaper } from '../../admin/api/paperApi'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Question as BankQuestion } from '../../admin/types/questionBank'
 import PaperBuilder from '../components/PaperBuilder'
+import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
+import { isSameSubject } from '@/shared/utils/curriculumMatcher'
 
 interface FacultyQuestion {
   id: string
@@ -62,6 +65,10 @@ interface PaperSection {
 export default function FacultyPaperGenerator() {
   const { user } = useAuth()
   const collegeId = user?.collegeId || ''
+  const facultyId = user?.id || user?.uid || ''
+
+  const { curriculum } = useFacultyCurriculum(facultyId, collegeId)
+
   const [papers, setPapers] = useState<TestPaper[]>([])
   const [availableQuestions, setAvailableQuestions] = useState<FacultyQuestion[]>([])
   const [loadingQuestions, setLoadingQuestions] = useState(false)
@@ -75,12 +82,20 @@ export default function FacultyPaperGenerator() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [showToast, setShowToast] = useState('')
   const [activeTab, setActiveTab] = useState<'generate' | 'my-papers' | 'visual-builder'>('generate')
+
+  // ── Automated Generation State ──
+  const [generationStrategy, setGenerationStrategy] = useState<'auto' | 'manual'>('auto')
+  const [autoMode, setAutoMode] = useState<'bank' | 'ai' | 'hybrid'>('bank')
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('')
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false)
+
   // ── Edit-before-submit: per-question overrides applied to this paper ──
   const [questionEdits, setQuestionEdits] = useState<Record<string, { questionText: string; marks: number }>>({})
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<{ questionText: string; marks: number }>({ questionText: '', marks: 1 })
   const [syncEditsToBank, setSyncEditsToBank] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+
   // HOD approval is optional — only pre-selected for mid/end semester papers.
   const [requiresApproval, setRequiresApproval] = useState(true)
   const [approvalTouched, setApprovalTouched] = useState(false)
@@ -93,11 +108,26 @@ export default function FacultyPaperGenerator() {
     subject: user?.department || 'General',
   }), [user])
 
+  // Select first assigned course by default
+  useEffect(() => {
+    if (curriculum && curriculum.length > 0 && !selectedCourseId) {
+      setSelectedCourseId(curriculum[0].courseId)
+    }
+  }, [curriculum, selectedCourseId])
+
+  const assignedCourse = useMemo(() => {
+    return curriculum.find(c => c.courseId === selectedCourseId)
+  }, [curriculum, selectedCourseId])
+
+  const activeSubjectName = useMemo(() => {
+    return assignedCourse ? assignedCourse.courseName : currentFaculty.subject
+  }, [assignedCourse, currentFaculty.subject])
+
   const loadData = useCallback(async () => {
     if (!collegeId) return
     setLoadingQuestions(true)
     try {
-      const result = await getQuestions(collegeId, { status: 'active' }, 100)
+      const result = await getQuestions(collegeId, { status: 'active' }, 200)
       const mapped: FacultyQuestion[] = result.data.map((q: BankQuestion) => ({
         id: q.id,
         status: q.status === 'active' ? 'Approved' : q.status,
@@ -120,7 +150,7 @@ export default function FacultyPaperGenerator() {
         totalMarks: p.totalMarks || 0,
         duration: p.duration || duration,
         fileName: `${(p.title || 'paper').replace(/\\s+/g, '_')}.pdf`,
-        verificationStatus: 'submitted-for-approval',
+        verificationStatus: p.status === 'published' ? 'published' : 'submitted-for-approval',
         questions: (p.sections || []).flatMap((s: any) => (s.questions || []).map((q: any) => ({
           number: 0,
           topic: q.topic || '',
@@ -128,13 +158,13 @@ export default function FacultyPaperGenerator() {
           marks: q.marks || 1,
           questionText: q.text || '',
         }))),
-        createdBy: currentFaculty.name,
+        createdBy: p.createdByName || currentFaculty.name,
         createdAt: p.createdAt || '',
         submittedAt: p.updatedAt || '',
-        aiGenerated: false,
+        aiGenerated: !!p.aiGenerated,
       })))
     } catch {
-      // Keep existing empty state; the error is surfaced by the toast below.
+      // ignore
     } finally {
       setLoadingQuestions(false)
     }
@@ -153,6 +183,15 @@ export default function FacultyPaperGenerator() {
       })
       .catch(() => undefined)
   }, [collegeId])
+
+  /** Filter questions for the selected course using canonical subject matching */
+  const filteredAvailableQuestions = useMemo(() => {
+    if (!activeSubjectName || activeSubjectName === 'General') return availableQuestions
+    return availableQuestions.filter(q =>
+      isSameSubject(q.courseCode, activeSubjectName) ||
+      isSameSubject(q.topic, activeSubjectName)
+    )
+  }, [availableQuestions, activeSubjectName])
 
   /** Applies any unsaved edits made in this session on top of the bank question. */
   const withEdits = useCallback((q: FacultyQuestion): FacultyQuestion => {
@@ -183,14 +222,6 @@ export default function FacultyPaperGenerator() {
     setTimeout(() => setShowToast(''), 2500)
   }
 
-  const resetQuestionEdit = (id: string) => {
-    setQuestionEdits(prev => {
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-  }
-
   const expectedMarks = assessmentType === 'C3' ? 80 : assessmentType === 'C2' ? 50 : 20
 
   /** Class tests (C1) don't need sign-off; mid (C2) and end semester (C3) do. */
@@ -198,7 +229,10 @@ export default function FacultyPaperGenerator() {
 
   useEffect(() => {
     if (!approvalTouched) setRequiresApproval(approvalDefault)
-  }, [approvalDefault, approvalTouched])
+    if (assessmentType === 'C1') setDuration(45)
+    else if (assessmentType === 'C2') setDuration(90)
+    else if (assessmentType === 'C3') setDuration(180)
+  }, [assessmentType, approvalDefault, approvalTouched])
 
   const toggleQuestion = (id: string) => {
     setSelectedQuestions(prev => 
@@ -206,13 +240,70 @@ export default function FacultyPaperGenerator() {
     )
   }
 
-  const selectAll = () => {
-    const allIds = availableQuestions.map(q => q.id)
-    const allSelected = allIds.every(id => selectedQuestions.includes(id))
-    if (allSelected) {
-      setSelectedQuestions(prev => prev.filter(id => !allIds.includes(id)))
+  // ─── Automated Generation Action ──────────────────────────────────
+  const handleAutoGenerate = async () => {
+    if (!collegeId) return
+    setIsAutoGenerating(true)
+    setShowToast('')
+
+    const subject = activeSubjectName
+    const title = paperTitle.trim() || `${subject} - ${assessmentType === 'C1' ? 'Class Test' : assessmentType === 'C2' ? 'Midterm Exam' : 'End Semester Examination'}`
+
+    // Blueprint configuration based on assessment type
+    let blueprintSections: any[] = []
+    if (assessmentType === 'C1') {
+      blueprintSections = [
+        { id: 'sec-a', name: 'Section A (MCQs)', title: 'Section A', questionType: 'mcq', numQuestions: 5, marksPerQuestion: 1, difficulty: 'medium', difficultyMix: { easy: 3, medium: 2, hard: 0 } },
+        { id: 'sec-b', name: 'Section B (Short Answers)', title: 'Section B', questionType: 'short', numQuestions: 3, marksPerQuestion: 5, difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 0 } },
+      ]
+    } else if (assessmentType === 'C2') {
+      blueprintSections = [
+        { id: 'sec-a', name: 'Section A (MCQs)', title: 'Section A', questionType: 'mcq', numQuestions: 10, marksPerQuestion: 1, difficulty: 'medium', difficultyMix: { easy: 4, medium: 4, hard: 2 } },
+        { id: 'sec-b', name: 'Section B (Short Answers)', title: 'Section B', questionType: 'short', numQuestions: 4, marksPerQuestion: 5, difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 1 } },
+        { id: 'sec-c', name: 'Section C (Long Answers / Case)', title: 'Section C', questionType: 'long', numQuestions: 2, marksPerQuestion: 10, difficulty: 'medium', difficultyMix: { easy: 0, medium: 1, hard: 1 } },
+      ]
     } else {
-      setSelectedQuestions(prev => [...new Set([...prev, ...allIds])])
+      blueprintSections = [
+        { id: 'sec-a', name: 'Section A (MCQs)', title: 'Section A', questionType: 'mcq', numQuestions: 10, marksPerQuestion: 1, difficulty: 'medium', difficultyMix: { easy: 4, medium: 4, hard: 2 } },
+        { id: 'sec-b', name: 'Section B (Short Answers)', title: 'Section B', questionType: 'short', numQuestions: 6, marksPerQuestion: 5, difficulty: 'medium', difficultyMix: { easy: 2, medium: 3, hard: 1 } },
+        { id: 'sec-c', name: 'Section C (Long Answers / Problems)', title: 'Section C', questionType: 'long', numQuestions: 4, marksPerQuestion: 10, difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 1 } },
+      ]
+    }
+
+    try {
+      const result = await generatePaper(
+        collegeId,
+        {
+          title,
+          subject,
+          courseCode: assignedCourse?.courseCode || '',
+          totalMarks: expectedMarks,
+          duration,
+          examType: assessmentType.toLowerCase(),
+          batch: assignedCourse?.batch || '',
+          branch: assignedCourse?.branch || '',
+          mode: autoMode,
+          sections: blueprintSections,
+        },
+        user?.id || user?.uid || '',
+        user?.name || user?.email || 'Faculty'
+      )
+
+      setPaperTitle(title)
+      const qIds = result.paper.linkedQuestionIds || result.paper.questionIds || []
+      setSelectedQuestions(qIds)
+      setLastSavedPaperId(result.paper.id)
+
+      await loadData()
+
+      setShowToast(`Exam paper automatically generated with ${qIds.length} questions!`)
+      setTimeout(() => setShowToast(''), 4000)
+    } catch (err: any) {
+      console.error('[handleAutoGenerate]', err)
+      setShowToast(err?.message || 'Automatic generation failed')
+      setTimeout(() => setShowToast(''), 4000)
+    } finally {
+      setIsAutoGenerating(false)
     }
   }
 
@@ -220,29 +311,31 @@ export default function FacultyPaperGenerator() {
     const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
     const sections = assessmentType === 'C3' 
       ? [
-          { name: 'Section A (5 marks each)', questions: selected.filter(q => q.marks === 5) },
-          { name: 'Section B (10 marks each)', questions: selected.filter(q => q.marks === 10) },
+          { name: 'Section A (1 Mark each)', questions: selected.filter(q => q.marks <= 2) },
+          { name: 'Section B (5 Marks each)', questions: selected.filter(q => q.marks > 2 && q.marks <= 6) },
+          { name: 'Section C (10 Marks each)', questions: selected.filter(q => q.marks > 6) },
         ]
       : [{ name: 'Questions', questions: selected }]
 
     let html = `
-      <div style="font-family: 'Times New Roman', serif; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-size: 18px; margin-bottom: 5px;">${(user as any)?.collegeName || 'Question Paper'}</h1>
-          <h2 style="font-size: 16px; margin-bottom: 5px;">${paperTitle || 'Untitled Paper'}</h2>
-          <p style="font-size: 12px; color: #666;">Subject: ${currentFaculty.subject} | Duration: ${duration} min | Max Marks: ${totalSelectedMarks}</p>
-          ${customInstructions ? `<p style="font-size: 12px; color: #666; margin-top: 10px;"><strong>Instructions:</strong> ${customInstructions}</p>` : ''}
+      <div style="font-family: 'Times New Roman', serif; padding: 25px; color: #111;">
+        <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px;">
+          <h1 style="font-size: 20px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">${(user as any)?.collegeName || 'College Examination'}</h1>
+          <h2 style="font-size: 16px; margin-bottom: 4px; font-weight: 600;">${paperTitle || 'Examination Paper'}</h2>
+          <p style="font-size: 12px; margin-bottom: 4px;"><strong>Course / Subject:</strong> ${activeSubjectName} ${assignedCourse?.courseCode ? `(${assignedCourse.courseCode})` : ''} | <strong>Assessment:</strong> ${assessmentType}</p>
+          <p style="font-size: 12px; margin: 0;"><strong>Time Allowed:</strong> ${duration} Minutes &nbsp;|&nbsp; <strong>Maximum Marks:</strong> ${totalSelectedMarks || expectedMarks}</p>
+          ${customInstructions ? `<p style="font-size: 11px; margin-top: 8px; font-style: italic;"><strong>General Instructions:</strong> ${customInstructions}</p>` : ''}
         </div>
     `
 
     sections.forEach((section, si) => {
       if (section.questions.length > 0) {
-        html += `<h3 style="font-size: 14px; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">${section.name}</h3>`
+        html += `<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">${section.name}</h3>`
         section.questions.forEach((q, i) => {
           html += `
-            <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
-              <p style="font-weight: bold; font-size: 13px;">Q${si * 10 + i + 1}. [${q.marks} marks] ${q.questionText}</p>
-              <p style="font-size: 11px; color: #666; margin-top: 5px;">Topic: ${q.topic} | Difficulty: ${q.difficulty}</p>
+            <div style="margin-bottom: 12px; font-size: 12px;">
+              <p style="margin: 0;"><strong>Q${si * 10 + i + 1}.</strong> ${q.questionText} <span style="float: right; font-weight: bold;">[${q.marks} Mark${q.marks > 1 ? 's' : ''}]</span></p>
+              <p style="font-size: 10px; color: #777; margin: 2px 0 0 20px;">Topic: ${q.topic} • Difficulty: ${q.difficulty}</p>
             </div>
           `
         })
@@ -253,50 +346,51 @@ export default function FacultyPaperGenerator() {
     return html
   }
 
+  const handlePrint = () => {
+    const win = window.open('', '_blank')
+    if (win) {
+      win.document.write(generatePreviewHTML())
+      win.document.close()
+      win.print()
+    }
+  }
+
+  const handleExportPDF = () => {
+    handlePrint()
+  }
+
   const handleSubmitForApproval = async () => {
-    if (!paperTitle) {
+    if (!paperTitle.trim()) {
       setShowToast('Please enter a paper title')
-      setTimeout(() => setShowToast(''), 3000)
       return
     }
     if (selectedQuestions.length === 0) {
       setShowToast('Please select at least one question')
-      setTimeout(() => setShowToast(''), 3000)
-      return
-    }
-    if (!collegeId) {
-      setShowToast('Not authenticated — missing collegeId')
-      setTimeout(() => setShowToast(''), 3000)
       return
     }
 
     const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
     const questionIds = selected.map(q => q.id)
 
-    try {
-      const sections = [
-        {
-          id: 'section-a',
-          name: 'Section A',
-          questions: selected.map((q, i) => ({
-            number: i + 1,
-            text: q.questionText,
-            type: q.questionType,
-            marks: q.marks,
-            topic: q.topic,
-            questionId: q.id,
-            edited: Boolean(questionEdits[q.id]),
-          })),
-        },
-      ] as any
+    const sections = assessmentType === 'C3'
+      ? [
+          { name: 'Section A', questions: selected.filter(q => q.marks <= 2).map(q => ({ questionId: q.id, question: q })), totalMarks: selected.filter(q => q.marks <= 2).reduce((s, q) => s + q.marks, 0) },
+          { name: 'Section B', questions: selected.filter(q => q.marks > 2 && q.marks <= 6).map(q => ({ questionId: q.id, question: q })), totalMarks: selected.filter(q => q.marks > 2 && q.marks <= 6).reduce((s, q) => s + q.marks, 0) },
+          { name: 'Section C', questions: selected.filter(q => q.marks > 6).map(q => ({ questionId: q.id, question: q })), totalMarks: selected.filter(q => q.marks > 6).reduce((s, q) => s + q.marks, 0) },
+        ]
+      : [{ name: 'Questions', questions: selected.map(q => ({ questionId: q.id, question: q })), totalMarks: totalSelectedMarks }]
 
+    try {
       const saved = await createPaper(
         collegeId,
         {
           title: paperTitle,
-          subject: currentFaculty.subject,
+          subject: activeSubjectName,
           totalMarks: totalSelectedMarks,
           duration,
+          examType: assessmentType.toLowerCase(),
+          batch: assignedCourse?.batch || '',
+          branch: assignedCourse?.branch || '',
           instructions: customInstructions ? [customInstructions] : [],
           negativeMarking: false,
         },
@@ -304,10 +398,9 @@ export default function FacultyPaperGenerator() {
         user?.id || user?.uid || '',
         user?.name || user?.email || 'Unknown',
         true,
-        sections
+        sections as any
       )
 
-      // Approval is optional: papers that don't need it are immediately usable.
       try {
         await updatePaper(saved.id, {
           ...(requiresApproval
@@ -315,19 +408,14 @@ export default function FacultyPaperGenerator() {
             : { verificationStatus: 'not-required', status: 'published', finalisedAt: new Date().toISOString() }),
           requiresApproval,
         } as any)
-      } catch {
-        // Non-fatal: the paper is saved, only its review state may lag.
-      }
+      } catch {}
 
-      // Optionally push the edits back into the shared question bank
       if (syncEditsToBank) {
         for (const [qid, edit] of Object.entries(questionEdits)) {
           if (!questionIds.includes(qid)) continue
           try {
             await updateQuestion(qid, { text: edit.questionText, marks: edit.marks })
-          } catch {
-            // Non-fatal: the paper still carries the edited version.
-          }
+          } catch {}
         }
       }
 
@@ -338,13 +426,13 @@ export default function FacultyPaperGenerator() {
       const newPaper: TestPaper = {
         id: saved.id,
         title: paperTitle,
-        subject: currentFaculty.subject,
-        className: user?.department || '',
-        division: '',
+        subject: activeSubjectName,
+        className: assignedCourse?.batch || '',
+        division: assignedCourse?.branch || '',
         totalMarks: totalSelectedMarks,
         duration,
         fileName: `${paperTitle.replace(/\s+/g, '_')}.pdf`,
-        verificationStatus: requiresApproval ? 'submitted-for-approval' : 'not-required',
+        verificationStatus: requiresApproval ? 'submitted-for-approval' : 'published',
         questions: selected.map((q, i) => ({
           number: i + 1,
           topic: q.topic,
@@ -355,345 +443,423 @@ export default function FacultyPaperGenerator() {
         createdBy: currentFaculty.name,
         createdAt: new Date().toISOString(),
         submittedAt: new Date().toISOString(),
-        aiGenerated: false
+        aiGenerated: autoMode === 'ai',
       }
 
       setLastSavedPaperId(saved.id)
       setPapers(prev => [newPaper, ...prev])
       setShowSubmitConfirm(false)
-      setShowToast(requiresApproval ? 'Paper submitted for HOD approval!' : 'Paper saved and ready to use')
+      setShowToast(requiresApproval ? 'Paper submitted for HOD approval!' : 'Paper saved and ready to use!')
       setTimeout(() => setShowToast(''), 3000)
 
-      // Reset form
       setSelectedQuestions([])
       setPaperTitle('')
       setCustomInstructions('')
       setQuestionEdits({})
       setActiveTab('my-papers')
-    } catch (err) {
-      setShowToast(err instanceof Error ? err.message : 'Failed to submit paper')
+    } catch (err: any) {
+      setShowToast(err?.message || 'Failed to submit paper')
       setTimeout(() => setShowToast(''), 3000)
     }
   }
 
-  /**
-   * Downloads a saved paper. When the server PDF renderer is unavailable the
-   * helper renders it in the browser (the paper is fetched from Firestore on
-   * demand) and we surface its "approximate styling" notice instead of an error.
-   */
   const downloadSavedPaper = async (paperId: string, title: string) => {
     try {
-      const result = await downloadPaperPDF(paperId, title || 'question_paper')
-      setShowToast(result.renderedBy === 'client' ? (result.notice || 'PDF generated in your browser') : 'PDF downloaded')
-      setTimeout(() => setShowToast(''), result.renderedBy === 'client' ? 6000 : 3000)
-    } catch (err) {
-      setShowToast(err instanceof Error ? err.message : 'Failed to download PDF')
-      setTimeout(() => setShowToast(''), 4000)
+      const result = await downloadPaperPDF(paperId, title)
+      if (result.renderedBy === 'client' && result.notice) {
+        setShowToast(result.notice)
+        setTimeout(() => setShowToast(''), 4000)
+      }
+    } catch (err: any) {
+      setShowToast(err?.message || 'Download failed')
+      setTimeout(() => setShowToast(''), 3000)
     }
   }
-
-  const handleExportPDF = async () => {
-    const paperId = lastSavedPaperId
-    if (!paperId) {
-      await handleSubmitForApproval()
-      return
-    }
-    await downloadSavedPaper(paperId, paperTitle || 'question_paper')
-  }
-
-  const handlePrint = () => {
-    window.print()
-  }
-
-  const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-    'draft': { label: 'Draft', color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
-    'pending-verification': { label: 'Pending Verification', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-    'verified': { label: 'Verified', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-    'modification-requested': { label: 'Changes Requested', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
-    'submitted-for-approval': { label: 'Awaiting HOD Approval', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-    'approved-by-hod': { label: 'Approved by HOD', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-    'rejected-by-hod': { label: 'Rejected by HOD', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
-  }
-
-  const myPapers = papers.filter(p => p.createdBy === currentFaculty.name)
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link
-          to="/faculty"
-          className="p-2 rounded-lg glass-card/50 hover:border-teal-500/30 text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-all"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Paper Generator</h1>
-          <p className="text-slate-600 dark:text-slate-400">{currentFaculty.subject} • Create and submit papers for approval</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Link to="/faculty" className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-500/30 transition-all shadow-sm">
+            <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Exam Paper Generator</h1>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
+              Automated examination authoring via Question Bank and AI Agent
+            </p>
+          </div>
         </div>
+
+        {curriculum.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Course:</span>
+            <select
+              value={selectedCourseId}
+              onChange={(e) => {
+                setSelectedCourseId(e.target.value)
+                const c = curriculum.find(item => item.courseId === e.target.value)
+                if (c) {
+                  setPaperTitle(`${c.courseName} - ${assessmentType} Examination`)
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-teal-700 dark:text-teal-300 focus:outline-none focus:border-teal-500"
+            >
+              {curriculum.map(c => (
+                <option key={c.courseId} value={c.courseId}>
+                  {c.courseName} {c.courseCode ? `(${c.courseCode})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setActiveTab('generate')}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'generate'
-              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
           }`}
         >
-          <Sparkles className="w-4 h-4 inline mr-1.5" />
-          Generate New Paper
+          <Sparkles className="w-4 h-4" />
+          Paper Generator
         </button>
         <button
           onClick={() => setActiveTab('visual-builder')}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'visual-builder'
-              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
           }`}
         >
-          <Pencil className="w-4 h-4 inline mr-1.5" />
-          Visual Paper Builder
+          <Pencil className="w-4 h-4" />
+          Visual Builder
         </button>
         <button
           onClick={() => setActiveTab('my-papers')}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'my-papers'
-              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
           }`}
         >
-          <FileText className="w-4 h-4 inline mr-1.5" />
-          My Papers
-          {myPapers.length > 0 && (
-            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-700 dark:text-slate-300 text-xs">{myPapers.length}</span>
+          <FileText className="w-4 h-4" />
+          My Generated Papers
+          {papers.length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px]">
+              {papers.length}
+            </span>
           )}
         </button>
       </div>
 
       {activeTab === 'visual-builder' && (
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <PaperBuilder collegeId={user?.collegeId || ''} />
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <PaperBuilder collegeId={collegeId} />
         </div>
       )}
 
       {activeTab === 'generate' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Configuration & Questions */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Configuration */}
-            <div className="p-4 rounded-xl glass-card/50">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                Paper Configuration
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Left Panel */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Strategy Switcher */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Paper Title *</label>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 text-teal-500" />
+                    Paper Authoring Engine
+                  </h3>
+                  <p className="text-xs text-slate-500">Choose between one-click automated generation or manual handpicking</p>
+                </div>
+                <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+                  <button
+                    onClick={() => setGenerationStrategy('auto')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      generationStrategy === 'auto'
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> Automated
+                  </button>
+                  <button
+                    onClick={() => setGenerationStrategy('manual')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      generationStrategy === 'manual'
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <CheckSquare className="w-3.5 h-3.5" /> Manual Picker
+                  </button>
+                </div>
+              </div>
+
+              {/* Automated Generation Banner & Controls */}
+              {generationStrategy === 'auto' && (
+                <div className="p-4 rounded-xl bg-teal-50/60 dark:bg-teal-950/20 border border-teal-500/20 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAutoMode('bank')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        autoMode === 'bank'
+                          ? 'border-teal-500 bg-white dark:bg-slate-800 ring-2 ring-teal-500/20 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <BookOpen className="w-4 h-4 text-teal-600" />
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">Question Bank</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">Pulls approved questions balancing module &amp; difficulty</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAutoMode('ai')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        autoMode === 'ai'
+                          ? 'border-teal-500 bg-white dark:bg-slate-800 ring-2 ring-teal-500/20 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bot className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">AI Agent</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">Generates brand-new leak-proof questions &amp; paper</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAutoMode('hybrid')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        autoMode === 'hybrid'
+                          ? 'border-teal-500 bg-white dark:bg-slate-800 ring-2 ring-teal-500/20 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Layers className="w-4 h-4 text-amber-600" />
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">Hybrid Engine</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">Pulls from bank and fills missing slots with AI</p>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-teal-500/20">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Target: <strong className="text-slate-900 dark:text-white">{expectedMarks} Marks</strong> • Duration: <strong className="text-slate-900 dark:text-white">{duration} min</strong> • Syllabus: <strong className="text-teal-700 dark:text-teal-300">{activeSubjectName}</strong>
+                    </p>
+                    <button
+                      onClick={handleAutoGenerate}
+                      disabled={isAutoGenerating}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+                    >
+                      {isAutoGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      {isAutoGenerating ? 'Generating Paper...' : 'Generate Paper Automatically'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Paper Configuration */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                Paper Specifications
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Paper Title *</label>
                   <input
                     type="text"
-                    placeholder="e.g., End Semester - Financial Accounting"
+                    placeholder="e.g., Midterm Exam - Cost Accounting"
                     value={paperTitle}
                     onChange={(e) => setPaperTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Assessment Type</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assessment Level</label>
                   <select
                     value={assessmentType}
                     onChange={(e) => setAssessmentType(e.target.value as 'C1' | 'C2' | 'C3')}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                   >
-                    <option value="C1">Class Test (20 marks)</option>
-                    <option value="C2">Mid Semester (50 marks)</option>
-                    <option value="C3">End Semester (80 marks)</option>
+                    <option value="C1">C1: Class / Unit Test (20 marks • 45 min)</option>
+                    <option value="C2">C2: Midterm Examination (50 marks • 90 min)</option>
+                    <option value="C3">C3: End Semester University Exam (80 marks • 180 min)</option>
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Duration (minutes)</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Duration (minutes)</label>
                   <input
                     type="number"
                     value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value) || 120)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50"
+                    onChange={(e) => setDuration(parseInt(e.target.value) || 60)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1.5">Custom Instructions</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Custom Instructions</label>
                   <input
                     type="text"
-                    placeholder="e.g., Answer any 5 out of 8"
+                    placeholder="e.g. Simple calculators permitted"
                     value={customInstructions}
                     onChange={(e) => setCustomInstructions(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/50 text-sm text-slate-900 dark:text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Questions Selection */}
-            <div className="rounded-xl border border-slate-700/50 overflow-hidden">
+            {/* Questions Pool & Selection */}
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
               <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  Select Questions ({availableQuestions.length} available)
-                </h3>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    Selected Questions for Paper ({selectedQuestions.length} selected)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {generationStrategy === 'auto'
+                      ? 'Review, edit, or swap individual questions in this paper'
+                      : `Pick from ${filteredAvailableQuestions.length} active question bank items`}
+                  </p>
+                </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setUploadOpen(true)}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/20 hover:bg-slate-500/20 transition-all flex items-center gap-1.5"
+                    className="text-xs px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-all flex items-center gap-1.5"
                   >
-                    <FileUp className="w-3.5 h-3.5" /> Upload a ready paper
-                  </button>
-                  <button
-                    onClick={selectAll}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-100 dark:bg-teal-900/30 transition-all"
-                  >
-                    {selectedQuestions.length === availableQuestions.length ? 'Deselect All' : 'Select All'}
+                    <FileUp className="w-3.5 h-3.5" /> Upload Ready Paper
                   </button>
                 </div>
               </div>
-              <div className="max-h-[500px] overflow-y-auto">
-                {availableQuestions.length === 0 ? (
-                  <div className="p-8 text-center text-slate-600 dark:text-slate-400">
-                    <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-600 dark:text-amber-400" />
-                    <p>No approved questions available. Add questions to the Question Bank first.</p>
+
+              {/* Questions List */}
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto p-2">
+                {selectedQuestions.length === 0 ? (
+                  <div className="p-10 text-center">
+                    <Sparkles className="w-8 h-8 text-teal-500 mx-auto mb-2 opacity-60" />
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No questions selected yet</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Click &quot;Generate Paper Automatically&quot; above to assemble questions instantly, or switch to Manual Picker.
+                    </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {availableQuestions.map((q) => (
-                      <div
-                        key={q.id}
-                        onClick={() => toggleQuestion(q.id)}
-                        className={`p-3 flex items-start gap-3 cursor-pointer transition-colors ${
-                          selectedQuestions.includes(q.id) ? 'bg-teal-500/5' : 'hover:bg-slate-100 dark:hover:bg-slate-800/30'
-                        }`}
-                      >
-                        <div className="pt-0.5">
-                          {selectedQuestions.includes(q.id) ? (
-                            <CheckSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                          ) : (
-                            <Square className="w-5 h-5 text-slate-600" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-slate-900 dark:text-white line-clamp-2">{withEdits(q).questionText}</p>
-                          <div className="flex flex-wrap gap-1.5 mt-1">
-                            {questionEdits[q.id] && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-500 border border-teal-500/20">edited</span>
-                            )}
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-500/20">{q.questionType}</span>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">{withEdits(q).marks}m</span>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-500/20">{q.topic}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                              q.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                              q.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-500/20' :
-                              'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                            }`}>{q.difficulty}</span>
+                  availableQuestions
+                    .filter(q => selectedQuestions.includes(q.id))
+                    .map((q, idx) => {
+                      const edited = withEdits(q)
+                      return (
+                        <div key={q.id} className="p-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex items-start gap-3">
+                          <span className="w-6 h-6 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                            Q{idx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-slate-900 dark:text-white leading-relaxed">
+                              {edited.questionText}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-500">
+                              <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-medium">
+                                {edited.marks} Mark{edited.marks > 1 ? 's' : ''}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                                {q.difficulty}
+                              </span>
+                              {q.topic && <span>• Topic: {q.topic}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              onClick={() => openQuestionEditor(q)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                              title="Edit question text or marks"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => toggleQuestion(q.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                              title="Remove from paper"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); openQuestionEditor(q) }}
-                            title="Edit this question for the paper"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-teal-500 hover:bg-teal-500/10 transition-colors"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          {questionEdits[q.id] && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); resetQuestionEdit(q.id) }}
-                              title="Revert to the original question"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      )
+                    })
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Panel - Summary & Actions */}
-          <div className="space-y-6">
-            {/* Summary Card */}
-            <div className="p-5 rounded-xl glass-card/50 sticky top-6">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <Award className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                Paper Summary
+          {/* Right Panel - Paper Summary & Actions */}
+          <div className="space-y-4">
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Exam Paper Summary
               </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Title</span>
-                  <span className="text-slate-900 dark:text-white font-medium truncate max-w-[150px]">{paperTitle || 'Not set'}</span>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500">Subject</span>
+                  <span className="font-bold text-slate-900 dark:text-white truncate max-w-[150px]">{activeSubjectName}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Assessment</span>
-                  <span className="text-slate-900 dark:text-white font-medium">{assessmentType}</span>
+                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500">Selected Questions</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{selectedQuestions.length}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Questions</span>
-                  <span className="text-slate-900 dark:text-white font-medium">{selectedQuestions.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Total Marks</span>
-                  <span className={`font-medium ${totalSelectedMarks === expectedMarks ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {totalSelectedMarks} / {expectedMarks}
+                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500">Total Marks</span>
+                  <span className={`font-extrabold ${totalSelectedMarks === expectedMarks ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {totalSelectedMarks} / {expectedMarks} Marks
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Duration</span>
-                  <span className="text-slate-900 dark:text-white font-medium">{duration} min</span>
+                <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500">Exam Duration</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{duration} min</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span className="text-slate-500">HOD Approval</span>
+                  <span className="font-bold text-teal-600 dark:text-teal-400">
+                    {requiresApproval ? 'Required (C2/C3)' : 'Not Required (Direct Publish)'}
+                  </span>
                 </div>
               </div>
 
-              {totalSelectedMarks !== expectedMarks && totalSelectedMarks > 0 && (
-                <div className="mt-3 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400">
-                  <AlertTriangle className="w-3 h-3 inline mr-1" />
-                  Marks mismatch! Expected {expectedMarks} marks.
-                </div>
-              )}
-
-              <div className="mt-4 space-y-2">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <button
                   onClick={() => setShowPreview(true)}
                   disabled={selectedQuestions.length === 0}
-                  className="w-full px-4 py-2.5 rounded-lg bg-slate-700/50 text-slate-900 dark:text-white border border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                 >
-                  <Eye className="w-4 h-4" />
-                  Preview Paper
+                  <Eye className="w-4 h-4" /> Full Paper Preview
                 </button>
                 <button
                   onClick={() => setShowSubmitConfirm(true)}
-                  disabled={selectedQuestions.length === 0 || !paperTitle}
-                  className="w-full px-4 py-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={selectedQuestions.length === 0}
+                  className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-40"
                 >
-                  <Send className="w-4 h-4" />
-                  {requiresApproval ? 'Submit for HOD Approval' : 'Save Paper'}
+                  {requiresApproval ? <Send className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                  {requiresApproval ? 'Submit for HOD Approval' : 'Save & Publish Exam Paper'}
                 </button>
               </div>
-            </div>
-
-            {/* Instructions */}
-            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-              <h4 className="text-sm font-medium text-blue-400 mb-2 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                How It Works
-              </h4>
-              <ol className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5 list-decimal list-inside">
-                <li>Select approved questions from the bank</li>
-                <li>Ensure total marks match expected ({expectedMarks})</li>
-                <li>Preview the paper before submitting</li>
-                <li>Submit for HOD approval (only if needed)</li>
-                <li>Track status in "My Papers" tab</li>
-              </ol>
             </div>
           </div>
         </div>
@@ -701,85 +867,32 @@ export default function FacultyPaperGenerator() {
 
       {/* My Papers Tab */}
       {activeTab === 'my-papers' && (
-        <div className="space-y-4">
-          {myPapers.length === 0 ? (
-            <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
-              <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-600 dark:text-slate-400">No papers created yet</p>
-              <button
-                onClick={() => setActiveTab('generate')}
-                className="mt-3 px-4 py-2 rounded-lg text-sm bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all"
-              >
-                Generate Your First Paper
-              </button>
+        <div className="space-y-3">
+          {papers.length === 0 ? (
+            <div className="p-12 text-center bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+              <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No generated papers yet</p>
+              <p className="text-xs text-slate-500 mt-1">Switch to the Paper Generator tab to author your first exam paper.</p>
             </div>
           ) : (
-            myPapers.map(paper => {
-              const status = statusConfig[paper.verificationStatus]
-              return (
-                <div key={paper.id} className="p-5 rounded-xl glass-card/50 hover:border-slate-600 transition-all">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-teal-500/10">
-                        <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white">{paper.title}</h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">{paper.subject} • {paper.className}</p>
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full border ${status.bg} ${status.color} ${status.border}`}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400 mb-4">
-                    <span className="flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4" /> {paper.questions.length} questions
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Award className="w-4 h-4" /> {paper.totalMarks} marks
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4" /> {paper.duration} min
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {paper.verificationStatus === 'submitted-for-approval' && (
-                      <span className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                        <Clock className="w-4 h-4" />
-                        Awaiting HOD review...
-                      </span>
-                    )}
-                    {paper.verificationStatus === 'approved-by-hod' && (
-                      <span className="flex items-center gap-2 text-sm text-emerald-400">
-                        <CheckCircle className="w-4 h-4" />
-                        Approved by HOD
-                      </span>
-                    )}
-                    {paper.verificationStatus === 'rejected-by-hod' && (
-                      <span className="flex items-center gap-2 text-sm text-rose-400">
-                        <AlertTriangle className="w-4 h-4" />
-                        Rejected — see remarks
-                      </span>
-                    )}
-                    {paper.approvalRemarks && (
-                      <span className="text-xs text-slate-500 italic">"{paper.approvalRemarks}"</span>
-                    )}
-                    <div className="flex items-center gap-2 ml-auto">
-                      <button className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors">
-                        <Eye className="w-4 h-4" /> View
-                      </button>
-                      <button
-                        className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-400 transition-colors"
-                        onClick={() => void downloadSavedPaper(paper.id, paper.title || 'paper')}
-                      >
-                        <Download className="w-4 h-4" /> Download
-                      </button>
-                    </div>
-                  </div>
+            papers.map(p => (
+              <div key={p.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shadow-sm">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">{p.title}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {p.subject} • {p.totalMarks} Marks • {p.duration} min • {p.verificationStatus === 'published' ? 'Published' : 'Submitted for Approval'}
+                  </p>
                 </div>
-              )
-            })
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadSavedPaper(p.id, p.title)}
+                    className="px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-500/20 text-xs font-bold hover:bg-teal-100 flex items-center gap-1.5 transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download PDF
+                  </button>
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}
@@ -787,21 +900,21 @@ export default function FacultyPaperGenerator() {
       {/* Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Eye className="w-5 h-5 text-teal-600" />
-                Paper Preview
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                <Eye className="w-4 h-4 text-teal-600" />
+                Paper Print &amp; PDF Preview
               </h3>
               <div className="flex items-center gap-2">
-                <button onClick={handlePrint} className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1">
-                  <Printer className="w-4 h-4" /> Print
+                <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-bold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1">
+                  <Printer className="w-3.5 h-3.5" /> Print
                 </button>
-                <button onClick={handleExportPDF} className="px-3 py-1.5 text-sm bg-teal-600 text-slate-900 dark:text-white rounded-lg hover:bg-teal-700 flex items-center gap-1">
-                  <Download className="w-4 h-4" /> Export PDF
+                <button onClick={handleExportPDF} className="px-3 py-1.5 text-xs font-bold bg-teal-600 text-white rounded-lg hover:bg-teal-700 flex items-center gap-1">
+                  <Download className="w-3.5 h-3.5" /> Export PDF
                 </button>
                 <button onClick={() => setShowPreview(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-4 h-4 text-gray-500" />
                 </button>
               </div>
             </div>
@@ -815,137 +928,81 @@ export default function FacultyPaperGenerator() {
       {/* Submit Confirmation Modal */}
       {showSubmitConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl p-6">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-teal-500/10">
                 <Send className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                {requiresApproval ? 'Submit for Approval' : 'Save Paper'}
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {requiresApproval ? 'Submit for HOD Approval' : 'Save and Publish Paper'}
               </h2>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-              {requiresApproval ? (
-                <>You are about to submit <strong className="text-slate-900 dark:text-white">{paperTitle}</strong> for HOD approval.</>
-              ) : (
-                <>You are about to save <strong className="text-slate-900 dark:text-white">{paperTitle}</strong>. It will be ready to use straight away.</>
-              )}
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
+              {requiresApproval
+                ? `You are about to submit "${paperTitle}" for official review and approval.`
+                : `You are about to save "${paperTitle}". As a class test, it will be published immediately.`}
             </p>
-            <div className="p-3 rounded-lg glass-card/50 space-y-1 text-sm mb-4">
-              <p className="text-slate-600 dark:text-slate-400">Questions: <span className="text-slate-900 dark:text-white">{selectedQuestions.length}</span></p>
-              <p className="text-slate-600 dark:text-slate-400">Total Marks: <span className="text-slate-900 dark:text-white">{totalSelectedMarks}</span></p>
-              <p className="text-slate-600 dark:text-slate-400">Duration: <span className="text-slate-900 dark:text-white">{duration} min</span></p>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 space-y-1 text-xs mb-4">
+              <p className="text-slate-600 dark:text-slate-400">Total Questions: <span className="font-bold text-slate-900 dark:text-white">{selectedQuestions.length}</span></p>
+              <p className="text-slate-600 dark:text-slate-400">Total Marks: <span className="font-bold text-slate-900 dark:text-white">{totalSelectedMarks}</span></p>
+              <p className="text-slate-600 dark:text-slate-400">Duration: <span className="font-bold text-slate-900 dark:text-white">{duration} min</span></p>
             </div>
-            {Object.keys(questionEdits).length > 0 && (
-              <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={syncEditsToBank}
-                  onChange={(e) => setSyncEditsToBank(e.target.checked)}
-                  className="mt-0.5"
-                />
-                Also save my {Object.keys(questionEdits).length} edited question(s) back to the question bank
-                (otherwise the edits only apply to this paper).
-              </label>
-            )}
-            <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={requiresApproval}
-                onChange={(e) => { setApprovalTouched(true); setRequiresApproval(e.target.checked) }}
-                className="mt-0.5"
-              />
-              Send this paper to the HOD for approval — normally only needed for mid-semester and
-              semester-end exams. Class tests and practice papers can be saved directly.
-            </label>
-            {requiresApproval && (
-              <p className="text-xs text-amber-400 mb-4 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                Once submitted, you cannot edit the paper until reviewed.
-              </p>
-            )}
             <div className="flex gap-3">
-              <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+              <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 Cancel
               </button>
-              <button onClick={handleSubmitForApproval} className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 hover:bg-teal-500/30 transition-all font-medium flex items-center justify-center gap-2">
-                {requiresApproval ? <Send className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                {requiresApproval ? 'Confirm Submit' : 'Confirm Save'}
+              <button onClick={handleSubmitForApproval} className="flex-1 px-4 py-2 rounded-xl text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                {requiresApproval ? <Send className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                Confirm &amp; Proceed
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit a question before it goes into the paper */}
+      {/* Edit Question Modal */}
       {editingQuestionId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-teal-500/10">
-                <Pencil className="w-5 h-5 text-teal-500" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Edit Question</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Changes apply to this paper. You can also push them back to the bank when you submit.
-                </p>
-              </div>
-            </div>
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Question text</label>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2">Edit Question Content</h2>
             <textarea
-              rows={5}
+              rows={4}
               value={editDraft.questionText}
               onChange={(e) => setEditDraft(prev => ({ ...prev, questionText: e.target.value }))}
-              className="w-full px-3 py-2 mb-3 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/60"
+              className="w-full px-3 py-2 mb-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
             />
-            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Marks</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Marks</label>
             <input
               type="number"
               min={1}
               value={editDraft.marks}
-              onChange={(e) => setEditDraft(prev => ({ ...prev, marks: Number(e.target.value) }))}
-              className="w-full px-3 py-2 mb-5 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/60"
+              onChange={(e) => setEditDraft(prev => ({ ...prev, marks: Number(e.target.value) || 1 }))}
+              className="w-full px-3 py-2 mb-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
             />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setEditingQuestionId(null)}
-                className="flex-1 px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-              >
+            <div className="flex gap-2">
+              <button onClick={() => setEditingQuestionId(null)} className="flex-1 py-2 rounded-xl text-xs text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">
                 Cancel
               </button>
-              <button
-                onClick={saveQuestionEdit}
-                disabled={!editDraft.questionText.trim()}
-                className="flex-1 px-4 py-2.5 rounded-lg text-sm bg-teal-500 text-white font-medium hover:bg-teal-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" /> Save changes
+              <button onClick={saveQuestionEdit} className="flex-1 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold hover:bg-teal-700">
+                Save Changes
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Upload a ready-made paper */}
+      {/* Upload Modal */}
       <PaperUploadEditor
         open={uploadOpen}
         collegeId={collegeId}
-        userId={user?.id || user?.uid || ''}
+        userId={facultyId}
         userName={user?.name || ''}
         branches={branches}
         batches={batches}
         canPublishDirectly={user?.role === 'hod'}
         onClose={() => setUploadOpen(false)}
-        onSaved={async (_id, action) => {
-          setShowToast(
-            action === 'draft'
-              ? 'Paper saved as draft'
-              : action === 'save'
-                ? 'Paper saved and ready to use'
-                : action === 'published'
-                  ? 'Paper approved and published'
-                  : 'Paper submitted for HOD approval'
-          )
+        onSaved={async () => {
+          setShowToast('Paper uploaded successfully!')
           setTimeout(() => setShowToast(''), 3000)
           await loadData()
         }}
@@ -953,9 +1010,9 @@ export default function FacultyPaperGenerator() {
 
       {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30 z-50">
+        <div className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-2xl bg-teal-500 text-white shadow-xl z-50 text-xs font-bold">
           <CheckCircle className="w-4 h-4" />
-          <span className="text-sm font-medium">{showToast}</span>
+          <span>{showToast}</span>
         </div>
       )}
     </div>

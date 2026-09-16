@@ -13,6 +13,8 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { getAllQuestions, linkQuestionToPaper } from './questionBankApi';
+import { isSameSubject } from '@/shared/utils/curriculumMatcher';
+import { generateQuestionsWithAI, saveGeneratedQuestions } from './aiQuestionApi';
 import {
   Paper,
   PaperConfig,
@@ -327,41 +329,117 @@ function pickWithDifficultyMix(
   return picked;
 }
 
+export interface ExtendedPaperConfig extends PaperConfig {
+  sections?: PaperSection[];
+  mode?: 'bank' | 'ai' | 'hybrid';
+  numSets?: number;
+  language?: string;
+  courseCode?: string;
+}
+
 export async function generatePaper(
   collegeId: string,
-  config: PaperConfig & { sections?: PaperSection[] },
+  config: ExtendedPaperConfig,
   userId: string,
   userName: string
-): Promise<GeneratedPaperResult & { paper: Paper }> {
+): Promise<GeneratedPaperResult & { paper: Paper; sets?: Paper[] }> {
   const sections = config.sections || [];
+  const mode = config.mode || 'bank';
   const allQuestions = await getAllQuestions(collegeId, 500);
   const warnings: string[] = [];
 
   const subjectFilter = config.subject?.trim();
   const filtered = allQuestions.filter((q) => {
-    if (subjectFilter && q.subject !== subjectFilter && q.courseName !== subjectFilter) return false;
-    return true;
-  });
-
-  const generatedSections = sections.map((sec) => {
-    let pool = filtered.filter((q) =>
-      matchesType(q, sec.questionType) &&
-      matchesDifficulty(q, sec.difficulty) &&
-      matchesDifficultyMix(q, sec.difficultyMix)
+    if (!subjectFilter) return true;
+    return (
+      q.subject === subjectFilter ||
+      q.courseName === subjectFilter ||
+      q.courseCode === subjectFilter ||
+      isSameSubject(q.subject || q.courseName || '', subjectFilter)
     );
-
-    if (sec.topicFilter) pool = pool.filter((q) => (q.topic || q.chapter) === sec.topicFilter);
-    if (sec.unitFilter) pool = pool.filter((q) => q.unit === sec.unitFilter);
-    if (sec.compulsory === false) pool = pool.filter((q) => true);
-
-    const questions = pickWithDifficultyMix(pool, sec.numQuestions, sec.difficultyMix);
-    return {
-      ...sec,
-      questions,
-      matched: questions.length,
-      requested: sec.numQuestions,
-    };
   });
+
+  const generateSingleSetSections = async (setLabel?: string) => {
+    const generatedSections: any[] = [];
+
+    for (const sec of sections) {
+      let pool = filtered.filter((q) =>
+        matchesType(q, sec.questionType) &&
+        matchesDifficulty(q, sec.difficulty) &&
+        matchesDifficultyMix(q, sec.difficultyMix)
+      );
+
+      if (sec.topicFilter) pool = pool.filter((q) => (q.topic || q.chapter) === sec.topicFilter);
+      if (sec.unitFilter) pool = pool.filter((q) => q.unit === sec.unitFilter);
+
+      let questions = mode === 'ai' ? [] : pickWithDifficultyMix(pool, sec.numQuestions, sec.difficultyMix);
+
+      // If AI mode or bank pool is short on questions, trigger AI generation on the fly
+      if (mode === 'ai' || (questions.length < sec.numQuestions && mode === 'hybrid')) {
+        const neededAI = mode === 'ai' ? sec.numQuestions : (sec.numQuestions - questions.length);
+        try {
+          const aiRes = await generateQuestionsWithAI({
+            subject: config.subject,
+            topic: sec.topicFilter || 'General Syllabus',
+            questionType: sec.questionType === 'any' ? 'mcq' : sec.questionType,
+            difficulty: sec.difficulty === 'mixed' || !sec.difficulty ? 'medium' : sec.difficulty,
+            count: neededAI,
+            marks: sec.marksPerQuestion,
+            language: config.language || 'en',
+          });
+
+          if (aiRes.questions && aiRes.questions.length > 0) {
+            // Save to question bank for future reuse
+            await saveGeneratedQuestions({
+              questions: aiRes.questions,
+              collegeId,
+              createdBy: userId,
+              createdByName: userName,
+              batch: config.batch,
+              branch: config.branch,
+            });
+
+            const mappedAIQuestions: Question[] = aiRes.questions.map((q) => ({
+              id: q.id,
+              text: q.text,
+              type: q.type,
+              difficulty: q.difficulty,
+              subject: q.subject,
+              topic: q.topic || '',
+              marks: q.marks,
+              options: q.options?.map((o: any) => (typeof o === 'string' ? o : o.text)) || [],
+              correctAnswer: q.correctAnswer,
+              explanation: q.explanation,
+              status: 'active',
+              createdBy: userId,
+              createdByName: userName,
+              collegeId,
+              tags: q.tags || [],
+            } as unknown as Question));
+
+            if (mode === 'ai') {
+              questions = mappedAIQuestions.slice(0, sec.numQuestions);
+            } else {
+              questions = [...questions, ...mappedAIQuestions].slice(0, sec.numQuestions);
+            }
+          }
+        } catch (aiErr: any) {
+          warnings.push(`AI question generation warning: ${aiErr?.message || 'Failed to auto-generate questions'}`);
+        }
+      }
+
+      generatedSections.push({
+        ...sec,
+        questions,
+        matched: questions.length,
+        requested: sec.numQuestions,
+      });
+    }
+
+    return generatedSections;
+  };
+
+  const generatedSections = await generateSingleSetSections();
 
   const totalMatched = generatedSections.reduce((sum, s) => sum + s.matched, 0);
   const totalSectionMarks = generatedSections.reduce((sum, s) => sum + s.numQuestions * s.marksPerQuestion, 0);
@@ -369,8 +447,8 @@ export async function generatePaper(
     warnings.push(`Section totals (${totalSectionMarks}) do not match configured total marks (${config.totalMarks}).`);
   }
 
-  const generatedQuestionIds = generatedSections.flatMap((s) => s.questions.map((q) => q.id));
-  const paper = await createPaper(
+  const generatedQuestionIds = generatedSections.flatMap((s) => s.questions.map((q: any) => q.id));
+  const mainPaper = await createPaper(
     collegeId,
     config,
     generatedQuestionIds,
@@ -380,23 +458,46 @@ export async function generatePaper(
     generatedSections
   );
 
-  if (generatedQuestionIds.length < generatedSections.reduce((sum, s) => sum + s.numQuestions, 0)) {
-    warnings.push(`Only ${generatedQuestionIds.length} questions were available; ${generatedSections.reduce((sum, s) => sum + s.numQuestions, 0)} were requested.`);
+  const numSets = Math.min(Math.max(config.numSets || 1, 1), 3);
+  const sets: Paper[] = [mainPaper];
+
+  if (numSets > 1) {
+    const setLabels = ['A', 'B', 'C'];
+    // Update mainPaper title with Set A
+    await updatePaper(mainPaper.id, { title: `${config.title} - Set A` });
+    mainPaper.title = `${config.title} - Set A`;
+
+    for (let i = 1; i < numSets; i++) {
+      const setLabel = setLabels[i];
+      const setSections = await generateSingleSetSections(setLabel);
+      const setQIds = setSections.flatMap((s) => s.questions.map((q: any) => q.id));
+      const setPaper = await createPaper(
+        collegeId,
+        {
+          ...config,
+          title: `${config.title} - Set ${setLabel}`,
+        },
+        setQIds,
+        userId,
+        userName,
+        false,
+        setSections
+      );
+      sets.push(setPaper);
+    }
   }
 
-  // Keep the question documents linked to the paper.
+  // Best-effort linkage to question documents
   try {
     for (const qid of generatedQuestionIds) {
-      await linkQuestionToPaper(qid, paper.id);
+      await linkQuestionToPaper(qid, mainPaper.id);
     }
-  } catch {
-    // Linking is best-effort; paper still stores the ids.
-  }
+  } catch {}
 
   return {
     success: true,
-    id: paper.id,
-    title: config.title,
+    id: mainPaper.id,
+    title: mainPaper.title,
     subject: config.subject,
     totalMarks: config.totalMarks,
     duration: config.duration,
@@ -404,7 +505,8 @@ export async function generatePaper(
     sections: generatedSections,
     warnings,
     generatedAt: new Date().toISOString(),
-    paper: paper as any,
+    paper: mainPaper as any,
+    sets,
   };
 }
 
