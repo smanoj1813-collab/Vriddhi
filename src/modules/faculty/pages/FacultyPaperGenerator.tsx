@@ -8,15 +8,18 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 import { DEFAULT_DEPARTMENT } from '@/shared/constants/academicPrograms'
-import { getQuestions, linkQuestionToPaper, updateQuestion, getBatchBranchConfig } from '../../admin/api/questionBankApi'
+import { getQuestions, linkQuestionToPaper, updateQuestion, getBatchBranchConfig, getQuestionStats } from '../../admin/api/questionBankApi'
 import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor'
-import { createPaper, updatePaper, generatePaper } from '../../admin/api/paperApi'
+import { createPaper, generatePaper } from '../../admin/api/paperApi'
+import { httpsCallable } from 'firebase/functions'
+import { functions } from '@/Firebase/config'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Question as BankQuestion } from '../../admin/types/questionBank'
 import PaperBuilder from '../components/PaperBuilder'
 import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import { isSameSubject } from '@/shared/utils/curriculumMatcher'
+import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims'
 
 interface FacultyQuestion {
   id: string
@@ -101,6 +104,11 @@ export default function FacultyPaperGenerator() {
   const [approvalTouched, setApprovalTouched] = useState(false)
   const [branches, setBranches] = useState<string[]>([])
   const [batches, setBatches] = useState<string[]>([])
+  // Subjects that exist in the college question bank. A faculty member can
+  // only be MAPPED to a handful of courses (curriculumFacultyMappings), and
+  // before this list was merged in, the course selector could show just that
+  // single mapped course even when the bank held questions for more.
+  const [bankSubjects, setBankSubjects] = useState<string[]>([])
 
   const currentFaculty = useMemo(() => ({
     name: user?.name || 'Faculty',
@@ -108,20 +116,51 @@ export default function FacultyPaperGenerator() {
     subject: user?.department || 'General',
   }), [user])
 
-  // Select first assigned course by default
+  /**
+   * Everything this faculty member may author a paper for: their mapped
+   * curriculum courses PLUS any subject that already has questions in the
+   * college bank. A faculty member mapped to a single course could otherwise
+   * never generate a paper for a second subject they teach — the selector
+   * simply drew from curriculumFacultyMappings and nothing else.
+   */
+  const subjectOptions = useMemo(() => {
+    const mapped = curriculum.map((c) => ({
+      id: `course:${c.courseId}`,
+      label: `${c.courseName}${c.courseCode ? ` (${c.courseCode})` : ''}`,
+      subjectName: c.courseName,
+      course: c as (typeof curriculum)[number] | undefined,
+    }))
+    const mappedNames = new Set(mapped.map((m) => m.subjectName.trim().toLowerCase()))
+    const bankOnly = bankSubjects
+      .filter((s) => s && s !== 'Unknown' && !mappedNames.has(s.trim().toLowerCase()))
+      .map((s) => ({
+        id: `bank:${s}`,
+        label: `${s} — question bank`,
+        subjectName: s,
+        course: undefined,
+      }))
+    return [...mapped, ...bankOnly]
+  }, [curriculum, bankSubjects])
+
+  // Select first available subject by default
   useEffect(() => {
-    if (curriculum && curriculum.length > 0 && !selectedCourseId) {
-      setSelectedCourseId(curriculum[0].courseId)
+    if (subjectOptions.length > 0 && !subjectOptions.some((o) => o.id === selectedCourseId)) {
+      setSelectedCourseId(subjectOptions[0].id)
     }
-  }, [curriculum, selectedCourseId])
+  }, [subjectOptions, selectedCourseId])
+
+  const selectedSubjectOption = useMemo(
+    () => subjectOptions.find((o) => o.id === selectedCourseId),
+    [subjectOptions, selectedCourseId]
+  )
 
   const assignedCourse = useMemo(() => {
-    return curriculum.find(c => c.courseId === selectedCourseId)
-  }, [curriculum, selectedCourseId])
+    return selectedSubjectOption?.course
+  }, [selectedSubjectOption])
 
   const activeSubjectName = useMemo(() => {
-    return assignedCourse ? assignedCourse.courseName : currentFaculty.subject
-  }, [assignedCourse, currentFaculty.subject])
+    return selectedSubjectOption ? selectedSubjectOption.subjectName : currentFaculty.subject
+  }, [selectedSubjectOption, currentFaculty.subject])
 
   const loadData = useCallback(async () => {
     if (!collegeId) return
@@ -140,8 +179,17 @@ export default function FacultyPaperGenerator() {
       }))
       setAvailableQuestions(mapped.filter(q => q.status === 'Approved'))
 
+      // Subjects present in the bank — feeds the paper-subject selector so a
+      // faculty member is not limited to their curriculum mappings.
+      getQuestionStats(collegeId)
+        .then((stats) => setBankSubjects(Object.keys(stats?.bySubject || {}).filter((s) => s && s !== 'Unknown')))
+        .catch(() => undefined)
+
       const saved = await getPapers(collegeId)
-      setPapers(saved.map((p: any) => ({
+      // "My Generated Papers" honestly means papers THIS faculty member
+      // authored; admin/principal views still show the whole college.
+      const mine = saved.filter((p: any) => !facultyId || !p.createdBy || p.createdBy === facultyId)
+      setPapers(mine.map((p: any) => ({
         id: p.id,
         title: p.title || '',
         subject: p.subject || currentFaculty.subject,
@@ -150,13 +198,16 @@ export default function FacultyPaperGenerator() {
         totalMarks: p.totalMarks || 0,
         duration: p.duration || duration,
         fileName: `${(p.title || 'paper').replace(/\\s+/g, '_')}.pdf`,
-        verificationStatus: p.status === 'published' ? 'published' : 'submitted-for-approval',
+        verificationStatus:
+          p.status === 'published' ? 'published'
+            : p.verificationStatus === 'submitted-for-approval' ? 'submitted-for-approval'
+              : 'draft',
         questions: (p.sections || []).flatMap((s: any) => (s.questions || []).map((q: any) => ({
           number: 0,
           topic: q.topic || '',
           type: q.type || 'long',
           marks: q.marks || 1,
-          questionText: q.text || '',
+          questionText: q.text || q.questionText || '',
         }))),
         createdBy: p.createdByName || currentFaculty.name,
         createdAt: p.createdAt || '',
@@ -168,7 +219,7 @@ export default function FacultyPaperGenerator() {
     } finally {
       setLoadingQuestions(false)
     }
-  }, [collegeId, currentFaculty.name, currentFaculty.subject, duration])
+  }, [collegeId, currentFaculty.name, currentFaculty.subject, duration, facultyId])
 
   useEffect(() => {
     loadData()
@@ -296,12 +347,20 @@ export default function FacultyPaperGenerator() {
 
       await loadData()
 
-      setShowToast(`Exam paper automatically generated with ${qIds.length} questions!`)
-      setTimeout(() => setShowToast(''), 4000)
+      // Take the faculty member straight to the saved paper — "Generate"
+      // used to end on this tab with no sign of where the paper went.
+      setActiveTab('my-papers')
+      const warnings = Array.isArray((result as any)?.warnings) ? ((result as any).warnings as string[]) : []
+      setShowToast(
+        warnings.length > 0
+          ? `Paper generated with ${qIds.length} questions. Note: ${warnings[0]}`
+          : `Exam paper generated with ${qIds.length} questions — saved under "My Generated Papers".`
+      )
+      setTimeout(() => setShowToast(''), 5000)
     } catch (err: any) {
       console.error('[handleAutoGenerate]', err)
-      setShowToast(err?.message || 'Automatic generation failed')
-      setTimeout(() => setShowToast(''), 4000)
+      setShowToast(isPermissionDeniedError(err) ? staleClaimMessage('paper save') : (err?.message || 'Automatic generation failed'))
+      setTimeout(() => setShowToast(''), 5000)
     } finally {
       setIsAutoGenerating(false)
     }
@@ -401,14 +460,54 @@ export default function FacultyPaperGenerator() {
         sections as any
       )
 
+      // Status transitions (draft → submitted-for-approval / published) are
+      // server-authoritative: the Firestore rules refuse direct client
+      // updates to verificationStatus, so route through the savePaper
+      // callable, which validates and audits the transition.
+      let transitioned = false
       try {
-        await updatePaper(saved.id, {
-          ...(requiresApproval
-            ? { verificationStatus: 'submitted-for-approval', status: 'draft', submittedAt: new Date().toISOString() }
-            : { verificationStatus: 'not-required', status: 'published', finalisedAt: new Date().toISOString() }),
-          requiresApproval,
-        } as any)
-      } catch {}
+        const savePaperFn = httpsCallable<
+          { paperId: string; collegeId: string; action: 'submitted' | 'save'; paper: Record<string, unknown> },
+          { id: string; status: string; verificationStatus: string }
+        >(functions, 'savePaper')
+        await savePaperFn({
+          paperId: saved.id,
+          collegeId,
+          action: requiresApproval ? 'submitted' : 'save',
+          paper: {
+            title: paperTitle.trim(),
+            subject: activeSubjectName,
+            branch: assignedCourse?.branch || '',
+            batch: assignedCourse?.batch || '',
+            semester: '',
+            examType: assessmentType.toLowerCase(),
+            date: new Date().toISOString().split('T')[0],
+            duration: Number(duration) || 0,
+            totalMarks: totalSelectedMarks,
+            instructions: customInstructions || '',
+            sections: sections
+              .map((s, i) => ({
+                id: `section-${i + 1}`,
+                name: s.name,
+                questions: s.questions.map(({ question }) => ({
+                  text: question.questionText,
+                  type: question.questionType === 'MCQ' ? 'mcq' : question.questionType === 'Short Answer' ? 'short' : 'long',
+                  marks: Number(question.marks) || 0,
+                  topic: question.topic || '',
+                })),
+              }))
+              .filter((s) => s.questions.length > 0),
+            requiresApproval,
+          },
+        })
+        transitioned = true
+      } catch (transitionErr: any) {
+        console.error('[handleSubmitForApproval] savePaper transition failed', transitionErr)
+        setShowToast(
+          `Paper saved as a DRAFT, but the ${requiresApproval ? 'approval submission' : 'publish step'} failed: ${transitionErr?.message || 'server error'}. Ask an admin to run Access Control → Identity Repair, then retry from My Papers.`
+        )
+        setTimeout(() => setShowToast(''), 6000)
+      }
 
       if (syncEditsToBank) {
         for (const [qid, edit] of Object.entries(questionEdits)) {
@@ -432,7 +531,7 @@ export default function FacultyPaperGenerator() {
         totalMarks: totalSelectedMarks,
         duration,
         fileName: `${paperTitle.replace(/\s+/g, '_')}.pdf`,
-        verificationStatus: requiresApproval ? 'submitted-for-approval' : 'published',
+        verificationStatus: transitioned ? (requiresApproval ? 'submitted-for-approval' : 'published') : 'draft',
         questions: selected.map((q, i) => ({
           number: i + 1,
           topic: q.topic,
@@ -449,8 +548,10 @@ export default function FacultyPaperGenerator() {
       setLastSavedPaperId(saved.id)
       setPapers(prev => [newPaper, ...prev])
       setShowSubmitConfirm(false)
-      setShowToast(requiresApproval ? 'Paper submitted for HOD approval!' : 'Paper saved and ready to use!')
-      setTimeout(() => setShowToast(''), 3000)
+      if (transitioned) {
+        setShowToast(requiresApproval ? 'Paper submitted for HOD approval!' : 'Paper saved and ready to use!')
+        setTimeout(() => setShowToast(''), 3000)
+      }
 
       setSelectedQuestions([])
       setPaperTitle('')
@@ -458,8 +559,8 @@ export default function FacultyPaperGenerator() {
       setQuestionEdits({})
       setActiveTab('my-papers')
     } catch (err: any) {
-      setShowToast(err?.message || 'Failed to submit paper')
-      setTimeout(() => setShowToast(''), 3000)
+      setShowToast(isPermissionDeniedError(err) ? staleClaimMessage('paper save') : (err?.message || 'Failed to submit paper'))
+      setTimeout(() => setShowToast(''), 5000)
     }
   }
 
@@ -492,23 +593,23 @@ export default function FacultyPaperGenerator() {
           </div>
         </div>
 
-        {curriculum.length > 0 && (
+        {subjectOptions.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">Course:</span>
+            <span className="text-xs text-slate-500">Subject:</span>
             <select
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value)
-                const c = curriculum.find(item => item.courseId === e.target.value)
-                if (c) {
-                  setPaperTitle(`${c.courseName} - ${assessmentType} Examination`)
+                const o = subjectOptions.find((item) => item.id === e.target.value)
+                if (o) {
+                  setPaperTitle(`${o.subjectName} - ${assessmentType} Examination`)
                 }
               }}
               className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-teal-700 dark:text-teal-300 focus:outline-none focus:border-teal-500"
             >
-              {curriculum.map(c => (
-                <option key={c.courseId} value={c.courseId}>
-                  {c.courseName} {c.courseCode ? `(${c.courseCode})` : ''}
+              {subjectOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
                 </option>
               ))}
             </select>
@@ -880,7 +981,12 @@ export default function FacultyPaperGenerator() {
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">{p.title}</h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {p.subject} • {p.totalMarks} Marks • {p.duration} min • {p.verificationStatus === 'published' ? 'Published' : 'Submitted for Approval'}
+                    {p.subject} • {p.totalMarks} Marks • {p.duration} min •{' '}
+                    {p.verificationStatus === 'published'
+                      ? 'Published'
+                      : p.verificationStatus === 'submitted-for-approval'
+                        ? 'Submitted for Approval'
+                        : 'Draft'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

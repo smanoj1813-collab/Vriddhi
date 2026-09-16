@@ -56,6 +56,7 @@ import {
   PROVISIONABLE_ROLES,
   normalizeEmail,
   normalizeRole,
+  pickCollegeId,
   withApiVersion,
 } from './identityShared'
 
@@ -121,9 +122,10 @@ export function resolveIdentityTarget(facts: IdentityLookupFacts): IdentityTarge
       role = candidate
       source = 'users'
     }
-    const candidateCollege =
-      typeof facts.usersDoc.collegeId === 'string' ? facts.usersDoc.collegeId.trim() : ''
-    if (candidateCollege) collegeId = candidateCollege
+    // Accept every spelling the client tolerates (collegeId / collegeID /
+    // college_id) — picking only `collegeId` left accounts whose importers
+    // used another spelling with a null college claim forever.
+    collegeId = pickCollegeId(facts.usersDoc)
   }
 
   const profileDoc = facts.profileDoc
@@ -137,9 +139,7 @@ export function resolveIdentityTarget(facts: IdentityLookupFacts): IdentityTarge
       }
     }
     if (collegeId === null) {
-      const candidateCollege =
-        typeof profileDoc.data.collegeId === 'string' ? profileDoc.data.collegeId.trim() : ''
-      if (candidateCollege) collegeId = candidateCollege
+      collegeId = pickCollegeId(profileDoc.data)
     }
   }
 
@@ -162,7 +162,12 @@ export function resolveIdentityTarget(facts: IdentityLookupFacts): IdentityTarge
 
 /**
  * Find the first profile document that describes this account, walking the
- * collections in the client's resolution order. The email anchor is tried
+ * collections in the client's resolution order. Per collection the anchors
+ * are tried in the SAME order the web client uses
+ * (src/modules/auth/context/auth.ts): the document id itself first — a huge
+ * share of legacy profiles are keyed BY the auth uid and carry no uid field
+ * at all, which made them invisible to this repair exactly when the sign-in
+ * resolver recognised them — then uid/userId fields, and the email anchor
  * last: it is how the identity repair resolves accounts, and a manager-set
  * email on a profile is as trustworthy as the uid link for THIS decision,
  * because both can only have been written by someone who already had
@@ -180,6 +185,20 @@ async function findProfileDocument(
   if (email) values.push({ field: 'email', value: email })
 
   for (const collectionName of PROFILE_FALLBACK_COLLECTIONS) {
+    // (a) document id == uid — the legacy provisioning shape.
+    try {
+      const byId = await db.collection(collectionName).doc(uid).get()
+      if (byId.exists) {
+        return { collection: collectionName, data: (byId.data() || {}) as Record<string, unknown> }
+      }
+    } catch (err) {
+      logger.warn('[syncMyIdentity] profile doc-id lookup failed', {
+        collection: collectionName,
+        error: (err as Error)?.message,
+      })
+    }
+
+    // (b) legacy documents that store the link in a field, or keyed by email.
     for (const { field, value } of values) {
       try {
         const snap = await db
@@ -238,8 +257,7 @@ export const syncMyIdentity = onCall(
       !!usersData &&
       !!normalizeRole(usersData.role) &&
       PROVISIONABLE_ROLES.includes(normalizeRole(usersData.role)) &&
-      typeof usersData.collegeId === 'string' &&
-      usersData.collegeId.trim() !== ''
+      pickCollegeId(usersData) !== null
 
     let profileDoc: { collection: string; data: Record<string, unknown> } | null = null
     if (!isSuperadminProfile && !usersComplete) {

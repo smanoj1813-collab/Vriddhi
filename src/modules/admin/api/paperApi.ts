@@ -32,6 +32,32 @@ function isoNow(): string {
   return Timestamp.now().toDate().toISOString();
 }
 
+/**
+ * Firestore rejects `undefined` ANYWHERE in a write payload — including
+ * nested inside maps inside arrays. Paper sections embed whole question
+ * objects, and AI-generated questions legitimately omit fields (a long-answer
+ * question has no `correctAnswer`, a short note has no `explanation`), so
+ * bank/AI/hybrid generation always produced an addDoc payload the SDK
+ * refused with "Unsupported field value: undefined" before the write ever
+ * reached the server. Strip undefined leaves recursively, leaving Firestore
+ * sentinels (Timestamp, FieldValue, GeoPoint, DocumentReference) untouched.
+ */
+function stripUndefinedDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefinedDeep(item)) as unknown as T;
+  }
+  if (value && typeof value === 'object') {
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) return value;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v !== undefined) out[k] = stripUndefinedDeep(v);
+    }
+    return out as unknown as T;
+  }
+  return value;
+}
+
 function normalizePaper(data: any, id: string): Paper {
   const now = new Date().toISOString();
   return {
@@ -143,12 +169,18 @@ export async function createPaper(
   sections: PaperSection[] = []
 ): Promise<Paper> {
   const now = isoNow();
-  const paperData = {
+  const paperData = stripUndefinedDeep({
     ...config,
     sections: sections || [],
     questionIds: questionIds || [],
     linkedQuestionIds: questionIds || [],
     status: 'draft' as PaperStatus,
+    // The papers CREATE rule pins a draft/draft initial state
+    // (request.resource.data.verificationStatus == 'draft'). A document
+    // written without this field is refused outright — which is exactly the
+    // "Missing or insufficient permissions" every generator hit on save.
+    verificationStatus: 'draft',
+    requiresApproval: false,
     collegeId,
     createdBy: userId,
     createdByName: userName,
@@ -161,7 +193,7 @@ export async function createPaper(
     isManual,
     createdAt: now,
     updatedAt: now,
-  };
+  });
   const docRef = await addDoc(collection(db, PAPERS_COLLECTION), paperData);
   return { id: docRef.id, ...paperData } as Paper;
 }
@@ -190,11 +222,14 @@ export async function duplicatePaper(
   const original = await getPaperById(paperId);
   if (!original) throw new Error('Paper not found');
 
-  const { id, createdAt, updatedAt, status, usageCount, ...rest } = original;
-  const copyData = {
+  const { id, createdAt, updatedAt, status, usageCount, verificationStatus, ...rest } = original as any;
+  const copyData = stripUndefinedDeep({
     ...rest,
     title: newTitle || `${original.title} (Copy)`,
     status: 'draft' as PaperStatus,
+    // A duplicate starts life as a fresh draft; inheriting the source paper's
+    // verification state would fail the create rule (and be untrue).
+    verificationStatus: 'draft',
     collegeId,
     createdBy: userId,
     createdByName: userName,
@@ -204,7 +239,7 @@ export async function duplicatePaper(
     usageCount: 0,
     createdAt: isoNow(),
     updatedAt: isoNow(),
-  };
+  });
   const docRef = await addDoc(collection(db, PAPERS_COLLECTION), copyData);
   return { id: docRef.id, ...copyData } as Paper;
 }

@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { COLLECTION_ROLE, normalizeRole, pickCollegeId } from './identityShared'
 
 interface PaperStaff {
   uid: string
@@ -21,15 +22,96 @@ const FILE_CONTENT_TYPES = new Set([
   'image/png',
 ])
 
+/**
+ * Staff profile collections, in the same resolution order the client and
+ * syncMyIdentity use. `students` is deliberately absent: membership here
+ * must prove ACADEMIC STAFF, and a students-document can never do that.
+ * `superadmins` is absent too — the superadmin identity only ever comes
+ * from the token claim or the canonical users document, never from a
+ * client-writable profile.
+ */
+const PAPER_PROFILE_COLLECTIONS = ['admins', 'faculty', 'hods', 'mentors'] as const
+
+/**
+ * Legacy-account fallback for resolvePaperStaff. Accounts provisioned before
+ * the users/{uid} convention have NO users document at all, which used to
+ * fail every savePaper/reviewPaper call with "Academic staff access is
+ * required" even when the token carried perfectly valid role+collegeId
+ * claims. Mirrors findProfileDocument() in selfIdentity.ts: document-id
+ * anchor first, then uid/userId fields, then the token email; the role comes
+ * from COLLECTION MEMBERSHIP only — never from the document's role field —
+ * and the college from any of the field spellings the client tolerates.
+ */
+async function resolveLegacyPaperStaff(
+  uid: string,
+  email: string | null,
+): Promise<{ role: string; collegeId: string; name: string } | null> {
+  const db = admin.firestore()
+  const anchors: Array<{ field: string; value: string }> = [
+    { field: 'uid', value: uid },
+    { field: 'userId', value: uid },
+  ]
+  if (email) anchors.push({ field: 'email', value: email })
+
+  for (const collectionName of PAPER_PROFILE_COLLECTIONS) {
+    let data: Record<string, unknown> | null = null
+    try {
+      const byId = await db.collection(collectionName).doc(uid).get()
+      if (byId.exists) data = (byId.data() || {}) as Record<string, unknown>
+    } catch (err) {
+      logger.warn('[resolvePaperStaff] doc-id lookup failed', { collectionName, error: (err as Error)?.message })
+    }
+
+    if (!data) {
+      for (const { field, value } of anchors) {
+        try {
+          const snap = await db.collection(collectionName).where(field, '==', value).limit(1).get()
+          if (!snap.empty) {
+            data = snap.docs[0].data()
+            break
+          }
+        } catch (err) {
+          logger.warn('[resolvePaperStaff] profile lookup failed', { collectionName, field, error: (err as Error)?.message })
+        }
+      }
+    }
+
+    if (data) {
+      const membershipRole = COLLECTION_ROLE[collectionName]
+      if (!membershipRole || !PAPER_ROLES.includes(membershipRole)) return null
+      const name =
+        String(data.name || data.displayName || `${(data.firstName as string) || ''} ${(data.lastName as string) || ''}`.trim())
+      return { role: membershipRole, collegeId: pickCollegeId(data) || '', name }
+    }
+  }
+  return null
+}
+
 export async function resolvePaperStaff(uid: string, token: Record<string, unknown>): Promise<PaperStaff> {
   const userDoc = await admin.firestore().collection('users').doc(uid).get()
   const user = userDoc.data()
-  const role = String(token.role || user?.role || '')
-  const collegeId = String(token.collegeId || user?.collegeId || '')
-  if (!userDoc.exists || !PAPER_ROLES.includes(role) || (role !== 'superadmin' && !collegeId)) {
+  let role = normalizeRole(token.role, '') || normalizeRole(user?.role, '') || String(token.role || user?.role || '')
+  let collegeId = String(token.collegeId || '') || pickCollegeId(user || null) || ''
+  let name = String(user?.name || user?.displayName || '')
+
+  // Legacy accounts have no users document (or it lacks the college) — fall
+  // back to the staff profile collections for the missing pieces.
+  if (!userDoc.exists || !role || (role !== 'superadmin' && !collegeId)) {
+    const legacy = await resolveLegacyPaperStaff(
+      uid,
+      typeof token.email === 'string' && token.email ? token.email.toLowerCase() : null,
+    )
+    if (legacy) {
+      if (!role) role = legacy.role
+      if (!collegeId && role !== 'superadmin') collegeId = legacy.collegeId
+      if (!name) name = legacy.name
+    }
+  }
+
+  if ((!userDoc.exists && !role) || !PAPER_ROLES.includes(role) || (role !== 'superadmin' && !collegeId)) {
     throw new HttpsError('permission-denied', 'Academic staff access is required')
   }
-  return { uid, role, collegeId, name: String(user?.name || user?.displayName || '') }
+  return { uid, role, collegeId, name }
 }
 
 function boundedString(value: unknown, field: string, maximum: number, required = false): string {

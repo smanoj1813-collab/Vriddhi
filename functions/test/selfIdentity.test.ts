@@ -153,6 +153,39 @@ describe('resolveIdentityTarget — nothing found', () => {
   })
 })
 
+describe('resolveIdentityTarget — college-id field spellings (legacy importers)', () => {
+  it('reads collegeID from a faculty profile document', () => {
+    // The client faculty mapper resolves `collegeId || collegeID`; the repair
+    // must see the same college or it mints a null-college claim and every
+    // tenant write (staffAttendance, papers) stays denied.
+    const target = resolveIdentityTarget(
+      facts({ profileDoc: { collection: 'faculty', data: { collegeID: COLLEGE_A } } }),
+    )
+    assert.deepEqual(target, { role: 'faculty', collegeId: COLLEGE_A, source: 'profile' })
+  })
+
+  it('reads college_id from a users document', () => {
+    const target = resolveIdentityTarget(
+      facts({ usersDoc: { role: 'hod', college_id: COLLEGE_A } }),
+    )
+    assert.equal(target.collegeId, COLLEGE_A)
+  })
+
+  it('prefers collegeId over the legacy spellings', () => {
+    const target = resolveIdentityTarget(
+      facts({ usersDoc: { role: 'faculty', collegeId: COLLEGE_A, collegeID: 'college-other' } }),
+    )
+    assert.equal(target.collegeId, COLLEGE_A)
+  })
+
+  it('trims whitespace around imported college ids', () => {
+    const target = resolveIdentityTarget(
+      facts({ profileDoc: { collection: 'mentors', data: { collegeId: '  college-a  ' } } }),
+    )
+    assert.equal(target.collegeId, COLLEGE_A)
+  })
+})
+
 describe('the two production stale-claim shapes (client/server agreement)', () => {
   it('correct role + missing college claim → server re-issues from the profile', () => {
     // Token: { role: 'faculty' } (no college). Profile: college-a.
