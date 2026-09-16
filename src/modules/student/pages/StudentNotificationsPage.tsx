@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, Check, ArrowLeft, Pin,
-  Calendar, BookOpen, AlertTriangle, Info, CheckCircle,
+  Calendar, BookOpen, AlertTriangle, Info, CheckCircle, Clock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStudentData } from '../hooks/useStudentData';
 import { markNotificationRead, markAllNotificationsRead } from '../api/studentDataApi';
+import { deadlineCountdown, linkageBadgeText } from '../utils/deadlineCountdown';
+import type { Notification } from '../types/student';
 
 // ------------------------------------------------------------------
 // The full notification panel.
@@ -65,6 +67,44 @@ export default function StudentNotificationsPage() {
     await markAllNotificationsRead(studentId);
     await refresh();
     setBusy(false);
+  };
+
+  /** Assignment-published entries get the course → module badge + a live
+   *  deadline countdown chip + a jump to the assignments page. */
+  const renderAssignmentMeta = (notification: Notification) => {
+    if (notification.category !== 'assignment') return null;
+    const badge = linkageBadgeText(notification.courseName, notification.moduleTitle);
+    const countdown = deadlineCountdown(notification.deadline);
+    if (!badge && !countdown && !notification.assignmentId) return null;
+    const chip =
+      countdown?.tone === 'overdue'
+        ? 'text-rose-700 dark:text-rose-300 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800'
+        : countdown?.tone === 'soon'
+          ? 'text-amber-700 dark:text-amber-300 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800'
+          : 'text-slate-600 dark:text-slate-400 bg-slate-50 border-slate-200 dark:bg-slate-900/40 dark:border-slate-700';
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap mt-2">
+        {badge && (
+          <span className="inline-flex items-center gap-1 max-w-full text-[11px] font-bold text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-full px-2.5 py-0.5">
+            <BookOpen size={11} className="shrink-0" />
+            <span className="truncate">{badge}</span>
+          </span>
+        )}
+        {countdown && (
+          <span className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full px-2.5 py-0.5 border ${chip}`}>
+            <Clock size={11} /> {countdown.text}
+          </span>
+        )}
+        {notification.assignmentId && (
+          <button
+            onClick={() => navigate('/student/assignments')}
+            className="text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline ml-1"
+          >
+            View assignment →
+          </button>
+        )}
+      </div>
+    );
   };
 
   const filtered = filter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
@@ -163,6 +203,8 @@ export default function StudentNotificationsPage() {
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed whitespace-pre-line">
                     {notification.message}
                   </p>
+
+                  {renderAssignmentMeta(notification)}
 
                   <div className="mt-3 flex items-center gap-3 flex-wrap">
                     {notification.priority === 'urgent' || notification.priority === 'high' ? (

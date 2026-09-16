@@ -170,6 +170,7 @@ const navItems: NavItem[] = [
   { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" />, roles: ["admin", "principal"], section: "Students" },
   { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
   { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
+  { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" />, roles: ["admin", "principal"], section: "Settings" },
 
@@ -188,6 +189,7 @@ const navItems: NavItem[] = [
   { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" />, roles: ["hod"], section: "Operations" },
   { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["hod"], section: "Operations" },
   { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" />, roles: ["hod"], section: "Insights" },
+  { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" />, roles: ["hod"], section: "Insights" },
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["hod"], section: "Insights" },
 
   // ─── FACULTY ───
@@ -346,6 +348,7 @@ const principalNav: SidebarEntry[] = [
     icon: <TrendingUp fontSize="small" />,
     children: [
       { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" /> },
+      { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" /> },
       { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" /> },
     ],
   },

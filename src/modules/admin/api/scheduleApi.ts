@@ -4,7 +4,7 @@
 import { db } from '@/Firebase/config'
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
-  deleteDoc, orderBy, limit, writeBatch, getDoc
+  deleteDoc, orderBy, limit, writeBatch, getDoc, deleteField
 } from 'firebase/firestore'
 import type {
   ClassSchedule,
@@ -109,6 +109,7 @@ function docToSchedule(d: any, id: string): ClassSchedule {
 // ─── Helper: Convert Firestore doc to WeeklyClassSchedule ─
 
 function docToWeeklySchedule(d: any, id: string): WeeklyClassSchedule {
+  const rawAssignment = d.assignment
   return {
     id,
     collegeId: d.collegeId || '',
@@ -130,6 +131,20 @@ function docToWeeklySchedule(d: any, id: string): WeeklyClassSchedule {
     isActive: d.isActive !== false,
     createdAt: d.createdAt || new Date().toISOString(),
     updatedAt: d.updatedAt || new Date().toISOString(),
+    // Optional attached assignment — read defensively so a partial or legacy
+    // document never breaks the timetable grid.
+    ...(rawAssignment
+      && typeof rawAssignment === 'object'
+      && String(rawAssignment.title || '').trim()
+      ? {
+          assignment: {
+            title: String(rawAssignment.title).trim(),
+            maxScore: Number(rawAssignment.maxScore) || 0,
+            deadline: String(rawAssignment.deadline || '').slice(0, 10),
+          },
+        }
+      : {}),
+    ...(d.assignmentId ? { assignmentId: String(d.assignmentId) } : {}),
   }
 }
 
@@ -508,6 +523,9 @@ export async function createWeeklySchedule(data: WeeklyScheduleFormData): Promis
     endTime: data.endTime,
     type: data.type || 'lecture',
     isActive: true,
+    // Optional attached assignment — validated server-side when sessions are
+    // generated, so a bad value here only skips the link, not the class.
+    ...(data.assignment ? { assignment: data.assignment } : {}),
     createdAt: now,
     updatedAt: now,
   }
@@ -551,6 +569,16 @@ export async function updateWeeklySchedule(id: string, data: Partial<WeeklySched
   if (data.startTime !== undefined) updateData.startTime = data.startTime
   if (data.endTime !== undefined) updateData.endTime = data.endTime
   if (data.type !== undefined) updateData.type = data.type
+  // Optional attached assignment: `null` removes it (and any materialised
+  // link stays on already-generated sessions), an object (re)sets it.
+  if (data.assignment !== undefined) {
+    if (data.assignment === null) {
+      updateData.assignment = deleteField()
+      updateData.assignmentId = deleteField()
+    } else {
+      updateData.assignment = data.assignment
+    }
+  }
 
   await updateDoc(doc(db, WEEKLY_COLLECTION, id), updateData)
 }

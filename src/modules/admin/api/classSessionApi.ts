@@ -54,6 +54,11 @@ export interface GenerateSessionsResult {
   skippedConflicts: number
   conflicts: SessionConflict[]
   batches: number
+  /**
+   * Optional schedule → assignment linkage: how many configured slots had
+   * their draft assignment created (or re-linked) by this run.
+   */
+  assignmentsLinked?: number
 }
 
 /** Errors that carry conflict details attached by the callable. */

@@ -11,6 +11,7 @@ const AdmissionCenter = lazy(() => import('./pages/AdmissionCenter'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
 const Analytics = lazy(() => import('./pages/Analytics'));
+const AssignmentAnalytics = lazy(() => import('./pages/AssignmentAnalytics'));
 const Assessments = lazy(() => import('./pages/Assessments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 // Staff (faculty) attendance — what the faculty themselves marked. Student
@@ -114,6 +115,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'curriculum', element: <LazyPage><AdminCurriculum /></LazyPage> },
       { path: 'curriculum-progress', element: <LazyPage><CurriculumProgress /></LazyPage> },
       { path: 'analytics', element: <LazyPage><Analytics /></LazyPage> },
+      { path: 'assignment-analytics', element: <LazyPage><AssignmentAnalytics /></LazyPage> },
       { path: 'journey', element: <LazyPage><Journey /></LazyPage> },
       { path: 'settings', element: <LazyPage><Settings /></LazyPage> },
       { path: 'hod-dashboard', element: <LazyPage><HODDashboard /></LazyPage> },

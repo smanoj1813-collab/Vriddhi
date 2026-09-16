@@ -85,6 +85,8 @@ import {
   completeClassSession,
   getCurriculumProgress,
 } from './classSchedule'
+// ─── Assignment completion analytics (course/module/batch/division) ───
+import { getAssignmentAnalytics } from './assignmentAnalytics'
 // ─── Announcements: server-authoritative targeting + per-recipient reads ───
 import {
   sendAnnouncement,
@@ -248,6 +250,7 @@ export {
   ensureClassSession,
   completeClassSession,
   getCurriculumProgress,
+  getAssignmentAnalytics,
   sendAnnouncement,
   listCollegeAnnouncements,
   deleteAnnouncement,

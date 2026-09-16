@@ -224,6 +224,13 @@ interface SerializedAnnouncement {
   recipientCount: number
   readCount: number
   read: boolean
+  // Assignment-published notifications carry the linkage fields so the bell
+  // feed can render the course → module badge and a live deadline countdown
+  // instead of parsing them out of the message text.
+  deadline: string | null
+  courseName: string
+  moduleTitle: string
+  assignmentId: string
 }
 
 function iso(value: unknown): string | null {
@@ -270,6 +277,10 @@ export function serialize(
     recipientCount: Number(data.recipientCount) || 0,
     readCount: Number(data.readCount) || 0,
     read,
+    deadline: iso(data.deadline),
+    courseName: String(data.courseName || ''),
+    moduleTitle: String(data.moduleTitle || ''),
+    assignmentId: String(data.assignmentId || ''),
   }
 }
 

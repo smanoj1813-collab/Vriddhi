@@ -306,6 +306,12 @@ function serializeAssignment(
     marksObtained: submission?.score ?? submission?.marksObtained ?? null,
     feedback: String(submission?.remarks || submission?.feedback || ''),
     submittedAt: asDate(submission?.submittedAt)?.toISOString() || '',
+    // Optional curriculum linkage — the student UI renders these as a
+    // "course → module" badge next to the deadline countdown.
+    courseId: String(assignment.courseId || ''),
+    courseName: String(assignment.courseName || ''),
+    moduleId: String(assignment.moduleId || ''),
+    moduleTitle: String(assignment.moduleTitle || ''),
   }
 }
 
@@ -750,7 +756,9 @@ interface AssignmentStaffIdentity {
   name: string
 }
 
-async function resolveAssignmentStaff(
+// Exported so other analytics callables (assignmentAnalytics.ts) can reuse
+// the exact same staff-role + tenancy check instead of drifting apart.
+export async function resolveAssignmentStaff(
   uid: string,
   token: Record<string, unknown>
 ): Promise<AssignmentStaffIdentity> {
@@ -1122,6 +1130,12 @@ async function createAssignmentPublishedNotification(
     sentByName: facultyName || String(assignment.facultyName || ''),
     createdBy: String(assignment.facultyUid || ''),
     assignmentId,
+    // Structured linkage for the bell feed: the student UI renders the
+    // course → module badge and a live deadline countdown from these fields
+    // (the message text above stays as the plain-language fallback).
+    ...(deadlineDate ? { deadline: deadlineDate.toISOString() } : {}),
+    ...(assignment.courseName ? { courseName: String(assignment.courseName).slice(0, 200) } : {}),
+    ...(assignment.moduleTitle ? { moduleTitle: String(assignment.moduleTitle).slice(0, 200) } : {}),
     recipientCount,
     readCount: 0,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),

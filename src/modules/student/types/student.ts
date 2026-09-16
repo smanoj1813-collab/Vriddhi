@@ -28,6 +28,14 @@ export interface Assignment {
   marksObtained?: number;
   feedback?: string;
   submittedAt?: string;
+  /**
+   * Optional curriculum linkage the faculty attached (or the admin's
+   * schedule→assignment flow created). Rendered as a "course → module" badge.
+   */
+  courseId?: string;
+  courseName?: string;
+  moduleId?: string;
+  moduleTitle?: string;
 }
 
 /* ─── Assignment Submission ─── */
@@ -54,6 +62,13 @@ export interface Notification {
   createdAt?: string;
   read: boolean;
   priority?: string;
+  /** 'assignment' marks the bell entry published with an assignment. */
+  category?: string;
+  /** Assignment linkage — badge + deadline countdown in the bell feed. */
+  deadline?: string;
+  courseName?: string;
+  moduleTitle?: string;
+  assignmentId?: string;
 }
 
 /* ─── Fee ─── */

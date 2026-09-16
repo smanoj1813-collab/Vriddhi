@@ -44,6 +44,7 @@ import {
   CalendarToday as CalendarIcon,
   EventBusy as EventBusyIcon,
   AutoAwesomeMotion as MaterialiseIcon,
+  Assignment as AssignmentIcon,
 } from '@mui/icons-material'
 import { useAdminSchedule } from '../hooks/useAdminSchedule'
 import { useAuth } from '../../auth/context/AuthContext'
@@ -142,6 +143,13 @@ const AdminClassSchedule: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState<WeeklyScheduleFormData>({ ...EMPTY_FORM })
+  // Optional "attach an assignment" toggle — the timetable-side equivalent of
+  // the faculty's curriculum link. generateClassSessions turns it into one
+  // draft assignment per slot for the faculty to publish.
+  const [attachAssignment, setAttachAssignment] = useState(false)
+  const [assignTitle, setAssignTitle] = useState('')
+  const [assignMaxScore, setAssignMaxScore] = useState(20)
+  const [assignDeadline, setAssignDeadline] = useState('')
   const [snackbar, setSnackbar] = useState<{
     open: boolean
     message: string
@@ -184,6 +192,7 @@ const AdminClassSchedule: React.FC = () => {
       type: 'lecture',
       room: '',
     })
+    resetAssignmentForm()
     setOpen(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill])
@@ -195,6 +204,20 @@ const AdminClassSchedule: React.FC = () => {
     if (!formData.facultyId) return []
     return subjects.filter(s => s.facultyId === formData.facultyId)
   }, [formData.facultyId, subjects])
+
+  const resetAssignmentForm = () => {
+    setAttachAssignment(false)
+    setAssignTitle('')
+    setAssignMaxScore(20)
+    setAssignDeadline('')
+  }
+
+  const applyAssignmentForm = (schedule?: typeof daySchedules[0]) => {
+    setAttachAssignment(Boolean(schedule?.assignment))
+    setAssignTitle(schedule?.assignment?.title || '')
+    setAssignMaxScore(schedule?.assignment?.maxScore || 20)
+    setAssignDeadline(schedule?.assignment?.deadline || '')
+  }
 
   const handleOpen = (schedule?: typeof daySchedules[0]) => {
     if (schedule) {
@@ -214,9 +237,11 @@ const AdminClassSchedule: React.FC = () => {
         endTime: schedule.endTime,
         type: schedule.type,
       })
+      applyAssignmentForm(schedule)
     } else {
       setEditingId(null)
       setFormData({ ...EMPTY_FORM, dayOfWeek: selectedDay })
+      resetAssignmentForm()
     }
     setOpen(true)
   }
@@ -225,6 +250,7 @@ const AdminClassSchedule: React.FC = () => {
     setOpen(false)
     setEditingId(null)
     setFormData({ ...EMPTY_FORM })
+    resetAssignmentForm()
   }
 
   const handleSubmit = () => {
@@ -233,9 +259,26 @@ const AdminClassSchedule: React.FC = () => {
       return
     }
 
+    if (attachAssignment) {
+      if (!assignTitle.trim() || !assignDeadline || !(Number(assignMaxScore) > 0)) {
+        setSnackbar({ open: true, message: 'Attach assignment needs a title, max score and deadline', severity: 'error' })
+        return
+      }
+      if (assignDeadline < new Date().toISOString().slice(0, 10)) {
+        setSnackbar({ open: true, message: 'The assignment deadline must be in the future', severity: 'error' })
+        return
+      }
+    }
+
+    // Editing a slot that previously had an attachment: unchecking the toggle
+    // clears it. Creating without the toggle leaves the field out entirely.
+    const assignmentPayload = attachAssignment
+      ? { title: assignTitle.trim(), maxScore: Number(assignMaxScore), deadline: assignDeadline }
+      : editingId ? null : undefined
+
     if (editingId) {
       updateSchedule(
-        { id: editingId, data: formData },
+        { id: editingId, data: { ...formData, assignment: assignmentPayload ?? null } },
         {
           onSuccess: () => {
             setSnackbar({ open: true, message: 'Schedule updated successfully', severity: 'success' })
@@ -247,15 +290,21 @@ const AdminClassSchedule: React.FC = () => {
         }
       )
     } else {
-      createSchedule(formData, {
-        onSuccess: () => {
-          setSnackbar({ open: true, message: 'Schedule created successfully', severity: 'success' })
-          handleClose()
+      createSchedule(
+        {
+          ...formData,
+          ...(assignmentPayload ? { assignment: assignmentPayload } : {}),
         },
-        onError: () => {
-          setSnackbar({ open: true, message: 'Failed to create schedule', severity: 'error' })
-        },
-      })
+        {
+          onSuccess: () => {
+            setSnackbar({ open: true, message: 'Schedule created successfully', severity: 'success' })
+            handleClose()
+          },
+          onError: () => {
+            setSnackbar({ open: true, message: 'Failed to create schedule', severity: 'error' })
+          },
+        }
+      )
     }
   }
 
@@ -275,6 +324,8 @@ const AdminClassSchedule: React.FC = () => {
       endTime: schedule.endTime,
       type: schedule.type,
     })
+    // The copy starts unattached; the admin can re-enable the same config.
+    applyAssignmentForm(undefined)
     setEditingId(null)
     setOpen(true)
   }
@@ -319,15 +370,20 @@ const AdminClassSchedule: React.FC = () => {
       setGenerateResult(result)
       setGenerateConflicts(result.conflicts || [])
       const skipped = result.skippedConflicts || 0
+      const linked = result.assignmentsLinked || 0
+      const linkedNote =
+        linked > 0
+          ? ` ${linked} attached assignment draft(s) were created — the faculty publishes them from Assignments.`
+          : ''
       setSnackbar({
         open: true,
         severity: skipped > 0 ? 'warning' : 'success',
         message:
           result.created === 0 && skipped === 0
-            ? `Already up to date — ${result.skippedExisting} session(s) existed for ${result.slotsScanned} slot(s), nothing new created.`
+            ? `Already up to date — ${result.skippedExisting} session(s) existed for ${result.slotsScanned} slot(s), nothing new created.${linkedNote}`
             : skipped > 0
-              ? `Created ${result.created} session(s) and skipped ${skipped} that would double-book a faculty member or a room.`
-              : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).`,
+              ? `Created ${result.created} session(s) and skipped ${skipped} that would double-book a faculty member or a room.${linkedNote}`
+              : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).${linkedNote}`,
       })
     } catch (error) {
       // S2.5: the server refuses to materialise a timetable that double-books.
@@ -599,6 +655,29 @@ const AdminClassSchedule: React.FC = () => {
                   <Typography variant="caption" color="text.secondary">
                     {schedule.subjectCode}
                   </Typography>
+                  {schedule.assignment && (
+                    <Tooltip
+                      title={
+                        schedule.assignmentId
+                          ? 'A draft assignment has been created for this slot — the faculty publishes it from Assignments.'
+                          : 'Generate Sessions will create a draft assignment for this slot (due ' +
+                            schedule.assignment.deadline + ') for the faculty to publish.'
+                      }
+                    >
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        color="secondary"
+                        icon={<AssignmentIcon />}
+                        label={
+                          schedule.assignmentId
+                            ? `Assignment · ${schedule.assignment.deadline}`
+                            : `Assigns · due ${schedule.assignment.deadline}`
+                        }
+                        sx={{ height: 20, fontSize: 11, mt: 0.5 }}
+                      />
+                    </Tooltip>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -927,6 +1006,65 @@ const AdminClassSchedule: React.FC = () => {
               </FormControl>
             </Box>
           </Box>
+
+          {/* Optional assignment attachment — timetable-side one-stop link */}
+          <Box sx={{ mt: 2, p: 2, borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'action.hover' }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={attachAssignment}
+                  onChange={e => setAttachAssignment(e.target.checked)}
+                  size="small"
+                />
+              }
+              label={
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Attach an assignment to this class (optional)
+                </Typography>
+              }
+            />
+            <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: attachAssignment ? 1.5 : 0 }}>
+              “Generate Sessions” creates one draft assignment for this slot — same subject and cohort as the
+              class above — and the faculty publishes it from Assignments. Students get the deadline
+              notification on publish. Leave off for a plain class.
+            </Typography>
+            {attachAssignment && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 0.5 }}>
+                <Box sx={{ flex: '2 1 260px' }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Assignment title *"
+                    value={assignTitle}
+                    onChange={e => setAssignTitle(e.target.value)}
+                    placeholder="e.g., Week 4 worksheet"
+                  />
+                </Box>
+                <Box sx={{ flex: '1 1 120px' }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Max score *"
+                    type="number"
+                    value={assignMaxScore}
+                    onChange={e => setAssignMaxScore(Number(e.target.value) || 0)}
+                    slotProps={{ htmlInput: { min: 1, max: 500 } }}
+                  />
+                </Box>
+                <Box sx={{ flex: '1 1 160px' }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Deadline *"
+                    type="date"
+                    value={assignDeadline}
+                    onChange={e => setAssignDeadline(e.target.value)}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                </Box>
+              </Box>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={isCreating || isUpdating}>
@@ -1031,6 +1169,11 @@ const AdminClassSchedule: React.FC = () => {
               {(generateResult.skippedConflicts || 0) > 0 && ` · ${generateResult.skippedConflicts} skipped (clash)`} ·{' '}
               {generateResult.slotsScanned} active slot(s) × {generateResult.scheduledOccurrences} occurrence(s)
               in range.
+              {(generateResult.assignmentsLinked || 0) > 0 && (
+                <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
+                  {generateResult.assignmentsLinked} assignment draft(s) linked for faculty review & publish.
+                </Typography>
+              )}
             </Alert>
           )}
 
