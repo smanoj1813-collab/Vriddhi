@@ -330,7 +330,7 @@ router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: Authe
     }
 
     // Build HTML for PDF
-    const html = buildPaperHTML(paper, collegeName, user)
+    const html = await buildPaperHTML(paper, collegeName, user)
 
     // Render via the shared Puppeteer helper; it writes the response (PDF or JSON error) itself.
     await sendRenderedPdf(res, html, {
@@ -360,8 +360,86 @@ router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: Authe
 // HTML Builders
 // ═══════════════════════════════════════════════════════════════════════
 
-function buildPaperHTML(paper: any, collegeName: string, user: any): string {
-  const sections = paper.sections || []
+interface NormalisedPaperQuestion {
+  text: string
+  marks: number | null
+  options: any[] | null
+}
+
+/**
+ * Questions embedded in paper sections arrive in several historical shapes:
+ *   - full bank question objects (auto-generation):  { text, marks, options }
+ *   - manual wrappers:                                { questionId, question: { questionText, marks } }
+ *   - validated upload/savePaper shape:               { number, text, type, marks, topic }
+ * Normalise all of them onto one render shape.
+ */
+function normaliseEmbeddedQuestion(q: any): NormalisedPaperQuestion {
+  if (!q || typeof q !== 'object') return { text: '', marks: null, options: null }
+  const inner = q.question && typeof q.question === 'object' ? q.question : {}
+  const text = q.text || q.questionText || inner.text || inner.questionText || ''
+  const rawMarks = q.marks ?? inner.marks
+  const marks = Number.isFinite(Number(rawMarks)) && Number(rawMarks) > 0 ? Number(rawMarks) : null
+  const options =
+    Array.isArray(q.options) && q.options.length
+      ? q.options
+      : Array.isArray(inner.options) && inner.options.length
+        ? inner.options
+        : null
+  return { text: String(text), marks, options }
+}
+
+/**
+ * Sections that carry only question ids (the classic bank-linked shape) are
+ * hydrated from the questions collection — the same fallback the client-side
+ * renderer performs when the server renderer is unavailable.
+ */
+async function hydratePaperQuestions(paper: any): Promise<NormalisedPaperQuestion[]> {
+  const ids: string[] = [
+    ...(Array.isArray(paper.questionIds) ? paper.questionIds : []),
+    ...(Array.isArray(paper.linkedQuestionIds) ? paper.linkedQuestionIds : []),
+  ].filter((v: any) => typeof v === 'string' && v)
+  const unique = Array.from(new Set(ids)).slice(0, 400)
+  if (!unique.length) return []
+  const refs = unique.map((id) => db.collection(QUESTIONS_COLLECTION).doc(id))
+  const snaps = await db.getAll(...refs)
+  const byId = new Map<string, any>()
+  for (const snap of snaps) {
+    if (snap.exists) byId.set(snap.id, snap.data())
+  }
+  return unique
+    .map((id) => byId.get(id))
+    .filter((d: any) => d && (d.text || d.questionText || d.content))
+    .map((d: any) => ({
+      text: String(d.text || d.questionText || d.content || ''),
+      marks: Number.isFinite(Number(d.marks)) && Number(d.marks) > 0 ? Number(d.marks) : null,
+      options: Array.isArray(d.options) && d.options.length ? d.options : null,
+    }))
+}
+
+async function buildPaperHTML(paper: any, collegeName: string, user: any): Promise<string> {
+  const rawSections: any[] = Array.isArray(paper.sections) ? paper.sections : []
+  let sections = rawSections.map((s: any) => ({
+    ...s,
+    questions: (Array.isArray(s.questions) ? s.questions : []).map(normaliseEmbeddedQuestion),
+  }))
+  const sectionsHaveText = sections.some((s: any) => s.questions.some((q: NormalisedPaperQuestion) => q.text))
+  if (!sectionsHaveText) {
+    const hydrated = await hydratePaperQuestions(paper)
+    if (hydrated.length) {
+      sections = [{ name: 'Questions', questions: hydrated }]
+    }
+  }
+
+  const sectionMeta = sections.map((s: any) => {
+    const qs: NormalisedPaperQuestion[] = s.questions || []
+    const declared = Number(s.marksPerQuestion)
+    const num = Number(s.numQuestions) || qs.length
+    const total =
+      Number.isFinite(declared) && declared > 0
+        ? num * declared
+        : qs.reduce((sum: number, q) => sum + (Number(q.marks) || 0), 0)
+    return { num, total }
+  })
 
   return `
 <!DOCTYPE html>
@@ -422,7 +500,7 @@ function buildPaperHTML(paper: any, collegeName: string, user: any): string {
       <div class="section">
         <div class="section-header">
           <span>Section ${String.fromCharCode(65 + sIdx)}: ${escapeHtml(section.name || section.title || '')}</span>
-          <span>[${section.numQuestions} × ${section.marksPerQuestion} = ${section.numQuestions * section.marksPerQuestion} marks]</span>
+          ${sectionMeta[sIdx].total > 0 ? `<span>[${sectionMeta[sIdx].num} question${sectionMeta[sIdx].num !== 1 ? 's' : ''} = ${sectionMeta[sIdx].total} marks]</span>` : ''}
         </div>
         ${section.instructions ? `<div style="font-size: 10pt; margin-bottom: 8px; font-style: italic;">${escapeHtml(section.instructions)}</div>` : ''}
 
@@ -431,19 +509,16 @@ function buildPaperHTML(paper: any, collegeName: string, user: any): string {
             <div class="question-header">
               <span class="question-num">Q${qIdx + 1}.</span>
               <span class="question-text">${escapeHtml(q.text)}</span>
-              <span class="marks">[${q.marks || section.marksPerQuestion} marks]</span>
+              <span class="marks">[${q.marks ?? section.marksPerQuestion ?? ''} marks]</span>
             </div>
 
             ${q.options ? `
               <div class="options">
                 ${q.options.map((opt: any, oIdx: number) => `
-                  <div class="option">${String.fromCharCode(65 + oIdx)}. ${escapeHtml(opt.text || opt)}</div>
+                  <div class="option">${String.fromCharCode(65 + oIdx)}. ${escapeHtml(typeof opt === 'string' ? opt : (opt.text || ''))}</div>
                 `).join('')}
               </div>
             ` : ''}
-
-            ${q.correctAnswer ? `<div class="correct-answer">Ans: ${escapeHtml(String(q.correctAnswer))}</div>` : ''}
-            ${q.explanation ? `<div class="explanation">${escapeHtml(q.explanation)}</div>` : ''}
           </div>
         `).join('')}
       </div>

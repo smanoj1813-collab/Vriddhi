@@ -2,7 +2,7 @@
 // AI Question Studio: generate, EDIT every question, add manually, save to bank.
 
 import { useState, useEffect } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Sparkles, Wand2, Loader2, Copy, Check, AlertCircle, Save, Plus, Trash2, Edit3, X, BookOpen, ArrowRight
 } from 'lucide-react';
@@ -57,6 +57,10 @@ export default function FacultyAIQuestions() {
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
+  // Survives the staged-questions clear: confirms WHERE the save landed, with
+  // a direct route into the bank, so a successful save never feels like the
+  // questions vanished.
+  const [saveSummary, setSaveSummary] = useState<{ count: number; subject: string } | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualQ, setManualQ] = useState<GeneratedQuestion>(blankQuestion(''));
@@ -95,6 +99,7 @@ export default function FacultyAIQuestions() {
   const saveGenerated = async () => {
     if (questions.length === 0) return;
     setSaveMessage('');
+    setSaveSummary(null);
     try {
       // saveAll signature is (questions, batch, branch) — we pass empty batch/branch
       // and let convertAllToQuestionData use collegeId from auth context
@@ -103,11 +108,10 @@ export default function FacultyAIQuestions() {
         setSaveMessage(`Saved 0/${questions.length} — check console for [saveAll] Errors. Likely Firestore rules or missing collegeId.`);
         return;
       }
-      setSaveMessage(`Saved ${saved.length} question(s) to the question bank. Check Question Bank page.`);
-      // Clear after save only if success
-      setTimeout(() => {
-        setQuestions([]);
-      }, 2000);
+      setSaveSummary({ count: saved.length, subject: saved[0]?.subject || subject || 'General' });
+      // Clear the staging list only after a confirmed save; the summary panel
+      // below stays so the user can navigate straight to the saved questions.
+      setQuestions([]);
     } catch (err: any) {
       console.error('[FacultyAI] Save failed:', err);
       const msg = err?.message || '';
@@ -271,6 +275,29 @@ export default function FacultyAIQuestions() {
               </button>
             )}
             {saveMessage && <p className="text-xs text-teal-400">{saveMessage}</p>}
+            {saveSummary && (
+              <div className="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
+                <p className="text-xs text-emerald-600 dark:text-emerald-300 font-semibold flex items-center gap-1.5">
+                  <Check size={14} />
+                  Saved {saveSummary.count} question{saveSummary.count !== 1 ? 's' : ''} to the Question Bank
+                  {saveSummary.subject ? ` under “${saveSummary.subject}”` : ''}.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/faculty/question-bank"
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 inline-flex items-center gap-1"
+                  >
+                    Open Question Bank <ArrowRight size={12} />
+                  </Link>
+                  <button
+                    onClick={() => setSaveSummary(null)}
+                    className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

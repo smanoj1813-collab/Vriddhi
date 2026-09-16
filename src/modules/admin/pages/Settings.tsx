@@ -7,11 +7,12 @@ import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase
 import {
   Save, User, Building2, Bell, Shield, Palette, Database, Download,
   Sun, Moon, Monitor, Check, Upload, Trash2, AlertTriangle,
-  Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info
+  Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info, Sparkles
 } from 'lucide-react'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
+import AiStudyContentTab from './AiStudyContentTab'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
@@ -187,6 +188,12 @@ export default function Settings() {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'data', label: 'Data & Backup', icon: Database },
+    // AI content & cost data is INTERNAL (platform-level spend and caps):
+    // the tab exists for superadmin only and is never shown to college staff.
+    // (The server enforces this too — the controls endpoints 403 non-superadmin.)
+    ...(user?.role === 'superadmin'
+      ? [{ id: 'ai-content', label: 'AI Content & Cost', icon: Sparkles }]
+      : []),
   ]
 
   // Load initial data
@@ -1135,6 +1142,9 @@ export default function Settings() {
               </div>
             </SettingsCard>
           )}
+
+          {/* AI Content & Cost — internal (superadmin-only) spend meter, limits, exam freezes, pre-warm */}
+          {activeTab === 'ai-content' && user?.role === 'superadmin' && <AiStudyContentTab />}
         </div>
       </div>
     </div>

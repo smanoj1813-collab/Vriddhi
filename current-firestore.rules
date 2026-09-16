@@ -1097,6 +1097,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Server-only collections (no match block => fall through to the
+    // catch-all deny below). Admin SDK only:
+    //   - ai_study_materials: versioned AI study packs + per-campus pins
+    //   - ai_config/{collegeId}: per-campus AI cost controls (daily caps,
+    //     exam freeze windows) managed via the api function's
+    //     /ai/study-material/controls endpoints
+    //   - ai_usage/{YYYY-MM-DD}: real-time spend telemetry (serves,
+    //     generations, tokens; per-campus and per-student counters)
+
     match /{document=**} {
       allow read, write: if false;
     }

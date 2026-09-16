@@ -64,6 +64,26 @@ export const COLLECTION_ROLE: Record<string, string> = {
   students: 'student',
 }
 
+/**
+ * Field names generations of importers have used for the tenant id, in trust
+ * order. The web client already tolerates every one of these
+ * (src/modules/auth/context/auth.ts maps faculty docs via `collegeId ||
+ * collegeID`, and the API middleware accepts `college_id`), so the backend
+ * identity chain must read the same spellings or it declares a healthy
+ * account "unrepairable" while the client happily signs it in.
+ */
+export const COLLEGE_ID_FIELDS = ['collegeId', 'collegeID', 'college_id'] as const
+
+/** First non-empty college id found on a profile/users document, or null. */
+export function pickCollegeId(data: Record<string, unknown> | null | undefined): string | null {
+  if (!data) return null
+  for (const field of COLLEGE_ID_FIELDS) {
+    const value = data[field]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return null
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function isValidEmail(value: unknown): value is string {

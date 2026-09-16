@@ -8,6 +8,14 @@ import {
   type AIStudyPack,
   type FetchStudyMaterialInput
 } from '@/shared/services/aiStudyMaterialService';
+import { useAuth } from '@/modules/auth/context/AuthContext';
+
+/**
+ * Mirrors the server-side cost guard in functions/src/routes/ai-chat.ts:
+ * content refresh is a PLATFORM operation (central content team = superadmin).
+ * Colleges consume the shared library — they never pay to regenerate it.
+ */
+const REGENERATE_ROLES = ['superadmin'];
 
 interface AIStudyCompanionModalProps {
   isOpen: boolean;
@@ -20,30 +28,65 @@ export default function AIStudyCompanionModal({
   onClose,
   context,
 }: AIStudyCompanionModalProps) {
+  const { user } = useAuth();
+  // Regenerating is a paid LLM call and content is centrally operated — the
+  // button exists only for the platform content team (the server
+  // independently 403s everyone else; this keeps the UI honest before the
+  // request ever leaves the browser).
+  const canRegenerate = REGENERATE_ROLES.includes(user?.role || '');
   const [activeTab, setActiveTab] = useState<'concept' | 'cheatSheet' | 'example' | 'examPrep'>('concept');
   const [studyPack, setStudyPack] = useState<AIStudyPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'cache' | 'generated' | null>(null);
+  const [servedVersion, setServedVersion] = useState<number | null>(null);
+  const [cooldownNote, setCooldownNote] = useState<string | null>(null);
+  const [waitingNote, setWaitingNote] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const loadMaterial = async (forceRefresh = false) => {
     if (!context.subject || !context.topic) return;
     setLoading(true);
     setError(null);
+    setCooldownNote(null);
+    setWaitingNote(null);
 
     try {
-      const res = await fetchAIStudyMaterial({
-        ...context,
-        forceRefresh,
-      });
+      const res = await fetchAIStudyMaterial(
+        {
+          ...context,
+          forceRefresh,
+        },
+        {
+          // Someone else is already paying for this pack's generation — the
+          // service polls and serves the shared result (the concurrency
+          // guard saves a duplicate LLM call; this note just explains the
+          // wait instead of looking stuck).
+          onWaiting: (info) =>
+            setWaitingNote(
+              `A study pack for this topic is already being generated — waiting for the shared copy (attempt ${info.attempt})…`
+            ),
+        }
+      );
       setStudyPack(res.data);
       setSource(res.source);
+      setServedVersion(typeof res.servedVersion === 'number' ? res.servedVersion : null);
     } catch (err: any) {
-      console.error('[AIStudyCompanion] Load failed:', err);
-      setError(err?.message || 'Could not load AI study material. Please try again.');
+      const serverBody = (err as { body?: unknown })?.body as Record<string, unknown> | undefined;
+      if (err?.status === 429 && serverBody?.regenerateAvailableAt) {
+        // Per-key cooldown (staff refresh): the pack on screen is still
+        // valid — keep it and say why the refresh did not happen.
+        setCooldownNote(err?.message || 'This pack was generated very recently. Try again later.');
+        setTimeout(() => setCooldownNote(null), 8000);
+      } else {
+        // Daily caps / exam freeze / real failures surface as hard errors
+        // with the server's own reason text.
+        console.error('[AIStudyCompanion] Load failed:', err);
+        setError(err?.message || 'Could not load AI study material. Please try again.');
+      }
     } finally {
       setLoading(false);
+      setWaitingNote(null);
     }
   };
 
@@ -54,6 +97,9 @@ export default function AIStudyCompanionModal({
       setStudyPack(null);
       setError(null);
       setSource(null);
+      setServedVersion(null);
+      setCooldownNote(null);
+      setWaitingNote(null);
     }
   }, [isOpen, context.subject, context.topic]);
 
@@ -163,6 +209,14 @@ export default function AIStudyCompanionModal({
                     AI Generated
                   </span>
                 )}
+                {servedVersion !== null && servedVersion > 0 && (
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 shrink-0"
+                    title="Versioned edition: your campus always sees this version unless your own faculty updates it"
+                  >
+                    v{servedVersion}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 truncate mt-0.5">
                 {context.subject} {context.courseCode ? `(${context.courseCode})` : ''} • {context.moduleName || 'Syllabus Topic'}
@@ -171,14 +225,16 @@ export default function AIStudyCompanionModal({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => loadMaterial(true)}
-              disabled={loading}
-              className="p-2 rounded-xl text-slate-500 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-              title="Regenerate with AI"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            {canRegenerate && (
+              <button
+                onClick={() => loadMaterial(true)}
+                disabled={loading}
+                className="p-2 rounded-xl text-slate-500 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                title="Regenerate with AI (platform content team only)"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            )}
             <button
               onClick={handlePrint}
               disabled={!studyPack || loading}
@@ -242,6 +298,12 @@ export default function AIStudyCompanionModal({
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {cooldownNote && (
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{cooldownNote}</span>
+            </div>
+          )}
           {loading && (
             <div className="py-16 text-center space-y-3">
               <Loader2 className="w-8 h-8 text-teal-500 animate-spin mx-auto" />
@@ -249,7 +311,7 @@ export default function AIStudyCompanionModal({
                 Crafting Structured Study Pack for {context.topic}...
               </p>
               <p className="text-[11px] text-slate-500">
-                Analyzing university syllabus requirements and generating exam-focused summaries
+                {waitingNote || 'Analyzing university syllabus requirements and generating exam-focused summaries'}
               </p>
             </div>
           )}
