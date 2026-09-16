@@ -4,9 +4,11 @@ import {
   BookOpen, Calculator, TrendingUp, Users, Scale, Target,
   Truck, Zap, Receipt, Search, Filter, Sparkles, CheckCircle2,
   ChevronRight, ArrowRight, BarChart2, PieChart, Briefcase,
-  AlertTriangle, ShieldAlert, Award, Compass, RefreshCw
+  AlertTriangle, ShieldAlert, Award, Compass, RefreshCw, GraduationCap,
+  Building2, ExternalLink
 } from 'lucide-react';
 import { getSubjects, getLearnerProgress, type PrepSubject, type LearnerProgress } from '../services/api';
+import { KARNATAKA_UNIVERSITIES, getUniversityCrosswalk } from '../../../src/shared/utils/prepHelpers';
 
 interface HubPageProps {
   onSelectSubject: (subjectId: string) => void;
@@ -42,6 +44,7 @@ export default function HubPage({ onSelectSubject, selectedProgram }: HubPagePro
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedSemester, setSelectedSemester] = useState<string>('all');
   const [selectedStream, setSelectedStream] = useState<string>('all');
+  const [selectedUniversity, setSelectedUniversity] = useState<string>('all');
 
   useEffect(() => {
     async function load() {
@@ -322,6 +325,100 @@ export default function HubPage({ onSelectSubject, selectedProgram }: HubPagePro
           </div>
         </div>
       </section>
+
+      {/* University Filter & Crosswalk Chips */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/60">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 text-xs">
+          <span className="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 shrink-0 uppercase tracking-wider flex items-center gap-1.5">
+            <GraduationCap className="w-4 h-4" />
+            University:
+          </span>
+          {[
+            { id: 'all', label: 'All Karnataka (KSHEC Model)' },
+            { id: 'bu', label: 'Bangalore Univ (BU)' },
+            { id: 'bcu', label: 'Bengaluru City (BCU)' },
+            { id: 'bnu', label: 'Bengaluru North (BNU)' },
+            { id: 'uom', label: 'Mysore Univ (UOM)' },
+            { id: 'vtu', label: 'VTU Belagavi' },
+          ].map((u) => (
+            <button
+              key={u.id}
+              onClick={() => setSelectedUniversity(u.id)}
+              className={`px-3 py-1 rounded-lg font-bold shrink-0 transition-all ${
+                selectedUniversity === u.id
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-indigo-200 dark:border-indigo-800 hover:border-indigo-400'
+              }`}
+            >
+              {u.label}
+            </button>
+          ))}
+        </div>
+
+        {selectedUniversity !== 'all' && (
+          <button
+            onClick={() => setSelectedUniversity('all')}
+            className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0"
+          >
+            Reset University Filter
+          </button>
+        )}
+      </div>
+
+      {/* Point 5: University Crosswalk Detailed Blueprint Banner */}
+      {selectedUniversity !== 'all' && (() => {
+        const uni = getUniversityCrosswalk(selectedUniversity);
+        if (!uni) return null;
+        return (
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/80 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs">
+                  <Building2 className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    {uni.name} — BBA Examination Blueprint
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Syllabus Authority: {uni.syllabusAuthority} · Scheme: {uni.examScheme}
+                  </p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 self-start sm:self-auto">
+                Total Exam: {uni.questionPaperPattern.totalMarks} Marks
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase text-[10px] tracking-wider">
+                  Part A (Foundations)
+                </span>
+                <p className="text-slate-700 dark:text-slate-300 font-medium">
+                  {uni.questionPaperPattern.partA}
+                </p>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase text-[10px] tracking-wider">
+                  Part B (Analytical / Solvers)
+                </span>
+                <p className="text-slate-700 dark:text-slate-300 font-medium">
+                  {uni.questionPaperPattern.partB}
+                </p>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase text-[10px] tracking-wider">
+                  Part C (Comprehensive / Cases)
+                </span>
+                <p className="text-slate-700 dark:text-slate-300 font-medium">
+                  {uni.questionPaperPattern.partC}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Year Group Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">

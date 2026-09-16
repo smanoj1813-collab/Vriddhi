@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, BookOpen, Calculator, Sparkles, CheckCircle2,
-  ChevronRight, HelpCircle, Award, Clock, ArrowRight, ShieldCheck, Flame, GraduationCap
+  ChevronRight, HelpCircle, Award, Clock, ArrowRight, ShieldCheck, Flame, GraduationCap,
+  Building2, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { getSubject, getTopics, getLearnerProgress, type PrepSubject, type PrepTopic, type LearnerProgress } from '../services/api';
+import { KARNATAKA_UNIVERSITIES } from '../../../src/shared/utils/prepHelpers';
 
 interface SubjectPageProps {
   subjectId: string;
@@ -18,6 +20,7 @@ export default function SubjectPage({ subjectId, onBack, onSelectTopic }: Subjec
   const [progress, setProgress] = useState<LearnerProgress>({ topicsCompleted: {} });
   const [loading, setLoading] = useState(true);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
+  const [showCrosswalk, setShowCrosswalk] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -102,6 +105,57 @@ export default function SubjectPage({ subjectId, onBack, onSelectTopic }: Subjec
             style={{ width: `${progressPercent}%` }}
           />
         </div>
+      </div>
+
+      {/* Point 5: University Exam Blueprint & Syllabus Crosswalk */}
+      <div className="rounded-3xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/60 p-5 space-y-3">
+        <div
+          onClick={() => setShowCrosswalk(!showCrosswalk)}
+          className="flex items-center justify-between cursor-pointer select-none"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold">
+              <GraduationCap className="w-4 h-4" />
+            </span>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                Karnataka NEP University Syllabus Crosswalk & Exam Blueprint
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Aligned across Bangalore University (BU), BCU, BNU, Mysore Univ (UOM), and VTU Belagavi.
+              </p>
+            </div>
+          </div>
+          <button className="text-indigo-600 dark:text-indigo-400 p-1">
+            {showCrosswalk ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {showCrosswalk && (
+          <div className="pt-3 border-t border-indigo-200/60 dark:border-indigo-900/60 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            {Object.values(KARNATAKA_UNIVERSITIES).slice(0, 4).map((uni) => (
+              <div
+                key={uni.code}
+                className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50 space-y-1.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-indigo-700 dark:text-indigo-300">
+                    {uni.name} ({uni.shortName})
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700">
+                    {uni.questionPaperPattern.totalMarks} Marks
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">{uni.examScheme}</p>
+                <div className="text-[11px] text-slate-700 dark:text-slate-300 space-y-0.5 pt-1">
+                  <div>• {uni.questionPaperPattern.partA}</div>
+                  <div>• {uni.questionPaperPattern.partB}</div>
+                  <div>• {uni.questionPaperPattern.partC}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filter Chips */}

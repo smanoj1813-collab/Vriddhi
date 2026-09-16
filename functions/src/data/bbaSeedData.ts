@@ -574,12 +574,85 @@ Every commercial transaction alters at least two accounts such that this balance
       ],
     },
     {
+      id: 'acc-mod3-consignment',
+      subjectId: 'bba-karnataka-accounting',
+      title: 'Consignment Accounts: Valuation of Unsold Stock & Abnormal Loss',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Consignment & Special Accounts',
+      order: 2,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'Mysore Univ (UOM) 2023 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-acc-03'],
+      subtopics: [
+        'Consignment vs. Sale Differences (Ownership, Risk & Pro-Forma Invoice)',
+        'Ordinary, Del Credere, and Over-Riding Commission',
+        'Valuation of Unsold Consignment Stock (Cost + Proportionate Non-Recurring Expenses)',
+        'Accounting for Normal Loss vs Abnormal Loss in Transit & Insurance Claims',
+        'Consignment Account & Consignee Account Ledgers in Consignor Books',
+      ],
+      explanationMd: `# Consignment Accounts: Valuation of Unsold Stock & Losses
+
+### Core Concept & University Framework
+In a consignment transaction, the principal (**Consignor**) sends goods to an agent (**Consignee**) for sale on a commission basis. Ownership of goods remains with the consignor until sold to the final customer.
+
+Under Karnataka university examinations (BU/BCU/BNU/UOM), calculating the **Value of Unsold Consignment Stock** and handling **Abnormal Loss in Transit** is a standard 10-mark problem.
+
+---
+
+### Valuation of Unsold Consignment Stock
+$$\\text{Value of Consignment Stock} = \\text{Proportionate Cost of Unsold Units} + \\text{Proportionate Non-Recurring Expenses}$$
+- **Non-Recurring Expenses of Consignor**: Freight, carriage inward, loading, transit insurance, railway freight.
+- **Non-Recurring Expenses of Consignee**: Custom duty, dock dues, clearing charges, carriage from station to godown.
+- *(Note: Recurring expenses like godown rent, godown insurance, advertisement, and salesman salary are strictly excluded from stock valuation).*
+
+---
+
+### Normal Loss vs. Abnormal Loss
+1. **Normal Loss (Inherent/Evaporation/Leakage)**:
+   - Inflates cost per unit; no separate accounting entry is made.
+   $$\\text{Cost Per Good Unit} = \\frac{\\text{Total Cost} + \\text{Non-Recurring Expenses}}{\\text{Total Units} - \\text{Normal Loss Units}}$$
+2. **Abnormal Loss (Accident/Fire/Theft)**:
+   - Treated as an independent business loss credited to Consignment A/c and debited to Abnormal Loss A/c.
+   $$\\text{Net Abnormal Loss to P\\&L} = \\text{Total Cost of Lost Units} - \\text{Insurance Claim Received}$$`,
+      formulas: [
+        {
+          id: 'formula-cons-1',
+          label: 'Unsold Consignment Stock Valuation Formula',
+          formula: 'Closing Stock Value = (Cost Price of Unsold Units) + (Consignor Expenses * Unsold / Total) + (Consignee Non-Recurring * Unsold / Good Units Received)',
+          exampleQ: '1,000 units sent at ₹100 each. Consignor paid freight ₹5,000. 100 units lost in transit (abnormal). Consignee received 900 units, paid clearing charges ₹1,800, godown rent ₹2,000, and sold 700 units. Value the unsold stock (200 units).',
+          exampleA: 'Proportionate Cost = 200 * ₹100 = ₹20,000. Consignor Freight = 5,000 * (200 / 1,000) = ₹1,000. Consignee Clearing = 1,800 * (200 / 900) = ₹400. (Godown rent is recurring, excluded). Total Stock Value = 20,000 + 1,000 + 400 = ₹21,400.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-cons-1',
+          title: 'Consignee Godown Rent Exclusion Trap',
+          trick: 'NEVER include Consignee godown rent or selling expenses in closing stock! Only expenses incurred up to reaching the godown door (freight, customs, clearing) are included.',
+          whenToUse: 'Deducted in 90% of consignment numerical mistakes.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-cons-1',
+          step: 'Step 1: Compute Abnormal Loss in Transit Before Stock Valuation',
+          detail: 'Abnormal loss takes only Consignor proportionate expenses because goods were lost before reaching the consignee.',
+          questionType: 'Practical Consignment Problem / 10-Marker',
+        },
+      ],
+    },
+    {
       id: 'acc-mod4-depreciation-slm-wdv',
       subjectId: 'bba-karnataka-accounting',
       title: 'Depreciation Accounting: SLM vs. WDV Methods',
       moduleNumber: 4,
       moduleName: 'Module 4: Depreciation Accounting & Bank Reconciliation',
-      order: 2,
+      order: 3,
       difficulty: 'core',
       tier: 'free',
       status: 'published',
@@ -1218,6 +1291,85 @@ Where:
           step: 'Step 1: Compute ROL Before Any Other Stock Level',
           detail: 'Both Minimum and Maximum Stock Levels depend on ROL. Always calculate ROL first.',
           questionType: 'Practical Stock Level Problem',
+        },
+      ],
+    },
+    {
+      id: 'cost-mod4-mhr-overheads',
+      subjectId: 'bba-karnataka-cost-accounting',
+      title: 'Overhead Allocation & Machine Hour Rate (MHR)',
+      moduleNumber: 4,
+      moduleName: 'Module 4: Overhead Accounting & Machine Hour Rate',
+      order: 3,
+      difficulty: 'advanced',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'Mysore Univ (UOM) 2023 · 10 Marks', 'BCU 2022 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-cost-03'],
+      subtopics: [
+        'Overhead Classification: Production, Administration, Selling & Distribution',
+        'Primary and Secondary Overhead Distribution (Repeated Distribution & Simultaneous Equations)',
+        'Concept of Machine Hour Rate (MHR): Comprehensive vs Simple Rate',
+        'Standing (Fixed) Charges vs Machine (Variable) Expenses',
+        'Treatment of Setting-Up Time, Power, Depreciation and Repairs',
+      ],
+      explanationMd: `# Overhead Allocation & Machine Hour Rate (MHR) Computation
+
+### Core Concept & University Framework
+In mechanized industrial settings (e.g. Peenya and Bommasandra industrial zones in Bengaluru), production overheads are predominantly absorbed on the basis of **Machine Hour Rate (MHR)**—the cost of running a machine for one operating hour.
+
+Under Karnataka State Higher Education Council (KSHEC) NEP Sem-3 examinations, calculating **Machine Hour Rate** is a recurring 10-mark practical problem.
+
+---
+
+### Classification of Machine Expenses
+1. **Standing (Fixed) Charges**:
+   - Rent & Rates (allocated on floor area occupied by machine).
+   - Heating and Lighting (allocated on light points or floor area).
+   - Insurance of machine and supervision salaries.
+   - Lubricating oil, consumable stores, and attendant wages.
+   $$\\text{Standing Charges Per Hour} = \\frac{\\text{Total Standing Charges}}{\\text{Total Productive Machine Hours}}$$
+
+2. **Machine (Variable) Expenses**:
+   - **Depreciation Per Hour**:
+     $$\\text{Depreciation} = \\frac{\\text{Cost of Machine} - \\text{Scrap Value}}{\\text{Total Working Life in Hours}}$$
+   - **Repairs & Maintenance Per Hour**:
+     $$\\text{Repairs} = \\frac{\\text{Total Estimated Life Repairs}}{\\text{Total Working Life in Hours}}$$
+   - **Power Charges Per Hour**:
+     $$\\text{Power} = \\text{Units Consumed per Hour} \\times \\text{Rate per Power Unit}$$`,
+      formulas: [
+        {
+          id: 'formula-mhr-1',
+          label: 'Machine Hour Rate (MHR) Composite Formula',
+          formula: 'MHR = (Total Standing Charges / Effective Hours) + Depreciation/Hr + Repairs/Hr + Power/Hr',
+          exampleQ: 'Machine cost ₹1,00,000, scrap value ₹10,000, working life 18,000 hours. Effective hours per year = 2,000. Annual standing charges = ₹4,000. Power = 5 units/hr at ₹2/unit. Repairs = ₹1,800/yr. Compute MHR.',
+          exampleA: 'Standing = 4,000 / 2,000 = ₹2.00/hr. Depreciation = (1,00,000 - 10,000) / 18,000 = ₹5.00/hr. Repairs = 1,800 / 2,000 = ₹0.90/hr. Power = 5 * 2 = ₹10.00/hr. Total MHR = 2.00 + 5.00 + 0.90 + 10.00 = ₹17.90 per hour.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mhr-1',
+          title: 'Effective Productive Hours Trap',
+          trick: 'Always subtract Non-Productive Setting-Up Time from total hours! If setting-up time is productive, divide by total hours. If unproductive, divide by Net Operating Hours.',
+          whenToUse: 'Tested in 95% of 10-mark university numericals.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mhr-1',
+          step: 'Step 1: Calculate Effective Machine Operating Hours First',
+          detail: 'Total Annual Hours minus Unproductive Idle Time and Routine Maintenance Time.',
+          questionType: 'Practical Overhead Numerical 10-Marker',
+        },
+        {
+          id: 'solve-mhr-2',
+          step: 'Step 2: Group Expenses into Standing Charges vs Machine Expenses',
+          detail: 'Total all annual standing charges and divide by effective hours; compute variable items directly per hour.',
+          questionType: 'Practical Overhead Numerical 10-Marker',
         },
       ],
     },
@@ -1868,6 +2020,82 @@ If either condition fails, the assessee is **Resident but Not Ordinarily Residen
         },
       ],
     },
+    {
+      id: 'tax1-mod3-salary-hra',
+      subjectId: 'bba-karnataka-income-tax-1',
+      title: 'Income from Salaries: HRA Exemption (Sec 10(13A)) & Standard Deduction',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Income from Salaries & Allowances',
+      order: 2,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'BCU 2023 · 10 Marks', 'UOM 2023 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-tax-02'],
+      subtopics: [
+        'Definition of Salary and Employer-Employee Relationship',
+        'House Rent Allowance (HRA) Exemption Formula under Section 10(13A) & Rule 2A',
+        'Salary Definition for HRA (Basic Salary + DA forming part + Fixed % Turnover Commission)',
+        'Standard Deduction under Section 16(ia) & Professional Tax u/s 16(iii)',
+        'Computation of Net Taxable Income from Salaries (Old vs New Regime)',
+      ],
+      explanationMd: `# Income from Salaries: House Rent Allowance (HRA) Exemption
+
+### Core Concept & University Framework
+Under Section 10(13A) of the Income Tax Act 1961 read with Rule 2A, House Rent Allowance (HRA) granted to an employee to meet rent expenditure for residential accommodation is exempt up to a statutory ceiling limit.
+
+---
+
+### Section 10(13A) Three-Tier Exemption Rule
+The amount of HRA exempt from income tax is the **LEAST** of the following three amounts:
+1. **Actual HRA received** from employer during the financial year.
+2. **Rent paid minus 10% of Salary** for the relevant accommodation period:
+   $$\\text{Rent Paid} - (0.10 \\times \\text{Salary})$$
+3. **Statutory Location Percentage**:
+   - **50% of Salary** if accommodation is situated in the 4 Metro Cities: **Mumbai, Kolkata, Delhi, Chennai**.
+   - **40% of Salary** in any other city (including **Bengaluru, Mysuru, Mangaluru, Hubballi**).
+
+---
+
+### Salary for HRA Purposes
+$$\\text{Salary for HRA} = \\text{Basic Pay} + \\text{Dearness Allowance (Enter into Retirement Benefits)} + \\text{Commission on Turnover (Fixed \\%)}$$
+
+---
+
+### Deductions from Gross Salary under Section 16
+1. **Standard Deduction (Sec 16(ia))**: Flat **₹50,000** (or actual salary, whichever is less).
+2. **Entertainment Allowance (Sec 16(ii))**: Available to government employees only.
+3. **Professional Tax (Sec 16(iii))**: Actual amount paid under Karnataka Tax on Professions Act (max ₹2,400/yr).`,
+      formulas: [
+        {
+          id: 'formula-hra-1',
+          label: 'HRA Exemption Formula (Sec 10(13A))',
+          formula: 'Exempt HRA = Min(Actual HRA, Rent Paid - 10% Salary, 40% or 50% Salary)',
+          exampleQ: 'Employee in Bengaluru receives Basic ₹40,000/month, HRA ₹12,000/month, and pays rent of ₹15,000/month in Koramangala. DA is ₹10,000/month (not forming part of retirement). Calculate taxable HRA.',
+          exampleA: 'Salary for HRA = Basic ₹4,80,000 (DA excluded because not forming part). 1) Actual HRA = ₹1,44,000; 2) Rent paid - 10% salary = (15,000 * 12) - 48,000 = 1,80,000 - 48,000 = ₹1,32,000; 3) 40% of salary (Bengaluru is non-metro for tax) = ₹1,92,000. Least amount = ₹1,32,000 exempt. Taxable HRA = 1,44,000 - 1,32,000 = ₹12,000.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-hra-1',
+          title: 'Bengaluru Metro Classification Trap',
+          trick: 'For HRA Section 10(13A), Bengaluru is 40% (NON-METRO)! Only Mumbai, Delhi, Kolkata, and Chennai qualify for 50%.',
+          whenToUse: 'Tested in every single Karnataka university direct tax paper.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-hra-1',
+          step: 'Step 1: Check DA Terms Before Calculating Salary for HRA',
+          detail: 'Only add DA if the question explicitly states "forming part of salary for retirement benefits" or "considered for PF".',
+          questionType: 'Practical Direct Tax Numerical / 10-Marker',
+        },
+      ],
+    },
   ],
 
   // ── 15. Production & Operations Management (Sem 5) ──
@@ -2076,6 +2304,85 @@ Under GST, the taxable event is **Supply**, replacing manufacture, sale, or prov
           step: 'Step 1: Determine Intra-State vs. Inter-State',
           detail: 'Compare Location of Supplier against Place of Supply. If same state -> CGST+SGST; if different states -> IGST.',
           questionType: 'Practical Tax Computation Problem',
+        },
+      ],
+    },
+    {
+      id: 'gst-mod3-itc',
+      subjectId: 'bba-karnataka-gst',
+      title: 'Input Tax Credit (ITC) Mechanics & Blocked Credits (Sec 17(5))',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Input Tax Credit & Tax Liability Determination',
+      order: 2,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'Mysore Univ (UOM) 2023 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-gst-02'],
+      subtopics: [
+        'Concept and Purpose of Input Tax Credit (ITC) in Eliminating Cascading Tax',
+        'Four Mandatory Conditions for Claiming ITC under Section 16(2)',
+        'Blocked / Ineligible Credits under Section 17(5) (Motor Vehicles, Food, Club Membership)',
+        'Sequential Order of ITC Utilization (IGST, CGST, SGST Matching Rules)',
+        'Computation of Net GST Payable to Government in Cash Ledger',
+      ],
+      explanationMd: `# Input Tax Credit (ITC) Mechanics & Blocked Credits (Section 17(5))
+
+### Core Concept & University Framework
+Input Tax Credit (ITC) is the backbone of the Goods and Services Tax (GST) system. It prevents the cascading effect ("tax on tax") by allowing a registered taxpayer to set off the GST paid on purchases (Input Tax) against the GST collected on sales (Output Tax).
+
+---
+
+### Four Mandatory Conditions to Claim ITC (Sec 16(2))
+A registered person can claim ITC only if **ALL FOUR** conditions are satisfied:
+1. Possession of a valid **Tax Invoice** or debit note issued by the supplier.
+2. **Actual Receipt** of goods or services.
+3. Tax charged on the supply has been **actually paid to the Government** by the supplier (in cash or through ITC).
+4. Return under Section 39 (**GSTR-3B**) has been duly furnished.
+
+---
+
+### Blocked Credits under Section 17(5) (NO ITC Allowed)
+Even if used in business, ITC is strictly **denied** on:
+- **Motor Vehicles** for passenger transport having seating capacity $\\le 13$ persons (unless used for driving school or onward supply).
+- **Food, beverages, outdoor catering, beauty treatment, and health services**.
+- **Membership of a club, health, and fitness centre**.
+- **Goods lost, stolen, destroyed, written off, or disposed of as gifts/free samples**.
+- **Works contract services** for construction of immovable property on own account.
+
+---
+
+### Rule 88A: Order of ITC Set-Off
+1. **IGST Credit** must be exhausted completely first against Output IGST, and the remainder against Output CGST and SGST in any proportion.
+2. **CGST Credit** can be set off only against Output CGST and Output IGST (NEVER against SGST).
+3. **SGST Credit** can be set off only against Output SGST and Output IGST (NEVER against CGST).`,
+      formulas: [
+        {
+          id: 'formula-itc-1',
+          label: 'Net GST Cash Payable Formula',
+          formula: 'Net GST Payable = Output GST Liability - Eligible Input Tax Credit (ITC)',
+          exampleQ: 'Dealer in Bengaluru has Output CGST ₹50,000, SGST ₹50,000. Input tax credits available: CGST ₹30,000, SGST ₹35,000, and GST on food catering for office party ₹10,000. Calculate Net GST payable in cash.',
+          exampleA: 'Food catering is blocked u/s 17(5) (zero ITC). Eligible CGST ITC = ₹30,000; SGST ITC = ₹35,000. Net CGST payable = 50,000 - 30,000 = ₹20,000. Net SGST payable = 50,000 - 35,000 = ₹15,000. Total Cash Payment = ₹35,000.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-itc-1',
+          title: 'Cross-Utilization Prohibition',
+          trick: 'CGST credit can NEVER be set off against SGST liability, and SGST credit can NEVER be set off against CGST liability! There is an impermeable firewall between Centre and State credits.',
+          whenToUse: 'Fundamental exam rule tested in all GST numerical calculations.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-itc-1',
+          step: 'Step 1: Filter Blocked Credits Under Section 17(5) First',
+          detail: 'Strike out food, motor cars, gifts, and personal club fees before summing eligible input credits.',
+          questionType: 'Practical GST Computation 10-Marker',
         },
       ],
     },
@@ -2997,6 +3304,110 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     prepTags: {
       subjectId: 'bba-karnataka-income-tax-2',
       topicIds: ['tax2-mod4-deductions-80c'],
+      stream: 'taxation',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-acc-03',
+    questionText: 'When valuing unsold closing stock in Consignment Accounts, which of the following expenses of the Consignee should be STRICTLY EXCLUDED?',
+    options: [
+      'Customs duty paid at destination port',
+      'Clearing charges paid at railway station',
+      'Godown rent and showroom advertising',
+      'Freight from port to godown',
+    ],
+    correctIndex: 2,
+    explanation: 'Only non-recurring (direct) expenses incurred to bring goods up to the godown are included. Recurring post-arrival expenses such as godown rent, storage insurance, and advertising are strictly excluded from stock valuation.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 1,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-accounting',
+      topicIds: ['acc-mod3-consignment'],
+      stream: 'commerce',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-cost-03',
+    questionText: 'In calculating Machine Hour Rate (MHR), how should unproductive setting-up time be treated when determining effective machine hours?',
+    options: [
+      'Added to total operating hours',
+      'Deducted from gross machine hours to arrive at net productive machine hours',
+      'Ignored and treated as a direct administrative cost',
+      'Multiplied by power charges per unit',
+    ],
+    correctIndex: 1,
+    explanation: 'Unproductive setting-up time represents idle hours and must be deducted from gross machine hours so that overheads are absorbed over actual productive running time.',
+    difficulty: 'advanced',
+    status: 'approved',
+    pyqTag: {
+      university: 'Bengaluru City University (BCU)',
+      year: 2024,
+      marks: 5,
+      semester: 3,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-cost-accounting',
+      topicIds: ['cost-mod4-mhr-overheads'],
+      stream: 'commerce',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-tax-02',
+    questionText: 'For an employee employed and residing in Bengaluru, what statutory percentage of salary applies when computing HRA exemption under Section 10(13A)?',
+    options: [
+      '50% of Salary',
+      '40% of Salary',
+      '30% of Salary',
+      '60% of Salary',
+    ],
+    correctIndex: 1,
+    explanation: 'Under Income Tax Rule 2A, the 50% limit applies exclusively to the four designated metro cities: Mumbai, Delhi, Kolkata, and Chennai. For all other cities in India, including Bengaluru, the statutory ceiling is 40% of Salary.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 5,
+      semester: 5,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-income-tax-1',
+      topicIds: ['tax1-mod3-salary-hra'],
+      stream: 'taxation',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-gst-02',
+    questionText: 'Under Section 17(5) of the CGST Act, which of the following input taxes is considered a BLOCKED CREDIT (ineligible for ITC)?',
+    options: [
+      'GST paid on raw material inputs used in manufacturing',
+      'GST paid on industrial plant machinery',
+      'GST paid on food, beverages, and outdoor catering for employees',
+      'GST paid on transport freight of commercial goods',
+    ],
+    correctIndex: 2,
+    explanation: 'Under Section 17(5)(b)(i), Input Tax Credit is blocked and cannot be claimed on food and beverages, outdoor catering, beauty treatment, and health services unless used as an outward taxable composite supply.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2023,
+      marks: 5,
+      semester: 6,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-gst',
+      topicIds: ['gst-mod3-itc'],
       stream: 'taxation',
       program: 'bba',
     },

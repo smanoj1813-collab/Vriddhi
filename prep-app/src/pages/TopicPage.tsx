@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, BookOpen, Calculator, Sparkles, CheckCircle2,
   ChevronRight, Award, Clock, ArrowRight, ShieldCheck,
-  Lightbulb, Zap, HelpCircle, Check, Copy, FileText, Flame, GraduationCap
+  Lightbulb, Zap, HelpCircle, Check, Copy, FileText, Flame, GraduationCap,
+  Printer, Download, Eye, X, FileDown
 } from 'lucide-react';
 import {
   getSubject,
@@ -16,6 +17,7 @@ import {
 } from '../services/api';
 import PracticeQuiz from '../components/PracticeQuiz';
 import { renderMarkdownWithMath } from '../components/MathRenderer';
+import { generateCheatSheetMarkdown, cleanKatexFormula } from '../../../src/shared/utils/prepHelpers';
 
 interface TopicPageProps {
   subjectId: string;
@@ -39,6 +41,33 @@ export default function TopicPage({
   const [activeTab, setActiveTab] = useState<'explanation' | 'formulas' | 'tricks' | 'howToSolve' | 'practice'>('explanation');
   const [isCompleted, setIsCompleted] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showCheatSheetModal, setShowCheatSheetModal] = useState(false);
+
+  const handleDownloadMarkdownCheatSheet = () => {
+    if (!topic || !subject) return;
+    const md = generateCheatSheetMarkdown({
+      subjectName: subject.name,
+      topicTitle: topic.title,
+      moduleName: topic.moduleName,
+      syllabusRef: subject.syllabusRef,
+      formulas: topic.formulas,
+      tricks: topic.tricks,
+      howToSolve: topic.howToSolve,
+    });
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${topic.id}-revision-cheat-sheet.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrintCheatSheet = () => {
+    window.print();
+  };
 
   useEffect(() => {
     if (['explanation', 'formulas', 'tricks', 'howToSolve', 'practice'].includes(initialTab)) {
@@ -199,17 +228,46 @@ export default function TopicPage({
             )}
           </div>
 
-          <button
-            onClick={handleMarkCompleted}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              isCompleted
-                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <span>{isCompleted ? 'Completed' : 'Mark Completed'}</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setShowCheatSheetModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all"
+              title="Open 1-Page Cheat Sheet Preview"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Cheat Sheet</span>
+            </button>
+
+            <button
+              onClick={handlePrintCheatSheet}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-90 transition-all shadow-sm"
+              title="Print or Save PDF Cheat Sheet"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print / PDF</span>
+            </button>
+
+            <button
+              onClick={handleDownloadMarkdownCheatSheet}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+              title="Download Offline Markdown File"
+            >
+              <FileDown className="w-4 h-4" />
+              <span>Offline .md</span>
+            </button>
+
+            <button
+              onClick={handleMarkCompleted}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                isCompleted
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                  : 'bg-teal-600 text-white hover:bg-teal-700'
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{isCompleted ? 'Completed' : 'Mark Completed'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Five Navigation Tabs */}
@@ -510,6 +568,225 @@ export default function TopicPage({
           }}
         />
       )}
+
+      {/* Point 3: Printable & Previewable 1-Page Revision Cheat Sheet Modal */}
+      {showCheatSheetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm no-print">
+          <div className="relative w-full max-w-3xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-teal-600" />
+                  1-Page University Revision Cheat Sheet
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {topic.title} · {subject?.name}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrintCheatSheet}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-90 transition-opacity"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print / Save PDF</span>
+                </button>
+                <button
+                  onClick={handleDownloadMarkdownCheatSheet}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                >
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>.md</span>
+                </button>
+                <button
+                  onClick={() => setShowCheatSheetModal(false)}
+                  className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-6 overflow-y-auto space-y-6 text-xs sm:text-sm">
+              <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-teal-900 dark:text-teal-200 text-xs">
+                💡 <strong>Exam Day Tip:</strong> This cheat sheet contains all high-yield formulas, examiner shortcuts, and scoring steps. Click <strong>Print / Save PDF</strong> to save it for offline review on your phone.
+              </div>
+
+              {/* Formulas */}
+              {topic.formulas && topic.formulas.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-teal-700 dark:text-teal-400">
+                    1. High-Yield Formulas
+                  </h4>
+                  <div className="space-y-3">
+                    {topic.formulas.map((f, i) => (
+                      <div key={i} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {i + 1}. {f.label}
+                        </span>
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-teal-200 dark:border-teal-800 text-center font-bold text-teal-700 dark:text-teal-300">
+                          {renderMarkdownWithMath(f.formula.includes('$') ? f.formula : `$$${f.formula}$$`)}
+                        </div>
+                        {f.exampleA && (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                            <strong>Exam Key:</strong> {renderMarkdownWithMath(f.exampleA)}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Shortcuts */}
+              {topic.tricks && topic.tricks.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                    2. Shortcuts & Traps
+                  </h4>
+                  <div className="space-y-2">
+                    {topic.tricks.map((t, i) => (
+                      <div key={i} className="p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900">
+                        <p className="font-bold text-slate-900 dark:text-white">{t.title}</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">{renderMarkdownWithMath(t.trick)}</p>
+                        {t.whenToUse && (
+                          <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-1">
+                            <em>When to use: {renderMarkdownWithMath(t.whenToUse)}</em>
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* How to solve */}
+              {topic.howToSolve && topic.howToSolve.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                    3. Scoring Framework Sequence
+                  </h4>
+                  <div className="space-y-2">
+                    {topic.howToSolve.map((h, i) => (
+                      <div key={i} className="p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900">
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          Step {i + 1}: {h.step}
+                        </span>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                          {renderMarkdownWithMath(h.detail)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Point 3: Dedicated Print-Only Revision Cheat Sheet Container */}
+      <div id="printable-cheat-sheet" className="print-only cheat-sheet-print bg-white text-black p-8 font-sans space-y-6">
+        <div className="border-b-2 border-slate-900 pb-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-black uppercase tracking-tight text-slate-900">
+                Vriddhi Prep · University Revision Cheat Sheet
+              </h1>
+              <p className="text-xs text-slate-600 font-semibold">
+                Aligned with Karnataka State Higher Education Council (KSHEC) NEP 2020 CBCS (BU / BCU / BNU / UOM / VTU)
+              </p>
+            </div>
+            <div className="text-right text-xs">
+              <span className="font-bold uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded">
+                {subject?.stream || 'BBA'}
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-3 text-xs font-bold text-slate-800">
+            <span>Subject: {subject?.name}</span>
+            <span>•</span>
+            <span>{topic.moduleName || 'Module Core'}</span>
+            <span>•</span>
+            <span>Topic: {topic.title}</span>
+          </div>
+        </div>
+
+        {/* Formulas Grid */}
+        {topic.formulas && topic.formulas.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1">
+              1. High-Yield Formulas & Formulations
+            </h2>
+            <div className="grid grid-cols-1 gap-2.5 text-xs">
+              {topic.formulas.map((f, i) => (
+                <div key={i} className="p-2.5 rounded border border-slate-300 bg-slate-50 space-y-1">
+                  <div className="flex justify-between font-bold text-slate-900">
+                    <span>{i + 1}. {f.label}</span>
+                  </div>
+                  <div className="font-mono text-center font-bold text-slate-950 py-1 text-sm bg-white border border-slate-200 rounded">
+                    {renderMarkdownWithMath(f.formula.includes('$') ? f.formula : `$$${f.formula}$$`)}
+                  </div>
+                  {f.exampleA && (
+                    <p className="text-[11px] text-slate-700">
+                      <span className="font-bold">Exam Key: </span>{renderMarkdownWithMath(f.exampleA)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Shortcuts & Tricks */}
+        {topic.tricks && topic.tricks.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1">
+              2. Examiner Shortcuts & Pitfall Warnings
+            </h2>
+            <div className="space-y-2 text-xs">
+              {topic.tricks.map((t, i) => (
+                <div key={i} className="p-2.5 rounded border border-amber-300 bg-amber-50/40">
+                  <p className="font-bold text-amber-950">{i + 1}. {t.title}</p>
+                  <p className="text-slate-800 mt-0.5">{renderMarkdownWithMath(t.trick)}</p>
+                  {t.whenToUse && (
+                    <p className="text-[10px] text-amber-900 font-semibold mt-1">
+                      When to use: {renderMarkdownWithMath(t.whenToUse)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step by Step Scoring Guide */}
+        {topic.howToSolve && topic.howToSolve.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1">
+              3. Step-by-Step Scoring Framework
+            </h2>
+            <div className="space-y-1.5 text-xs">
+              {topic.howToSolve.map((h, i) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <span className="font-bold text-slate-900 shrink-0">Step {i + 1}:</span>
+                  <div>
+                    <span className="font-bold text-slate-900">{h.step}</span>
+                    <p className="text-slate-700">{renderMarkdownWithMath(h.detail)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-slate-300 pt-3 flex justify-between text-[10px] text-slate-500 font-mono">
+          <span>Vriddhi Prep Academic Revision • Valid for BU, BCU, BNU, UOM, VTU</span>
+          <span>Self-Study & Offline Print Copy</span>
+        </div>
+      </div>
     </div>
   );
 }

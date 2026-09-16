@@ -10,6 +10,8 @@ import {
   formatStreamLabel,
   formatDifficultyBadge,
   cleanKatexFormula,
+  getUniversityCrosswalk,
+  generateCheatSheetMarkdown,
 } from './prepHelpers.ts'
 
 describe('filterTopicsByDifficulty', () => {
@@ -120,3 +122,53 @@ describe('cleanKatexFormula', () => {
     assert.equal(cleanKatexFormula(null), '')
   })
 })
+
+describe('getUniversityCrosswalk', () => {
+  it('returns valid university crosswalk specs for Karnataka institutions', () => {
+    const bu = getUniversityCrosswalk('bu')
+    assert.ok(bu)
+    assert.equal(bu.shortName, 'BU')
+    assert.equal(bu.questionPaperPattern.totalMarks, 60)
+
+    const uom = getUniversityCrosswalk('uom')
+    assert.ok(uom)
+    assert.equal(uom.shortName, 'UOM')
+    assert.equal(uom.questionPaperPattern.totalMarks, 70)
+  })
+
+  it('returns null for all, null, undefined or unknown codes', () => {
+    assert.equal(getUniversityCrosswalk('all'), null)
+    assert.equal(getUniversityCrosswalk(null), null)
+    assert.equal(getUniversityCrosswalk(undefined), null)
+    assert.equal(getUniversityCrosswalk('oxford'), null)
+  })
+})
+
+describe('generateCheatSheetMarkdown', () => {
+  it('generates structured printable cheat sheet markdown with formulas and shortcuts', () => {
+    const md = generateCheatSheetMarkdown({
+      subjectName: 'Cost Accounting',
+      topicTitle: 'Machine Hour Rate (MHR)',
+      moduleName: 'Module 4: Overhead Accounting',
+      syllabusRef: 'KSHEC NEP Sem-3',
+      formulas: [
+        { label: 'MHR Composite', formula: 'MHR = Standing/Hr + Machine/Hr', exampleQ: 'Cost 1L', exampleA: 'MHR = 17.90' },
+      ],
+      tricks: [
+        { title: 'Idle Time Trap', trick: 'Always subtract unproductive setup time!', whenToUse: 'When setting-up time is unproductive' },
+      ],
+      howToSolve: [
+        { step: 'Calculate Productive Hours', detail: 'Total hours minus idle hours' },
+      ],
+    })
+
+    assert.ok(md.includes('# Machine Hour Rate (MHR) — Rapid Revision Cheat Sheet'))
+    assert.ok(md.includes('Cost Accounting'))
+    assert.ok(md.includes('Module 4: Overhead Accounting'))
+    assert.ok(md.includes('MHR Composite'))
+    assert.ok(md.includes('Idle Time Trap'))
+    assert.ok(md.includes('Calculate Productive Hours'))
+    assert.ok(md.includes('KSHEC NEP Sem-3'))
+  })
+})
+
