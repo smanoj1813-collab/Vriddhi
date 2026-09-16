@@ -12,6 +12,7 @@ import { useMyCurriculum, type StudentSubject, type StudentModule } from '../hoo
 import { materialApi, type MaterialItem, type MaterialType } from '@/api/materialApi';
 import { isSameSubject, isSameTopic, extractCanonicalSubject } from '@/shared/utils/curriculumMatcher';
 import { openAIChatWithQuery } from '@/shared/components/FloatingAIChatWidget';
+import AIStudyCompanionModal from '@/shared/components/study/AIStudyCompanionModal';
 
 const typeIcons: Record<string, React.ReactNode> = {
   pdf: <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />,
@@ -172,10 +173,35 @@ export default function StudentMaterials() {
     }
   };
 
-  const handleAskAIStudyGuide = (subjectName: string, topicOrModule: string) => {
-    openAIChatWithQuery(
-      `Explain "${topicOrModule}" for ${subjectName} in simple terms with key definitions, formulas/rules, a practical worked example, and 3 common exam questions.`
-    );
+  const [activeStudyModal, setActiveStudyModal] = useState<{
+    isOpen: boolean;
+    subject: string;
+    topic: string;
+    courseName?: string;
+    courseCode?: string;
+    moduleName?: string;
+    moduleNo?: number | string;
+  }>({
+    isOpen: false,
+    subject: '',
+    topic: '',
+  });
+
+  const handleAskAIStudyGuide = (
+    subjectName: string,
+    topicOrModule: string,
+    modName?: string,
+    modNo?: number | string
+  ) => {
+    setActiveStudyModal({
+      isOpen: true,
+      subject: subjectName,
+      topic: topicOrModule,
+      courseName: activeSubject?.courseName || subjectName,
+      courseCode: activeSubject?.courseCode || '',
+      moduleName: modName,
+      moduleNo: modNo,
+    });
   };
 
   const loading = profileLoading || (curriculumLoading && materialsLoading);
@@ -453,7 +479,7 @@ export default function StudentMaterials() {
                             </p>
                           </div>
                           <button
-                            onClick={() => handleAskAIStudyGuide(activeSubject.courseName, `Module ${mod.moduleNo}: ${mod.moduleName}`)}
+                            onClick={() => handleAskAIStudyGuide(activeSubject.courseName, `Module ${mod.moduleNo}: ${mod.moduleName}`, mod.moduleName, mod.moduleNo)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-500/20 text-xs font-bold hover:bg-teal-100 transition-colors shrink-0"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-teal-500" />
@@ -542,6 +568,13 @@ export default function StudentMaterials() {
           )}
         </div>
       )}
+
+      {/* AI Study Companion Modal */}
+      <AIStudyCompanionModal
+        isOpen={activeStudyModal.isOpen}
+        onClose={() => setActiveStudyModal(prev => ({ ...prev, isOpen: false }))}
+        context={activeStudyModal}
+      />
     </div>
   );
 }
