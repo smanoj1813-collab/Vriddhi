@@ -18,11 +18,15 @@
 //      campus breaker; limit 0 disables a tier) (guard 4).
 //   7. Exam freeze windows behave [start, end) and malformed windows never
 //      freeze a campus by accident (guard 5).
+//   8. Content is platform-operated: a superadmin generation REPUBLISHES
+//      every connected campus's pin to the new edition; colleges consume
+//      the shared library and cannot fork it.
 
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   decideGenerationLock,
+  decidePinMoves,
   decideStudyServeTarget,
   evaluateDailyLimits,
   isFrozenNow,
@@ -222,5 +226,42 @@ describe('isFrozenNow', () => {
       { start: '2026-09-16T09:00:00Z', end: '2026-09-16T11:00:00Z' },
     ]
     assert.equal(isFrozenNow(windows, NOW).frozen, true)
+  })
+})
+
+// ─── Centrally-operated content (superadmin republish rule) ──────────────
+// Colleges consume the shared library; only the platform regenerates, and
+// when it does, EVERY connected campus moves to the new edition together —
+// no forking, no campus stranded on stale content.
+
+describe('decidePinMoves', () => {
+  it('superadmin republishes to every connected campus', () => {
+    assert.deepEqual(
+      decidePinMoves({ role: 'superadmin' }, ['pesu', 'reva', 'jain']),
+      ['pesu', 'reva', 'jain'],
+    )
+  })
+
+  it('superadmin republish dedupes pins', () => {
+    assert.deepEqual(
+      decidePinMoves({ role: 'superadmin' }, ['pesu', 'pesu']),
+      ['pesu'],
+    )
+  })
+
+  it('superadmin on a brand-new key moves nothing (no campuses connected yet)', () => {
+    assert.deepEqual(decidePinMoves({ role: 'superadmin' }, []), [])
+  })
+
+  it('a non-superadmin (legacy path) moves only its own campus', () => {
+    assert.deepEqual(
+      decidePinMoves({ role: 'principal', collegeId: 'pesu' }, ['pesu', 'reva']),
+      ['pesu'],
+    )
+  })
+
+  it('an actor without a campus moves nothing', () => {
+    assert.deepEqual(decidePinMoves({ role: 'student', collegeId: null }, ['pesu']), [])
+    assert.deepEqual(decidePinMoves({ role: 'faculty' }, ['pesu']), [])
   })
 })

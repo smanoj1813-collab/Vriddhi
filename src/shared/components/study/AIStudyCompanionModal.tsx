@@ -10,8 +10,12 @@ import {
 } from '@/shared/services/aiStudyMaterialService';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 
-/** Mirrors the server-side STUDY_STAFF_ROLES cost guard in functions/src/routes/ai-chat.ts. */
-const REGENERATE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
+/**
+ * Mirrors the server-side cost guard in functions/src/routes/ai-chat.ts:
+ * content refresh is a PLATFORM operation (central content team = superadmin).
+ * Colleges consume the shared library — they never pay to regenerate it.
+ */
+const REGENERATE_ROLES = ['superadmin'];
 
 interface AIStudyCompanionModalProps {
   isOpen: boolean;
@@ -25,9 +29,10 @@ export default function AIStudyCompanionModal({
   context,
 }: AIStudyCompanionModalProps) {
   const { user } = useAuth();
-  // Regenerating is a paid LLM call — the button is for staff only (the
-  // server independently rejects student refreshes, this just keeps the UI
-  // honest before the request ever leaves the browser).
+  // Regenerating is a paid LLM call and content is centrally operated — the
+  // button exists only for the platform content team (the server
+  // independently 403s everyone else; this keeps the UI honest before the
+  // request ever leaves the browser).
   const canRegenerate = REGENERATE_ROLES.includes(user?.role || '');
   const [activeTab, setActiveTab] = useState<'concept' | 'cheatSheet' | 'example' | 'examPrep'>('concept');
   const [studyPack, setStudyPack] = useState<AIStudyPack | null>(null);
@@ -225,7 +230,7 @@ export default function AIStudyCompanionModal({
                 onClick={() => loadMaterial(true)}
                 disabled={loading}
                 className="p-2 rounded-xl text-slate-500 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-                title="Regenerate with AI (staff only)"
+                title="Regenerate with AI (platform content team only)"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>

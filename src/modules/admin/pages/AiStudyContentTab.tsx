@@ -22,15 +22,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Sparkles, Loader2, RefreshCw, AlertTriangle, Check, Info, Zap,
-  Gauge, Snowflake, Plus, Trash2, BookOpen, Globe2, Play,
+  Gauge, Snowflake, Plus, Trash2, BookOpen, Globe2, Play, Search, Library,
 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import {
   getStudyMaterialControls,
   updateStudyMaterialControls,
   prewarmAIStudyMaterials,
+  fetchAIStudyMaterial,
+  getStudyMaterialLibrary,
   type StudyMaterialControls,
   type PrewarmModuleResult,
+  type StudyMaterialLibraryItem,
 } from '@/shared/services/aiStudyMaterialService';
 
 const fmt = (n?: number) => new Intl.NumberFormat('en-IN').format(Number(n) || 0);
@@ -114,6 +117,16 @@ export default function AiStudyContentTab() {
   const [pwResults, setPwResults] = useState<PrewarmModuleResult[]>([]);
   const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'err' | 'info'; text: string } | null>(null);
 
+  // Central content library (the "one page" the platform operates from).
+  const [libItems, setLibItems] = useState<StudyMaterialLibraryItem[]>([]);
+  const [libQ, setLibQ] = useState('');
+  const [libAppliedQ, setLibAppliedQ] = useState('');
+  const [libCursor, setLibCursor] = useState<string | null>(null);
+  const [libHasMore, setLibHasMore] = useState(false);
+  const [libLoading, setLibLoading] = useState(false);
+  const [libMsg, setLibMsg] = useState<{ type: 'ok' | 'err' | 'info'; text: string } | null>(null);
+  const [regenKey, setRegenKey] = useState<string | null>(null);
+
   const target = isSuperadmin && appliedCollege.trim() ? appliedCollege.trim() : undefined;
 
   const load = useCallback(async () => {
@@ -134,6 +147,60 @@ export default function AiStudyContentTab() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // ── Central library ─────────────────────────────────────────────────────
+
+  const loadLibrary = useCallback(
+    async (opts: { startAfter?: string; append?: boolean; qOverride?: string } = {}) => {
+      setLibLoading(true);
+      if (!opts.append) setLibMsg(null);
+      try {
+        const page = await getStudyMaterialLibrary({
+          q: (opts.qOverride ?? libAppliedQ) || undefined,
+          startAfter: opts.startAfter,
+          limit: 50,
+        });
+        setLibItems((prev) => (opts.append ? [...prev, ...page.items] : page.items));
+        setLibCursor(page.nextStartAfter);
+        setLibHasMore(page.hasMore);
+      } catch (err: any) {
+        setLibMsg({ type: 'err', text: err?.message || 'Failed to load the library.' });
+      } finally {
+        setLibLoading(false);
+      }
+    },
+    [libAppliedQ]
+  );
+
+  useEffect(() => {
+    void loadLibrary({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [libAppliedQ]);
+
+  /** Regenerate one library row — a republish: every connected campus moves to the new edition. */
+  const regenerateLibraryItem = async (item: StudyMaterialLibraryItem) => {
+    setRegenKey(item.cacheKey);
+    setLibMsg(null);
+    try {
+      const res = await fetchAIStudyMaterial({
+        subject: item.subject || item.cacheKey.split('__')[0] || item.cacheKey,
+        topic: item.topic || item.cacheKey.split('__')[1] || '',
+        courseName: item.courseName || undefined,
+        courseCode: item.courseCode || undefined,
+        forceRefresh: true,
+      });
+      setLibMsg({
+        type: 'ok',
+        text: `"${item.topic || item.cacheKey}" republished as v${res.servedVersion} — every connected college now serves the new edition.`,
+      });
+      await loadLibrary({});
+    } catch (err: any) {
+      // 15-min per-key cooldown and other guards surface as readable text.
+      setLibMsg({ type: 'err', text: err?.message || 'Regeneration failed.' });
+    } finally {
+      setRegenKey(null);
+    }
+  };
 
   const saveLimits = async () => {
     if (!controls) return;
@@ -382,6 +449,112 @@ export default function AiStudyContentTab() {
         )}
       </Card>
 
+      {/* Central content library — the "one page" the platform operates from */}
+      <Card>
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div>
+            <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Library className="w-4 h-4 text-indigo-500" /> Study material library
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Every pack the platform has ever generated, shared by all colleges. Regenerating a row REPUBLISHES a new edition to every connected campus at once (respecting the 15-min per-key cooldown).
+            </p>
+          </div>
+          <button
+            onClick={() => void loadLibrary({})}
+            className="p-2 rounded-xl text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            title="Refresh list"
+          >
+            <RefreshCw className={`w-4 h-4 ${libLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        <div className="flex gap-2 my-4">
+          <input
+            className={inputCls}
+            placeholder="Search by cache key prefix (e.g. cost_accounting__)"
+            value={libQ}
+            onChange={(e) => setLibQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') setLibAppliedQ(libQ.trim().toLowerCase());
+            }}
+          />
+          <button
+            onClick={() => setLibAppliedQ(libQ.trim().toLowerCase())}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500 text-white text-sm font-bold transition-colors shrink-0"
+          >
+            <Search className="w-4 h-4" />
+            Search
+          </button>
+        </div>
+
+        {libMsg && <div className="mb-4"><Note type={libMsg.type} text={libMsg.text} /></div>}
+
+        {libItems.length === 0 && !libLoading ? (
+          <p className="text-xs text-slate-400">No packs in the library yet — use pre-warm below to generate the first subject.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 text-left">
+                  <th className="px-3 py-2 font-bold">Content</th>
+                  <th className="px-3 py-2 font-bold text-right">Edition</th>
+                  <th className="px-3 py-2 font-bold text-right">Serves</th>
+                  <th className="px-3 py-2 font-bold text-right">Regens</th>
+                  <th className="px-3 py-2 font-bold text-right">Colleges</th>
+                  <th className="px-3 py-2 font-bold text-right">Tokens (in/out)</th>
+                  <th className="px-3 py-2 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {libItems.map((item) => (
+                  <tr key={item.cacheKey} className="border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                    <td className="px-3 py-2 max-w-[280px]">
+                      <p className="font-bold text-slate-700 dark:text-slate-200 truncate">{item.topic || item.cacheKey}</p>
+                      <p className="text-[11px] text-slate-400 truncate">
+                        {item.courseName || item.subject}{item.courseCode ? ` (${item.courseCode})` : ''} · <span className="font-mono">{item.cacheKey}</span>
+                        {item.inProgress && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-bold text-[10px] uppercase">generating</span>}
+                      </p>
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold">v{item.latestVersion || '—'}</td>
+                    <td className="px-3 py-2 text-right">{fmt(item.hitCount)}</td>
+                    <td className="px-3 py-2 text-right">{fmt(item.regenCount)}</td>
+                    <td className="px-3 py-2 text-right font-bold text-indigo-600 dark:text-indigo-400">{fmt(item.connectedCollegeCount)}</td>
+                    <td className="px-3 py-2 text-right">{fmt(item.totalTokensIn)} / {fmt(item.totalTokensOut)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        onClick={() => void regenerateLibraryItem(item)}
+                        disabled={regenKey !== null || item.inProgress}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white text-[11px] font-bold transition-colors"
+                        title="Republish a new AI edition to every connected college"
+                      >
+                        {regenKey === item.cacheKey ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                        Republish
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {(libHasMore || libLoading) && (
+          <div className="mt-3 flex items-center gap-3">
+            {libHasMore && (
+              <button
+                onClick={() => void loadLibrary({ startAfter: libCursor || undefined, append: true })}
+                disabled={libLoading}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors disabled:opacity-50"
+              >
+                {libLoading ? 'Loading…' : 'Load more'}
+              </button>
+            )}
+            {libLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+          </div>
+        )}
+      </Card>
+
       {/* Limits */}
       <Card>
         <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-1">
@@ -555,7 +728,7 @@ export default function AiStudyContentTab() {
 
       <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
         <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-        Students always receive the shared cached pack instantly; only staff can regenerate, each topic at most once every 15 minutes, and concurrent requests share a single paid generation.
+        Students always receive the shared cached pack instantly. Content is curated centrally: only this console can regenerate (each topic at most once every 15 minutes), concurrent requests share a single paid generation, and every republish reaches all connected colleges at once.
       </p>
     </div>
   );

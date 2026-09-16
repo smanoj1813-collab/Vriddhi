@@ -1,7 +1,7 @@
 // functions/src/routes/ai-chat.ts
 import * as express from 'express'
 import { db } from '../config/firebase'
-import { FieldValue } from 'firebase-admin/firestore'
+import { FieldValue, FieldPath } from 'firebase-admin/firestore'
 import { verifyAuth, AuthenticatedRequest, resolveCollegeId } from '../middleware/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
@@ -41,19 +41,23 @@ interface ChatMessage {
  *   ai_study_materials/{key}                 — summary (latestVersion, counters)
  *   ai_study_materials/{key}/versions/vNNNN  — immutable pack per generation
  *   ai_study_materials/{key}/pins/{collegeId}— the version that campus reads
- * A refresh writes a new version and moves ONLY the regenerating campus's
- * pin. A campus's pin first materialises on its first serve (pin-on-first-
- * serve) and afterwards moves only when ITS OWN staff regenerate. Campuses
- * that never press refresh keep the version they learned from — even when a
- * newer one exists. (When progress/bookmarks land for packs, key them by
+ *
+ * Content is operated CENTRALLY by the platform (colleges consume, they do
+ * not refresh). A campus's pin first materialises on its first serve
+ * (pin-on-first-serve — it also becomes a counted "connected college" for
+ * that pack) and afterwards moves only when the PLATFORM regenerates: a
+ * superadmin refresh REPUBLISHES the new edition to every connected campus
+ * at once, so no college can fork the content and none is stranded on a
+ * stale edition. (When progress/bookmarks land for packs, key them by
  * (cacheKey, version) — versions are immutable, so progress can never be
- * orphaned by another campus again.)
+ * orphaned by a republish.)
  *
  * COST GUARDS (the cache only saves money if the bypass is not free):
- *  1. `forceRefresh` (the regenerate button) is a STAFF-only action. Every
- *     refresh is a paid LLM call, and student accounts pressing it N times
- *     turned one shared cache entry into N bills — students therefore always
- *     receive the cached pack; forged student refreshes get 403.
+ *  1. `forceRefresh` (regeneration) is a PLATFORM-ONLY action (superadmin):
+ *     study content is curated centrally by the platform content team —
+ *     colleges CONSUME the shared library, they do not pay to regenerate
+ *     it. Every refresh is a paid LLM call, so a forged refresh from any
+ *     non-superadmin account gets 403.
  *  2. Even for staff, a cache key may be regenerated at most once per
  *     REGENERATE_COOLDOWN window. The key is global across every campus, so
  *     this caps worst-case regeneration spend per topic no matter how many
@@ -188,6 +192,21 @@ export function decideGenerationLock(
 export type DailyLimitDecision = { allowed: true } | { allowed: false; scope: 'student' | 'college' }
 
 /**
+ * Which campus pins a generation moves. Pure (unit-tested) because this is
+ * the content-governance rule in one line:
+ *   - superadmin — the ONLY actor allowed to regenerate — REPUBLISHES:
+ *     every connected campus moves to the new version together. A new
+ *     edition reaches all colleges at once; no campus can fork the content
+ *     and none is stranded on a stale edition.
+ *   - Any other (legacy-path) actor moves only its own campus's pin.
+ */
+export function decidePinMoves(
+  actor: { role: string; collegeId?: string | null },
+  pinnedCollegeIds: string[],
+): string[] {
+  if (actor.role === 'superadmin') return [...new Set(pinnedCollegeIds)]
+  return actor.collegeId ? [String(actor.collegeId)] : []
+}/**
  * Daily cap decision (guard 4). Pure. The campus circuit breaker applies to
  * EVERYONE including staff; the per-account cap applies only to
  * students/parents (staff pre-warm many units legitimately). A limit <= 0
@@ -537,9 +556,10 @@ async function requestStudyPackFromProviders(
 
 /**
  * Append a generated pack as the next immutable version, advance the global
- * latest pointer, move ONLY this campus's pin, record real token usage (on
- * the version, cumulatively on the summary, and into the daily usage doc),
- * and release the in-flight lease when we still own it. Single transaction.
+ * latest pointer, move the pins per decidePinMoves (a superadmin generation
+ * REPUBLISHES to every connected campus), record real token usage (on the
+ * version, cumulatively on the summary, and into the daily usage doc), and
+ * release the in-flight lease when we still own it. Single transaction.
  */
 async function commitStudyGeneration(
   cacheDocRef: FirebaseFirestore.DocumentReference,
@@ -552,6 +572,7 @@ async function commitStudyGeneration(
     tokensIn: number
     tokensOut: number
     uid: string
+    role: string
     collegeId: string | undefined
   },
 ): Promise<number> {
@@ -559,6 +580,7 @@ async function commitStudyGeneration(
   const usageRef = db.collection('ai_usage').doc(usageDocIdForDay())
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(cacheDocRef)
+    const pinsSnap = await tx.get(cacheDocRef.collection('pins'))
     const prev = snap.data() || {}
 
     // Preserve the pre-versioning pack (if any) as v0001 before adding vN+1.
@@ -613,8 +635,15 @@ async function commitStudyGeneration(
     }
     tx.set(cacheDocRef, summaryUpdate, { merge: true })
 
-    if (opts.collegeId) {
-      tx.set(cacheDocRef.collection('pins').doc(String(opts.collegeId)), {
+    // Pin semantics: a superadmin generation REPUBLISHES to every connected
+    // campus (decidePinMoves); the actor's own campus always joins too.
+    const pinnedCollegeIds = pinsSnap.docs.map((d) => d.id)
+    const moves = new Set([
+      ...decidePinMoves({ role: opts.role, collegeId: opts.collegeId }, pinnedCollegeIds),
+      ...(opts.collegeId ? [String(opts.collegeId)] : []),
+    ])
+    for (const cid of moves) {
+      tx.set(cacheDocRef.collection('pins').doc(cid), {
         version: next,
         pinnedAt: now,
       })
@@ -649,11 +678,12 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
   const user = req.user!
   const wantsRefresh = forceRefresh === true
 
-  // Cost guard 1: regeneration is staff-only (verified role from the
-  // middleware's resolved profile/claims — a student cannot self-assert it).
-  if (wantsRefresh && !STUDY_STAFF_ROLES.has(String(user.role || ''))) {
+  // Cost guard 1: regeneration is a PLATFORM-only operation — the content
+  // team curates centrally; colleges consume the shared library. A forged
+  // refresh from any non-superadmin account gets 403.
+  if (wantsRefresh && String(user.role || '') !== 'superadmin') {
     res.status(403).json({
-      error: 'Regenerating study packs is restricted to staff. The shared cached pack is always served for free.',
+      error: 'Study content is curated centrally by the platform content team. Reach out to your platform administrator to request an updated edition.',
     })
     return
   }
@@ -760,13 +790,18 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
           if (!pack) pack = cached.studyPack || null // defensive: never 404 a hit
 
           if (pack) {
-            // Pin-on-first-serve: from now on this campus is stable at this
-            // version no matter what other campuses regenerate.
+            // Pin-on-first-serve: this campus is now a CONNECTED consumer of
+            // the pack (the central library counts these — it is the VAS
+            // adoption metric) and stays on this edition until the platform
+            // republishes.
             if (collegeId && !pinned && target.pinTo !== null) {
               cacheDocRef
                 .collection('pins')
                 .doc(String(collegeId))
                 .set({ version: target.pinTo, pinnedAt: new Date().toISOString() })
+                .catch(() => {})
+              cacheDocRef
+                .set({ connectedCollegeCount: FieldValue.increment(1) }, { merge: true })
                 .catch(() => {})
             }
             cacheDocRef.update({
@@ -872,6 +907,7 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
       tokensIn: llm.tokensIn,
       tokensOut: llm.tokensOut,
       uid: user.uid,
+      role: String(user.role || ''),
       collegeId,
     })
     generationLeaseHeld = false
@@ -897,12 +933,12 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
 
 /**
  * POST /study-material/prewarm
- * Staff-only BULK pre-generation: warm every module of a subject BEFORE the
- * semester/exam rush, so students only ever ride free cache hits and the
- * per-student daily cap never bites legitimate learners. This is the single
- * biggest cost lever — the generation count is identical to organic first
- * requests, but it happens once, calmly, under staff governance, instead of
- * during a stampede.
+ * INTERNAL (superadmin) BULK pre-generation: warm every module of a subject
+ * BEFORE the semester/exam rush, so students only ever ride free cache hits
+ * and the per-student daily cap never bites legitimate learners. This is
+ * the single biggest cost lever — the generation count is identical to
+ * organic first requests, but it happens once, calmly, under platform
+ * governance, instead of during a stampede.
  *
  * To stay comfortably inside the 60s function timeout, each invocation
  * processes at most PREWARM_BATCH_SIZE modules and returns `nextIndex`; the
@@ -912,8 +948,8 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
  */
 router.post('/study-material/prewarm', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {
   const user = req.user!
-  if (!STUDY_STAFF_ROLES.has(String(user.role || ''))) {
-    res.status(403).json({ error: 'Pre-warming the study-material cache is a staff action.' })
+  if (String(user.role || '') !== 'superadmin') {
+    res.status(403).json({ error: 'Pre-warming the study-material cache is a platform content-team operation.' })
     return
   }
 
@@ -1026,6 +1062,7 @@ router.post('/study-material/prewarm', verifyAuth, aiGenerationLimiter, async (r
         tokensIn: llm.tokensIn,
         tokensOut: llm.tokensOut,
         uid: user.uid,
+        role: String(user.role || ''),
         collegeId,
       })
       results.push({ topic, status: 'generated', version })
@@ -1167,6 +1204,65 @@ router.put('/study-material/controls', verifyAuth, async (req: AuthenticatedRequ
   await db.collection('ai_config').doc(String(collegeId)).set(update, { merge: true })
   const config = await loadAiContentConfig(collegeId)
   res.json({ success: true, collegeId, config })
+})
+
+/**
+ * GET /study-material/library
+ * INTERNAL (superadmin): browse the centrally-operated study-pack library —
+ * the single page from which the platform runs content for every connected
+ * college. Cursor-paginated over document ids (cacheKeys); `q` does a
+ * prefix search on the cacheKey. Each row carries the counters the platform
+ * story needs: versions, hits, regenerations, tokens, and the number of
+ * colleges CONNECTED to the pack (its pins) — the VAS adoption metric.
+ */
+router.get('/study-material/library', verifyAuth, async (req: AuthenticatedRequest, res: express.Response) => {
+  const user = req.user!
+  if (String(user.role || '') !== 'superadmin') {
+    res.status(403).json({ error: 'The study-material library is an internal platform view.' })
+    return
+  }
+
+  const limitRaw = Number(req.query?.limit)
+  const limit = Math.min(Math.max(Number.isFinite(limitRaw) ? Math.floor(limitRaw) : 50, 1), 100)
+  const startAfter = typeof req.query?.startAfter === 'string' ? String(req.query.startAfter) : ''
+  const q = typeof req.query?.q === 'string' ? String(req.query.q).trim().toLowerCase().slice(0, 100) : ''
+
+  let query: FirebaseFirestore.Query = db.collection('ai_study_materials').orderBy(FieldPath.documentId())
+  if (q) {
+    // Doc-id prefix search (cacheKeys are lowercased, normalized).
+    query = query.startAt(q).endAt(q + '\uf8ff')
+  } else if (startAfter) {
+    query = query.startAfter(startAfter)
+  }
+
+  const snap = await query.limit(limit + 1).get()
+  const docs = snap.docs.slice(0, limit)
+  const items = docs.map((d) => {
+    const v = d.data() || {}
+    return {
+      cacheKey: d.id,
+      subject: v.subject || '',
+      topic: v.topic || '',
+      courseName: v.courseName || '',
+      courseCode: v.courseCode || '',
+      latestVersion: Number(v.latestVersion) || 0,
+      hitCount: Number(v.hitCount) || 0,
+      regenCount: Number(v.regenCount) || 0,
+      connectedCollegeCount: Number(v.connectedCollegeCount) || 0,
+      totalTokensIn: Number(v.totalTokensIn) || 0,
+      totalTokensOut: Number(v.totalTokensOut) || 0,
+      cachedAt: v.cachedAt || null,
+      provider: v.provider || null,
+      inProgress: !!v.generating,
+    }
+  })
+
+  res.json({
+    success: true,
+    items,
+    hasMore: snap.docs.length > limit,
+    nextStartAfter: snap.docs.length > limit ? docs[docs.length - 1]?.id || null : null,
+  })
 })
 
 router.post('/chat', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {

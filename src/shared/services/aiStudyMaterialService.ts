@@ -265,3 +265,44 @@ export async function updateStudyMaterialControls(
   });
   return response.json();
 }
+
+// ─── Central content library (internal content ops) ──────────────────────
+
+export interface StudyMaterialLibraryItem {
+  cacheKey: string;
+  subject: string;
+  topic: string;
+  courseName: string;
+  courseCode: string;
+  latestVersion: number;
+  hitCount: number;
+  regenCount: number;
+  /** How many colleges are connected to (pinned on) this pack — VAS metric. */
+  connectedCollegeCount: number;
+  totalTokensIn: number;
+  totalTokensOut: number;
+  cachedAt: string | null;
+  provider: string | null;
+  inProgress: boolean;
+}
+
+export interface StudyMaterialLibraryPage {
+  success: boolean;
+  items: StudyMaterialLibraryItem[];
+  hasMore: boolean;
+  nextStartAfter: string | null;
+}
+
+export async function getStudyMaterialLibrary(opts?: {
+  q?: string;
+  startAfter?: string;
+  limit?: number;
+}): Promise<StudyMaterialLibraryPage> {
+  const params = new URLSearchParams();
+  if (opts?.q) params.set('q', opts.q);
+  if (opts?.startAfter) params.set('startAfter', opts.startAfter);
+  if (opts?.limit) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  const response = await authedFetch(`/ai/study-material/library${qs ? `?${qs}` : ''}`, { method: 'GET' });
+  return response.json();
+}
