@@ -25,7 +25,29 @@ interface ChatMessage {
 
 /**
  * POST /study-material
- * Dedicated AI Study Material Generator Agent with Global Multi-College Caching
+ * Dedicated AI Study Material Generator Agent — versioned global cache with
+ * per-campus pins.
+ *
+ * THE GOVERNANCE MODEL (why the naive single-document cache was replaced):
+ * the cache is shared across every college for cost, but CONTENT APPROVAL
+ * and LEARNING CONTINUITY are per-campus concerns:
+ *   - A faculty member at College A regenerating "marginal costing" must NOT
+ *     silently change what Colleges B and C serve their students.
+ *   - A student halfway through a pack must never see it swap out from
+ *     under them because ANOTHER campus pressed refresh.
+ *
+ * So generations are IMMUTABLE VERSIONS and each campus PINS the version its
+ * members see:
+ *   ai_study_materials/{key}                 — summary (latestVersion, counters)
+ *   ai_study_materials/{key}/versions/vNNNN  — immutable pack per generation
+ *   ai_study_materials/{key}/pins/{collegeId}— the version that campus reads
+ * A refresh writes a new version and moves ONLY the regenerating campus's
+ * pin. A campus's pin first materialises on its first serve (pin-on-first-
+ * serve) and afterwards moves only when ITS OWN staff regenerate. Campuses
+ * that never press refresh keep the version they learned from — even when a
+ * newer one exists. (When progress/bookmarks land for packs, key them by
+ * (cacheKey, version) — versions are immutable, so progress can never be
+ * orphaned by another campus again.)
  *
  * COST GUARDS (the cache only saves money if the bypass is not free):
  *  1. `forceRefresh` (the regenerate button) is a STAFF-only action. Every
@@ -39,6 +61,44 @@ interface ChatMessage {
  */
 const STUDY_STAFF_ROLES = new Set(['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'])
 const REGENERATE_COOLDOWN_MS = 15 * 60 * 1000
+
+/** Zero-padded version doc id so Firestore console sorts v0001..v9999 naturally. */
+export const studyVersionDocId = (n: number): string => `v${String(n).padStart(4, '0')}`
+
+/** Next version number for a summary's latestVersion (1-based). Pure. */
+export function nextStudyVersion(latestVersion: unknown): number {
+  const v = Number(latestVersion)
+  return Number.isFinite(v) && v >= 0 ? Math.floor(v) + 1 : 1
+}
+
+export interface StudyServeTarget {
+  /** The version to serve. */
+  version: number
+  /** Version a campus should be pinned to when it has no pin yet (first serve). */
+  pinTo: number | null
+}
+
+/**
+ * Decide what a cache-hit serves. Pure so the whole pin/latest table is
+ * unit-tested without the Admin SDK. Pin wins over latest — that one rule is
+ * what keeps a campus stable while others refresh. A null result means the
+ * document predates versioning (legacy top-level studyPack) and must be
+ * migrated to v0001 before anything is served.
+ */
+export function decideStudyServeTarget(
+  summary: { latestVersion?: unknown } | null | undefined,
+  pinnedVersion: unknown,
+): StudyServeTarget | null {
+  const pin = Number(pinnedVersion)
+  if (pinnedVersion !== null && pinnedVersion !== undefined && Number.isFinite(pin) && pin > 0) {
+    return { version: Math.floor(pin), pinTo: null }
+  }
+  const latest = Number(summary?.latestVersion)
+  if (Number.isFinite(latest) && latest > 0) {
+    return { version: Math.floor(latest), pinTo: Math.floor(latest) }
+  }
+  return null
+}
 
 router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: express.Response) => {
   const { subject, topic, courseName, courseCode, moduleName, moduleNo, branch, semester, forceRefresh } = req.body as {
@@ -76,28 +136,115 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
   const canonicalTop = cleanKey(topic || moduleName || '')
   const cacheKey = `${canonicalSub}__${canonicalTop}`.substring(0, 100)
 
+  const baseCacheFields = {
+    cacheKey,
+    subject,
+    topic,
+    courseName: courseName || subject,
+    courseCode: courseCode || '',
+    moduleName: moduleName || '',
+    moduleNo: moduleNo || null,
+    semester: semester || null,
+    canonicalSubject: canonicalSub,
+    canonicalTopic: canonicalTop,
+  }
+
   try {
     const cacheDocRef = db.collection('ai_study_materials').doc(cacheKey)
 
+    /**
+     * One-time materialisation of the pre-versioning cache: the original
+     * single top-level studyPack becomes immutable version v0001. Idempotent
+     * and race-safe (the transaction re-reads and bails when beaten to it).
+     * Returns the materialised latest version, or 0 when nothing to migrate.
+     */
+    const migrateLegacyIfNeeded = async (): Promise<number> =>
+      db.runTransaction(async (tx) => {
+        const snap = await tx.get(cacheDocRef)
+        const d = snap.data() || {}
+        if (Number(d.latestVersion) > 0) return Number(d.latestVersion)
+        if (!d.studyPack) return 0
+        tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(1)), {
+          version: 1,
+          studyPack: d.studyPack,
+          provider: d.provider || 'pre-versioning',
+          createdBy: d.createdBy || null,
+          collegeId: d.collegeId || null,
+          createdAt: d.cachedAt || new Date().toISOString(),
+          migratedFrom: 'legacy-top-level',
+          subject: d.subject || subject,
+          topic: d.topic || topic,
+          canonicalSubject: d.canonicalSubject || canonicalSub,
+          canonicalTopic: d.canonicalTopic || canonicalTop,
+        })
+        tx.set(cacheDocRef, { latestVersion: 1 }, { merge: true })
+        return 1
+      })
+
     // 1. Check Global Cache first ($0 Cost / Instant)
     if (!wantsRefresh) {
-      const cachedSnap = await cacheDocRef.get()
+      let cachedSnap = await cacheDocRef.get()
       if (cachedSnap.exists) {
-        const cached = cachedSnap.data() || {}
-        // Increment hit counter asynchronously
-        cacheDocRef.update({
-          hitCount: FieldValue.increment(1),
-          lastAccessedAt: new Date().toISOString(),
-        }).catch(() => {})
+        let cached = cachedSnap.data() || {}
 
-        res.json({
-          success: true,
-          source: 'cache',
-          cachedAt: cached.cachedAt,
-          cacheKey,
-          data: cached.studyPack,
-        })
-        return
+        // The campus's own pin decides; otherwise the global latest.
+        let pinned: Record<string, unknown> | null = null
+        if (collegeId) {
+          try {
+            pinned = (await cacheDocRef.collection('pins').doc(String(collegeId)).get()).data() || null
+          } catch {
+            pinned = null
+          }
+        }
+        let target = decideStudyServeTarget(cached, pinned?.version)
+
+        // Pre-versioning document → materialise its pack as v0001 first so
+        // pins only ever reference real version documents.
+        if (!target && cached.studyPack) {
+          const migrated = await migrateLegacyIfNeeded()
+          if (migrated > 0) {
+            cachedSnap = await cacheDocRef.get()
+            cached = cachedSnap.data() || {}
+            target = decideStudyServeTarget(cached, pinned?.version)
+          }
+        }
+
+        if (target) {
+          let pack: any = null
+          const versionSnap = await cacheDocRef
+            .collection('versions')
+            .doc(studyVersionDocId(target.version))
+            .get()
+          if (versionSnap.exists) pack = versionSnap.data()?.studyPack || null
+          if (!pack) pack = cached.studyPack || null // defensive: never 404 a hit
+
+          if (pack) {
+            // Pin-on-first-serve: from now on this campus is stable at this
+            // version no matter what other campuses regenerate.
+            if (collegeId && !pinned && target.pinTo !== null) {
+              cacheDocRef
+                .collection('pins')
+                .doc(String(collegeId))
+                .set({ version: target.pinTo, pinnedAt: new Date().toISOString() })
+                .catch(() => {})
+            }
+            cacheDocRef.update({
+              hitCount: FieldValue.increment(1),
+              lastAccessedAt: new Date().toISOString(),
+            }).catch(() => {})
+
+            res.json({
+              success: true,
+              source: 'cache',
+              cachedAt: cached.cachedAt,
+              cacheKey,
+              servedVersion: target.version,
+              pinned: !!pinned,
+              data: pack,
+            })
+            return
+          }
+        }
       }
     } else {
       // Cost guard 2: per-key regeneration cooldown, global across campuses.
@@ -263,37 +410,74 @@ You MUST respond ONLY with a valid JSON object matching this exact schema, with 
     }
 
     const now = new Date().toISOString()
-    // Preserve cumulative hit/regeneration counters across rewrites.
-    const previousSnap = await cacheDocRef.get()
-    const previous = previousSnap.exists ? previousSnap.data() || {} : {}
-    const record = {
-      cacheKey,
-      subject,
-      topic,
-      courseName: courseName || subject,
-      courseCode: courseCode || '',
-      moduleName: moduleName || '',
-      moduleNo: moduleNo || null,
-      semester: semester || null,
-      canonicalSubject: canonicalSub,
-      canonicalTopic: canonicalTop,
-      studyPack: parsedStudyPack,
-      cachedAt: now,
-      hitCount: Number(previous.hitCount || 0) + 1,
-      regenCount: Number(previous.regenCount || 0) + (previousSnap.exists ? 1 : 0),
-      provider: usedProvider,
-      collegeId: collegeId || null,
-      createdBy: user.uid,
-    }
 
-    // Save to Firestore cache so subsequent requests cost $0
-    await cacheDocRef.set(record)
+    /**
+     * Append the new pack as the next immutable version, advance the global
+     * "latest" pointer, and move ONLY this campus's pin to it. Every other
+     * campus keeps its pinned version — their students' packs do not change.
+     */
+    const servedVersion = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(cacheDocRef)
+      const prev = snap.data() || {}
+
+      // Preserve the pre-versioning pack (if any) as v0001 before adding vN+1.
+      let latest = Number(prev.latestVersion) > 0 ? Number(prev.latestVersion) : 0
+      if (latest === 0 && prev.studyPack) {
+        tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(1)), {
+          version: 1,
+          studyPack: prev.studyPack,
+          provider: prev.provider || 'pre-versioning',
+          createdBy: prev.createdBy || null,
+          collegeId: prev.collegeId || null,
+          createdAt: prev.cachedAt || now,
+          migratedFrom: 'legacy-top-level',
+          subject: prev.subject || subject,
+          topic: prev.topic || topic,
+          canonicalSubject: prev.canonicalSubject || canonicalSub,
+          canonicalTopic: prev.canonicalTopic || canonicalTop,
+        })
+        latest = 1
+      }
+
+      const next = nextStudyVersion(latest)
+      tx.set(cacheDocRef.collection('versions').doc(studyVersionDocId(next)), {
+        ...baseCacheFields,
+        version: next,
+        studyPack: parsedStudyPack,
+        provider: usedProvider,
+        createdBy: user.uid,
+        collegeId: collegeId || null,
+        createdAt: now,
+      })
+      tx.set(cacheDocRef, {
+        ...baseCacheFields,
+        // studyPack mirrors LATEST for console legibility; readers never use
+        // it — pinned campuses read their pinned version document.
+        studyPack: parsedStudyPack,
+        latestVersion: next,
+        cachedAt: now,
+        hitCount: Number(prev.hitCount || 0) + (snap.exists ? 0 : 1),
+        regenCount: Number(prev.regenCount || 0) + (snap.exists ? 1 : 0),
+        provider: usedProvider,
+        collegeId: (collegeId || prev.collegeId) || null,
+        createdBy: prev.createdBy || user.uid,
+      }, { merge: true })
+      if (collegeId) {
+        tx.set(cacheDocRef.collection('pins').doc(String(collegeId)), {
+          version: next,
+          pinnedAt: now,
+        })
+      }
+      return next
+    })
 
     res.json({
       success: true,
       source: 'generated',
       cachedAt: now,
       cacheKey,
+      servedVersion,
+      pinned: !!collegeId,
       data: parsedStudyPack,
     })
   } catch (err: any) {

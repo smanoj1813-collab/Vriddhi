@@ -58,6 +58,10 @@ export interface FetchStudyMaterialResponse {
   source: 'cache' | 'generated';
   cachedAt?: string;
   cacheKey?: string;
+  /** Immutable version that was served (versions never change once written). */
+  servedVersion?: number;
+  /** True when the served version came from this campus's own pin. */
+  pinned?: boolean;
   data: AIStudyPack;
 }
 

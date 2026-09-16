@@ -34,6 +34,7 @@ export default function AIStudyCompanionModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'cache' | 'generated' | null>(null);
+  const [servedVersion, setServedVersion] = useState<number | null>(null);
   const [cooldownNote, setCooldownNote] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
@@ -50,6 +51,7 @@ export default function AIStudyCompanionModal({
       });
       setStudyPack(res.data);
       setSource(res.source);
+      setServedVersion(typeof res.servedVersion === 'number' ? res.servedVersion : null);
     } catch (err: any) {
       if (err?.status === 429) {
         // Cooldown: the pack on screen is still valid — keep it and say why
@@ -72,6 +74,7 @@ export default function AIStudyCompanionModal({
       setStudyPack(null);
       setError(null);
       setSource(null);
+      setServedVersion(null);
       setCooldownNote(null);
     }
   }, [isOpen, context.subject, context.topic]);
@@ -180,6 +183,14 @@ export default function AIStudyCompanionModal({
                 {source === 'generated' && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shrink-0">
                     AI Generated
+                  </span>
+                )}
+                {servedVersion !== null && servedVersion > 0 && (
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 shrink-0"
+                    title="Versioned edition: your campus always sees this version unless your own faculty updates it"
+                  >
+                    v{servedVersion}
                   </span>
                 )}
               </div>
