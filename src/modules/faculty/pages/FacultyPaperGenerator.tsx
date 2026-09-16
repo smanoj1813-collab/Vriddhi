@@ -91,6 +91,7 @@ export default function FacultyPaperGenerator() {
   const [autoMode, setAutoMode] = useState<'bank' | 'ai' | 'hybrid'>('bank')
   const [selectedCourseId, setSelectedCourseId] = useState<string>('')
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
+  const [numSets, setNumSets] = useState<1 | 2 | 3>(1)
 
   // ── Edit-before-submit: per-question overrides applied to this paper ──
   const [questionEdits, setQuestionEdits] = useState<Record<string, { questionText: string; marks: number }>>({})
@@ -334,6 +335,7 @@ export default function FacultyPaperGenerator() {
           batch: assignedCourse?.batch || '',
           branch: assignedCourse?.branch || '',
           mode: autoMode,
+          numSets,
           sections: blueprintSections,
         },
         user?.id || user?.uid || '',
@@ -351,10 +353,12 @@ export default function FacultyPaperGenerator() {
       // used to end on this tab with no sign of where the paper went.
       setActiveTab('my-papers')
       const warnings = Array.isArray((result as any)?.warnings) ? ((result as any).warnings as string[]) : []
+      const setCount = Array.isArray((result as any)?.sets) ? (result as any).sets.length : 1
+      const setNote = setCount > 1 ? ` (${setCount} sets — A${setCount > 1 ? ', B' : ''}${setCount > 2 ? ', C' : ''})` : ''
       setShowToast(
         warnings.length > 0
-          ? `Paper generated with ${qIds.length} questions. Note: ${warnings[0]}`
-          : `Exam paper generated with ${qIds.length} questions — saved under "My Generated Papers".`
+          ? `Paper${setCount > 1 ? 's' : ''} generated${setNote} — Note: ${warnings[0]}`
+          : `Exam paper${setCount > 1 ? 's' : ''} generated with ${qIds.length} questions${setNote} — saved under "My Generated Papers".`
       )
       setTimeout(() => setShowToast(''), 5000)
     } catch (err: any) {
@@ -760,14 +764,30 @@ export default function FacultyPaperGenerator() {
                     <p className="text-xs text-slate-600 dark:text-slate-400">
                       Target: <strong className="text-slate-900 dark:text-white">{expectedMarks} Marks</strong> • Duration: <strong className="text-slate-900 dark:text-white">{duration} min</strong> • Syllabus: <strong className="text-teal-700 dark:text-teal-300">{activeSubjectName}</strong>
                     </p>
-                    <button
-                      onClick={handleAutoGenerate}
-                      disabled={isAutoGenerating}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
-                    >
-                      {isAutoGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                      {isAutoGenerating ? 'Generating Paper...' : 'Generate Paper Automatically'}
-                    </button>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <label className="text-[11px] text-slate-500 whitespace-nowrap" htmlFor="num-sets-select">
+                        Sets:
+                      </label>
+                      <select
+                        id="num-sets-select"
+                        value={numSets}
+                        onChange={(e) => setNumSets(Number(e.target.value) as 1 | 2 | 3)}
+                        disabled={isAutoGenerating}
+                        className="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-teal-500 disabled:opacity-50"
+                      >
+                        <option value={1}>1 set</option>
+                        <option value={2}>2 sets (A, B)</option>
+                        <option value={3}>3 sets (A, B, C)</option>
+                      </select>
+                      <button
+                        onClick={handleAutoGenerate}
+                        disabled={isAutoGenerating}
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+                      >
+                        {isAutoGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        {isAutoGenerating ? 'Generating Paper...' : 'Generate Paper Automatically'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

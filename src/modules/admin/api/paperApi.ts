@@ -463,6 +463,16 @@ export async function generatePaper(
         }
       }
 
+      if (questions.length < (sec.numQuestions || 0)) {
+        const sectionLabel = (sec as any).title || (sec as any).name || 'Section';
+        const typeNote = (sec as any).questionType && (sec as any).questionType !== 'any' ? ` ${(sec as any).questionType}` : '';
+        warnings.push(
+          mode === 'bank'
+            ? `${sectionLabel}: only ${questions.length} of ${sec.numQuestions} requested${typeNote} questions matched "${config.subject || 'the selected subject'}" in the question bank — add more bank questions or switch to Hybrid mode.`
+            : `${sectionLabel}: filled ${questions.length} of ${sec.numQuestions} requested questions.`
+        );
+      }
+
       generatedSections.push({
         ...sec,
         questions,
