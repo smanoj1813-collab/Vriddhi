@@ -117,6 +117,8 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
     instructions: string[]
     includePYQ: boolean
     pyqRatio: number
+    mode: 'bank' | 'ai' | 'hybrid'
+    numSets: number
   }>({
     title: '',
     subject: '',
@@ -133,6 +135,8 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
     ],
     includePYQ: false,
     pyqRatio: 0.2,
+    mode: 'bank',
+    numSets: 1,
   })
 
   // Sections - now with all required PaperSection fields
@@ -264,13 +268,17 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
 
   // ─── Generate ─────────────────────────────────────────
   const handleGenerate = async () => {
-    const generationConfig: GenerationConfig = {
+    const generationConfig: any = {
       subject: config.subject,
       totalMarks: config.totalMarks,
       duration: config.duration,
       title: config.title,
       instructions: config.instructions,
       sections,
+      mode: config.mode,
+      numSets: config.numSets,
+      batch: config.batch,
+      branch: config.branch,
     }
 
     try {
@@ -439,6 +447,36 @@ const PaperGenerator: React.FC<PaperGeneratorProps> = ({
                     {branches.map(b => (
                       <MenuItem key={b} value={b}>{b}</MenuItem>
                     ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Generation Engine</InputLabel>
+                  <Select
+                    value={config.mode}
+                    onChange={e => handleConfigChange('mode', e.target.value)}
+                    label="Generation Engine"
+                  >
+                    <MenuItem value="bank">📚 Question Bank Only</MenuItem>
+                    <MenuItem value="ai">🤖 AI Agent (One-Shot Creation)</MenuItem>
+                    <MenuItem value="hybrid">🔄 Hybrid (Bank + AI Auto-Fill)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Exam Sets (Parallel Sets)</InputLabel>
+                  <Select
+                    value={config.numSets}
+                    onChange={e => handleConfigChange('numSets', Number(e.target.value) || 1)}
+                    label="Exam Sets (Parallel Sets)"
+                  >
+                    <MenuItem value={1}>1 Set (Standard Paper)</MenuItem>
+                    <MenuItem value={2}>2 Sets (Set A &amp; Set B)</MenuItem>
+                    <MenuItem value={3}>3 Sets (Set A, B &amp; C)</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
