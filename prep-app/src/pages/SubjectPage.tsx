@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, BookOpen, Calculator, Sparkles, CheckCircle2,
-  ChevronRight, HelpCircle, Award, Clock, ArrowRight, ShieldCheck
+  ChevronRight, HelpCircle, Award, Clock, ArrowRight, ShieldCheck, Flame, GraduationCap
 } from 'lucide-react';
 import { getSubject, getTopics, getLearnerProgress, type PrepSubject, type PrepTopic, type LearnerProgress } from '../services/api';
 
@@ -176,8 +176,18 @@ export default function SubjectPage({ subjectId, onBack, onSelectTopic }: Subjec
                         {isCompleted && (
                           <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                         )}
+                        {topic.examFrequency && (
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase shrink-0 ${
+                            topic.examFrequency === 'very_high'
+                              ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                              : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900'
+                          }`}>
+                            <Flame className="w-3 h-3 fill-current" />
+                            {topic.examFrequency === 'very_high' ? 'Very High PYQ' : 'High PYQ'}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-semibold">
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-semibold flex-wrap">
                         <span className="capitalize">{topic.difficulty || 'Core'} difficulty</span>
                         <span>·</span>
                         <span>{topic.formulas?.length || 0} Formulas</span>
@@ -193,9 +203,27 @@ export default function SubjectPage({ subjectId, onBack, onSelectTopic }: Subjec
                         )}
                       </div>
 
+                      {/* University PYQ Tag highlights */}
+                      {topic.pyqHighlights && topic.pyqHighlights.length > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mr-0.5">
+                            <GraduationCap className="w-3 h-3" />
+                            PYQ:
+                          </span>
+                          {topic.pyqHighlights.map((pyq, pIdx) => (
+                            <span
+                              key={pIdx}
+                              className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300"
+                            >
+                              {pyq}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       {/* Granular Subtopics Breakdown */}
                       {topic.subtopics && topic.subtopics.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
+                        <div className="mt-2.5 flex flex-wrap gap-1.5">
                           {topic.subtopics.map((st, sIdx) => (
                             <span
                               key={sIdx}

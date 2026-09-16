@@ -45,6 +45,13 @@ export interface PrepHowToSolve {
   questionType: string
 }
 
+export interface PyqTag {
+  university: string
+  year: number
+  marks: 2 | 5 | 10
+  semester?: number
+}
+
 export interface PrepTopic {
   id: string
   subjectId: string
@@ -54,6 +61,8 @@ export interface PrepTopic {
   moduleNumber?: number
   moduleName?: string
   subtopics?: string[]
+  examFrequency?: 'very_high' | 'high' | 'moderate'
+  pyqHighlights?: string[]
   explanationMd: string
   formulas: PrepFormula[]
   tricks: PrepTrick[]

@@ -41,6 +41,13 @@ export interface PrepHowToSolve {
   questionType: string
 }
 
+export interface PyqTag {
+  university: string
+  year: number
+  marks: 2 | 5 | 10
+  semester?: number
+}
+
 export interface PrepTopicContent {
   explanationMd: string
   formulas: PrepFormula[]
@@ -49,6 +56,8 @@ export interface PrepTopicContent {
   moduleNumber?: number
   moduleName?: string
   subtopics?: string[]
+  examFrequency?: 'very_high' | 'high' | 'moderate'
+  pyqHighlights?: string[]
 }
 
 export interface PrepTopic extends PrepTopicContent {
@@ -98,6 +107,7 @@ export interface UniversalQuestion {
     stream?: string
     program?: string
   }
+  pyqTag?: PyqTag
   tags?: string[]
   createdAt?: string
 }
@@ -235,6 +245,14 @@ export function parsePrepDraft(raw: unknown): {
     .map((s: any) => (typeof s === 'string' ? s.trim() : String(s || '').trim()))
     .filter(Boolean)
 
+  const examFrequency = ['very_high', 'high', 'moderate'].includes(parsed.examFrequency)
+    ? parsed.examFrequency
+    : undefined
+  const rawPyq = Array.isArray(parsed.pyqHighlights) ? parsed.pyqHighlights : []
+  const pyqHighlights = rawPyq
+    .map((p: any) => (typeof p === 'string' ? p.trim() : String(p || '').trim()))
+    .filter(Boolean)
+
   if (errors.length > 0) {
     return { valid: false, errors }
   }
@@ -249,6 +267,8 @@ export function parsePrepDraft(raw: unknown): {
       ...(moduleNumber ? { moduleNumber } : {}),
       ...(moduleName ? { moduleName } : {}),
       ...(subtopics.length > 0 ? { subtopics } : {}),
+      ...(examFrequency ? { examFrequency } : {}),
+      ...(pyqHighlights.length > 0 ? { pyqHighlights } : {}),
     },
     errors: [],
   }

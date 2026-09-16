@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, BookOpen, Calculator, Sparkles, CheckCircle2,
   ChevronRight, Award, Clock, ArrowRight, ShieldCheck,
-  Lightbulb, Zap, HelpCircle, Check, Copy, FileText
+  Lightbulb, Zap, HelpCircle, Check, Copy, FileText, Flame, GraduationCap
 } from 'lucide-react';
 import {
   getSubject,
@@ -15,6 +15,7 @@ import {
   type UniversalQuestion
 } from '../services/api';
 import PracticeQuiz from '../components/PracticeQuiz';
+import { renderMarkdownWithMath } from '../components/MathRenderer';
 
 interface TopicPageProps {
   subjectId: string;
@@ -147,6 +148,16 @@ export default function TopicPage({
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {subject?.name}
               </span>
+              {topic.examFrequency && (
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                  topic.examFrequency === 'very_high'
+                    ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                    : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900'
+                }`}>
+                  <Flame className="w-3 h-3 fill-current" />
+                  {topic.examFrequency === 'very_high' ? 'Very High PYQ Frequency' : 'High PYQ Frequency'}
+                </span>
+              )}
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                 Free Topic
               </span>
@@ -154,6 +165,23 @@ export default function TopicPage({
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               {topic.title}
             </h1>
+            {/* University PYQ Highlights Banner */}
+            {topic.pyqHighlights && topic.pyqHighlights.length > 0 && (
+              <div className="pt-1 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1 mr-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Recent University PYQ:
+                </span>
+                {topic.pyqHighlights.map((pyq, pIdx) => (
+                  <span
+                    key={pIdx}
+                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300"
+                  >
+                    {pyq}
+                  </span>
+                ))}
+              </div>
+            )}
             {topic.subtopics && topic.subtopics.length > 0 && (
               <div className="pt-1 flex flex-wrap gap-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 self-center mr-1">
@@ -217,19 +245,19 @@ export default function TopicPage({
       {activeTab === 'explanation' && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-10 space-y-6">
           <div className="prose prose-slate dark:prose-invert max-w-none text-xs sm:text-sm leading-relaxed space-y-4">
-            {/* Simple Markdown Renderer */}
+            {/* KaTeX & Markdown Hybrid Content Renderer */}
             {topic.explanationMd.split('\n\n').map((block, idx) => {
               if (block.startsWith('# ')) {
                 return (
                   <h2 key={idx} className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white pt-2 pb-1 border-b border-slate-100 dark:border-slate-800">
-                    {block.replace(/^# /, '')}
+                    {renderMarkdownWithMath(block.replace(/^# /, ''))}
                   </h2>
                 );
               }
               if (block.startsWith('### ')) {
                 return (
                   <h3 key={idx} className="text-base sm:text-lg font-bold text-teal-700 dark:text-teal-400 pt-3">
-                    {block.replace(/^### /, '')}
+                    {renderMarkdownWithMath(block.replace(/^### /, ''))}
                   </h3>
                 );
               }
@@ -242,7 +270,7 @@ export default function TopicPage({
                   <ol key={idx} className="space-y-1.5 pl-4 list-decimal">
                     {items.map((it, iIdx) => (
                       <li key={iIdx} className="text-slate-700 dark:text-slate-300">
-                        {it.replace(/^\d+\.\s*/, '')}
+                        {renderMarkdownWithMath(it.replace(/^\d+\.\s*/, ''))}
                       </li>
                     ))}
                   </ol>
@@ -254,16 +282,16 @@ export default function TopicPage({
                   <ul key={idx} className="space-y-1.5 pl-4 list-disc">
                     {items.map((it, iIdx) => (
                       <li key={iIdx} className="text-slate-700 dark:text-slate-300">
-                        {it.replace(/^-\s*/, '')}
+                        {renderMarkdownWithMath(it.replace(/^-\s*/, ''))}
                       </li>
                     ))}
                   </ul>
                 );
               }
               return (
-                <p key={idx} className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  {block}
-                </p>
+                <div key={idx} className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {renderMarkdownWithMath(block)}
+                </div>
               );
             })}
           </div>
@@ -294,7 +322,7 @@ export default function TopicPage({
             topic.formulas.map((f, idx) => (
               <div
                 key={f.id || idx}
-                className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-4"
+                className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -312,9 +340,9 @@ export default function TopicPage({
                   </button>
                 </div>
 
-                {/* Formula Highlight Box */}
-                <div className="p-4 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 font-mono text-sm sm:text-base font-bold text-teal-900 dark:text-teal-200 text-center">
-                  {f.formula}
+                {/* Formula Highlight Box with KaTeX math */}
+                <div className="p-4 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 text-sm sm:text-base font-bold text-teal-900 dark:text-teal-200 text-center">
+                  {renderMarkdownWithMath(f.formula.includes('$') ? f.formula : `$$${f.formula}$$`)}
                 </div>
 
                 {/* Example Problem & Solution */}
@@ -322,11 +350,15 @@ export default function TopicPage({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
                       <p className="font-bold text-slate-400 uppercase text-[10px]">Realistic Exam Problem</p>
-                      <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{f.exampleQ}</p>
+                      <div className="text-slate-800 dark:text-slate-200 leading-relaxed">
+                        {renderMarkdownWithMath(f.exampleQ)}
+                      </div>
                     </div>
                     <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/60 space-y-1.5">
                       <p className="font-bold text-emerald-600 dark:text-emerald-400 uppercase text-[10px]">Step-by-Step Solution</p>
-                      <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">{f.exampleA}</p>
+                      <div className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                        {renderMarkdownWithMath(f.exampleA)}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -364,7 +396,7 @@ export default function TopicPage({
             topic.tricks.map((t, idx) => (
               <div
                 key={t.id || idx}
-                className="rounded-3xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/50 p-6 space-y-3 relative overflow-hidden"
+                className="rounded-3xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/50 p-6 space-y-3 relative overflow-hidden shadow-sm"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center font-bold">
@@ -376,13 +408,13 @@ export default function TopicPage({
                 </div>
 
                 <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
-                  {t.trick}
+                  {renderMarkdownWithMath(t.trick)}
                 </div>
 
                 {t.whenToUse && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                     <span className="font-bold text-amber-600 uppercase text-[10px]">When to use:</span>
-                    <span>{t.whenToUse}</span>
+                    <span>{renderMarkdownWithMath(t.whenToUse)}</span>
                   </p>
                 )}
               </div>
@@ -424,7 +456,7 @@ export default function TopicPage({
             topic.howToSolve.map((h, idx) => (
               <div
                 key={h.id || idx}
-                className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-2"
+                className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-2 shadow-sm"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -439,9 +471,9 @@ export default function TopicPage({
                     </span>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pl-8">
-                  {h.detail}
-                </p>
+                <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pl-8">
+                  {renderMarkdownWithMath(h.detail)}
+                </div>
               </div>
             ))
           )}

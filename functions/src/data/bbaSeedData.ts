@@ -877,6 +877,8 @@ If any single component is zero, total motivational drive collapses to zero!`,
       difficulty: 'core',
       tier: 'free',
       status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['VTU Belagavi 2024 · 2 Marks', 'Bangalore Univ (BU) 2023 · 10 Marks'],
       generatedBy: 'curator',
       contentVersion: 1,
       publishedAt: '2026-09-16T12:00:00.000Z',
@@ -933,6 +935,70 @@ $$a_3 x + b_3 y + c_3 z = d_3$$
           step: 'Step 1: Always Write Equations in Standard Form',
           detail: 'Ensure variables appear in the identical order (ax + by + cz = d) on the left and constants on the right.',
           questionType: '10-Mark Practical Math Problem',
+        },
+      ],
+    },
+    {
+      id: 'math-mod5-lpp',
+      subjectId: 'bba-karnataka-math',
+      title: 'Linear Programming Problems (LPP): Graphical Optimization',
+      moduleNumber: 5,
+      moduleName: 'Module 5: Linear Programming & Optimization',
+      order: 2,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['VTU Belagavi 2024 · 10 Marks', 'Bangalore Univ (BU) 2023 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-math-02'],
+      subtopics: [
+        'Formulation of Linear Programming Problems (Objective Function & Constraints)',
+        'Feasible Region Identification using Boundary Intercept Lines',
+        'Corner Point (Extreme Point) Method for Optimal Solution',
+        'Special Cases: Unbounded Solutions, Infeasibility & Multiple Optima',
+        'Managerial Applications in Product Mix and Transport Cost Minimization',
+      ],
+      explanationMd: `# Linear Programming Problems (LPP): Graphical Optimization
+
+### Core Concept & University Framework
+Linear Programming is an operations research optimization tool used to allocate limited resources (labor hours, machine capacity, raw materials) to achieve an objective (maximizing profit or minimizing cost).
+
+---
+
+### Step-by-Step Graphical Solution Method
+1. **Formulate the LPP**:
+   - Objective: Maximize $Z = c_1 x_1 + c_2 x_2$
+   - Subject to: $a_{11} x_1 + a_{12} x_2 \\le b_1$, $x_1, x_2 \\ge 0$
+2. **Convert Inequalities to Equalities**: Plot intercept points $(0, b_1/a_{12})$ and $(b_1/a_{11}, 0)$ on graph axes.
+3. **Determine the Feasible Region**: Test origin $(0, 0)$ to establish the feasible side of each boundary line.
+4. **Identify Corner Points**: Calculate coordinates $(x_1, x_2)$ of all vertices of the bounded convex polygon.
+5. **Evaluate Objective Function ($Z$)**: Substitute each corner point into $Z$ to find the optimal maximum or minimum value.`,
+      formulas: [
+        {
+          id: 'formula-lpp-1',
+          label: 'LPP Standard Formulation',
+          formula: 'Maximize / Minimize Z = c1*x1 + c2*x2 subject to Ax <= b and x1, x2 >= 0',
+          exampleQ: 'Maximize Z = 3x + 5y subject to x + 2y <= 10, x <= 6, x, y >= 0. Find optimal solution.',
+          exampleA: 'Corner points: (0, 0) -> Z=0; (6, 0) -> Z=18; (6, 2) -> Z=28; (0, 5) -> Z=25. Maximum Z = 28 at x = 6, y = 2.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-lpp-1',
+          title: 'Non-Negativity Constraint Trap',
+          trick: 'Always include x, y >= 0! Feasible region is STRICTLY restricted to the First Quadrant of the Cartesian plane.',
+          whenToUse: 'Deducted in 100% of LPP formulation questions if omitted.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-lpp-1',
+          step: 'Step 1: Set Up an Intercepts Table for Each Constraint Line',
+          detail: 'When x=0 find y; when y=0 find x. Connect both points with a straight line.',
+          questionType: 'Practical LPP Graphical 10-Marker',
         },
       ],
     },
@@ -1160,15 +1226,84 @@ Where:
   // ── 8. Business Statistics (Sem 3) ──
   'bba-karnataka-statistics': [
     {
+      id: 'stat-mod2-dispersion',
+      subjectId: 'bba-karnataka-statistics',
+      title: 'Measures of Dispersion: Standard Deviation & Coefficient of Variation (CV)',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Measures of Dispersion & Skewness',
+      order: 1,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'Mysore Univ (UOM) 2023 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-stat-02'],
+      subtopics: [
+        'Absolute vs. Relative Measures of Dispersion',
+        'Standard Deviation ($\\sigma$) for Discrete & Continuous Series',
+        'Variance ($\\sigma^2$) and Mathematical Properties',
+        'Coefficient of Variation (CV) for Consistency & Stability Comparisons',
+        'Combined Standard Deviation of Two Groups',
+      ],
+      explanationMd: `# Measures of Dispersion: Standard Deviation & Coefficient of Variation (CV)
+
+### Core Concept & University Framework
+While central tendency (mean, median) indicates the central location of data, dispersion measures the extent of scatter or variation around the average. In university exams, **Coefficient of Variation (CV)** is used to compare the stability and consistency of two business entities (e.g. comparing share price stability or sales consistency).
+
+---
+
+### Standard Deviation ($\\sigma$)
+For grouped frequency distributions:
+$$\\sigma = \\sqrt{\\frac{\\sum f d^2}{N} - \\left( \\frac{\\sum f d}{N} \\right)^2} \\times c$$
+
+---
+
+### Coefficient of Variation (CV)
+$$\\text{CV (\\%)} = \\frac{\\sigma}{\\bar{X}} \\times 100$$
+- **Managerial Decision Rule**:
+  - The series with the **LOWER CV** is more **consistent, uniform, and stable**.
+  - The series with the **HIGHER CV** is more **variable, erratic, or risky**.`,
+      formulas: [
+        {
+          id: 'formula-disp-1',
+          label: 'Coefficient of Variation (CV)',
+          formula: 'CV (%) = (Standard Deviation / Mean) * 100',
+          exampleQ: 'Factory A: Mean wage ₹500, SD = ₹25. Factory B: Mean wage ₹600, SD = ₹36. Which factory has greater uniformity in wages?',
+          exampleA: 'CV(A) = (25 / 500) * 100 = 5%. CV(B) = (36 / 600) * 100 = 6%. Factory A has lower CV, hence greater uniformity.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-disp-1',
+          title: 'Consistency vs Variability Decision Trap',
+          trick: 'Lower CV = More Consistent / Stable. Higher CV = More Variable / Risky. Double check what the exam asks: "more consistent" or "more variable"!',
+          whenToUse: 'High-frequency exam mistake in comparative analysis.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-disp-1',
+          step: 'Step 1: Compute Mean and SD for Both Series Separately',
+          detail: 'Construct calculation tables for Series A and Series B, calculate CV for each, and state the concluding interpretation.',
+          questionType: 'Practical Statistics 10-Marker',
+        },
+      ],
+    },
+    {
       id: 'stat-mod3-correlation-regression',
       subjectId: 'bba-karnataka-statistics',
       title: 'Correlation & Linear Regression Equations',
       moduleNumber: 3,
       moduleName: 'Module 3: Correlation & Regression Analysis',
-      order: 1,
+      order: 2,
       difficulty: 'core',
       tier: 'free',
       status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'Mysore Univ (UOM) 2023 · 5 Marks'],
       generatedBy: 'curator',
       contentVersion: 1,
       publishedAt: '2026-09-16T12:00:00.000Z',
@@ -1388,6 +1523,8 @@ All contracts are agreements, but all agreements are not contracts (e.g. social 
       difficulty: 'core',
       tier: 'free',
       status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 5 Marks', 'Mysore Univ (UOM) 2023 · 10 Marks'],
       generatedBy: 'curator',
       contentVersion: 1,
       publishedAt: '2026-09-16T12:00:00.000Z',
@@ -1444,6 +1581,72 @@ Cost of capital is the minimum required rate of return that a firm must earn on 
           step: 'Step 1: Compute Specific Component Costs (Kd, Kp, Ke)',
           detail: 'Calculate each component percentage cost after tax.',
           questionType: 'Practical Financial Management Problem',
+        },
+      ],
+    },
+    {
+      id: 'fin-mod3-capital-budgeting',
+      subjectId: 'bba-karnataka-fin-mgmt',
+      title: 'Capital Budgeting: Net Present Value (NPV), Payback & Profitability Index (PI)',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Investment Decisions & Capital Budgeting',
+      order: 2,
+      difficulty: 'advanced',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      pyqHighlights: ['Bangalore Univ (BU) 2024 · 10 Marks', 'Mysore Univ (UOM) 2023 · 10 Marks', 'VTU 2022 · 10 Marks'],
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-fin-02'],
+      subtopics: [
+        'Nature and Significance of Capital Budgeting Evaluation',
+        'Discounted Cash Flow (DCF) vs Non-Discounted Methods',
+        'Payback Period (PBP) and Accounting Rate of Return (ARR)',
+        'Net Present Value (NPV) Decision Rule and Discounting Mechanics',
+        'Internal Rate of Return (IRR) & Profitability Index (PI / Benefit-Cost Ratio)',
+      ],
+      explanationMd: `# Capital Budgeting: Net Present Value (NPV), Payback & Profitability Index (PI)
+
+### Core Concept & University Framework
+Capital Budgeting involves planning and evaluating long-term capital investments whose returns extend beyond one fiscal year. In KSHEC NEP BBA Semester 4 examinations, calculating project feasibility using **NPV, IRR, and Payback Period** is a recurring 10-mark problem.
+
+---
+
+### Key Evaluation Techniques
+1. **Net Present Value (NPV)**:
+   $$\\text{NPV} = \\sum_{t=1}^{n} \\frac{C_t}{(1 + k)^t} - C_0$$
+   - Decision Rule: Accept if $\\text{NPV} > 0$; Reject if $\\text{NPV} < 0$. If mutually exclusive, choose highest positive NPV.
+2. **Profitability Index (PI / Benefit-Cost Ratio)**:
+   $$\\text{PI} = \\frac{\\text{Present Value of Future Cash Inflows}}{\\text{Initial Cash Outlay } (C_0)}$$
+   - Decision Rule: Accept if $\\text{PI} > 1.0$.
+3. **Payback Period (PBP)**:
+   Time required for cumulative cash inflows to equal the initial capital outlay:
+   $$\\text{Payback Period} = \\frac{\\text{Initial Investment}}{\\text{Annual Constant Cash Inflow}}$$`,
+      formulas: [
+        {
+          id: 'formula-capbud-1',
+          label: 'Net Present Value (NPV) Formula',
+          formula: 'NPV = (PV of Inflows) - (Initial Outlay)',
+          exampleQ: 'Project costs ₹2,00,000 and generates net annual inflows of ₹70,000 for 4 years. Discount rate is 10% (PVIFA at 10% for 4 yrs = 3.1699). Calculate NPV and PI.',
+          exampleA: 'PV of Inflows = 70,000 * 3.1699 = ₹2,21,893. NPV = 2,21,893 - 2,00,000 = +₹21,893 (Accept). PI = 2,21,893 / 2,00,000 = 1.109 (Accept).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-capbud-1',
+          title: 'Cash Flow vs Accounting Profit Trap',
+          trick: 'In Capital Budgeting, ALWAYS use Cash Inflow after Tax before Depreciation (CFAT = Net Profit after Tax + Depreciation)! Never discount accounting profit.',
+          whenToUse: 'Most frequent deduction trap in 10-mark university numericals.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-capbud-1',
+          step: 'Step 1: Convert Net Profit to CFAT First',
+          detail: 'Add back non-cash depreciation to Net Profit after Tax: CFAT = NPAT + Dep.',
+          questionType: 'Practical Capital Budgeting 10-Marker',
         },
       ],
     },
@@ -2109,6 +2312,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: "The Gang Plank is Fayol's exception to the strict scalar chain, enabling authorized horizontal communication between peers during operational emergencies while keeping superiors informed.",
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 5,
+      semester: 1,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-mpa',
       topicIds: ['mpa-mod1-fayol-taylor'],
@@ -2129,6 +2338,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Unity of Command mandates that each subordinate employee receives orders from only one superior to prevent conflicting priorities and split loyalty.',
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2023,
+      marks: 2,
+      semester: 1,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-mpa',
       topicIds: ['mpa-mod1-fayol-taylor'],
@@ -2149,6 +2364,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Once planning premises (forecasting assumptions) are established, management identifies the various alternative courses of action before evaluating them.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bengaluru City University (BCU)',
+      year: 2024,
+      marks: 5,
+      semester: 1,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-mpa',
       topicIds: ['mpa-mod2-planning-mbo'],
@@ -2169,6 +2390,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Under the DEALER mnemonic: D (Drawings), E (Expenses), and A (Assets) increase on the DEBIT side. L (Liabilities), E (Equity), and R (Revenue) increase on the CREDIT side.',
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 2,
+      semester: 1,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-accounting',
       topicIds: ['acc-mod1-concepts-rules'],
@@ -2189,6 +2416,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Psychographic segmentation divides buyers into different groups based on social class, lifestyle, or personality characteristics.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2024,
+      marks: 5,
+      semester: 1,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-marketing',
       topicIds: ['mkt-mod2-stp'],
@@ -2209,6 +2442,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Price Skimming involves setting high introductory prices for technological or innovative products to skim maximum revenues layer-by-layer from early adopters.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'VTU Belagavi',
+      year: 2023,
+      marks: 10,
+      semester: 1,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-marketing',
       topicIds: ['mkt-mod3-plc-pricing'],
@@ -2229,6 +2468,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Salary, company policies, supervision, and working conditions are Hygiene factors. Their presence prevents dissatisfaction but does not intrinsically motivate peak effort.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 5,
+      semester: 2,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-ob',
       topicIds: ['ob-mod3-motivation-theories'],
@@ -2249,6 +2494,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: "If Det(A) = 0, division by zero occurs (x = Det(Ax) / 0), meaning Cramer's rule cannot yield a unique solution (the system has either infinite solutions or no solution).",
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'VTU Belagavi',
+      year: 2024,
+      marks: 2,
+      semester: 2,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-math',
       topicIds: ['math-mod1-matrices-cramer'],
@@ -2269,6 +2520,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'When demand is price elastic (Ep > 1), a price reduction leads to a proportionally larger increase in quantity demanded, thereby increasing Total Revenue.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2023,
+      marks: 5,
+      semester: 2,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-economics',
       topicIds: ['eco-mod1-elasticity-demand'],
@@ -2289,6 +2546,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Income Tax, dividends, debenture interest, and capital donations are purely financial charges and appropriation of profits; they are never included in cost sheets.',
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 5,
+      semester: 3,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-cost-accounting',
       topicIds: ['cost-mod1-cost-sheet'],
@@ -2309,6 +2572,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'EOQ = sqrt((2 * 8,000 * 100) / 4) = sqrt(1,600,000 / 4) = sqrt(400,000) = 632.45 ≈ 632 units.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bengaluru North University (BNU)',
+      year: 2023,
+      marks: 10,
+      semester: 3,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-cost-accounting',
       topicIds: ['cost-mod2-eoq-stock-levels'],
@@ -2329,6 +2598,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'r = -sqrt((-0.8) * (-0.45)) = -sqrt(0.36) = -0.60. Both regression coefficients and the correlation coefficient must always carry the same algebraic sign.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 3,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-statistics',
       topicIds: ['stat-mod3-correlation-regression'],
@@ -2349,6 +2624,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Under RBI guidelines, Commercial Papers can be issued for maturities ranging from a minimum of 7 days up to a maximum of 1 year.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2024,
+      marks: 2,
+      semester: 3,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-fin-markets',
       topicIds: ['fm-mod2-money-market'],
@@ -2369,6 +2650,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Under the landmark Privy Council ruling in Mohori Bibee v. Dharmodas Ghose (1903), a minor has no legal capacity to contract and any such agreement is void ab initio.',
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2023,
+      marks: 10,
+      semester: 4,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-business-law',
       topicIds: ['law-mod1-contract-essentials'],
@@ -2389,10 +2676,94 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Under corporate income tax laws, interest paid on debt capital is a tax-deductible expense. The effective net cost to the firm is Kd * (1 - tax rate).',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 5,
+      semester: 4,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-fin-mgmt',
       topicIds: ['fin-mod2-wacc-cost-of-capital'],
       stream: 'finance',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-fin-02',
+    questionText: 'A capital investment proposal costs ₹3,00,000 and has a Present Value of future cash inflows of ₹3,75,000. What is its Profitability Index (PI)?',
+    options: [
+      '0.80',
+      '1.25',
+      '1.75',
+      '0.75',
+    ],
+    correctIndex: 1,
+    explanation: 'Profitability Index (PI) = Present Value of Inflows / Initial Outlay = ₹3,75,000 / ₹3,00,000 = 1.25. Since PI > 1.0, the investment is financially acceptable.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 4,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-fin-mgmt',
+      topicIds: ['fin-mod3-capital-budgeting'],
+      stream: 'finance',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-stat-02',
+    questionText: 'When comparing two industrial firms, which statistical metric demonstrates greater stability and consistency in worker daily output?',
+    options: [
+      'Higher Standard Deviation',
+      'Higher Mean output',
+      'Lower Coefficient of Variation (CV)',
+      'Higher Range of output',
+    ],
+    correctIndex: 2,
+    explanation: 'The Coefficient of Variation (CV = (SD / Mean) * 100) measures relative dispersion. A lower CV indicates greater stability, consistency, and uniformity.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2023,
+      marks: 10,
+      semester: 3,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-statistics',
+      topicIds: ['stat-mod2-dispersion'],
+      stream: 'aptitude',
+      program: 'bba',
+    },
+  },
+  {
+    id: 'q-math-02',
+    questionText: 'In Graphical Linear Programming (LPP), what geometric property ensures that the optimal value of the objective function occurs at a vertex?',
+    options: [
+      'The feasible region is always a non-convex curved area',
+      'The objective function and constraints are both linear and form a convex polygon',
+      'Variables can take negative coordinates in Quadrant IV',
+      'The number of constraints must equal the number of decision variables',
+    ],
+    correctIndex: 1,
+    explanation: 'Because both the objective function and linear inequalities form a convex polygonal feasible set, the Fundamental Theorem of Linear Programming guarantees that the maximum or minimum always occurs at an extreme corner point.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: {
+      university: 'VTU Belagavi',
+      year: 2024,
+      marks: 10,
+      semester: 2,
+    },
+    prepTags: {
+      subjectId: 'bba-karnataka-math',
+      topicIds: ['math-mod5-lpp'],
+      stream: 'aptitude',
       program: 'bba',
     },
   },
@@ -2409,6 +2780,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Job Specification (JS) defines the human qualities, qualifications, skills, and experience necessary for an individual to perform the role.',
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Bengaluru City University (BCU)',
+      year: 2023,
+      marks: 5,
+      semester: 4,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-hrm',
       topicIds: ['hrm-mod2-job-analysis'],
@@ -2429,6 +2806,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Margin of Safety = Actual Sales - Break-Even Sales = ₹5,00,000 - ₹3,50,000 = ₹1,50,000.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 5,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-mgmt-accounting',
       topicIds: ['mgmtacc-mod3-marginal-costing'],
@@ -2449,6 +2832,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'The primary basic condition under Section 6(1)(a) requires physical presence in India for a minimum of 182 days in the relevant financial previous year.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 5,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-income-tax-1',
       topicIds: ['tax1-mod2-residential-status'],
@@ -2469,6 +2858,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'A Product (Line) Layout arranges machines in sequential production flow, which is ideal for high-volume, standardized continuous production.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'VTU Belagavi',
+      year: 2023,
+      marks: 5,
+      semester: 5,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-operations-mgmt',
       topicIds: ['ops-mod2-plant-layout'],
@@ -2489,6 +2884,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Substitutes originate from an entirely different industry but satisfy the same consumer need (Metro rail transportation substituting road automotive transit).',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Mysore University (UOM)',
+      year: 2024,
+      marks: 10,
+      semester: 6,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-strategic-mgmt',
       topicIds: ['strat-mod2-pestle-porter'],
@@ -2509,6 +2910,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'For intra-state supplies, the dual GST framework mandates that tax is levied concurrently as CGST and SGST, divided equally (e.g. 18% GST = 9% CGST + 9% SGST).',
     difficulty: 'basic',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 6,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-gst',
       topicIds: ['gst-mod1-framework-supply'],
@@ -2529,6 +2936,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'The Value Proposition describes the bundle of products and services that create value for a specific customer segment by solving a problem or fulfilling a need.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bengaluru City University (BCU)',
+      year: 2024,
+      marks: 5,
+      semester: 6,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-entrepreneurship',
       topicIds: ['ent-mod2-bmc'],
@@ -2549,6 +2962,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Salomon v. Salomon & Co. Ltd. (1897) is the foundational English company law ruling establishing that a legally incorporated company is an independent juristic person.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 6,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-company-law',
       topicIds: ['colaw-mod1-corporate-personality'],
@@ -2569,6 +2988,12 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
     explanation: 'Under Section 80CCE, the maximum cumulative deduction permissible under Sections 80C, 80CCC, and 80CCD(1) is ₹1,50,000 per financial year.',
     difficulty: 'core',
     status: 'approved',
+    pyqTag: {
+      university: 'Bangalore University (BU)',
+      year: 2024,
+      marks: 10,
+      semester: 6,
+    },
     prepTags: {
       subjectId: 'bba-karnataka-income-tax-2',
       topicIds: ['tax2-mod4-deductions-80c'],
