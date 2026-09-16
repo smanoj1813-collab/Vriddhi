@@ -104,6 +104,14 @@ export interface WeeklyClassSchedule {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  /**
+   * Optional "Attach an assignment" config. When present, `generateClassSessions`
+   * materialises one draft assignment for this slot (targeting the slot's
+   * cohort) for the faculty to review and publish.
+   */
+  assignment?: { title: string; maxScore: number; deadline: string }
+  /** Assignment doc id once the slot's assignment has been materialised. */
+  assignmentId?: string
 }
 
 // For student view
@@ -157,4 +165,10 @@ export interface WeeklyScheduleFormData {
   startTime: string
   endTime: string
   type: ClassType
+  /**
+   * Optional assignment to attach to this slot (same toggle as the faculty's
+   * curriculum link, but from the timetable side). `null` clears an existing
+   * attachment; omitting leaves it untouched on update.
+   */
+  assignment?: { title: string; maxScore: number; deadline: string } | null
 }

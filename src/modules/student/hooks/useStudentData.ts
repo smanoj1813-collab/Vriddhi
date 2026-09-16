@@ -99,6 +99,10 @@ function mapAssignments(items: StudentAssignmentData[]): Assignment[] {
     maxMarks: a.maxMarks,
     status: a.status,
     submissionType: a.submissionType,
+    courseId: a.courseId,
+    courseName: a.courseName,
+    moduleId: a.moduleId,
+    moduleTitle: a.moduleTitle,
   }));
 }
 
@@ -111,6 +115,11 @@ function mapNotifications(items: StudentNotificationData[]): Notification[] {
     timestamp: n.timestamp,
     read: n.read,
     priority: n.priority,
+    category: n.category,
+    deadline: n.deadline || undefined,
+    courseName: n.courseName,
+    moduleTitle: n.moduleTitle,
+    assignmentId: n.assignmentId,
   }));
 }
 

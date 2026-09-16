@@ -84,6 +84,11 @@ export interface StudentAssignmentData {
   feedback?: string;
   submittedAt?: string;
   createdAt?: string;
+  /** Optional curriculum linkage (course → module badge). */
+  courseId?: string;
+  courseName?: string;
+  moduleId?: string;
+  moduleTitle?: string;
 }
 
 export interface StudentFeeData {
@@ -123,6 +128,11 @@ export interface StudentNotificationData {
   sentByName?: string;
   pinned?: boolean;
   recipientCount?: number;
+  /** Assignment linkage for the bell feed (badge + countdown). */
+  deadline?: string | null;
+  courseName?: string;
+  moduleTitle?: string;
+  assignmentId?: string;
 }
 
 export interface StudentGradeData {
@@ -560,6 +570,11 @@ export async function fetchNotifications(_studentId: string): Promise<StudentNot
     timestamp: n.createdAt || n.timestamp || '',
     read: Boolean(n.read),
     priority: n.priority,
+    category: n.category || undefined,
+    deadline: n.deadline || undefined,
+    courseName: n.courseName || undefined,
+    moduleTitle: n.moduleTitle || undefined,
+    assignmentId: n.assignmentId || undefined,
   }));
 }
 

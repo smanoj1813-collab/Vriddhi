@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle2, XCircle, AlertTriangle, FileUp, Upload } from 'lucide-react';
+import { FileText, Clock, CheckCircle2, XCircle, AlertTriangle, FileUp, Upload, BookOpen, ChevronRight } from 'lucide-react';
 import { useStudentData } from '../hooks/useStudentData';
 import AssignmentUploadModal from '../components/AssignmentUploadModal';
+import { linkageBadgeText } from '../utils/deadlineCountdown';
 import type { Assignment } from '../types/student';
 
 type FilterKey = 'pending' | 'submitted' | 'graded' | 'all';
@@ -15,21 +16,35 @@ const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: stri
   graded: { icon: CheckCircle2, color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800', label: 'Graded' },
 };
 
+/** The "course" an assignment belongs to — linked course first, subject fallback. */
+const courseOf = (a: Assignment): string => a.courseName?.trim() || a.subject?.trim() || 'General';
+
 export default function StudentAssignments() {
   const { assignments, loading, error, warnings, refresh } = useStudentData();
   const [filter, setFilter] = useState<FilterKey>('pending');
+  const [courseFilter, setCourseFilter] = useState<string>('all');
   const [selected, setSelected] = useState<Assignment | null>(null);
 
   const handleSubmitted = () => {
     refresh();
   };
 
+  // Distinct courses across the loaded assignments (linked course name, or
+  // the subject when the faculty published it without a curriculum link).
+  const courses = useMemo(() => {
+    const set = new Set<string>();
+    assignments.forEach((a) => set.add(courseOf(a)));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [assignments]);
+
   const filtered = useMemo(() => {
-    const list = filter === 'all'
-      ? assignments
-      : assignments.filter((a) => a.status === filter);
+    const list = assignments.filter((a) => {
+      const matchesStatus = filter === 'all' || a.status === filter;
+      const matchesCourse = courseFilter === 'all' || courseOf(a) === courseFilter;
+      return matchesStatus && matchesCourse;
+    });
     return [...list].sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
-  }, [assignments, filter]);
+  }, [assignments, filter, courseFilter]);
 
   const counts = useMemo(() => ({
     pending: assignments.filter((a) => a.status === 'pending').length,
@@ -41,10 +56,16 @@ export default function StudentAssignments() {
   const getDaysLeft = (dueDate: string, dueTime?: string) => {
     const timeStr = dueTime ? `T${dueTime}` : 'T23:59:59';
     const due = new Date(`${dueDate}${timeStr}`);
-    const hours = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60));
-    if (hours < 0) return { text: 'Overdue', urgent: true };
-    if (hours < 24) return { text: `${hours}h left`, urgent: true };
-    return { text: `${Math.floor(hours / 24)} days left`, urgent: false };
+    const ms = due.getTime() - Date.now();
+    if (Number.isNaN(ms)) return { text: 'Check date', urgent: false };
+    if (ms < 0) {
+      const days = Math.floor(-ms / 86_400_000);
+      return { text: days > 0 ? `Overdue by ${days} day${days === 1 ? '' : 's'}` : 'Overdue', urgent: true };
+    }
+    const hours = Math.ceil(ms / (1000 * 60 * 60));
+    if (hours < 24) return { text: `${Math.max(1, hours)}h left`, urgent: true };
+    const days = Math.ceil(ms / 86_400_000);
+    return { text: `${days} day${days === 1 ? '' : 's'} left`, urgent: false };
   };
 
   if (loading) {
@@ -78,26 +99,45 @@ export default function StudentAssignments() {
         <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Submit homework, practical writeups and view teacher feedback</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
-        {([
-          { key: 'pending', label: 'Pending' },
-          { key: 'submitted', label: 'Submitted' },
-          { key: 'graded', label: 'Graded' },
-          { key: 'all', label: 'All Assignments' },
-        ] as { key: FilterKey; label: string }[]).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
-              filter === tab.key
-                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            {tab.label} ({counts[tab.key]})
-          </button>
-        ))}
+      {/* Tabs + course filter */}
+      <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto">
+          {([
+            { key: 'pending', label: 'Pending' },
+            { key: 'submitted', label: 'Submitted' },
+            { key: 'graded', label: 'Graded' },
+            { key: 'all', label: 'All Assignments' },
+          ] as { key: FilterKey; label: string }[]).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
+                filter === tab.key
+                  ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              {tab.label} ({counts[tab.key]})
+            </button>
+          ))}
+        </div>
+        {courses.length > 1 && (
+          <div className="relative shrink-0 ml-auto">
+            <select
+              value={courseFilter}
+              onChange={(e) => setCourseFilter(e.target.value)}
+              aria-label="Filter by course"
+              className="appearance-none bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-700 rounded-xl pl-8 pr-8 py-2 text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-teal-500 cursor-pointer"
+            >
+              <option value="all">All courses</option>
+              {courses.map((course) => (
+                <option key={course} value={course}>{course}</option>
+              ))}
+            </select>
+            <BookOpen size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400 pointer-events-none" />
+            <ChevronRight size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 -rotate-90 text-slate-400 pointer-events-none" />
+          </div>
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -130,6 +170,17 @@ export default function StudentAssignments() {
                     <p className="text-xs text-teal-700 dark:text-teal-400 font-semibold mt-1">
                       {a.subject}{a.subjectCode ? ` · ${a.subjectCode}` : ''}
                     </p>
+                    {linkageBadgeText(a.courseName, a.moduleTitle) && (
+                      <div className="mt-1.5">
+                        <span
+                          className="inline-flex items-center gap-1.5 max-w-full text-[11px] font-semibold text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-full px-2.5 py-0.5"
+                          title="Linked to a course/module in your curriculum"
+                        >
+                          <BookOpen size={11} className="shrink-0" />
+                          <span className="truncate">{linkageBadgeText(a.courseName, a.moduleTitle)}</span>
+                        </span>
+                      </div>
+                    )}
                     {a.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">{a.description}</p>}
                   </div>
 
@@ -139,12 +190,25 @@ export default function StudentAssignments() {
                         {a.marksObtained} / {a.maxMarks ?? '100'} Marks
                       </div>
                     )}
-                    {a.dueDate && (
-                      <div className={`text-xs font-medium ${due.urgent && a.status === 'pending' ? 'text-rose-600 font-bold' : 'text-slate-500'}`}>
-                        Due {new Date(a.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        {a.status === 'pending' && ` · ${due.text}`}
-                      </div>
-                    )}
+                    {a.dueDate && (() => {
+                      const openWork = a.status === 'pending' || a.status === 'overdue';
+                      return (
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="text-xs font-medium text-slate-500">
+                            Due {new Date(a.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </div>
+                          {openWork && (
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full px-2 py-0.5 border ${
+                              due.urgent
+                                ? 'text-rose-700 dark:text-rose-300 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800'
+                                : 'text-amber-700 dark:text-amber-300 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800'
+                            }`}>
+                              <Clock size={11} /> {due.text}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {(a.status === 'pending' || a.status === 'overdue') && (
                       <button
                         onClick={() => setSelected(a)}

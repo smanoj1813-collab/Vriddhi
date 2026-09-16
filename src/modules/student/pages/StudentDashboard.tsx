@@ -7,6 +7,7 @@ import {
   GraduationCap, Sparkles, User, CalendarDays, BookMarked
 } from 'lucide-react';
 import type { Assessment, ClassSchedule } from '../types/student';
+import { deadlineCountdown, linkageBadgeText } from '../utils/deadlineCountdown';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 
 // ─── Sub-components ─────────────────────────────────────────────────
@@ -110,23 +111,59 @@ function ScheduleCard({ session }: { session: ClassSchedule }) {
   );
 }
 
-function NotificationCard({ notification }: { notification: { id: string; title: string; message: string; type: string; read: boolean } }) {
+function NotificationCard({ notification }: { notification: {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  category?: string;
+  deadline?: string;
+  courseName?: string;
+  moduleTitle?: string;
+  assignmentId?: string;
+} }) {
   const typeColors: Record<string, string> = {
     info: 'border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300',
     warning: 'border-amber-200 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
     success: 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300',
   };
+  const isAssignment = notification.category === 'assignment';
+  const countdown = isAssignment ? deadlineCountdown(notification.deadline) : null;
+  const badge = isAssignment ? linkageBadgeText(notification.courseName, notification.moduleTitle) : null;
   return (
     <div className={`p-3.5 rounded-xl border ${typeColors[notification.type] || typeColors.info}`}>
       <div className="flex items-start gap-2.5">
         <div className="mt-0.5 shrink-0">
-          {notification.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-amber-500" /> :
+          {isAssignment ? <BookOpen className="w-4 h-4 text-violet-500" /> :
+           notification.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-amber-500" /> :
            notification.type === 'success' ? <CheckCircle className="w-4 h-4 text-emerald-500" /> :
            <Bell className="w-4 h-4 text-blue-500" />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-slate-900 dark:text-slate-900 dark:text-white">{notification.title}</p>
           <p className="text-xs text-slate-600 dark:text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">{notification.message}</p>
+          {(badge || countdown) && (
+            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+              {badge && (
+                <span className="inline-flex items-center gap-1 max-w-full text-[10px] font-bold text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20 rounded-full px-2 py-0.5">
+                  <BookOpen size={10} className="shrink-0" />
+                  <span className="truncate">{badge}</span>
+                </span>
+              )}
+              {countdown && (
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-2 py-0.5 border ${
+                  countdown.tone === 'overdue'
+                    ? 'text-rose-700 dark:text-rose-300 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800'
+                    : countdown.tone === 'soon'
+                      ? 'text-amber-700 dark:text-amber-300 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800'
+                      : 'text-slate-600 dark:text-slate-400 bg-slate-50 border-slate-200 dark:bg-slate-900/40 dark:border-slate-700'
+                }`}>
+                  <Clock size={10} /> {countdown.text}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         {!notification.read && <div className="w-2 h-2 rounded-full bg-teal-600 shrink-0 mt-1" />}
       </div>
@@ -400,7 +437,25 @@ export default function StudentDashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{a.title}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 font-medium">{a.subject}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
+                            <span className="truncate">{a.subject}</span>
+                            {linkageBadgeText(a.courseName, a.moduleTitle) && (
+                              <span className="inline-flex items-center gap-1 max-w-[160px] px-1.5 py-0.5 rounded-full text-[10px] font-bold text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20">
+                                <BookOpen className="w-2.5 h-2.5 shrink-0" />
+                                <span className="truncate">{linkageBadgeText(a.courseName, a.moduleTitle)}</span>
+                              </span>
+                            )}
+                            {deadlineCountdown(a.dueDate ? `${a.dueDate}T23:59:59` : undefined) && (
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                deadlineCountdown(`${a.dueDate}T23:59:59`)!.tone === 'overdue'
+                                  ? 'text-rose-700 dark:text-rose-300 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800'
+                                  : 'text-amber-700 dark:text-amber-300 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800'
+                              }`}>
+                                <Clock className="w-2.5 h-2.5" />
+                                {deadlineCountdown(`${a.dueDate}T23:59:59`)!.text}
+                              </span>
+                            )}
+                          </p>
                         </div>
                       </div>
                       <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-lg border border-amber-200/60 shrink-0">

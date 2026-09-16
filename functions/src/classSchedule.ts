@@ -276,6 +276,12 @@ export interface WeeklySlot {
   endTime?: unknown
   type?: unknown
   isActive?: unknown
+  // Optional "Attach an assignment" config written by the admin's weekly
+  // form: { title, maxScore, deadline }. `generateClassSessions` materialises
+  // exactly one draft assignment per configured slot (see below).
+  assignment?: unknown
+  /** Set once the slot's assignment has been materialised — the doc id. */
+  assignmentId?: unknown
 }
 
 function text(value: unknown, fallback = ''): string {
@@ -300,7 +306,12 @@ function toSemester(value: unknown): number {
  *    of client writers already use (attendanceApi's Timestamp is the outlier,
  *    and S2.2 folds that path into this one).
  */
-export function buildSessionDoc(slot: WeeklySlot, date: string, now: Date = new Date()): admin.firestore.DocumentData {
+export function buildSessionDoc(
+  slot: WeeklySlot,
+  date: string,
+  now: Date = new Date(),
+  assignmentId?: string
+): admin.firestore.DocumentData {
   const day = coerceDayOfWeek(slot.dayOfWeek)
   const start = text(slot.startTime)
   const end = text(slot.endTime)
@@ -333,9 +344,138 @@ export function buildSessionDoc(slot: WeeklySlot, date: string, now: Date = new 
     attendanceCount: 0,
     presentCount: 0,
     source: 'weekly-schedule',
+    // Set when the slot carries an attached assignment (admin "Attach an
+    // assignment" toggle), so a session can be traced to its work item.
+    ...(assignmentId ? { assignmentId } : {}),
     createdAt: stamp,
     updatedAt: stamp,
   }
+}
+
+// ─── Optional weekly slot → assignment linkage ──────────────────────────────
+//
+// The admin's weekly form can attach an assignment config (title, max score,
+// deadline) to a slot. `generateClassSessions` then materialises exactly ONE
+// draft assignment per configured slot under a deterministic id, links it
+// back through `scheduleId`, and records `assignmentId` on the slot so reruns
+// (and the timetable UI) can trace it. The draft is left for the slot's
+// faculty to review and publish — publishing is what fans out the student
+// bell notification with the deadline and course context.
+
+/** Deterministic assignment doc id for a slot's attached assignment. */
+export function scheduleAssignmentDocId(weeklyScheduleId: string): string {
+  const id = String(weeklyScheduleId || '').trim()
+  if (!id) throw new Error('weeklyScheduleId is required to build an assignment id')
+  if (id.includes('/')) throw new Error('weeklyScheduleId may not contain "/"')
+  return `sched-assign-${id}`
+}
+
+export interface SlotAssignmentConfig {
+  title: string
+  maxScore: number
+  deadline: Date
+}
+
+/** Accepts Timestamps, Date objects, ISO strings and yyyy-mm-dd keys. */
+export function parseSlotDeadline(value: unknown): Date | null {
+  if (value instanceof admin.firestore.Timestamp) return value.toDate()
+  if (value instanceof Date) return value
+  const raw = String(value ?? '').trim()
+  if (!raw) return null
+  // A bare date means "end of that day" in the college timezone, matching
+  // how assignment deadlines are interpreted for students (studentPortal).
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? `${raw}T23:59:59+05:30` : raw
+  const parsed = new Date(normalized)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+/**
+ * Reads and validates the optional `assignment` config on a weekly slot.
+ * Returns null when the slot has no usable config — one malformed admin edit
+ * must never abort materialisation for the whole college.
+ */
+export function parseSlotAssignmentConfig(slot: WeeklySlot): SlotAssignmentConfig | null {
+  const raw = (slot as unknown as Record<string, unknown>).assignment
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const config = raw as Record<string, unknown>
+  const title = String(config.title ?? '').trim()
+  if (title.length < 3 || title.length > 200) return null
+  const maxScore = Number(config.maxScore)
+  if (!Number.isFinite(maxScore) || maxScore <= 0 || maxScore > 10_000) return null
+  const deadline = parseSlotDeadline(config.deadline)
+  if (!deadline) return null
+  return { title, maxScore, deadline }
+}
+
+/**
+ * The canonical draft assignment for a configured slot. Cohort targeting
+ * comes from the slot's own branch/batch/division/semester, so the work item
+ * reaches exactly the students the class is timetabled for.
+ */
+export function buildScheduleAssignmentDoc(
+  slot: WeeklySlot,
+  config: SlotAssignmentConfig,
+  facultyUid: string,
+  now: Date = new Date()
+): admin.firestore.DocumentData {
+  const branch = text(slot.branch)
+  const batch = text(slot.batch)
+  const division = text(slot.division)
+  const semester = toSemester(slot.semester)
+  const cohort: Record<string, unknown> = {
+    ...(branch ? { branch } : {}),
+    ...(batch ? { batch } : {}),
+    ...(division ? { division } : {}),
+    ...(semester ? { semester } : {}),
+  }
+  const stamp = now.toISOString()
+  return {
+    title: config.title,
+    description:
+      `Auto-created from the weekly class schedule: ${text(slot.subject) || 'class'} on ` +
+      `${text(slot.dayOfWeek)} ${text(slot.startTime)}–${text(slot.endTime)}` +
+      `${text(slot.room) ? ` (room ${text(slot.room)})` : ''}. ` +
+      `Review and publish it to notify the students with the deadline.`,
+    subject: text(slot.subject),
+    subjectCode: text(slot.subjectCode),
+    maxScore: config.maxScore,
+    type: 'assignment',
+    targetType: 'cohort',
+    cohort,
+    deadline: admin.firestore.Timestamp.fromDate(config.deadline),
+    allowResubmission: false,
+    scheduleId: slot.id,
+    collegeId: text(slot.collegeId),
+    facultyUid,
+    facultyName: text(slot.facultyName),
+    status: 'draft',
+    source: 'weekly-schedule',
+    submissionCount: 0,
+    createdAt: stamp,
+    updatedAt: stamp,
+  }
+}
+
+/**
+ * Assignments are keyed by the faculty's Auth UID (`facultyUid`), while
+ * weekly slots usually store the faculty PROFILE document id (see
+ * fetchFacultyWeeklySchedule's fallback). Resolve the uid through the
+ * profile when possible; fall back to whatever the slot stores.
+ */
+async function resolveSlotFacultyAuthUid(slot: WeeklySlot): Promise<string> {
+  const profileId = text(slot.facultyId)
+  if (!profileId) return ''
+  try {
+    const doc = await admin.firestore().collection('faculty').doc(profileId).get()
+    const uid = String(doc.data()?.uid || '').trim()
+    if (uid) return uid
+  } catch (error) {
+    logger.warn('[classSchedule] Could not resolve faculty uid for assignment linkage', {
+      facultyId: profileId,
+      error,
+    })
+  }
+  return profileId
 }
 
 // ─── S2.2: canonical session identity ───────────────────────────────────────
@@ -760,6 +900,49 @@ export const generateClassSessions = onCall(
       ({ slot, date }) => !conflictedIds.has(slotDateKey(slot.id, date))
     )
 
+    // ─── Optional schedule → assignment linkage ───────────────────────────
+    // Every planned slot that carries a validated `assignment` config gets
+    // exactly one draft assignment (deterministic id, so a rerun cannot
+    // create a second one). The slot remembers the id; the generated
+    // sessions inherit it so the class and the work item stay traceable.
+    const slotAssignmentIds = new Map<string, string>()
+    {
+      const plannedSlotIds = new Set(generatePlan.map(({ slot }) => slot.id))
+      const configuredSlots = slots.filter(
+        (slot) => plannedSlotIds.has(slot.id) && parseSlotAssignmentConfig(slot) !== null
+      )
+      for (const slot of configuredSlots) {
+        const remembered = String(slot.assignmentId || '').trim()
+        if (remembered && !remembered.includes('/')) {
+          slotAssignmentIds.set(slot.id, remembered)
+          continue
+        }
+        const config = parseSlotAssignmentConfig(slot)
+        if (!config) continue
+        const assignmentId = scheduleAssignmentDocId(slot.id)
+        const existing = await db.collection('assignments').doc(assignmentId).get()
+        if (!existing.exists) {
+          const facultyUid = await resolveSlotFacultyAuthUid(slot)
+          await db
+            .collection('assignments')
+            .doc(assignmentId)
+            .set(buildScheduleAssignmentDoc(slot, config, facultyUid, new Date()))
+        }
+        // Idempotent on rerun; the timetable UI reads this to show the link.
+        await db
+          .collection('weeklySchedules')
+          .doc(slot.id)
+          .set(
+            {
+              assignmentId,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          )
+        slotAssignmentIds.set(slot.id, assignmentId)
+      }
+    }
+
     let created = 0
     let skippedExisting = 0
     let batches = 0
@@ -787,7 +970,7 @@ export const generateClassSessions = onCall(
       for (const { slot, date } of pending) {
         batch.set(
           db.collection('classSessions').doc(slotDateKey(slot.id, date)),
-          buildSessionDoc(slot, date, now)
+          buildSessionDoc(slot, date, now, slotAssignmentIds.get(slot.id))
         )
       }
       await batch.commit()
@@ -804,6 +987,7 @@ export const generateClassSessions = onCall(
       created,
       skippedExisting,
       skippedConflicts: conflictedIds.size,
+      assignmentsLinked: slotAssignmentIds.size,
       batches,
       actorUid: uid,
     })
@@ -819,6 +1003,9 @@ export const generateClassSessions = onCall(
       skippedConflicts: conflictedIds.size,
       conflicts: conflictDetails(conflicts).conflicts,
       batches,
+      // Slots whose attached assignment was linked (created or remembered)
+      // by this run — the admin UI surfaces the drafts for faculty publish.
+      assignmentsLinked: slotAssignmentIds.size,
     }
   }
 )
@@ -1164,7 +1351,7 @@ export const ensureClassSession = onCall(
       const now = new Date()
       const payload = slot
         ? {
-            ...buildSessionDoc(slot, input.date, now),
+            ...buildSessionDoc(slot, input.date, now, slot.assignmentId ? String(slot.assignmentId) : undefined),
             subjectKey: subjectKey(slot.subject, slot.subjectCode),
             topicsCovered: input.topic ? [input.topic] : [],
             createdBy: uid,
