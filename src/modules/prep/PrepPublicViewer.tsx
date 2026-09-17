@@ -157,6 +157,29 @@ export function PrepMarkdown({ text }: { text: string }) {
       );
       continue;
     }
+    // ![Caption](https://…) on its own line → figure block. Only http(s)
+    // URLs are rendered (the Studio "Upload image" control produces exactly
+    // this syntax with a Storage URL).
+    const image = line.match(/^!\[([^\]]*)\]\((https?:\/\/\S+?)\)\s*$/);
+    if (image) {
+      flushList();
+      blocks.push(
+        <Box key={key++} sx={{ my: 1.5, textAlign: 'center' }}>
+          <img
+            src={image[2]}
+            alt={image[1] || 'Diagram'}
+            loading="lazy"
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: 8, border: '1px solid rgba(0,0,0,0.08)' }}
+          />
+          {image[1] ? (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              {image[1]}
+            </Typography>
+          ) : null}
+        </Box>,
+      );
+      continue;
+    }
     if (!line.trim()) {
       flushList();
       continue;

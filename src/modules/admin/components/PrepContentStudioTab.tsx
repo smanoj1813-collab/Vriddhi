@@ -8,11 +8,12 @@
 //   - Curator Review & Publishing State Machine
 //   - Practice Pool Inspection
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BookOpen, Sparkles, Plus, Check, AlertTriangle, Loader2, RefreshCw,
   Eye, Save, Send, Database, Filter, Search, Award, FileText,
-  ChevronRight, ExternalLink, HelpCircle, Layers, CheckCircle2, Circle, Trash2
+  ChevronRight, ExternalLink, HelpCircle, Layers, CheckCircle2, Circle, Trash2,
+  ImagePlus
 } from 'lucide-react';
 import {
   fetchPrepSubjects,
@@ -31,6 +32,8 @@ import {
   type PrepHowToSolve,
   type UniversalQuestion
 } from '@/shared/services/prepContentService';
+import { uploadPrepImage } from '@/shared/services/prepMediaUpload';
+import { insertMarkdownImage, markdownImageLine } from '@/shared/utils/prepMedia';
 import { formatStreamLabel, formatDifficultyBadge } from '@/shared/utils/prepHelpers';
 
 /**
@@ -67,6 +70,34 @@ export default function PrepContentStudioTab() {
   const [drafting, setDrafting] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Explanation "Upload image": the file picker is hidden; the textarea ref
+  // gives the cursor position so the markdown line lands where the editor
+  // was working (null cursor → appended at the end).
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const explanationRef = useRef<HTMLTextAreaElement | null>(null);
+  const imageFileRef = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadImage = async (file: File) => {
+    if (!activeTopic) return;
+    setUploadingImage(true);
+    try {
+      const url = await uploadPrepImage(file);
+      const caption = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() || 'Diagram';
+      const line = markdownImageLine(caption, url);
+      const cursor = explanationRef.current?.selectionStart ?? null;
+      setActiveTopic({
+        ...activeTopic,
+        explanationMd: insertMarkdownImage(activeTopic.explanationMd || '', line, cursor),
+      });
+      showToast('ok', 'Image uploaded — the markdown line was added at your cursor. Remember to Save the topic.');
+    } catch (err: any) {
+      showToast('err', err?.message || 'Image upload failed.');
+    } finally {
+      setUploadingImage(false);
+      if (imageFileRef.current) imageFileRef.current.value = '';
+    }
+  };
 
   const [filterYear, setFilterYear] = useState<string>('all');
   const [filterSemester, setFilterSemester] = useState<string>('all');
@@ -675,16 +706,43 @@ export default function PrepContentStudioTab() {
               {/* Section 1: Explanation Markdown */}
               {activeSection === 'explanation' && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
                     <span>Comprehensive Markdown Explanation (curriculum-aligned)</span>
-                    <span>Supports GitHub Markdown & KaTeX</span>
+                    <div className="flex items-center gap-2">
+                      <span className="hidden sm:inline">Markdown · KaTeX · images</span>
+                      <input
+                        ref={imageFileRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void handleUploadImage(file);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => imageFileRef.current?.click()}
+                        disabled={uploadingImage}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-600 px-2.5 py-1 font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
+                        title="Upload a diagram (PNG/JPEG/WebP/GIF, max 4 MB) and insert it at your cursor"
+                      >
+                        {uploadingImage ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <ImagePlus className="w-3.5 h-3.5" />
+                        )}
+                        {uploadingImage ? 'Uploading…' : 'Upload image'}
+                      </button>
+                    </div>
                   </div>
                   <textarea
+                    ref={explanationRef}
                     rows={16}
                     value={activeTopic.explanationMd || ''}
                     onChange={(e) => setActiveTopic({ ...activeTopic, explanationMd: e.target.value })}
                     className="w-full font-mono text-xs p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    placeholder="Enter academic explanation in Markdown..."
+                    placeholder={'Enter academic explanation in Markdown...\n\nVisuals: use "Upload image" above, or paste  ![Caption](https://image-url)  on its own line.'}
                   />
                 </div>
               )}
