@@ -36,6 +36,7 @@ import { bulkProvisionStaff } from './staffAuth'
 import { resetUserPassword, syncIdentityClaims } from './accountManagement'
 import { auditAndRepairIdentities } from './identityRepair'
 import { syncMyIdentity } from './selfIdentity'
+import { saveMyStaffAttendance } from './staffAttendanceWrites'
 import { resetCollegeData } from './collegeCleanup'
 import { relinkFacultyToCollege } from './collegeLinks'
 import {
@@ -208,6 +209,7 @@ export {
   diagnoseIdentity,
   auditAndRepairIdentities,
   syncMyIdentity,
+  saveMyStaffAttendance,
   resetCollegeData,
   relinkFacultyToCollege,
   updateMyStudentProfile,

@@ -3,8 +3,11 @@
 // State for a faculty member marking THEIR OWN attendance.
 //
 // Identity comes from AuthContext — never from a URL parameter or a form
-// field. A faculty member can only ever write the document their own uid owns;
-// current-firestore.rules enforces the same thing server-side.
+// field. A faculty member can only ever write the document their own uid
+// owns; the saveMyStaffAttendance Cloud Function re-checks that against the
+// VERIFIED token and performs the write with the Admin SDK, so the write
+// path cannot be broken by a security-rules drift (see
+// functions/src/staffAttendanceWrites.ts).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
@@ -243,6 +246,17 @@ export function useMyStaffAttendance() {
       return true;
     } catch (err) {
       console.error('[useMyStaffAttendance] save failed', err);
+      const code = String((err as { code?: unknown })?.code ?? '').toLowerCase();
+      if (code.includes('not-found')) {
+        // The callable is not in the deployed backend yet (older functions
+        // deployment) — a redeploy is the only fix; sign-out cannot help.
+        setError(
+          'The deployed backend is missing the attendance service — it is older than this app. ' +
+            'Ask the platform admin to run "npm run deploy:all" (deploys rules, functions, storage and ' +
+            'hosting together) from this repository, then retry. A sign-out/sign-in will not fix this one.',
+        );
+        return false;
+      }
       if (isPermissionDeniedError(err)) {
         // The denial message says WHICH fix applies; the evidence lines say
         // what the write ACTUALLY presented — the JWT claims at that instant
