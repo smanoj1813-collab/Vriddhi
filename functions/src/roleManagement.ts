@@ -271,6 +271,44 @@ export const diagnoseIdentity = onCall(
           "The collegeId claim and the users document agree only after trimming — the security rules compare strictly, so this account's tenant writes are refused. Run Identity repair, then the user signs out and back in."
         )
       }
+      // Probe the attendance rows this account tries to write. With a
+      // provably-correct token the ONE remaining refusal path in the rules
+      // is a legacy document already sitting at the deterministic id
+      // {collegeId}__{uid}__{date} with a conflicting facultyId/collegeId —
+      // the self-mark then becomes a refused update. Surface it here so the
+      // diagnosis does not depend on the Firestore console. Dates are computed
+      // in Asia/Kolkata to match the client's local date key.
+      const usersCollege =
+        usersData && typeof usersData.collegeId === 'string' ? usersData.collegeId.trim() : ''
+      const probes: Array<{ date: string; exists: boolean; data: Record<string, unknown> | null }> = []
+      if (usersCollege) {
+        const istDayKey = (offset: number) =>
+          new Date(Date.now() - offset * 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+        for (const offset of [0, 1, 2]) {
+          const dateKey = istDayKey(offset)
+          const snap = await db.doc(`staffAttendance/${usersCollege}__${uid}__${dateKey}`).get()
+          probes.push({
+            date: dateKey,
+            exists: snap.exists,
+            data: snap.exists ? ((snap.data() as Record<string, unknown>) || null) : null,
+          })
+        }
+      }
+      result.attendanceProbes = probes
+      const conflicting = probes.filter(
+        (p) =>
+          p.exists &&
+          p.data !== null &&
+          (String(p.data.facultyId ?? '') !== uid ||
+            (typeof p.data.collegeId === 'string' && p.data.collegeId !== usersCollege)),
+      )
+      if (conflicting.length) {
+        issues.push(
+          `A legacy attendance document at the account's deterministic id (${conflicting
+            .map((p) => p.date)
+            .join(', ')}) carries a facultyId/collegeId that does not match this account — the security rules pin ownership, so the self-mark is refused as an update. Delete that document (superadmin may) so the next save creates a clean row, or correct its facultyId/collegeId fields.`
+        )
+      }
     }
     result.issues = issues
     return result
