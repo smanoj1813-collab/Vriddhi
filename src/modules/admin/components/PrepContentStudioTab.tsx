@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 import {
   BookOpen, Sparkles, Plus, Check, AlertTriangle, Loader2, RefreshCw,
   Eye, Save, Send, Database, Filter, Search, Award, FileText,
-  ChevronRight, ExternalLink, HelpCircle, Layers, CheckCircle2, Trash2
+  ChevronRight, ExternalLink, HelpCircle, Layers, CheckCircle2, Circle, Trash2
 } from 'lucide-react';
 import {
   fetchPrepSubjects,
@@ -22,7 +22,7 @@ import {
   publishPrepTopic,
   savePrepTopic,
   savePrepSubject,
-  seedBbaCatalog,
+  seedPrepCatalog,
   fetchPracticeQuestions,
   type PrepSubject,
   type PrepTopic,
@@ -32,6 +32,20 @@ import {
   type UniversalQuestion
 } from '@/shared/services/prepContentService';
 import { formatStreamLabel, formatDifficultyBadge } from '@/shared/utils/prepHelpers';
+
+/**
+ * Every program the server ships seed data for (functions/src/routes/prep.ts
+ * PREP_SEED_BUNDLES). The old UI only exposed BBA here, which is why the
+ * "seeded B.Com and BA" request was impossible from the studio: BA/B.Sc/
+ * M.Com/B.Com only existed behind /prep/seed-all with no button.
+ */
+const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
+  { code: 'bba', label: 'BBA' },
+  { code: 'bcom', label: 'B.Com' },
+  { code: 'ba', label: 'BA' },
+  { code: 'bsc', label: 'B.Sc' },
+  { code: 'mcom', label: 'M.Com' },
+];
 
 export default function PrepContentStudioTab() {
   const [subjects, setSubjects] = useState<PrepSubject[]>([]);
@@ -44,6 +58,12 @@ export default function PrepContentStudioTab() {
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [loadingTopic, setLoadingTopic] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  // Which programs the operator has ticked for the next seed pass. Defaults
+  // to every seedable program so "Seed All" is one click, and ticking a
+  // single program (e.g. just B.Com) narrows the pass to that catalogue.
+  const [seedSelection, setSeedSelection] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(SEEDABLE_PROGRAMS.map((p) => [p.code, true]))
+  );
   const [drafting, setDrafting] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -136,12 +156,30 @@ export default function PrepContentStudioTab() {
     }
   }, [selectedSubjectId, selectedTopicId]);
 
-  const handleSeedBba = async () => {
-    if (!confirm('Seed/refresh the complete BBA curriculum (all 3 years, 14 subjects and core topic content)?')) return;
+  const selectedSeedCodes = SEEDABLE_PROGRAMS
+    .filter((p) => seedSelection[p.code])
+    .map((p) => p.code);
+
+  const toggleSeedProgram = (code: string) => {
+    setSeedSelection((prev) => ({ ...prev, [code]: !prev[code] }));
+  };
+
+  const handleSeed = async () => {
+    const codes = selectedSeedCodes;
+    if (codes.length === 0) {
+      showToast('err', 'Tick at least one program to seed.');
+      return;
+    }
+    const labels = SEEDABLE_PROGRAMS.filter((p) => codes.includes(p.code)).map((p) => p.label).join(', ');
+    if (!confirm(`Seed/refresh the ${codes.length === SEEDABLE_PROGRAMS.length ? 'complete' : 'selected'} catalogue (${labels})? Existing subjects and topics are updated in place.`)) return;
     setSeeding(true);
     try {
-      const res = await seedBbaCatalog();
-      showToast('ok', res.message);
+      const res = await seedPrepCatalog(codes);
+      const integrity = res.perProgram
+        .filter((p) => !p.valid)
+        .map((p) => `${p.label} (${p.errorCount} integrity note${p.errorCount === 1 ? '' : 's'})`)
+        .join('; ');
+      showToast('ok', res.message + (integrity ? ` Review: ${integrity}.` : ''));
       await loadSubjects();
     } catch (err: any) {
       showToast('err', `Seeding failed: ${err.message}`);
@@ -314,18 +352,44 @@ export default function PrepContentStudioTab() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {SEEDABLE_PROGRAMS.map((p) => {
+              const active = seedSelection[p.code];
+              return (
+                <button
+                  key={p.code}
+                  onClick={() => toggleSeedProgram(p.code)}
+                  disabled={seeding}
+                  aria-pressed={active}
+                  className={
+                    'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors ' +
+                    (active
+                      ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-300 dark:border-teal-700'
+                      : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 hover:text-slate-600')
+                  }
+                >
+                  {active ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
           <button
-            onClick={handleSeedBba}
-            disabled={seeding}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-xs font-bold hover:bg-teal-100 transition-colors"
+            onClick={handleSeed}
+            disabled={seeding || selectedSeedCodes.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-            {seeding ? 'Seeding Catalog…' : 'Seed Complete BBA (Y1–Y3)'}
+            {seeding
+              ? 'Seeding Catalog…'
+              : selectedSeedCodes.length === SEEDABLE_PROGRAMS.length
+                ? 'Seed All Programs'
+                : `Seed ${selectedSeedCodes.length} Selected`}
           </button>
           <button
             onClick={() => setShowNewSubject(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white dark:text-slate-900 text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             New Subject
@@ -376,7 +440,7 @@ export default function PrepContentStudioTab() {
             {loadingSubjects ? (
               <div className="p-4 text-center text-xs text-slate-400">Loading subjects…</div>
             ) : filteredSubjects.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-400">No subjects found. Click "Seed Complete BBA" above.</div>
+              <div className="p-4 text-center text-xs text-slate-400">No subjects found. Tick a program (BBA, B.Com, BA, B.Sc, M.Com) above and press "Seed".</div>
             ) : (
               filteredSubjects.map((s) => (
                 <button

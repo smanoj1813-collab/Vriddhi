@@ -57,6 +57,11 @@ import {
   paperReadiness,
   resolvePaperStaff,
 } from './paperWorkflow'
+import {
+  findSchedulingProblem,
+  isKnownQuestionType as sharedIsKnownQuestionType,
+  SCHEDULABLE_ONLINE_TYPES,
+} from './questionTypes'
 
 const PDF_TYPE = 'application/pdf'
 const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -70,7 +75,13 @@ const MAX_QUESTION_TEXT = 20_000
 const MAX_OPTIONS = 8
 const GEMINI_PARSE_MODEL = 'gemini-2.5-flash'
 
-/** Response types that the assessment engine can schedule online. */
+// Types the PARSER recognises (known labels are preserved; unknown ones fall
+// back to short/long answer). This is NOT the same as "schedulable online" —
+// `matching` is known but the online test engine does not render it, and the
+// authoritative schedulable set lives in ./questionTypes (also imported by the
+// schedule-time check in studentAssessments.ts). The old local copy of that
+// set is exactly what let a case_based paper Confirm cleanly and then fail at
+// schedule time with "Question 1 … unsupported online response type".
 export const SUPPORTED_QUESTION_TYPES = new Set([
   'mcq',
   'multi_select',
@@ -306,9 +317,14 @@ export function normalizeQuestionType(value: unknown): string {
 }
 
 /** True when the raw label is recognised (alias or supported type). */
+// Delegates to the shared table so the parser and the schedule-time check
+// agree on what a "known" type is. The old local body compacted the input
+// first, so an already-normalised canonical name like 'fill_in_blank'
+// (compact → 'fillinblank') matched neither the alias table nor the
+// underscored SUPPORTED_QUESTION_TYPES — a re-Confirm of a paper containing a
+// fill-in-the-blank question was therefore refused.
 export function isKnownQuestionType(value: unknown): boolean {
-  const compact = String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-  return Boolean(TYPE_ALIASES[compact]) || SUPPORTED_QUESTION_TYPES.has(compact)
+  return sharedIsKnownQuestionType(value)
 }
 
 function normalizeMarks(value: unknown): number {
@@ -1035,10 +1051,23 @@ export function normalizeConfirmSections(sections: unknown): ConfirmSection[] {
       if (!isKnownQuestionType(question.type)) {
         throw new HttpsError(
           'failed-precondition',
-          `Question ${order} uses "${String(question.type || '')}", which cannot be scheduled online. Change it to a supported type.`
+          `Question ${order} uses "${String(question.type || '')}", which cannot be scheduled online. Change it to a supported type (MCQ, True/False, Fill in the blank, Short/Long answer, Numerical, Assertion–Reason or Case-based).`
         )
       }
       const type = normalizeQuestionType(question.type)
+      // A type the parser knows but the online engine cannot render (today:
+      // matching) is rejected HERE, with the same wording the schedule-time
+      // check uses, instead of passing Confirm and failing later at
+      // "Assessment Schedule" after the paper was already marked onlineReady.
+      if (!SCHEDULABLE_ONLINE_TYPES.has(type)) {
+        const problem = findSchedulingProblem({
+          order, text, type, marks: 1,
+          options: type === 'assertion_reason'
+            ? [{ id: 'A', text: '' }, { id: 'B', text: '' }]
+            : [],
+        })
+        throw new HttpsError('failed-precondition', problem || `Question ${order} uses "${type}", which cannot be scheduled online.`)
+      }
       const marks = Number(question.marks)
       if (!Number.isFinite(marks) || marks <= 0) {
         throw new HttpsError('failed-precondition', `Question ${order} has no marks. Set marks before confirming.`)
@@ -1060,6 +1089,18 @@ export function normalizeConfirmSections(sections: unknown): ConfirmSection[] {
             .filter(Boolean)
             .slice(0, MAX_OPTIONS)
         : undefined
+      // Choice types need at least two real options. Checked here (same
+      // validator as the schedule-time gate) so a one-option MCQ cannot sail
+      // through Confirm and blow up later at schedule time.
+      const optionProblem = findSchedulingProblem({
+        order, text, type, marks,
+        options: type === 'assertion_reason'
+          ? [{ id: 'A', text: '' }, { id: 'B', text: '' }]
+          : (options || []).map((label, index) => ({ id: String(index), text: label })),
+      })
+      if (optionProblem) {
+        throw new HttpsError('failed-precondition', optionProblem)
+      }
       questions.push({
         text: text.slice(0, MAX_QUESTION_TEXT),
         type,

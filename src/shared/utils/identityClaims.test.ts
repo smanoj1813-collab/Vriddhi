@@ -15,6 +15,7 @@ import {
   detectClaimStaleness,
   isPermissionDeniedError,
   staleClaimMessage,
+  staleDeployMessage,
 } from './identityClaims'
 
 describe('canonicalizeRole', () => {
@@ -142,5 +143,17 @@ describe('staleClaimMessage', () => {
     assert.match(text, /sign out and sign back in/i)
     assert.match(text, /Identity Repair/i)
     assert.doesNotMatch(text, /Missing or insufficient permissions/)
+  })
+})
+
+describe('staleDeployMessage', () => {
+  it('points at the deployment, not a re-sign-in, when the token is already correct', () => {
+    const text = staleDeployMessage('attendance save')
+    assert.match(text, /already carries the role and college/i)
+    assert.match(text, /deploy:all/i)
+    // It must not repeat the sign-out remedy — that is what this message
+    // exists to distinguish from staleClaimMessage.
+    assert.doesNotMatch(text, /sign out and sign back in/i)
+    assert.doesNotMatch(text, /Identity Repair/i)
   })
 })

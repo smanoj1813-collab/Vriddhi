@@ -169,3 +169,23 @@ export function staleClaimMessage(operation: string): string {
     `Access Control → Identity Repair for your account.`
   )
 }
+
+/**
+ * Actionable copy for the case where the sign-in token ALREADY carries the
+ * role and college the account's profile declares, yet the rules still
+ * refused the operation. The token is provably not the problem — which means
+ * the deployed Firestore rules or Cloud Functions predate the code in this
+ * repository (e.g. the rules lack the write grant this operation needs).
+ * Telling this user to "sign out and back in" or to run Identity Repair
+ * changes nothing; the deployment does.
+ */
+export function staleDeployMessage(operation: string): string {
+  return (
+    `Security rules refused this ${operation}, but your sign-in token already carries the ` +
+    `role and college your account was issued — so the refusal is not a token problem. ` +
+    `The deployed security rules or backend functions are older than this app. ` +
+    `Ask the platform admin to run "npm run deploy:all" (deploys rules, functions, storage ` +
+    `and hosting together) from this repository, then retry. A normal sign-out/sign-in ` +
+    `will not fix this one.`
+  )
+}

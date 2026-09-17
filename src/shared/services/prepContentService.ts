@@ -266,3 +266,39 @@ export async function seedBbaCatalog(): Promise<{
   })
   return res.json()
 }
+
+export interface PrepSeedProgramResult {
+  code: string
+  label: string
+  subjectCount: number
+  topicCount: number
+  questionCount: number
+  valid: boolean
+  errorCount: number
+  warningCount: number
+}
+
+export interface PrepSeedAllResult {
+  success: boolean
+  message: string
+  programs: string[]
+  unseedable?: string[]
+  subjectCount: number
+  topicCount: number
+  questionCount: number
+  perProgram: PrepSeedProgramResult[]
+}
+
+/**
+ * Master seeder: every program that ships with seed data (BBA, B.Com, B.Sc,
+ * BA, M.Com), or a chosen subset such as `['ba']` / `'ba,bcom'`. The old
+ * studio button only wired up BBA, which is why "seeded B.Com and BA" was
+ * impossible from the UI — this is the endpoint those programs live in.
+ */
+export async function seedPrepCatalog(programs?: string | string[]): Promise<PrepSeedAllResult> {
+  const res = await authedFetch('/prep/seed-all', {
+    method: 'POST',
+    body: JSON.stringify(programs ? { programs } : { programs: 'all' }),
+  })
+  return res.json()
+}

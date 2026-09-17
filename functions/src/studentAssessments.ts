@@ -8,6 +8,7 @@ import {
   type ServerAnswer,
   type ServerQuestion,
 } from './assessmentGrading'
+import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
@@ -127,27 +128,8 @@ async function resolveStaff(uid: string, token: Record<string, unknown>): Promis
   return { uid, role, collegeId, name: String(user?.name || '') }
 }
 
-function canonicalQuestionType(value: unknown): string {
-  const compact = String(value || 'mcq').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const aliases: Record<string, string> = {
-    mcq: 'mcq',
-    singlechoice: 'mcq',
-    msq: 'multi_select',
-    multiselect: 'multi_select',
-    multiplechoice: 'multi_select',
-    truefalse: 'true_false',
-    fillintheblank: 'fill_in_blank',
-    fillintheblanks: 'fill_in_blank',
-    shortanswer: 'short_answer',
-    longanswer: 'long_answer',
-    numerical: 'numerical',
-    nat: 'numerical',
-    assertionreason: 'assertion_reason',
-    casebased: 'case_based',
-    matching: 'matching',
-  }
-  return aliases[compact] || compact
-}
+// canonicalQuestionType now lives in ./questionTypes (single source of truth
+// shared with the paper pipeline); it is imported above.
 
 function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order: number): ServerQuestion {
   const questionType = canonicalQuestionType(data.type || data.questionType)
@@ -1344,22 +1326,20 @@ export const scheduleAssessmentTest = onCall(
     if (questions.length < 1 || questions.length > MAX_QUESTIONS) {
       throw new HttpsError('failed-precondition', `Paper must contain between 1 and ${MAX_QUESTIONS} questions`)
     }
-    const supportedTypes = new Set([
-      'mcq', 'multi_select', 'true_false', 'fill_in_blank',
-      'short_answer', 'long_answer', 'numerical', 'assertion_reason',
-    ])
-    const invalidQuestion = questions.find((question) =>
-      !question.text.trim()
-      || question.marks <= 0
-      || !supportedTypes.has(question.type)
-      || (['mcq', 'multi_select', 'true_false', 'assertion_reason'].includes(question.type)
-        && question.options.length < 2)
-    )
-    if (invalidQuestion) {
-      throw new HttpsError(
-        'failed-precondition',
-        `Question ${invalidQuestion.order} is incomplete or uses an unsupported online response type`
-      )
+    // The schedulable set is the SAME one the paper pipeline's Confirm uses
+    // (functions/src/questionTypes.ts), and the message now names the exact
+    // defect instead of the old blanket "incomplete or unsupported" text that
+    // left faculty guessing which question and why.
+    let problemMessage: string | null = null
+    for (const question of questions) {
+      const problem = findSchedulingProblem(question)
+      if (problem !== null) {
+        problemMessage = problem
+        break
+      }
+    }
+    if (problemMessage) {
+      throw new HttpsError('failed-precondition', problemMessage)
     }
     const targetSections = Array.isArray(input.targetSections)
       ? input.targetSections.slice(0, 100).map((target: unknown) => {

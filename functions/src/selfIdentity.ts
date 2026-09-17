@@ -308,7 +308,21 @@ export const syncMyIdentity = onCall(
       role,
       collegeId: collegeId || null,
     })
-    await auth.revokeRefreshTokens(uid)
+
+    // Deliberately NO revokeRefreshTokens() here. This callable is the
+    // mid-session self-heal: the client calls it from a page and then force-
+    // refreshes the ID token (getIdToken(true)) to pick up the claims just
+    // written. Revoking the refresh token in between makes that refresh fail
+    // and drops the user from the app on the very page they were fixing —
+    // and the heal then reports the wrong outcome ("nothing to refresh"),
+    // which is why a faculty attendance save that *was* repairable still
+    // showed "sign out and sign back in". The old token keeps working with
+    // its OLD (narrower-or-equal) claims until it is re-minted; the claims it
+    // could ever gain are the role/college the application already recorded
+    // in documents the owner cannot self-edit (rules pin role/collegeId/uid
+    // on users/{uid} and every profile update), so no escalation is possible.
+    // Admin-side changes that DO demote (grantUserRole, identityRepair) keep
+    // their own revocation, where forcing a re-sign-in is the point.
 
     logger.info('[syncMyIdentity] claims issued', { uid, role, collegeId, source: target.source })
 

@@ -61,20 +61,30 @@ export async function ensureIdentityClaims(expected: {
   }
   if (!sync) return 'unavailable';
 
-  if (sync.updated) {
-    const user = auth.currentUser;
-    if (user) {
-      // Force a re-mint: an ID token only carries the claims that existed
-      // when it was minted, so the next read must use a fresh token.
-      try {
-        await user.getIdToken(true);
-      } catch {
-        // The refresh failed; the next check below reports it honestly.
-      }
+  // Force a re-mint whether or not the function wrote new claims. The two
+  // cases matter equally:
+  //   * updated: true  — new claims were just written; the token must be
+  //                      re-minted to carry them;
+  //   * updated: false — the account's claims were ALREADY correct (e.g. a
+  //                      superadmin granted access while the user was signed
+  //                      in). The token is simply stale, and a forced refresh
+  //                      against the still-valid refresh token picks the
+  //                      correct claims up without a sign-out.
+  // (The function no longer revokes the refresh token, so the refresh below
+  // succeeds in both cases; it only fails if an admin revoked it, in which
+  // case the session ends and the post-check reports 'unchanged' → the UI
+  // tells the user to sign in again.)
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      await user.getIdToken(true);
+    } catch {
+      // The refresh failed (session already gone); the post-check below
+      // reports it honestly.
     }
   }
 
   const after = await currentTokenClaims();
   if (after) return detectClaimStaleness(after, expected).stale ? 'unchanged' : 'refreshed';
-  return sync.updated ? 'refreshed' : 'unchanged';
+  return 'unchanged';
 }

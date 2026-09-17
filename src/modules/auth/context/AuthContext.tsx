@@ -65,11 +65,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           'collegeStale:', resolution.claimCollegeMissing, '; running syncMyIdentity',
         );
         const sync = await syncMyIdentity();
-        if (sync?.updated) {
-          await fbUser.getIdToken(true);
-          const afterRepair = await resolveIdentity(fbUser.uid, fbUser.email || undefined);
-          if (afterRepair.user) data = afterRepair.user;
-        } else if (!sync) {
+        // Re-mint the token whether or not the function wrote new claims:
+        // `updated: false` means the account's claims were ALREADY correct
+        // (e.g. a superadmin granted access during this sign-in session) and
+        // only the freshly minted token is stale. Without this branch such a
+        // user resolves with the old claimless token and hits
+        // permission-denied on every tenant write despite healthy identity
+        // data — the "I granted the access but it still refuses" report.
+        if (!sync) {
           // The callable returned nothing: it is not deployed (stale backend),
           // or no users/profile document exists at all (an identity-repair
           // job, not a self-heal). Either way the user is still stale — say so.
@@ -77,6 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             '[AuthContext] syncMyIdentity could not re-issue the claims. ' +
             'Deploy the current functions, or have a superadmin run Access Control → Identity Repair.',
           );
+        } else {
+          try {
+            await fbUser.getIdToken(true);
+          } catch {
+            // Refresh failed (e.g. an admin revoked the refresh token); the
+            // re-resolution below simply keeps the previous data.
+          }
+          const afterRepair = await resolveIdentity(fbUser.uid, fbUser.email || undefined);
+          if (afterRepair.user) data = afterRepair.user;
         }
       } catch (err) {
         console.warn('[AuthContext] claim self-heal failed:', err);

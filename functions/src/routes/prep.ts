@@ -63,10 +63,19 @@ import {
   SEEDED_BA_TOPICS,
   SEEDED_BA_QUESTIONS,
 } from '../data/baSeedData'
+import {
+  BCOM_SUBJECTS,
+  SEEDED_BCOM_TOPICS,
+  SEEDED_BCOM_QUESTIONS,
+} from '../data/bcomSeedData'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
  * master seeder walks when `programs` is 'all'.
+ *
+ * 'bcom' is a DERIVED bundle (see data/bcomSeedData.ts): it re-writes the
+ * bcom-tagged slice of the BBA/BA/B.Sc bundles with identical document bytes,
+ * so its position in the walk cannot conflict with the source bundles.
  */
 const PREP_SEED_BUNDLES: Array<{
   code: string
@@ -76,6 +85,7 @@ const PREP_SEED_BUNDLES: Array<{
   questions: UniversalQuestion[]
 }> = [
   { code: 'bba', label: 'BBA', subjects: BBA_SUBJECTS, topics: SEEDED_BBA_TOPICS, questions: SEEDED_UNIVERSAL_QUESTIONS },
+  { code: 'bcom', label: 'B.Com', subjects: BCOM_SUBJECTS, topics: SEEDED_BCOM_TOPICS, questions: SEEDED_BCOM_QUESTIONS },
   { code: 'bsc', label: 'B.Sc', subjects: BSC_SUBJECTS, topics: SEEDED_BSC_TOPICS, questions: SEEDED_BSC_QUESTIONS },
   { code: 'ba', label: 'BA', subjects: BA_SUBJECTS, topics: SEEDED_BA_TOPICS, questions: SEEDED_BA_QUESTIONS },
   { code: 'mcom', label: 'M.Com', subjects: MCOM_SUBJECTS, topics: SEEDED_MCOM_TOPICS, questions: SEEDED_MCOM_QUESTIONS },

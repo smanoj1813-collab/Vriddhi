@@ -13,8 +13,8 @@ import {
   fetchStaffAttendanceForDate,
   saveStaffAttendance,
 } from '@/shared/api/staffAttendanceApi';
-import { ensureIdentityClaims } from '@/shared/services/identitySelfHeal';
-import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims';
+import { ensureIdentityClaims, type SelfHealOutcome } from '@/shared/services/identitySelfHeal';
+import { isPermissionDeniedError, staleClaimMessage, staleDeployMessage } from '@/shared/utils/identityClaims';
 import {
   monthBounds,
   monthKeyOf,
@@ -59,8 +59,14 @@ export function useMyStaffAttendance() {
 
   // How many times this session has asked syncMyIdentity to re-issue the
   // token claims. One attempt per page mount: after that, further denials
-  // get the actionable message instead of re-calling the function.
+  // get the actionable message instead of re-calling the function. The
+  // OUTCOME is kept so the error can say which real fix is needed:
+  // 'current' → the token already matches the profile, so the deployed
+  // rules/functions are the problem (redeploy, not sign-out);
+  // 'unavailable' → the identity service could not be reached (stale backend);
+  // anything else → the usual stale-token guidance.
   const healAttempts = useRef(0);
+  const healOutcomeRef = useRef<SelfHealOutcome | null>(null);
 
   // selectDate reads the month records through a ref (not a dependency) on
   // purpose: the page re-runs selectDate(today) whenever the callback's
@@ -88,15 +94,34 @@ export function useMyStaffAttendance() {
         role: user.role,
         collegeId: user.collegeId ?? null,
       });
+      healOutcomeRef.current = outcome;
       if (outcome !== 'refreshed') {
         console.warn('[useMyStaffAttendance] claim self-heal did not re-issue claims:', outcome);
       }
       return outcome === 'refreshed';
     } catch (err) {
       console.warn('[useMyStaffAttendance] claim self-heal failed:', err);
+      healOutcomeRef.current = 'unavailable';
       return false;
     }
   }, [user]);
+
+  // Map the heal outcome to the specific, actionable denial message. The
+  // previous blanket "token missing role/college" sent users who were
+  // already holding a correct token (deployed rules are stale) down the
+  // sign-out / identity-repair path that cannot fix a deployment gap.
+  const denialMessage = (operation: string): string => {
+    const outcome = healOutcomeRef.current;
+    if (outcome === 'current') return staleDeployMessage(operation);
+    if (outcome === 'unavailable') {
+      return (
+        `Security rules refused this ${operation}, and the automatic identity refresh ` +
+        `could not reach the identity service. The deployed backend is likely out of ` +
+        `date — an admin must run "npm run deploy:functions", then you sign out and back in.`
+      );
+    }
+    return staleClaimMessage(operation);
+  };
 
   const load = useCallback(async () => {
     if (!facultyId) return;
@@ -116,13 +141,13 @@ export function useMyStaffAttendance() {
           return;
         } catch (retryErr) {
           console.error('[useMyStaffAttendance] load failed after claim refresh', retryErr);
-          setError(staleClaimMessage('attendance load'));
+          setError(denialMessage('attendance load'));
           return;
         }
       }
       setError(
         isPermissionDeniedError(err)
-          ? staleClaimMessage('attendance load')
+          ? denialMessage('attendance load')
           : err instanceof Error ? err.message : 'Could not load your attendance.',
       );
     } finally {
@@ -207,7 +232,7 @@ export function useMyStaffAttendance() {
       console.error('[useMyStaffAttendance] save failed', err);
       setError(
         isPermissionDeniedError(err)
-          ? staleClaimMessage('attendance save')
+          ? denialMessage('attendance save')
           : err instanceof Error ? err.message : 'Could not save your attendance.',
       );
       return false;

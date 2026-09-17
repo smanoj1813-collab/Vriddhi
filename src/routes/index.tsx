@@ -8,6 +8,7 @@ import { studentRoutes } from '@/modules/student/routes';
 import { facultyRoutes } from '@/modules/faculty/routes';
 import { adminRoutes } from '@/modules/admin/routes';
 import { superadminRoutes } from '@/modules/superadmin/routes';
+import { prepRoutes } from '@/modules/prep/routes';
 
 function RootRedirect() {
   const { user, isLoading } = useAuth();
@@ -68,5 +69,8 @@ export const appRoutes: RouteObject[] = [
   ...adminRoutes,
   ...superadminRoutes,
   // NO principalRoutes — principal uses adminRoutes
+  // Public Prep catalog (shareable, college-free) — must sit before the
+  // catch-all so /prep/... links resolve instead of 404-redirecting home.
+  ...prepRoutes,
   { path: '*', element: <NotFoundHandler /> },
 ];
