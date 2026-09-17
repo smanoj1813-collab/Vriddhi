@@ -208,7 +208,9 @@ export default function FacultySelfAttendance() {
       {error && (
         <div className="mb-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-          <span>{error}</span>
+          {/* pre-line: permission-denial errors now carry EVIDENCE lines
+              (token claims at failure time + exact write path) */}
+          <span className="whitespace-pre-line">{error}</span>
           <button type="button" onClick={() => setError(null)} className="ml-auto text-xs underline">Dismiss</button>
         </div>
       )}

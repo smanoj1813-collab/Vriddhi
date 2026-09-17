@@ -88,3 +88,47 @@ export async function ensureIdentityClaims(expected: {
   if (after) return detectClaimStaleness(after, expected).stale ? 'unchanged' : 'refreshed';
   return 'unchanged';
 }
+
+/**
+ * One-shot evidence capture for a rules denial that the client cannot
+ * explain: force-refresh the ID token, decode the ACTUAL JWT the SDK holds
+ * at that instant, and pair it with the exact document path and tenant
+ * fields the failed write carried. Printed into the denial message so the
+ * diagnosis does not depend on a DevTools network capture:
+ *
+ *   * token.uid / role / collegeId + iat/exp  → proves what the write
+ *     actually presented (and when that token was minted — a days-old iat
+ *     on a live session is a stale SDK-cached token by itself);
+ *   * write path + tenant fields             → proves the request shape.
+ */
+export async function captureWriteEvidence(writeInfo: {
+  collection: string;
+  docId: string;
+  fields: Record<string, unknown>;
+}): Promise<string> {
+  const parts: string[] = [];
+  const user = auth.currentUser;
+  if (!user) {
+    return 'EVIDENCE: no signed-in user at failure time.';
+  }
+  try {
+    const jwt = await user.getIdToken(true);
+    const payload = JSON.parse(
+      atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as Record<string, unknown>;
+    const iso = (v: unknown) => (typeof v === 'number' ? new Date(v * 1000).toISOString() : '?');
+    parts.push(
+      `EVIDENCE — token: uid=${String(payload.uid ?? 'MISSING')} ` +
+        `role=${String(payload.role ?? 'MISSING')} ` +
+        `collegeId=${JSON.stringify(payload.collegeId ?? 'MISSING')} ` +
+        `iat=${iso(payload.iat)} exp=${iso(payload.exp)}`,
+    );
+  } catch (err) {
+    parts.push(`EVIDENCE — could not read the current token: ${String(err)}`);
+  }
+  const flat = Object.fromEntries(
+    Object.entries(writeInfo.fields).map(([k, v]) => [k, typeof v === 'string' ? v : `${typeof v}`]),
+  );
+  parts.push(`EVIDENCE — write: ${writeInfo.collection}/${writeInfo.docId} fields: ${JSON.stringify(flat)}`);
+  return parts.join('\n');
+}

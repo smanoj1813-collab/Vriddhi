@@ -12,8 +12,13 @@ import {
   fetchMyStaffAttendance,
   fetchStaffAttendanceForDate,
   saveStaffAttendance,
+  staffAttendanceDocId,
 } from '@/shared/api/staffAttendanceApi';
-import { ensureIdentityClaims, type SelfHealOutcome } from '@/shared/services/identitySelfHeal';
+import {
+  captureWriteEvidence,
+  ensureIdentityClaims,
+  type SelfHealOutcome,
+} from '@/shared/services/identitySelfHeal';
 import { isPermissionDeniedError, staleClaimMessage, staleDeployMessage } from '@/shared/utils/identityClaims';
 import {
   monthBounds,
@@ -230,11 +235,23 @@ export function useMyStaffAttendance() {
       return true;
     } catch (err) {
       console.error('[useMyStaffAttendance] save failed', err);
-      setError(
-        isPermissionDeniedError(err)
-          ? denialMessage('attendance save')
-          : err instanceof Error ? err.message : 'Could not save your attendance.',
-      );
+      if (isPermissionDeniedError(err)) {
+        // The denial message says WHICH fix applies; the evidence lines say
+        // what the write ACTUALLY presented — the JWT claims at that instant
+        // (with iat, exposing a stale SDK-cached token) and the exact
+        // document path + tenant fields. Pasting the banner back is enough
+        // to finish the diagnosis without any network capture.
+        const base = denialMessage('attendance save');
+        const evidence = await captureWriteEvidence({
+          collection: 'staffAttendance',
+          docId: staffAttendanceDocId(collegeId, facultyId, form.date),
+          fields: { collegeId, facultyId, department, status: form.status, source: 'self' },
+        });
+        console.error('[useMyStaffAttendance] write evidence', evidence);
+        setError(`${base}\n\n${evidence}`);
+      } else {
+        setError(err instanceof Error ? err.message : 'Could not save your attendance.');
+      }
       return false;
     } finally {
       setSaving(false);
