@@ -90,6 +90,35 @@ export async function ensureIdentityClaims(expected: {
 }
 
 /**
+ * Decode the token the SDK is about to present for the next request,
+ * WITHOUT refreshing: exactly the cached credentials the write will carry.
+ * The SDK auto-refreshes only on expiry — if that refresh fails (flaky
+ * proxy, cold start), the write goes out with an expired token and the
+ * server rejects the auth itself, surfacing as the SAME
+ * "Missing or insufficient permissions" error. The pre-write iat/exp is
+ * what separates that case from any claims problem.
+ */
+export async function fingerprintCurrentToken(): Promise<string> {
+  const user = auth.currentUser;
+  if (!user) return 'EVIDENCE — pre-write token: no signed-in user';
+  try {
+    const result = await user.getIdTokenResult(); // no refresh — what the next request will present
+    const payload = JSON.parse(
+      atob(result.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as Record<string, unknown>;
+    const iso = (v: unknown) => (typeof v === 'number' ? new Date(v * 1000).toISOString() : '?');
+    return (
+      `EVIDENCE — pre-write token: uid=${String(payload.user_id ?? payload.uid ?? 'MISSING')} ` +
+      `role=${String(payload.role ?? 'MISSING')} ` +
+      `collegeId=${JSON.stringify(payload.collegeId ?? 'MISSING')} ` +
+      `iat=${iso(payload.iat)} exp=${iso(payload.exp)}`
+    );
+  } catch (err) {
+    return `EVIDENCE — pre-write token: unreadable (${String(err)})`;
+  }
+}
+
+/**
  * One-shot evidence capture for a rules denial that the client cannot
  * explain: force-refresh the ID token, decode the ACTUAL JWT the SDK holds
  * at that instant, and pair it with the exact document path and tenant
@@ -118,7 +147,7 @@ export async function captureWriteEvidence(writeInfo: {
     ) as Record<string, unknown>;
     const iso = (v: unknown) => (typeof v === 'number' ? new Date(v * 1000).toISOString() : '?');
     parts.push(
-      `EVIDENCE — token: uid=${String(payload.uid ?? 'MISSING')} ` +
+      `EVIDENCE — token (refreshed): uid=${String(payload.user_id ?? payload.uid ?? 'MISSING')} ` +
         `role=${String(payload.role ?? 'MISSING')} ` +
         `collegeId=${JSON.stringify(payload.collegeId ?? 'MISSING')} ` +
         `iat=${iso(payload.iat)} exp=${iso(payload.exp)}`,

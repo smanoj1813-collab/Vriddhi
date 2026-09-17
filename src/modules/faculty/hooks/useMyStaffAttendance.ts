@@ -17,6 +17,7 @@ import {
 import {
   captureWriteEvidence,
   ensureIdentityClaims,
+  fingerprintCurrentToken,
   type SelfHealOutcome,
 } from '@/shared/services/identitySelfHeal';
 import { isPermissionDeniedError, staleClaimMessage, staleDeployMessage } from '@/shared/utils/identityClaims';
@@ -202,6 +203,13 @@ export function useMyStaffAttendance() {
       return false;
     }
     setSaving(true);
+    // The exact token the next write will present — the SDK's CACHED
+    // credentials, read without refreshing. If the denial turns out
+    // unexplainable, the banner shows this beside the post-failure
+    // refreshed token: a pre-write exp in the past means the SDK's
+    // automatic refresh failed silently and the server rejected the auth
+    // before any rule ran (same error text either way).
+    const preWriteToken = await fingerprintCurrentToken();
     const params = {
       collegeId,
       facultyId,
@@ -248,7 +256,7 @@ export function useMyStaffAttendance() {
           fields: { collegeId, facultyId, department, status: form.status, source: 'self' },
         });
         console.error('[useMyStaffAttendance] write evidence', evidence);
-        setError(`${base}\n\n${evidence}`);
+        setError(`${base}\n${preWriteToken}\n${evidence}`);
       } else {
         setError(err instanceof Error ? err.message : 'Could not save your attendance.');
       }
