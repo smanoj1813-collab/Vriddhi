@@ -21,6 +21,7 @@
 //   POST /progress                      → (Signed in) Save learner's progress / quiz result
 //   POST /auth/init                     → (Signed in) Set student role claim for B2C learner
 //   POST /seed-bba                      → (Superadmin) Seed BBA subjects & topics across 3 years
+//   POST /seed-all                      → (Superadmin) Seed every program (or a chosen subset / degree level)
 
 import { Router, Response } from 'express'
 import { db, auth } from '../config/firebase'
@@ -33,6 +34,11 @@ import {
   validatePublishTransition,
   samplePracticeQuestions,
   buildPrepAiPrompt,
+  validatePrepCatalog,
+  resolveSeedPrograms,
+  chunkArray,
+  getPrepProgramsForLevel,
+  effectiveDegreeLevel,
   PrepSubject,
   PrepTopic,
   UniversalQuestion,
@@ -42,6 +48,41 @@ import {
   SEEDED_BBA_TOPICS,
   SEEDED_UNIVERSAL_QUESTIONS,
 } from '../data/bbaSeedData'
+import {
+  MCOM_SUBJECTS,
+  SEEDED_MCOM_TOPICS,
+  SEEDED_MCOM_QUESTIONS,
+} from '../data/mcomSeedData'
+import {
+  BSC_SUBJECTS,
+  SEEDED_BSC_TOPICS,
+  SEEDED_BSC_QUESTIONS,
+} from '../data/bscSeedData'
+import {
+  BA_SUBJECTS,
+  SEEDED_BA_TOPICS,
+  SEEDED_BA_QUESTIONS,
+} from '../data/baSeedData'
+
+/**
+ * Registry of every program that ships with seed data. Order is the order the
+ * master seeder walks when `programs` is 'all'.
+ */
+const PREP_SEED_BUNDLES: Array<{
+  code: string
+  label: string
+  subjects: PrepSubject[]
+  topics: Record<string, PrepTopic[]>
+  questions: UniversalQuestion[]
+}> = [
+  { code: 'bba', label: 'BBA', subjects: BBA_SUBJECTS, topics: SEEDED_BBA_TOPICS, questions: SEEDED_UNIVERSAL_QUESTIONS },
+  { code: 'bsc', label: 'B.Sc', subjects: BSC_SUBJECTS, topics: SEEDED_BSC_TOPICS, questions: SEEDED_BSC_QUESTIONS },
+  { code: 'ba', label: 'BA', subjects: BA_SUBJECTS, topics: SEEDED_BA_TOPICS, questions: SEEDED_BA_QUESTIONS },
+  { code: 'mcom', label: 'M.Com', subjects: MCOM_SUBJECTS, topics: SEEDED_MCOM_TOPICS, questions: SEEDED_MCOM_QUESTIONS },
+]
+
+/** Firestore allows at most 500 writes per commit; stay well under it. */
+const FIRESTORE_BATCH_LIMIT = 400
 
 export const router = Router()
 
@@ -192,7 +233,7 @@ When writing answers for 10-mark questions:
 // Publicly lists prep subjects. Filterable by program (e.g. 'bba'), stream, and yearGroup.
 router.get('/subjects', async (req, res) => {
   try {
-    const { program, stream, yearGroup } = req.query
+    const { program, stream, yearGroup, degreeLevel } = req.query
     const snap = await db.collection('prep_subjects').get()
 
     let subjects: PrepSubject[] = snap.docs.map((d) => {
@@ -222,6 +263,13 @@ router.get('/subjects', async (req, res) => {
     if (typeof yearGroup === 'string' && yearGroup.trim()) {
       const yg = yearGroup.toLowerCase().trim()
       subjects = subjects.filter((s) => s.yearGroup?.toLowerCase() === yg)
+    }
+
+    if (typeof degreeLevel === 'string' && degreeLevel.trim() && degreeLevel !== 'all') {
+      const lvl = degreeLevel.toLowerCase().trim()
+      // effectiveDegreeLevel infers 'undergraduate' for legacy records (BBA)
+      // that predate the degreeLevel field.
+      subjects = subjects.filter((s) => effectiveDegreeLevel(s) === lvl)
     }
 
     subjects.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
@@ -713,5 +761,158 @@ router.post('/seed-bba', verifyAuth, async (req: AuthenticatedRequest, res: Resp
   } catch (err: any) {
     console.error('[Prep] POST /seed-bba error:', err)
     res.status(500).json({ error: 'Failed to seed BBA catalog', detail: err.message })
+  }
+})
+
+// ── POST /seed-all (Superadmin master curriculum population) ─────────────────
+//
+// One-click population of every program that ships with seed data, or a chosen
+// subset. Accepts:
+//   { "programs": "all" }                 → every program (default)
+//   { "programs": "ba,mcom" }             → comma separated codes
+//   { "programs": ["ba", "bsc"] }         → array of codes
+//   { "programs": "undergraduate" }       → every UG program in the catalog
+//
+// Writes are accumulated and committed in chunks of FIRESTORE_BATCH_LIMIT to
+// stay under Firestore's 500-writes-per-commit ceiling. Every write uses
+// { merge: true } so re-running the seeder refreshes content in place.
+//
+// Each selected catalog is also passed through validatePrepCatalog() and the
+// integrity report is returned, so the operator can see any referential gap
+// without a separate round trip.
+router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+
+  try {
+    const body = req.body || {}
+    const requested = body.programs ?? body.program ?? 'all'
+
+    // Allow selecting by degree level as well as by explicit program codes.
+    const seedableCodes = PREP_SEED_BUNDLES.map((b) => b.code)
+    const asLevel = typeof requested === 'string' ? requested.trim().toLowerCase() : ''
+    const byLevel =
+      asLevel === 'undergraduate' || asLevel === 'postgraduate'
+        ? getPrepProgramsForLevel(asLevel)
+            .map((p) => p.code)
+            .filter((code) => seedableCodes.includes(code))
+        : null
+
+    const selection = resolveSeedPrograms(byLevel ?? requested)
+    // Honour the caller's ordering rather than the registry's, so a chosen
+    // subset seeds in exactly the sequence requested.
+    const bundles = selection.programs
+      .map((code) => PREP_SEED_BUNDLES.find((b) => b.code === code))
+      .filter((b): b is (typeof PREP_SEED_BUNDLES)[number] => Boolean(b))
+    // Valid program codes that simply have no seed bundle yet.
+    const unseedable = selection.programs.filter((code) => !seedableCodes.includes(code))
+
+    if (selection.errors.length > 0 && bundles.length === 0) {
+      res.status(400).json({
+        error: 'No seedable programs matched the request.',
+        errors: selection.errors,
+        available: seedableCodes,
+      })
+      return
+    }
+
+    if (bundles.length === 0) {
+      res.status(400).json({
+        error: 'The requested programs have no seed data yet.',
+        errors: selection.errors,
+        unseedable,
+        available: seedableCodes,
+      })
+      return
+    }
+
+    // Stage every write up front so counts are exact and chunks are uniform.
+    type StagedWrite = { ref: FirebaseFirestore.DocumentReference; data: Record<string, any> }
+    const writes: StagedWrite[] = []
+    const perProgram: Array<{
+      code: string
+      label: string
+      subjectCount: number
+      topicCount: number
+      questionCount: number
+      valid: boolean
+      errorCount: number
+      warningCount: number
+    }> = []
+
+    for (const bundle of bundles) {
+      const report = validatePrepCatalog({
+        programCode: bundle.code,
+        subjects: bundle.subjects,
+        topics: bundle.topics,
+        questions: bundle.questions,
+      })
+
+      let subjectCount = 0
+      let topicCount = 0
+      let questionCount = 0
+
+      for (const subj of bundle.subjects) {
+        writes.push({ ref: db.collection('prep_subjects').doc(subj.id), data: subj as any })
+        subjectCount++
+      }
+
+      for (const [subjectId, topics] of Object.entries(bundle.topics)) {
+        for (const topic of topics) {
+          writes.push({
+            ref: db.collection('prep_subjects').doc(subjectId).collection('topics').doc(topic.id),
+            data: topic as any,
+          })
+          topicCount++
+        }
+      }
+
+      for (const q of bundle.questions) {
+        writes.push({ ref: db.collection('universalQuestions').doc(q.id), data: q as any })
+        questionCount++
+      }
+
+      perProgram.push({
+        code: bundle.code,
+        label: bundle.label,
+        subjectCount,
+        topicCount,
+        questionCount,
+        valid: report.valid,
+        errorCount: report.errorCount,
+        warningCount: report.warningCount,
+      })
+    }
+
+    // Commit in chunks; Firestore rejects batches larger than 500 writes.
+    const chunks = chunkArray(writes, FIRESTORE_BATCH_LIMIT)
+    for (const chunk of chunks) {
+      const batch = db.batch()
+      for (const w of chunk) batch.set(w.ref, w.data, { merge: true })
+      await batch.commit()
+    }
+
+    const totals = perProgram.reduce(
+      (acc, p) => ({
+        subjectCount: acc.subjectCount + p.subjectCount,
+        topicCount: acc.topicCount + p.topicCount,
+        questionCount: acc.questionCount + p.questionCount,
+      }),
+      { subjectCount: 0, topicCount: 0, questionCount: 0 }
+    )
+
+    res.json({
+      success: true,
+      message: `Seeded ${bundles.length} program(s): ${totals.subjectCount} subjects, ${totals.topicCount} topics and ${totals.questionCount} universal practice questions across ${chunks.length} commit(s).`,
+      programs: selection.programs,
+      errors: selection.errors,
+      unseedable,
+      ...totals,
+      perProgram,
+      writes: writes.length,
+      commits: chunks.length,
+    })
+  } catch (err: any) {
+    console.error('[Prep] POST /seed-all error:', err)
+    res.status(500).json({ error: 'Failed to seed prep catalog', detail: err.message })
   }
 })

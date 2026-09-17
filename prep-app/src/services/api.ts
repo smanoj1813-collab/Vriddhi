@@ -7,9 +7,25 @@ import { auth } from '../firebase';
 export interface PrepSubject {
   id: string;
   name: string;
-  stream: 'commerce' | 'management' | 'aptitude' | 'economics' | 'finance' | 'law' | 'strategy' | 'operations' | 'taxation';
+  stream:
+    | 'commerce'
+    | 'management'
+    | 'aptitude'
+    | 'economics'
+    | 'finance'
+    | 'law'
+    | 'strategy'
+    | 'operations'
+    | 'taxation'
+    | 'mathematics'
+    | 'statistics'
+    | 'science'
+    | 'computing'
+    | 'communication';
   programs: string[];
-  yearGroup?: '1st-year' | '2nd-year' | 'final-year';
+  /** UG vs PG. Absent on legacy (BBA) records — treated as undergraduate. */
+  degreeLevel?: 'undergraduate' | 'postgraduate';
+  yearGroup?: '1st-year' | '2nd-year' | 'final-year' | 'pg-first-year' | 'pg-second-year';
   semester?: number;
   universityRegion?: 'karnataka' | 'national';
   syllabusRef?: string;
@@ -132,17 +148,66 @@ import {
   SEEDED_BBA_TOPICS,
   SEEDED_UNIVERSAL_QUESTIONS,
 } from '../../../functions/src/data/bbaSeedData';
+import {
+  BSC_SUBJECTS,
+  SEEDED_BSC_TOPICS,
+  SEEDED_BSC_QUESTIONS,
+} from '../../../functions/src/data/bscSeedData';
+import {
+  BA_SUBJECTS,
+  SEEDED_BA_TOPICS,
+  SEEDED_BA_QUESTIONS,
+} from '../../../functions/src/data/baSeedData';
+import {
+  MCOM_SUBJECTS,
+  SEEDED_MCOM_TOPICS,
+  SEEDED_MCOM_QUESTIONS,
+} from '../../../functions/src/data/mcomSeedData';
+
+/**
+ * Merged offline catalogue across every program that ships with seed data.
+ * Used only when the backend is unreachable, so the Prep App never renders an
+ * empty hub. The remote API remains the source of truth whenever it responds.
+ */
+const ALL_SEED_SUBJECTS: PrepSubject[] = [
+  ...BBA_SUBJECTS,
+  ...BSC_SUBJECTS,
+  ...BA_SUBJECTS,
+  ...MCOM_SUBJECTS,
+] as PrepSubject[];
+
+const ALL_SEED_TOPICS: Record<string, PrepTopic[]> = {
+  ...SEEDED_BBA_TOPICS,
+  ...SEEDED_BSC_TOPICS,
+  ...SEEDED_BA_TOPICS,
+  ...SEEDED_MCOM_TOPICS,
+} as Record<string, PrepTopic[]>;
+
+const ALL_SEED_QUESTIONS: UniversalQuestion[] = [
+  ...SEEDED_UNIVERSAL_QUESTIONS,
+  ...SEEDED_BSC_QUESTIONS,
+  ...SEEDED_BA_QUESTIONS,
+  ...SEEDED_MCOM_QUESTIONS,
+] as UniversalQuestion[];
+
+/** Subjects offered for a given program code, newest programs included. */
+function seedSubjectsForProgram(program?: string): PrepSubject[] {
+  if (!program || program === 'all') return ALL_SEED_SUBJECTS;
+  return ALL_SEED_SUBJECTS.filter((s) => (s.programs || []).includes(program));
+}
 
 export async function getSubjects(params?: {
   program?: string;
   stream?: string;
   yearGroup?: string;
+  degreeLevel?: string;
 }): Promise<PrepSubject[]> {
   try {
     const qs = new URLSearchParams();
     if (params?.program) qs.set('program', params.program);
     if (params?.stream) qs.set('stream', params.stream);
     if (params?.yearGroup) qs.set('yearGroup', params.yearGroup);
+    if (params?.degreeLevel) qs.set('degreeLevel', params.degreeLevel);
 
     const res = await authedFetch(`/prep/subjects${qs.toString() ? `?${qs.toString()}` : ''}`);
     if (res.ok) {
@@ -155,8 +220,14 @@ export async function getSubjects(params?: {
     console.warn('[PrepApp] Failed to fetch remote subjects, falling back to embedded seed:', err);
   }
 
-  // Fallback to embedded BBA catalog
-  let filtered = [...BBA_SUBJECTS];
+  // Fallback to the embedded multi-program catalog.
+  let filtered = seedSubjectsForProgram(params?.program);
+  if (params?.degreeLevel && params.degreeLevel !== 'all') {
+    // Legacy BBA records omit degreeLevel and count as undergraduate.
+    filtered = filtered.filter(
+      (s) => (s.degreeLevel || 'undergraduate') === params.degreeLevel
+    );
+  }
   if (params?.yearGroup && params.yearGroup !== 'all') {
     filtered = filtered.filter((s) => s.yearGroup === params.yearGroup);
   }
@@ -176,7 +247,7 @@ export async function getSubject(subjectId: string): Promise<PrepSubject | null>
   } catch (err) {
     console.warn('[PrepApp] Error fetching subject:', err);
   }
-  return BBA_SUBJECTS.find((s) => s.id === subjectId) || null;
+  return ALL_SEED_SUBJECTS.find((s) => s.id === subjectId) || null;
 }
 
 export async function getTopics(subjectId: string): Promise<PrepTopic[]> {
@@ -191,7 +262,7 @@ export async function getTopics(subjectId: string): Promise<PrepTopic[]> {
   } catch (err) {
     console.warn('[PrepApp] Error fetching topics:', err);
   }
-  return SEEDED_BBA_TOPICS[subjectId] || [];
+  return ALL_SEED_TOPICS[subjectId] || [];
 }
 
 export async function getTopic(subjectId: string, topicId: string): Promise<PrepTopic | null> {
@@ -204,7 +275,7 @@ export async function getTopic(subjectId: string, topicId: string): Promise<Prep
   } catch (err) {
     console.warn('[PrepApp] Error fetching topic:', err);
   }
-  const list = SEEDED_BBA_TOPICS[subjectId] || [];
+  const list = ALL_SEED_TOPICS[subjectId] || [];
   return list.find((t) => t.id === topicId) || null;
 }
 
@@ -231,7 +302,7 @@ export async function getPracticeQuestions(params: {
   }
 
   // Fallback to seeded questions
-  const matches = SEEDED_UNIVERSAL_QUESTIONS.filter(
+  const matches = ALL_SEED_QUESTIONS.filter(
     (q) =>
       (!params.topicId || q.prepTags.topicIds.includes(params.topicId)) ||
       (!params.subjectId || q.prepTags.subjectId === params.subjectId)

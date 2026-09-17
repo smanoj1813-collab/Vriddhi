@@ -20,6 +20,7 @@
 //     students only ever ride free cache hits.
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Sparkles, Loader2, RefreshCw, AlertTriangle, Check, Info, Zap,
   Gauge, Snowflake, Plus, Trash2, BookOpen, Globe2, Play, Search, Library,
@@ -84,11 +85,27 @@ const statusChip = (status: string) => {
 export default function AiStudyContentTab() {
   const { user } = useAuth();
   const role = user?.role || '';
-  const [activeMode, setActiveMode] = useState<'controls' | 'prepStudio'>('controls');
+  // Deep-link support: ?mode=prepStudio opens directly into the Prep Content
+  // Studio instead of the spend/breaker controls (used by the superadmin
+  // sidebar path into AI Content & Cost).
+  const [searchParams] = useSearchParams();
+  const [activeMode, setActiveMode] = useState<'controls' | 'prepStudio'>(() =>
+    searchParams.get('mode') === 'prepStudio' ? 'prepStudio' : 'controls'
+  );
   // Internal platform view: editing and even READING are superadmin-only
   // (mirrors the server's 403; college staff must not see cost data).
   const canEdit = role === 'superadmin';
   const isSuperadmin = role === 'superadmin';
+
+  // Re-sync when the query string changes while this tab stays mounted
+  // (e.g. navigating from the superadmin sidebar to ?tab=ai-content&mode=prepStudio).
+  // Unknown mode values are ignored so the viewer keeps their current pane.
+  useEffect(() => {
+    const requested = searchParams.get('mode');
+    if (requested === 'prepStudio' || requested === 'controls') {
+      setActiveMode(requested);
+    }
+  }, [searchParams]);
 
   // Superadmin targets a campus explicitly; staff are auto-scoped by claim.
   const [collegeInput, setCollegeInput] = useState('');

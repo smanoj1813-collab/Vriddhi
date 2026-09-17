@@ -5,22 +5,40 @@ import {
   Sparkles, Flame, Shield, Search
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import {
+  PREP_PROGRAM_CATALOG,
+  getPrepProgramsForLevel,
+  type PrepDegreeLevel,
+} from '../../../functions/src/prepShared';
 
 interface NavbarProps {
   onOpenAuth: () => void;
   onHomeClick: () => void;
   selectedProgram: string;
   onSelectProgram: (prog: string) => void;
+  degreeLevel: PrepDegreeLevel;
+  onSelectDegreeLevel: (level: PrepDegreeLevel) => void;
 }
+
+const DEGREE_LEVELS: Array<{ id: PrepDegreeLevel; label: string }> = [
+  { id: 'undergraduate', label: 'Undergraduate' },
+  { id: 'postgraduate', label: 'Postgraduate' },
+];
 
 export default function Navbar({
   onOpenAuth,
   onHomeClick,
   selectedProgram,
   onSelectProgram,
+  degreeLevel,
+  onSelectDegreeLevel,
 }: NavbarProps) {
   const { user, signOut } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const activeProgram =
+    PREP_PROGRAM_CATALOG.find((p) => p.code === selectedProgram) ?? null;
+  const programsForLevel = getPrepProgramsForLevel(degreeLevel);
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
@@ -40,30 +58,55 @@ export default function Navbar({
                   Vriddhi<span className="text-teal-600 dark:text-teal-400">Prep</span>
                 </span>
                 <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 uppercase tracking-wider">
-                  BBA Hub
+                  {activeProgram ? `${activeProgram.code} Hub` : 'Prep Hub'}
                 </span>
               </div>
               <p className="text-[10px] font-semibold text-slate-400 -mt-0.5">
-                Commerce & Management Prep
+                {activeProgram ? activeProgram.fullName : 'Karnataka NEP Prep'}
               </p>
             </div>
           </button>
 
-          {/* Program Switcher */}
-          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800">
-            {(['bba', 'bcom', 'mba'] as const).map((prog) => (
-              <button
-                key={prog}
-                onClick={() => onSelectProgram(prog)}
-                className={`px-3 py-1 rounded-lg uppercase transition-all ${
-                  selectedProgram === prog
-                    ? 'bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                {prog}
-              </button>
-            ))}
+          {/* Degree Level Toggle + Program Switcher */}
+          <div className="hidden md:flex items-center gap-2">
+            <div
+              role="group"
+              aria-label="Degree level"
+              className="flex items-center bg-teal-50 dark:bg-teal-950/40 p-1 rounded-xl text-xs font-bold border border-teal-200 dark:border-teal-900"
+            >
+              {DEGREE_LEVELS.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => onSelectDegreeLevel(level.id)}
+                  aria-pressed={degreeLevel === level.id}
+                  className={`px-3 py-1 rounded-lg transition-all ${
+                    degreeLevel === level.id
+                      ? 'bg-teal-600 text-white shadow-sm'
+                      : 'text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900'
+                  }`}
+                >
+                  {level.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800">
+              {programsForLevel.map((prog) => (
+                <button
+                  key={prog.code}
+                  onClick={() => onSelectProgram(prog.code)}
+                  title={prog.fullName}
+                  aria-pressed={selectedProgram === prog.code}
+                  className={`px-3 py-1 rounded-lg uppercase transition-all ${
+                    selectedProgram === prog.code
+                      ? 'bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {prog.code}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

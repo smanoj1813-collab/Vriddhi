@@ -13,6 +13,7 @@ import { KARNATAKA_UNIVERSITIES, getUniversityCrosswalk } from '../../../src/sha
 interface HubPageProps {
   onSelectSubject: (subjectId: string) => void;
   selectedProgram: string;
+  degreeLevel?: 'undergraduate' | 'postgraduate';
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -36,7 +37,7 @@ interface RadarAxis {
   score: number; // 0 to 100
 }
 
-export default function HubPage({ onSelectSubject, selectedProgram }: HubPageProps) {
+export default function HubPage({ onSelectSubject, selectedProgram, degreeLevel }: HubPageProps) {
   const [subjects, setSubjects] = useState<PrepSubject[]>([]);
   const [progress, setProgress] = useState<LearnerProgress>({ topicsCompleted: {} });
   const [loading, setLoading] = useState(true);
@@ -50,7 +51,7 @@ export default function HubPage({ onSelectSubject, selectedProgram }: HubPagePro
     async function load() {
       setLoading(true);
       const [subjData, progData] = await Promise.all([
-        getSubjects({ program: selectedProgram }),
+        getSubjects({ program: selectedProgram, degreeLevel }),
         getLearnerProgress(),
       ]);
       setSubjects(subjData);
@@ -58,7 +59,7 @@ export default function HubPage({ onSelectSubject, selectedProgram }: HubPagePro
       setLoading(false);
     }
     load();
-  }, [selectedProgram]);
+  }, [selectedProgram, degreeLevel]);
 
   const filtered = subjects.filter((s) => {
     if (selectedYear !== 'all' && s.yearGroup !== selectedYear) return false;
@@ -138,10 +139,10 @@ export default function HubPage({ onSelectSubject, selectedProgram }: HubPagePro
         <div className="relative max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>PrepInsta-Class Commerce & Management Preparation</span>
+            <span>PrepInsta-Class UG & PG Preparation</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-            Master Every BBA Subject from <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">1st Year to Final Year</span>
+            Master Every {selectedProgram.toUpperCase()} Subject from <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">1st Year to Final Year</span>
           </h1>
           <p className="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
             Curriculum-authored study material for Indian Universities (NEP 2020, CBCS). Instant concept explanations, formula sheets, examiner shortcuts, step-by-step solvers, and timed practice tests.
@@ -378,7 +379,7 @@ export default function HubPage({ onSelectSubject, selectedProgram }: HubPagePro
                 </span>
                 <div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                    {uni.name} — BBA Examination Blueprint
+                    {uni.name} — {selectedProgram.toUpperCase()} Examination Blueprint
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Syllabus Authority: {uni.syllabusAuthority} · Scheme: {uni.examScheme}
