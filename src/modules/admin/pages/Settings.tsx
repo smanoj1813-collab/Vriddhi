@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useAuth } from '../../auth/context/AuthContext'
 import { auth, db } from '@/Firebase/config'
@@ -109,6 +110,9 @@ function Message({ type, text }: { type: 'ok' | 'err' | 'info'; text: string }) 
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
+  // Deep-link support: /admin/settings?tab=ai-content lands the superadmin
+  // straight on the "AI Content & Cost" tab (which hosts Prep Content Studio).
+  const [searchParams] = useSearchParams()
   const { mode, resolvedMode, setMode } = useThemeMode()
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -195,6 +199,18 @@ export default function Settings() {
       ? [{ id: 'ai-content', label: 'AI Content & Cost', icon: Sparkles }]
       : []),
   ]
+
+  // Honour ?tab=<tabId> deep links. Only tabs that actually exist for this
+  // viewer are accepted, so a college admin hitting ?tab=ai-content simply
+  // stays on General rather than being routed to a superadmin-only surface.
+  useEffect(() => {
+    const requested = searchParams.get('tab')
+    if (!requested) return
+    if (tabs.some((tab) => tab.id === requested)) {
+      setActiveTab(requested)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.role])
 
   // Load initial data
   useEffect(() => {

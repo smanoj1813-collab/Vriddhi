@@ -147,11 +147,17 @@ const navItems: NavItem[] = [
   { label: "Import Students", path: "/superadmin/students/import", icon: <UploadFile fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Regenerate Credentials", path: "/superadmin/credentials/regenerate", icon: <BadgeIcon fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Curriculum", path: "/superadmin/curriculum", icon: <School fontSize="small" />, roles: ["superadmin"], section: "Academic" },
+  // Prep Content Studio gets a first-class superadmin entry: it used to be
+  // reachable only through /admin/settings → "AI Content & Cost" tab.
+  { label: "Prep Content Studio", path: "/superadmin/prep-studio", icon: <AutoAwesome fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   { label: "Question Bank", path: "/superadmin/question-bank", icon: <QuestionAnswer fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "System Management", path: "/superadmin/system-management", icon: <Settings fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "System Health", path: "/superadmin/health", icon: <MonitorHeartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
+  // Superadmin can open the shared Settings surface (hosted under /admin, whose
+  // RoleRoute already allows 'superadmin') to reach "AI Content & Cost" controls.
+  { label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" />, roles: ["superadmin"], section: "System" },
 
   // ─── ADMIN / PRINCIPAL ───
   { label: "Dashboard", path: "/admin/dashboard", icon: <Dashboard fontSize="small" />, roles: ["admin", "principal"], section: "Main" },

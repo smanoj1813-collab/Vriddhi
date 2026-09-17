@@ -14,6 +14,12 @@ export type PrepStream =
   | 'strategy'
   | 'operations'
   | 'taxation'
+  // Science / arts streams added for the B.Sc, BA and MCA catalogs.
+  | 'mathematics'
+  | 'statistics'
+  | 'science'
+  | 'computing'
+  | 'communication'
 
 export type PrepDifficulty = 'basic' | 'core' | 'advanced'
 export type PrepStatus = 'draft' | 'in_review' | 'published'
@@ -81,8 +87,11 @@ export interface PrepSubject {
   name: string
   stream: PrepStream
   programs: string[] // ['bba', 'bcom', 'mba', ...]
-  yearGroup?: '1st-year' | '2nd-year' | 'final-year'
-  semester?: number // 1 to 6
+  /** UG vs PG. Absent on legacy (BBA) records — inferred as undergraduate. */
+  degreeLevel?: PrepDegreeLevel
+  /** PG programs run 4 semesters, so they get their own year grouping. */
+  yearGroup?: '1st-year' | '2nd-year' | 'final-year' | 'pg-first-year' | 'pg-second-year'
+  semester?: number // UG 1 to 6, PG 1 to 4
   universityRegion?: 'karnataka' | 'national'
   syllabusRef?: string
   icon: string
@@ -394,4 +403,358 @@ You MUST output ONLY a valid JSON object matching this schema with NO markdown c
 }
 
 Note: For theoretical subjects (like Business Law or Principles of Management), in "formulas" you can provide legal maxims, journal entry rules, or core analytical equations.`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Multi-program catalog layer (UG + PG, Karnataka NEP 2020 / CBCS)
+//
+// Everything below is pure data + pure functions so the seeding controller and
+// the node:test integrity suite share one source of truth.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type PrepDegreeLevel = 'undergraduate' | 'postgraduate'
+
+export interface PrepProgramInfo {
+  /** Lowercase canonical program code used in PrepSubject.programs / seed APIs. */
+  code: string
+  /** Human label shown in the Prep App program selector. */
+  label: string
+  degreeLevel: PrepDegreeLevel
+  /** Full degree name, used for the AI authoring prompt context. */
+  fullName: string
+}
+
+/**
+ * Canonical program catalog for the Vriddhi Prep platform.
+ * UG: BBA, B.Com, BCA, B.Sc, BA  |  PG: MBA, M.Com, MCA
+ */
+export const PREP_PROGRAM_CATALOG: PrepProgramInfo[] = [
+  { code: 'bba', label: 'BBA', degreeLevel: 'undergraduate', fullName: 'Bachelor of Business Administration' },
+  { code: 'bcom', label: 'B.Com', degreeLevel: 'undergraduate', fullName: 'Bachelor of Commerce' },
+  { code: 'bca', label: 'BCA', degreeLevel: 'undergraduate', fullName: 'Bachelor of Computer Applications' },
+  { code: 'bsc', label: 'B.Sc', degreeLevel: 'undergraduate', fullName: 'Bachelor of Science' },
+  { code: 'ba', label: 'BA', degreeLevel: 'undergraduate', fullName: 'Bachelor of Arts' },
+  { code: 'mba', label: 'MBA', degreeLevel: 'postgraduate', fullName: 'Master of Business Administration' },
+  { code: 'mcom', label: 'M.Com', degreeLevel: 'postgraduate', fullName: 'Master of Commerce' },
+  { code: 'mca', label: 'MCA', degreeLevel: 'postgraduate', fullName: 'Master of Computer Applications' },
+]
+
+/** Lowercase program codes, e.g. ['bba', 'bcom', ...]. */
+export const PREP_PROGRAM_CODES: string[] = PREP_PROGRAM_CATALOG.map((p) => p.code)
+
+export function getPrepProgramInfo(code?: string | null): PrepProgramInfo | null {
+  if (!code) return null
+  const norm = code.toLowerCase().trim()
+  return PREP_PROGRAM_CATALOG.find((p) => p.code === norm) || null
+}
+
+export function getPrepProgramsForLevel(level?: PrepDegreeLevel | string | null): PrepProgramInfo[] {
+  if (!level || level === 'all') return [...PREP_PROGRAM_CATALOG]
+  const norm = String(level).toLowerCase().trim()
+  return PREP_PROGRAM_CATALOG.filter((p) => p.degreeLevel === norm)
+}
+
+export function resolveProgramDegreeLevel(code?: string | null): PrepDegreeLevel | null {
+  return getPrepProgramInfo(code)?.degreeLevel ?? null
+}
+
+
+/**
+ * Normalises a subject's effective degree level. Subjects authored before the
+ * multi-program layer (BBA) omit the field and are treated as undergraduate.
+ */
+export function effectiveDegreeLevel(subject?: {
+  degreeLevel?: PrepDegreeLevel | string | null
+  programs?: string[] | null
+} | null): PrepDegreeLevel {
+  if (!subject) return 'undergraduate'
+  if (subject.degreeLevel === 'postgraduate' || subject.degreeLevel === 'undergraduate') {
+    return subject.degreeLevel
+  }
+  // Infer from the program catalog when the field is absent.
+  const inferred = (subject.programs || [])
+    .map((p) => resolveProgramDegreeLevel(p))
+    .find((lvl): lvl is PrepDegreeLevel => lvl === 'postgraduate')
+  return inferred ?? 'undergraduate'
+}
+
+/**
+ * Splits an array into chunks no larger than `size`. Used to keep every
+ * Firestore batch under the 500-writes-per-commit hard limit.
+ */
+export function chunkArray<T>(items: T[], size: number): T[][] {
+  if (!Array.isArray(items) || items.length === 0) return []
+  const width = Number.isFinite(size) && size > 0 ? Math.floor(size) : 1
+  const out: T[][] = []
+  for (let i = 0; i < items.length; i += width) {
+    out.push(items.slice(i, i + width))
+  }
+  return out
+}
+
+/**
+ * Resolves which programs a `/prep/seed-all` request should seed.
+ * Accepts: nothing (=> all), 'all', a CSV string, or an array of codes.
+ * Unknown codes are reported as errors rather than silently dropped.
+ */
+export function resolveSeedPrograms(
+  input?: unknown
+): { programs: string[]; all: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  if (input === undefined || input === null || input === '') {
+    return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+  }
+
+  let rawList: unknown[] = []
+  if (Array.isArray(input)) {
+    rawList = input
+  } else if (typeof input === 'string') {
+    const trimmed = input.trim()
+    if (!trimmed || trimmed.toLowerCase() === 'all') {
+      return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+    }
+    rawList = trimmed.split(',')
+  } else {
+    return {
+      programs: [],
+      all: false,
+      errors: ['programs must be a program code, a comma-separated list, or an array of codes.'],
+    }
+  }
+
+  const resolved: string[] = []
+  for (const entry of rawList) {
+    const code = String(entry ?? '').toLowerCase().trim()
+    if (!code) continue
+    if (code === 'all') {
+      return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+    }
+    if (!PREP_PROGRAM_CODES.includes(code)) {
+      errors.push(`Unknown program "${String(entry)}". Valid codes: ${PREP_PROGRAM_CODES.join(', ')}.`)
+      continue
+    }
+    if (!resolved.includes(code)) resolved.push(code)
+  }
+
+  if (errors.length > 0 && resolved.length === 0) {
+    return { programs: [], all: false, errors }
+  }
+  return { programs: resolved, all: false, errors }
+}
+
+/**
+ * Filters a catalog's subjects down to the ones actually belonging to the
+ * requested programs, plus the topics/questions that hang off them. Used by
+ * the seed controller so `?programs=mcom` never touches the BBA catalog.
+ */
+export function filterCatalogByPrograms<T extends { programs?: string[] | null }>(
+  subjects: T[],
+  programs: string[]
+): T[] {
+  if (!Array.isArray(subjects)) return []
+  if (!Array.isArray(programs) || programs.length === 0) return [...subjects]
+  const wanted = programs.map((p) => p.toLowerCase().trim())
+  return subjects.filter((s) =>
+    (s.programs || []).some((p) => wanted.includes(String(p).toLowerCase().trim()))
+  )
+}
+
+export interface PrepCatalogBundle {
+  programCode: string
+  subjects: PrepSubject[]
+  topics: Record<string, PrepTopic[]>
+  questions: UniversalQuestion[]
+}
+
+export interface CatalogIssue {
+  level: 'error' | 'warning'
+  code: string
+  message: string
+}
+
+export interface CatalogIntegrityReport {
+  programCode: string
+  subjectCount: number
+  topicCount: number
+  questionCount: number
+  issues: CatalogIssue[]
+  errorCount: number
+  warningCount: number
+  valid: boolean
+}
+
+/**
+ * Verifies referential integrity of a seeded curriculum bundle:
+ *  - unique subject / topic / question ids
+ *  - subject.topicCount matches the number of topics actually authored
+ *  - every topic.subjectId matches the record it is filed under
+ *  - every topic carries the 4 mandatory PrepInsta sections
+ *  - every featuredQuestionId points at a real question
+ *  - every question's prepTags.subjectId / topicIds resolve inside the bundle
+ *  - MCQ options are well-formed and correctIndex is in range
+ */
+export function validatePrepCatalog(bundle: PrepCatalogBundle): CatalogIntegrityReport {
+  const issues: CatalogIssue[] = []
+  const err = (code: string, message: string) => issues.push({ level: 'error', code, message })
+  const warn = (code: string, message: string) => issues.push({ level: 'warning', code, message })
+
+  const subjects = Array.isArray(bundle?.subjects) ? bundle.subjects : []
+  const topicsBySubject = bundle?.topics && typeof bundle.topics === 'object' ? bundle.topics : {}
+  const questions = Array.isArray(bundle?.questions) ? bundle.questions : []
+
+  // ── Subjects ──
+  const subjectIds = new Set<string>()
+  for (const subject of subjects) {
+    if (!subject?.id) {
+      err('SUBJECT_MISSING_ID', 'A subject is missing its id.')
+      continue
+    }
+    if (subjectIds.has(subject.id)) {
+      err('DUPLICATE_SUBJECT_ID', `Duplicate subject id "${subject.id}".`)
+    }
+    subjectIds.add(subject.id)
+
+    if (!subject.name?.trim()) {
+      err('SUBJECT_MISSING_NAME', `Subject "${subject.id}" has no name.`)
+    }
+    if (!Array.isArray(subject.programs) || subject.programs.length === 0) {
+      err('SUBJECT_NO_PROGRAMS', `Subject "${subject.id}" declares no programs.`)
+    }
+    if (typeof subject.order !== 'number') {
+      err('SUBJECT_BAD_ORDER', `Subject "${subject.id}" has a non-numeric order.`)
+    }
+
+    const authored = topicsBySubject[subject.id]
+    if (!Array.isArray(authored) || authored.length === 0) {
+      err('SUBJECT_NO_TOPICS', `Subject "${subject.id}" has no topics authored.`)
+      continue
+    }
+    if (subject.topicCount !== authored.length) {
+      err(
+        'TOPIC_COUNT_MISMATCH',
+        `Subject "${subject.id}" declares topicCount ${subject.topicCount} but ${authored.length} topics are authored.`
+      )
+    }
+  }
+
+  // Orphan topic buckets (keyed under a subject id that was never declared).
+  for (const key of Object.keys(topicsBySubject)) {
+    if (!subjectIds.has(key)) {
+      err('ORPHAN_TOPIC_BUCKET', `Topics are filed under unknown subject id "${key}".`)
+    }
+  }
+
+  // ── Topics ──
+  const topicIds = new Set<string>()
+  let topicCount = 0
+  for (const [subjectId, list] of Object.entries(topicsBySubject)) {
+    for (const topic of list || []) {
+      topicCount++
+      if (!topic?.id) {
+        err('TOPIC_MISSING_ID', `A topic under subject "${subjectId}" is missing its id.`)
+        continue
+      }
+      if (topicIds.has(topic.id)) {
+        err('DUPLICATE_TOPIC_ID', `Duplicate topic id "${topic.id}".`)
+      }
+      topicIds.add(topic.id)
+
+      if (topic.subjectId !== subjectId) {
+        err(
+          'TOPIC_SUBJECT_MISMATCH',
+          `Topic "${topic.id}" declares subjectId "${topic.subjectId}" but is filed under "${subjectId}".`
+        )
+      }
+      if (!topic.title?.trim()) {
+        err('TOPIC_MISSING_TITLE', `Topic "${topic.id}" has no title.`)
+      }
+      if (typeof topic.explanationMd !== 'string' || topic.explanationMd.trim().length < 30) {
+        err('TOPIC_SHORT_EXPLANATION', `Topic "${topic.id}" explanationMd is missing or under 30 characters.`)
+      }
+      if (!Array.isArray(topic.formulas) || topic.formulas.length === 0) {
+        err('TOPIC_NO_FORMULAS', `Topic "${topic.id}" has no formulas section.`)
+      }
+      if (!Array.isArray(topic.tricks) || topic.tricks.length === 0) {
+        err('TOPIC_NO_TRICKS', `Topic "${topic.id}" has no tricks section.`)
+      }
+      if (!Array.isArray(topic.howToSolve) || topic.howToSolve.length === 0) {
+        err('TOPIC_NO_HOW_TO_SOLVE', `Topic "${topic.id}" has no howToSolve section.`)
+      }
+      if (!Array.isArray(topic.featuredQuestionIds) || topic.featuredQuestionIds.length === 0) {
+        warn('TOPIC_NO_FEATURED_QUESTIONS', `Topic "${topic.id}" features no practice questions.`)
+      }
+    }
+  }
+
+  // ── Questions ──
+  const questionIds = new Set<string>()
+  for (const q of questions) {
+    if (!q?.id) {
+      err('QUESTION_MISSING_ID', 'A question is missing its id.')
+      continue
+    }
+    if (questionIds.has(q.id)) {
+      err('DUPLICATE_QUESTION_ID', `Duplicate question id "${q.id}".`)
+    }
+    questionIds.add(q.id)
+
+    if (!q.questionText?.trim()) {
+      err('QUESTION_NO_TEXT', `Question "${q.id}" has no questionText.`)
+    }
+    if (!Array.isArray(q.options) || q.options.length < 2) {
+      err('QUESTION_BAD_OPTIONS', `Question "${q.id}" needs at least 2 options.`)
+    } else if (
+      !Number.isInteger(q.correctIndex) ||
+      q.correctIndex < 0 ||
+      q.correctIndex >= q.options.length
+    ) {
+      err(
+        'QUESTION_BAD_CORRECT_INDEX',
+        `Question "${q.id}" correctIndex ${q.correctIndex} is out of range for ${q.options.length} options.`
+      )
+    }
+    if (!q.explanation?.trim()) {
+      err('QUESTION_NO_EXPLANATION', `Question "${q.id}" has no explanation.`)
+    }
+
+    const tags = q.prepTags || ({} as UniversalQuestion['prepTags'])
+    if (tags.subjectId && !subjectIds.has(tags.subjectId)) {
+      err(
+        'QUESTION_UNKNOWN_SUBJECT',
+        `Question "${q.id}" is tagged with unknown subjectId "${tags.subjectId}".`
+      )
+    }
+    for (const topicId of tags.topicIds || []) {
+      if (!topicIds.has(topicId)) {
+        err('QUESTION_UNKNOWN_TOPIC', `Question "${q.id}" is tagged with unknown topicId "${topicId}".`)
+      }
+    }
+  }
+
+  // ── Featured question references ──
+  for (const [, list] of Object.entries(topicsBySubject)) {
+    for (const topic of list || []) {
+      for (const qid of topic?.featuredQuestionIds || []) {
+        if (!questionIds.has(qid)) {
+          err(
+            'FEATURED_QUESTION_MISSING',
+            `Topic "${topic.id}" features unknown question id "${qid}".`
+          )
+        }
+      }
+    }
+  }
+
+  const errorCount = issues.filter((i) => i.level === 'error').length
+  return {
+    programCode: bundle?.programCode || 'unknown',
+    subjectCount: subjects.length,
+    topicCount,
+    questionCount: questions.length,
+    issues,
+    errorCount,
+    warningCount: issues.length - errorCount,
+    valid: errorCount === 0,
+  }
 }
