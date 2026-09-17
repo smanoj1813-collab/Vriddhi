@@ -116,7 +116,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const appUser: AppUser = {
       uid: fbUser.uid, id: fbUser.uid, email,
       displayName: name, name, role,
-      collegeId: data.collegeId, department: data.department,
+      // Trimmed at this single resolution point: the security rules compare
+      // collegeId STRICTLY (no normalisation), and legacy imports have stored
+      // values with invisible trailing characters. Normalising here keeps
+      // every tenant payload, UI lookup and the staleness check aligned with
+      // the trimmed value syncMyIdentity stamps on the claim.
+      collegeId: data.collegeId ? String(data.collegeId).trim() || undefined : undefined,
+      department: data.department,
       avatar: data.avatar, phone: data.phone,
     };
     // Persist collegeId to localStorage for APIs that read it directly.

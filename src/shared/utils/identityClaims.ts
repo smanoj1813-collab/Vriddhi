@@ -120,16 +120,25 @@ export function detectClaimStaleness(
   resolved: ResolvedIdentity,
 ): ClaimStaleness {
   const claimedRole = canonicalizeRole(claims.role) || null
+  // The collegeId claim is compared RAW, unlike role. The security rules do
+  // `data.collegeId == request.auth.token.collegeId` with NO normalisation,
+  // so a claim that only matches the profile after trimming is exactly the
+  // stale state that must be re-issued. Trimming here was the production
+  // failure: a college id carrying an invisible trailing character read as
+  // "current" to this check (both sides trimmed) while every tenant-scoped
+  // write was refused by the rules (strict comparison) — and no self-heal
+  // ever fired. Role is different: the rules canonicalise spellings, so the
+  // claim is canonicalised the same way.
   const claimedCollegeId =
     claims.collegeId != null && String(claims.collegeId).trim() !== ''
-      ? String(claims.collegeId).trim()
+      ? String(claims.collegeId)
       : null
 
   const expectedRole = canonicalizeRole(resolved.role) || resolved.role || null
   const expectedCollegeId =
     expectedRole === 'superadmin'
       ? null
-      : (resolved.collegeId ? String(resolved.collegeId).trim() : '') || claimedCollegeId
+      : (resolved.collegeId ? String(resolved.collegeId) : '') || claimedCollegeId
 
   const roleStale = claimedRole !== expectedRole
   const collegeStale = claimedCollegeId !== expectedCollegeId

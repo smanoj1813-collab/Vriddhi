@@ -236,6 +236,41 @@ export const diagnoseIdentity = onCall(
           'Auth custom claims do not contain role — sign-in will work but every rule-guarded read is denied. Run Access Control → Identity repair, then sign out and back in.'
         )
       }
+      // Hidden-character drift (the 2026-09 "My Attendance" production
+      // denial): the web client normalises collegeId with trim() — for
+      // display, payloads and the staleness check — but the security rules
+      // compare the claim against the document's collegeId STRICTLY. A value
+      // that only matches after trimming therefore reads as healthy to every
+      // self-heal while every tenant-scoped write is refused. Surface it.
+      const rawClaimCollege =
+        typeof authUser?.customClaims?.collegeId === 'string'
+          ? authUser.customClaims.collegeId
+          : null
+      const usersData = (result.users as Record<string, unknown> | null) || null
+      const rawUsersCollege =
+        usersData && typeof (usersData.collegeId ?? usersData.collegeID ?? usersData.college_id) === 'string'
+          ? String(usersData.collegeId ?? usersData.collegeID ?? usersData.college_id)
+          : null
+      for (const [label, value] of [
+        ['The Auth collegeId claim', rawClaimCollege],
+        ['The users document collegeId', rawUsersCollege],
+      ] as Array<[string, string | null]>) {
+        if (value !== null && value !== value.trim()) {
+          issues.push(
+            `${label} contains invisible leading/trailing characters. The security rules compare collegeId strictly, so this account's tenant writes (attendance included) are refused. Run Access Control → Identity repair to reissue the claim trimmed, then the user signs out and back in.`
+          )
+        }
+      }
+      if (
+        rawClaimCollege !== null &&
+        rawUsersCollege !== null &&
+        rawClaimCollege !== rawUsersCollege &&
+        rawClaimCollege.trim() === rawUsersCollege.trim()
+      ) {
+        issues.push(
+          "The collegeId claim and the users document agree only after trimming — the security rules compare strictly, so this account's tenant writes are refused. Run Identity repair, then the user signs out and back in."
+        )
+      }
     }
     result.issues = issues
     return result

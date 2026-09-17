@@ -195,10 +195,14 @@ export async function verifyCaller(
   if (!allowedRoles.includes(role)) {
     throw new HttpsError('permission-denied', `Role "${role || 'unknown'}" cannot perform this operation`)
   }
+  // Trimmed: this value is compared against profile collegeId fields by the
+  // provisioning/identity callables, and legacy imports have stored those
+  // with invisible trailing characters.
+  const callerCollege = typeof userData.collegeId === 'string' ? userData.collegeId.trim() : ''
   return {
     uid: request.auth.uid,
     role,
-    collegeId: (userData.collegeId as string | undefined) || undefined,
+    collegeId: callerCollege || undefined,
     name: (userData.name as string | undefined) || undefined,
   }
 }
