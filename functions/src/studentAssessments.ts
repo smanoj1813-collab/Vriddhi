@@ -1275,6 +1275,90 @@ export const listManagedAssessmentTests = onCall(
   }
 )
 
+/**
+ * Resolve the questions a paper would actually schedule: embedded `sections`
+ * first (the Confirm pipeline stores the reviewed structure there), otherwise
+ * the linked question-bank documents, in the paper's own order. Mirrors the
+ * resolution order `loadTestQuestions` uses at schedule time, so a "check"
+ * and a real schedule can never disagree about which questions are in play.
+ */
+export async function resolvePaperSchedulableQuestions(paper: admin.firestore.DocumentData): Promise<ServerQuestion[]> {
+  const embedded: ServerQuestion[] = []
+  if (Array.isArray(paper.sections)) {
+    paper.sections.forEach((section: admin.firestore.DocumentData) => {
+      if (!Array.isArray(section.questions)) return
+      section.questions.forEach((question: admin.firestore.DocumentData) => {
+        if (embedded.length >= MAX_QUESTIONS) return
+        embedded.push(normalizeQuestion(
+          {
+            ...question,
+            sectionId: question.sectionId || section.id,
+            sectionName: question.sectionName || section.name || section.title,
+          },
+          String(question.id || question.questionId || `q-${embedded.length + 1}`),
+          embedded.length + 1
+        ))
+      })
+    })
+  }
+  if (embedded.length > 0) return embedded
+
+  const questionIds = Array.isArray(paper.linkedQuestionIds)
+    ? paper.linkedQuestionIds
+    : Array.isArray(paper.questionIds) ? paper.questionIds : []
+  if (questionIds.length === 0 || questionIds.length > MAX_QUESTIONS) return []
+
+  const db = admin.firestore()
+  const refs = questionIds.map((id: unknown) => db.collection('questions').doc(String(id)))
+  const out: ServerQuestion[] = []
+  for (let i = 0; i < refs.length; i += 100) {
+    const docs = await db.getAll(...refs.slice(i, i + 100))
+    docs.forEach((snap) => {
+      if (!snap.exists || out.length >= MAX_QUESTIONS) return
+      out.push(normalizeQuestion(snap.data() || {}, snap.id, out.length + 1))
+    })
+  }
+  return out
+}
+
+export const checkPaperScheduling = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    requireAssessmentManager(staff)
+    const input = (request.data || {}) as Record<string, unknown>
+    const collegeId = staff.role === 'superadmin' ? String(input.collegeId || '') : staff.collegeId
+    const paperId = String(input.paperId || '')
+    if (!collegeId) throw new HttpsError('invalid-argument', 'collegeId is required')
+    if (!paperId || paperId.includes('/')) throw new HttpsError('invalid-argument', 'paperId is required')
+
+    const paperDoc = await admin.firestore().collection('papers').doc(paperId).get()
+    const paper = paperDoc.data()
+    if (!paperDoc.exists || !paper || paper.collegeId !== collegeId) {
+      throw new HttpsError('not-found', 'Paper was not found in this college')
+    }
+
+    // The SAME validator and the SAME resolution order as the schedule-time
+    // gate, run read-only — so what the scheduler warns about is exactly
+    // what a real schedule would accept, with the same per-question wording.
+    const questions = await resolvePaperSchedulableQuestions(paper)
+    const issues: string[] = []
+    for (const question of questions) {
+      const problem = findSchedulingProblem(question)
+      if (problem !== null) issues.push(problem)
+    }
+    return {
+      ok: questions.length >= 1 && issues.length === 0,
+      questionCount: questions.length,
+      issueCount: issues.length,
+      firstIssue: issues[0] || null,
+      issues: issues.slice(0, 5),
+    }
+  }
+)
+
 export const scheduleAssessmentTest = onCall(
   { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 60, minInstances: 0, maxInstances: 20 },
   async (request) => {

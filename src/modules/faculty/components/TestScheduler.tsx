@@ -19,7 +19,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { usePapers, useScheduledTests } from '../../../hooks/useAssessment';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
-import { auth, db } from '../../../Firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '../../../Firebase/config';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,
 } from '../../../types/assessment';
@@ -60,6 +61,9 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
 
   // Step 1: Paper Selection
   const [selectedPaper, setSelectedPaper] = useState<AssessmentPaper | null>(null);
+  // True while the server checks the selected paper's questions for
+  // schedule-time problems (same validator the real schedule uses).
+  const [checkingPaper, setCheckingPaper] = useState(false);
 
   // Step 2: Schedule
   const [testTitle, setTestTitle] = useState('');
@@ -147,10 +151,38 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     return () => { cancelled = true; };
   }, [collegeId]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep === 0 && !selectedPaper) {
       setError('Please select a paper');
       return;
+    }
+    // Surface the exact scheduling problem at the SELECT step — using the
+    // same server-side validator and the same question-resolution order
+    // (embedded sections, else linked bank questions) the real schedule uses
+    // — instead of letting it surface at the final Publish step.
+    if (activeStep === 0 && selectedPaper) {
+      setCheckingPaper(true);
+      setError(null);
+      try {
+        const response = await httpsCallable(functions, 'checkPaperScheduling')({
+          paperId: selectedPaper.id,
+          collegeId,
+        });
+        const check = response.data as { ok: boolean; issueCount: number; firstIssue: string | null };
+        if (!check.ok) {
+          setError(
+            check.firstIssue
+              || 'This paper has questions that cannot be scheduled online — open it in Papers and fix them.',
+          );
+          return;
+        }
+      } catch (err) {
+        // Check unavailable (e.g. backend not redeployed yet) — proceed; the
+        // schedule-time gate still enforces the same validation on Publish.
+        console.warn('[TestScheduler] scheduling check unavailable', err);
+      } finally {
+        setCheckingPaper(false);
+      }
     }
     if (activeStep === 1) {
       if (!testTitle.trim()) {
@@ -372,7 +404,12 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                           borderColor: selectedPaper?.id === paper.id ? 'primary.main' : 'divider',
                           bgcolor: selectedPaper?.id === paper.id ? 'primary.50' : 'background.paper',
                         }}
-                        onClick={() => setSelectedPaper(paper)}
+                        // Clicking the already-selected card DESELECTS it —
+                        // the previous behaviour (re-select) left no way to
+                        // switch to a different paper.
+                        onClick={() =>
+                          setSelectedPaper((prev) => (prev?.id === paper.id ? null : paper))
+                        }
                       >
                         <CardContent>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paper.title}</Typography>
@@ -398,8 +435,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     </Alert>
                   )}
                   <Box sx={{ mt: 2 }}>
-                    <Button variant="contained" onClick={handleNext} disabled={!selectedPaper}>
-                      Next
+                    <Button variant="contained" onClick={handleNext} disabled={!selectedPaper || checkingPaper}>
+                      {checkingPaper ? 'Checking paper…' : 'Next'}
                     </Button>
                   </Box>
                 </StepContent>
