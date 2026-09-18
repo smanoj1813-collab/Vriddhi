@@ -288,10 +288,15 @@ const TestRow: React.FC<{
           )}
           {isCompleted && (
             <>
-              <div className="text-right">
+              <div className="text-right space-y-1">
+                {test.studentStatus === 'submitted' && (
+                  <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                    <CheckCircle sx={{ fontSize: 13 }} /> Test Attended
+                  </div>
+                )}
                 {test.studentStatus === 'submitted' && test.needsManualGrading ? (
                   <div className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded">
-                    Awaiting Faculty Grading
+                    Result pending · Awaiting Faculty Grading
                   </div>
                 ) : test.studentStatus === 'graded' && !test.resultReleased ? (
                   <div className="text-xs font-bold text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 rounded">

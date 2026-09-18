@@ -628,9 +628,23 @@ export const getMyStudentTests = onCall(
       const testId = String(value.testId || value.assessmentId || '')
       if (testId && value.collegeId === student.collegeId) byTest.set(testId, value)
     })
-    const cards = tests.docs
-      .filter((test) => testTargetsStudent(test.data(), student))
-      .map((test) => serializeCard(test.id, test.data(), byTest.get(test.id)))
+    // A student's own attempt must never vanish from their dashboard: also
+    // load the test documents referenced by their attempt rows when the
+    // test's stored status put it outside the visible set (e.g. cancelled
+    // after the student had already submitted). Submitted tests always
+    // surface as "completed / test attended".
+    const visibleTestDocs = new Map<string, admin.firestore.DocumentData>()
+    tests.docs.forEach((testDoc) => visibleTestDocs.set(testDoc.id, testDoc.data() || {}))
+    const missingTestIds = [...byTest.keys()].filter((id) => !visibleTestDocs.has(id)).slice(0, 50)
+    if (missingTestIds.length > 0) {
+      const extra = await db.getAll(...missingTestIds.map((id) => db.collection('scheduledTests').doc(id)))
+      extra.forEach((testDoc) => {
+        if (testDoc.exists) visibleTestDocs.set(testDoc.id, testDoc.data() || {})
+      })
+    }
+    const cards = [...visibleTestDocs.entries()]
+      .filter(([, data]) => testTargetsStudent(data, student))
+      .map(([id, data]) => serializeCard(id, data, byTest.get(id)))
       .sort((left, right) => left.startDateTime.localeCompare(right.startDateTime))
     return { tests: cards }
   }

@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
   Timer, NavigateNext, NavigateBefore, Send, PlayArrow,
-  Warning, Fullscreen, Security, Save, GridView,
+  Warning, Fullscreen, Security, GridView,
 } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentProfile } from '../hooks/useStudentProfile';
@@ -91,6 +91,9 @@ function buildDisplayQuestions(test: ActiveTest, studentId: string): PaperQuesti
 // delta), 3 s after the last change, with the 60 s tick as a safety net.
 const AUTOSAVE_INTERVAL_MS = 60_000;
 const AUTOSAVE_DEBOUNCE_MS = 3_000;
+// Mandatory break between exam sections: crossing a section boundary shows a
+// countdown screen before the new section's questions. The test clock runs on.
+const SECTION_BREAK_SECONDS = 30;
 // Severity-high proctor events are still logged per-event (faculty live view);
 // every other type rides along in the next autosave payload.
 const DIRECT_LOG_PROCTOR_TYPES = new Set(['fullscreen_exit', 'auto_submit', 'fullscreen_denied']);
@@ -121,6 +124,10 @@ const ActiveTestPage: React.FC = () => {
   // test's scheduling flags; null until the test has loaded.
   const [displayQuestions, setDisplayQuestions] = useState<PaperQuestion[] | null>(null);
   const [showTabLimitWarning, setShowTabLimitWarning] = useState(false);
+  // 30-second gap between sections: { targetIndex, sectionName } while the
+  // break countdown is showing; null while a section is being answered.
+  const [sectionTransition, setSectionTransition] = useState<{ targetIndex: number; sectionName: string } | null>(null);
+  const [transitionRemaining, setTransitionRemaining] = useState(SECTION_BREAK_SECONDS);
 
   const collegeId = profile?.collegeId || user?.collegeId || '';
   const studentId = profile?.id || '';
@@ -289,6 +296,18 @@ const ActiveTestPage: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [activeTest, submitted, doSubmit]);
+
+  /* ─── 30-second gap between exam sections ─── */
+  useEffect(() => {
+    if (!sectionTransition || submitted) return;
+    if (transitionRemaining <= 0) {
+      setCurrentQIndex(sectionTransition.targetIndex);
+      setSectionTransition(null);
+      return;
+    }
+    const id = setTimeout(() => setTransitionRemaining((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [sectionTransition, transitionRemaining, submitted]);
 
   /* ─── autosave: dirty flag + delta + 3 s debounce + 60 s safety tick ─── */
   const runAutosave = useCallback(async () => {
@@ -623,6 +642,23 @@ const ActiveTestPage: React.FC = () => {
   const isLastInSection = !!currentSection && currentQIndex === currentSection.indices[currentSection.indices.length - 1];
   const maxTabSwitches = activeTest.maxTabSwitches || 0;
 
+  // Section-aware navigation: moving within the same section is instant;
+  // crossing a section boundary plays the mandatory 30-second gap screen
+  // before the new section's first question.
+  const navigateToIndex = (idx: number) => {
+    if (idx < 0 || idx >= questions.length || idx === currentQIndex) return;
+    if (sectionTransition) return;
+    const targetKey = questions[idx].sectionId || 'sec-0';
+    const currentKey = currentQ.sectionId || 'sec-0';
+    if (targetKey === currentKey) {
+      setCurrentQIndex(idx);
+      return;
+    }
+    const targetSection = sections.find((g) => g.indices.includes(idx));
+    setTransitionRemaining(SECTION_BREAK_SECONDS);
+    setSectionTransition({ targetIndex: idx, sectionName: targetSection?.name || 'Next section' });
+  };
+
   // Palette body shared by the desktop sidebar card and the phone bottom sheet.
   const paletteContent = (
             <CardContent>
@@ -640,7 +676,7 @@ const ActiveTestPage: React.FC = () => {
                         const flagged = !!answers[q.id]?.isFlagged;
                         const isCurrent = idx === currentQIndex;
                         return (
-                          <Button key={q.id} onClick={() => { setCurrentQIndex(idx); setPaletteOpen(false); }} sx={{
+                          <Button key={q.id} onClick={() => { navigateToIndex(idx); setPaletteOpen(false); }} sx={{
                             minWidth: 44, height: 44, borderRadius: 2, fontWeight: 700,
                             border: isCurrent ? 2 : 1, borderColor: isCurrent ? 'primary.main' : 'divider',
                             bgcolor: answered ? 'success.main' : flagged ? 'warning.light' : 'grey.100',
@@ -664,9 +700,9 @@ const ActiveTestPage: React.FC = () => {
                 <Typography variant="caption" color="text.secondary">
                   {answeredCount} answered • {unansweredCount} unanswered • {flaggedCount} flagged
                 </Typography>
-                <Button size="small" startIcon={<Save />} onClick={() => void flushNow()} sx={{ mt: 1 }}>
-                  Save now
-                </Button>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Answers are saved automatically
+                </Typography>
               </Box>
             </CardContent>
   );
@@ -738,6 +774,24 @@ const ActiveTestPage: React.FC = () => {
 
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 1.5, md: 4 }, pb: { xs: 'calc(96px + env(safe-area-inset-bottom))', md: 4 }, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
         <Box sx={{ flex: '1 1 600px', minWidth: 0 }}>
+          {sectionTransition ? (
+            <Card sx={{ borderRadius: 3, mb: 3 }}>
+              <CardContent sx={{ p: { xs: 3, md: 8 }, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: { md: 320 } }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  {sectionTransition.sectionName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Section break — your next section starts in
+                </Typography>
+                <Typography variant="h1" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: 'primary.main', lineHeight: 1 }}>
+                  {formatTime(transitionRemaining)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 3 }}>
+                  The test timer keeps running during the break.
+                </Typography>
+              </CardContent>
+            </Card>
+          ) : (
           <Card sx={{ borderRadius: 3, mb: 3 }}>
             <CardContent sx={{ p: { xs: 2, md: 4 } }}>
               <QuestionRenderer
@@ -751,16 +805,17 @@ const ActiveTestPage: React.FC = () => {
 
               {!isMobile && (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                  <Button variant="outlined" startIcon={<NavigateBefore />} disabled={currentQIndex === 0} onClick={() => setCurrentQIndex((p) => p - 1)}>Previous</Button>
+                  <Button variant="outlined" startIcon={<NavigateBefore />} disabled={currentQIndex === 0 || !!sectionTransition} onClick={() => navigateToIndex(currentQIndex - 1)}>Previous</Button>
                   {isLast ? (
                     <Button variant="contained" color="success" endIcon={<Send />} onClick={() => setShowSubmitConfirm(true)}>Finish &amp; Submit</Button>
                   ) : (
-                    <Button variant="contained" endIcon={<NavigateNext />} onClick={() => setCurrentQIndex((p) => p + 1)}>{isLastInSection ? 'Next Section' : 'Next'}</Button>
+                    <Button variant="contained" endIcon={<NavigateNext />} disabled={!!sectionTransition} onClick={() => navigateToIndex(currentQIndex + 1)}>{isLastInSection ? 'Next Section' : 'Next'}</Button>
                   )}
                 </Box>
               )}
             </CardContent>
           </Card>
+          )}
 
           <Box sx={{ px: 1 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -793,7 +848,7 @@ const ActiveTestPage: React.FC = () => {
       {/* Mobile: thumb-reachable Prev / Palette / Next / Submit bar */}
       {isMobile && (
         <Paper elevation={8} sx={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 60, px: 1.5, py: 1, pb: 'calc(8px + env(safe-area-inset-bottom))', display: 'flex', alignItems: 'center', gap: 1, borderRadius: 0 }}>
-          <Button variant="outlined" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} disabled={currentQIndex === 0} onClick={() => setCurrentQIndex((p) => p - 1)} aria-label="Previous question"><NavigateBefore /></Button>
+          <Button variant="outlined" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} disabled={currentQIndex === 0 || !!sectionTransition} onClick={() => navigateToIndex(currentQIndex - 1)} aria-label="Previous question"><NavigateBefore /></Button>
           <Button variant="outlined" startIcon={<GridView />} sx={{ flex: 1, minHeight: 44 }} onClick={() => setPaletteOpen(true)}>
             {answeredCount}/{questions.length}
           </Button>
@@ -801,7 +856,7 @@ const ActiveTestPage: React.FC = () => {
             <Button variant="contained" color="success" endIcon={<Send />} sx={{ flex: 1, minHeight: 44 }} onClick={() => setShowSubmitConfirm(true)} disabled={submitting}>Submit</Button>
           ) : (
             <>
-              <Button variant="contained" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} onClick={() => setCurrentQIndex((p) => p + 1)} aria-label="Next question"><NavigateNext /></Button>
+              <Button variant="contained" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} disabled={!!sectionTransition} onClick={() => navigateToIndex(currentQIndex + 1)} aria-label="Next question"><NavigateNext /></Button>
               <Button variant="contained" color="success" sx={{ minWidth: 0, px: 1.5, minHeight: 44 }} onClick={() => setShowSubmitConfirm(true)} disabled={submitting} aria-label="Submit test"><Send fontSize="small" /></Button>
             </>
           )}
