@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { derivePaperState, validatePaperInput } from '../src/paperWorkflow'
+import { derivePaperState, validatePaperInput, submissionReadiness } from '../src/paperWorkflow'
 
 function paper(examType = 'Class Test') {
   return validatePaperInput({
@@ -60,5 +60,29 @@ describe('paper workflow validation', () => {
       duration: 30, totalMarks: 10,
       sections: [{ questions: [{ text: 'Question', type: 'mcq', marks: 1001 }] }],
     }), /Question marks are invalid/)
+  })
+})
+
+// ─── submissionReadiness — the gate behind submitPaperForReview ────────────
+// Only editable papers (draft / returned) may be moved into the review queue.
+// Papers already awaiting review, or approved/published, are locked.
+describe('submissionReadiness (submitPaperForReview gate)', () => {
+  it('allows editable papers (draft, returned)', () => {
+    assert.deepEqual(submissionReadiness({ status: 'draft' }), { currentStatus: 'draft', submittable: true })
+    assert.equal(submissionReadiness({ verificationStatus: 'modification-requested' }).submittable, true)
+    assert.equal(submissionReadiness({ verificationStatus: 'rejected-by-hod' }).submittable, true)
+    // A paper with no explicit status defaults to draft → editable.
+    assert.equal(submissionReadiness(undefined).submittable, true)
+  })
+
+  it('blocks papers already in the review queue', () => {
+    assert.equal(submissionReadiness({ verificationStatus: 'submitted-for-approval' }).submittable, false)
+    assert.equal(submissionReadiness({ verificationStatus: 'pending-verification' }).submittable, false)
+  })
+
+  it('blocks approved / published papers', () => {
+    // verificationStatus is authoritative and must win over status.
+    assert.equal(submissionReadiness({ verificationStatus: 'approved-by-hod', status: 'published' }).submittable, false)
+    assert.equal(submissionReadiness({ verificationStatus: 'not-required', status: 'published' }).submittable, false)
   })
 })

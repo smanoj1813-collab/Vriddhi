@@ -521,6 +521,80 @@ export const reviewPaper = onCall(
   }
 )
 
+// ─── submitPaperForReview — author moves an editable paper into the queue ──
+//
+// The client must NEVER write `status` / `verificationStatus` directly — the
+// Firestore rules lock those fields on /papers (client updates are denied
+// with "Missing or insufficient permissions"). Submission is therefore a
+// server-side transition, mirroring reviewPaper: author (or a reviewer) moves
+// an editable paper into the approval queue, with an audit entry.
+//
+// Input:  { paperId: string }
+// Output: { success: true }
+
+/**
+ * State gate for paper submission, extracted for unit tests. A paper may be
+ * submitted only while editable (draft / returned); papers already in the
+ * review queue or approved/published are locked.
+ */
+export function submissionReadiness(paper: {
+  verificationStatus?: unknown;
+  status?: unknown;
+} | undefined): { currentStatus: string; submittable: boolean } {
+  const currentStatus = String(paper?.verificationStatus || paper?.status || 'draft')
+  return { currentStatus, submittable: EDITABLE_STATES.includes(currentStatus) }
+}
+
+export const submitPaperForReview = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 60, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolvePaperStaff(uid, request.auth?.token || {})
+    const paperId = String(request.data?.paperId || '')
+    if (!paperId || paperId.includes('/') || paperId.length > 200) {
+      throw new HttpsError('invalid-argument', 'Paper identifier is required')
+    }
+    const db = admin.firestore()
+    const ref = db.collection('papers').doc(paperId)
+    const auditRef = db.collection('paperReviewAudit').doc()
+    await db.runTransaction(async (transaction) => {
+      const current = await transaction.get(ref)
+      const paper = current.data()
+      if (!current.exists || !paper) throw new HttpsError('not-found', 'Paper not found')
+      if (staff.role !== 'superadmin' && paper.collegeId !== staff.collegeId) {
+        throw new HttpsError('permission-denied', 'Paper belongs to another college')
+      }
+      if (staff.role !== 'superadmin' && !REVIEW_ROLES.includes(staff.role) && paper.createdBy !== uid) {
+        throw new HttpsError('permission-denied', 'Only the author or a reviewer can submit this paper')
+      }
+      const { currentStatus, submittable } = submissionReadiness(paper)
+      if (!submittable) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Only draft or returned papers can be submitted for review'
+        )
+      }
+      transaction.update(ref, {
+        status: 'draft',
+        verificationStatus: 'submitted-for-approval',
+        submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+      transaction.create(auditRef, {
+        paperId,
+        collegeId: paper.collegeId,
+        action: 'submit',
+        fromStatus: currentStatus,
+        toStatus: 'submitted-for-approval',
+        performedBy: uid,
+        performedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    })
+    return { success: true }
+  }
+)
+
 // ─── deletePaper — safe removal of a paper and what its Confirm owned ──────
 
 /** States in which a paper is inside the approval queue and must not vanish. */
