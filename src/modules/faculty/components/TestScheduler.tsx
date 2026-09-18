@@ -21,6 +21,7 @@ import { usePapers, useScheduledTests } from '../../../hooks/useAssessment';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { auth, db, functions } from '../../../Firebase/config';
+import { useAuth } from '../../auth/context/AuthContext';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,
 } from '../../../types/assessment';
@@ -53,6 +54,7 @@ const toDate = (value: unknown): Date => {
 };
 
 const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
+  const { user } = useAuth();
   const { papers, loading: papersLoading, error: papersError } = usePapers(collegeId);
   const { tests, schedule, publish, cancel, loading: testsLoading, error: testsError } = useScheduledTests(collegeId);
 
@@ -368,7 +370,15 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
             </Box>
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              {typedTests.map((test: ScheduledTest) => (
+              {typedTests.map((test: ScheduledTest) => {
+                // College-wide list: faculty may publish/cancel only their own
+                // tests (enforced server-side too) — hide the actions otherwise
+                // so a guaranteed-rejected click never appears.
+                const canManage = !user?.role
+                  || user.role === 'faculty'
+                    ? test.facultyId === user?.uid
+                    : true;
+                return (
                 <Card key={test.id} variant="outlined" sx={{ flex: '1 1 350px', borderRadius: 2 }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
@@ -386,12 +396,12 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <Chip size="small" icon={<PeopleIcon fontSize="small" />} label={((test as any).visibility || 'all').replace(/_/g, ' ')} />
                     </Stack>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
-                      {test.status === 'scheduled' && (
+                      {canManage && test.status === 'scheduled' && (
                         <Button size="small" variant="outlined" startIcon={<PublishIcon />} onClick={() => handlePublishTest(test.id)}>
                           Publish
                         </Button>
                       )}
-                      {test.status !== 'completed' && test.status !== 'cancelled' && (
+                      {canManage && test.status !== 'completed' && test.status !== 'cancelled' && (
                         <Button size="small" color="error" startIcon={<CancelIcon />} onClick={() => handleCancelTest(test.id)}>
                           Cancel
                         </Button>
@@ -399,7 +409,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     </Box>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </Box>
 
             {testsLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading scheduled tests…</Alert>}

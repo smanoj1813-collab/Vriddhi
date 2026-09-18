@@ -172,11 +172,10 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
       {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
-        {stat('Submitted', `${summary.submitted} / ${summary.totalScheduled || test.totalRegistered || '—'}`)}
+        {stat('Submitted', `${summary.submitted} / ${test.totalStarted || summary.submitted || '—'}`, 'of students who started')}
         {stat('Graded', summary.graded)}
         {stat('Awaiting grading', summary.pendingManual, 'manual marks due')}
         {stat('In progress', summary.inProgress)}
-        {stat('Not started', summary.notStarted)}
         {stat('Average', summary.avgPercentage === null ? '—' : `${summary.avgPercentage}%`)}
         {stat('Highest', summary.maxPercentage === null ? '—' : `${summary.maxPercentage}%`)}
         {stat('Lowest', summary.minPercentage === null ? '—' : `${summary.minPercentage}%`)}
@@ -303,7 +302,6 @@ export default function AssessmentTestReports({ showScheduleHint = false }: { sh
           const chip = PHASE_CHIP[phase];
           const submitted = Number(test.totalSubmitted) || 0;
           const graded = Number(test.totalGraded) || 0;
-          const registered = Number(test.totalRegistered) || 0;
           const started = Number(test.totalStarted) || 0;
           // Server policy: faculty may publish/cancel only their own tests;
           // hod/principal/admin/superadmin may manage any test in the college.
@@ -339,7 +337,7 @@ export default function AssessmentTestReports({ showScheduleHint = false }: { sh
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, alignItems: 'flex-end' }}>
                   <Chip label={chip.label} color={chip.color} size="small" icon={phase === 'live' ? <Warning /> : phase === 'completed' ? <CheckCircle /> : <HourglassTop />} />
                   <Typography variant="body2" color="text.secondary">
-                    {registered} registered · {started} started · {submitted} submitted{graded > 0 ? ` · ${graded} graded` : ''}
+                    {started} started · {submitted} submitted{graded > 0 ? ` · ${graded} graded` : ''}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
