@@ -6,11 +6,29 @@
 
 import { apiUrl, assertJsonResponse } from '@/shared/api/apiBase'
 
+/**
+ * 'academic' = university-syllabus subjects scoped to a program/semester.
+ * 'aptitude' = placement-prep catalogues (QA / LR / Verbal) shared by every
+ * program. Legacy subjects without a track are academic.
+ */
+export type PrepTrack = 'academic' | 'aptitude'
+
+/** Which learners a topic is primarily aimed at (aptitude track only). */
+export type PrepAudience = 'ug' | 'pg' | 'tech'
+
+export interface PrepSubtopic {
+  id: string
+  title: string
+  briefMd: string
+}
+
 export interface PrepSubject {
   id: string
   name: string
-  stream: 'commerce' | 'management' | 'aptitude' | 'economics' | 'finance' | 'law' | 'strategy' | 'operations' | 'taxation'
+  stream: 'commerce' | 'management' | 'aptitude' | 'communication' | 'economics' | 'finance' | 'law' | 'strategy' | 'operations' | 'taxation'
   programs: string[]
+  track?: PrepTrack
+  degreeLevel?: 'undergraduate' | 'postgraduate'
   yearGroup?: '1st-year' | '2nd-year' | 'final-year'
   semester?: number
   universityRegion?: 'karnataka' | 'national'
@@ -61,8 +79,11 @@ export interface PrepTopic {
   moduleNumber?: number
   moduleName?: string
   subtopics?: string[]
+  /** Sub-topics with a short brief each; `subtopics` mirrors the titles. */
+  subtopicDetails?: PrepSubtopic[]
   examFrequency?: 'very_high' | 'high' | 'moderate'
   pyqHighlights?: string[]
+  audience?: PrepAudience[]
   explanationMd: string
   formulas: PrepFormula[]
   tricks: PrepTrick[]
@@ -301,4 +322,19 @@ export async function seedPrepCatalog(programs?: string | string[]): Promise<Pre
     body: JSON.stringify(programs ? { programs } : { programs: 'all' }),
   })
   return res.json()
+}
+
+/** Legacy subjects have no track; treat them as academic. */
+export function effectivePrepTrack(subject: Pick<PrepSubject, 'track'> | null | undefined): PrepTrack {
+  return subject?.track === 'aptitude' ? 'aptitude' : 'academic'
+}
+
+/**
+ * Returns the sub-topics of a topic as detail records, synthesising empty
+ * briefs for legacy topics that only carry a `subtopics` title list.
+ */
+export function topicSubtopics(topic: Pick<PrepTopic, 'subtopics' | 'subtopicDetails'> | null | undefined): PrepSubtopic[] {
+  if (!topic) return []
+  if (Array.isArray(topic.subtopicDetails) && topic.subtopicDetails.length > 0) return topic.subtopicDetails
+  return (topic.subtopics ?? []).map((title, idx) => ({ id: `sub-${idx + 1}`, title, briefMd: '' }))
 }

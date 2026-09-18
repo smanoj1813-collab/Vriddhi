@@ -11,6 +11,7 @@ import { describe, it } from 'node:test'
 import {
   validatePublishTransition,
   parsePrepDraft,
+  normaliseSubtopics,
   samplePracticeQuestions,
   buildPrepAiPrompt,
 } from '../src/prepShared.ts'
@@ -253,5 +254,82 @@ describe('parsePrepDraft module and subtopics parsing', () => {
       'Taylor Scientific Management',
       'Scalar Chain and Gang Plank',
     ])
+  })
+})
+
+describe('normaliseSubtopics (sub-topic titles + briefs)', () => {
+  it('keeps a plain string list as titles only, with no detail records', () => {
+    const r = normaliseSubtopics(['HCF & LCM', '  Divisibility  ', '', 42])
+    assert.deepEqual(r.subtopics, ['HCF & LCM', 'Divisibility'])
+    assert.deepEqual(r.subtopicDetails, [])
+  })
+
+  it('accepts object entries with alias keys and mirrors titles into subtopics[]', () => {
+    const r = normaliseSubtopics([
+      { title: 'Successive discounts', briefMd: 'Two discounts of a% and b% equal a single discount of a + b − ab/100.' },
+      { name: 'Marked price', brief: 'MP is the label price before discount; SP = MP × (1 − d/100).' },
+      { label: 'Dishonest dealer', summary: 'False weights give gain% = error / (true − error) × 100.', id: 'custom-id' },
+      { briefMd: 'no title, dropped' },
+    ])
+    assert.deepEqual(r.subtopics, ['Successive discounts', 'Marked price', 'Dishonest dealer'])
+    assert.equal(r.subtopicDetails.length, 3)
+    assert.deepEqual(r.subtopicDetails.map((d) => d.id), ['sub-1', 'sub-2', 'custom-id'])
+    assert.ok(r.subtopicDetails[1].briefMd.startsWith('MP is the label price'))
+  })
+
+  it('mixes strings and objects, persisting details only when at least one brief exists', () => {
+    const withBrief = normaliseSubtopics(['Plain', { title: 'Rich', briefMd: 'Has a brief.' }])
+    assert.deepEqual(withBrief.subtopics, ['Plain', 'Rich'])
+    assert.equal(withBrief.subtopicDetails.length, 2)
+    assert.equal(withBrief.subtopicDetails[0].briefMd, '')
+
+    const noBrief = normaliseSubtopics([{ title: 'A' }, { title: 'B' }])
+    assert.deepEqual(noBrief.subtopics, ['A', 'B'])
+    assert.deepEqual(noBrief.subtopicDetails, [])
+  })
+
+  it('returns empty arrays for non-array input', () => {
+    assert.deepEqual(normaliseSubtopics(undefined), { subtopics: [], subtopicDetails: [] })
+    assert.deepEqual(normaliseSubtopics('HCF'), { subtopics: [], subtopicDetails: [] })
+  })
+})
+
+describe('parsePrepDraft sub-topic briefs', () => {
+  const base = {
+    explanationMd: 'Percentages connect fractions, ratios and every commercial-maths topic in the placement syllabus.',
+    formulas: [],
+    tricks: [],
+    howToSolve: [],
+  }
+
+  it('parses subtopicDetails objects and mirrors titles into subtopics', () => {
+    const res = parsePrepDraft({
+      ...base,
+      subtopicDetails: [
+        { title: 'Fraction equivalents', briefMd: '1/8 = 12.5%, 1/6 = 16.67%, 1/3 = 33.33%.' },
+        { title: 'Successive change', briefMd: 'a + b + ab/100 handles two consecutive percentage changes.' },
+      ],
+    })
+    assert.equal(res.valid, true, res.errors.join('; '))
+    assert.deepEqual(res.data?.subtopics, ['Fraction equivalents', 'Successive change'])
+    assert.equal(res.data?.subtopicDetails?.length, 2)
+    assert.equal(res.data?.subtopicDetails?.[0].title, 'Fraction equivalents')
+  })
+
+  it('accepts a subtopics[] array of objects (AI output shape) as well', () => {
+    const res = parsePrepDraft({
+      ...base,
+      subtopics: [{ name: 'Profit %', brief: 'Profit % is always on cost price unless stated otherwise.' }, 'Loss %'],
+    })
+    assert.equal(res.valid, true, res.errors.join('; '))
+    assert.deepEqual(res.data?.subtopics, ['Profit %', 'Loss %'])
+    assert.equal(res.data?.subtopicDetails?.length, 2)
+  })
+
+  it('omits subtopicDetails entirely when only plain titles are supplied', () => {
+    const res = parsePrepDraft({ ...base, subtopics: ['Only', 'Titles'] })
+    assert.equal(res.valid, true)
+    assert.deepEqual(res.data?.subtopics, ['Only', 'Titles'])
+    assert.equal(res.data?.subtopicDetails, undefined)
   })
 })

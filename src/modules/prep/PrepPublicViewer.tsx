@@ -52,6 +52,8 @@ import {
   fetchPrepTopics,
   fetchPrepTopic,
   fetchPracticeQuestions,
+  effectivePrepTrack,
+  topicSubtopics,
   type PrepSubject,
   type PrepTopic,
   type UniversalQuestion,
@@ -66,8 +68,10 @@ const PROGRAMS: Array<{ code: string; label: string; level: 'undergraduate' | 'p
   { code: 'bcom', label: 'B.Com', level: 'undergraduate' },
   { code: 'ba', label: 'BA', level: 'undergraduate' },
   { code: 'bsc', label: 'B.Sc', level: 'undergraduate' },
+  { code: 'bca', label: 'BCA', level: 'undergraduate' },
   { code: 'mba', label: 'MBA', level: 'postgraduate' },
   { code: 'mcom', label: 'M.Com', level: 'postgraduate' },
+  { code: 'mca', label: 'MCA', level: 'postgraduate' },
 ];
 
 const PROGRAM_LABELS: Record<string, string> = Object.fromEntries(PROGRAMS.map((p) => [p.code, p.label]));
@@ -302,6 +306,48 @@ function DifficultyChip({ difficulty }: { difficulty?: string }) {
   return <Chip size="small" label={formatDifficultyBadge(difficulty).label} color={color} variant="outlined" />;
 }
 
+const AUDIENCE_LABELS: Record<string, string> = {
+  ug: 'UG (BBA / B.Com / BA / B.Sc)',
+  pg: 'PG (MBA / M.Com / MCA)',
+  tech: 'Tech roles (BCA / MCA)',
+};
+
+/** One sub-topic row: title always visible, brief expands on tap. */
+function SubtopicBrief({ index, title, briefMd }: { index: number; title: string; briefMd: string }) {
+  const [open, setOpen] = useState(false);
+  const hasBrief = Boolean(briefMd && briefMd.trim());
+  return (
+    <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
+      <Box
+        role={hasBrief ? 'button' : undefined}
+        tabIndex={hasBrief ? 0 : undefined}
+        aria-expanded={hasBrief ? open : undefined}
+        onClick={() => hasBrief && setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (!hasBrief) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, cursor: hasBrief ? 'pointer' : 'default' }}
+      >
+        <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', minWidth: 20 }}>{index}.</Typography>
+        <Typography variant="body2" sx={{ fontWeight: 700, flex: 1 }}>{title}</Typography>
+        {hasBrief ? (
+          <Typography variant="caption" color="primary" sx={{ fontWeight: 700 }}>{open ? 'Hide brief' : 'Brief'}</Typography>
+        ) : null}
+      </Box>
+      {hasBrief && open ? (
+        <Box sx={{ px: 1.5, pb: 1.5, pl: { xs: 1.5, sm: 5.5 } }}>
+          <Divider sx={{ mb: 1 }} />
+          <PrepMarkdown text={briefMd} />
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
 // ─── View 1: Hub (subject grid for a program) ───────────────────────────────
 
 function HubView() {
@@ -331,6 +377,11 @@ function HubView() {
     setSearchParams(next, { replace: true });
   };
 
+  // Academic subjects are scoped to the program; aptitude subjects are the
+  // shared placement catalogue (QA / LR / Verbal) listed for every program.
+  const academicSubjects = subjects.filter((s) => effectivePrepTrack(s) === 'academic');
+  const aptitudeSubjects = subjects.filter((s) => effectivePrepTrack(s) === 'aptitude');
+
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Stack spacing={2}>
@@ -345,6 +396,23 @@ function HubView() {
           <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>
         ) : error ? (
           <Card><Box sx={{ p: 3, color: 'error.main' }}>{error}</Box></Card>
+        ) : subjects.length > 0 && (academicSubjects.length === 0 || aptitudeSubjects.length > 0) ? (
+          <Stack spacing={3}>
+            {academicSubjects.length > 0 ? (
+              <SubjectSection
+                title="Academic subjects"
+                subtitle={`${PROGRAM_LABELS[program]} syllabus — semester-wise study packs.`}
+                subjects={academicSubjects}
+              />
+            ) : null}
+            {aptitudeSubjects.length > 0 ? (
+              <SubjectSection
+                title="Placement aptitude"
+                subtitle="Quantitative Aptitude, Logical Reasoning and Verbal Ability — the shared core of TCS NQT, Infosys, Wipro, Accenture and Capgemini tests, for every UG and PG program."
+                subjects={aptitudeSubjects}
+              />
+            ) : null}
+          </Stack>
         ) : subjects.length === 0 ? (
           <Card>
             <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -357,35 +425,52 @@ function HubView() {
             </Box>
           </Card>
         ) : (
-          <Grid container spacing={2}>
-            {subjects.map((subject) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={subject.id}>
-                <Card variant="outlined" sx={{ height: '100%' }}>
-                  <CardActionArea component={Link} to={`/prep/subject/${subject.id}`} sx={{ height: '100%', p: 2 }}>
-                    <Stack spacing={1}>
-                      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }} useFlexGap>
-                        <Chip size="small" label={formatStreamLabel(subject.stream)} />
-                        {subject.semester ? <Chip size="small" variant="outlined" label={`Sem ${subject.semester}`} /> : null}
-                        {subject.yearGroup ? <Chip size="small" variant="outlined" label={subject.yearGroup} /> : null}
-                      </Stack>
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                        {subject.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {subject.description || 'Curriculum-aligned study pack.'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {subject.topicCount || 0} module topics · {subject.programs?.map((p) => PROGRAM_LABELS[p] || p).join(', ')}
-                      </Typography>
-                    </Stack>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          <SubjectSection title="Academic subjects" subjects={academicSubjects} />
         )}
       </Stack>
     </Container>
+  );
+}
+
+function SubjectSection({ title, subtitle, subjects }: { title: string; subtitle?: string; subjects: PrepSubject[] }) {
+  return (
+    <Stack spacing={1.5}>
+      <Box>
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>{title}</Typography>
+        {subtitle ? <Typography variant="body2" color="text.secondary">{subtitle}</Typography> : null}
+      </Box>
+      <Grid container spacing={2}>
+        {subjects.map((subject) => {
+          const isAptitude = effectivePrepTrack(subject) === 'aptitude';
+          return (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={subject.id}>
+              <Card variant="outlined" sx={{ height: '100%' }}>
+                <CardActionArea component={Link} to={`/prep/subject/${subject.id}`} sx={{ height: '100%', p: 2 }}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }} useFlexGap>
+                      <Chip size="small" label={formatStreamLabel(subject.stream)} color={isAptitude ? 'primary' : 'default'} variant={isAptitude ? 'outlined' : 'filled'} />
+                      {subject.semester ? <Chip size="small" variant="outlined" label={`Sem ${subject.semester}`} /> : null}
+                      {subject.yearGroup ? <Chip size="small" variant="outlined" label={subject.yearGroup} /> : null}
+                      {isAptitude ? <Chip size="small" variant="outlined" label="All programs" /> : null}
+                    </Stack>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {subject.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {subject.description || 'Curriculum-aligned study pack.'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {subject.topicCount || 0} topics
+                      {isAptitude ? ' · UG & PG · placement prep' : ` · ${subject.programs?.map((p) => PROGRAM_LABELS[p] || p).join(', ')}`}
+                    </Typography>
+                  </Stack>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
+    </Stack>
   );
 }
 
@@ -421,6 +506,21 @@ function SubjectView({ subjectId }: { subjectId: string }) {
   if (error) return <Container maxWidth="lg" sx={{ py: 3 }}><Card><Box sx={{ p: 3, color: 'error.main' }}>{error}</Box></Card></Container>;
   if (!subject) return null;
 
+  const isAptitude = effectivePrepTrack(subject) === 'aptitude';
+  // Group topics by module (moduleNumber + moduleName). Academic subjects use
+  // one topic per module, which collapses to a single group and renders as
+  // before; aptitude subjects have several topics per module.
+  const moduleGroups: Array<{ key: string; label: string; topics: PrepTopic[] }> = [];
+  for (const t of topics) {
+    const key = `${t.moduleNumber ?? t.order}`;
+    let g = moduleGroups.find((x) => x.key === key);
+    if (!g) {
+      g = { key, label: t.moduleName || `Module ${t.moduleNumber ?? t.order}`, topics: [] };
+      moduleGroups.push(g);
+    }
+    g.topics.push(t);
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Stack spacing={2}>
@@ -435,43 +535,71 @@ function SubjectView({ subjectId }: { subjectId: string }) {
           <Chip label={formatStreamLabel(subject.stream)} size="small" />
           {subject.semester ? <Chip size="small" variant="outlined" label={`Semester ${subject.semester}`} /> : null}
           {subject.yearGroup ? <Chip size="small" variant="outlined" label={subject.yearGroup} /> : null}
-          {(subject.programs || []).map((p) => (
-            <Chip key={p} size="small" variant="outlined" color="primary" label={PROGRAM_LABELS[p] || p} />
-          ))}
+          {isAptitude ? (
+            <Chip size="small" variant="outlined" color="primary" label="All UG & PG programs" />
+          ) : (
+            (subject.programs || []).map((p) => (
+              <Chip key={p} size="small" variant="outlined" color="primary" label={PROGRAM_LABELS[p] || p} />
+            ))
+          )}
           {subject.syllabusRef ? <Chip size="small" variant="outlined" label={subject.syllabusRef} /> : null}
         </Stack>
         {subject.description ? (
           <Typography variant="body1" color="text.secondary">{subject.description}</Typography>
         ) : null}
 
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>Module Topics</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          {isAptitude ? 'Modules & topics' : 'Module Topics'}
+        </Typography>
         {topics.length === 0 ? (
           <Card><Box sx={{ p: 3, color: 'text.secondary' }}>No published topics yet for this subject.</Box></Card>
         ) : (
-          <Grid container spacing={2}>
-            {topics.map((topic) => (
-              <Grid size={{ xs: 12, sm: 6 }} key={topic.id}>
-                <Card variant="outlined" sx={{ height: '100%' }}>
-                  <CardActionArea component={Link} to={`/prep/subject/${subject.id}/topic/${topic.id}`} sx={{ height: '100%', p: 2 }}>
-                    <Stack spacing={1}>
-                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-                          {topic.moduleName ? `Module ${topic.moduleNumber ?? topic.order} — ${topic.moduleName}` : `Module ${topic.order}`}
-                        </Typography>
-                        <DifficultyChip difficulty={topic.difficulty} />
-                      </Stack>
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>{topic.title}</Typography>
-                      {(topic.subtopics && topic.subtopics.length > 0) ? (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          {topic.subtopics.join(' · ')}
-                        </Typography>
-                      ) : null}
-                    </Stack>
-                  </CardActionArea>
-                </Card>
-              </Grid>
+          <Stack spacing={3}>
+            {moduleGroups.map((group) => (
+              <Stack spacing={1.5} key={group.key}>
+                {moduleGroups.length > 1 ? (
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{group.label}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {group.topics.length} topic{group.topics.length === 1 ? '' : 's'} · {group.topics.reduce((n, t) => n + topicSubtopics(t).length, 0)} sub-topics
+                    </Typography>
+                  </Box>
+                ) : null}
+                <Grid container spacing={2}>
+                  {group.topics.map((topic) => {
+                    const subs = topicSubtopics(topic);
+                    return (
+                      <Grid size={{ xs: 12, sm: 6 }} key={topic.id}>
+                        <Card variant="outlined" sx={{ height: '100%' }}>
+                          <CardActionArea component={Link} to={`/prep/subject/${subject.id}/topic/${topic.id}`} sx={{ height: '100%', p: 2 }}>
+                            <Stack spacing={1}>
+                              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+                                  {moduleGroups.length > 1
+                                    ? `Topic ${topic.order}`
+                                    : topic.moduleName ? `Module ${topic.moduleNumber ?? topic.order} — ${topic.moduleName}` : `Module ${topic.order}`}
+                                </Typography>
+                                <Stack direction="row" spacing={0.5}>
+                                  {topic.examFrequency === 'very_high' ? <Chip size="small" color="warning" variant="outlined" label="Very high frequency" /> : null}
+                                  <DifficultyChip difficulty={topic.difficulty} />
+                                </Stack>
+                              </Stack>
+                              <Typography variant="h6" sx={{ fontWeight: 700 }}>{topic.title}</Typography>
+                              {subs.length > 0 ? (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                  {subs.length} sub-topics: {subs.map((st) => st.title).join(' · ')}
+                                </Typography>
+                              ) : null}
+                            </Stack>
+                          </CardActionArea>
+                        </Card>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Stack>
             ))}
-          </Grid>
+          </Stack>
         )}
       </Stack>
     </Container>
@@ -515,6 +643,8 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
   if (error) return <Container maxWidth="lg" sx={{ py: 3 }}><Card><Box sx={{ p: 3, color: 'error.main' }}>{error}</Box></Card></Container>;
   if (!topic) return null;
 
+  const subtopics = topicSubtopics(topic);
+
   const sections: Array<{ id: typeof activeSection; label: string; icon: React.ReactElement }> = [
     { id: 'explanation', label: 'Explanation', icon: <MenuBook fontSize="small" /> },
     { id: 'formulas', label: 'Formulas', icon: <Calculate fontSize="small" /> },
@@ -538,10 +668,30 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
           <Typography variant="h5" sx={{ fontWeight: 800 }}>{topic.title}</Typography>
         </Stack>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} useFlexGap>
+          {topic.moduleName ? <Chip size="small" variant="outlined" label={topic.moduleName} /> : null}
           <DifficultyChip difficulty={topic.difficulty} />
           <Chip size="small" variant="outlined" label={topic.tier === 'free' ? 'Free' : 'Premium'} color={topic.tier === 'free' ? 'success' : 'secondary'} />
           {topic.examFrequency ? <Chip size="small" variant="outlined" label={`Exam frequency: ${topic.examFrequency.replace(/_/g, ' ')}`} /> : null}
+          {(topic.audience || []).length > 0 && (topic.audience || []).length < 3 ? (
+            <Chip size="small" variant="outlined" label={`Mainly for: ${(topic.audience || []).map((a) => AUDIENCE_LABELS[a] || a).join(', ')}`} />
+          ) : null}
         </Stack>
+
+        {subtopics.length > 0 ? (
+          <Card variant="outlined">
+            <Box sx={{ p: { xs: 2, md: 2.5 } }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 0.5 }}>What this topic covers</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {subtopics.length} sub-topics — expand any one for a quick brief before reading the full explanation.
+              </Typography>
+              <Stack spacing={1} sx={{ mt: 1.5 }}>
+                {subtopics.map((st, idx) => (
+                  <SubtopicBrief key={st.id || idx} index={idx + 1} title={st.title} briefMd={st.briefMd} />
+                ))}
+              </Stack>
+            </Box>
+          </Card>
+        ) : null}
 
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} useFlexGap>
           {sections.map((s) => (

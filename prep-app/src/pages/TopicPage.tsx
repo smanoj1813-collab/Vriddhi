@@ -211,7 +211,26 @@ export default function TopicPage({
                 ))}
               </div>
             )}
-            {topic.subtopics && topic.subtopics.length > 0 && (
+            {topic.subtopicDetails && topic.subtopicDetails.some((st) => st.briefMd?.trim()) ? (
+              <div className="pt-1 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  What this topic covers ({topic.subtopicDetails.length} sub-topics)
+                </span>
+                {topic.subtopicDetails.map((st, sIdx) => (
+                  <details
+                    key={st.id || sIdx}
+                    className="rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5"
+                  >
+                    <summary className="cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {sIdx + 1}. {st.title}
+                    </summary>
+                    {st.briefMd?.trim() ? (
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">{st.briefMd}</p>
+                    ) : null}
+                  </details>
+                ))}
+              </div>
+            ) : topic.subtopics && topic.subtopics.length > 0 ? (
               <div className="pt-1 flex flex-wrap gap-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 self-center mr-1">
                   Subtopics:
@@ -225,7 +244,7 @@ export default function TopicPage({
                   </span>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">

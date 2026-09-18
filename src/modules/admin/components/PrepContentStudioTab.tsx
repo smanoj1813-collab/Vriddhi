@@ -25,7 +25,11 @@ import {
   savePrepSubject,
   seedPrepCatalog,
   fetchPracticeQuestions,
+  topicSubtopics,
+  effectivePrepTrack,
+  type PrepTrack,
   type PrepSubject,
+  type PrepSubtopic,
   type PrepTopic,
   type PrepFormula,
   type PrepTrick,
@@ -48,6 +52,9 @@ const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
   { code: 'ba', label: 'BA' },
   { code: 'bsc', label: 'B.Sc' },
   { code: 'mcom', label: 'M.Com' },
+  // Shared placement-aptitude track (Quant / Reasoning / Verbal) — not a
+  // program; one seed serves every UG & PG program.
+  { code: 'aptitude', label: 'Aptitude (QA · LR · Verbal)' },
 ];
 
 export default function PrepContentStudioTab() {
@@ -100,6 +107,7 @@ export default function PrepContentStudioTab() {
   };
 
   const [filterYear, setFilterYear] = useState<string>('all');
+  const [filterTrack, setFilterTrack] = useState<'all' | PrepTrack>('all');
   const [filterSemester, setFilterSemester] = useState<string>('all');
   const [filterStream, setFilterStream] = useState<string>('all');
   const [activeSection, setActiveSection] = useState<'explanation' | 'formulas' | 'tricks' | 'howToSolve' | 'practice'>('explanation');
@@ -293,12 +301,32 @@ export default function PrepContentStudioTab() {
     }
   };
 
+  // Sub-topic rows edited in the meta panel. Legacy topics only have a
+  // `subtopics` title list; `topicSubtopics` synthesises empty briefs for them.
+  const subtopicRows: PrepSubtopic[] = topicSubtopics(activeTopic);
+  const nextSubtopicId = () => `sub-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4)}`;
+  const updateSubtopics = (rows: PrepSubtopic[]) => {
+    if (!activeTopic) return;
+    setActiveTopic({
+      ...activeTopic,
+      subtopicDetails: rows,
+      subtopics: rows.map((r) => r.title),
+    });
+  };
+
   const handleSaveTopic = async () => {
     if (!activeTopic || !selectedSubjectId) return;
     setSaving(true);
     try {
+      // Drop rows with no title; trim what remains. The API mirrors titles
+      // back into `subtopics` for older readers.
+      const cleanedSubtopics = subtopicRows
+        .map((r) => ({ id: r.id, title: r.title.trim(), briefMd: r.briefMd.trim() }))
+        .filter((r) => r.title.length > 0);
       await savePrepTopic({
         ...activeTopic,
+        subtopicDetails: cleanedSubtopics,
+        subtopics: cleanedSubtopics.map((r) => r.title),
         subjectId: selectedSubjectId,
         topicId: activeTopic.id,
       });
@@ -344,8 +372,14 @@ export default function PrepContentStudioTab() {
   };
 
   const filteredSubjects = subjects.filter((s) => {
-    if (filterYear !== 'all' && s.yearGroup !== filterYear) return false;
-    if (filterSemester !== 'all' && s.semester !== Number(filterSemester)) return false;
+    const track = effectivePrepTrack(s);
+    if (filterTrack !== 'all' && track !== filterTrack) return false;
+    // Shared aptitude subjects have no year / semester; the academic filters
+    // must not hide them.
+    if (track === 'academic') {
+      if (filterYear !== 'all' && s.yearGroup !== filterYear) return false;
+      if (filterSemester !== 'all' && s.semester !== Number(filterSemester)) return false;
+    }
     if (filterStream !== 'all' && s.stream !== filterStream) return false;
     return true;
   });
@@ -436,6 +470,16 @@ export default function PrepContentStudioTab() {
           <div className="p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 flex items-center gap-2 text-xs">
             <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <select
+              value={filterTrack}
+              onChange={(e) => setFilterTrack(e.target.value as 'all' | PrepTrack)}
+              aria-label="Track"
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200"
+            >
+              <option value="all">All Tracks</option>
+              <option value="academic">Academic</option>
+              <option value="aptitude">Aptitude</option>
+            </select>
+            <select
               value={filterYear}
               onChange={(e) => setFilterYear(e.target.value)}
               className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200 w-1/2"
@@ -466,12 +510,12 @@ export default function PrepContentStudioTab() {
           {/* Subject Selector */}
           <div className="bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 max-h-72 overflow-y-auto space-y-1.5">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 pb-1">
-              BBA Subjects ({filteredSubjects.length})
+              Subjects ({filteredSubjects.length})
             </div>
             {loadingSubjects ? (
               <div className="p-4 text-center text-xs text-slate-400">Loading subjects…</div>
             ) : filteredSubjects.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-400">No subjects found. Tick a program (BBA, B.Com, BA, B.Sc, M.Com) above and press "Seed".</div>
+              <div className="p-4 text-center text-xs text-slate-400">No subjects found. Tick a program (BBA, B.Com, BA, B.Sc, M.Com) or the Aptitude track above and press "Seed".</div>
             ) : (
               filteredSubjects.map((s) => (
                 <button
@@ -485,7 +529,11 @@ export default function PrepContentStudioTab() {
                 >
                   <div className="truncate pr-2">
                     <p className="truncate font-bold">{s.name}</p>
-                    <p className="text-[10px] text-slate-400">{formatStreamLabel(s.stream)} · {s.yearGroup || 'All'}</p>
+                    <p className="text-[10px] text-slate-400">
+                      {effectivePrepTrack(s) === 'aptitude'
+                        ? `Placement aptitude · all programs`
+                        : `${formatStreamLabel(s.stream)} · ${s.yearGroup || 'All'}`}
+                    </p>
                   </div>
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
                     {s.topicCount || 0}
@@ -629,48 +677,68 @@ export default function PrepContentStudioTab() {
                 <div>
                   <div className="flex items-center justify-between pb-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Granular Subtopics Breakdown ({activeTopic.subtopics?.length || 0})
+                      Sub-topics &amp; briefs ({subtopicRows.length})
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        const newSub = prompt('Enter new subtopic:');
-                        if (newSub && newSub.trim()) {
-                          setActiveTopic({
-                            ...activeTopic,
-                            subtopics: [...(activeTopic.subtopics || []), newSub.trim()],
-                          });
-                        }
-                      }}
+                      onClick={() => updateSubtopics([...subtopicRows, { id: nextSubtopicId(), title: '', briefMd: '' }])}
                       className="text-[10px] text-teal-600 font-bold hover:underline"
                     >
-                      + Add Subtopic
+                      + Add Sub-topic
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {activeTopic.subtopics && activeTopic.subtopics.length > 0 ? (
-                      activeTopic.subtopics.map((st, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                  <p className="text-[11px] text-slate-400 mb-2">
+                    Each sub-topic gets a title and a 1–3 sentence brief. Briefs are shown to learners on the public topic page under “What this topic covers”.
+                  </p>
+                  {subtopicRows.length > 0 ? (
+                    <div className="space-y-2">
+                      {subtopicRows.map((st, sIdx) => (
+                        <div
+                          key={st.id || sIdx}
+                          className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2.5"
                         >
-                          <span>{st}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = activeTopic.subtopics?.filter((_, idx) => idx !== sIdx);
-                              setActiveTopic({ ...activeTopic, subtopics: updated });
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-slate-400 w-5 shrink-0">{sIdx + 1}.</span>
+                            <input
+                              type="text"
+                              value={st.title}
+                              onChange={(e) => {
+                                const next = subtopicRows.slice();
+                                next[sIdx] = { ...st, title: e.target.value };
+                                updateSubtopics(next);
+                              }}
+                              placeholder="Sub-topic title, e.g. Successive discounts"
+                              className="flex-1 px-2 py-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateSubtopics(subtopicRows.filter((_, idx) => idx !== sIdx))}
+                              aria-label={`Remove sub-topic ${sIdx + 1}`}
+                              className="text-slate-400 hover:text-rose-500 font-bold px-1"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <textarea
+                            value={st.briefMd}
+                            onChange={(e) => {
+                              const next = subtopicRows.slice();
+                              next[sIdx] = { ...st, briefMd: e.target.value };
+                              updateSubtopics(next);
                             }}
-                            className="text-slate-400 hover:text-rose-500 font-bold ml-1"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-[11px] text-slate-400 italic">No subtopics defined yet.</span>
-                    )}
-                  </div>
+                            rows={2}
+                            placeholder="Brief: what a learner should know about this sub-topic (markdown allowed)."
+                            className="mt-1.5 w-full px-2 py-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] leading-relaxed resize-y"
+                          />
+                          {st.title.trim() && st.briefMd.trim().length < 20 && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400">Add a brief (≥ 20 characters) so this sub-topic explains itself.</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-slate-400 italic">No sub-topics defined yet.</span>
+                  )}
                 </div>
               </div>
 

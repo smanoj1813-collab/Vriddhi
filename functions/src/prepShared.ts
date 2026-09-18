@@ -25,6 +25,33 @@ export type PrepDifficulty = 'basic' | 'core' | 'advanced'
 export type PrepStatus = 'draft' | 'in_review' | 'published'
 export type PrepTier = 'free' | 'premium'
 
+/**
+ * Which catalogue a subject belongs to.
+ *  - academic: semester-wise university curriculum (BBA, B.Com, M.Com, ...)
+ *  - aptitude: placement aptitude shared by every program (QA, LR, Verbal)
+ *  - company:  company-specific placement prep (reserved for the next phase)
+ * Absent on legacy records — treated as 'academic'.
+ */
+export type PrepTrack = 'academic' | 'aptitude' | 'company'
+
+/**
+ * Who a topic is pitched at. Aptitude topics are shared across programs, so
+ * this tag lets the same "Percentages" page serve everyone while
+ * "Permutations & Probability" is flagged for tech / PG audiences.
+ *  - ug:   non-technical undergraduate (BBA, B.Com, BA, B.Sc)
+ *  - pg:   non-technical postgraduate (MBA, M.Com)
+ *  - tech: technical / IT hiring (BCA, MCA, engineering-pattern papers)
+ */
+export type PrepAudience = 'ug' | 'pg' | 'tech'
+
+/** A granular sub-topic with its own short brief (rendered under the topic). */
+export interface PrepSubtopic {
+  id: string
+  title: string
+  /** 2-6 lines of Markdown: what it is, the key idea/formula, the exam angle. */
+  briefMd: string
+}
+
 export interface PrepFormula {
   id: string
   label: string
@@ -61,7 +88,10 @@ export interface PrepTopicContent {
   howToSolve: PrepHowToSolve[]
   moduleNumber?: number
   moduleName?: string
+  /** Sub-topic titles (kept for the list views and legacy records). */
   subtopics?: string[]
+  /** Sub-topics with briefs. When present, `subtopics` mirrors its titles. */
+  subtopicDetails?: PrepSubtopic[]
   examFrequency?: 'very_high' | 'high' | 'moderate'
   pyqHighlights?: string[]
 }
@@ -79,6 +109,8 @@ export interface PrepTopic extends PrepTopicContent {
   reviewedBy?: string | null
   publishedAt?: string | null
   tier: PrepTier
+  /** Audience tags for shared (aptitude) topics. Absent => everyone. */
+  audience?: PrepAudience[]
   updatedAt?: string
 }
 
@@ -87,6 +119,8 @@ export interface PrepSubject {
   name: string
   stream: PrepStream
   programs: string[] // ['bba', 'bcom', 'mba', ...]
+  /** Catalogue this subject belongs to. Absent on legacy records => 'academic'. */
+  track?: PrepTrack
   /** UG vs PG. Absent on legacy (BBA) records — inferred as undergraduate. */
   degreeLevel?: PrepDegreeLevel
   /** PG programs run 4 semesters, so they get their own year grouping. */
@@ -175,6 +209,41 @@ export function validatePublishTransition(
 }
 
 /**
+ * Accepts sub-topics as plain strings, as `{ title, briefMd }` objects, or a
+ * mix of both, and returns the two synchronised shapes the topic stores:
+ * `subtopics` (titles only, for list views and legacy readers) and
+ * `subtopicDetails` (titles + briefs). Entries without a title are dropped.
+ */
+export function normaliseSubtopics(raw: unknown): {
+  subtopics: string[]
+  subtopicDetails: PrepSubtopic[]
+} {
+  const list = Array.isArray(raw) ? raw : []
+  const details: PrepSubtopic[] = []
+  list.forEach((entry: any, idx: number) => {
+    if (typeof entry === 'string') {
+      const title = entry.trim()
+      if (title) details.push({ id: `sub-${idx + 1}`, title, briefMd: '' })
+      return
+    }
+    if (entry && typeof entry === 'object') {
+      const title = String(entry.title ?? entry.name ?? entry.label ?? '').trim()
+      if (!title) return
+      const briefMd = String(entry.briefMd ?? entry.brief ?? entry.summary ?? entry.description ?? '').trim()
+      const id = String(entry.id || `sub-${idx + 1}`).trim() || `sub-${idx + 1}`
+      details.push({ id, title, briefMd })
+    }
+  })
+  const hasAnyBrief = details.some((d) => d.briefMd.length > 0)
+  return {
+    subtopics: details.map((d) => d.title),
+    // Only persist the detailed shape when at least one brief exists, so a
+    // plain string list round-trips unchanged.
+    subtopicDetails: hasAnyBrief ? details : [],
+  }
+}
+
+/**
  * Parses and validates structured AI or curator output into the 4 mandatory sections:
  * 1. explanationMd (Markdown content)
  * 2. formulas (Formula cards with example Q&A)
@@ -249,10 +318,9 @@ export function parsePrepDraft(raw: unknown): {
   // Optional module & subtopics metadata
   const moduleNumber = Number(parsed.moduleNumber) || undefined
   const moduleName = typeof parsed.moduleName === 'string' && parsed.moduleName.trim() ? parsed.moduleName.trim() : undefined
-  const rawSubtopics = Array.isArray(parsed.subtopics) ? parsed.subtopics : []
-  const subtopics = rawSubtopics
-    .map((s: any) => (typeof s === 'string' ? s.trim() : String(s || '').trim()))
-    .filter(Boolean)
+  const { subtopics, subtopicDetails } = normaliseSubtopics(
+    parsed.subtopicDetails ?? parsed.subtopics
+  )
 
   const examFrequency = ['very_high', 'high', 'moderate'].includes(parsed.examFrequency)
     ? parsed.examFrequency
@@ -276,6 +344,7 @@ export function parsePrepDraft(raw: unknown): {
       ...(moduleNumber ? { moduleNumber } : {}),
       ...(moduleName ? { moduleName } : {}),
       ...(subtopics.length > 0 ? { subtopics } : {}),
+      ...(subtopicDetails.length > 0 ? { subtopicDetails } : {}),
       ...(examFrequency ? { examFrequency } : {}),
       ...(pyqHighlights.length > 0 ? { pyqHighlights } : {}),
     },
@@ -357,10 +426,10 @@ Difficulty Level: "${difficulty}"
 You MUST output ONLY a valid JSON object matching this schema with NO markdown code fences and NO conversational filler:
 {
   "subtopics": [
-    "Granular subtopic 1 covering fundamental definition and scope",
-    "Granular subtopic 2 covering core analytical framework or mechanism",
-    "Granular subtopic 3 covering practical corporate application",
-    "Granular subtopic 4 covering examination pitfalls and model answers"
+    { "title": "Granular subtopic 1 covering fundamental definition and scope", "briefMd": "3-5 line Markdown brief: what it is, the key idea or formula, and how examiners test it" },
+    { "title": "Granular subtopic 2 covering core analytical framework or mechanism", "briefMd": "3-5 line Markdown brief" },
+    { "title": "Granular subtopic 3 covering practical corporate application", "briefMd": "3-5 line Markdown brief" },
+    { "title": "Granular subtopic 4 covering examination pitfalls and model answers", "briefMd": "3-5 line Markdown brief" }
   ],
   "explanationMd": "# Comprehensive Markdown Explanation\\n\\n### Core Concept & Intuition\\nExplain the concept clearly with high academic rigour, accompanied by an intuitive modern business case analogy (e.g. Tata, Reliance, Infosys, Zomato, Apple).\\n\\n### Key Principles & Frameworks\\nBreak down the essential principles, rules, or components systematically using bullet points, comparison tables, or clear headings.\\n\\n### Real-World Business Application\\nHow corporate leaders, accountants, financial analysts, or operations managers apply this in practice in India.\\n\\n### Examination Focus & Model Structure\\nKey points university examiners award full marks for in 5-mark and 10-mark questions.",
   "formulas": [
@@ -442,6 +511,22 @@ export const PREP_PROGRAM_CATALOG: PrepProgramInfo[] = [
 /** Lowercase program codes, e.g. ['bba', 'bcom', ...]. */
 export const PREP_PROGRAM_CODES: string[] = PREP_PROGRAM_CATALOG.map((p) => p.code)
 
+/**
+ * Non-program catalogues that can also be seeded. 'aptitude' is the shared
+ * placement bundle (Quantitative Aptitude, Logical Reasoning, Verbal Ability)
+ * that every program lists.
+ */
+export const PREP_TRACK_SEED_CODES: string[] = ['aptitude']
+
+/** Everything `/prep/seed-all` understands: program codes + track bundles. */
+export const PREP_SEED_CODES: string[] = [...PREP_PROGRAM_CODES, ...PREP_TRACK_SEED_CODES]
+
+/** Normalises a subject's catalogue; legacy records without the field are academic. */
+export function effectiveTrack(subject?: { track?: PrepTrack | string | null } | null): PrepTrack {
+  const t = subject?.track
+  return t === 'aptitude' || t === 'company' ? t : 'academic'
+}
+
 export function getPrepProgramInfo(code?: string | null): PrepProgramInfo | null {
   if (!code) return null
   const norm = code.toLowerCase().trim()
@@ -503,7 +588,7 @@ export function resolveSeedPrograms(
   const errors: string[] = []
 
   if (input === undefined || input === null || input === '') {
-    return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+    return { programs: [...PREP_SEED_CODES], all: true, errors }
   }
 
   let rawList: unknown[] = []
@@ -512,7 +597,7 @@ export function resolveSeedPrograms(
   } else if (typeof input === 'string') {
     const trimmed = input.trim()
     if (!trimmed || trimmed.toLowerCase() === 'all') {
-      return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+      return { programs: [...PREP_SEED_CODES], all: true, errors }
     }
     rawList = trimmed.split(',')
   } else {
@@ -528,10 +613,10 @@ export function resolveSeedPrograms(
     const code = String(entry ?? '').toLowerCase().trim()
     if (!code) continue
     if (code === 'all') {
-      return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+      return { programs: [...PREP_SEED_CODES], all: true, errors }
     }
-    if (!PREP_PROGRAM_CODES.includes(code)) {
-      errors.push(`Unknown program "${String(entry)}". Valid codes: ${PREP_PROGRAM_CODES.join(', ')}.`)
+    if (!PREP_SEED_CODES.includes(code)) {
+      errors.push(`Unknown program "${String(entry)}". Valid codes: ${PREP_SEED_CODES.join(', ')}.`)
       continue
     }
     if (!resolved.includes(code)) resolved.push(code)
@@ -683,6 +768,30 @@ export function validatePrepCatalog(bundle: PrepCatalogBundle): CatalogIntegrity
       }
       if (!Array.isArray(topic.featuredQuestionIds) || topic.featuredQuestionIds.length === 0) {
         warn('TOPIC_NO_FEATURED_QUESTIONS', `Topic "${topic.id}" features no practice questions.`)
+      }
+      if (topic.subtopicDetails !== undefined) {
+        if (!Array.isArray(topic.subtopicDetails)) {
+          err('TOPIC_BAD_SUBTOPIC_DETAILS', `Topic "${topic.id}" subtopicDetails must be an array.`)
+        } else {
+          const seen = new Set<string>()
+          for (const sub of topic.subtopicDetails) {
+            if (!sub?.id || !sub?.title?.trim()) {
+              err('SUBTOPIC_MISSING_ID_OR_TITLE', `Topic "${topic.id}" has a sub-topic without id/title.`)
+              continue
+            }
+            if (seen.has(sub.id)) {
+              err('DUPLICATE_SUBTOPIC_ID', `Topic "${topic.id}" repeats sub-topic id "${sub.id}".`)
+            }
+            seen.add(sub.id)
+            if (typeof sub.briefMd !== 'string' || sub.briefMd.trim().length < 20) {
+              warn('SUBTOPIC_SHORT_BRIEF', `Sub-topic "${sub.id}" of topic "${topic.id}" has no brief (under 20 characters).`)
+            }
+          }
+          const titles = topic.subtopicDetails.map((d) => d.title)
+          if (Array.isArray(topic.subtopics) && topic.subtopics.join('\u0001') !== titles.join('\u0001')) {
+            warn('SUBTOPICS_OUT_OF_SYNC', `Topic "${topic.id}" subtopics[] does not mirror subtopicDetails titles.`)
+          }
+        }
       }
     }
   }

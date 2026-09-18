@@ -39,6 +39,8 @@ import {
   chunkArray,
   getPrepProgramsForLevel,
   effectiveDegreeLevel,
+  effectiveTrack,
+  normaliseSubtopics,
   PrepSubject,
   PrepTopic,
   UniversalQuestion,
@@ -68,6 +70,7 @@ import {
   SEEDED_BCOM_TOPICS,
   SEEDED_BCOM_QUESTIONS,
 } from '../data/bcomSeedData'
+import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../data/aptitudeSeedData'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
@@ -89,6 +92,9 @@ const PREP_SEED_BUNDLES: Array<{
   { code: 'bsc', label: 'B.Sc', subjects: BSC_SUBJECTS, topics: SEEDED_BSC_TOPICS, questions: SEEDED_BSC_QUESTIONS },
   { code: 'ba', label: 'BA', subjects: BA_SUBJECTS, topics: SEEDED_BA_TOPICS, questions: SEEDED_BA_QUESTIONS },
   { code: 'mcom', label: 'M.Com', subjects: MCOM_SUBJECTS, topics: SEEDED_MCOM_TOPICS, questions: SEEDED_MCOM_QUESTIONS },
+  // Shared placement-aptitude track (QA / LR / Verbal). Not a program: the
+  // subjects list every UG & PG program, so seeding once serves them all.
+  { code: 'aptitude', label: 'Placement Aptitude', subjects: APTITUDE_SUBJECTS, topics: SEEDED_APTITUDE_TOPICS, questions: SEEDED_APTITUDE_QUESTIONS },
 ]
 
 /** Firestore allows at most 500 writes per commit; stay well under it. */
@@ -243,7 +249,7 @@ When writing answers for 10-mark questions:
 // Publicly lists prep subjects. Filterable by program (e.g. 'bba'), stream, and yearGroup.
 router.get('/subjects', async (req, res) => {
   try {
-    const { program, stream, yearGroup, degreeLevel } = req.query
+    const { program, stream, yearGroup, degreeLevel, track } = req.query
     const snap = await db.collection('prep_subjects').get()
 
     let subjects: PrepSubject[] = snap.docs.map((d) => {
@@ -278,8 +284,15 @@ router.get('/subjects', async (req, res) => {
     if (typeof degreeLevel === 'string' && degreeLevel.trim() && degreeLevel !== 'all') {
       const lvl = degreeLevel.toLowerCase().trim()
       // effectiveDegreeLevel infers 'undergraduate' for legacy records (BBA)
-      // that predate the degreeLevel field.
-      subjects = subjects.filter((s) => effectiveDegreeLevel(s) === lvl)
+      // that predate the degreeLevel field. Shared aptitude subjects carry no
+      // degree level and are relevant to both, so they pass this filter.
+      subjects = subjects.filter((s) => effectiveTrack(s) === 'aptitude' || effectiveDegreeLevel(s) === lvl)
+    }
+
+    if (typeof track === 'string' && track.trim() && track !== 'all') {
+      const tr = track.toLowerCase().trim()
+      // effectiveTrack treats legacy subjects without a track as 'academic'.
+      subjects = subjects.filter((s) => effectiveTrack(s) === tr)
     }
 
     subjects.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
@@ -494,8 +507,19 @@ router.post('/content/save', verifyAuth, async (req: AuthenticatedRequest, res: 
     const topicRef = db.collection('prep_subjects').doc(subjectId).collection('topics').doc(topicId)
     const now = new Date().toISOString()
 
+    // Keep the two sub-topic shapes in sync: the Studio edits
+    // `subtopicDetails` (title + brief); `subtopics` must mirror the titles
+    // for the older readers (prep-app, legacy viewer).
+    const subtopicPatch: Record<string, unknown> = {}
+    if (fields.subtopicDetails !== undefined || fields.subtopics !== undefined) {
+      const norm = normaliseSubtopics(fields.subtopicDetails ?? fields.subtopics)
+      subtopicPatch.subtopics = norm.subtopics
+      subtopicPatch.subtopicDetails = norm.subtopicDetails
+    }
+
     const payload = {
       ...fields,
+      ...subtopicPatch,
       id: topicId,
       subjectId,
       generatedBy: 'curator',
