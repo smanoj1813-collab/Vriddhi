@@ -1882,17 +1882,19 @@ export const getAssessmentTestReport = onCall(
     const minPercentage = percentages.length > 0 ? round1(Math.min(...percentages)) : null
     const avgMarksObtained = marksObtainedList.length > 0 ? round1(marksObtainedList.reduce((a, b) => a + b, 0) / marksObtainedList.length) : null
 
-    // One-time self-heal: tests scheduled before counter tracking have no
-    // totalSubmitted/totalGraded; backfill them so the list view is accurate
-    // forever after this first report open.
-    if (test.totalSubmitted === undefined || Number(test.totalSubmitted) === 0) {
-      if (submitted > 0) {
-        void testRef.update({
-          totalSubmitted: admin.firestore.FieldValue.increment(submitted),
-          totalGraded: admin.firestore.FieldValue.increment(graded),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }).catch(() => undefined)
+    // One-time self-heal: tests scheduled before counter tracking (or before
+    // totalGraded tracking) have missing counters; backfill them so the list
+    // view is accurate forever after this first report open.
+    const needsSubmittedHeal = test.totalSubmitted === undefined
+      || (Number(test.totalSubmitted) === 0 && submitted > 0)
+    const needsGradedHeal = test.totalGraded === undefined && graded > 0
+    if (needsSubmittedHeal || needsGradedHeal) {
+      const heal: admin.firestore.DocumentData = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }
+      if (needsSubmittedHeal) heal.totalSubmitted = admin.firestore.FieldValue.increment(submitted)
+      if (needsGradedHeal) heal.totalGraded = admin.firestore.FieldValue.increment(graded)
+      void testRef.update(heal).catch(() => undefined)
     }
 
     return {

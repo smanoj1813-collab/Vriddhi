@@ -235,7 +235,7 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
                       </TableCell>
                       <TableCell align="right">{s.percentage === null ? '—' : `${s.percentage}%`}</TableCell>
                       <TableCell>{s.grade || '—'}</TableCell>
-                      <TableCell align="right">{fmtDuration(s.timeSpent)}</TableCell>
+                      <TableCell align="right">{s.status === 'in_progress' ? '—' : fmtDuration(s.timeSpent)}</TableCell>
                       <TableCell>
                         {s.submittedAt ? fmtDateTime(s.submittedAt) : '—'}
                       </TableCell>
