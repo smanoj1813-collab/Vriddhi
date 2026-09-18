@@ -42,9 +42,31 @@ const TestInstructionsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const collegeId = profile?.collegeId || user?.collegeId || '';
   const studentId = profile?.id || '';
+
+  // Live clock so a future test shows "Yet to start" (with a countdown)
+  // instead of offering a Start button the server would only reject.
+  const startMs = data?.scheduledStart ? new Date(data.scheduledStart).getTime() : null;
+  const yetToStart = !!startMs && !Number.isNaN(startMs) && data?.studentStatus === 'not_started' && startMs > nowMs;
+  useEffect(() => {
+    if (!yetToStart) return;
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [yetToStart]);
+
+  const formatCountdown = (ms: number) => {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (d > 0) return `${d}d ${h}h ${m}m`;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    return `${m}m ${s}s`;
+  };
 
   useEffect(() => {
     if (!testId || !collegeId || !studentId) return;
@@ -131,6 +153,23 @@ const TestInstructionsPage: React.FC = () => {
         </Box>
       </Box>
 
+      {yetToStart && startMs !== null && (
+        <Card sx={{ borderRadius: 3, mb: 3 }}>
+          <CardContent sx={{ p: 4, textAlign: 'center' }}>
+            <Timer color="disabled" sx={{ fontSize: 56, mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>Yet to start</Typography>
+            <Typography variant="body1" color="text.secondary">
+              This test starts at{' '}
+              <strong>{new Date(startMs).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</strong>
+              {' '}— begins in <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCountdown(startMs - nowMs)}</strong>.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              You can read the instructions below. The Start button becomes active when the test opens.
+            </Typography>
+          </CardContent>
+        </Card>
+      )}
+
       {isInProgress && (
         <Alert severity={timeLeft && timeLeft <= 5 ? 'error' : 'success'} sx={{ mb: 3 }}>
           <AlertTitle>Test in progress</AlertTitle>
@@ -195,6 +234,24 @@ const TestInstructionsPage: React.FC = () => {
                 primary="Autosave"
                 secondary="Answers are saved every few seconds — you can refresh or reconnect and resume without losing work."
               />
+              {data.maxTabSwitches && data.maxTabSwitches > 0 && (
+                <InstructionItem
+                  icon={<DesktopAccessDisabled color="error" />}
+                  primary="Tab Switch Limit"
+                  secondary={`You may leave this tab at most ${data.maxTabSwitches} time${data.maxTabSwitches === 1 ? '' : 's'}. Exceeding the limit submits your test automatically.`}
+                />
+              )}
+              {(data.shuffleQuestions || data.shuffleSections || data.shuffleOptions) && (
+                <InstructionItem
+                  icon={<Info color="primary" />}
+                  primary="Shuffled Presentation"
+                  secondary={[
+                    data.shuffleSections && 'Section order is shuffled',
+                    data.shuffleQuestions && 'Question order is shuffled',
+                    data.shuffleOptions && 'Answer options are shuffled',
+                  ].filter(Boolean).join(' • ') + ' — for your attempt only.'}
+                />
+              )}
               <InstructionItem
                 icon={<CheckCircle color="primary" />}
                 primary="Marking Scheme"
@@ -345,12 +402,20 @@ const TestInstructionsPage: React.FC = () => {
                   Resume Test
                 </Button>
               ) : (
-                <Button
-                  variant="contained" color="success" size="large" disabled={!agreed || starting}
-                  onClick={handleStartTest} startIcon={<PlayArrow />} sx={{ px: 4, py: 1.5, fontWeight: 700 }}
-                >
-                  {starting ? 'Starting…' : 'Start Test Now'}
-                </Button>
+                <>
+                  {yetToStart && startMs !== null && (
+                    <Alert severity="info" sx={{ flex: '1 1 100%' }}>
+                      <AlertTitle>Yet to start</AlertTitle>
+                      Starts in {formatCountdown(startMs - nowMs)} — you will be able to start then.
+                    </Alert>
+                  )}
+                  <Button
+                    variant="contained" color="success" size="large" disabled={!agreed || starting || yetToStart}
+                    onClick={handleStartTest} startIcon={<PlayArrow />} sx={{ px: 4, py: 1.5, fontWeight: 700 }}
+                  >
+                    {starting ? 'Starting…' : yetToStart ? 'Not started yet' : 'Start Test Now'}
+                  </Button>
+                </>
               )}
             </Box>
           </CardContent>

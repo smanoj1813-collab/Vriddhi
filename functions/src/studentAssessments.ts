@@ -502,6 +502,33 @@ async function readAnswerIndex(
   return null
 }
 
+/**
+ * One-time heal: persist the answer index on an attempt that started before
+ * the fast path existed. Without it, EVERY autosave re-loads the paper and
+ * all N question documents to validate a delta — one 20-minute session with
+ * a noisy-focus client produced ~30k reads this way. Best-effort: a failed
+ * heal must never break the autosave itself.
+ */
+async function healAnswerIndex(
+  assessmentRef: FirebaseFirestore.DocumentReference,
+  assessmentId: string,
+  index: Record<string, AnswerIndexEntry>
+): Promise<void> {
+  if (!isPlainObject(index) || Object.keys(index).length === 0) return
+  const db = admin.firestore()
+  if (Buffer.byteLength(JSON.stringify(index), 'utf8') > MAX_ANSWER_INDEX_BYTES) {
+    await db
+      .collection('studentAssessments')
+      .doc(assessmentId)
+      .collection('meta')
+      .doc('answerIndex')
+      .set({ index, updatedAt: admin.firestore.FieldValue.serverTimestamp() })
+    await assessmentRef.update({ answerIndexRef: 'meta/answerIndex' })
+  } else {
+    await assessmentRef.update({ answerIndex: index, answerIndexRef: null })
+  }
+}
+
 function answerText(question: ServerQuestion, answer: ServerAnswer | undefined): string {
   if (!answer) return ''
   if (answer.selectedOptionId) {
@@ -638,6 +665,10 @@ export const getMyTestInstructions = onCall(
         : resolved.test.instructions ? [String(resolved.test.instructions)] : [],
       negativeMarking: questions.some((question) => question.negativeMarks > 0),
       enableProctoring: resolved.test.enableProctoring === true,
+      maxTabSwitches: Number(resolved.test.maxTabSwitches) || 0,
+      shuffleQuestions: resolved.test.shuffleQuestions === true,
+      shuffleOptions: resolved.test.shuffleOptions === true,
+      shuffleSections: resolved.test.shuffleSections === true,
       questionTypes: [...new Set(questions.map((question) => question.type))],
       studentStatus: String(rowData?.status || 'not_started'),
       startedAt: iso(rowData?.startedAt) || undefined,
@@ -812,6 +843,11 @@ export const getMyActiveStudentTest = onCall(
       resumed: true,
       enableProctoring: resolved.test.enableProctoring === true,
       allowResume: true,
+      maxTabSwitches: Number(resolved.test.maxTabSwitches) || 0,
+      shuffleQuestions: resolved.test.shuffleQuestions === true,
+      shuffleOptions: resolved.test.shuffleOptions === true,
+      shuffleSections: resolved.test.shuffleSections === true,
+      scheduledStart: iso(resolved.test.startDateTime || resolved.test.scheduledAt),
     }
   }
 )
@@ -878,14 +914,17 @@ export const autosaveMyStudentTest = onCall(
         validated = sanitizeAnswersWithIndex(deltaRaw, index)
       } else {
         // Attempt started before the answer index existed: fall back to the
-        // question load so validation stays authoritative.
+        // question load so validation stays authoritative — then persist the
+        // index so this expensive path runs at most ONCE per attempt.
         const testRef = db.collection('scheduledTests').doc(String(row.testId || ''))
         const test = await testRef.get()
         const testData = test.data()
         if (!test.exists || !testData) throw new HttpsError('failed-precondition', 'Scheduled test not found')
         if (testData.status === 'cancelled') throw new HttpsError('failed-precondition', 'This test has been cancelled')
         const questions = await loadTestQuestions(test.id, testData)
-        validated = sanitizeAnswersWithIndex(deltaRaw, questionsToIndex(questions))
+        const index = questionsToIndex(questions)
+        validated = sanitizeAnswersWithIndex(deltaRaw, index)
+        void healAnswerIndex(assessmentRef, assessmentId, index).catch(() => undefined)
       }
     } else if (hasLegacy) {
       // Pre-deploy client sends the full keyed answer map: unchanged semantics
@@ -926,7 +965,11 @@ export const autosaveMyStudentTest = onCall(
       transaction.update(assessmentRef, update)
     })
 
-    if (proctorEvents.length > 0) {
+    // Blur-only batches are focus noise (a screen recorder or extension
+    // stealing focus fires them continuously): they still ride along in the
+    // row's proctorEvents, but they do not earn their own summary document.
+    const meaningfulEvents = proctorEvents.filter((event) => event.type !== 'window_blur')
+    if (proctorEvents.length > 0 && meaningfulEvents.length > 0) {
       // One summary doc per flush (was: one doc per event). `proctoringLogs`
       // has no readers today; the `kind` marker keeps future queries able to
       // tell batches apart from the high-severity direct-log docs.
@@ -1481,6 +1524,11 @@ export const scheduleAssessmentTest = onCall(
       allowLateSubmission: Boolean(input.allowLateSubmission),
       lateSubmissionPenalty: Math.max(0, Math.min(100, Number(input.lateSubmissionPenalty) || 0)),
       enableProctoring: Boolean(input.enableProctoring),
+      // 0 = unlimited tab switches; the student engine auto-submits beyond this.
+      maxTabSwitches: Math.max(0, Math.min(20, Math.trunc(Number(input.maxTabSwitches) || 0))),
+      shuffleQuestions: Boolean(input.shuffleQuestions),
+      shuffleOptions: Boolean(input.shuffleOptions),
+      shuffleSections: Boolean(input.shuffleSections),
       requireFaceVerification: Boolean(input.requireFaceVerification),
       resultPublishDate: admin.firestore.Timestamp.fromDate(resultPublishDate),
       showResultImmediately: paper.showResultImmediately !== false,

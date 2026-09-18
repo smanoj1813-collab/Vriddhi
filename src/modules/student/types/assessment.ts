@@ -101,6 +101,12 @@ export interface ActiveTest {
   resumed?: boolean;
   enableProctoring?: boolean;
   allowResume?: boolean;
+  scheduledStart?: string;
+  /** 0 = unlimited tab switches; beyond this the student engine auto-submits. */
+  maxTabSwitches?: number;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  shuffleSections?: boolean;
 }
 
 export interface TestResultSummary {
@@ -400,6 +406,13 @@ export interface TestInstructionsData {
   grade?: string;
   needsManualGrading?: boolean;
   resultReleased?: boolean;
+  /** Server-authoritative start time — the test may not start before this. */
+  scheduledStart?: string;
+  /** 0 = unlimited tab switches; beyond this the student engine auto-submits. */
+  maxTabSwitches?: number;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  shuffleSections?: boolean;
 }
 
 export interface SubmitOutcome {

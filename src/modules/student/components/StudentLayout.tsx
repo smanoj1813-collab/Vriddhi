@@ -1,5 +1,5 @@
 import { Suspense, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
 import StudentSidebar from './StudentSidebar';
 import { Loader2 } from 'lucide-react';
@@ -24,8 +24,14 @@ function LoadingContentLabel() {
 
 export default function StudentLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+
+  // While a student is actively taking a test, the app chrome (sidebar, top
+  // padding, floating chat) is removed so there is nothing to navigate away
+  // to. The test page is route-scoped, so this is robust to test state.
+  const inActiveTest = /\/(test|assessments)\/[^/]+\/take$/.test(location.pathname);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -64,6 +70,17 @@ export default function StudentLayout() {
             {t('auth.goStaffDashboard')}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (inActiveTest) {
+    // Full-bleed test surface: no sidebar, no app padding, no floating widget.
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100">
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </div>
     );
   }

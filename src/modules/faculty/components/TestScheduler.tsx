@@ -74,6 +74,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
   const [lateSubmissionPenalty, setLateSubmissionPenalty] = useState(0);
   const [enableProctoring, setEnableProctoring] = useState(false);
+  const [maxTabSwitches, setMaxTabSwitches] = useState(0);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [shuffleOptions, setShuffleOptions] = useState(false);
+  const [shuffleSections, setShuffleSections] = useState(false);
   const [resultPublishDate, setResultPublishDate] = useState<Date | null>(null);
 
   // Step 3: Visibility
@@ -245,6 +249,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
         allowLateSubmission,
         lateSubmissionPenalty: allowLateSubmission ? lateSubmissionPenalty : undefined,
         enableProctoring,
+        maxTabSwitches,
+        shuffleQuestions,
+        shuffleOptions,
+        shuffleSections,
         resultPublishDate: resultPublishDate || undefined,
       } as ScheduleTestInput);
 
@@ -268,6 +276,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     setAllowLateSubmission(false);
     setLateSubmissionPenalty(0);
     setEnableProctoring(false);
+    setMaxTabSwitches(0);
+    setShuffleQuestions(false);
+    setShuffleOptions(false);
+    setShuffleSections(false);
     setResultPublishDate(null);
     setVisibility('public');
     setTargetSections([]);
@@ -490,7 +502,24 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                         <TextField label="Late Penalty (%)" type="number" value={lateSubmissionPenalty} onChange={(e) => setLateSubmissionPenalty(Number(e.target.value))} size="small" sx={{ width: 150 }} />
                       )}
                       <FormControlLabel control={<Checkbox checked={enableProctoring} onChange={(e) => setEnableProctoring(e.target.checked)} />} label="Enable Basic Browser Proctoring" />
+                      <TextField
+                        label="Max Tab Switches (0 = unlimited)"
+                        type="number"
+                        value={maxTabSwitches}
+                        onChange={(e) => setMaxTabSwitches(Math.max(0, Math.min(20, Math.trunc(Number(e.target.value) || 0))))}
+                        helperText="Student is auto-submitted when this limit is exceeded."
+                        size="small"
+                        sx={{ width: 230 }}
+                      />
                     </Box>
+                    <Paper variant="outlined" sx={{ p: 1.5 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>Shuffle options (applied per student)</Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                        <FormControlLabel control={<Checkbox checked={shuffleQuestions} onChange={(e) => setShuffleQuestions(e.target.checked)} />} label="Shuffle question order within sections" />
+                        <FormControlLabel control={<Checkbox checked={shuffleSections} onChange={(e) => setShuffleSections(e.target.checked)} />} label="Shuffle section order" />
+                        <FormControlLabel control={<Checkbox checked={shuffleOptions} onChange={(e) => setShuffleOptions(e.target.checked)} />} label="Shuffle answer options" />
+                      </Box>
+                    </Paper>
                     <DateTimePicker label="Result Publish Date (optional)" value={resultPublishDate} onChange={(v) => setResultPublishDate(v)} sx={{ flex: '1 1 250px' }} />
                   </Stack>
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
