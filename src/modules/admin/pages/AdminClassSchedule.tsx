@@ -1,5 +1,5 @@
 // src/pages/AdminClassSchedule.tsx
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
   Box,
@@ -33,6 +33,7 @@ import {
   Paper,
   Checkbox,
   FormControlLabel,
+  Slider,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -45,6 +46,12 @@ import {
   EventBusy as EventBusyIcon,
   AutoAwesomeMotion as MaterialiseIcon,
   Assignment as AssignmentIcon,
+  AutoAwesome as AutoIcon,
+  PictureAsPdf as PdfIcon,
+  Image as ImageIcon,
+  Schedule as ScheduleIcon,
+  Balance as BalanceIcon,
+  Coffee as BreakIcon,
 } from '@mui/icons-material'
 import { useAdminSchedule } from '../hooks/useAdminSchedule'
 import { useAuth } from '../../auth/context/AuthContext'
@@ -57,10 +64,19 @@ import {
   type GenerateSessionsResult,
   type SessionConflict,
 } from '../api/classSessionApi'
-import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
+import { autoGenerateTimetable, type CohortDemand } from '../api/autoTimetableApi'
+import { generateWeeklyTimetable, buildTimeSlots, type BreakSlot, type SlotConfig } from '@/shared/utils/timetableGenerator'
+import {
+  toSchedulePdfBlob,
+  triggerDownload,
+  schedulePdfFilename,
+  downloadScheduleAsImage,
+} from '@/shared/utils/scheduleExport'
+import type { WeeklyScheduleFormData, DayOfWeek, ClassType, WeeklyClassSchedule } from '../types/schedule'
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 const CLASS_TYPES: ClassType[] = ['lecture', 'lab', 'tutorial', 'seminar', 'workshop']
+const DAY_LABELS: Record<DayOfWeek,string> = { monday:'Monday', tuesday:'Tuesday', wednesday:'Wednesday', thursday:'Thursday', friday:'Friday', saturday:'Saturday', sunday:'Sunday' }
 
 const EMPTY_FORM: WeeklyScheduleFormData = {
   subject: '',
@@ -172,6 +188,30 @@ const AdminClassSchedule: React.FC = () => {
   const [generateConflicts, setGenerateConflicts] = useState<SessionConflict[]>([])
   const [skipConflicting, setSkipConflicting] = useState(false)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+
+  // ─── Automatic scheduling (equal distribution + breaks) ───────────────
+  const [autoOpen, setAutoOpen] = useState(false)
+  const [autoStep, setAutoStep] = useState<1|2|3>(1)
+  const [autoRooms, setAutoRooms] = useState('101, 102, 201, 202, Lab-1, LH-301')
+  const [autoDayStart, setAutoDayStart] = useState('09:00')
+  const [autoDayEnd, setAutoDayEnd] = useState('16:00')
+  const [autoPeriodMins, setAutoPeriodMins] = useState(50)
+  const [autoBreaks, setAutoBreaks] = useState<BreakSlot[]>([
+    { start: '10:40', end: '11:00', label: 'Short Break' },
+    { start: '13:00', end: '14:00', label: 'Lunch Break' },
+  ])
+  const [autoEqualDist, setAutoEqualDist] = useState(true)
+  const [autoMaxFacultyPerDay, setAutoMaxFacultyPerDay] = useState(4)
+  const [autoPeriodsPerWeek, setAutoPeriodsPerWeek] = useState(3)
+  const [autoScope, setAutoScope] = useState<'all'|'filtered'>('all')
+  const [autoPreview, setAutoPreview] = useState<ReturnType<typeof generateWeeklyTimetable> | null>(null)
+  const [autoGenerating, setAutoGenerating] = useState(false)
+  const [autoResult, setAutoResult] = useState<{created:number;warnings:string[]}|null>(null)
+  const autoPreviewRef = useRef<HTMLDivElement>(null)
+
+  // ─── Printable refs for export (daily / weekly) ───────────────────────
+  const dailyPrintRef = useRef<HTMLDivElement>(null)
+  const weeklyPrintRef = useRef<HTMLDivElement>(null)
 
   // ─── Apply prefill from AdminCurriculum "Schedule Class" ──────────────
   useEffect(() => {
@@ -436,6 +476,154 @@ const AdminClassSchedule: React.FC = () => {
     }
   }
 
+  // ─── Automatic scheduling helpers ─────────────────────────────────────
+
+  const autoRoomsList = useMemo(()=> autoRooms.split(',').map(s=> s.trim()).filter(Boolean), [autoRooms])
+  const autoCohortDemands: CohortDemand[] = useMemo(()=>{
+    const brs = autoScope==='filtered' ? branches.slice(0,1) : branches.slice(0,4)
+    const bats = autoScope==='filtered' ? batches.slice(0,1) : batches.slice(0,3)
+    const divs = divisions.length ? (autoScope==='filtered'? divisions.slice(0,1): divisions.slice(0,2)) : ['A'] as string[]
+    if (!brs.length || !bats.length || subjects.length===0) return []
+    const demands: CohortDemand[]=[]
+    for (const branch of brs) for (const batch of bats) for (const division of divs) {
+      const subSlice = subjects.slice(0, 6)
+      if (subSlice.length===0) continue
+      demands.push({
+        branch, batch, semester: 1, division,
+        subjects: subSlice.map(s=> ({
+          subject: s.name, subjectCode: s.code, facultyId: s.facultyId, facultyName: s.facultyName,
+          periodsPerWeek: autoPeriodsPerWeek, type: 'lecture' as ClassType,
+        }))
+      })
+    }
+    return demands
+  }, [branches, batches, divisions, subjects, autoPeriodsPerWeek, autoScope])
+
+  const autoSlotConfig: SlotConfig = useMemo(()=> ({
+    workingDays: ['monday','tuesday','wednesday','thursday','friday','saturday'] as DayOfWeek[],
+    dayStart: autoDayStart, dayEnd: autoDayEnd, periodMinutes: autoPeriodMins, breaks: autoBreaks
+  }), [autoDayStart, autoDayEnd, autoPeriodMins, autoBreaks])
+
+  const handleAutoPreview = () => {
+    if (autoCohortDemands.length===0) { setSnackbar({open:true, message:'No cohorts/subjects to schedule — add faculty + subjects first', severity:'error'}); return }
+    if (autoRoomsList.length===0) { setSnackbar({open:true, message:'Add at least one room', severity:'error'}); return }
+    try {
+      const preview = generateWeeklyTimetable({
+        cohorts: autoCohortDemands,
+        slotConfig: autoSlotConfig,
+        rooms: autoRoomsList,
+        maxPeriodsPerDayPerFaculty: autoMaxFacultyPerDay,
+        equalDistribution: autoEqualDist,
+      })
+      setAutoPreview(preview)
+      setAutoStep(2)
+    } catch (e:any){
+      setSnackbar({open:true, message: e.message||'Preview failed', severity:'error'})
+    }
+  }
+
+  const handleAutoConfirm = async () => {
+    if (!autoPreview || autoCohortDemands.length===0) return
+    setAutoGenerating(true)
+    try {
+      const res = await autoGenerateTimetable({
+        cohorts: autoCohortDemands,
+        slotConfig: autoSlotConfig,
+        rooms: autoRoomsList,
+        maxPeriodsPerDayPerFaculty: autoMaxFacultyPerDay,
+        equalDistribution: autoEqualDist,
+        dryRun: false,
+        replace: false,
+      })
+      setAutoResult({created: res.created||0, warnings: res.warnings||[]})
+      setAutoStep(3)
+      setSnackbar({open:true, message:`Created ${res.created} class slots — timetable is live. Now Generate Sessions for dates.`, severity:'success'})
+    } catch (e:any){
+      setSnackbar({open:true, message: e.message||'Auto-generation failed', severity:'error'})
+    } finally { setAutoGenerating(false) }
+  }
+
+  const handleAutoReset = () => { setAutoPreview(null); setAutoResult(null); setAutoStep(1) }
+
+  // ─── Exports ─────────────────────────────────────────────────────────
+
+  const exportTitle = useMemo(()=> `Class Schedule — ${user?.collegeId || collegeId || ''}`.trim(), [user, collegeId])
+  const weeklySlotsForExport = useMemo(()=>{
+    const all: WeeklyClassSchedule[] = []
+    DAYS.forEach(d=> (weeklySchedule[d]||[]).forEach((s:any)=> all.push(s)))
+    return all
+  }, [weeklySchedule])
+
+  const handleDownloadDailyPdf = async () => {
+    try {
+      const daily = weeklySlotsForExport.filter(s=> s.dayOfWeek?.toLowerCase()===selectedDay)
+      if (daily.length===0){ setSnackbar({open:true, message:`No classes on ${DAY_LABELS[selectedDay]} to export`, severity:'warning'}); return }
+      const blob = toSchedulePdfBlob({ mode:'daily', schedules: daily as any, options:{ day:selectedDay, collegeName: exportTitle, title:`Daily Schedule — ${DAY_LABELS[selectedDay]}`, subtitle:`${daySchedules.length} classes • ${getDateForDayOfWeek(selectedDay)}` } })
+      const filename = schedulePdfFilename('daily',{day:selectedDay},'pdf')
+      triggerDownload(blob, filename)
+      setSnackbar({open:true, message:`Daily PDF downloaded — ${filename}`, severity:'success'})
+    } catch(e:any){ setSnackbar({open:true, message:e.message||'PDF export failed', severity:'error'}) }
+  }
+  const handleDownloadWeeklyPdf = async () => {
+    try {
+      if (weeklySlotsForExport.length===0){ setSnackbar({open:true, message:'No timetable to export — create or auto-generate classes first', severity:'warning'}); return }
+      const blob = toSchedulePdfBlob({ mode:'weekly', schedules: weeklySlotsForExport as any, options:{ collegeName: exportTitle, title:'Weekly Class Schedule', subtitle:`${weeklySlotsForExport.length} classes • Mon–Sat • Generated ${new Date().toLocaleDateString('en-IN')}` } })
+      const filename = schedulePdfFilename('weekly',{},'pdf')
+      triggerDownload(blob, filename)
+      setSnackbar({open:true, message:`Weekly PDF downloaded — ${filename}`, severity:'success'})
+    } catch(e:any){ setSnackbar({open:true, message:e.message||'PDF export failed', severity:'error'}) }
+  }
+  const handleDownloadDailyImage = async () => {
+    const el = dailyPrintRef.current
+    const daily = weeklySlotsForExport.filter(s=> s.dayOfWeek?.toLowerCase()===selectedDay)
+    if (daily.length===0){ setSnackbar({open:true, message:`No classes on ${DAY_LABELS[selectedDay]} to export`, severity:'warning'}); return }
+    if(!el){ setSnackbar({open:true, message:'Preview not ready — scroll to the table and try again', severity:'warning'}); return }
+    try{
+      const filename = schedulePdfFilename('daily',{day:selectedDay},'png')
+      await downloadScheduleAsImage(el, filename)
+      setSnackbar({open:true, message:`Daily image downloaded — ${filename}`, severity:'success'})
+    }catch(e:any){ setSnackbar({open:true, message:e.message||'Image export failed', severity:'error'})}
+  }
+  const handleDownloadWeeklyImage = async () => {
+    const el = weeklyPrintRef.current
+    if (weeklySlotsForExport.length===0){ setSnackbar({open:true, message:'No timetable to export', severity:'warning'}); return }
+    if(!el){ setSnackbar({open:true, message:'Preview not ready', severity:'warning'}); return }
+    try{
+      const filename = schedulePdfFilename('weekly',{},'png')
+      await downloadScheduleAsImage(el, filename)
+      setSnackbar({open:true, message:`Weekly image downloaded — ${filename}`, severity:'success'})
+    }catch(e:any){ setSnackbar({open:true, message:e.message||'Image export failed', severity:'error'})}
+  }
+  const handleDownloadAutoPreviewPdf = async () => {
+    if(!autoPreview) return
+    const blob = toSchedulePdfBlob({ mode:'weekly', schedules: autoPreview.slots as any, options:{ collegeName: exportTitle, title:'Auto-Generated Timetable — Preview', subtitle:`${autoPreview.slots.length} classes • Equal distribution ${autoEqualDist?'ON':'OFF'}` } })
+    triggerDownload(blob, schedulePdfFilename('weekly',{},'pdf'))
+    setSnackbar({open:true, message:'Preview PDF downloaded', severity:'success'})
+  }
+  const handleDownloadAutoPreviewImage = async () => {
+    const el = autoPreviewRef.current
+    if(!el || !autoPreview) return
+    await downloadScheduleAsImage(el, schedulePdfFilename('weekly',{},'png'))
+    setSnackbar({open:true, message:'Preview image downloaded', severity:'success'})
+  }
+
+  // Grid helpers for printable preview
+  const allDays = DAYS
+  const slotKeysWeekly = useMemo(()=>{
+    const keys = Array.from(new Set(weeklySlotsForExport.map(s=> `${s.startTime}–${s.endTime}`))).sort()
+    return keys
+  }, [weeklySlotsForExport])
+  const weeklyCellMap = useMemo(()=>{
+    const m=new Map<string, WeeklyClassSchedule>()
+    weeklySlotsForExport.forEach(s=> m.set(`${s.dayOfWeek?.toLowerCase()}|${s.startTime}–${s.endTime}`, s as WeeklyClassSchedule))
+    return m
+  }, [weeklySlotsForExport])
+
+  const slotKeysPreview = useMemo(()=>{
+    if(!autoPreview) return [] as string[]
+    return Array.from(new Set(autoPreview.slots.map(s=> `${s.startTime}–${s.endTime}`))).sort()
+  }, [autoPreview])
+
   // ─── Bulk Upload ──────────────────────────────────────
   const handleDownloadTemplate = () => {
     const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv' })
@@ -527,38 +715,39 @@ const AdminClassSchedule: React.FC = () => {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 500 }}>
-            Class Schedule Manager
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage weekly recurring class schedules for all branches and batches
-          </Typography>
+          <Typography variant="h5" sx={{ fontWeight: 500 }}>Class Schedule Manager</Typography>
+          <Typography variant="body2" color="text.secondary">Manage weekly recurring class schedules — manual or ⚡ auto-generated with equal distribution</Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<MaterialiseIcon />}
-            onClick={handleOpenGenerate}
-          >
-            Generate Sessions
+        <Box sx={{ display: 'flex', gap: 1, flexWrap:'wrap' }}>
+          <Button variant="contained" color="secondary" startIcon={<AutoIcon />} onClick={()=> { setAutoOpen(true); setAutoStep(1); setAutoPreview(null); setAutoResult(null) }}>
+            Auto Generate
           </Button>
-          <Button
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            onClick={() => setBulkDialogOpen(true)}
-          >
-            Bulk Upload
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpen()}
-            disabled={isCreating}
-          >
-            Add Class
-          </Button>
+          <Button variant="outlined" startIcon={<MaterialiseIcon />} onClick={handleOpenGenerate}>Generate Sessions</Button>
+          <Button variant="outlined" startIcon={<UploadIcon />} onClick={() => setBulkDialogOpen(true)}>Bulk Upload</Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpen()} disabled={isCreating}>Add Class</Button>
         </Box>
       </Box>
+
+      {/* Scalability / Distribution explainers */}
+      <Paper variant="outlined" sx={{ p:2, mb:2, bgcolor:'rgba(13,148,136,0.04)', borderColor:'rgba(13,148,136,0.25)' }}>
+        <Box sx={{ display:'flex', gap:2, alignItems:'flex-start', flexWrap:'wrap' }}>
+          <Box sx={{ display:'flex', gap:1, alignItems:'center' }}><BalanceIcon color="primary" fontSize="small" /><Typography variant="subtitle2" sx={{fontWeight:700}}>Equal distribution</Typography></Box>
+          <Typography variant="caption" color="text.secondary" sx={{flex:'1 1 260px'}}>Auto-generation spreads each subject evenly across Mon–Sat, levels faculty load (no teacher with 6 periods Monday), respects breaks, and never double-books rooms — the same greedy + rebalance that powers the server preview.</Typography>
+          <Box sx={{ display:'flex', gap:1, alignItems:'center' }}><BreakIcon color="action" fontSize="small" /><Typography variant="caption" color="text.secondary">Breaks are blocked slots — no class can cross lunch or the short break.</Typography></Box>
+        </Box>
+      </Paper>
+
+      {/* Quick Exports — visible to admin/principal/HOD (page is already role-guarded) */}
+      <Paper variant="outlined" sx={{ p:1.5, mb:3, display:'flex', gap:1, flexWrap:'wrap', alignItems:'center' }}>
+        <ScheduleIcon fontSize="small" color="action" />
+        <Typography variant="subtitle2" sx={{fontWeight:600, mr:1}}>Downloads (admin / principal):</Typography>
+        <Button size="small" variant="outlined" startIcon={<PdfIcon />} onClick={handleDownloadDailyPdf}>Daily PDF ({DAY_LABELS[selectedDay]})</Button>
+        <Button size="small" variant="outlined" startIcon={<ImageIcon />} onClick={handleDownloadDailyImage}>Daily Image</Button>
+        <Divider orientation="vertical" flexItem sx={{mx:0.5}}/>
+        <Button size="small" variant="outlined" color="secondary" startIcon={<PdfIcon />} onClick={handleDownloadWeeklyPdf}>Weekly PDF</Button>
+        <Button size="small" variant="outlined" color="secondary" startIcon={<ImageIcon />} onClick={handleDownloadWeeklyImage}>Weekly Image</Button>
+        <Typography variant="caption" color="text.secondary" sx={{ml:1}}>PNGs are notice-board ready; PDFs are print-quality.</Typography>
+      </Paper>
 
       {/* Empty-data banners */}
       {facultyList.length === 0 && (
@@ -606,8 +795,8 @@ const AdminClassSchedule: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Schedule Table */}
-      <Card variant="outlined">
+      {/* Daily Print Target (captured for Image exports) */}
+      <Card variant="outlined" ref={dailyPrintRef} sx={{ bgcolor:'#fff' }}>
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: 'action.hover' }}>
@@ -795,6 +984,230 @@ const AdminClassSchedule: React.FC = () => {
           })}
         </Box>
       </Box>
+
+      {/* Weekly printable (captured for Weekly Image/PDF) */}
+      <Box ref={weeklyPrintRef} sx={{ mt:3, p:2, bgcolor:'#fff', border:'1px solid #e2e8f0', borderRadius:2 }}>
+        <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:1 }}>
+          <Typography variant="subtitle1" sx={{fontWeight:700, color:'#0f766e'}}>Weekly Schedule — Mon to Sat</Typography>
+          <Typography variant="caption" color="text.secondary">{weeklySlotsForExport.length} classes • {new Date().toLocaleDateString('en-IN')}</Typography>
+        </Box>
+        <Table size="small" sx={{ '& th, & td': { fontSize: 11, py:0.6 } }}>
+          <TableHead>
+            <TableRow sx={{bgcolor:'#0f766e'}}>
+              <TableCell sx={{color:'#fff', fontWeight:700, minWidth:90}}>Time</TableCell>
+              {allDays.map(d=> <TableCell key={d} sx={{color:'#fff', fontWeight:700, textAlign:'center', textTransform:'capitalize'}}>{d.slice(0,3)}</TableCell>)}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {slotKeysWeekly.length===0 ? (
+              <TableRow><TableCell colSpan={7} align="center" sx={{py:4}}><Typography variant="caption" color="text.secondary">No weekly timetable yet — create classes or use Auto Generate.</Typography></TableCell></TableRow>
+            ) : slotKeysWeekly.map(key=> (
+              <TableRow key={key} hover>
+                <TableCell sx={{fontWeight:600, bgcolor:'#f8fafc', whiteSpace:'nowrap'}}>{key}</TableCell>
+                {allDays.map(d=>{
+                  const cell = weeklyCellMap.get(`${d}|${key}`)
+                  return (
+                    <TableCell key={d} sx={{ textAlign:'center', verticalAlign:'top', minWidth:110 }}>
+                      {cell ? (
+                        <Box>
+                          <Typography variant="caption" sx={{fontWeight:600, display:'block', lineHeight:1.2}}>{cell.subject}</Typography>
+                          {cell.room && <Typography variant="caption" sx={{color:'#0f766e', display:'block'}}>@{cell.room}</Typography>}
+                          <Typography variant="caption" sx={{color:'text.secondary', display:'block'}}>{cell.facultyName}</Typography>
+                        </Box>
+                      ) : <Typography variant="caption" sx={{color:'#cbd5e1'}}>—</Typography>}
+                    </TableCell>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Typography variant="caption" color="text.secondary" sx={{display:'block', mt:1, borderTop:'1px solid #e2e8f0', pt:1}}>Vriddhi Academic Cloud — scalable, equal-distribution scheduling</Typography>
+      </Box>
+
+      {/* ─── AUTO GENERATE WIZARD ──────────────────────────────────────── */}
+      <Dialog open={autoOpen} onClose={()=> setAutoOpen(false)} maxWidth="lg" fullWidth>
+        <DialogTitle sx={{ display:'flex', alignItems:'center', gap:1 }}>
+          <AutoIcon color="secondary" />
+          Auto-Generate Timetable — Equal Distribution &amp; Break-Aware
+          <Chip size="small" label={`Step ${autoStep}/3`} color="secondary" variant="outlined" sx={{ml:1}} />
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ display:'flex', gap:1, mb:2 }}>
+            {[
+              {n:1,label:'Configure'},
+              {n:2,label:'Preview & Balance Check'},
+              {n:3,label:'Done'},
+            ].map(s=> (
+              <Chip key={s.n} label={`${s.n}. ${s.label}`} color={autoStep===s.n ? 'secondary' : autoStep> s.n ? 'success' : 'default'} variant={autoStep===s.n ? 'filled' : 'outlined'} size="small" />
+            ))}
+          </Box>
+
+          {autoStep===1 && (
+            <Stack spacing={2}>
+              <Alert severity="info">
+                One click builds a fair week: each subject spread evenly Mon→Sat (not 3 on Monday), faculty load levelled (max {autoMaxFacultyPerDay}/day), breaks blocked. A live preview shows balance before anything is saved.
+              </Alert>
+
+              <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+                <Box sx={{ flex:'1 1 280px', minWidth:280 }}>
+                  <Card variant="outlined" sx={{p:1.5}}>
+                    <Typography variant="subtitle2" sx={{fontWeight:700, display:'flex', alignItems:'center', gap:1}}><ScheduleIcon fontSize="small"/> Daily window &amp; periods</Typography>
+                    <Stack direction="row" spacing={1} sx={{mt:1}}>
+                      <TextField label="Day start" type="time" size="small" value={autoDayStart} onChange={e=> setAutoDayStart(e.target.value)} slotProps={{inputLabel:{shrink:true}}} />
+                      <TextField label="Day end" type="time" size="small" value={autoDayEnd} onChange={e=> setAutoDayEnd(e.target.value)} slotProps={{inputLabel:{shrink:true}}} />
+                      <TextField label="Period (mins)" type="number" size="small" value={autoPeriodMins} onChange={e=> setAutoPeriodMins(Number(e.target.value)||50)} sx={{maxWidth:120}} slotProps={{htmlInput:{min:30,max:90}}} />
+                    </Stack>
+                    <Box sx={{mt:2}}>
+                      <Typography variant="caption" sx={{fontWeight:600}}>Max periods per faculty per day: {autoMaxFacultyPerDay}</Typography>
+                      <Slider min={2} max={6} step={1} value={autoMaxFacultyPerDay} onChange={(_,v)=> setAutoMaxFacultyPerDay(v as number)} valueLabelDisplay="auto" />
+                    </Box>
+                  </Card>
+                </Box>
+                <Box sx={{ flex:'1 1 280px', minWidth:280 }}>
+                  <Card variant="outlined" sx={{p:1.5}}>
+                    <Typography variant="subtitle2" sx={{fontWeight:700, display:'flex', alignItems:'center', gap:1}}><BreakIcon fontSize="small"/> Breaks — blocked, not teachable</Typography>
+                    {autoBreaks.map((br,i)=> (
+                      <Stack key={i} direction="row" spacing={1} sx={{mt:1}} style={{alignItems:'center'}}>
+                        <TextField size="small" label="Start" type="time" value={br.start} onChange={e=> setAutoBreaks(prev=> prev.map((b,idx)=> idx===i? {...b, start:e.target.value}: b))} slotProps={{inputLabel:{shrink:true}}} />
+                        <TextField size="small" label="End" type="time" value={br.end} onChange={e=> setAutoBreaks(prev=> prev.map((b,idx)=> idx===i? {...b, end:e.target.value}: b))} slotProps={{inputLabel:{shrink:true}}} />
+                        <TextField size="small" label="Label" value={br.label} onChange={e=> setAutoBreaks(prev=> prev.map((b,idx)=> idx===i? {...b, label:e.target.value}: b))} sx={{flex:1}} />
+                        <IconButton size="small" onClick={()=> setAutoBreaks(prev=> prev.filter((_,idx)=> idx!==i))}><DeleteIcon fontSize="small"/></IconButton>
+                      </Stack>
+                    ))}
+                    <Button size="small" sx={{mt:1}} onClick={()=> setAutoBreaks(prev=> [...prev, {start:'15:00', end:'15:15', label:'Evening Break'}])}>+ Add break</Button>
+                  </Card>
+                </Box>
+              </Box>
+
+              <Card variant="outlined" sx={{p:1.5}}>
+                <Box sx={{display:'flex', gap:2, flexWrap:'wrap', alignItems:'center'}}>
+                  <FormControl size="small" sx={{minWidth:140}}>
+                    <InputLabel>Periods / subject / week</InputLabel>
+                    <Select value={autoPeriodsPerWeek} label="Periods / subject / week" onChange={e=> setAutoPeriodsPerWeek(Number(e.target.value))}>
+                      {[2,3,4,5,6].map(n=> <MenuItem key={n} value={n}>{n} / week — {n<=3?'light':'balanced'}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  <FormControlLabel control={<Checkbox checked={autoEqualDist} onChange={e=> setAutoEqualDist(e.target.checked)} />} label="Equal distribution (recommended)" />
+                  <FormControl size="small" sx={{minWidth:180}}>
+                    <InputLabel>Scope</InputLabel>
+                    <Select value={autoScope} label="Scope" onChange={e=> setAutoScope(e.target.value as any)}>
+                      <MenuItem value="all">All branches & batches</MenuItem>
+                      <MenuItem value="filtered">First cohort only (quick test)</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Chip label={`${autoCohortDemands.length} cohorts • ${autoCohortDemands.reduce((s,c)=> s+c.subjects.length,0)} subject-assignments`} color="secondary" variant="outlined" />
+                </Box>
+                <TextField fullWidth size="small" label="Rooms (comma-separated)" value={autoRooms} onChange={e=> setAutoRooms(e.target.value)} placeholder="101, 102, Lab-1, LH-301" sx={{mt:2}} helperText="Pool the generator picks from; preferredRoom on a subject still wins if free" />
+                {autoCohortDemands.length>0 && (
+                  <Alert severity="success" sx={{mt:2}}>
+                    Preview will generate <strong>{(() => {
+                      try {
+                        const g=buildTimeSlots(autoSlotConfig); const spd=g.get('monday')?.length||0; return `${spd} slots/day × ${autoSlotConfig.workingDays.length} days = ${spd*autoSlotConfig.workingDays.length} weekly slots`; 
+                      } catch(e:any){ return e.message }
+                    })()}</strong> • {autoCohortDemands.length} cohorts • Rooms: {autoRoomsList.length}
+                  </Alert>
+                )}
+                {facultyList.length===0 && <Alert severity="warning" sx={{mt:1}}>No faculty found — preview will be empty. Add faculty (or seed subjects) first.</Alert>}
+              </Card>
+            </Stack>
+          )}
+
+          {autoStep===2 && autoPreview && (
+            <Stack spacing={2}>
+              <Box sx={{ display:'flex', gap:1, flexWrap:'wrap', alignItems:'center' }}>
+                <Chip icon={<BalanceIcon />} label={`Faculty variance σ=${autoPreview.stats.facultyVariance} — ${autoPreview.stats.facultyVariance<0.8?'Excellent': autoPreview.stats.facultyVariance<1.4?'Good':'Needs review'}`} color={autoPreview.stats.facultyVariance<1.4?'success':'warning'} size="small" />
+                <Chip label={`${autoPreview.slots.length} classes proposed`} color="secondary" size="small" />
+                <Chip label={autoPreview.stats.breaksRespected? 'Breaks respected ✓' : 'Breaks violated'} color={autoPreview.stats.breaksRespected?'success':'error'} size="small" />
+                <Chip label={`Clashes: ${autoPreview.hardClashes.length}`} color={autoPreview.hardClashes.length===0?'success':'error'} size="small" />
+                <Box sx={{flex:1}}/>
+                <Button size="small" variant="outlined" startIcon={<PdfIcon/>} onClick={handleDownloadAutoPreviewPdf}>Preview PDF</Button>
+                <Button size="small" variant="outlined" startIcon={<ImageIcon/>} onClick={handleDownloadAutoPreviewImage}>Preview Image</Button>
+              </Box>
+
+              {autoPreview.warnings.length>0 && <Alert severity="warning" sx={{whiteSpace:'pre-wrap'}}>{autoPreview.warnings.join('\n')}</Alert>}
+              {autoPreview.hardClashes.length>0 && <Alert severity="error">{autoPreview.hardClashes.slice(0,4).map(c=> c.message).join('\n')}</Alert>}
+
+              <Paper variant="outlined" ref={autoPreviewRef} sx={{p:1.5, overflowX:'auto', bgcolor:'#fff'}}>
+                <Typography variant="subtitle2" sx={{fontWeight:700, color:'#0f766e'}}>Preview — Weekly Matrix (sample by start time)</Typography>
+                <Typography variant="caption" color="text.secondary">Each cell = one cohort&apos;s class. For multi-cohort colleges the table scrolls horizontally; PDF will paginate cleanly.</Typography>
+                <Table size="small" sx={{mt:1, '& th, & td': {fontSize:10, py:0.5}}}>
+                  <TableHead>
+                    <TableRow sx={{bgcolor:'#0f766e'}}>
+                      <TableCell sx={{color:'#fff', fontWeight:700, minWidth:90}}>Time</TableCell>
+                      {autoSlotConfig.workingDays.map(d=> <TableCell key={d} sx={{color:'#fff', fontWeight:700, textTransform:'capitalize', textAlign:'center'}}>{d.slice(0,3)}</TableCell>)}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {slotKeysPreview.map(key=> (
+                      <TableRow key={key}>
+                        <TableCell sx={{fontWeight:600, bgcolor:'#f8fafc', whiteSpace:'nowrap'}}>{key}</TableCell>
+                        {autoSlotConfig.workingDays.map(d=>{
+                          const cell = autoPreview.slots.find(s=> s.dayOfWeek===d && `${s.startTime}–${s.endTime}`===key)
+                          return (
+                            <TableCell key={d} sx={{textAlign:'center', verticalAlign:'top'}}>
+                              {cell ? (
+                                <Box sx={{border:1, borderColor:'divider', borderRadius:1, p:0.5, bgcolor:'rgba(13,148,136,0.06)'}}>
+                                  <Typography variant="caption" sx={{fontWeight:700, display:'block', lineHeight:1.2}}>{cell.subject}</Typography>
+                                  <Typography variant="caption" sx={{display:'block', color:'#0f766e'}}>{cell.room} • {cell.branch} {cell.division}</Typography>
+                                  <Typography variant="caption" sx={{display:'block', color:'text.secondary'}}>{cell.facultyName}</Typography>
+                                </Box>
+                              ) : <Typography variant="caption" sx={{color:'#cbd5e1'}}>—</Typography>}
+                            </TableCell>
+                          )
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Typography variant="caption" color="text.secondary" sx={{display:'block', mt:1}}>Scrolled view shows one cohort per day-slot for readability — weekly PDF loops over cohorts if needed.</Typography>
+              </Paper>
+
+              <Paper variant="outlined" sx={{p:1.5}}>
+                <Typography variant="subtitle2" sx={{fontWeight:700}}>Per-cohort distribution</Typography>
+                {autoPreview.stats.cohorts.map(c=> (
+                  <Box key={c.cohortKey} sx={{display:'flex', gap:1, alignItems:'center', flexWrap:'wrap', mt:1, p:1, borderRadius:1, bgcolor:'action.hover'}}>
+                    <Typography variant="caption" sx={{fontWeight:600, minWidth:160}}>{c.cohortKey}</Typography>
+                    <Chip size="small" label={`needed ${c.needed} • placed ${c.placed}${c.unmet?` • unmet ${c.unmet}`:''}`} color={c.unmet?'error':'success'} />
+                    {autoSlotConfig.workingDays.map(d=> <Chip key={d} size="small" variant="outlined" label={`${d.slice(0,2)}:${c.perDay[d]||0}`} sx={{height:20, fontSize:10}} />)}
+                  </Box>
+                ))}
+              </Paper>
+            </Stack>
+          )}
+
+          {autoStep===2 && !autoPreview && (
+            <Alert severity="warning">No preview yet — go back and click “Generate Preview”.</Alert>
+          )}
+
+          {autoStep===3 && (
+            <Box sx={{ display:'flex', flexDirection:'column', gap:2, alignItems:'center', py:2 }}>
+              <Typography variant="h6" sx={{fontWeight:700, color:'success.main'}}>✓ Timetable is live</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{textAlign:'center'}}>
+                {autoResult?.created} weekly slots were created. <br/> Next: <strong>Generate Sessions</strong> for your term dates so faculty attendance &amp; coverage can start.
+              </Typography>
+              {autoResult && autoResult.warnings.length>0 && <Alert severity="warning" sx={{width:'100%'}}>{autoResult.warnings.join('\n')}</Alert>}
+              <Box sx={{ display:'flex', gap:1 }}>
+                <Button variant="outlined" onClick={()=> setAutoOpen(false)}>Close</Button>
+                <Button variant="contained" startIcon={<MaterialiseIcon/>} onClick={()=> { setAutoOpen(false); setGenerateOpen(true)}}>Generate Sessions</Button>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {autoStep===1 && <>
+            <Button onClick={()=> setAutoOpen(false)}>Cancel</Button>
+            <Button variant="contained" color="secondary" startIcon={<AutoIcon/>} onClick={handleAutoPreview} disabled={autoCohortDemands.length===0}>Generate Preview →</Button>
+          </>}
+          {autoStep===2 && <>
+            <Button onClick={()=> setAutoStep(1)}>← Back</Button>
+            <Box sx={{flex:1}}/>
+            <Button onClick={()=> setAutoOpen(false)}>Cancel</Button>
+            <Button variant="contained" color="secondary" disabled={autoGenerating} onClick={handleAutoConfirm}>{autoGenerating ? 'Creating…' : `Confirm & Create ${autoPreview? autoPreview.slots.length:0} slots`}</Button>
+          </>}
+          {autoStep===3 && <Button variant="outlined" onClick={handleAutoReset}>Create another</Button>}
+        </DialogActions>
+      </Dialog>
 
       {/* Create/Edit Dialog */}
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>

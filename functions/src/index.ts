@@ -21,6 +21,7 @@ import { router as prepRouter } from './routes/prep'
 import { router as questionsRouter } from './routes/questions'
 import { router as papersRouter } from './routes/papers'
 import { router as configRouter } from './routes/config'
+import { schedulesRouter } from './routes/schedules'
 import { generalLimiter } from './middleware/rateLimit'
 import { router as admissionIntakeRouter } from './routes/admissionIntake'
 
@@ -114,6 +115,7 @@ import {
   rotateAdmissionIngestToken,
   disableAdmissionIntake,
 } from './admissions'
+import { autoGenerateTimetable } from './autoTimetable'
 
 const app = express()
 
@@ -161,10 +163,12 @@ app.use('/papers', papersRouter)
 app.use('/api/prep', prepRouter)
 app.use('/prep', prepRouter)
 app.use('/api/config', configRouter)
+app.use('/config', configRouter)
+app.use('/api/schedules', schedulesRouter)
+app.use('/schedules', schedulesRouter)
 
 // Public Google Form intake — token-gated, no Firebase auth.
 app.use('/api/admissions', admissionIntakeRouter)
-app.use('/config', configRouter)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path })
@@ -273,4 +277,5 @@ export {
   saveAdmissionConfig,
   rotateAdmissionIngestToken,
   disableAdmissionIntake,
+  autoGenerateTimetable,
 }
