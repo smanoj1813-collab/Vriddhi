@@ -390,7 +390,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                 <StepLabel>Select Paper</StepLabel>
                 <StepContent>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Choose a paper from the approved question bank
+                    Click a paper to select it — click the SAME paper again (or “Clear
+                    selection”) to deselect it and pick another.
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
                     {typedPapers.map((paper: AssessmentPaper) => (
@@ -400,6 +401,7 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                         sx={{
                           flex: '1 1 280px',
                           cursor: 'pointer',
+                          position: 'relative',
                           border: selectedPaper?.id === paper.id ? 2 : 1,
                           borderColor: selectedPaper?.id === paper.id ? 'primary.main' : 'divider',
                           bgcolor: selectedPaper?.id === paper.id ? 'primary.50' : 'background.paper',
@@ -411,6 +413,23 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                           setSelectedPaper((prev) => (prev?.id === paper.id ? null : paper))
                         }
                       >
+                        {selectedPaper?.id === paper.id && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              color: 'primary.main',
+                              fontWeight: 700,
+                              fontSize: 13,
+                            }}
+                          >
+                            <CheckIcon fontSize="small" /> Selected
+                          </Box>
+                        )}
                         <CardContent>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paper.title}</Typography>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -426,6 +445,18 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       </Card>
                     ))}
                   </Box>
+                  {selectedPaper && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Button
+                        size="small"
+                        color="inherit"
+                        startIcon={<CancelIcon fontSize="small" />}
+                        onClick={() => setSelectedPaper(null)}
+                      >
+                        Clear selection
+                      </Button>
+                    </Box>
+                  )}
                   {papersLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading approved papers…</Alert>}
                   {!papersLoading && typedPapers.length === 0 && (
                     <Alert severity="warning" sx={{ mt: 2 }}>
