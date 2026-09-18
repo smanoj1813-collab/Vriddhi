@@ -236,6 +236,79 @@ export const diagnoseIdentity = onCall(
           'Auth custom claims do not contain role — sign-in will work but every rule-guarded read is denied. Run Access Control → Identity repair, then sign out and back in.'
         )
       }
+      // Hidden-character drift (the 2026-09 "My Attendance" production
+      // denial): the web client normalises collegeId with trim() — for
+      // display, payloads and the staleness check — but the security rules
+      // compare the claim against the document's collegeId STRICTLY. A value
+      // that only matches after trimming therefore reads as healthy to every
+      // self-heal while every tenant-scoped write is refused. Surface it.
+      const rawClaimCollege =
+        typeof authUser?.customClaims?.collegeId === 'string'
+          ? authUser.customClaims.collegeId
+          : null
+      const usersData = (result.users as Record<string, unknown> | null) || null
+      const rawUsersCollege =
+        usersData && typeof (usersData.collegeId ?? usersData.collegeID ?? usersData.college_id) === 'string'
+          ? String(usersData.collegeId ?? usersData.collegeID ?? usersData.college_id)
+          : null
+      for (const [label, value] of [
+        ['The Auth collegeId claim', rawClaimCollege],
+        ['The users document collegeId', rawUsersCollege],
+      ] as Array<[string, string | null]>) {
+        if (value !== null && value !== value.trim()) {
+          issues.push(
+            `${label} contains invisible leading/trailing characters. The security rules compare collegeId strictly, so this account's tenant writes (attendance included) are refused. Run Access Control → Identity repair to reissue the claim trimmed, then the user signs out and back in.`
+          )
+        }
+      }
+      if (
+        rawClaimCollege !== null &&
+        rawUsersCollege !== null &&
+        rawClaimCollege !== rawUsersCollege &&
+        rawClaimCollege.trim() === rawUsersCollege.trim()
+      ) {
+        issues.push(
+          "The collegeId claim and the users document agree only after trimming — the security rules compare strictly, so this account's tenant writes are refused. Run Identity repair, then the user signs out and back in."
+        )
+      }
+      // Probe the attendance rows this account tries to write. With a
+      // provably-correct token the ONE remaining refusal path in the rules
+      // is a legacy document already sitting at the deterministic id
+      // {collegeId}__{uid}__{date} with a conflicting facultyId/collegeId —
+      // the self-mark then becomes a refused update. Surface it here so the
+      // diagnosis does not depend on the Firestore console. Dates are computed
+      // in Asia/Kolkata to match the client's local date key.
+      const usersCollege =
+        usersData && typeof usersData.collegeId === 'string' ? usersData.collegeId.trim() : ''
+      const probes: Array<{ date: string; exists: boolean; data: Record<string, unknown> | null }> = []
+      if (usersCollege) {
+        const istDayKey = (offset: number) =>
+          new Date(Date.now() - offset * 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+        for (const offset of [0, 1, 2]) {
+          const dateKey = istDayKey(offset)
+          const snap = await db.doc(`staffAttendance/${usersCollege}__${uid}__${dateKey}`).get()
+          probes.push({
+            date: dateKey,
+            exists: snap.exists,
+            data: snap.exists ? ((snap.data() as Record<string, unknown>) || null) : null,
+          })
+        }
+      }
+      result.attendanceProbes = probes
+      const conflicting = probes.filter(
+        (p) =>
+          p.exists &&
+          p.data !== null &&
+          (String(p.data.facultyId ?? '') !== uid ||
+            (typeof p.data.collegeId === 'string' && p.data.collegeId !== usersCollege)),
+      )
+      if (conflicting.length) {
+        issues.push(
+          `A legacy attendance document at the account's deterministic id (${conflicting
+            .map((p) => p.date)
+            .join(', ')}) carries a facultyId/collegeId that does not match this account — the security rules pin ownership, so the self-mark is refused as an update. Delete that document (superadmin may) so the next save creates a clean row, or correct its facultyId/collegeId fields.`
+        )
+      }
     }
     result.issues = issues
     return result

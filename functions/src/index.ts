@@ -36,6 +36,7 @@ import { bulkProvisionStaff } from './staffAuth'
 import { resetUserPassword, syncIdentityClaims } from './accountManagement'
 import { auditAndRepairIdentities } from './identityRepair'
 import { syncMyIdentity } from './selfIdentity'
+import { saveMyStaffAttendance } from './staffAttendanceWrites'
 import { resetCollegeData } from './collegeCleanup'
 import { relinkFacultyToCollege } from './collegeLinks'
 import {
@@ -62,8 +63,13 @@ import {
   submitMyStudentTest,
   logMyStudentTestEvent,
   getMyStudentTestResult,
+  getAssessmentTestReport,
+  suggestAssessmentGrading,
+  getAssessmentConfig,
+  saveAssessmentConfig,
   listManagedAssessmentTests,
   scheduleAssessmentTest,
+  checkPaperScheduling,
   publishAssessmentTest,
   cancelAssessmentTest,
   gradeStudentAssessmentSubmission,
@@ -76,7 +82,7 @@ import {
   publishGradeRecords,
   deleteDraftGradeRecords,
 } from './gradeRecords'
-import { savePaper, reviewPaper, getPaperFileDownload, deletePaper } from './paperWorkflow'
+import { savePaper, reviewPaper, submitPaperForReview, reopenPaperForEditing, getPaperFileDownload, deletePaper } from './paperWorkflow'
 import { parsePaperFile, confirmPaperStructure } from './paperParsing'
 // ─── Slice 2 "Delivery Spine" — timetable → class sessions ───
 import {
@@ -208,6 +214,7 @@ export {
   diagnoseIdentity,
   auditAndRepairIdentities,
   syncMyIdentity,
+  saveMyStaffAttendance,
   resetCollegeData,
   relinkFacultyToCollege,
   updateMyStudentProfile,
@@ -231,8 +238,13 @@ export {
   submitMyStudentTest,
   logMyStudentTestEvent,
   getMyStudentTestResult,
+  getAssessmentTestReport,
+  suggestAssessmentGrading,
+  getAssessmentConfig,
+  saveAssessmentConfig,
   listManagedAssessmentTests,
   scheduleAssessmentTest,
+  checkPaperScheduling,
   publishAssessmentTest,
   cancelAssessmentTest,
   gradeStudentAssessmentSubmission,
@@ -244,6 +256,8 @@ export {
   deleteDraftGradeRecords,
   savePaper,
   reviewPaper,
+  submitPaperForReview,
+  reopenPaperForEditing,
   getPaperFileDownload,
   deletePaper,
   parsePaperFile,

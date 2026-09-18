@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckCircle, XCircle, AlertTriangle,
   Eye, Upload, Clock, ChevronRight, Download, Send,
-  FileUp, BookOpen, Calendar, Printer, Globe, Database, Trash2
+  FileUp, BookOpen, Calendar, Printer, Globe, Database, Trash2, Undo2
 } from 'lucide-react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/Firebase/config'
 import { useAuth } from '../../auth/context/AuthContext'
 import { getPapers } from '../../admin/services/paperAPI'
-import { getPaperQuestions } from '../../admin/api/paperApi'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Paper as BankPaper } from '../../admin/types/questionBank'
 import PaperUploadEditor, { type EditablePaper } from '@/shared/components/question-paper/PaperUploadEditor'
@@ -313,16 +312,22 @@ export default function FacultyPapers() {
   const [loading, setLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TestPaper | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const canReview = ['superadmin', 'admin', 'principal', 'hod'].includes(user?.role || '')
 
   const loadData = useCallback(async () => {
     if (!collegeId) return
     setLoading(true)
     try {
+      setLoadError(null)
       const result = await getPapers(collegeId)
       const mapped: TestPaper[] = []
       for (const p of result) {
-        const questions = await getPaperQuestions(p.id)
+        // NOTE: questions are mapped from the paper's embedded `sections`
+        // below. A per-paper `getPaperQuestions` round-trip used to run here;
+        // its result was never read and any denial on one of its per-id
+        // getDocs (e.g. a stale questionId) aborted the WHOLE list — the
+        // page silently showed "No papers found".
         const paper: TestPaper = {
           id: p.id,
           title: p.title || '',
@@ -398,7 +403,11 @@ export default function FacultyPapers() {
           }))
       )
     } catch (err) {
-      setShowToast(err instanceof Error ? err.message : 'Failed to load papers')
+      const msg = err instanceof Error ? err.message : 'Failed to load papers'
+      // A transient/permission error here must not masquerade as an empty
+      // college. Keep it visible on the page, not just a 3s toast.
+      setLoadError(msg)
+      setShowToast(msg)
       setTimeout(() => setShowToast(''), 3000)
     } finally {
       setLoading(false)
@@ -423,6 +432,26 @@ export default function FacultyPapers() {
     { paperId: string; action: 'approve' | 'request_modification'; topic?: string; questionNumbers?: string; remarks?: string },
     { success: boolean }
   >(functions, 'reviewPaper')
+
+  // Author recovery path: a submitted paper is locked out of the editor, so
+  // withdrawing it (server-side re-open to draft) is the only way to fix a
+  // defect found after submission.
+  const withdrawSubmission = async (paperId: string) => {
+    try {
+      const reopen = httpsCallable<{ paperId: string }, { success: boolean }>(
+        functions,
+        'reopenPaperForEditing'
+      )
+      await reopen({ paperId })
+      setShowToast('Submission withdrawn — the paper is back to draft.')
+      setTimeout(() => setShowToast(''), 3000)
+      await loadData()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not withdraw the submission.'
+      setShowToast(msg)
+      setTimeout(() => setShowToast(''), 5000)
+    }
+  }
 
   const handlePaperFileDownload = async (paperId: string) => {
     try {
@@ -644,6 +673,21 @@ export default function FacultyPapers() {
       {/* Content */}
       {activeTab !== 'requests' ? (
         <div className="space-y-4">
+          {loadError && (
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-400 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Could not load papers</p>
+                <p className="text-rose-400/80 mt-0.5 break-words">{loadError}</p>
+                <button
+                  onClick={() => { void loadData() }}
+                  className="mt-2 px-3 py-1 rounded-md bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-medium"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
           {filteredPapers.map(paper => {
             const status = statusConfig[paper.verificationStatus] || fallbackStatus
             const badges = paperBadges(paper)
@@ -737,6 +781,15 @@ export default function FacultyPapers() {
                     <span className="flex items-center gap-2 text-sm text-amber-500">
                       <Clock className="w-4 h-4" /> Awaiting authorized review
                     </span>
+                  )}
+                  {isAuthor && !canReview && (paper.verificationStatus === 'pending-verification' || paper.verificationStatus === 'submitted-for-approval') && (
+                    <button
+                      onClick={() => void withdrawSubmission(paper.id)}
+                      title="Move this paper back to draft so you can fix it and submit again"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 transition-all"
+                    >
+                      <Undo2 className="w-3.5 h-3.5" /> Withdraw submission
+                    </button>
                   )}
                   {(paper.verificationStatus === 'verified' || paper.verificationStatus === 'approved-by-hod') && (
                     <span className="flex items-center gap-2 text-sm text-emerald-400">

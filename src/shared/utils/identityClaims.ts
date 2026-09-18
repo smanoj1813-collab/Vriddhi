@@ -120,16 +120,25 @@ export function detectClaimStaleness(
   resolved: ResolvedIdentity,
 ): ClaimStaleness {
   const claimedRole = canonicalizeRole(claims.role) || null
+  // The collegeId claim is compared RAW, unlike role. The security rules do
+  // `data.collegeId == request.auth.token.collegeId` with NO normalisation,
+  // so a claim that only matches the profile after trimming is exactly the
+  // stale state that must be re-issued. Trimming here was the production
+  // failure: a college id carrying an invisible trailing character read as
+  // "current" to this check (both sides trimmed) while every tenant-scoped
+  // write was refused by the rules (strict comparison) — and no self-heal
+  // ever fired. Role is different: the rules canonicalise spellings, so the
+  // claim is canonicalised the same way.
   const claimedCollegeId =
     claims.collegeId != null && String(claims.collegeId).trim() !== ''
-      ? String(claims.collegeId).trim()
+      ? String(claims.collegeId)
       : null
 
   const expectedRole = canonicalizeRole(resolved.role) || resolved.role || null
   const expectedCollegeId =
     expectedRole === 'superadmin'
       ? null
-      : (resolved.collegeId ? String(resolved.collegeId).trim() : '') || claimedCollegeId
+      : (resolved.collegeId ? String(resolved.collegeId) : '') || claimedCollegeId
 
   const roleStale = claimedRole !== expectedRole
   const collegeStale = claimedCollegeId !== expectedCollegeId
@@ -167,5 +176,25 @@ export function staleClaimMessage(operation: string): string {
     `missing the role/college your account was issued, so the app cannot prove who you are. ` +
     `Sign out and sign back in to refresh it; if it still fails, ask a superadmin to run ` +
     `Access Control → Identity Repair for your account.`
+  )
+}
+
+/**
+ * Actionable copy for the case where the sign-in token ALREADY carries the
+ * role and college the account's profile declares, yet the rules still
+ * refused the operation. The token is provably not the problem — which means
+ * the deployed Firestore rules or Cloud Functions predate the code in this
+ * repository (e.g. the rules lack the write grant this operation needs).
+ * Telling this user to "sign out and back in" or to run Identity Repair
+ * changes nothing; the deployment does.
+ */
+export function staleDeployMessage(operation: string): string {
+  return (
+    `Security rules refused this ${operation}, but your sign-in token already carries the ` +
+    `role and college your account was issued — so the refusal is not a token problem. ` +
+    `The deployed security rules or backend functions are older than this app. ` +
+    `Ask the platform admin to run "npm run deploy:all" (deploys rules, functions, storage ` +
+    `and hosting together) from this repository, then retry. A normal sign-out/sign-in ` +
+    `will not fix this one.`
   )
 }

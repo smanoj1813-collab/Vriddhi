@@ -14,10 +14,13 @@
 // current-firestore.rules require it to match the caller's college claim.
 
 import {
-  collection, doc, getDoc, getDocs, query, setDoc, where, orderBy,
+  collection, doc, getDoc, getDocs, query, where, orderBy,
   Timestamp, type QueryConstraint,
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+// (setDoc removed with the direct write — staffAttendance is written by the
+//  saveMyStaffAttendance callable; see the note on saveMyStaffAttendance below.)
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/Firebase/config';
 
 import {
   isStaffAttendanceStatus,
@@ -97,53 +100,44 @@ export interface SaveStaffAttendanceParams {
   markedBy?: string;
 }
 
-/** Upsert one faculty member's day. Returns the document id. */
+/**
+ * Upsert one faculty member's day. Returns the document id.
+ *
+ * THE WRITE GOES THROUGH THE `saveMyStaffAttendance` CLOUD FUNCTION — the
+ * one-stop, unit-tested authorization point (functions/src/staffAttendanceWrites.ts).
+ * The function re-checks the VERIFIED token (self-mark ⇒ facultyId == uid and
+ * collegeId == the college claim; management ⇒ own college) and writes with
+ * the Admin SDK, so a security-rules drift/clobber can no longer refuse this
+ * save. The document shape is identical to the old direct write, so every
+ * reader is unaffected.
+ *
+ * Errors that can surface here:
+ *   - HttpsError('permission-denied')   → the token's claims don't authorise
+ *     this write; the caller's identity self-heal (useMyStaffAttendance)
+ *     re-issues them and retries once, exactly as before.
+ *   - HttpsError('invalid-argument')    → a malformed field (date/status/time).
+ *   - code 'functions-not-found'        → the deployed backend is older than
+ *     this app; the caller shows the deploy:all instruction.
+ */
 export async function saveStaffAttendance(params: SaveStaffAttendanceParams): Promise<string> {
   if (!params.collegeId) throw new Error('Missing college context — sign in again to refresh it.');
   if (!params.facultyId) throw new Error('Missing faculty identity.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(params.date)) throw new Error('Invalid date.');
 
-  const now = Timestamp.now();
-  const id = staffAttendanceDocId(params.collegeId, params.facultyId, params.date);
-  const checkIn = params.checkIn ?? '';
-  const checkOut = params.checkOut ?? '';
-
-  await setDoc(
-    doc(db, STAFF_ATTENDANCE_COLLECTION, id),
-    {
-      collegeId: params.collegeId,
-      facultyId: params.facultyId,
-      facultyName: params.facultyName,
-      department: params.department || 'General',
-      designation: params.designation || '',
-      date: params.date,
-      month: monthKeyOf(params.date),
-      status: params.status,
-      checkIn,
-      checkOut,
-      hoursWorked: hoursBetween(checkIn, checkOut),
-      note: params.note ?? '',
-      source: params.source ?? 'self',
-      markedBy: params.markedBy ?? params.facultyId,
-      markedAt: new Date().toISOString(),
-      updatedAt: now,
-      // Only set on first write, so `createdAt` stays meaningful on updates.
-      ...(await docExists(doc(db, STAFF_ATTENDANCE_COLLECTION, id)) ? {} : { createdAt: now }),
-    },
-    { merge: true },
-  );
-
-  return id;
-}
-
-async function docExists(ref: ReturnType<typeof doc>): Promise<boolean> {
-  try {
-    const snap = await getDoc(ref);
-    return snap.exists();
-  } catch {
-    // A rules denial here must not block the write; `merge: true` is safe either way.
-    return false;
-  }
+  const call = httpsCallable(functions, 'saveMyStaffAttendance');
+  const result = await call({
+    collegeId: params.collegeId,
+    facultyId: params.facultyId,
+    facultyName: params.facultyName,
+    department: params.department,
+    designation: params.designation,
+    date: params.date,
+    status: params.status,
+    checkIn: params.checkIn ?? '',
+    checkOut: params.checkOut ?? '',
+    note: params.note ?? '',
+  });
+  return String((result.data as { id: string }).id);
 }
 
 // ─── Reads ────────────────────────────────────────────────────────────────────

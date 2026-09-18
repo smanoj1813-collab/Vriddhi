@@ -50,7 +50,13 @@ export const provisionUser = onCall(
       throw new HttpsError('permission-denied', 'Insufficient permissions to provision users')
     }
 
-    const { email, name, role, collegeId, password: providedPassword } = request.data || {}
+    const { email, name, role, password: providedPassword, collegeId: rawCollegeId } = request.data || {}
+    // Trimmed before it lands on the users/profile document AND the claim:
+    // the security rules compare collegeId strictly, so a pasted id with a
+    // trailing space would permanently refuse this account's tenant writes —
+    // and no staleness check would ever notice, because the client resolves
+    // and compares trimmed values.
+    const collegeId = rawCollegeId == null ? rawCollegeId : String(rawCollegeId).trim()
     if (!email || !name || !role) {
       throw new HttpsError('invalid-argument', 'email, name, and role are required')
     }

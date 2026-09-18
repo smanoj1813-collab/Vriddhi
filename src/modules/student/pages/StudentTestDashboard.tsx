@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlayArrow, Schedule, CheckCircle, Cancel,
@@ -39,8 +39,27 @@ function getTimeRemaining(iso: string): string {
 
 const StudentTestDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { tests, loading, error, warnings } = useStudentData();
+  const { tests, loading, error, warnings, refresh } = useStudentData();
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
+
+  // While a future test is on screen, poll so the card flips from
+  // "Yet to start" to "Start Test" at the window open without a manual
+  // refresh. Pauses while the browser tab is hidden (no reads for a tab
+  // nobody is looking at).
+  const hasUpcoming = tests.some((t) => t.status === "upcoming");
+  useEffect(() => {
+    if (!hasUpcoming) return;
+    let id: ReturnType<typeof setInterval> | null = null;
+    const start = () => { if (id === null) id = setInterval(() => refresh(), 30_000); };
+    const stop = () => { if (id !== null) { clearInterval(id); id = null; } };
+    const onVisibility = () => (document.hidden ? stop() : start());
+    start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [hasUpcoming, refresh]);
 
   const results = useMemo(
     () => tests.filter((t) => t.status === "completed" || t.status === "graded"),
@@ -255,12 +274,12 @@ const TestRow: React.FC<{
             </span>
           )}
           {test.status === 'upcoming' && start && (
-            <button
-              onClick={() => onStart(test.id)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300 text-xs font-bold hover:bg-sky-100 transition-colors"
-            >
-              <Schedule fontSize="small" /> Starts in {getTimeRemaining(test.startDateTime)}
-            </button>
+            // Deliberately NOT a button: a future test must read as
+            // "yet to start", not as a start action. The card flips to
+            // "Start Test" automatically once the window opens.
+            <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300 text-xs font-bold">
+              <Schedule fontSize="small" /> Yet to start · in {getTimeRemaining(test.startDateTime)}
+            </span>
           )}
           {isMissed && (
             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 text-xs font-bold">
@@ -269,10 +288,15 @@ const TestRow: React.FC<{
           )}
           {isCompleted && (
             <>
-              <div className="text-right">
+              <div className="text-right space-y-1">
+                {test.studentStatus === 'submitted' && (
+                  <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                    <CheckCircle sx={{ fontSize: 13 }} /> Test Attended
+                  </div>
+                )}
                 {test.studentStatus === 'submitted' && test.needsManualGrading ? (
                   <div className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded">
-                    Awaiting Faculty Grading
+                    Result pending · Awaiting Faculty Grading
                   </div>
                 ) : test.studentStatus === 'graded' && !test.resultReleased ? (
                   <div className="text-xs font-bold text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 rounded">

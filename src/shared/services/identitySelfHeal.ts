@@ -61,20 +61,103 @@ export async function ensureIdentityClaims(expected: {
   }
   if (!sync) return 'unavailable';
 
-  if (sync.updated) {
-    const user = auth.currentUser;
-    if (user) {
-      // Force a re-mint: an ID token only carries the claims that existed
-      // when it was minted, so the next read must use a fresh token.
-      try {
-        await user.getIdToken(true);
-      } catch {
-        // The refresh failed; the next check below reports it honestly.
-      }
+  // Force a re-mint whether or not the function wrote new claims. The two
+  // cases matter equally:
+  //   * updated: true  — new claims were just written; the token must be
+  //                      re-minted to carry them;
+  //   * updated: false — the account's claims were ALREADY correct (e.g. a
+  //                      superadmin granted access while the user was signed
+  //                      in). The token is simply stale, and a forced refresh
+  //                      against the still-valid refresh token picks the
+  //                      correct claims up without a sign-out.
+  // (The function no longer revokes the refresh token, so the refresh below
+  // succeeds in both cases; it only fails if an admin revoked it, in which
+  // case the session ends and the post-check reports 'unchanged' → the UI
+  // tells the user to sign in again.)
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      await user.getIdToken(true);
+    } catch {
+      // The refresh failed (session already gone); the post-check below
+      // reports it honestly.
     }
   }
 
   const after = await currentTokenClaims();
   if (after) return detectClaimStaleness(after, expected).stale ? 'unchanged' : 'refreshed';
-  return sync.updated ? 'refreshed' : 'unchanged';
+  return 'unchanged';
+}
+
+/**
+ * Decode the token the SDK is about to present for the next request,
+ * WITHOUT refreshing: exactly the cached credentials the write will carry.
+ * The SDK auto-refreshes only on expiry — if that refresh fails (flaky
+ * proxy, cold start), the write goes out with an expired token and the
+ * server rejects the auth itself, surfacing as the SAME
+ * "Missing or insufficient permissions" error. The pre-write iat/exp is
+ * what separates that case from any claims problem.
+ */
+export async function fingerprintCurrentToken(): Promise<string> {
+  const user = auth.currentUser;
+  if (!user) return 'EVIDENCE — pre-write token: no signed-in user';
+  try {
+    const result = await user.getIdTokenResult(); // no refresh — what the next request will present
+    const payload = JSON.parse(
+      atob(result.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as Record<string, unknown>;
+    const iso = (v: unknown) => (typeof v === 'number' ? new Date(v * 1000).toISOString() : '?');
+    return (
+      `EVIDENCE — pre-write token: uid=${String(payload.user_id ?? payload.uid ?? 'MISSING')} ` +
+      `role=${String(payload.role ?? 'MISSING')} ` +
+      `collegeId=${JSON.stringify(payload.collegeId ?? 'MISSING')} ` +
+      `iat=${iso(payload.iat)} exp=${iso(payload.exp)}`
+    );
+  } catch (err) {
+    return `EVIDENCE — pre-write token: unreadable (${String(err)})`;
+  }
+}
+
+/**
+ * One-shot evidence capture for a rules denial that the client cannot
+ * explain: force-refresh the ID token, decode the ACTUAL JWT the SDK holds
+ * at that instant, and pair it with the exact document path and tenant
+ * fields the failed write carried. Printed into the denial message so the
+ * diagnosis does not depend on a DevTools network capture:
+ *
+ *   * token.uid / role / collegeId + iat/exp  → proves what the write
+ *     actually presented (and when that token was minted — a days-old iat
+ *     on a live session is a stale SDK-cached token by itself);
+ *   * write path + tenant fields             → proves the request shape.
+ */
+export async function captureWriteEvidence(writeInfo: {
+  collection: string;
+  docId: string;
+  fields: Record<string, unknown>;
+}): Promise<string> {
+  const parts: string[] = [];
+  const user = auth.currentUser;
+  if (!user) {
+    return 'EVIDENCE: no signed-in user at failure time.';
+  }
+  try {
+    const jwt = await user.getIdToken(true);
+    const payload = JSON.parse(
+      atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as Record<string, unknown>;
+    const iso = (v: unknown) => (typeof v === 'number' ? new Date(v * 1000).toISOString() : '?');
+    parts.push(
+      `EVIDENCE — token (refreshed): uid=${String(payload.user_id ?? payload.uid ?? 'MISSING')} ` +
+        `role=${String(payload.role ?? 'MISSING')} ` +
+        `collegeId=${JSON.stringify(payload.collegeId ?? 'MISSING')} ` +
+        `iat=${iso(payload.iat)} exp=${iso(payload.exp)}`,
+    );
+  } catch (err) {
+    parts.push(`EVIDENCE — could not read the current token: ${String(err)}`);
+  }
+  const flat = Object.fromEntries(
+    Object.entries(writeInfo.fields).map(([k, v]) => [k, typeof v === 'string' ? v : `${typeof v}`]),
+  );
+  parts.push(`EVIDENCE — write: ${writeInfo.collection}/${writeInfo.docId} fields: ${JSON.stringify(flat)}`);
+  return parts.join('\n');
 }

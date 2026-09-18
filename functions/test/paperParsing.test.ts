@@ -199,6 +199,33 @@ describe('confirm structure validation (the one server Confirm)', () => {
     )
   })
 
+  it('rejects matching questions at confirm (known, but not renderable online)', () => {
+    assert.throws(
+      () =>
+        normalizeConfirmSections([
+          { name: 'A', questions: [{ text: 'Match the columns', type: 'matching', marks: 5 }] },
+        ]),
+      /Match the following/
+    )
+  })
+
+  it('accepts case_based questions at confirm (the online engine renders them)', () => {
+    const sections = normalizeConfirmSections([
+      { name: 'A', questions: [{ text: 'Read the case and answer', type: 'case_based', marks: 10 }] },
+    ])
+    assert.equal(sections[0].questions[0].type, 'case_based')
+  })
+
+  it('rejects a choice question with fewer than two options at confirm', () => {
+    assert.throws(
+      () =>
+        normalizeConfirmSections([
+          { name: 'A', questions: [{ text: 'Pick one', type: 'mcq', marks: 1, options: ['Only option'] }] },
+        ]),
+      /fewer than two options/
+    )
+  })
+
   it('rejects empty structures', () => {
     assert.throws(() => normalizeConfirmSections([]), /Nothing to confirm/)
     assert.throws(() => normalizeConfirmSections(null), /Nothing to confirm/)

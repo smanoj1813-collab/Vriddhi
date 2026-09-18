@@ -20,8 +20,8 @@ import {
   PaperType, QuestionType, QuestionDifficulty,
 } from '../../../types/assessment';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { db } from '../../../Firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../../Firebase/config';
 
 const PAPER_TYPES: { value: PaperType; label: string }[] = [
   { value: 'quiz', label: 'Quiz' },
@@ -36,6 +36,19 @@ interface PaperBuilderProps {
   collegeId: string;
   subjectId?: string;
 }
+
+// Canonical paper workflow states (mirror functions/src/paperWorkflow.ts).
+const WORKFLOW_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  'submitted-for-approval': 'Awaiting review',
+  'pending-verification': 'Awaiting review',
+  'approved-by-hod': 'Approved',
+  'not-required': 'Ready',
+  'rejected-by-hod': 'Rejected',
+  'modification-requested': 'Changes requested',
+};
+const EDITABLE_WORKFLOW_STATES = ['draft', 'modification-requested', 'rejected-by-hod'];
+const REVIEWABLE_WORKFLOW_STATES = ['submitted-for-approval', 'pending-verification'];
 
 const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => {
   const { user } = useAuth();
@@ -257,23 +270,50 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
     setError(null);
   };
 
+  // `status` / `verificationStatus` are locked against client writes by the
+  // Firestore rules (any update touching them is denied with "Missing or
+  // insufficient permissions"). Transitions therefore go through the server
+  // workflow callables, which own the state machine and the audit trail
+  // (functions/src/paperWorkflow.ts).
+  const submitForReviewFn = httpsCallable<{ paperId: string }, { success: boolean }>(
+    functions,
+    'submitPaperForReview'
+  );
+  const reviewPaperFn = httpsCallable<
+    { paperId: string; action: 'approve' | 'reject'; remarks?: string },
+    { success: boolean }
+  >(functions, 'reviewPaper');
+
+  const [statusBusyId, setStatusBusyId] = useState<string | null>(null);
+
   const updatePaperStatus = async (paperId: string, status: 'pending' | 'approved' | 'rejected') => {
     try {
       setError(null);
-      await updateDoc(doc(db, 'papers', paperId), {
-        status,
-        ...(status === 'pending'
-          ? { submittedForReviewAt: serverTimestamp() }
-          : { reviewedAt: serverTimestamp(), reviewedBy: user?.uid || '' }),
-        updatedAt: serverTimestamp(),
-      });
+      setStatusBusyId(paperId);
+      if (status === 'pending') {
+        await submitForReviewFn({ paperId });
+      } else {
+        await reviewPaperFn({
+          paperId,
+          action: status === 'approved' ? 'approve' : 'reject',
+          ...(status === 'rejected' ? { remarks: 'Rejected by reviewer' } : {}),
+        });
+      }
       refreshPapers();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Paper status could not be updated.');
+    } finally {
+      setStatusBusyId(null);
     }
   };
 
   const canReview = ['admin', 'superadmin', 'hod', 'principal'].includes(String((user as any)?.role || ''));
+
+  // Canonical workflow state. `verificationStatus` is authoritative
+  // (submitted-for-approval / approved-by-hod / rejected-by-hod /
+  // modification-requested / not-required); `status` is the legacy fallback.
+  const paperWorkflowState = (paper: any): string =>
+    paper.verificationStatus || (paper.status === 'published' ? 'approved-by-hod' : paper.status || 'draft');
 
   return (
     <Box sx={{ p: 3, height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -296,7 +336,18 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
             <Alert severity="info">No papers yet. Create a paper from approved questions.</Alert>
           )}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {papers.map((paper: any) => (
+            {papers.map((paper: any) => {
+              const wf = paperWorkflowState(paper);
+              const published = paper.status === 'published';
+              const chipLabel = published ? 'Published' : WORKFLOW_LABELS[wf] || wf;
+              const chipColor = published || wf === 'approved-by-hod' || wf === 'not-required'
+                ? 'success' as const
+                : wf === 'rejected-by-hod' || wf === 'modification-requested'
+                  ? 'error' as const
+                  : REVIEWABLE_WORKFLOW_STATES.includes(wf)
+                    ? 'warning' as const
+                    : 'default' as const;
+              return (
               <Card key={paper.id} variant="outlined" sx={{ flex: '1 1 320px', maxWidth: 480 }}>
                 <CardContent>
                   <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -304,9 +355,7 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
                       <Typography variant="h6">{paper.title}</Typography>
                       <Typography variant="body2" color="text.secondary">{paper.description || 'No description'}</Typography>
                     </Box>
-                    <Chip size="small" label={paper.status || 'draft'} color={
-                      paper.status === 'approved' ? 'success' : paper.status === 'rejected' ? 'error' : 'default'
-                    } />
+                    <Chip size="small" label={chipLabel} color={chipColor} />
                   </Stack>
                   <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
                     <Chip size="small" label={`${paper.totalMarks || 0} marks`} />
@@ -314,21 +363,42 @@ const PaperBuilder: React.FC<PaperBuilderProps> = ({ collegeId, subjectId }) => 
                     <Chip size="small" label={`${paper.totalQuestions || paper.sections?.reduce((sum: number, section: any) => sum + (section.questions?.length || 0), 0) || 0} questions`} />
                   </Stack>
                   <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                    {paper.status === 'draft' && (
-                      <Button size="small" variant="outlined" onClick={() => void updatePaperStatus(paper.id, 'pending')}>
-                        Submit for review
+                    {!published && EDITABLE_WORKFLOW_STATES.includes(wf) && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={statusBusyId === paper.id}
+                        onClick={() => void updatePaperStatus(paper.id, 'pending')}
+                      >
+                        {statusBusyId === paper.id ? 'Submitting…' : 'Submit for review'}
                       </Button>
                     )}
-                    {canReview && paper.status === 'pending' && (
+                    {canReview && REVIEWABLE_WORKFLOW_STATES.includes(wf) && (
                       <>
-                        <Button size="small" color="success" variant="contained" onClick={() => void updatePaperStatus(paper.id, 'approved')}>Approve</Button>
-                        <Button size="small" color="error" onClick={() => void updatePaperStatus(paper.id, 'rejected')}>Reject</Button>
+                        <Button
+                          size="small"
+                          color="success"
+                          variant="contained"
+                          disabled={statusBusyId === paper.id}
+                          onClick={() => void updatePaperStatus(paper.id, 'approved')}
+                        >
+                          {statusBusyId === paper.id ? 'Approving…' : 'Approve'}
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          disabled={statusBusyId === paper.id}
+                          onClick={() => void updatePaperStatus(paper.id, 'rejected')}
+                        >
+                          Reject
+                        </Button>
                       </>
                     )}
                   </Stack>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </Box>
         </Box>
       ) : (

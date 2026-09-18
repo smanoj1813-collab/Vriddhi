@@ -3,8 +3,11 @@
 // State for a faculty member marking THEIR OWN attendance.
 //
 // Identity comes from AuthContext — never from a URL parameter or a form
-// field. A faculty member can only ever write the document their own uid owns;
-// current-firestore.rules enforces the same thing server-side.
+// field. A faculty member can only ever write the document their own uid
+// owns; the saveMyStaffAttendance Cloud Function re-checks that against the
+// VERIFIED token and performs the write with the Admin SDK, so the write
+// path cannot be broken by a security-rules drift (see
+// functions/src/staffAttendanceWrites.ts).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
@@ -12,9 +15,15 @@ import {
   fetchMyStaffAttendance,
   fetchStaffAttendanceForDate,
   saveStaffAttendance,
+  staffAttendanceDocId,
 } from '@/shared/api/staffAttendanceApi';
-import { ensureIdentityClaims } from '@/shared/services/identitySelfHeal';
-import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims';
+import {
+  captureWriteEvidence,
+  ensureIdentityClaims,
+  fingerprintCurrentToken,
+  type SelfHealOutcome,
+} from '@/shared/services/identitySelfHeal';
+import { isPermissionDeniedError, staleClaimMessage, staleDeployMessage } from '@/shared/utils/identityClaims';
 import {
   monthBounds,
   monthKeyOf,
@@ -59,8 +68,14 @@ export function useMyStaffAttendance() {
 
   // How many times this session has asked syncMyIdentity to re-issue the
   // token claims. One attempt per page mount: after that, further denials
-  // get the actionable message instead of re-calling the function.
+  // get the actionable message instead of re-calling the function. The
+  // OUTCOME is kept so the error can say which real fix is needed:
+  // 'current' → the token already matches the profile, so the deployed
+  // rules/functions are the problem (redeploy, not sign-out);
+  // 'unavailable' → the identity service could not be reached (stale backend);
+  // anything else → the usual stale-token guidance.
   const healAttempts = useRef(0);
+  const healOutcomeRef = useRef<SelfHealOutcome | null>(null);
 
   // selectDate reads the month records through a ref (not a dependency) on
   // purpose: the page re-runs selectDate(today) whenever the callback's
@@ -88,15 +103,34 @@ export function useMyStaffAttendance() {
         role: user.role,
         collegeId: user.collegeId ?? null,
       });
+      healOutcomeRef.current = outcome;
       if (outcome !== 'refreshed') {
         console.warn('[useMyStaffAttendance] claim self-heal did not re-issue claims:', outcome);
       }
       return outcome === 'refreshed';
     } catch (err) {
       console.warn('[useMyStaffAttendance] claim self-heal failed:', err);
+      healOutcomeRef.current = 'unavailable';
       return false;
     }
   }, [user]);
+
+  // Map the heal outcome to the specific, actionable denial message. The
+  // previous blanket "token missing role/college" sent users who were
+  // already holding a correct token (deployed rules are stale) down the
+  // sign-out / identity-repair path that cannot fix a deployment gap.
+  const denialMessage = (operation: string): string => {
+    const outcome = healOutcomeRef.current;
+    if (outcome === 'current') return staleDeployMessage(operation);
+    if (outcome === 'unavailable') {
+      return (
+        `Security rules refused this ${operation}, and the automatic identity refresh ` +
+        `could not reach the identity service. The deployed backend is likely out of ` +
+        `date — an admin must run "npm run deploy:functions", then you sign out and back in.`
+      );
+    }
+    return staleClaimMessage(operation);
+  };
 
   const load = useCallback(async () => {
     if (!facultyId) return;
@@ -116,13 +150,13 @@ export function useMyStaffAttendance() {
           return;
         } catch (retryErr) {
           console.error('[useMyStaffAttendance] load failed after claim refresh', retryErr);
-          setError(staleClaimMessage('attendance load'));
+          setError(denialMessage('attendance load'));
           return;
         }
       }
       setError(
         isPermissionDeniedError(err)
-          ? staleClaimMessage('attendance load')
+          ? denialMessage('attendance load')
           : err instanceof Error ? err.message : 'Could not load your attendance.',
       );
     } finally {
@@ -172,6 +206,13 @@ export function useMyStaffAttendance() {
       return false;
     }
     setSaving(true);
+    // The exact token the next write will present — the SDK's CACHED
+    // credentials, read without refreshing. If the denial turns out
+    // unexplainable, the banner shows this beside the post-failure
+    // refreshed token: a pre-write exp in the past means the SDK's
+    // automatic refresh failed silently and the server rejected the auth
+    // before any rule ran (same error text either way).
+    const preWriteToken = await fingerprintCurrentToken();
     const params = {
       collegeId,
       facultyId,
@@ -205,11 +246,34 @@ export function useMyStaffAttendance() {
       return true;
     } catch (err) {
       console.error('[useMyStaffAttendance] save failed', err);
-      setError(
-        isPermissionDeniedError(err)
-          ? staleClaimMessage('attendance save')
-          : err instanceof Error ? err.message : 'Could not save your attendance.',
-      );
+      const code = String((err as { code?: unknown })?.code ?? '').toLowerCase();
+      if (code.includes('not-found')) {
+        // The callable is not in the deployed backend yet (older functions
+        // deployment) — a redeploy is the only fix; sign-out cannot help.
+        setError(
+          'The deployed backend is missing the attendance service — it is older than this app. ' +
+            'Ask the platform admin to run "npm run deploy:all" (deploys rules, functions, storage and ' +
+            'hosting together) from this repository, then retry. A sign-out/sign-in will not fix this one.',
+        );
+        return false;
+      }
+      if (isPermissionDeniedError(err)) {
+        // The denial message says WHICH fix applies; the evidence lines say
+        // what the write ACTUALLY presented — the JWT claims at that instant
+        // (with iat, exposing a stale SDK-cached token) and the exact
+        // document path + tenant fields. Pasting the banner back is enough
+        // to finish the diagnosis without any network capture.
+        const base = denialMessage('attendance save');
+        const evidence = await captureWriteEvidence({
+          collection: 'staffAttendance',
+          docId: staffAttendanceDocId(collegeId, facultyId, form.date),
+          fields: { collegeId, facultyId, department, status: form.status, source: 'self' },
+        });
+        console.error('[useMyStaffAttendance] write evidence', evidence);
+        setError(`${base}\n${preWriteToken}\n${evidence}`);
+      } else {
+        setError(err instanceof Error ? err.message : 'Could not save your attendance.');
+      }
       return false;
     } finally {
       setSaving(false);

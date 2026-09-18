@@ -655,6 +655,13 @@ service cloud.firestore {
     // `isStaff()` includes faculty and mentors, so it is deliberately NOT used
     // for the college-wide read below — that would let any teacher list every
     // colleague's attendance.
+    //
+    // WRITE PATH: the web client writes this collection ONLY through the
+    // saveMyStaffAttendance callable (functions/src/staffAttendanceWrites.ts)
+    // — one unit-tested authorization decision + an Admin SDK write, immune
+    // to rules drift. The create/update rules below remain as
+    // defence-in-depth; the get/list rules are the LIVE read path, so do not
+    // delete this block.
     match /staffAttendance/{docId} {
       function isOwnRecord(data) {
         return isSignedIn() && 'facultyId' in data && data.facultyId == request.auth.uid;

@@ -9,7 +9,6 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
   Timestamp,
 } from 'firebase/firestore';
 import { getAllQuestions, linkQuestionToPaper } from './questionBankApi';
@@ -81,21 +80,18 @@ export async function fetchPapers(
   collegeId: string,
   filters?: { status?: PaperStatus; search?: string }
 ): Promise<{ data: Paper[]; total: number }> {
+  // No where+orderBy: those need composite indexes that `deploy:all` does not
+  // ship (only `deploy:indexes` does), and a missing index errors out the whole
+  // list. College paper volumes are small — one plain where query plus an
+  // in-memory filter/sort is index-independent and always complete.
   const papersRef = collection(db, PAPERS_COLLECTION);
-  let q = query(papersRef, where('collegeId', '==', collegeId), orderBy('createdAt', 'desc'));
-  if (filters?.status) {
-    q = query(papersRef, where('collegeId', '==', collegeId), where('status', '==', filters.status), orderBy('createdAt', 'desc'));
-  }
-  const snap = await getDocs(q);
+  const snap = await getDocs(query(papersRef, where('collegeId', '==', collegeId)));
   let papers = snap.docs.map((d) => normalizePaper(d.data(), d.id));
 
   // One-stop: also include universal papers (papers_universal) created from Universal Bank selection
   try {
     const universalRef = collection(db, 'papers_universal');
-    let uq: any = query(universalRef, where('createdBy.collegeId', '==', collegeId), orderBy('createdAt', 'desc'));
-    if (filters?.status) {
-      uq = query(universalRef, where('createdBy.collegeId', '==', collegeId), where('status', '==', filters.status), orderBy('createdAt', 'desc'));
-    }
+    const uq: any = query(universalRef, where('createdBy.collegeId', '==', collegeId));
     const usnap = await getDocs(uq);
     const universalPapers = usnap.docs.map((d) => {
       const data: any = d.data();
@@ -119,10 +115,17 @@ export async function fetchPapers(
       return bt - at;
     });
   } catch (e: any) {
-    if (!String(e?.message || '').includes('requires an index')) {
-      console.warn('[fetchPapers] universal merge skipped:', e?.message);
-    }
+    console.warn('[fetchPapers] universal merge skipped:', e?.message);
   }
+
+  if (filters?.status) {
+    papers = papers.filter((p) => (p as any).status === filters.status);
+  }
+  papers.sort((a: any, b: any) => {
+    const at = new Date(a.createdAt).getTime() || 0;
+    const bt = new Date(b.createdAt).getTime() || 0;
+    return bt - at;
+  });
 
   if (filters?.search) {
     const searchLower = filters.search.toLowerCase();

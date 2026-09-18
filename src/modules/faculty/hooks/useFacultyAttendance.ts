@@ -8,7 +8,7 @@ import {
   saveAttendance,
 } from '../api/facultyApi';
 import { ensureIdentityClaims, type SelfHealOutcome } from '@/shared/services/identitySelfHeal';
-import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims';
+import { isPermissionDeniedError, staleClaimMessage, staleDeployMessage } from '@/shared/utils/identityClaims';
 import type {
   FacultyClassSession,
   FacultyStudent,
@@ -316,17 +316,23 @@ export function useFacultyAttendance() {
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
       if (isPermissionDeniedError(err)) {
-        // Say WHICH fix is needed instead of one generic message: an
-        // 'unavailable' self-heal almost always means the deployed functions
-        // predate syncMyIdentity (deploy functions); 'unchanged' means no
-        // record states this account's college (superadmin repair).
+        // Say WHICH fix is needed instead of one generic message:
+        //   'current'     — the token already carries the account's role and
+        //                    college, so the deployed rules/functions predate
+        //                    this code (redeploy, sign-out cannot help);
+        //   'unavailable' — the deployed functions predate syncMyIdentity
+        //                    (deploy functions);
+        //   'unchanged'   — the identity service could not change the claims
+        //                    (superadmin Identity Repair / re-grant).
         const outcome = healOutcomeRef.current;
         setError(
-          outcome === 'unavailable'
-            ? 'Security rules refused this save, and the automatic identity refresh could not reach the identity service. The deployed backend is likely out of date — an admin must run "npm run deploy:functions", then you sign out and back in.'
-            : outcome === 'unchanged'
-              ? 'Security rules refused this save, and no record states the college for your account, so there is nothing to refresh automatically. Ask a superadmin to check your users and faculty profile collegeId (Access Control → Identity Repair).'
-              : staleClaimMessage('attendance save')
+          outcome === 'current'
+            ? staleDeployMessage('attendance save')
+            : outcome === 'unavailable'
+              ? 'Security rules refused this save, and the automatic identity refresh could not reach the identity service. The deployed backend is likely out of date — an admin must run "npm run deploy:functions", then you sign out and back in.'
+              : outcome === 'unchanged'
+                ? 'Security rules refused this save, and the identity service could not change your token claims. Ask a superadmin to re-grant your role and college (Access Control) or run Identity Repair, then sign out and back in.'
+                : staleClaimMessage('attendance save')
         );
       } else {
         setError(err instanceof Error ? err.message : 'Failed to save attendance');

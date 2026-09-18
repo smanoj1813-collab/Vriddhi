@@ -15,6 +15,7 @@ import {
   detectClaimStaleness,
   isPermissionDeniedError,
   staleClaimMessage,
+  staleDeployMessage,
 } from './identityClaims'
 
 describe('canonicalizeRole', () => {
@@ -88,6 +89,26 @@ describe('detectClaimStaleness — college claim (the production bug)', () => {
     assert.equal(check.stale, false)
   })
 
+  it('flags a college claim that only matches after trimming (the 2026-09 production denial)', () => {
+    // A college id with an invisible trailing character (pasted grant, CSV
+    // import) read as "current" when both sides were trimmed — while the
+    // security rules compare strictly and refused every tenant write, so no
+    // self-heal ever fired. The claim comparison must be RAW.
+    const check = detectClaimStaleness({ role: 'faculty', collegeId: 'college-a ' }, faculty)
+    assert.equal(check.stale, true)
+    assert.equal(check.roleStale, false)
+    assert.equal(check.collegeStale, true)
+    assert.equal(check.claimedCollegeId, 'college-a ')
+    assert.equal(check.expectedCollegeId, 'college-a')
+  })
+
+  it('flags a leading-whitespace college claim too', () => {
+    assert.equal(
+      detectClaimStaleness({ role: 'faculty', collegeId: '  college-a' }, faculty).stale,
+      true,
+    )
+  })
+
   it('keeps a token college claim that the profile never contradicts', () => {
     // Neither the users document nor the profile carries a college; the
     // target is whatever the token already has — including "nothing".
@@ -142,5 +163,17 @@ describe('staleClaimMessage', () => {
     assert.match(text, /sign out and sign back in/i)
     assert.match(text, /Identity Repair/i)
     assert.doesNotMatch(text, /Missing or insufficient permissions/)
+  })
+})
+
+describe('staleDeployMessage', () => {
+  it('points at the deployment, not a re-sign-in, when the token is already correct', () => {
+    const text = staleDeployMessage('attendance save')
+    assert.match(text, /already carries the role and college/i)
+    assert.match(text, /deploy:all/i)
+    // It must not repeat the sign-out remedy — that is what this message
+    // exists to distinguish from staleClaimMessage.
+    assert.doesNotMatch(text, /sign out and sign back in/i)
+    assert.doesNotMatch(text, /Identity Repair/i)
   })
 })

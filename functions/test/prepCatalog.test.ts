@@ -32,6 +32,7 @@ import { BBA_SUBJECTS, SEEDED_BBA_TOPICS, SEEDED_UNIVERSAL_QUESTIONS } from '../
 import { MCOM_SUBJECTS, SEEDED_MCOM_TOPICS, SEEDED_MCOM_QUESTIONS } from '../src/data/mcomSeedData.ts'
 import { BSC_SUBJECTS, SEEDED_BSC_TOPICS, SEEDED_BSC_QUESTIONS } from '../src/data/bscSeedData.ts'
 import { BA_SUBJECTS, SEEDED_BA_TOPICS, SEEDED_BA_QUESTIONS } from '../src/data/baSeedData.ts'
+import { BCOM_SUBJECTS, SEEDED_BCOM_TOPICS, SEEDED_BCOM_QUESTIONS } from '../src/data/bcomSeedData.ts'
 
 interface ProgramFixture {
   programCode: string
@@ -293,6 +294,122 @@ describe('legacy BBA catalogue (partial, pre-dates the completeness contract)', 
       assert.ok(q.questionText.trim().length > 0, `${q.id} has no text`)
       assert.ok(q.options.length >= 2, `${q.id} has fewer than two options`)
       assert.ok(q.correctIndex >= 0 && q.correctIndex < q.options.length, `${q.id} correctIndex out of range`)
+    }
+  })
+})
+
+describe('derived B.Com catalogue (bcom-tagged slice of the UG bundles)', () => {
+  const topics = flattenTopics(SEEDED_BCOM_TOPICS)
+  const questionIds = new Set(SEEDED_BCOM_QUESTIONS.map((q) => q.id))
+  const topicIds = new Set(topics.map((t) => t.id))
+  const subjectIds = new Set(BCOM_SUBJECTS.map((s) => s.id))
+
+  it('actually derives content (not an empty placeholder)', () => {
+    assert.ok(BCOM_SUBJECTS.length >= 10, `expected a real B.Com catalogue, got ${BCOM_SUBJECTS.length} subjects`)
+    assert.ok(topics.length >= 20, `expected topics, got ${topics.length}`)
+    assert.ok(SEEDED_BCOM_QUESTIONS.length >= 20, `expected questions, got ${SEEDED_BCOM_QUESTIONS.length}`)
+  })
+
+  it('every subject is bcom-tagged, from a real source bundle, and uniquely ordered', () => {
+    const seenOrders = new Set<number>()
+    for (const subject of BCOM_SUBJECTS) {
+      assert.ok(subject.programs.includes('bcom'), `${subject.id} is not tagged for bcom`)
+      assert.ok(
+        BBA_SUBJECTS.some((s) => s.id === subject.id)
+          || BA_SUBJECTS.some((s) => s.id === subject.id)
+          || BSC_SUBJECTS.some((s) => s.id === subject.id),
+        `${subject.id} is not part of any source bundle`
+      )
+      assert.ok(!seenOrders.has(subject.order), `duplicate order ${subject.order}`)
+      seenOrders.add(subject.order)
+    }
+    // 1..N with no gaps
+    assert.deepEqual([...seenOrders].sort((a, b) => a - b), BCOM_SUBJECTS.map((_, i) => i + 1))
+  })
+
+  it('writes byte-identical subject documents to the source bundle (no seed-order conflict)', () => {
+    for (const subject of BCOM_SUBJECTS) {
+      const source =
+        BBA_SUBJECTS.find((s) => s.id === subject.id)
+        ?? BA_SUBJECTS.find((s) => s.id === subject.id)
+        ?? BSC_SUBJECTS.find((s) => s.id === subject.id)
+      assert.ok(source, `${subject.id} missing from sources`)
+      // `order` is the ONE field the derivation may renumber; everything the
+      // seeder writes besides it must match the source bundle exactly.
+      const { order: _derivedOrder, ...derivedRest } = subject
+      const { order: _sourceOrder, ...sourceRest } = source
+      assert.deepEqual(derivedRest, sourceRest, `${subject.id} diverges from its source subject document`)
+    }
+  })
+
+  it('has unique subject, topic and question ids', () => {
+    assert.equal(subjectIds.size, BCOM_SUBJECTS.length)
+    assert.equal(topicIds.size, topics.length)
+    assert.equal(questionIds.size, SEEDED_BCOM_QUESTIONS.length)
+  })
+
+  it('files every topic bucket under a derived subject', () => {
+    for (const [subjectId, list] of Object.entries(SEEDED_BCOM_TOPICS)) {
+      assert.ok(subjectIds.has(subjectId), `unknown subject bucket "${subjectId}"`)
+      for (const topic of list) {
+        assert.equal(topic.subjectId, subjectId, `${topic.id} is filed under the wrong subject`)
+      }
+    }
+  })
+
+  it('tags every question with a derived subject and a real topic', () => {
+    for (const q of SEEDED_BCOM_QUESTIONS) {
+      assert.ok(subjectIds.has(q.prepTags.subjectId), `${q.id} tags unknown subject`)
+      for (const tid of q.prepTags.topicIds) {
+        assert.ok(topicIds.has(tid), `${q.id} tags unknown topic "${tid}"`)
+      }
+    }
+  })
+
+  it('introduces no integrity errors beyond the sources\' documented quirks', () => {
+    const report = validatePrepCatalog({
+      programCode: 'bcom',
+      subjects: BCOM_SUBJECTS,
+      topics: SEEDED_BCOM_TOPICS,
+      questions: SEEDED_BCOM_QUESTIONS,
+    })
+    const errors = report.issues.filter((i) => i.level === 'error')
+
+    // Referential breaks are never acceptable in a derived bundle: every
+    // error that could point at a missing/orphaned subject, topic or
+    // question is one the derivation would have caused.
+    const referentialCodes = new Set([
+      'ORPHAN_TOPIC_BUCKET',
+      'TOPIC_SUBJECT_MISMATCH',
+      'SUBJECT_NO_TOPICS',
+      'QUESTION_UNKNOWN_SUBJECT',
+      'QUESTION_UNKNOWN_TOPIC',
+      'DUPLICATE_SUBJECT_ID',
+      'DUPLICATE_TOPIC_ID',
+      'DUPLICATE_QUESTION_ID',
+    ])
+    const referential = errors.filter((i) => referentialCodes.has(i.code))
+    assert.deepEqual(
+      referential.map((i) => `${i.code}: ${i.message}`),
+      [],
+      'derived B.Com bundle must not contain referential integrity errors',
+    )
+
+    // The only tolerable residue is the legacy BBA bundle's documented
+    // partial-catalog shape (topicCount 5 vs 1-3 authored topics, one
+    // dangling featured id) — and even that must be present verbatim in a
+    // source bundle, i.e. inherited, not invented.
+    for (const issue of errors) {
+      assert.ok(
+        issue.code === 'TOPIC_COUNT_MISMATCH' || issue.code === 'FEATURED_QUESTION_MISSING',
+        `unexpected error code in derived bundle: ${issue.code}`,
+      )
+      const inSource = [LEGACY_BBA, ...COMPLETE_FIXTURES].some((fixture) =>
+        validatePrepCatalog(bundleFor(fixture)).issues.some(
+          (s) => s.code === issue.code && s.message === issue.message,
+        ),
+      )
+      assert.ok(inSource, `error not inherited from a source bundle: ${issue.message}`)
     }
   })
 })

@@ -8,7 +8,6 @@ import {
   deleteDoc, 
   query, 
   where, 
-  orderBy,
   Timestamp,
   writeBatch
 } from 'firebase/firestore';
@@ -62,40 +61,23 @@ export const getPaperById = async (paperId: string): Promise<Paper | null> => {
 };
 
 export const getPapers = async (collegeId: string): Promise<Paper[]> => {
-  try {
-    const q = query(
-      collection(db, PAPERS_COLLECTION),
-      where('collegeId', '==', collegeId),
-      orderBy('createdAt', 'desc')
-    );
-    const snapshot = await getDocs(q);
-    const papers: Paper[] = [];
-    snapshot.forEach((doc) => {
-      papers.push({ id: doc.id, ...doc.data() } as Paper);
-    });
-    return papers;
-  } catch (err: any) {
-    // Fallback if index is still building — query without orderBy
-    if (err?.message?.includes('requires an index') || err?.code === 'failed-precondition') {
-      console.warn('[getPapers] Index missing/building, falling back to simple query:', err.message);
-      const fallbackQ = query(
-        collection(db, PAPERS_COLLECTION),
-        where('collegeId', '==', collegeId)
-      );
-      const snapshot = await getDocs(fallbackQ);
-      const papers: Paper[] = [];
-      snapshot.forEach((doc) => {
-        papers.push({ id: doc.id, ...doc.data() } as Paper);
-      });
-      // Sort in memory
-      return papers.sort((a: any, b: any) => {
-        const aTime = a.createdAt?.toDate?.()?.getTime() || new Date(a.createdAt).getTime() || 0;
-        const bTime = b.createdAt?.toDate?.()?.getTime() || new Date(b.createdAt).getTime() || 0;
-        return bTime - aTime;
-      });
-    }
-    throw err;
-  }
+  // NOTE: no orderBy in the query. `where + orderBy` needs a composite index
+  // that `deploy:all` does NOT ship (only `deploy:indexes` does), and a
+  // missing index either errors (failed-precondition) or silently drops docs
+  // lacking the sorted field. College paper lists are small — a plain where
+  // query plus an in-memory sort is index-independent and always complete.
+  const snapshot = await getDocs(
+    query(collection(db, PAPERS_COLLECTION), where('collegeId', '==', collegeId))
+  );
+  const papers: Paper[] = [];
+  snapshot.forEach((doc) => {
+    papers.push({ id: doc.id, ...doc.data() } as Paper);
+  });
+  return papers.sort((a: any, b: any) => {
+    const aTime = a.createdAt?.toDate?.()?.getTime() || new Date(a.createdAt).getTime() || 0;
+    const bTime = b.createdAt?.toDate?.()?.getTime() || new Date(b.createdAt).getTime() || 0;
+    return bTime - aTime;
+  });
 };
 
 export const duplicatePaper = async (paperId: string, collegeId: string): Promise<Paper> => {

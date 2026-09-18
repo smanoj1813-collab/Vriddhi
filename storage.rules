@@ -213,6 +213,19 @@ service firebase.storage {
         && (isSuperadmin() || tenantCollege() == collegeId);
     }
 
+    // Prep content diagrams / visual explanations. The /prep public pages are
+    // unauthenticated, so these objects are PUBLIC read. Writes come only from
+    // the superadmin Prep Studio "Upload image" control (superadmin-gated in
+    // the UI AND here), with an image MIME + 4 MB cap.
+    match /prep-media/{fileName} {
+      allow read: if true;
+      allow create, update: if isSuperadmin()
+        && request.resource.size <= 4 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches('image/png|image/jpeg|image/webp|image/gif');
+      allow delete: if isSuperadmin();
+    }
+
     // No implicit authenticated-user access. Additional product workflows
     // receive explicit path contracts as they are implemented.
     match /{allPaths=**} {

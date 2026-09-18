@@ -1,7 +1,7 @@
 // src/modules/faculty/components/TestScheduler.tsx
 // FIXED: usePapers and useScheduledTests imported from useAssessment (they exist there)
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box, Typography, Button, Stack, Card, CardContent, TextField, Select, MenuItem,
   FormControl, InputLabel, Chip, IconButton, Dialog, DialogTitle, DialogContent,
@@ -19,7 +19,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { usePapers, useScheduledTests } from '../../../hooks/useAssessment';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
-import { auth, db } from '../../../Firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '../../../Firebase/config';
+import { useAuth } from '../../auth/context/AuthContext';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,
 } from '../../../types/assessment';
@@ -52,6 +54,7 @@ const toDate = (value: unknown): Date => {
 };
 
 const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
+  const { user } = useAuth();
   const { papers, loading: papersLoading, error: papersError } = usePapers(collegeId);
   const { tests, schedule, publish, cancel, loading: testsLoading, error: testsError } = useScheduledTests(collegeId);
 
@@ -60,6 +63,9 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
 
   // Step 1: Paper Selection
   const [selectedPaper, setSelectedPaper] = useState<AssessmentPaper | null>(null);
+  // True while the server checks the selected paper's questions for
+  // schedule-time problems (same validator the real schedule uses).
+  const [checkingPaper, setCheckingPaper] = useState(false);
 
   // Step 2: Schedule
   const [testTitle, setTestTitle] = useState('');
@@ -67,9 +73,18 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   const [startDateTime, setStartDateTime] = useState<Date | null>(new Date());
   const [endDateTime, setEndDateTime] = useState<Date | null>(new Date(Date.now() + 3600000));
   const [durationMinutes, setDurationMinutes] = useState(30);
+  // Cohort the test is labelled for (optional). 'public' visibility still
+  // shows the test to every student in the college — these are metadata that
+  // also act as the fallback filter for 'selected' tests.
+  const [branch, setBranch] = useState('');
+  const [batch, setBatch] = useState('');
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
   const [lateSubmissionPenalty, setLateSubmissionPenalty] = useState(0);
   const [enableProctoring, setEnableProctoring] = useState(false);
+  const [maxTabSwitches, setMaxTabSwitches] = useState(0);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [shuffleOptions, setShuffleOptions] = useState(false);
+  const [shuffleSections, setShuffleSections] = useState(false);
   const [resultPublishDate, setResultPublishDate] = useState<Date | null>(null);
 
   // Step 3: Visibility
@@ -147,10 +162,48 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     return () => { cancelled = true; };
   }, [collegeId]);
 
-  const handleNext = () => {
+  // Distinct branch / batch values present in the college, for the selectors.
+  const branchOptions = useMemo(
+    () => [...new Set(availableStudents.map((s) => s.branch).filter(Boolean))].sort(),
+    [availableStudents],
+  );
+  const batchOptions = useMemo(
+    () => [...new Set(availableStudents.map((s) => s.batch).filter(Boolean))].sort(),
+    [availableStudents],
+  );
+
+  const handleNext = async () => {
     if (activeStep === 0 && !selectedPaper) {
       setError('Please select a paper');
       return;
+    }
+    // Surface the exact scheduling problem at the SELECT step — using the
+    // same server-side validator and the same question-resolution order
+    // (embedded sections, else linked bank questions) the real schedule uses
+    // — instead of letting it surface at the final Publish step.
+    if (activeStep === 0 && selectedPaper) {
+      setCheckingPaper(true);
+      setError(null);
+      try {
+        const response = await httpsCallable(functions, 'checkPaperScheduling')({
+          paperId: selectedPaper.id,
+          collegeId,
+        });
+        const check = response.data as { ok: boolean; issueCount: number; firstIssue: string | null };
+        if (!check.ok) {
+          setError(
+            check.firstIssue
+              || 'This paper has questions that cannot be scheduled online — open it in Papers and fix them.',
+          );
+          return;
+        }
+      } catch (err) {
+        // Check unavailable (e.g. backend not redeployed yet) — proceed; the
+        // schedule-time gate still enforces the same validation on Publish.
+        console.warn('[TestScheduler] scheduling check unavailable', err);
+      } finally {
+        setCheckingPaper(false);
+      }
     }
     if (activeStep === 1) {
       if (!testTitle.trim()) {
@@ -207,12 +260,18 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
         ...input,
         startDateTime,
         endDateTime,
+        branch: branch || undefined,
+        batch: batch || undefined,
         visibility: visibility === 'public' ? 'public' : 'selected',
         targetSections: visibility === 'private' ? targetSections : undefined,
         targetStudents: visibility === 'selected' ? targetStudents : undefined,
         allowLateSubmission,
         lateSubmissionPenalty: allowLateSubmission ? lateSubmissionPenalty : undefined,
         enableProctoring,
+        maxTabSwitches,
+        shuffleQuestions,
+        shuffleOptions,
+        shuffleSections,
         resultPublishDate: resultPublishDate || undefined,
       } as ScheduleTestInput);
 
@@ -233,9 +292,15 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     setStartDateTime(new Date());
     setEndDateTime(new Date(Date.now() + 3600000));
     setDurationMinutes(30);
+    setBranch('');
+    setBatch('');
     setAllowLateSubmission(false);
     setLateSubmissionPenalty(0);
     setEnableProctoring(false);
+    setMaxTabSwitches(0);
+    setShuffleQuestions(false);
+    setShuffleOptions(false);
+    setShuffleSections(false);
     setResultPublishDate(null);
     setVisibility('public');
     setTargetSections([]);
@@ -305,7 +370,15 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
             </Box>
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              {typedTests.map((test: ScheduledTest) => (
+              {typedTests.map((test: ScheduledTest) => {
+                // College-wide list: faculty may publish/cancel only their own
+                // tests (enforced server-side too) — hide the actions otherwise
+                // so a guaranteed-rejected click never appears.
+                const canManage = !user?.role
+                  || user.role === 'faculty'
+                    ? test.facultyId === user?.uid
+                    : true;
+                return (
                 <Card key={test.id} variant="outlined" sx={{ flex: '1 1 350px', borderRadius: 2 }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
@@ -318,15 +391,17 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 1 }}>
                       <Chip size="small" icon={<CalendarIcon fontSize="small" />} label={format(toDate(test.scheduledAt), 'MMM dd, yyyy')} />
                       <Chip size="small" icon={<TimeIcon fontSize="small" />} label={`${test.duration} min`} />
+                      {test.branch && <Chip size="small" icon={<SchoolIcon fontSize="small" />} label={test.branch} />}
+                      {test.batch && <Chip size="small" icon={<SchoolIcon fontSize="small" />} label={`Batch ${test.batch}`} />}
                       <Chip size="small" icon={<PeopleIcon fontSize="small" />} label={((test as any).visibility || 'all').replace(/_/g, ' ')} />
                     </Stack>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
-                      {test.status === 'scheduled' && (
+                      {canManage && test.status === 'scheduled' && (
                         <Button size="small" variant="outlined" startIcon={<PublishIcon />} onClick={() => handlePublishTest(test.id)}>
                           Publish
                         </Button>
                       )}
-                      {test.status !== 'completed' && test.status !== 'cancelled' && (
+                      {canManage && test.status !== 'completed' && test.status !== 'cancelled' && (
                         <Button size="small" color="error" startIcon={<CancelIcon />} onClick={() => handleCancelTest(test.id)}>
                           Cancel
                         </Button>
@@ -334,7 +409,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     </Box>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </Box>
 
             {testsLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading scheduled tests…</Alert>}
@@ -358,7 +434,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                 <StepLabel>Select Paper</StepLabel>
                 <StepContent>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Choose a paper from the approved question bank
+                    Click a paper to select it — click the SAME paper again (or “Clear
+                    selection”) to deselect it and pick another.
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
                     {typedPapers.map((paper: AssessmentPaper) => (
@@ -368,12 +445,35 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                         sx={{
                           flex: '1 1 280px',
                           cursor: 'pointer',
+                          position: 'relative',
                           border: selectedPaper?.id === paper.id ? 2 : 1,
                           borderColor: selectedPaper?.id === paper.id ? 'primary.main' : 'divider',
                           bgcolor: selectedPaper?.id === paper.id ? 'primary.50' : 'background.paper',
                         }}
-                        onClick={() => setSelectedPaper(paper)}
+                        // Clicking the already-selected card DESELECTS it —
+                        // the previous behaviour (re-select) left no way to
+                        // switch to a different paper.
+                        onClick={() =>
+                          setSelectedPaper((prev) => (prev?.id === paper.id ? null : paper))
+                        }
                       >
+                        {selectedPaper?.id === paper.id && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              color: 'primary.main',
+                              fontWeight: 700,
+                              fontSize: 13,
+                            }}
+                          >
+                            <CheckIcon fontSize="small" /> Selected
+                          </Box>
+                        )}
                         <CardContent>
                           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paper.title}</Typography>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -389,6 +489,18 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       </Card>
                     ))}
                   </Box>
+                  {selectedPaper && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Button
+                        size="small"
+                        color="inherit"
+                        startIcon={<CancelIcon fontSize="small" />}
+                        onClick={() => setSelectedPaper(null)}
+                      >
+                        Clear selection
+                      </Button>
+                    </Box>
+                  )}
                   {papersLoading && <Alert severity="info" sx={{ mt: 2 }}>Loading approved papers…</Alert>}
                   {!papersLoading && typedPapers.length === 0 && (
                     <Alert severity="warning" sx={{ mt: 2 }}>
@@ -398,8 +510,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     </Alert>
                   )}
                   <Box sx={{ mt: 2 }}>
-                    <Button variant="contained" onClick={handleNext} disabled={!selectedPaper}>
-                      Next
+                    <Button variant="contained" onClick={handleNext} disabled={!selectedPaper || checkingPaper}>
+                      {checkingPaper ? 'Checking paper…' : 'Next'}
                     </Button>
                   </Box>
                 </StepContent>
@@ -417,12 +529,59 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <TextField label="Duration (minutes)" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} sx={{ flex: '1 1 150px' }} />
                     </Box>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                      <FormControl sx={{ flex: '1 1 180px', minWidth: 180 }}>
+                        <InputLabel id="test-branch-label">Branch</InputLabel>
+                        <Select
+                          labelId="test-branch-label"
+                          label="Branch"
+                          value={branch}
+                          onChange={(e) => setBranch(e.target.value)}
+                        >
+                          <MenuItem value="">All branches</MenuItem>
+                          {branchOptions.map((b) => (
+                            <MenuItem key={b} value={b}>{b}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl sx={{ flex: '1 1 180px', minWidth: 180 }}>
+                        <InputLabel id="test-batch-label">Batch</InputLabel>
+                        <Select
+                          labelId="test-batch-label"
+                          label="Batch"
+                          value={batch}
+                          onChange={(e) => setBatch(e.target.value)}
+                        >
+                          <MenuItem value="">All batches</MenuItem>
+                          {batchOptions.map((b) => (
+                            <MenuItem key={b} value={b}>{b}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                       <FormControlLabel control={<Checkbox checked={allowLateSubmission} onChange={(e) => setAllowLateSubmission(e.target.checked)} />} label="Allow Late Submission" />
                       {allowLateSubmission && (
                         <TextField label="Late Penalty (%)" type="number" value={lateSubmissionPenalty} onChange={(e) => setLateSubmissionPenalty(Number(e.target.value))} size="small" sx={{ width: 150 }} />
                       )}
                       <FormControlLabel control={<Checkbox checked={enableProctoring} onChange={(e) => setEnableProctoring(e.target.checked)} />} label="Enable Basic Browser Proctoring" />
+                      <TextField
+                        label="Max Tab Switches (0 = unlimited)"
+                        type="number"
+                        value={maxTabSwitches}
+                        onChange={(e) => setMaxTabSwitches(Math.max(0, Math.min(20, Math.trunc(Number(e.target.value) || 0))))}
+                        helperText="Student is auto-submitted when this limit is exceeded."
+                        size="small"
+                        sx={{ width: 230 }}
+                      />
                     </Box>
+                    <Paper variant="outlined" sx={{ p: 1.5 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>Shuffle options (applied per student)</Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                        <FormControlLabel control={<Checkbox checked={shuffleQuestions} onChange={(e) => setShuffleQuestions(e.target.checked)} />} label="Shuffle question order within sections" />
+                        <FormControlLabel control={<Checkbox checked={shuffleSections} onChange={(e) => setShuffleSections(e.target.checked)} />} label="Shuffle section order" />
+                        <FormControlLabel control={<Checkbox checked={shuffleOptions} onChange={(e) => setShuffleOptions(e.target.checked)} />} label="Shuffle answer options" />
+                      </Box>
+                    </Paper>
                     <DateTimePicker label="Result Publish Date (optional)" value={resultPublishDate} onChange={(v) => setResultPublishDate(v)} sx={{ flex: '1 1 250px' }} />
                   </Stack>
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
@@ -516,6 +675,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography color="text.secondary">Duration:</Typography>
                         <Typography>{durationMinutes} minutes</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography color="text.secondary">Branch / Batch:</Typography>
+                        <Typography>{branch || 'All branches'} / {batch || 'All batches'}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography color="text.secondary">Start:</Typography>

@@ -8,6 +8,8 @@ import {
   type ServerAnswer,
   type ServerQuestion,
 } from './assessmentGrading'
+import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
+import { geminiClient, openaiClient, deepseekClient } from './config/aiProviders'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
@@ -127,32 +129,19 @@ async function resolveStaff(uid: string, token: Record<string, unknown>): Promis
   return { uid, role, collegeId, name: String(user?.name || '') }
 }
 
-function canonicalQuestionType(value: unknown): string {
-  const compact = String(value || 'mcq').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const aliases: Record<string, string> = {
-    mcq: 'mcq',
-    singlechoice: 'mcq',
-    msq: 'multi_select',
-    multiselect: 'multi_select',
-    multiplechoice: 'multi_select',
-    truefalse: 'true_false',
-    fillintheblank: 'fill_in_blank',
-    fillintheblanks: 'fill_in_blank',
-    shortanswer: 'short_answer',
-    longanswer: 'long_answer',
-    numerical: 'numerical',
-    nat: 'numerical',
-    assertionreason: 'assertion_reason',
-    casebased: 'case_based',
-    matching: 'matching',
-  }
-  return aliases[compact] || compact
-}
+// canonicalQuestionType now lives in ./questionTypes (single source of truth
+// shared with the paper pipeline); it is imported above.
 
 function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order: number): ServerQuestion {
-  const questionType = canonicalQuestionType(data.type || data.questionType)
-  let options = Array.isArray(data.options)
-    ? data.options.map((option: unknown, index: number) => {
+  // AI-generated papers store embedded questions as { questionId, question }
+  // wrappers — unwrap so text/options/type normalise from the inner object
+  // (bank documents and editor papers are flat and are unaffected).
+  const raw = (data?.question && typeof data.question === 'object' && !Array.isArray(data.question))
+    ? (data.question as admin.firestore.DocumentData)
+    : data
+  const questionType = canonicalQuestionType(raw.type || raw.questionType)
+  let options = Array.isArray(raw.options)
+    ? raw.options.map((option: unknown, index: number) => {
         if (typeof option === 'string') {
           return { id: `opt-${index}`, text: option }
         }
@@ -172,25 +161,25 @@ function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order
       { id: 'D', text: 'Assertion is false but Reason is true' },
     ]
   }
-  const questionId = String(data.questionId || data.id || id)
+  const questionId = String(data.questionId || raw.questionId || raw.id || id)
   return {
     id,
     questionId,
-    order: Number(data.order) || order,
-    text: String(data.text || data.questionText || data.content || ''),
+    order: Number(raw.order) || order,
+    text: String(raw.text || raw.questionText || raw.content || ''),
     type: questionType,
-    marks: Math.max(0, Number(data.marks) || 1),
-    negativeMarks: Math.max(0, Number(data.negativeMarks) || 0),
+    marks: Math.max(0, Number(raw.marks) || 1),
+    negativeMarks: Math.max(0, Number(raw.negativeMarks) || 0),
     options,
-    ...(data.correctAnswer === undefined ? {} : { correctAnswer: data.correctAnswer }),
-    ...(data.tolerance === undefined ? {} : { tolerance: Math.max(0, Number(data.tolerance) || 0) }),
-    ...(data.explanation ? { explanation: String(data.explanation) } : {}),
-    ...(data.sectionId ? { sectionId: String(data.sectionId) } : {}),
-    ...(data.sectionName ? { sectionName: String(data.sectionName) } : {}),
-    ...(data.difficulty ? { difficulty: String(data.difficulty) } : {}),
-    ...(data.imageUrl ? { imageUrl: String(data.imageUrl) } : {}),
-    ...(data.caseText ? { caseText: String(data.caseText) } : {}),
-    ...(Array.isArray(data.matchPairs) ? { matchPairs: data.matchPairs } : {}),
+    ...(raw.correctAnswer === undefined ? {} : { correctAnswer: raw.correctAnswer }),
+    ...(raw.tolerance === undefined ? {} : { tolerance: Math.max(0, Number(raw.tolerance) || 0) }),
+    ...(raw.explanation ? { explanation: String(raw.explanation) } : {}),
+    ...(raw.sectionId ? { sectionId: String(raw.sectionId) } : {}),
+    ...(raw.sectionName ? { sectionName: String(raw.sectionName) } : {}),
+    ...(raw.difficulty ? { difficulty: String(raw.difficulty) } : {}),
+    ...(raw.imageUrl ? { imageUrl: String(raw.imageUrl) } : {}),
+    ...(raw.caseText ? { caseText: String(raw.caseText) } : {}),
+    ...(Array.isArray(raw.matchPairs) ? { matchPairs: raw.matchPairs } : {}),
   }
 }
 
@@ -514,6 +503,33 @@ async function readAnswerIndex(
   return null
 }
 
+/**
+ * One-time heal: persist the answer index on an attempt that started before
+ * the fast path existed. Without it, EVERY autosave re-loads the paper and
+ * all N question documents to validate a delta — one 20-minute session with
+ * a noisy-focus client produced ~30k reads this way. Best-effort: a failed
+ * heal must never break the autosave itself.
+ */
+async function healAnswerIndex(
+  assessmentRef: FirebaseFirestore.DocumentReference,
+  assessmentId: string,
+  index: Record<string, AnswerIndexEntry>
+): Promise<void> {
+  if (!isPlainObject(index) || Object.keys(index).length === 0) return
+  const db = admin.firestore()
+  if (Buffer.byteLength(JSON.stringify(index), 'utf8') > MAX_ANSWER_INDEX_BYTES) {
+    await db
+      .collection('studentAssessments')
+      .doc(assessmentId)
+      .collection('meta')
+      .doc('answerIndex')
+      .set({ index, updatedAt: admin.firestore.FieldValue.serverTimestamp() })
+    await assessmentRef.update({ answerIndexRef: 'meta/answerIndex' })
+  } else {
+    await assessmentRef.update({ answerIndex: index, answerIndexRef: null })
+  }
+}
+
 function answerText(question: ServerQuestion, answer: ServerAnswer | undefined): string {
   if (!answer) return ''
   if (answer.selectedOptionId) {
@@ -612,9 +628,23 @@ export const getMyStudentTests = onCall(
       const testId = String(value.testId || value.assessmentId || '')
       if (testId && value.collegeId === student.collegeId) byTest.set(testId, value)
     })
-    const cards = tests.docs
-      .filter((test) => testTargetsStudent(test.data(), student))
-      .map((test) => serializeCard(test.id, test.data(), byTest.get(test.id)))
+    // A student's own attempt must never vanish from their dashboard: also
+    // load the test documents referenced by their attempt rows when the
+    // test's stored status put it outside the visible set (e.g. cancelled
+    // after the student had already submitted). Submitted tests always
+    // surface as "completed / test attended".
+    const visibleTestDocs = new Map<string, admin.firestore.DocumentData>()
+    tests.docs.forEach((testDoc) => visibleTestDocs.set(testDoc.id, testDoc.data() || {}))
+    const missingTestIds = [...byTest.keys()].filter((id) => !visibleTestDocs.has(id)).slice(0, 50)
+    if (missingTestIds.length > 0) {
+      const extra = await db.getAll(...missingTestIds.map((id) => db.collection('scheduledTests').doc(id)))
+      extra.forEach((testDoc) => {
+        if (testDoc.exists) visibleTestDocs.set(testDoc.id, testDoc.data() || {})
+      })
+    }
+    const cards = [...visibleTestDocs.entries()]
+      .filter(([, data]) => testTargetsStudent(data, student))
+      .map(([id, data]) => serializeCard(id, data, byTest.get(id)))
       .sort((left, right) => left.startDateTime.localeCompare(right.startDateTime))
     return { tests: cards }
   }
@@ -650,6 +680,10 @@ export const getMyTestInstructions = onCall(
         : resolved.test.instructions ? [String(resolved.test.instructions)] : [],
       negativeMarking: questions.some((question) => question.negativeMarks > 0),
       enableProctoring: resolved.test.enableProctoring === true,
+      maxTabSwitches: Number(resolved.test.maxTabSwitches) || 0,
+      shuffleQuestions: resolved.test.shuffleQuestions === true,
+      shuffleOptions: resolved.test.shuffleOptions === true,
+      shuffleSections: resolved.test.shuffleSections === true,
       questionTypes: [...new Set(questions.map((question) => question.type))],
       studentStatus: String(rowData?.status || 'not_started'),
       startedAt: iso(rowData?.startedAt) || undefined,
@@ -738,6 +772,12 @@ export const startMyStudentTest = onCall(
         studentUid: student.uid,
         studentName: student.name,
         regNo: student.regNo,
+        // Denormalised once at start so completion-report exports (Excel)
+        // never need to re-read student documents.
+        branch: student.branch,
+        section: student.section,
+        semester: student.semester,
+        batch: student.batch,
         title: String(freshTestData.title || freshTestData.paperTitle || ''),
         subject: String(freshTestData.subject || freshTestData.subjectName || ''),
         totalMarks: Number(freshTestData.totalMarks) || questions.reduce((sum, question) => sum + question.marks, 0),
@@ -824,6 +864,11 @@ export const getMyActiveStudentTest = onCall(
       resumed: true,
       enableProctoring: resolved.test.enableProctoring === true,
       allowResume: true,
+      maxTabSwitches: Number(resolved.test.maxTabSwitches) || 0,
+      shuffleQuestions: resolved.test.shuffleQuestions === true,
+      shuffleOptions: resolved.test.shuffleOptions === true,
+      shuffleSections: resolved.test.shuffleSections === true,
+      scheduledStart: iso(resolved.test.startDateTime || resolved.test.scheduledAt),
     }
   }
 )
@@ -890,14 +935,17 @@ export const autosaveMyStudentTest = onCall(
         validated = sanitizeAnswersWithIndex(deltaRaw, index)
       } else {
         // Attempt started before the answer index existed: fall back to the
-        // question load so validation stays authoritative.
+        // question load so validation stays authoritative — then persist the
+        // index so this expensive path runs at most ONCE per attempt.
         const testRef = db.collection('scheduledTests').doc(String(row.testId || ''))
         const test = await testRef.get()
         const testData = test.data()
         if (!test.exists || !testData) throw new HttpsError('failed-precondition', 'Scheduled test not found')
         if (testData.status === 'cancelled') throw new HttpsError('failed-precondition', 'This test has been cancelled')
         const questions = await loadTestQuestions(test.id, testData)
-        validated = sanitizeAnswersWithIndex(deltaRaw, questionsToIndex(questions))
+        const index = questionsToIndex(questions)
+        validated = sanitizeAnswersWithIndex(deltaRaw, index)
+        void healAnswerIndex(assessmentRef, assessmentId, index).catch(() => undefined)
       }
     } else if (hasLegacy) {
       // Pre-deploy client sends the full keyed answer map: unchanged semantics
@@ -938,7 +986,11 @@ export const autosaveMyStudentTest = onCall(
       transaction.update(assessmentRef, update)
     })
 
-    if (proctorEvents.length > 0) {
+    // Blur-only batches are focus noise (a screen recorder or extension
+    // stealing focus fires them continuously): they still ride along in the
+    // row's proctorEvents, but they do not earn their own summary document.
+    const meaningfulEvents = proctorEvents.filter((event) => event.type !== 'window_blur')
+    if (proctorEvents.length > 0 && meaningfulEvents.length > 0) {
       // One summary doc per flush (was: one doc per event). `proctoringLogs`
       // has no readers today; the `kind` marker keeps future queries able to
       // tell batches apart from the high-severity direct-log docs.
@@ -993,7 +1045,6 @@ export const submitMyStudentTest = onCall(
     const answers = sanitizeAnswers(request.data?.answers, questions)
     const graded = gradeAssessmentPaper(questions, answers)
     const assessmentRef = rowRef(resolved.testId, student.id)
-    const auditRef = admin.firestore().collection('studentSubmissions').doc()
 
     const result = await admin.firestore().runTransaction(async (transaction) => {
       const [attempt, freshTestDoc] = await Promise.all([
@@ -1051,6 +1102,19 @@ export const submitMyStudentTest = onCall(
       const manualGradeableMax = questions
         .filter((question) => pendingManualIds.has(question.id))
         .reduce((sum, question) => sum + question.marks, 0)
+      // Denormalise the manual questions' text + the student's rendered answer
+      // onto the row at submit time: the faculty grading queue then renders
+      // without re-reading the paper's question documents on every load
+      // (was N question reads per pending test per queue open).
+      const answerMap = new Map(answers.map((answer) => [answer.questionId, answer]))
+      const manualQuestionSnippets = questions
+        .filter((question) => pendingManualIds.has(question.id))
+        .map((question) => ({
+          questionId: question.id,
+          text: String(question.text || '').slice(0, 2000),
+          marks: Number(question.marks) || 0,
+          answerText: answerText(question, answerMap.get(question.id)).slice(0, 4000),
+        }))
       const update: admin.firestore.DocumentData = {
         status,
         answers,
@@ -1061,6 +1125,7 @@ export const submitMyStudentTest = onCall(
         autoMax: graded.autoMax,
         manualMax: graded.manualMax,
         manualGradeableMax,
+        manualQuestionSnippets,
         needsManualGrading: !fullyObjective,
         objectiveCorrectCount: graded.correctCount,
         objectiveIncorrectCount: graded.incorrectCount,
@@ -1081,25 +1146,14 @@ export const submitMyStudentTest = onCall(
           gradedBy: 'server-auto-grader',
         })
       }
+      // No separate audit doc: the attempt row itself is the durable record
+      // (answers, scores, times, proctor events) — the old studentSubmissions
+      // write had no readers, so it was pure write cost.
       transaction.update(assessmentRef, update)
-      transaction.create(auditRef, {
-        kind: 'test',
-        collegeId: student.collegeId,
-        testId: resolved.testId,
-        studentAssessmentId: assessmentRef.id,
-        studentId: student.id,
-        studentUid: uid,
-        answers,
-        timeSpent,
-        autoScore: graded.autoScore,
-        autoMax: graded.autoMax,
-        manualMax: graded.manualMax,
-        status,
-        autoSubmitted: Boolean(request.data?.autoSubmitted),
-        submittedAt,
-      })
       transaction.update(resolved.testRef, {
         totalSubmitted: admin.firestore.FieldValue.increment(1),
+        // Fully objective papers are graded at submission time.
+        ...(fullyObjective ? { totalGraded: admin.firestore.FieldValue.increment(1) } : {}),
         updatedAt: submittedAt,
       })
       return outcome({ id: assessmentRef.id, testId: resolved.testId, ...row, ...update })
@@ -1272,10 +1326,12 @@ export const listManagedAssessmentTests = onCall(
     const requestedCollege = String(request.data?.collegeId || '')
     const collegeId = staff.role === 'superadmin' ? requestedCollege : staff.collegeId
     if (!collegeId) throw new HttpsError('invalid-argument', 'collegeId is required')
-    let query: FirebaseFirestore.Query = admin.firestore().collection('scheduledTests')
+    // Every assessment manager (faculty, hod, principal, admin) sees the
+    // college-wide list — "My tests" is shared, not creator-only.
+    const snapshot = await admin.firestore().collection('scheduledTests')
       .where('collegeId', '==', collegeId)
-    if (staff.role === 'faculty') query = query.where('facultyId', '==', uid)
-    const snapshot = await query.orderBy('createdAt', 'desc').limit(200).get()
+      .orderBy('createdAt', 'desc').limit(200)
+      .get()
     return {
       tests: snapshot.docs.map((test) => {
         const data = test.data()
@@ -1289,6 +1345,90 @@ export const listManagedAssessmentTests = onCall(
           updatedAt: iso(data.updatedAt),
         }
       }),
+    }
+  }
+)
+
+/**
+ * Resolve the questions a paper would actually schedule: embedded `sections`
+ * first (the Confirm pipeline stores the reviewed structure there), otherwise
+ * the linked question-bank documents, in the paper's own order. Mirrors the
+ * resolution order `loadTestQuestions` uses at schedule time, so a "check"
+ * and a real schedule can never disagree about which questions are in play.
+ */
+export async function resolvePaperSchedulableQuestions(paper: admin.firestore.DocumentData): Promise<ServerQuestion[]> {
+  const embedded: ServerQuestion[] = []
+  if (Array.isArray(paper.sections)) {
+    paper.sections.forEach((section: admin.firestore.DocumentData) => {
+      if (!Array.isArray(section.questions)) return
+      section.questions.forEach((question: admin.firestore.DocumentData) => {
+        if (embedded.length >= MAX_QUESTIONS) return
+        embedded.push(normalizeQuestion(
+          {
+            ...question,
+            sectionId: question.sectionId || section.id,
+            sectionName: question.sectionName || section.name || section.title,
+          },
+          String(question.id || question.questionId || `q-${embedded.length + 1}`),
+          embedded.length + 1
+        ))
+      })
+    })
+  }
+  if (embedded.length > 0) return embedded
+
+  const questionIds = Array.isArray(paper.linkedQuestionIds)
+    ? paper.linkedQuestionIds
+    : Array.isArray(paper.questionIds) ? paper.questionIds : []
+  if (questionIds.length === 0 || questionIds.length > MAX_QUESTIONS) return []
+
+  const db = admin.firestore()
+  const refs = questionIds.map((id: unknown) => db.collection('questions').doc(String(id)))
+  const out: ServerQuestion[] = []
+  for (let i = 0; i < refs.length; i += 100) {
+    const docs = await db.getAll(...refs.slice(i, i + 100))
+    docs.forEach((snap) => {
+      if (!snap.exists || out.length >= MAX_QUESTIONS) return
+      out.push(normalizeQuestion(snap.data() || {}, snap.id, out.length + 1))
+    })
+  }
+  return out
+}
+
+export const checkPaperScheduling = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    requireAssessmentManager(staff)
+    const input = (request.data || {}) as Record<string, unknown>
+    const collegeId = staff.role === 'superadmin' ? String(input.collegeId || '') : staff.collegeId
+    const paperId = String(input.paperId || '')
+    if (!collegeId) throw new HttpsError('invalid-argument', 'collegeId is required')
+    if (!paperId || paperId.includes('/')) throw new HttpsError('invalid-argument', 'paperId is required')
+
+    const paperDoc = await admin.firestore().collection('papers').doc(paperId).get()
+    const paper = paperDoc.data()
+    if (!paperDoc.exists || !paper || paper.collegeId !== collegeId) {
+      throw new HttpsError('not-found', 'Paper was not found in this college')
+    }
+
+    // The SAME validator and the SAME resolution order as the schedule-time
+    // gate, run read-only — so what the scheduler warns about is exactly
+    // what a real schedule would accept, with the same per-question wording.
+    const questions = await resolvePaperSchedulableQuestions(paper)
+    const issues: string[] = []
+    for (const question of questions) {
+      const problem = findSchedulingProblem(question)
+      if (problem !== null) issues.push(problem)
+    }
+    return {
+      ok: questions.length >= 1 && issues.length === 0,
+      questionCount: questions.length,
+      issueCount: issues.length,
+      firstIssue: issues[0] || null,
+      issues: issues.slice(0, 5),
     }
   }
 )
@@ -1344,22 +1484,20 @@ export const scheduleAssessmentTest = onCall(
     if (questions.length < 1 || questions.length > MAX_QUESTIONS) {
       throw new HttpsError('failed-precondition', `Paper must contain between 1 and ${MAX_QUESTIONS} questions`)
     }
-    const supportedTypes = new Set([
-      'mcq', 'multi_select', 'true_false', 'fill_in_blank',
-      'short_answer', 'long_answer', 'numerical', 'assertion_reason',
-    ])
-    const invalidQuestion = questions.find((question) =>
-      !question.text.trim()
-      || question.marks <= 0
-      || !supportedTypes.has(question.type)
-      || (['mcq', 'multi_select', 'true_false', 'assertion_reason'].includes(question.type)
-        && question.options.length < 2)
-    )
-    if (invalidQuestion) {
-      throw new HttpsError(
-        'failed-precondition',
-        `Question ${invalidQuestion.order} is incomplete or uses an unsupported online response type`
-      )
+    // The schedulable set is the SAME one the paper pipeline's Confirm uses
+    // (functions/src/questionTypes.ts), and the message now names the exact
+    // defect instead of the old blanket "incomplete or unsupported" text that
+    // left faculty guessing which question and why.
+    let problemMessage: string | null = null
+    for (const question of questions) {
+      const problem = findSchedulingProblem(question)
+      if (problem !== null) {
+        problemMessage = problem
+        break
+      }
+    }
+    if (problemMessage) {
+      throw new HttpsError('failed-precondition', problemMessage)
     }
     const targetSections = Array.isArray(input.targetSections)
       ? input.targetSections.slice(0, 100).map((target: unknown) => {
@@ -1400,6 +1538,12 @@ export const scheduleAssessmentTest = onCall(
       collegeId,
       facultyId: uid,
       facultyName: staff.name,
+      // Cohort the faculty selected while scheduling. 'public' visibility
+      // still shows the test to every student in the college; these fields
+      // act as the fallback filter for 'selected' tests and are displayed on
+      // the faculty list and report.
+      branch: String(input.branch || '').trim().slice(0, 100),
+      batch: String(input.batch || '').trim().slice(0, 100),
       startDateTime: admin.firestore.Timestamp.fromDate(start),
       scheduledAt: admin.firestore.Timestamp.fromDate(start),
       endDateTime: admin.firestore.Timestamp.fromDate(end),
@@ -1411,12 +1555,36 @@ export const scheduleAssessmentTest = onCall(
       allowLateSubmission: Boolean(input.allowLateSubmission),
       lateSubmissionPenalty: Math.max(0, Math.min(100, Number(input.lateSubmissionPenalty) || 0)),
       enableProctoring: Boolean(input.enableProctoring),
+      // 0 = unlimited tab switches; the student engine auto-submits beyond this.
+      maxTabSwitches: Math.max(0, Math.min(20, Math.trunc(Number(input.maxTabSwitches) || 0))),
+      shuffleQuestions: Boolean(input.shuffleQuestions),
+      shuffleOptions: Boolean(input.shuffleOptions),
+      shuffleSections: Boolean(input.shuffleSections),
       requireFaceVerification: Boolean(input.requireFaceVerification),
       resultPublishDate: admin.firestore.Timestamp.fromDate(resultPublishDate),
       showResultImmediately: paper.showResultImmediately !== false,
       passingMarks: Number(paper.passingMarks) || Math.ceil(totalMarks * 0.4),
       totalMarks,
       totalQuestions: questions.length,
+      // Freeze the section structure at schedule time so the completion
+      // report can compute section-wise student scores without ever
+      // re-reading the question documents.
+      sections: [...new Map(
+        questions
+          .filter((question) => question.sectionId)
+          .map((question) => [
+            String(question.sectionId),
+            { id: String(question.sectionId), name: String(question.sectionName || question.sectionId || '') },
+          ])
+      ).values()].map((section, index) => {
+        const members = questions.filter((question) => String(question.sectionId) === section.id)
+        return { ...section, order: index + 1, questionCount: members.length, totalMarks: members.reduce((sum, question) => sum + (question.marks || 0), 0) }
+      }),
+      questionSections: questions.map((question, index) => ({
+        id: `q-${String(index + 1).padStart(4, '0')}`,
+        sectionId: String(question.sectionId || ''),
+        sectionName: String(question.sectionName || ''),
+      })),
       status: 'scheduled',
       totalRegistered: 0,
       totalStarted: 0,
@@ -1524,6 +1692,25 @@ export const gradeStudentAssessmentSubmission = onCall(
       ? null
       : Number(request.data.marksObtained)
     const feedback = String(request.data?.feedback || '').trim()
+    // Optional per-question manual marks (from the grading queue's
+    // per-question quick-mark UI). The sum must equal the manual total;
+    // per-question caps are validated against the denormalised snippets
+    // when the row carries them.
+    const rawManualMarks: Array<Record<string, unknown>> | null = Array.isArray(request.data?.manualMarks)
+      ? (request.data.manualMarks as Array<Record<string, unknown>>)
+      : null
+    const manualMarks = rawManualMarks
+      ? rawManualMarks
+          .filter((entry) => Boolean(entry) && typeof entry === 'object')
+          .map((entry) => ({
+            questionId: String(entry.questionId || ''),
+            marks: Number(entry.marks),
+          }))
+          .filter((entry) => entry.questionId.length > 0 && Number.isFinite(entry.marks) && entry.marks >= 0)
+      : null
+    if (manualMarks !== null && (manualMarks.length === 0 || manualMarks.length > 400)) {
+      throw new HttpsError('invalid-argument', 'Per-question marks list is invalid')
+    }
     if (
       !assessmentId
       || assessmentId.includes('/')
@@ -1566,6 +1753,28 @@ export const gradeStudentAssessmentSubmission = onCall(
       if (manualScore < 0 || manualScore > manualMax) {
         throw new HttpsError('invalid-argument', `Final score is inconsistent with the objective score; manual component must be between 0 and ${manualMax}`)
       }
+      let manualMarksByQuestion: Map<string, number> | null = null
+      if (manualMarks !== null) {
+        const perQuestionMax = new Map<string, number>()
+        if (Array.isArray(row.manualQuestionSnippets)) {
+          for (const snippet of row.manualQuestionSnippets) {
+            perQuestionMax.set(String(snippet.questionId || ''), Number(snippet.marks) || 0)
+          }
+        }
+        const sum = manualMarks.reduce((acc, entry) => acc + entry.marks, 0)
+        if (Math.abs(sum - manualScore) > 0.01) {
+          throw new HttpsError('invalid-argument', 'Per-question marks do not add up to the manual total')
+        }
+        if (perQuestionMax.size > 0) {
+          for (const entry of manualMarks) {
+            const max = perQuestionMax.get(entry.questionId)
+            if (max !== undefined && entry.marks > max + 0.001) {
+              throw new HttpsError('invalid-argument', `Marks for one question exceed its maximum of ${max}`)
+            }
+          }
+        }
+        manualMarksByQuestion = new Map(manualMarks.map((entry) => [entry.questionId, entry.marks]))
+      }
       const rawMarks = Math.max(0, autoScore + manualScore)
       const marksObtained = Math.round(rawMarks * penaltyFactor * 100) / 100
       const percentage = totalMarks > 0
@@ -1581,13 +1790,23 @@ export const gradeStudentAssessmentSubmission = onCall(
         gradePoint: derived.gradePoint,
         facultyFeedback: feedback,
         gradingBreakdown: Array.isArray(row.gradingBreakdown)
-          ? row.gradingBreakdown.map((item: admin.firestore.DocumentData) =>
-              item.status === 'pending_manual' ? { ...item, status: 'manual_graded' } : item
-            )
+          ? row.gradingBreakdown.map((item: admin.firestore.DocumentData) => {
+              if (item.status !== 'pending_manual') return item
+              const manualMarksValue = manualMarksByQuestion
+                ? manualMarksByQuestion.get(String(item.questionId)) ?? 0
+                : null
+              return { ...item, status: 'manual_graded', marksObtained: manualMarksValue }
+            })
           : [],
         needsManualGrading: false,
         gradedAt: admin.firestore.FieldValue.serverTimestamp(),
         gradedBy: uid,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+      // Keep the faculty list's "graded" counter current (self-maintained,
+      // no extra reads anywhere else).
+      transaction.update(testRef, {
+        totalGraded: admin.firestore.FieldValue.increment(1),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
       return { marksObtained, percentage, grade: derived.grade, gradePoint: derived.gradePoint }
@@ -1621,8 +1840,18 @@ export const listPendingAssessmentSubmissions = onCall(
       if (staff.role !== 'faculty') return true
       return tests.get(String(attempt.data().testId || ''))?.facultyId === uid
     })
+    // New rows carry denormalised manual-question snippets (question text +
+    // rendered answer) written at submit time, so their tests need NO question
+    // reads. Only tests with legacy rows (submitted before snippets existed)
+    // pay the old question-document reads.
+    const legacyTestIds = new Set(
+      visibleCandidates
+        .filter((attempt) => !Array.isArray(attempt.data().manualQuestionSnippets))
+        .map((attempt) => String(attempt.data().testId || ''))
+        .filter(Boolean)
+    )
     const questionCache = new Map<string, ServerQuestion[]>()
-    await Promise.all([...new Set(visibleCandidates.map((attempt) => String(attempt.data().testId || '')))].map(async (testId) => {
+    await Promise.all([...legacyTestIds].map(async (testId) => {
       const test = tests.get(testId)
       if (test) questionCache.set(testId, await loadTestQuestions(testId, test))
     }))
@@ -1631,6 +1860,9 @@ export const listPendingAssessmentSubmissions = onCall(
       submissions: visibleCandidates.map((attempt) => {
         const row = attempt.data()
         const testId = String(row.testId || '')
+        const snippets = Array.isArray(row.manualQuestionSnippets) && row.manualQuestionSnippets.length > 0
+          ? row.manualQuestionSnippets as Array<{ questionId?: unknown; text?: unknown; marks?: unknown; answerText?: unknown }>
+          : null
         const questions = questionCache.get(testId) || []
         const answers = new Map(
           (Array.isArray(row.answers) ? row.answers : [])
@@ -1659,17 +1891,231 @@ export const listPendingAssessmentSubmissions = onCall(
           submittedAt: iso(row.submittedAt),
           isLateSubmission: Boolean(row.isLateSubmission),
           latePenaltyPercentage: Number(row.latePenaltyPercentage) || 0,
-          responses: questions
-            .filter((question) => manualIds.has(question.id))
-            .map((question) => ({
-              questionId: question.id,
-              questionText: question.text,
-              type: question.type,
-              marks: question.marks,
-              answer: answerText(question, answers.get(question.id)),
-            })),
+          responses: snippets
+            ? snippets.map((snippet) => ({
+                questionId: String(snippet.questionId || ''),
+                questionText: String(snippet.text || ''),
+                type: 'manual',
+                marks: Number(snippet.marks) || 0,
+                answer: String(snippet.answerText || ''),
+              }))
+            : questions
+              .filter((question) => manualIds.has(question.id))
+              .map((question) => ({
+                questionId: question.id,
+                questionText: question.text,
+                type: question.type,
+                marks: question.marks,
+                answer: answerText(question, answers.get(question.id)),
+              })),
+          aiSuggestion: (row.aiGradingSuggestion as Record<string, unknown> | undefined) || null,
         }
       }),
+    }
+  }
+)
+
+/**
+ * Faculty test report: summary aggregates + per-student outcomes for one
+ * scheduled test. One indexed query over the attempt rows (deterministic doc
+ * ids, testId filter) with field selection keeps it cheap even for large
+ * batches. Also self-heals the legacy counters (tests scheduled before
+ * totalSubmitted tracking) with a one-time backfill write.
+ */
+export const getAssessmentTestReport = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    requireAssessmentManager(staff)
+    const testId = String(request.data?.testId || '')
+    if (!testId) throw new HttpsError('invalid-argument', 'testId is required')
+    const db = admin.firestore()
+    const testRef = db.collection('scheduledTests').doc(testId)
+    const testDoc = await testRef.get()
+    const test = testDoc.data()
+    if (!testDoc.exists || !test) throw new HttpsError('not-found', 'Scheduled test not found')
+    // Any assessment manager of the test's college may open the report
+    // (faculty, hod, principal, admin; superadmin for any college).
+    if (staff.role !== 'superadmin' && test.collegeId && test.collegeId !== staff.collegeId) {
+      throw new HttpsError('permission-denied', 'Test belongs to another college')
+    }
+
+    const snapshot = await db.collection('studentAssessments')
+      .where('testId', '==', testId)
+      .select(
+        'studentId', 'studentName', 'regNo', 'status',
+        'totalMarks', 'autoScore', 'autoMax', 'manualMax', 'manualScore',
+        'marksObtained', 'percentage', 'grade', 'timeSpent',
+        'submittedAt', 'gradedAt', 'isLateSubmission', 'latePenaltyPercentage',
+        'autoSubmitted', 'needsManualGrading',
+        'branch', 'section', 'semester', 'batch', 'gradingBreakdown'
+      )
+      .limit(500)
+      .get()
+    const rows = snapshot.docs.map((doc) => doc.data() || {})
+
+    let submitted = 0
+    let graded = 0
+    let pendingManual = 0
+    let inProgress = 0
+    let notStarted = 0
+    let lateSubmissions = 0
+    let autoSubmittedCount = 0
+    const percentages: number[] = []
+    const marksObtainedList: number[] = []
+    rows.forEach((row) => {
+      const status = String(row.status || 'not_started')
+      if (status === 'submitted' || status === 'graded') {
+        submitted += 1
+        if (row.isLateSubmission === true) lateSubmissions += 1
+        if (row.autoSubmitted === true) autoSubmittedCount += 1
+        if (typeof row.marksObtained === 'number') marksObtainedList.push(row.marksObtained)
+        if (status === 'graded') {
+          graded += 1
+          if (typeof row.percentage === 'number') percentages.push(row.percentage)
+        } else if (row.needsManualGrading === true) {
+          pendingManual += 1
+        }
+      } else if (status === 'in_progress') {
+        inProgress += 1
+      } else {
+        notStarted += 1
+      }
+    })
+    const round1 = (value: number) => Math.round(value * 10) / 10
+    const avgPercentage = percentages.length > 0 ? round1(percentages.reduce((a, b) => a + b, 0) / percentages.length) : null
+    const maxPercentage = percentages.length > 0 ? round1(Math.max(...percentages)) : null
+    const minPercentage = percentages.length > 0 ? round1(Math.min(...percentages)) : null
+    const avgMarksObtained = marksObtainedList.length > 0 ? round1(marksObtainedList.reduce((a, b) => a + b, 0) / marksObtainedList.length) : null
+
+    // One-time self-heal: tests scheduled before counter tracking (or before
+    // totalGraded tracking) have missing counters; backfill them so the list
+    // view is accurate forever after this first report open.
+    const needsSubmittedHeal = test.totalSubmitted === undefined
+      || (Number(test.totalSubmitted) === 0 && submitted > 0)
+    const needsGradedHeal = test.totalGraded === undefined && graded > 0
+    if (needsSubmittedHeal || needsGradedHeal) {
+      const heal: admin.firestore.DocumentData = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }
+      if (needsSubmittedHeal) heal.totalSubmitted = admin.firestore.FieldValue.increment(submitted)
+      if (needsGradedHeal) heal.totalGraded = admin.firestore.FieldValue.increment(graded)
+      void testRef.update(heal).catch(() => undefined)
+    }
+
+    // Section-wise scores: the test document froze the section structure at
+    // schedule time (sections + questionSections), so this is pure in-memory
+    // aggregation over the gradingBreakdown already read — no extra queries.
+    const sectionOrder: string[] = []
+    const sectionNames = new Map<string, string>()
+    const sectionMaxMarks = new Map<string, number>()
+    if (Array.isArray(test.sections)) {
+      for (const section of test.sections) {
+        const id = String(section.id || '')
+        if (!id || sectionNames.has(id)) continue
+        sectionNames.set(id, String(section.name || id))
+        sectionMaxMarks.set(id, Number(section.totalMarks) || 0)
+        sectionOrder.push(id)
+      }
+    }
+    const questionToSection = new Map<string, string>()
+    if (Array.isArray(test.questionSections)) {
+      for (const entry of test.questionSections) {
+        const id = String(entry.id || '')
+        const sectionId = String(entry.sectionId || '')
+        if (id && sectionId) questionToSection.set(id, sectionId)
+      }
+    }
+    const round2 = (value: number) => Math.round(value * 100) / 100
+    const studentSectionScores = (row: Record<string, unknown>): Array<{ sectionId: string; sectionName: string; score: number; max: number }> | null => {
+      if (!Array.isArray(row.gradingBreakdown) || sectionOrder.length === 0) return null
+      const scoreBySection = new Map<string, number>()
+      for (const item of row.gradingBreakdown as Array<Record<string, unknown>>) {
+        const sectionId = questionToSection.get(String(item.questionId || ''))
+        if (!sectionId) continue
+        scoreBySection.set(sectionId, (scoreBySection.get(sectionId) || 0) + (typeof item.marksObtained === 'number' ? item.marksObtained : 0))
+      }
+      return sectionOrder
+        .filter((sectionId) => scoreBySection.has(sectionId))
+        .map((sectionId) => ({
+          sectionId,
+          sectionName: sectionNames.get(sectionId) || sectionId,
+          score: round2(scoreBySection.get(sectionId) || 0),
+          max: sectionMaxMarks.get(sectionId) || 0,
+        }))
+    }
+
+    return {
+      test: {
+        id: testId,
+        title: String(test.title || ''),
+        subject: String(test.subject || ''),
+        facultyId: String(test.facultyId || ''),
+        facultyName: String(test.facultyName || ''),
+        branch: String(test.branch || ''),
+        batch: String(test.batch || ''),
+        status: String(test.status || 'scheduled'),
+        startDateTime: iso(test.startDateTime),
+        endDateTime: iso(test.endDateTime),
+        resultPublishDate: iso(test.resultPublishDate) || null,
+        totalQuestions: Number(test.totalQuestions) || 0,
+        totalMarks: Number(test.totalMarks) || 0,
+        enableProctoring: Boolean(test.enableProctoring),
+        maxTabSwitches: Number(test.maxTabSwitches) || 0,
+        shuffleQuestions: test.shuffleQuestions === true,
+        shuffleOptions: test.shuffleOptions === true,
+        shuffleSections: test.shuffleSections === true,
+        totalRegistered: Number(test.totalRegistered) || 0,
+        totalStarted: Number(test.totalStarted) || 0,
+        totalSubmitted: Number(test.totalSubmitted) || 0,
+        totalGraded: Number(test.totalGraded) || 0,
+        sections: Array.isArray(test.sections)
+          ? (test.sections as Array<Record<string, unknown>>).map((section) => ({
+              id: String(section.id || ''),
+              name: String(section.name || ''),
+              questionCount: Number(section.questionCount) || 0,
+              totalMarks: Number(section.totalMarks) || 0,
+            }))
+          : [],
+      },
+      summary: {
+        totalScheduled: Number(test.totalRegistered) || 0,
+        submitted,
+        graded,
+        pendingManual,
+        inProgress,
+        notStarted,
+        lateSubmissions,
+        autoSubmittedCount,
+        avgPercentage,
+        maxPercentage,
+        minPercentage,
+        avgMarksObtained,
+      },
+      students: rows.map((row) => ({
+        studentId: String(row.studentId || ''),
+        studentName: String(row.studentName || 'Student'),
+        regNo: String(row.regNo || ''),
+        status: String(row.status || 'not_started'),
+        branch: String(row.branch || ''),
+        section: String(row.section || ''),
+        semester: Number(row.semester) || 0,
+        batch: String(row.batch || ''),
+        totalMarks: Number(row.totalMarks) || 0,
+        autoScore: row.autoScore === undefined ? null : Number(row.autoScore) || 0,
+        marksObtained: row.marksObtained === undefined || row.marksObtained === null ? null : Number(row.marksObtained),
+        percentage: row.percentage === undefined || row.percentage === null ? null : Number(row.percentage),
+        grade: row.grade === undefined || row.grade === null ? null : String(row.grade),
+        timeSpent: row.timeSpent === undefined ? null : Number(row.timeSpent) || 0,
+        submittedAt: row.submittedAt === undefined || row.submittedAt === null ? null : iso(row.submittedAt),
+        isLateSubmission: row.isLateSubmission === true,
+        latePenaltyPercentage: Number(row.latePenaltyPercentage) || 0,
+        autoSubmitted: row.autoSubmitted === true,
+        needsManualGrading: row.needsManualGrading === true,
+        sectionScores: studentSectionScores(row),
+      })),
     }
   }
 )
@@ -1687,7 +2133,6 @@ async function finalizeExpiredAttempt(
   if (!testDoc.exists || !test || test.status === 'cancelled') return 'skipped'
   const questions = await loadTestQuestions(testId, test)
   if (questions.length === 0) return 'skipped'
-  const auditRef = db.collection('studentSubmissions').doc()
 
   return db.runTransaction(async (transaction) => {
     const [freshAttemptDoc, freshTestDoc] = await Promise.all([
@@ -1743,6 +2188,17 @@ async function finalizeExpiredAttempt(
       ? Math.max(0, Math.floor((autoSubmitAt.getTime() - startedAt.getTime()) / 1000))
       : Number(row.timeSpent) || 0
     const submittedAt = admin.firestore.FieldValue.serverTimestamp()
+    // Same denormalisation as the manual submit path: the grading queue reads
+    // these snippets instead of re-loading the paper's question documents.
+    const answerMap = new Map(answers.map((answer) => [answer.questionId, answer]))
+    const manualQuestionSnippets = questions
+      .filter((question) => pendingManualIds.has(question.id))
+      .map((question) => ({
+        questionId: question.id,
+        text: String(question.text || '').slice(0, 2000),
+        marks: Number(question.marks) || 0,
+        answerText: answerText(question, answerMap.get(question.id)).slice(0, 4000),
+      }))
     const update: admin.firestore.DocumentData = {
       status,
       answers,
@@ -1759,6 +2215,7 @@ async function finalizeExpiredAttempt(
       unattemptedCount: questions.filter((question) => !answerIds.has(question.id)).length,
       answeredCount: answers.length,
       gradingBreakdown: graded.perQuestion,
+      manualQuestionSnippets,
       autoSubmitted: true,
       isLateSubmission: isLate,
       latePenaltyPercentage,
@@ -1774,24 +2231,9 @@ async function finalizeExpiredAttempt(
       })
     }
     transaction.update(attemptDoc.ref, update)
-    transaction.create(auditRef, {
-      kind: 'test',
-      collegeId: String(row.collegeId || ''),
-      testId,
-      studentAssessmentId: attemptDoc.id,
-      studentId: String(row.studentId || ''),
-      studentUid: String(row.studentUid || ''),
-      answers,
-      timeSpent,
-      autoScore: graded.autoScore,
-      autoMax: graded.autoMax,
-      manualMax: graded.manualMax,
-      status,
-      autoSubmitted: true,
-      submittedAt,
-    })
     transaction.update(testRef, {
       totalSubmitted: admin.firestore.FieldValue.increment(1),
+      ...(status === 'graded' ? { totalGraded: admin.firestore.FieldValue.increment(1) } : {}),
       updatedAt: submittedAt,
     })
     return status
@@ -1838,5 +2280,357 @@ export const autoSubmitExpiredStudentTests = onSchedule(
     } else if (attempts.size > 0) {
       logger.info('[StudentAssessments] Expired attempts finalized', { scanned: attempts.size })
     }
+
+    // Close out tests whose window has ended: published/ongoing → completed.
+    // Nothing else ever moved the stored status, so a test whose window had
+    // passed kept showing "ongoing" in the scheduler forever.
+    const endedTests = await admin.firestore().collection('scheduledTests')
+      .where('status', 'in', ['published', 'ongoing'])
+      .where('endDateTime', '<=', now)
+      .limit(100)
+      .get()
+    const completions = await Promise.allSettled(endedTests.docs.map((testDoc) =>
+      testDoc.ref.update({
+        status: 'completed',
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    ))
+    const completionFailures = completions.filter((outcome) => outcome.status === 'rejected').length
+    if (completionFailures > 0) {
+      logger.error('[StudentAssessments] Some ended tests could not be completed', {
+        scanned: endedTests.size,
+        failures: completionFailures,
+      })
+    } else if (endedTests.size > 0) {
+      logger.info('[StudentAssessments] Ended tests marked completed', { scanned: endedTests.size })
+    }
+  }
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI-assisted manual grading suggestion
+//
+// Faculty time is the bottleneck for descriptive papers: a 20-question
+// language test with 100 students means 2,000 answers to read and score by
+// hand. This callable lets the grading queue ask a model to propose
+// per-question marks + feedback for ONE student's pending manual questions in
+// a single call. The suggestion is cached on the attempt row
+// (aiGradingSuggestion) so repeated queue opens never re-pay the API cost,
+// and the faculty member stays in full control: the suggestion only becomes a
+// grade when they press "Publish" via gradeStudentAssessmentSubmission.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const AI_GRADING_MODELS: Record<string, string> = {
+  gemini: 'gemini-2.5-flash',
+  openai: 'gpt-4o-mini',
+  deepseek: 'deepseek-chat',
+}
+const MAX_AI_GRADED_QUESTIONS = 50
+const AI_QUESTION_TEXT_CAP = 2000
+const AI_ANSWER_TEXT_CAP = 4000
+
+interface AiQuestionItem {
+  questionId: string
+  text: string
+  marks: number
+  answer: string
+}
+
+export function extractFirstJsonObject(raw: string): unknown {
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/, '')
+  const start = cleaned.indexOf('{')
+  if (start === -1) throw new Error('no JSON object in model response')
+  let depth = 0
+  let inString = false
+  let escaped = false
+  for (let i = start; i < cleaned.length; i += 1) {
+    const char = cleaned[i]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') inString = false
+      continue
+    }
+    if (char === '"') inString = true
+    else if (char === '{') depth += 1
+    else if (char === '}' && --depth === 0) {
+      return JSON.parse(cleaned.slice(start, i + 1))
+    }
+  }
+  throw new Error('unbalanced JSON object in model response')
+}
+
+async function requestAiGradingRaw(
+  prompt: string,
+  preferred: string
+): Promise<{ raw: string; provider: string }> {
+  const order = [preferred, 'gemini', 'openai', 'deepseek'].filter(
+    (value, index, list) => list.indexOf(value) === index && value !== ''
+  )
+  let lastError: unknown = null
+  for (const provider of order) {
+    try {
+      if (provider === 'gemini') {
+        const client = geminiClient()
+        if (!client) continue
+        const model = client.getGenerativeModel({
+          model: AI_GRADING_MODELS.gemini,
+          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+        })
+        const response = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        })
+        return { raw: response.response.text(), provider }
+      }
+      const client = provider === 'openai' ? openaiClient() : deepseekClient()
+      if (!client) continue
+      const completion = await client.chat.completions.create({
+        model: AI_GRADING_MODELS[provider],
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: prompt }],
+      })
+      return { raw: completion.choices[0]?.message?.content || '', provider }
+    } catch (err) {
+      lastError = err
+      logger.warn(`[AiGrading] provider ${provider} failed`, err)
+    }
+  }
+  void lastError
+  throw new HttpsError(
+    'failed-precondition',
+    'AI grading is unavailable right now (no configured provider responded). Grade manually or try again shortly.'
+  )
+}
+
+export const suggestAssessmentGrading = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 90, minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    requireAssessmentManager(staff)
+    const assessmentId = String(request.data?.studentAssessmentId || '')
+    const requestedProvider = ['gemini', 'openai', 'deepseek'].includes(String(request.data?.provider))
+      ? String(request.data.provider)
+      : 'gemini'
+    const refresh = Boolean(request.data?.refresh)
+    if (!assessmentId || assessmentId.includes('/')) {
+      throw new HttpsError('invalid-argument', 'Attempt id is required')
+    }
+    const db = admin.firestore()
+    const attemptRef = db.collection('studentAssessments').doc(assessmentId)
+    const attemptDoc = await attemptRef.get()
+    const row = attemptDoc.data()
+    if (!attemptDoc.exists || !row) throw new HttpsError('not-found', 'Student assessment not found')
+    if (staff.role !== 'superadmin' && row.collegeId !== staff.collegeId) {
+      throw new HttpsError('permission-denied', 'Attempt belongs to another college')
+    }
+    const testId = String(row.testId || row.assessmentId || '')
+    const testDoc = testId ? await db.collection('scheduledTests').doc(testId).get() : null
+    const testForPolicy = testDoc?.data()
+    if (staff.role === 'faculty' && testForPolicy?.facultyId !== uid) {
+      throw new HttpsError('permission-denied', 'Faculty may grade only their own tests')
+    }
+    if (row.status !== 'submitted' || !row.needsManualGrading) {
+      throw new HttpsError('failed-precondition', 'Attempt is not awaiting manual grading')
+    }
+    const cached = row.aiGradingSuggestion as Record<string, unknown> | undefined
+    if (cached && !refresh) {
+      return { success: true, cached: true, suggestion: cached }
+    }
+
+    // Manual questions to grade: prefer the denormalised snippets written at
+    // submit time (zero extra reads); legacy rows fall back to the paper's
+    // question documents.
+    let items: AiQuestionItem[] = []
+    const snippets = Array.isArray(row.manualQuestionSnippets)
+      ? row.manualQuestionSnippets
+      : null
+    if (snippets && snippets.length > 0) {
+      items = snippets
+        .slice(0, MAX_AI_GRADED_QUESTIONS)
+        .map((snippet) => ({
+          questionId: String(snippet.questionId || ''),
+          text: String(snippet.text || '').slice(0, AI_QUESTION_TEXT_CAP),
+          marks: Number(snippet.marks) || 0,
+          answer: String(snippet.answerText || '').slice(0, AI_ANSWER_TEXT_CAP),
+        }))
+        .filter((item) => item.questionId)
+    } else {
+      const questions = await loadTestQuestions(testId, testForPolicy || {})
+      const answers = new Map(
+        (Array.isArray(row.answers) ? row.answers : []).map((answer: ServerAnswer) => [answer.questionId, answer])
+      )
+      const manualIds = new Set(
+        (Array.isArray(row.gradingBreakdown) ? row.gradingBreakdown : [])
+          .filter((item: admin.firestore.DocumentData) => item.isObjective === false)
+          .map((item: admin.firestore.DocumentData) => String(item.questionId))
+      )
+      items = questions
+        .filter((question) => manualIds.has(question.id))
+        .slice(0, MAX_AI_GRADED_QUESTIONS)
+        .map((question) => ({
+          questionId: question.id,
+          text: String(question.text || '').slice(0, AI_QUESTION_TEXT_CAP),
+          marks: Number(question.marks) || 0,
+          answer: answerText(question, answers.get(question.id)).slice(0, AI_ANSWER_TEXT_CAP),
+        }))
+    }
+    if (items.length === 0) {
+      throw new HttpsError('invalid-argument', 'This attempt has no manual questions to suggest grades for')
+    }
+
+    const subject = String(row.subject || testForPolicy?.subject || '')
+    const title = String(row.title || testForPolicy?.title || 'Scheduled test')
+    const questionBlock = items
+      .map((item, index) =>
+        [
+          `[${index + 1}] questionId: ${item.questionId} (maximum ${item.marks} marks)`,
+          `Question: ${item.text}`,
+          `Student answer: ${item.answer || '(not answered)'}`,
+        ].join('\n')
+      )
+      .join('\n\n')
+    const prompt = [
+      'You are an experienced exam invigilator marking short-answer and long-answer questions for a college test.',
+      'Award partial credit for partially correct, relevant or well-structured answers. Reserve full marks for answers that are clearly correct and complete.',
+      `Mark each question below from this test: "${title}"${subject ? ` (subject: ${subject})` : ''}.`,
+      'Respond with STRICT JSON only (no markdown, no commentary) in exactly this shape:',
+      '{"suggestions":[{"questionId":"<id>","marks":<number>,"feedback":"<one short sentence, max 20 words>"}],"overallFeedback":"<1-2 sentences for the student>"}',
+      '"marks" must be a number between 0 and the question maximum, in steps of 0.5.',
+      '',
+      questionBlock,
+    ].join('\n')
+
+    const { raw, provider } = await requestAiGradingRaw(prompt, requestedProvider)
+    let parsed: unknown
+    try {
+      parsed = extractFirstJsonObject(raw)
+    } catch {
+      throw new HttpsError('internal', 'The AI response could not be read. Try again.')
+    }
+    const suggestionList = Array.isArray((parsed as { suggestions?: unknown[] })?.suggestions)
+      ? (parsed as { suggestions: unknown[] }).suggestions
+      : []
+    const byId = new Map(items.map((item) => [item.questionId, item]))
+    const perQuestion = suggestionList
+      .filter((entry) => Boolean(entry) && typeof entry === 'object')
+      .map((entry) => {
+        const record = entry as Record<string, unknown>
+        const questionId = String(record.questionId || '')
+        const item = byId.get(questionId)
+        if (!item) return null
+        const rawMarks = Number(record.marks)
+        const marks = Number.isFinite(rawMarks)
+          ? Math.min(item.marks, Math.max(0, Math.round(rawMarks * 2) / 2))
+          : 0
+        const feedback = String(record.feedback || '').slice(0, 300)
+        return { questionId, marks, feedback }
+      })
+      .filter((entry): entry is { questionId: string; marks: number; feedback: string } => entry !== null)
+    if (perQuestion.length === 0) {
+      throw new HttpsError('internal', 'The AI response contained no usable suggestions. Try again.')
+    }
+    const totalMarks = Math.round(perQuestion.reduce((sum, entry) => sum + entry.marks, 0) * 100) / 100
+    const overallFeedback = String((parsed as { overallFeedback?: unknown }).overallFeedback || '').slice(0, 1000)
+    const suggestion = {
+      perQuestion,
+      totalMarks,
+      overallFeedback,
+      provider,
+      model: AI_GRADING_MODELS[provider],
+      generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }
+    await attemptRef.update({ aiGradingSuggestion: suggestion })
+    return { success: true, cached: false, suggestion }
+  }
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// College assessment-report configuration
+//
+// The pass-status categories used on test reports and Excel exports
+// ("Good to Go ≥ 70%", "Needs Improvement 50–69%", …) are a COLLEGE decision,
+// not a product constant. They live in assessmentConfigs/{collegeId} and are
+// editable by college administrators; when a college has not customised them,
+// the defaults below apply.
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PerformanceCategory {
+  label: string
+  minPercent: number
+}
+
+const DEFAULT_PERFORMANCE_CATEGORIES: PerformanceCategory[] = [
+  { label: 'Good to Go', minPercent: 70 },
+  { label: 'Needs Improvement', minPercent: 50 },
+  { label: 'Needs Training', minPercent: 0 },
+]
+
+export function parsePerformanceCategories(input: unknown): PerformanceCategory[] {
+  if (!Array.isArray(input) || input.length === 0 || input.length > 6) {
+    throw new HttpsError('invalid-argument', 'Provide between 1 and 6 status categories')
+  }
+  const categories: PerformanceCategory[] = input.map((entry, index) => {
+    const record = (entry && typeof entry === 'object' ? entry : {}) as Record<string, unknown>
+    const label = String(record.label || '').trim().slice(0, 40)
+    const minPercent = Number(record.minPercent)
+    if (!label) throw new HttpsError('invalid-argument', `Category ${index + 1} needs a label`)
+    if (!Number.isFinite(minPercent) || minPercent < 0 || minPercent > 100) {
+      throw new HttpsError('invalid-argument', `Category ${index + 1}: minimum percent must be between 0 and 100`)
+    }
+    return { label, minPercent }
+  })
+  for (let index = 1; index < categories.length; index += 1) {
+    if (categories[index].minPercent >= categories[index - 1].minPercent) {
+      throw new HttpsError('invalid-argument', 'Category minimums must be strictly decreasing — list the highest range first')
+    }
+  }
+  return categories
+}
+
+export const getAssessmentConfig = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    const collegeId = staff.role === 'superadmin' ? String(request.data?.collegeId || '') : staff.collegeId
+    if (!collegeId) throw new HttpsError('invalid-argument', 'collegeId is required')
+    const doc = await admin.firestore().collection('assessmentConfigs').doc(collegeId).get()
+    const data = doc.data()
+    const customised = Array.isArray(data?.performanceCategories) && (data.performanceCategories as unknown[]).length > 0
+    return {
+      performanceCategories: customised ? data.performanceCategories : DEFAULT_PERFORMANCE_CATEGORIES,
+      customised,
+    }
+  }
+)
+
+export const saveAssessmentConfig = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    if (!['superadmin', 'admin', 'principal', 'hod'].includes(staff.role)) {
+      throw new HttpsError('permission-denied', 'Only college administrators can change report settings')
+    }
+    if (!staff.collegeId) {
+      throw new HttpsError('invalid-argument', 'Select a college first, then save the report settings')
+    }
+    const categories = parsePerformanceCategories(request.data?.performanceCategories)
+    await admin.firestore().collection('assessmentConfigs').doc(staff.collegeId).set({
+      collegeId: staff.collegeId,
+      performanceCategories: categories,
+      updatedBy: staff.name,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true })
+    return { success: true, performanceCategories: categories }
   }
 )
