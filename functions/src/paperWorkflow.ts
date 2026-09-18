@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { COLLECTION_ROLE, normalizeRole, pickCollegeId } from './identityShared'
+import { findSchedulingProblem } from './questionTypes'
 
 interface PaperStaff {
   uid: string
@@ -142,6 +143,7 @@ interface PaperInput {
       type: string
       marks: number
       topic: string
+      options: Array<{ id: string; text: string }>
     }>
   }>
   totalQuestions: number
@@ -152,6 +154,40 @@ interface PaperInput {
   answerKeyPath?: string
   answerKeyName?: string
   answerKeyUrl?: string
+}
+
+const MAX_PAPER_OPTIONS = 10
+
+/**
+ * Normalises client-supplied options into the { id, text } shape the paper
+ * document, the Confirm sync and the scheduler all read. Accepts plain
+ * strings or { text | label } (optionally with an id). Empty/blank options
+ * are dropped; the list is capped.
+ *
+ * IMPORTANT: previously savePaper silently DROPPED options (validatePaperInput
+ * returned no options field), so every save stripped MCQ options from the
+ * stored paper and the following Confirm failed with "fewer than two options"
+ * — after which the paper was locked and the faculty could neither fix nor
+ * resubmit it. Options must survive the round-trip.
+ */
+export function normalizeQuestionOptions(value: unknown): Array<{ id: string; text: string }> {
+  if (!Array.isArray(value)) return []
+  const out: Array<{ id: string; text: string }> = []
+  for (let i = 0; i < value.length && out.length < MAX_PAPER_OPTIONS; i += 1) {
+    const raw = value[i]
+    let text = ''
+    let id = String.fromCharCode(65 + Math.min(i, 25))
+    if (typeof raw === 'string') {
+      text = raw.trim()
+    } else if (raw && typeof raw === 'object') {
+      const entry = raw as Record<string, unknown>
+      text = String(entry.text ?? entry.label ?? '').trim()
+      if (typeof entry.id === 'string' && entry.id.trim()) id = entry.id.trim().slice(0, 10)
+    }
+    if (!text) continue
+    out.push({ id, text })
+  }
+  return out
 }
 
 export function validatePaperInput(value: unknown): PaperInput {
@@ -204,7 +240,7 @@ export function validatePaperInput(value: unknown): PaperInput {
       questionCount += 1
       calculatedMarks += marks
       if (questionCount > 400) throw new HttpsError('invalid-argument', 'A paper can contain at most 400 questions')
-      return { number: questionIndex + 1, text, type, marks, topic }
+      return { number: questionIndex + 1, text, type, marks, topic, options: normalizeQuestionOptions(question.options) }
     })
     return {
       id: boundedString(section.id, 'section id', 100) || `section-${sectionIndex + 1}`,
@@ -306,6 +342,35 @@ export interface PaperReadinessFlags {
  *   onlineReady — at least one structured question exists (schedulable online)
  *   bankReady   — question bank documents are linked via questionIds
  */
+/**
+ * Walks a validated paper's sections in order and returns the FIRST question
+ * the online engine cannot schedule (via the SAME findSchedulingProblem used
+ * by the scheduler and Confirm), or null when the paper is schedulable.
+ *
+ * savePaper uses this to gate every NON-draft action: a paper that would fail
+ * Confirm (e.g. an MCQ with fewer than two options) must stay editable
+ * instead of being saved-and-locked and then failing the bank sync.
+ */
+export function firstPaperSchedulingProblem(
+  sections: Array<{ questions: Array<{ text: string; type: string; marks: number; options: Array<{ id: string; text: string }> }> }>
+): string | null {
+  let order = 0
+  for (const section of sections || []) {
+    for (const question of section.questions || []) {
+      order += 1
+      const problem = findSchedulingProblem({
+        order,
+        text: question.text,
+        type: question.type,
+        marks: question.marks,
+        options: question.options || [],
+      })
+      if (problem) return problem
+    }
+  }
+  return null
+}
+
 export function paperReadiness(paper: {
   filePath?: unknown
   sections?: unknown
@@ -397,6 +462,16 @@ export const savePaper = onCall(
     const answerKeyPath = uploadedKey?.path || paper.answerKeyPath || existing?.answerKeyPath
     if (action !== 'draft' && paper.totalQuestions === 0 && !filePath) {
       throw new HttpsError('failed-precondition', 'Add a paper file or at least one question')
+    }
+    // A non-draft save locks the paper out of editing (it enters the review
+    // queue / becomes published). Never lock a paper that cannot be scheduled
+    // — surface the exact problem now, while it is still fixable, instead of
+    // letting Confirm fail after the lock.
+    if (action !== 'draft' && paper.totalQuestions > 0) {
+      const problem = firstPaperSchedulingProblem(paper.sections)
+      if (problem) {
+        throw new HttpsError('failed-precondition', problem)
+      }
     }
     const preservedQuestionIds = Array.isArray(existing?.questionIds) ? existing.questionIds : []
     const preservedLinkedIds = Array.isArray(existing?.linkedQuestionIds) ? existing.linkedQuestionIds : []
@@ -587,6 +662,81 @@ export const submitPaperForReview = onCall(
         action: 'submit',
         fromStatus: currentStatus,
         toStatus: 'submitted-for-approval',
+        performedBy: uid,
+        performedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    })
+    return { success: true }
+  }
+)
+
+// ─── reopenPaperForEditing — move a locked paper back to draft ─────────────
+//
+// Once a paper is submitted / self-published / reviewer-approved it is locked
+// from savePaper (canEditExistingPaper). If the author then finds a fixable
+// defect (the classic case: an MCQ that lost its options), the only way back
+// is to re-open it as a draft. This is server-authoritative, with an audit
+// entry, and is the recovery path the editor's "Re-open for editing" button
+// calls. A reviewer may also re-open a reviewer-approved paper.
+
+const AUTHOR_REOPEN_STATES = ['submitted-for-approval', 'pending-verification', 'not-required']
+const REVIEWER_REOPEN_STATES = [...AUTHOR_REOPEN_STATES, 'approved-by-hod']
+
+/** Gate for reopenPaperForEditing, extracted for unit tests. */
+export function reopenReadiness(
+  paper: { verificationStatus?: unknown; status?: unknown } | undefined,
+  staff: { role: string },
+  uid: string,
+  createdBy: unknown
+): { currentStatus: string; allowed: boolean } {
+  const currentStatus = String(paper?.verificationStatus || paper?.status || 'draft')
+  const isReviewer = REVIEW_ROLES.includes(staff.role) || staff.role === 'superadmin'
+  const isAuthor = String(createdBy || '') === uid
+  const allowedStates = isReviewer ? REVIEWER_REOPEN_STATES : AUTHOR_REOPEN_STATES
+  const allowed = allowedStates.includes(currentStatus) && (isReviewer || isAuthor)
+  return { currentStatus, allowed }
+}
+
+export const reopenPaperForEditing = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 60, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolvePaperStaff(uid, request.auth?.token || {})
+    const paperId = String(request.data?.paperId || '')
+    if (!paperId || paperId.includes('/') || paperId.length > 200) {
+      throw new HttpsError('invalid-argument', 'Paper identifier is required')
+    }
+    const db = admin.firestore()
+    const ref = db.collection('papers').doc(paperId)
+    const auditRef = db.collection('paperReviewAudit').doc()
+    await db.runTransaction(async (transaction) => {
+      const current = await transaction.get(ref)
+      const paper = current.data()
+      if (!current.exists || !paper) throw new HttpsError('not-found', 'Paper not found')
+      if (staff.role !== 'superadmin' && paper.collegeId !== staff.collegeId) {
+        throw new HttpsError('permission-denied', 'Paper belongs to another college')
+      }
+      const { currentStatus, allowed } = reopenReadiness(paper, staff, uid, paper.createdBy)
+      if (!allowed) {
+        throw new HttpsError(
+          'failed-precondition',
+          'This paper cannot be re-opened in its current state'
+        )
+      }
+      transaction.update(ref, {
+        status: 'draft',
+        verificationStatus: 'draft',
+        publishedAt: null,
+        submittedAt: null,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+      transaction.create(auditRef, {
+        paperId,
+        collegeId: paper.collegeId,
+        action: 'reopen',
+        fromStatus: currentStatus,
+        toStatus: 'draft',
         performedBy: uid,
         performedAt: admin.firestore.FieldValue.serverTimestamp(),
       })

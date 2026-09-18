@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   X, UploadCloud, FileText, Plus, Trash2, ArrowUp, ArrowDown, Loader2,
   AlertTriangle, Save, Send, Paperclip, CheckCircle2, ShieldCheck,
-  Sparkles, Printer, Info, Layers, RefreshCw,
+  Sparkles, Printer, Info, Layers, RefreshCw, Undo2,
 } from 'lucide-react';
 import { collection, doc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -213,29 +213,38 @@ export default function PaperUploadEditor({
       topic?: string;
       chapter?: string;
       options?: unknown[];
+      questionId?: string;
+      question?: RawQuestion;
     };
     type RawSection = { name?: string; title?: string; questions?: RawQuestion[] };
+    // AI-generated papers store embedded questions as { questionId, question }
+    // wrappers — unwrap so the editor pre-fills text/type/marks/options.
+    const unwrap = (q: RawQuestion): RawQuestion =>
+      q.question && typeof q.question === 'object' && !Array.isArray(q.question)
+        ? ({ ...q.question, questionId: q.questionId } as RawQuestion)
+        : q;
     const rawSections: RawSection[] = Array.isArray(paper?.sections) ? (paper!.sections as RawSection[]) : [];
 
     const loadedSections: EditablePaperSection[] = rawSections.length > 0
       ? rawSections.map((section, index) => ({
           rowId: nextSectionRowId(),
           name: String(section.name || section.title || `Section ${index + 1}`),
-          questions: (Array.isArray(section.questions) ? section.questions : []).map((q) =>
-            newQ({
-              text: q.text || q.questionText || '',
-              type: q.type || 'long_answer',
-              marks: Number(q.marks) || 0,
-              topic: q.topic || q.chapter || '',
-              options: Array.isArray(q.options)
-                ? q.options.map((option) =>
+          questions: (Array.isArray(section.questions) ? section.questions : []).map((q) => {
+            const r = unwrap(q);
+            return newQ({
+              text: r.text || r.questionText || '',
+              type: r.type || 'long_answer',
+              marks: Number(r.marks) || 0,
+              topic: r.topic || r.chapter || '',
+              options: Array.isArray(r.options)
+                ? r.options.map((option) =>
                     typeof option === 'string'
                       ? option
                       : String((option as Record<string, unknown>)?.text || (option as Record<string, unknown>)?.label || '')
                   )
                 : undefined,
-            })
-          ),
+            });
+          }),
         }))
       : [];
     if (loadedSections.length === 0 && Array.isArray(paper?.questions) && paper!.questions!.length > 0) {
@@ -416,6 +425,30 @@ export default function PaperUploadEditor({
     }
   };
 
+  // Once a non-draft save succeeds the paper is locked out of savePaper. If
+  // the bank sync (Confirm) then failed — or the faculty saved again and hit
+  // the lock — the only way back is the server re-open, which drops the paper
+  // to draft so the fixable defect can be corrected and re-saved.
+  const [reopened, setReopened] = useState(false);
+  const handleReopen = async () => {
+    if (!form.id) return;
+    setBusy(true);
+    setConfirmError('');
+    setError('');
+    try {
+      const reopen = httpsCallable<{ paperId: string }, { success: boolean }>(
+        functions,
+        'reopenPaperForEditing'
+      );
+      await reopen({ paperId: form.id });
+      setReopened(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not re-open the paper for editing.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const persist = async (action: 'draft' | 'save' | 'submitted' | 'published') => {
     if (!collegeId || !userId) {
       setError('Missing account or college — please sign in again.');
@@ -561,14 +594,26 @@ export default function PaperUploadEditor({
               <span>{error}</span>
             </div>
           )}
+          {reopened && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                Paper re-opened as a draft — you can edit the questions above and save again.
+                <span className="block text-xs opacity-80 mt-1">
+                  Saved options are now kept, so a re-save will include them.
+                </span>
+              </span>
+            </div>
+          )}
           {confirmError && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>
                 {confirmError}
                 <span className="block text-xs opacity-80 mt-1">
-                  The paper itself was saved. Use “Retry structure confirm” below to sync the questions to the bank
-                  — do not save the paper again.
+                  The paper was saved and is now locked from editing. If you changed any question
+                  above, use “Re-open for editing” below and save again. If the structure above is
+                  already correct, “Retry structure confirm” will sync it to the bank.
                 </span>
               </span>
             </div>
@@ -1048,6 +1093,17 @@ export default function PaperUploadEditor({
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Retry structure confirm
+            </button>
+          )}
+          {form.id && (confirmError || /cannot be edited/i.test(error)) && (
+            <button
+              onClick={() => void handleReopen()}
+              disabled={busy}
+              title="Drop this paper back to draft so you can fix it and save again"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 disabled:opacity-40"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4" />}
+              Re-open for editing
             </button>
           )}
           <button

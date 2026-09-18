@@ -78,7 +78,7 @@ import {
   publishGradeRecords,
   deleteDraftGradeRecords,
 } from './gradeRecords'
-import { savePaper, reviewPaper, submitPaperForReview, getPaperFileDownload, deletePaper } from './paperWorkflow'
+import { savePaper, reviewPaper, submitPaperForReview, reopenPaperForEditing, getPaperFileDownload, deletePaper } from './paperWorkflow'
 import { parsePaperFile, confirmPaperStructure } from './paperParsing'
 // ─── Slice 2 "Delivery Spine" — timetable → class sessions ───
 import {
@@ -249,6 +249,7 @@ export {
   savePaper,
   reviewPaper,
   submitPaperForReview,
+  reopenPaperForEditing,
   getPaperFileDownload,
   deletePaper,
   parsePaperFile,

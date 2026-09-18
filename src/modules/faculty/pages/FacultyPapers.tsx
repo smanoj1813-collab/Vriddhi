@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft, FileText, CheckCircle, XCircle, AlertTriangle,
   Eye, Upload, Clock, ChevronRight, Download, Send,
-  FileUp, BookOpen, Calendar, Printer, Globe, Database, Trash2
+  FileUp, BookOpen, Calendar, Printer, Globe, Database, Trash2, Undo2
 } from 'lucide-react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/Firebase/config'
@@ -433,6 +433,26 @@ export default function FacultyPapers() {
     { success: boolean }
   >(functions, 'reviewPaper')
 
+  // Author recovery path: a submitted paper is locked out of the editor, so
+  // withdrawing it (server-side re-open to draft) is the only way to fix a
+  // defect found after submission.
+  const withdrawSubmission = async (paperId: string) => {
+    try {
+      const reopen = httpsCallable<{ paperId: string }, { success: boolean }>(
+        functions,
+        'reopenPaperForEditing'
+      )
+      await reopen({ paperId })
+      setShowToast('Submission withdrawn — the paper is back to draft.')
+      setTimeout(() => setShowToast(''), 3000)
+      await loadData()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not withdraw the submission.'
+      setShowToast(msg)
+      setTimeout(() => setShowToast(''), 5000)
+    }
+  }
+
   const handlePaperFileDownload = async (paperId: string) => {
     try {
       const getDownload = httpsCallable<
@@ -761,6 +781,15 @@ export default function FacultyPapers() {
                     <span className="flex items-center gap-2 text-sm text-amber-500">
                       <Clock className="w-4 h-4" /> Awaiting authorized review
                     </span>
+                  )}
+                  {isAuthor && !canReview && (paper.verificationStatus === 'pending-verification' || paper.verificationStatus === 'submitted-for-approval') && (
+                    <button
+                      onClick={() => void withdrawSubmission(paper.id)}
+                      title="Move this paper back to draft so you can fix it and submit again"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 transition-all"
+                    >
+                      <Undo2 className="w-3.5 h-3.5" /> Withdraw submission
+                    </button>
                   )}
                   {(paper.verificationStatus === 'verified' || paper.verificationStatus === 'approved-by-hod') && (
                     <span className="flex items-center gap-2 text-sm text-emerald-400">

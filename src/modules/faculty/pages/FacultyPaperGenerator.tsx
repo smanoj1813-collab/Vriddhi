@@ -30,6 +30,7 @@ interface FacultyQuestion {
   topic: string
   difficulty: string
   questionType: string
+  options?: string[] | Array<{ id: string; text: string }>
 }
 
 interface TestPaperQuestion {
@@ -498,6 +499,10 @@ export default function FacultyPaperGenerator() {
                   type: question.questionType === 'MCQ' ? 'mcq' : question.questionType === 'Short Answer' ? 'short' : 'long',
                   marks: Number(question.marks) || 0,
                   topic: question.topic || '',
+                  // Options must travel with the save — savePaper stores what it
+                  // is given (and now gates on it). Dropping options here would
+                  // strip them from the stored paper and fail the Confirm sync.
+                  ...(question.options && question.options.length > 0 ? { options: question.options } : {}),
                 })),
               }))
               .filter((s) => s.questions.length > 0),

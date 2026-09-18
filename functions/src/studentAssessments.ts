@@ -132,9 +132,15 @@ async function resolveStaff(uid: string, token: Record<string, unknown>): Promis
 // shared with the paper pipeline); it is imported above.
 
 function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order: number): ServerQuestion {
-  const questionType = canonicalQuestionType(data.type || data.questionType)
-  let options = Array.isArray(data.options)
-    ? data.options.map((option: unknown, index: number) => {
+  // AI-generated papers store embedded questions as { questionId, question }
+  // wrappers — unwrap so text/options/type normalise from the inner object
+  // (bank documents and editor papers are flat and are unaffected).
+  const raw = (data?.question && typeof data.question === 'object' && !Array.isArray(data.question))
+    ? (data.question as admin.firestore.DocumentData)
+    : data
+  const questionType = canonicalQuestionType(raw.type || raw.questionType)
+  let options = Array.isArray(raw.options)
+    ? raw.options.map((option: unknown, index: number) => {
         if (typeof option === 'string') {
           return { id: `opt-${index}`, text: option }
         }
@@ -154,25 +160,25 @@ function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order
       { id: 'D', text: 'Assertion is false but Reason is true' },
     ]
   }
-  const questionId = String(data.questionId || data.id || id)
+  const questionId = String(data.questionId || raw.questionId || raw.id || id)
   return {
     id,
     questionId,
-    order: Number(data.order) || order,
-    text: String(data.text || data.questionText || data.content || ''),
+    order: Number(raw.order) || order,
+    text: String(raw.text || raw.questionText || raw.content || ''),
     type: questionType,
-    marks: Math.max(0, Number(data.marks) || 1),
-    negativeMarks: Math.max(0, Number(data.negativeMarks) || 0),
+    marks: Math.max(0, Number(raw.marks) || 1),
+    negativeMarks: Math.max(0, Number(raw.negativeMarks) || 0),
     options,
-    ...(data.correctAnswer === undefined ? {} : { correctAnswer: data.correctAnswer }),
-    ...(data.tolerance === undefined ? {} : { tolerance: Math.max(0, Number(data.tolerance) || 0) }),
-    ...(data.explanation ? { explanation: String(data.explanation) } : {}),
-    ...(data.sectionId ? { sectionId: String(data.sectionId) } : {}),
-    ...(data.sectionName ? { sectionName: String(data.sectionName) } : {}),
-    ...(data.difficulty ? { difficulty: String(data.difficulty) } : {}),
-    ...(data.imageUrl ? { imageUrl: String(data.imageUrl) } : {}),
-    ...(data.caseText ? { caseText: String(data.caseText) } : {}),
-    ...(Array.isArray(data.matchPairs) ? { matchPairs: data.matchPairs } : {}),
+    ...(raw.correctAnswer === undefined ? {} : { correctAnswer: raw.correctAnswer }),
+    ...(raw.tolerance === undefined ? {} : { tolerance: Math.max(0, Number(raw.tolerance) || 0) }),
+    ...(raw.explanation ? { explanation: String(raw.explanation) } : {}),
+    ...(raw.sectionId ? { sectionId: String(raw.sectionId) } : {}),
+    ...(raw.sectionName ? { sectionName: String(raw.sectionName) } : {}),
+    ...(raw.difficulty ? { difficulty: String(raw.difficulty) } : {}),
+    ...(raw.imageUrl ? { imageUrl: String(raw.imageUrl) } : {}),
+    ...(raw.caseText ? { caseText: String(raw.caseText) } : {}),
+    ...(Array.isArray(raw.matchPairs) ? { matchPairs: raw.matchPairs } : {}),
   }
 }
 
