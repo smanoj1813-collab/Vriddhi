@@ -9,6 +9,7 @@ import {
   type ServerQuestion,
 } from './assessmentGrading'
 import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
+import { geminiClient, openaiClient, deepseekClient } from './config/aiProviders'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
@@ -1652,6 +1653,25 @@ export const gradeStudentAssessmentSubmission = onCall(
       ? null
       : Number(request.data.marksObtained)
     const feedback = String(request.data?.feedback || '').trim()
+    // Optional per-question manual marks (from the grading queue's
+    // per-question quick-mark UI). The sum must equal the manual total;
+    // per-question caps are validated against the denormalised snippets
+    // when the row carries them.
+    const rawManualMarks: Array<Record<string, unknown>> | null = Array.isArray(request.data?.manualMarks)
+      ? (request.data.manualMarks as Array<Record<string, unknown>>)
+      : null
+    const manualMarks = rawManualMarks
+      ? rawManualMarks
+          .filter((entry) => Boolean(entry) && typeof entry === 'object')
+          .map((entry) => ({
+            questionId: String(entry.questionId || ''),
+            marks: Number(entry.marks),
+          }))
+          .filter((entry) => entry.questionId.length > 0 && Number.isFinite(entry.marks) && entry.marks >= 0)
+      : null
+    if (manualMarks !== null && (manualMarks.length === 0 || manualMarks.length > 400)) {
+      throw new HttpsError('invalid-argument', 'Per-question marks list is invalid')
+    }
     if (
       !assessmentId
       || assessmentId.includes('/')
@@ -1694,6 +1714,28 @@ export const gradeStudentAssessmentSubmission = onCall(
       if (manualScore < 0 || manualScore > manualMax) {
         throw new HttpsError('invalid-argument', `Final score is inconsistent with the objective score; manual component must be between 0 and ${manualMax}`)
       }
+      let manualMarksByQuestion: Map<string, number> | null = null
+      if (manualMarks !== null) {
+        const perQuestionMax = new Map<string, number>()
+        if (Array.isArray(row.manualQuestionSnippets)) {
+          for (const snippet of row.manualQuestionSnippets) {
+            perQuestionMax.set(String(snippet.questionId || ''), Number(snippet.marks) || 0)
+          }
+        }
+        const sum = manualMarks.reduce((acc, entry) => acc + entry.marks, 0)
+        if (Math.abs(sum - manualScore) > 0.01) {
+          throw new HttpsError('invalid-argument', 'Per-question marks do not add up to the manual total')
+        }
+        if (perQuestionMax.size > 0) {
+          for (const entry of manualMarks) {
+            const max = perQuestionMax.get(entry.questionId)
+            if (max !== undefined && entry.marks > max + 0.001) {
+              throw new HttpsError('invalid-argument', `Marks for one question exceed its maximum of ${max}`)
+            }
+          }
+        }
+        manualMarksByQuestion = new Map(manualMarks.map((entry) => [entry.questionId, entry.marks]))
+      }
       const rawMarks = Math.max(0, autoScore + manualScore)
       const marksObtained = Math.round(rawMarks * penaltyFactor * 100) / 100
       const percentage = totalMarks > 0
@@ -1709,9 +1751,13 @@ export const gradeStudentAssessmentSubmission = onCall(
         gradePoint: derived.gradePoint,
         facultyFeedback: feedback,
         gradingBreakdown: Array.isArray(row.gradingBreakdown)
-          ? row.gradingBreakdown.map((item: admin.firestore.DocumentData) =>
-              item.status === 'pending_manual' ? { ...item, status: 'manual_graded' } : item
-            )
+          ? row.gradingBreakdown.map((item: admin.firestore.DocumentData) => {
+              if (item.status !== 'pending_manual') return item
+              const manualMarksValue = manualMarksByQuestion
+                ? manualMarksByQuestion.get(String(item.questionId)) ?? 0
+                : null
+              return { ...item, status: 'manual_graded', marksObtained: manualMarksValue }
+            })
           : [],
         needsManualGrading: false,
         gradedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1823,6 +1869,7 @@ export const listPendingAssessmentSubmissions = onCall(
                 marks: question.marks,
                 answer: answerText(question, answers.get(question.id)),
               })),
+          aiSuggestion: (row.aiGradingSuggestion as Record<string, unknown> | undefined) || null,
         }
       }),
     }
@@ -2138,5 +2185,248 @@ export const autoSubmitExpiredStudentTests = onSchedule(
     } else if (attempts.size > 0) {
       logger.info('[StudentAssessments] Expired attempts finalized', { scanned: attempts.size })
     }
+  }
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI-assisted manual grading suggestion
+//
+// Faculty time is the bottleneck for descriptive papers: a 20-question
+// language test with 100 students means 2,000 answers to read and score by
+// hand. This callable lets the grading queue ask a model to propose
+// per-question marks + feedback for ONE student's pending manual questions in
+// a single call. The suggestion is cached on the attempt row
+// (aiGradingSuggestion) so repeated queue opens never re-pay the API cost,
+// and the faculty member stays in full control: the suggestion only becomes a
+// grade when they press "Publish" via gradeStudentAssessmentSubmission.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const AI_GRADING_MODELS: Record<string, string> = {
+  gemini: 'gemini-2.5-flash',
+  openai: 'gpt-4o-mini',
+  deepseek: 'deepseek-chat',
+}
+const MAX_AI_GRADED_QUESTIONS = 50
+const AI_QUESTION_TEXT_CAP = 2000
+const AI_ANSWER_TEXT_CAP = 4000
+
+interface AiQuestionItem {
+  questionId: string
+  text: string
+  marks: number
+  answer: string
+}
+
+export function extractFirstJsonObject(raw: string): unknown {
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/, '')
+  const start = cleaned.indexOf('{')
+  if (start === -1) throw new Error('no JSON object in model response')
+  let depth = 0
+  let inString = false
+  let escaped = false
+  for (let i = start; i < cleaned.length; i += 1) {
+    const char = cleaned[i]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') inString = false
+      continue
+    }
+    if (char === '"') inString = true
+    else if (char === '{') depth += 1
+    else if (char === '}' && --depth === 0) {
+      return JSON.parse(cleaned.slice(start, i + 1))
+    }
+  }
+  throw new Error('unbalanced JSON object in model response')
+}
+
+async function requestAiGradingRaw(
+  prompt: string,
+  preferred: string
+): Promise<{ raw: string; provider: string }> {
+  const order = [preferred, 'gemini', 'openai', 'deepseek'].filter(
+    (value, index, list) => list.indexOf(value) === index && value !== ''
+  )
+  let lastError: unknown = null
+  for (const provider of order) {
+    try {
+      if (provider === 'gemini') {
+        const client = geminiClient()
+        if (!client) continue
+        const model = client.getGenerativeModel({
+          model: AI_GRADING_MODELS.gemini,
+          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+        })
+        const response = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        })
+        return { raw: response.response.text(), provider }
+      }
+      const client = provider === 'openai' ? openaiClient() : deepseekClient()
+      if (!client) continue
+      const completion = await client.chat.completions.create({
+        model: AI_GRADING_MODELS[provider],
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'user', content: prompt }],
+      })
+      return { raw: completion.choices[0]?.message?.content || '', provider }
+    } catch (err) {
+      lastError = err
+      logger.warn(`[AiGrading] provider ${provider} failed`, err)
+    }
+  }
+  void lastError
+  throw new HttpsError(
+    'failed-precondition',
+    'AI grading is unavailable right now (no configured provider responded). Grade manually or try again shortly.'
+  )
+}
+
+export const suggestAssessmentGrading = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 90, minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    requireAssessmentManager(staff)
+    const assessmentId = String(request.data?.studentAssessmentId || '')
+    const requestedProvider = ['gemini', 'openai', 'deepseek'].includes(String(request.data?.provider))
+      ? String(request.data.provider)
+      : 'gemini'
+    const refresh = Boolean(request.data?.refresh)
+    if (!assessmentId || assessmentId.includes('/')) {
+      throw new HttpsError('invalid-argument', 'Attempt id is required')
+    }
+    const db = admin.firestore()
+    const attemptRef = db.collection('studentAssessments').doc(assessmentId)
+    const attemptDoc = await attemptRef.get()
+    const row = attemptDoc.data()
+    if (!attemptDoc.exists || !row) throw new HttpsError('not-found', 'Student assessment not found')
+    if (staff.role !== 'superadmin' && row.collegeId !== staff.collegeId) {
+      throw new HttpsError('permission-denied', 'Attempt belongs to another college')
+    }
+    const testId = String(row.testId || row.assessmentId || '')
+    const testDoc = testId ? await db.collection('scheduledTests').doc(testId).get() : null
+    const testForPolicy = testDoc?.data()
+    if (staff.role === 'faculty' && testForPolicy?.facultyId !== uid) {
+      throw new HttpsError('permission-denied', 'Faculty may grade only their own tests')
+    }
+    if (row.status !== 'submitted' || !row.needsManualGrading) {
+      throw new HttpsError('failed-precondition', 'Attempt is not awaiting manual grading')
+    }
+    const cached = row.aiGradingSuggestion as Record<string, unknown> | undefined
+    if (cached && !refresh) {
+      return { success: true, cached: true, suggestion: cached }
+    }
+
+    // Manual questions to grade: prefer the denormalised snippets written at
+    // submit time (zero extra reads); legacy rows fall back to the paper's
+    // question documents.
+    let items: AiQuestionItem[] = []
+    const snippets = Array.isArray(row.manualQuestionSnippets)
+      ? row.manualQuestionSnippets
+      : null
+    if (snippets && snippets.length > 0) {
+      items = snippets
+        .slice(0, MAX_AI_GRADED_QUESTIONS)
+        .map((snippet) => ({
+          questionId: String(snippet.questionId || ''),
+          text: String(snippet.text || '').slice(0, AI_QUESTION_TEXT_CAP),
+          marks: Number(snippet.marks) || 0,
+          answer: String(snippet.answerText || '').slice(0, AI_ANSWER_TEXT_CAP),
+        }))
+        .filter((item) => item.questionId)
+    } else {
+      const questions = await loadTestQuestions(testId, testForPolicy || {})
+      const answers = new Map(
+        (Array.isArray(row.answers) ? row.answers : []).map((answer: ServerAnswer) => [answer.questionId, answer])
+      )
+      const manualIds = new Set(
+        (Array.isArray(row.gradingBreakdown) ? row.gradingBreakdown : [])
+          .filter((item: admin.firestore.DocumentData) => item.isObjective === false)
+          .map((item: admin.firestore.DocumentData) => String(item.questionId))
+      )
+      items = questions
+        .filter((question) => manualIds.has(question.id))
+        .slice(0, MAX_AI_GRADED_QUESTIONS)
+        .map((question) => ({
+          questionId: question.id,
+          text: String(question.text || '').slice(0, AI_QUESTION_TEXT_CAP),
+          marks: Number(question.marks) || 0,
+          answer: answerText(question, answers.get(question.id)).slice(0, AI_ANSWER_TEXT_CAP),
+        }))
+    }
+    if (items.length === 0) {
+      throw new HttpsError('invalid-argument', 'This attempt has no manual questions to suggest grades for')
+    }
+
+    const subject = String(row.subject || testForPolicy?.subject || '')
+    const title = String(row.title || testForPolicy?.title || 'Scheduled test')
+    const questionBlock = items
+      .map((item, index) =>
+        [
+          `[${index + 1}] questionId: ${item.questionId} (maximum ${item.marks} marks)`,
+          `Question: ${item.text}`,
+          `Student answer: ${item.answer || '(not answered)'}`,
+        ].join('\n')
+      )
+      .join('\n\n')
+    const prompt = [
+      'You are an experienced exam invigilator marking short-answer and long-answer questions for a college test.',
+      'Award partial credit for partially correct, relevant or well-structured answers. Reserve full marks for answers that are clearly correct and complete.',
+      `Mark each question below from this test: "${title}"${subject ? ` (subject: ${subject})` : ''}.`,
+      'Respond with STRICT JSON only (no markdown, no commentary) in exactly this shape:',
+      '{"suggestions":[{"questionId":"<id>","marks":<number>,"feedback":"<one short sentence, max 20 words>"}],"overallFeedback":"<1-2 sentences for the student>"}',
+      '"marks" must be a number between 0 and the question maximum, in steps of 0.5.',
+      '',
+      questionBlock,
+    ].join('\n')
+
+    const { raw, provider } = await requestAiGradingRaw(prompt, requestedProvider)
+    let parsed: unknown
+    try {
+      parsed = extractFirstJsonObject(raw)
+    } catch {
+      throw new HttpsError('internal', 'The AI response could not be read. Try again.')
+    }
+    const suggestionList = Array.isArray((parsed as { suggestions?: unknown[] })?.suggestions)
+      ? (parsed as { suggestions: unknown[] }).suggestions
+      : []
+    const byId = new Map(items.map((item) => [item.questionId, item]))
+    const perQuestion = suggestionList
+      .filter((entry) => Boolean(entry) && typeof entry === 'object')
+      .map((entry) => {
+        const record = entry as Record<string, unknown>
+        const questionId = String(record.questionId || '')
+        const item = byId.get(questionId)
+        if (!item) return null
+        const rawMarks = Number(record.marks)
+        const marks = Number.isFinite(rawMarks)
+          ? Math.min(item.marks, Math.max(0, Math.round(rawMarks * 2) / 2))
+          : 0
+        const feedback = String(record.feedback || '').slice(0, 300)
+        return { questionId, marks, feedback }
+      })
+      .filter((entry): entry is { questionId: string; marks: number; feedback: string } => entry !== null)
+    if (perQuestion.length === 0) {
+      throw new HttpsError('internal', 'The AI response contained no usable suggestions. Try again.')
+    }
+    const totalMarks = Math.round(perQuestion.reduce((sum, entry) => sum + entry.marks, 0) * 100) / 100
+    const overallFeedback = String((parsed as { overallFeedback?: unknown }).overallFeedback || '').slice(0, 1000)
+    const suggestion = {
+      perQuestion,
+      totalMarks,
+      overallFeedback,
+      provider,
+      model: AI_GRADING_MODELS[provider],
+      generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }
+    await attemptRef.update({ aiGradingSuggestion: suggestion })
+    return { success: true, cached: false, suggestion }
   }
 )

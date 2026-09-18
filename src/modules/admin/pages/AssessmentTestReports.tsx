@@ -16,12 +16,12 @@ export default function AssessmentTestReportsPage() {
   return (
     <Box sx={{ minHeight: '100%', bgcolor: 'background.default' }}>
       <Box sx={{ px: { xs: 2, md: 3 }, pt: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>My tests</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Assessments</Typography>
         <Typography color="text.secondary">
           All scheduled tests for this college — completion status, student result reports, and manual grading.
         </Typography>
         <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mt: 2 }}>
-          <Tab label="My tests" />
+          <Tab label="All tests" />
           <Tab label={`Manual grading${pendingCount ? ` (${pendingCount})` : ''}`} />
         </Tabs>
       </Box>
