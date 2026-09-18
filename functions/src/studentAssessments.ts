@@ -1517,6 +1517,12 @@ export const scheduleAssessmentTest = onCall(
       collegeId,
       facultyId: uid,
       facultyName: staff.name,
+      // Cohort the faculty selected while scheduling. 'public' visibility
+      // still shows the test to every student in the college; these fields
+      // act as the fallback filter for 'selected' tests and are displayed on
+      // the faculty list and report.
+      branch: String(input.branch || '').trim().slice(0, 100),
+      batch: String(input.batch || '').trim().slice(0, 100),
       startDateTime: admin.firestore.Timestamp.fromDate(start),
       scheduledAt: admin.firestore.Timestamp.fromDate(start),
       endDateTime: admin.firestore.Timestamp.fromDate(end),
@@ -1896,6 +1902,8 @@ export const getAssessmentTestReport = onCall(
         subject: String(test.subject || ''),
         facultyId: String(test.facultyId || ''),
         facultyName: String(test.facultyName || ''),
+        branch: String(test.branch || ''),
+        batch: String(test.batch || ''),
         status: String(test.status || 'scheduled'),
         startDateTime: iso(test.startDateTime),
         endDateTime: iso(test.endDateTime),

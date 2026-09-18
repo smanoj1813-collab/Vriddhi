@@ -156,6 +156,9 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
           <Typography variant="h6" sx={{ fontWeight: 700 }}>{test.title || 'Test report'}</Typography>
           <Typography variant="body2" color="text.secondary">
             {test.subject}
+            {[test.branch, test.batch].filter(Boolean).length > 0
+              ? ` · ${[test.branch, test.batch].filter(Boolean).join(' · ')}`
+              : ''}
             {test.facultyName ? ` · by ${test.facultyName}` : ''} · {test.totalQuestions} questions · {test.totalMarks} marks · {fmtDateTime(test.startDateTime)} – {fmtDateTime(test.endDateTime)}
           </Typography>
         </Box>
@@ -326,6 +329,8 @@ export default function AssessmentTestReports({ showScheduleHint = false }: { sh
                     {fmtDateTime(test.startDateTime)} – {fmtDateTime(test.endDateTime)}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                    {test.branch && <Chip size="small" label={test.branch} />}
+                    {test.batch && <Chip size="small" label={`Batch ${test.batch}`} />}
                     {test.enableProctoring && <Chip size="small" label="Proctored" color="warning" />}
                     {Number(test.maxTabSwitches) > 0 && <Chip size="small" label={`Max ${test.maxTabSwitches} tab switches`} />}
                     {(test.shuffleQuestions || test.shuffleSections || test.shuffleOptions) && <Chip size="small" label="Shuffled" />}

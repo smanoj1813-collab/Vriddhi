@@ -415,6 +415,7 @@ export interface ScheduleTestInput {
   paperId: string
   title: string
   subject?: string
+  branch?: string
   batch?: string
   description?: string
   scheduledAt?: string
@@ -506,6 +507,7 @@ export interface ScheduledTest {
   createdBy: string
   facultyId?: string
   facultyName?: string
+  branch?: string
   // Server-maintained progress counters (incremented on register/start/submit/
   // grade) — the faculty "My tests" list reads these, zero extra queries.
   totalRegistered?: number
@@ -526,6 +528,8 @@ export interface AssessmentTestReportTest {
   title: string
   subject: string
   facultyName?: string
+  branch?: string
+  batch?: string
   status: string
   startDateTime: string
   endDateTime: string

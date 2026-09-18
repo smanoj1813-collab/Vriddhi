@@ -1,7 +1,7 @@
 // src/modules/faculty/components/TestScheduler.tsx
 // FIXED: usePapers and useScheduledTests imported from useAssessment (they exist there)
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box, Typography, Button, Stack, Card, CardContent, TextField, Select, MenuItem,
   FormControl, InputLabel, Chip, IconButton, Dialog, DialogTitle, DialogContent,
@@ -71,6 +71,11 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   const [startDateTime, setStartDateTime] = useState<Date | null>(new Date());
   const [endDateTime, setEndDateTime] = useState<Date | null>(new Date(Date.now() + 3600000));
   const [durationMinutes, setDurationMinutes] = useState(30);
+  // Cohort the test is labelled for (optional). 'public' visibility still
+  // shows the test to every student in the college — these are metadata that
+  // also act as the fallback filter for 'selected' tests.
+  const [branch, setBranch] = useState('');
+  const [batch, setBatch] = useState('');
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
   const [lateSubmissionPenalty, setLateSubmissionPenalty] = useState(0);
   const [enableProctoring, setEnableProctoring] = useState(false);
@@ -154,6 +159,16 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
       .finally(() => { if (!cancelled) setTargetsLoading(false); });
     return () => { cancelled = true; };
   }, [collegeId]);
+
+  // Distinct branch / batch values present in the college, for the selectors.
+  const branchOptions = useMemo(
+    () => [...new Set(availableStudents.map((s) => s.branch).filter(Boolean))].sort(),
+    [availableStudents],
+  );
+  const batchOptions = useMemo(
+    () => [...new Set(availableStudents.map((s) => s.batch).filter(Boolean))].sort(),
+    [availableStudents],
+  );
 
   const handleNext = async () => {
     if (activeStep === 0 && !selectedPaper) {
@@ -243,6 +258,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
         ...input,
         startDateTime,
         endDateTime,
+        branch: branch || undefined,
+        batch: batch || undefined,
         visibility: visibility === 'public' ? 'public' : 'selected',
         targetSections: visibility === 'private' ? targetSections : undefined,
         targetStudents: visibility === 'selected' ? targetStudents : undefined,
@@ -273,6 +290,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
     setStartDateTime(new Date());
     setEndDateTime(new Date(Date.now() + 3600000));
     setDurationMinutes(30);
+    setBranch('');
+    setBatch('');
     setAllowLateSubmission(false);
     setLateSubmissionPenalty(0);
     setEnableProctoring(false);
@@ -362,6 +381,8 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 1 }}>
                       <Chip size="small" icon={<CalendarIcon fontSize="small" />} label={format(toDate(test.scheduledAt), 'MMM dd, yyyy')} />
                       <Chip size="small" icon={<TimeIcon fontSize="small" />} label={`${test.duration} min`} />
+                      {test.branch && <Chip size="small" icon={<SchoolIcon fontSize="small" />} label={test.branch} />}
+                      {test.batch && <Chip size="small" icon={<SchoolIcon fontSize="small" />} label={`Batch ${test.batch}`} />}
                       <Chip size="small" icon={<PeopleIcon fontSize="small" />} label={((test as any).visibility || 'all').replace(/_/g, ' ')} />
                     </Stack>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
@@ -497,6 +518,36 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <TextField label="Duration (minutes)" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} sx={{ flex: '1 1 150px' }} />
                     </Box>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                      <FormControl sx={{ flex: '1 1 180px', minWidth: 180 }}>
+                        <InputLabel id="test-branch-label">Branch</InputLabel>
+                        <Select
+                          labelId="test-branch-label"
+                          label="Branch"
+                          value={branch}
+                          onChange={(e) => setBranch(e.target.value)}
+                        >
+                          <MenuItem value="">All branches</MenuItem>
+                          {branchOptions.map((b) => (
+                            <MenuItem key={b} value={b}>{b}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl sx={{ flex: '1 1 180px', minWidth: 180 }}>
+                        <InputLabel id="test-batch-label">Batch</InputLabel>
+                        <Select
+                          labelId="test-batch-label"
+                          label="Batch"
+                          value={batch}
+                          onChange={(e) => setBatch(e.target.value)}
+                        >
+                          <MenuItem value="">All batches</MenuItem>
+                          {batchOptions.map((b) => (
+                            <MenuItem key={b} value={b}>{b}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                       <FormControlLabel control={<Checkbox checked={allowLateSubmission} onChange={(e) => setAllowLateSubmission(e.target.checked)} />} label="Allow Late Submission" />
                       {allowLateSubmission && (
                         <TextField label="Late Penalty (%)" type="number" value={lateSubmissionPenalty} onChange={(e) => setLateSubmissionPenalty(Number(e.target.value))} size="small" sx={{ width: 150 }} />
@@ -613,6 +664,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography color="text.secondary">Duration:</Typography>
                         <Typography>{durationMinutes} minutes</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography color="text.secondary">Branch / Batch:</Typography>
+                        <Typography>{branch || 'All branches'} / {batch || 'All batches'}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography color="text.secondary">Start:</Typography>
