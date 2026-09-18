@@ -1131,6 +1131,8 @@ export const submitMyStudentTest = onCall(
       })
       transaction.update(resolved.testRef, {
         totalSubmitted: admin.firestore.FieldValue.increment(1),
+        // Fully objective papers are graded at submission time.
+        ...(fullyObjective ? { totalGraded: admin.firestore.FieldValue.increment(1) } : {}),
         updatedAt: submittedAt,
       })
       return outcome({ id: assessmentRef.id, testId: resolved.testId, ...row, ...update })
@@ -1303,10 +1305,12 @@ export const listManagedAssessmentTests = onCall(
     const requestedCollege = String(request.data?.collegeId || '')
     const collegeId = staff.role === 'superadmin' ? requestedCollege : staff.collegeId
     if (!collegeId) throw new HttpsError('invalid-argument', 'collegeId is required')
-    let query: FirebaseFirestore.Query = admin.firestore().collection('scheduledTests')
+    // Every assessment manager (faculty, hod, principal, admin) sees the
+    // college-wide list — "My tests" is shared, not creator-only.
+    const snapshot = await admin.firestore().collection('scheduledTests')
       .where('collegeId', '==', collegeId)
-    if (staff.role === 'faculty') query = query.where('facultyId', '==', uid)
-    const snapshot = await query.orderBy('createdAt', 'desc').limit(200).get()
+      .orderBy('createdAt', 'desc').limit(200)
+      .get()
     return {
       tests: snapshot.docs.map((test) => {
         const data = test.data()
@@ -1708,6 +1712,12 @@ export const gradeStudentAssessmentSubmission = onCall(
         gradedBy: uid,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
+      // Keep the faculty list's "graded" counter current (self-maintained,
+      // no extra reads anywhere else).
+      transaction.update(testRef, {
+        totalGraded: admin.firestore.FieldValue.increment(1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
       return { marksObtained, percentage, grade: derived.grade, gradePoint: derived.gradePoint }
     })
     return { success: true, ...result }
@@ -1788,6 +1798,151 @@ export const listPendingAssessmentSubmissions = onCall(
             })),
         }
       }),
+    }
+  }
+)
+
+/**
+ * Faculty test report: summary aggregates + per-student outcomes for one
+ * scheduled test. One indexed query over the attempt rows (deterministic doc
+ * ids, testId filter) with field selection keeps it cheap even for large
+ * batches. Also self-heals the legacy counters (tests scheduled before
+ * totalSubmitted tracking) with a one-time backfill write.
+ */
+export const getAssessmentTestReport = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    requireAssessmentManager(staff)
+    const testId = String(request.data?.testId || '')
+    if (!testId) throw new HttpsError('invalid-argument', 'testId is required')
+    const db = admin.firestore()
+    const testRef = db.collection('scheduledTests').doc(testId)
+    const testDoc = await testRef.get()
+    const test = testDoc.data()
+    if (!testDoc.exists || !test) throw new HttpsError('not-found', 'Scheduled test not found')
+    // Any assessment manager of the test's college may open the report
+    // (faculty, hod, principal, admin; superadmin for any college).
+    if (staff.role !== 'superadmin' && test.collegeId && test.collegeId !== staff.collegeId) {
+      throw new HttpsError('permission-denied', 'Test belongs to another college')
+    }
+
+    const snapshot = await db.collection('studentAssessments')
+      .where('testId', '==', testId)
+      .select(
+        'studentId', 'studentName', 'regNo', 'status',
+        'totalMarks', 'autoScore', 'autoMax', 'manualMax', 'manualScore',
+        'marksObtained', 'percentage', 'grade', 'timeSpent',
+        'submittedAt', 'gradedAt', 'isLateSubmission', 'latePenaltyPercentage',
+        'autoSubmitted', 'needsManualGrading'
+      )
+      .limit(500)
+      .get()
+    const rows = snapshot.docs.map((doc) => doc.data() || {})
+
+    let submitted = 0
+    let graded = 0
+    let pendingManual = 0
+    let inProgress = 0
+    let notStarted = 0
+    let lateSubmissions = 0
+    let autoSubmittedCount = 0
+    const percentages: number[] = []
+    const marksObtainedList: number[] = []
+    rows.forEach((row) => {
+      const status = String(row.status || 'not_started')
+      if (status === 'submitted' || status === 'graded') {
+        submitted += 1
+        if (row.isLateSubmission === true) lateSubmissions += 1
+        if (row.autoSubmitted === true) autoSubmittedCount += 1
+        if (typeof row.marksObtained === 'number') marksObtainedList.push(row.marksObtained)
+        if (status === 'graded') {
+          graded += 1
+          if (typeof row.percentage === 'number') percentages.push(row.percentage)
+        } else if (row.needsManualGrading === true) {
+          pendingManual += 1
+        }
+      } else if (status === 'in_progress') {
+        inProgress += 1
+      } else {
+        notStarted += 1
+      }
+    })
+    const round1 = (value: number) => Math.round(value * 10) / 10
+    const avgPercentage = percentages.length > 0 ? round1(percentages.reduce((a, b) => a + b, 0) / percentages.length) : null
+    const maxPercentage = percentages.length > 0 ? round1(Math.max(...percentages)) : null
+    const minPercentage = percentages.length > 0 ? round1(Math.min(...percentages)) : null
+    const avgMarksObtained = marksObtainedList.length > 0 ? round1(marksObtainedList.reduce((a, b) => a + b, 0) / marksObtainedList.length) : null
+
+    // One-time self-heal: tests scheduled before counter tracking have no
+    // totalSubmitted/totalGraded; backfill them so the list view is accurate
+    // forever after this first report open.
+    if (test.totalSubmitted === undefined || Number(test.totalSubmitted) === 0) {
+      if (submitted > 0) {
+        void testRef.update({
+          totalSubmitted: admin.firestore.FieldValue.increment(submitted),
+          totalGraded: admin.firestore.FieldValue.increment(graded),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }).catch(() => undefined)
+      }
+    }
+
+    return {
+      test: {
+        id: testId,
+        title: String(test.title || ''),
+        subject: String(test.subject || ''),
+        facultyId: String(test.facultyId || ''),
+        facultyName: String(test.facultyName || ''),
+        status: String(test.status || 'scheduled'),
+        startDateTime: iso(test.startDateTime),
+        endDateTime: iso(test.endDateTime),
+        resultPublishDate: iso(test.resultPublishDate) || null,
+        totalQuestions: Number(test.totalQuestions) || 0,
+        totalMarks: Number(test.totalMarks) || 0,
+        enableProctoring: Boolean(test.enableProctoring),
+        maxTabSwitches: Number(test.maxTabSwitches) || 0,
+        shuffleQuestions: test.shuffleQuestions === true,
+        shuffleOptions: test.shuffleOptions === true,
+        shuffleSections: test.shuffleSections === true,
+        totalRegistered: Number(test.totalRegistered) || 0,
+        totalStarted: Number(test.totalStarted) || 0,
+        totalSubmitted: Number(test.totalSubmitted) || 0,
+        totalGraded: Number(test.totalGraded) || 0,
+      },
+      summary: {
+        totalScheduled: Number(test.totalRegistered) || 0,
+        submitted,
+        graded,
+        pendingManual,
+        inProgress,
+        notStarted,
+        lateSubmissions,
+        autoSubmittedCount,
+        avgPercentage,
+        maxPercentage,
+        minPercentage,
+        avgMarksObtained,
+      },
+      students: rows.map((row) => ({
+        studentId: String(row.studentId || ''),
+        studentName: String(row.studentName || 'Student'),
+        regNo: String(row.regNo || ''),
+        status: String(row.status || 'not_started'),
+        totalMarks: Number(row.totalMarks) || 0,
+        autoScore: row.autoScore === undefined ? null : Number(row.autoScore) || 0,
+        marksObtained: row.marksObtained === undefined || row.marksObtained === null ? null : Number(row.marksObtained),
+        percentage: row.percentage === undefined || row.percentage === null ? null : Number(row.percentage),
+        grade: row.grade === undefined || row.grade === null ? null : String(row.grade),
+        timeSpent: row.timeSpent === undefined ? null : Number(row.timeSpent) || 0,
+        submittedAt: row.submittedAt === undefined || row.submittedAt === null ? null : iso(row.submittedAt),
+        isLateSubmission: row.isLateSubmission === true,
+        latePenaltyPercentage: Number(row.latePenaltyPercentage) || 0,
+        autoSubmitted: row.autoSubmitted === true,
+        needsManualGrading: row.needsManualGrading === true,
+      })),
     }
   }
 )
@@ -1910,6 +2065,7 @@ async function finalizeExpiredAttempt(
     })
     transaction.update(testRef, {
       totalSubmitted: admin.firestore.FieldValue.increment(1),
+      ...(status === 'graded' ? { totalGraded: admin.firestore.FieldValue.increment(1) } : {}),
       updatedAt: submittedAt,
     })
     return status

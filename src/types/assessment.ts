@@ -504,6 +504,82 @@ export interface ScheduledTest {
   targetSections?: Array<{ sectionId: string; sectionName: string }>
   targetStudents?: string[]
   createdBy: string
+  facultyId?: string
+  facultyName?: string
+  // Server-maintained progress counters (incremented on register/start/submit/
+  // grade) — the faculty "My tests" list reads these, zero extra queries.
+  totalRegistered?: number
+  totalStarted?: number
+  totalSubmitted?: number
+  totalGraded?: number
+  totalQuestions?: number
+  totalMarks?: number
+  // Scheduling-time options (new fields; undefined on older tests).
+  maxTabSwitches?: number
+  shuffleQuestions?: boolean
+  shuffleOptions?: boolean
+  shuffleSections?: boolean
+}
+
+export interface AssessmentTestReportTest {
+  id: string
+  title: string
+  subject: string
+  facultyName?: string
+  status: string
+  startDateTime: string
+  endDateTime: string
+  resultPublishDate: string | null
+  totalQuestions: number
+  totalMarks: number
+  enableProctoring: boolean
+  maxTabSwitches: number
+  shuffleQuestions: boolean
+  shuffleOptions: boolean
+  shuffleSections: boolean
+  totalRegistered: number
+  totalStarted: number
+  totalSubmitted: number
+  totalGraded: number
+}
+
+export interface AssessmentTestReportStudent {
+  studentId: string
+  studentName: string
+  regNo: string
+  status: 'not_started' | 'in_progress' | 'submitted' | 'graded' | string
+  totalMarks: number
+  autoScore: number | null
+  marksObtained: number | null
+  percentage: number | null
+  grade: string | null
+  timeSpent: number | null
+  submittedAt: string | null
+  isLateSubmission: boolean
+  latePenaltyPercentage: number
+  autoSubmitted: boolean
+  needsManualGrading: boolean
+}
+
+export interface AssessmentTestReportSummary {
+  totalScheduled: number
+  submitted: number
+  graded: number
+  pendingManual: number
+  inProgress: number
+  notStarted: number
+  lateSubmissions: number
+  autoSubmittedCount: number
+  avgPercentage: number | null
+  maxPercentage: number | null
+  minPercentage: number | null
+  avgMarksObtained: number | null
+}
+
+export interface AssessmentTestReport {
+  test: AssessmentTestReportTest
+  summary: AssessmentTestReportSummary
+  students: AssessmentTestReportStudent[]
 }
 
 // ============================================================================

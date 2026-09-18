@@ -325,6 +325,16 @@ export interface ScheduledTest {
   totalRegistered: number;
   totalStarted: number;
   totalSubmitted: number;
+  totalGraded?: number;
+  title?: string;
+  description?: string;
+  resultPublishDate?: string | null;
+  allowLateSubmission?: boolean;
+  enableProctoring?: boolean;
+  maxTabSwitches?: number;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  shuffleSections?: boolean;
   negativeMarking: boolean;
   createdAt: string;
   updatedAt: string;
