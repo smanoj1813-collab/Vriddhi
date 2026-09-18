@@ -1024,7 +1024,6 @@ export const submitMyStudentTest = onCall(
     const answers = sanitizeAnswers(request.data?.answers, questions)
     const graded = gradeAssessmentPaper(questions, answers)
     const assessmentRef = rowRef(resolved.testId, student.id)
-    const auditRef = admin.firestore().collection('studentSubmissions').doc()
 
     const result = await admin.firestore().runTransaction(async (transaction) => {
       const [attempt, freshTestDoc] = await Promise.all([
@@ -1082,6 +1081,19 @@ export const submitMyStudentTest = onCall(
       const manualGradeableMax = questions
         .filter((question) => pendingManualIds.has(question.id))
         .reduce((sum, question) => sum + question.marks, 0)
+      // Denormalise the manual questions' text + the student's rendered answer
+      // onto the row at submit time: the faculty grading queue then renders
+      // without re-reading the paper's question documents on every load
+      // (was N question reads per pending test per queue open).
+      const answerMap = new Map(answers.map((answer) => [answer.questionId, answer]))
+      const manualQuestionSnippets = questions
+        .filter((question) => pendingManualIds.has(question.id))
+        .map((question) => ({
+          questionId: question.id,
+          text: String(question.text || '').slice(0, 2000),
+          marks: Number(question.marks) || 0,
+          answerText: answerText(question, answerMap.get(question.id)).slice(0, 4000),
+        }))
       const update: admin.firestore.DocumentData = {
         status,
         answers,
@@ -1092,6 +1104,7 @@ export const submitMyStudentTest = onCall(
         autoMax: graded.autoMax,
         manualMax: graded.manualMax,
         manualGradeableMax,
+        manualQuestionSnippets,
         needsManualGrading: !fullyObjective,
         objectiveCorrectCount: graded.correctCount,
         objectiveIncorrectCount: graded.incorrectCount,
@@ -1112,23 +1125,10 @@ export const submitMyStudentTest = onCall(
           gradedBy: 'server-auto-grader',
         })
       }
+      // No separate audit doc: the attempt row itself is the durable record
+      // (answers, scores, times, proctor events) — the old studentSubmissions
+      // write had no readers, so it was pure write cost.
       transaction.update(assessmentRef, update)
-      transaction.create(auditRef, {
-        kind: 'test',
-        collegeId: student.collegeId,
-        testId: resolved.testId,
-        studentAssessmentId: assessmentRef.id,
-        studentId: student.id,
-        studentUid: uid,
-        answers,
-        timeSpent,
-        autoScore: graded.autoScore,
-        autoMax: graded.autoMax,
-        manualMax: graded.manualMax,
-        status,
-        autoSubmitted: Boolean(request.data?.autoSubmitted),
-        submittedAt,
-      })
       transaction.update(resolved.testRef, {
         totalSubmitted: admin.firestore.FieldValue.increment(1),
         // Fully objective papers are graded at submission time.
@@ -1755,8 +1755,18 @@ export const listPendingAssessmentSubmissions = onCall(
       if (staff.role !== 'faculty') return true
       return tests.get(String(attempt.data().testId || ''))?.facultyId === uid
     })
+    // New rows carry denormalised manual-question snippets (question text +
+    // rendered answer) written at submit time, so their tests need NO question
+    // reads. Only tests with legacy rows (submitted before snippets existed)
+    // pay the old question-document reads.
+    const legacyTestIds = new Set(
+      visibleCandidates
+        .filter((attempt) => !Array.isArray(attempt.data().manualQuestionSnippets))
+        .map((attempt) => String(attempt.data().testId || ''))
+        .filter(Boolean)
+    )
     const questionCache = new Map<string, ServerQuestion[]>()
-    await Promise.all([...new Set(visibleCandidates.map((attempt) => String(attempt.data().testId || '')))].map(async (testId) => {
+    await Promise.all([...legacyTestIds].map(async (testId) => {
       const test = tests.get(testId)
       if (test) questionCache.set(testId, await loadTestQuestions(testId, test))
     }))
@@ -1765,6 +1775,9 @@ export const listPendingAssessmentSubmissions = onCall(
       submissions: visibleCandidates.map((attempt) => {
         const row = attempt.data()
         const testId = String(row.testId || '')
+        const snippets = Array.isArray(row.manualQuestionSnippets) && row.manualQuestionSnippets.length > 0
+          ? row.manualQuestionSnippets as Array<{ questionId?: unknown; text?: unknown; marks?: unknown; answerText?: unknown }>
+          : null
         const questions = questionCache.get(testId) || []
         const answers = new Map(
           (Array.isArray(row.answers) ? row.answers : [])
@@ -1793,15 +1806,23 @@ export const listPendingAssessmentSubmissions = onCall(
           submittedAt: iso(row.submittedAt),
           isLateSubmission: Boolean(row.isLateSubmission),
           latePenaltyPercentage: Number(row.latePenaltyPercentage) || 0,
-          responses: questions
-            .filter((question) => manualIds.has(question.id))
-            .map((question) => ({
-              questionId: question.id,
-              questionText: question.text,
-              type: question.type,
-              marks: question.marks,
-              answer: answerText(question, answers.get(question.id)),
-            })),
+          responses: snippets
+            ? snippets.map((snippet) => ({
+                questionId: String(snippet.questionId || ''),
+                questionText: String(snippet.text || ''),
+                type: 'manual',
+                marks: Number(snippet.marks) || 0,
+                answer: String(snippet.answerText || ''),
+              }))
+            : questions
+              .filter((question) => manualIds.has(question.id))
+              .map((question) => ({
+                questionId: question.id,
+                questionText: question.text,
+                type: question.type,
+                marks: question.marks,
+                answer: answerText(question, answers.get(question.id)),
+              })),
         }
       }),
     }
@@ -1970,7 +1991,6 @@ async function finalizeExpiredAttempt(
   if (!testDoc.exists || !test || test.status === 'cancelled') return 'skipped'
   const questions = await loadTestQuestions(testId, test)
   if (questions.length === 0) return 'skipped'
-  const auditRef = db.collection('studentSubmissions').doc()
 
   return db.runTransaction(async (transaction) => {
     const [freshAttemptDoc, freshTestDoc] = await Promise.all([
@@ -2026,6 +2046,17 @@ async function finalizeExpiredAttempt(
       ? Math.max(0, Math.floor((autoSubmitAt.getTime() - startedAt.getTime()) / 1000))
       : Number(row.timeSpent) || 0
     const submittedAt = admin.firestore.FieldValue.serverTimestamp()
+    // Same denormalisation as the manual submit path: the grading queue reads
+    // these snippets instead of re-loading the paper's question documents.
+    const answerMap = new Map(answers.map((answer) => [answer.questionId, answer]))
+    const manualQuestionSnippets = questions
+      .filter((question) => pendingManualIds.has(question.id))
+      .map((question) => ({
+        questionId: question.id,
+        text: String(question.text || '').slice(0, 2000),
+        marks: Number(question.marks) || 0,
+        answerText: answerText(question, answerMap.get(question.id)).slice(0, 4000),
+      }))
     const update: admin.firestore.DocumentData = {
       status,
       answers,
@@ -2042,6 +2073,7 @@ async function finalizeExpiredAttempt(
       unattemptedCount: questions.filter((question) => !answerIds.has(question.id)).length,
       answeredCount: answers.length,
       gradingBreakdown: graded.perQuestion,
+      manualQuestionSnippets,
       autoSubmitted: true,
       isLateSubmission: isLate,
       latePenaltyPercentage,
@@ -2057,22 +2089,6 @@ async function finalizeExpiredAttempt(
       })
     }
     transaction.update(attemptDoc.ref, update)
-    transaction.create(auditRef, {
-      kind: 'test',
-      collegeId: String(row.collegeId || ''),
-      testId,
-      studentAssessmentId: attemptDoc.id,
-      studentId: String(row.studentId || ''),
-      studentUid: String(row.studentUid || ''),
-      answers,
-      timeSpent,
-      autoScore: graded.autoScore,
-      autoMax: graded.autoMax,
-      manualMax: graded.manualMax,
-      status,
-      autoSubmitted: true,
-      submittedAt,
-    })
     transaction.update(testRef, {
       totalSubmitted: admin.firestore.FieldValue.increment(1),
       ...(status === 'graded' ? { totalGraded: admin.firestore.FieldValue.increment(1) } : {}),

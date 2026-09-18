@@ -43,12 +43,22 @@ const StudentTestDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
 
   // While a future test is on screen, poll so the card flips from
-  // "Yet to start" to "Start Test" at the window open without a manual refresh.
+  // "Yet to start" to "Start Test" at the window open without a manual
+  // refresh. Pauses while the browser tab is hidden (no reads for a tab
+  // nobody is looking at).
   const hasUpcoming = tests.some((t) => t.status === "upcoming");
   useEffect(() => {
     if (!hasUpcoming) return;
-    const id = setInterval(() => refresh(), 30_000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | null = null;
+    const start = () => { if (id === null) id = setInterval(() => refresh(), 30_000); };
+    const stop = () => { if (id !== null) { clearInterval(id); id = null; } };
+    const onVisibility = () => (document.hidden ? stop() : start());
+    start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [hasUpcoming, refresh]);
 
   const results = useMemo(
