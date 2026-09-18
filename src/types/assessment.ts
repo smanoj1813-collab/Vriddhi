@@ -523,6 +523,11 @@ export interface ScheduledTest {
   shuffleSections?: boolean
 }
 
+export interface PerformanceCategory {
+  label: string
+  minPercent: number
+}
+
 export interface AssessmentTestReportTest {
   id: string
   title: string
@@ -531,6 +536,7 @@ export interface AssessmentTestReportTest {
   branch?: string
   batch?: string
   status: string
+  sections?: Array<{ id: string; name: string; questionCount: number; totalMarks: number }>
   startDateTime: string
   endDateTime: string
   resultPublishDate: string | null
@@ -552,6 +558,11 @@ export interface AssessmentTestReportStudent {
   studentName: string
   regNo: string
   status: 'not_started' | 'in_progress' | 'submitted' | 'graded' | string
+  branch?: string
+  section?: string
+  semester?: number
+  batch?: string
+  sectionScores?: Array<{ sectionId: string; sectionName: string; score: number; max: number }> | null
   totalMarks: number
   autoScore: number | null
   marksObtained: number | null

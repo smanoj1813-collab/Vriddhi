@@ -758,6 +758,12 @@ export const startMyStudentTest = onCall(
         studentUid: student.uid,
         studentName: student.name,
         regNo: student.regNo,
+        // Denormalised once at start so completion-report exports (Excel)
+        // never need to re-read student documents.
+        branch: student.branch,
+        section: student.section,
+        semester: student.semester,
+        batch: student.batch,
         title: String(freshTestData.title || freshTestData.paperTitle || ''),
         subject: String(freshTestData.subject || freshTestData.subjectName || ''),
         totalMarks: Number(freshTestData.totalMarks) || questions.reduce((sum, question) => sum + question.marks, 0),
@@ -1546,6 +1552,25 @@ export const scheduleAssessmentTest = onCall(
       passingMarks: Number(paper.passingMarks) || Math.ceil(totalMarks * 0.4),
       totalMarks,
       totalQuestions: questions.length,
+      // Freeze the section structure at schedule time so the completion
+      // report can compute section-wise student scores without ever
+      // re-reading the question documents.
+      sections: [...new Map(
+        questions
+          .filter((question) => question.sectionId)
+          .map((question) => [
+            String(question.sectionId),
+            { id: String(question.sectionId), name: String(question.sectionName || question.sectionId || '') },
+          ])
+      ).values()].map((section, index) => {
+        const members = questions.filter((question) => String(question.sectionId) === section.id)
+        return { ...section, order: index + 1, questionCount: members.length, totalMarks: members.reduce((sum, question) => sum + (question.marks || 0), 0) }
+      }),
+      questionSections: questions.map((question, index) => ({
+        id: `q-${String(index + 1).padStart(4, '0')}`,
+        sectionId: String(question.sectionId || ''),
+        sectionName: String(question.sectionName || ''),
+      })),
       status: 'scheduled',
       totalRegistered: 0,
       totalStarted: 0,
@@ -1910,7 +1935,8 @@ export const getAssessmentTestReport = onCall(
         'totalMarks', 'autoScore', 'autoMax', 'manualMax', 'manualScore',
         'marksObtained', 'percentage', 'grade', 'timeSpent',
         'submittedAt', 'gradedAt', 'isLateSubmission', 'latePenaltyPercentage',
-        'autoSubmitted', 'needsManualGrading'
+        'autoSubmitted', 'needsManualGrading',
+        'branch', 'section', 'semester', 'batch', 'gradingBreakdown'
       )
       .limit(500)
       .get()
@@ -1965,6 +1991,48 @@ export const getAssessmentTestReport = onCall(
       void testRef.update(heal).catch(() => undefined)
     }
 
+    // Section-wise scores: the test document froze the section structure at
+    // schedule time (sections + questionSections), so this is pure in-memory
+    // aggregation over the gradingBreakdown already read — no extra queries.
+    const sectionOrder: string[] = []
+    const sectionNames = new Map<string, string>()
+    const sectionMaxMarks = new Map<string, number>()
+    if (Array.isArray(test.sections)) {
+      for (const section of test.sections) {
+        const id = String(section.id || '')
+        if (!id || sectionNames.has(id)) continue
+        sectionNames.set(id, String(section.name || id))
+        sectionMaxMarks.set(id, Number(section.totalMarks) || 0)
+        sectionOrder.push(id)
+      }
+    }
+    const questionToSection = new Map<string, string>()
+    if (Array.isArray(test.questionSections)) {
+      for (const entry of test.questionSections) {
+        const id = String(entry.id || '')
+        const sectionId = String(entry.sectionId || '')
+        if (id && sectionId) questionToSection.set(id, sectionId)
+      }
+    }
+    const round2 = (value: number) => Math.round(value * 100) / 100
+    const studentSectionScores = (row: Record<string, unknown>): Array<{ sectionId: string; sectionName: string; score: number; max: number }> | null => {
+      if (!Array.isArray(row.gradingBreakdown) || sectionOrder.length === 0) return null
+      const scoreBySection = new Map<string, number>()
+      for (const item of row.gradingBreakdown as Array<Record<string, unknown>>) {
+        const sectionId = questionToSection.get(String(item.questionId || ''))
+        if (!sectionId) continue
+        scoreBySection.set(sectionId, (scoreBySection.get(sectionId) || 0) + (typeof item.marksObtained === 'number' ? item.marksObtained : 0))
+      }
+      return sectionOrder
+        .filter((sectionId) => scoreBySection.has(sectionId))
+        .map((sectionId) => ({
+          sectionId,
+          sectionName: sectionNames.get(sectionId) || sectionId,
+          score: round2(scoreBySection.get(sectionId) || 0),
+          max: sectionMaxMarks.get(sectionId) || 0,
+        }))
+    }
+
     return {
       test: {
         id: testId,
@@ -1989,6 +2057,14 @@ export const getAssessmentTestReport = onCall(
         totalStarted: Number(test.totalStarted) || 0,
         totalSubmitted: Number(test.totalSubmitted) || 0,
         totalGraded: Number(test.totalGraded) || 0,
+        sections: Array.isArray(test.sections)
+          ? (test.sections as Array<Record<string, unknown>>).map((section) => ({
+              id: String(section.id || ''),
+              name: String(section.name || ''),
+              questionCount: Number(section.questionCount) || 0,
+              totalMarks: Number(section.totalMarks) || 0,
+            }))
+          : [],
       },
       summary: {
         totalScheduled: Number(test.totalRegistered) || 0,
@@ -2009,6 +2085,10 @@ export const getAssessmentTestReport = onCall(
         studentName: String(row.studentName || 'Student'),
         regNo: String(row.regNo || ''),
         status: String(row.status || 'not_started'),
+        branch: String(row.branch || ''),
+        section: String(row.section || ''),
+        semester: Number(row.semester) || 0,
+        batch: String(row.batch || ''),
         totalMarks: Number(row.totalMarks) || 0,
         autoScore: row.autoScore === undefined ? null : Number(row.autoScore) || 0,
         marksObtained: row.marksObtained === undefined || row.marksObtained === null ? null : Number(row.marksObtained),
@@ -2020,6 +2100,7 @@ export const getAssessmentTestReport = onCall(
         latePenaltyPercentage: Number(row.latePenaltyPercentage) || 0,
         autoSubmitted: row.autoSubmitted === true,
         needsManualGrading: row.needsManualGrading === true,
+        sectionScores: studentSectionScores(row),
       })),
     }
   }
@@ -2184,6 +2265,31 @@ export const autoSubmitExpiredStudentTests = onSchedule(
       })
     } else if (attempts.size > 0) {
       logger.info('[StudentAssessments] Expired attempts finalized', { scanned: attempts.size })
+    }
+
+    // Close out tests whose window has ended: published/ongoing → completed.
+    // Nothing else ever moved the stored status, so a test whose window had
+    // passed kept showing "ongoing" in the scheduler forever.
+    const endedTests = await admin.firestore().collection('scheduledTests')
+      .where('status', 'in', ['published', 'ongoing'])
+      .where('endDateTime', '<=', now)
+      .limit(100)
+      .get()
+    const completions = await Promise.allSettled(endedTests.docs.map((testDoc) =>
+      testDoc.ref.update({
+        status: 'completed',
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    ))
+    const completionFailures = completions.filter((outcome) => outcome.status === 'rejected').length
+    if (completionFailures > 0) {
+      logger.error('[StudentAssessments] Some ended tests could not be completed', {
+        scanned: endedTests.size,
+        failures: completionFailures,
+      })
+    } else if (endedTests.size > 0) {
+      logger.info('[StudentAssessments] Ended tests marked completed', { scanned: endedTests.size })
     }
   }
 )
@@ -2428,5 +2534,89 @@ export const suggestAssessmentGrading = onCall(
     }
     await attemptRef.update({ aiGradingSuggestion: suggestion })
     return { success: true, cached: false, suggestion }
+  }
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// College assessment-report configuration
+//
+// The pass-status categories used on test reports and Excel exports
+// ("Good to Go ≥ 70%", "Needs Improvement 50–69%", …) are a COLLEGE decision,
+// not a product constant. They live in assessmentConfigs/{collegeId} and are
+// editable by college administrators; when a college has not customised them,
+// the defaults below apply.
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PerformanceCategory {
+  label: string
+  minPercent: number
+}
+
+const DEFAULT_PERFORMANCE_CATEGORIES: PerformanceCategory[] = [
+  { label: 'Good to Go', minPercent: 70 },
+  { label: 'Needs Improvement', minPercent: 50 },
+  { label: 'Needs Training', minPercent: 0 },
+]
+
+export function parsePerformanceCategories(input: unknown): PerformanceCategory[] {
+  if (!Array.isArray(input) || input.length === 0 || input.length > 6) {
+    throw new HttpsError('invalid-argument', 'Provide between 1 and 6 status categories')
+  }
+  const categories: PerformanceCategory[] = input.map((entry, index) => {
+    const record = (entry && typeof entry === 'object' ? entry : {}) as Record<string, unknown>
+    const label = String(record.label || '').trim().slice(0, 40)
+    const minPercent = Number(record.minPercent)
+    if (!label) throw new HttpsError('invalid-argument', `Category ${index + 1} needs a label`)
+    if (!Number.isFinite(minPercent) || minPercent < 0 || minPercent > 100) {
+      throw new HttpsError('invalid-argument', `Category ${index + 1}: minimum percent must be between 0 and 100`)
+    }
+    return { label, minPercent }
+  })
+  for (let index = 1; index < categories.length; index += 1) {
+    if (categories[index].minPercent >= categories[index - 1].minPercent) {
+      throw new HttpsError('invalid-argument', 'Category minimums must be strictly decreasing — list the highest range first')
+    }
+  }
+  return categories
+}
+
+export const getAssessmentConfig = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    const collegeId = staff.role === 'superadmin' ? String(request.data?.collegeId || '') : staff.collegeId
+    if (!collegeId) throw new HttpsError('invalid-argument', 'collegeId is required')
+    const doc = await admin.firestore().collection('assessmentConfigs').doc(collegeId).get()
+    const data = doc.data()
+    const customised = Array.isArray(data?.performanceCategories) && (data.performanceCategories as unknown[]).length > 0
+    return {
+      performanceCategories: customised ? data.performanceCategories : DEFAULT_PERFORMANCE_CATEGORIES,
+      customised,
+    }
+  }
+)
+
+export const saveAssessmentConfig = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, minInstances: 0, maxInstances: 30 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveStaff(uid, request.auth?.token || {})
+    if (!['superadmin', 'admin', 'principal', 'hod'].includes(staff.role)) {
+      throw new HttpsError('permission-denied', 'Only college administrators can change report settings')
+    }
+    if (!staff.collegeId) {
+      throw new HttpsError('invalid-argument', 'Select a college first, then save the report settings')
+    }
+    const categories = parsePerformanceCategories(request.data?.performanceCategories)
+    await admin.firestore().collection('assessmentConfigs').doc(staff.collegeId).set({
+      collegeId: staff.collegeId,
+      performanceCategories: categories,
+      updatedBy: staff.name,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true })
+    return { success: true, performanceCategories: categories }
   }
 )
