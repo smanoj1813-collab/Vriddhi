@@ -15,6 +15,11 @@ const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
 const MAX_QUESTIONS = 400
 const MAX_ANSWER_TEXT = 20_000
+// Frozen public question snapshots are deliberately small: this keeps each
+// Firestore document comfortably below the 1 MiB limit even when a question
+// contains long case text, images and matching metadata.
+const FROZEN_QUESTION_CHUNK_SIZE = 25
+const MAX_FROZEN_CHUNK_BYTES = 750_000
 const MAX_PROCTOR_DETAILS_BYTES = 4_000
 // Bounded size of the compact answer index (400 q x ~10 options). Larger indexes
 // move to a studentAssessments/{id}/meta/answerIndex subdocument.
@@ -181,6 +186,69 @@ function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order
     ...(raw.caseText ? { caseText: String(raw.caseText) } : {}),
     ...(Array.isArray(raw.matchPairs) ? { matchPairs: raw.matchPairs } : {}),
   }
+}
+
+export interface FrozenQuestionChunk {
+  chunkId: string
+  ordinal: number
+  questions: ReturnType<typeof publicQuestion>[]
+}
+
+/**
+ * Builds bounded, answer-key-free snapshots. The size check is based on the
+ * JSON representation because Firestore's 1 MiB limit applies to the encoded
+ * document, not to the number of questions alone.
+ */
+export function buildFrozenQuestionChunks(questions: ServerQuestion[]): FrozenQuestionChunk[] {
+  const chunks: FrozenQuestionChunk[] = []
+  let current: ReturnType<typeof publicQuestion>[] = []
+  let ordinal = 0
+  const flush = () => {
+    if (current.length === 0) return
+    chunks.push({ chunkId: `chunk-${String(ordinal).padStart(3, '0')}`, ordinal, questions: current })
+    ordinal += 1
+    current = []
+  }
+  questions.slice(0, MAX_QUESTIONS).forEach((question) => {
+    const candidate = [...current, publicQuestion(question)]
+    const candidateBytes = Buffer.byteLength(JSON.stringify({ questions: candidate }), 'utf8')
+    if (current.length > 0 && (current.length >= FROZEN_QUESTION_CHUNK_SIZE || candidateBytes > MAX_FROZEN_CHUNK_BYTES)) flush()
+    current.push(publicQuestion(question))
+  })
+  flush()
+  return chunks
+}
+
+async function loadFrozenQuestionChunks(testId: string): Promise<ReturnType<typeof publicQuestion>[] | null> {
+  const snapshot = await admin.firestore()
+    .collection('scheduledTests').doc(testId).collection('questionChunks')
+    .orderBy('ordinal').get()
+  if (snapshot.empty) return null
+  const questions = snapshot.docs.flatMap((doc) => {
+    const value = doc.data().questions
+    return Array.isArray(value) ? value : []
+  })
+  return questions.length > 0 ? questions : null
+}
+
+async function writeFrozenQuestionChunks(
+  testId: string,
+  questions: ServerQuestion[]
+): Promise<void> {
+  const db = admin.firestore()
+  const chunks = buildFrozenQuestionChunks(questions)
+  if (chunks.length === 0) return
+  const batch = db.batch()
+  chunks.forEach((chunk) => {
+    batch.set(db.collection('scheduledTests').doc(testId).collection('questionChunks').doc(chunk.chunkId), {
+      version: 1,
+      ordinal: chunk.ordinal,
+      questions: chunk.questions,
+      questionCount: chunk.questions.length,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: false })
+  })
+  await batch.commit()
 }
 
 async function loadTestQuestions(
@@ -715,6 +783,13 @@ export const startMyStudentTest = onCall(
     const questions = await loadTestQuestions(resolved.testId, resolved.test)
     if (questions.length === 0) throw new HttpsError('failed-precondition', 'Test has no published questions')
 
+    // Materialise the answer-key-free snapshot once. Resume reads this bounded
+    // collection instead of one assessmentQuestions document per question;
+    // legacy tests simply continue through loadTestQuestions below.
+    if (Number(resolved.test.questionChunksVersion || 0) < 1) {
+      await writeFrozenQuestionChunks(resolved.testId, questions)
+    }
+
     const assessmentRef = rowRef(resolved.testId, student.id)
     // Compact validation data frozen at start so autosave never has to load
     // the N question documents. Oversized indexes go to a meta subdocument.
@@ -753,6 +828,7 @@ export const startMyStudentTest = onCall(
           writeAnswerIndex(transaction)
           transaction.update(assessmentRef, {
             ...(answerIndexExternal ? { answerIndexRef: 'meta/answerIndex' } : { answerIndex }),
+            ...(Number(resolved.test.questionChunksVersion || 0) >= 1 ? { questionChunksVersion: 1 } : {}),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           })
         }
@@ -784,6 +860,7 @@ export const startMyStudentTest = onCall(
         totalQuestions: questions.length,
         duration,
         status: 'in_progress',
+        questionChunksVersion: 1,
         answers: [],
         ...(answerIndexExternal ? { answerIndexRef: 'meta/answerIndex' } : { answerIndex }),
         startedAt: admin.firestore.Timestamp.fromDate(now),
@@ -808,6 +885,7 @@ export const startMyStudentTest = onCall(
           : {}),
         totalStarted: admin.firestore.FieldValue.increment(1),
         status: 'ongoing',
+        ...(Number(resolved.test.questionChunksVersion || 0) < 1 ? { questionChunksVersion: 1 } : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
       return { startedAt: now.toISOString(), endsAt: endsAt.toISOString(), resumed: false }
@@ -836,7 +914,14 @@ export const getMyActiveStudentTest = onCall(
     if (!assessment.exists || row?.status !== 'in_progress') {
       throw new HttpsError('failed-precondition', 'Start the test before loading questions')
     }
-    const questions = await loadTestQuestions(resolved.testId, resolved.test)
+    // New attempts have immutable public chunks; old attempts retain the
+    // legacy question-document fallback until they are next started/resumed.
+    const frozenQuestions = Number(row.questionChunksVersion || 0) >= 1
+      ? await loadFrozenQuestionChunks(resolved.testId)
+      : null
+    const questions = frozenQuestions
+      ? frozenQuestions as unknown as ServerQuestion[]
+      : await loadTestQuestions(resolved.testId, resolved.test)
     const savedAnswers = Array.isArray(row.answers) ? row.answers : []
     const answers: Record<string, ServerAnswer> = {}
     savedAnswers.forEach((answer: ServerAnswer) => { if (answer.questionId) answers[answer.questionId] = answer })

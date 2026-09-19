@@ -57,6 +57,7 @@ serviceAccountKey.json
 # .firebaserc
 
 # Project artifacts / scratch
+artifacts/
 *.BACKUP
 assessment_files_dump.txt
 

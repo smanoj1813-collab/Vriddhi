@@ -56,6 +56,33 @@ Target: ≈ 60–80 k reads, < 10 k writes (≈ 97 % cut).
 - `tsc` clean in root + `functions/`, `node --import tsx --test functions/test`, `npm run test:render` 58/58.
 - Deploy: `firebase deploy --only functions:startMyStudentTest,functions:autosaveMyStudentTest,functions:logMyStudentTestEvent,hosting`. Functions predeploy builds TS. Remind user `git pull` on the arena branch first.
 
+## Runtime alignment
+
+The Functions runtime declaration is now Node 22 in both `functions/package.json`
+and `functions/package-lock.json`. Node 20 is not an acceptable deployment target
+because it is scheduled for decommissioning on 2026-10-30. Local emulator work
+should use Node 22; Node 24 is newer than the repository's supported runtime and
+can prevent the Functions emulator from loading the module correctly.
+
+## Phase 0 implementation status (2026-09-19)
+
+The code-level optimization is now present and covered by the autosave tests:
+
+- `scripts/assessment-cost-baseline.mjs` provides a deterministic fixture estimate for 50, 200 and 1,000 students. It is explicitly **not** a production measurement; run the emulator/load scenarios before rollout.
+- `startMyStudentTest` writes answer-key-free frozen snapshots under `scheduledTests/{testId}/questionChunks/chunk-NNN`.
+- Chunks contain at most 25 questions and are additionally capped at 750,000 JSON bytes, leaving headroom under Firestore's 1 MiB document limit.
+- `getMyActiveStudentTest` reads the bounded chunk collection for new attempts and falls back to the legacy question loader when chunks are absent.
+- `functions/test/autosaveIndex.test.ts` covers chunk bounds, answer-key stripping, answer-index equivalence, merge behavior and proctor-event limits.
+
+Run the fixture with:
+
+```bash
+npm run assessment:baseline
+npm run assessment:baseline -- --json
+```
+
+The fixture's nominal 200-student scenario is 30,000 reads, 4,400 writes and 2,400 invocations, versus the old 2,682,000 reads, 54,400 writes and 54,400 invocations. These figures depend on the explicit assumptions in the script and must not be presented as measured billing data.
+
 ## Context the next session needs
 
 - Firebase project `vriddhi-academic`, region `asia-south1`, live at https://vriddhi-academic.web.app. No admin creds / CLI in the sandbox — cannot inspect live data; all changes code-level, user deploys from Windows PowerShell.
