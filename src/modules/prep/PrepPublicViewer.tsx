@@ -52,10 +52,12 @@ import {
   type PrepSubject,
   type PrepTopic,
   type UniversalQuestion,
+  rememberLearnerCollege,
 } from '@/shared/services/prepContentService';
 import { formatStreamLabel } from '@/shared/utils/prepHelpers';
 import { CompanyStrip, CompanyView } from './PrepCompanyViews';
 import { AUDIENCE_LABELS, DifficultyChip, PROGRAMS, PROGRAM_LABELS, PrepMarkdown, ShareLinkButton, renderInline } from './prepPublicShared';
+import { useAuth } from '@/modules/auth/context/AuthContext';
 
 // ─── Header (shared by all three views) ─────────────────────────────────────
 
@@ -613,6 +615,13 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
 
 export default function PrepPublicViewer({ view }: { view: 'hub' | 'subject' | 'topic' | 'company' }) {
   const params = useParams<{ subjectId: string; topicId: string; companyCode: string }>();
+  // The prep pages are public, but a signed-in learner's college decides
+  // which company guides they may see. Remember it so anonymous follow-up
+  // visits (and the strip on this page) are filtered the same way.
+  const { user } = useAuth();
+  useEffect(() => {
+    rememberLearnerCollege(user?.collegeId);
+  }, [user?.collegeId]);
   const body = useMemo(() => {
     if (view === 'hub') return <HubView />;
     if (view === 'subject') return <SubjectView subjectId={params.subjectId || ''} />;

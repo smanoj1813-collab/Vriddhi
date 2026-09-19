@@ -39,6 +39,8 @@ import {
 import { uploadPrepImage } from '@/shared/services/prepMediaUpload';
 import { insertMarkdownImage, markdownImageLine } from '@/shared/utils/prepMedia';
 import { formatStreamLabel, formatDifficultyBadge } from '@/shared/utils/prepHelpers';
+import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel';
+import { useColleges } from '@/modules/superadmin/hooks/useSuperAdmin';
 
 /**
  * Every program the server ships seed data for (functions/src/routes/prep.ts
@@ -59,6 +61,62 @@ const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
   // Cognizant) — pattern + section→topic map over the aptitude catalogue.
   { code: 'companies', label: 'Company Prep' },
 ];
+
+/**
+ * Collapsible "who sees company prep" block for the Studio: superadmin picks
+ * a college and flips the master / per-company switches. Kept collapsed by
+ * default so the authoring workspace stays the focus.
+ */
+function CompanyPrepVisibilitySection() {
+  const [open, setOpen] = useState(false);
+  const [collegeId, setCollegeId] = useState('');
+  const { data, isLoading } = useColleges({ limit: 100 }, { enabled: open });
+  const colleges = (data?.items || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  const selected = colleges.find((c) => c.id === collegeId);
+
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        aria-expanded={open}
+      >
+        <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Eye className="w-4 h-4 text-teal-600" />
+          Company prep visibility per college
+          <span className="text-[11px] font-medium text-slate-400">— show / hide company guides for a specific college</span>
+        </span>
+        <ChevronRight className={'w-4 h-4 text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 sm:w-28">College</label>
+            <select
+              value={collegeId}
+              onChange={(e) => setCollegeId(e.target.value)}
+              className="flex-1 max-w-md text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2"
+            >
+              <option value="">{isLoading ? 'Loading colleges…' : 'Select a college…'}</option>
+              {colleges.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}{c.code ? ` (${c.code})` : ''}</option>
+              ))}
+            </select>
+          </div>
+          {collegeId ? (
+            <CompanyPrepVisibilityPanel key={collegeId} collegeId={collegeId} collegeName={selected?.name} embedded />
+          ) : (
+            <p className="text-xs text-slate-500">
+              Defaults: every college sees all published company guides. College admins can also change this themselves under
+              <span className="font-semibold"> Settings → General → Company-specific placement prep</span>.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PrepContentStudioTab() {
   const [subjects, setSubjects] = useState<PrepSubject[]>([]);
@@ -464,6 +522,9 @@ export default function PrepContentStudioTab() {
           </button>
         </div>
       </div>
+
+      {/* Company prep visibility per college */}
+      <CompanyPrepVisibilitySection />
 
       {/* Studio Workspace Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

@@ -409,10 +409,38 @@ export function topicSubtopics(topic: Pick<PrepTopic, 'subtopics' | 'subtopicDet
   return (topic.subtopics ?? []).map((title, idx) => ({ id: `sub-${idx + 1}`, title, briefMd: '' }))
 }
 
-export async function fetchPrepCompanies(params?: { program?: string; audience?: string }): Promise<PrepCompany[]> {
+/**
+ * The public /prep pages are anonymous, so when the learner's college is
+ * known client-side it is passed along and the server applies that college's
+ * company-prep toggles. Signed-in learners are resolved from the token instead.
+ */
+function learnerCollegeId(): string | undefined {
+  try {
+    const raw = localStorage.getItem('vriddhi.prep.collegeId') || sessionStorage.getItem('vriddhi.prep.collegeId')
+    return raw && /^[A-Za-z0-9_-]{1,64}$/.test(raw) ? raw : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function rememberLearnerCollege(collegeId: string | null | undefined): void {
+  try {
+    if (collegeId) localStorage.setItem('vriddhi.prep.collegeId', collegeId)
+  } catch {}
+}
+
+function withCollege(qs: URLSearchParams): URLSearchParams {
+  const c = learnerCollegeId()
+  if (c && !qs.has('collegeId')) qs.set('collegeId', c)
+  return qs
+}
+
+export async function fetchPrepCompanies(params?: { program?: string; audience?: string; collegeId?: string }): Promise<PrepCompany[]> {
   const qs = new URLSearchParams()
   if (params?.program) qs.set('program', params.program)
   if (params?.audience) qs.set('audience', params.audience)
+  if (params?.collegeId) qs.set('collegeId', params.collegeId)
+  withCollege(qs)
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   const res = await authedFetch(`/prep/companies${suffix}`)
   const json = await res.json()
@@ -420,13 +448,58 @@ export async function fetchPrepCompanies(params?: { program?: string; audience?:
 }
 
 export async function fetchPrepCompany(code: string): Promise<{ company: PrepCompany; topics: PrepCompanyTopicCard[] }> {
-  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}`)
+  const qs = withCollege(new URLSearchParams())
+  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}${qs.toString() ? `?${qs}` : ''}`)
   const json = await res.json()
   return { company: json.data as PrepCompany, topics: (json.topics || []) as PrepCompanyTopicCard[] }
 }
 
 export async function fetchPrepCompanyMock(code: string, count = 20): Promise<PrepCompanyMockQuestion[]> {
-  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}/mock?count=${count}`)
+  const qs = withCollege(new URLSearchParams({ count: String(count) }))
+  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}/mock?${qs}`)
   const json = await res.json()
   return (json.data || []) as PrepCompanyMockQuestion[]
+}
+
+// ─── Company prep: per-college visibility toggles ───────────────────────────
+
+export interface CompanyPrepSettings {
+  enabled: boolean
+  hiddenCompanies: string[]
+  updatedAt?: string
+  updatedBy?: string
+}
+
+export interface CompanyPrepSettingsRow {
+  code: string
+  name: string
+  testName: string
+  tier: string
+  programs: string[]
+  hidden: boolean
+}
+
+export async function fetchCompanyPrepSettings(collegeId?: string): Promise<{
+  collegeId: string
+  settings: CompanyPrepSettings
+  companies: CompanyPrepSettingsRow[]
+}> {
+  const qs = collegeId ? `?collegeId=${encodeURIComponent(collegeId)}` : ''
+  const res = await authedFetch(`/prep/companies/settings${qs}`)
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to load company prep settings')
+  return { collegeId: json.collegeId, settings: json.settings, companies: json.companies || [] }
+}
+
+export async function saveCompanyPrepSettings(
+  settings: { enabled: boolean; hiddenCompanies: string[] },
+  collegeId?: string,
+): Promise<CompanyPrepSettings> {
+  const res = await authedFetch('/prep/companies/settings', {
+    method: 'PUT',
+    body: JSON.stringify({ ...settings, ...(collegeId ? { collegeId } : {}) }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to save company prep settings')
+  return json.settings as CompanyPrepSettings
 }

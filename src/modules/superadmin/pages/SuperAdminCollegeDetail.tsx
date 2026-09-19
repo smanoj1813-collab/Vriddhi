@@ -37,6 +37,7 @@ import {
 import { resetCollegeData } from '../api/superAdminApi';
 import BulkCredentialReset from '../components/BulkCredentialReset';
 import FacultyLinkRepair from '../components/FacultyLinkRepair';
+import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel';
 import { downloadCsv } from '@/shared/utils/parseCSV';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -517,6 +518,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
       <div className="min-h-[400px]">
         {/* ── OVERVIEW TAB ───────────────────────────────────────────── */}
         {activeTab === "overview" && (
+          <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* College Info Card */}
             <div className="lg:col-span-2 glass-card p-6">
@@ -636,6 +638,8 @@ const SuperAdminCollegeDetail: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+          <CompanyPrepVisibilityPanel collegeId={college.id} collegeName={college.name} />
           </div>
         )}
 

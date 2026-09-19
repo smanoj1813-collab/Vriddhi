@@ -10,6 +10,9 @@ import { describe, it } from 'node:test'
 import {
   validateCompanyCatalog,
   companyTopicIds,
+  normaliseCompanyPrepSettings,
+  applyCompanyPrepSettings,
+  isCompanyVisibleForCollege,
   resolveSeedPrograms,
   PREP_PROGRAM_CODES,
   PREP_SEED_CODES,
@@ -159,5 +162,44 @@ describe('seed codes include the company bundle', () => {
     assert.ok(PREP_SEED_CODES.includes('companies'))
     assert.deepEqual(resolveSeedPrograms('companies,aptitude').programs, ['companies', 'aptitude'])
     assert.ok(resolveSeedPrograms('all').programs.includes('companies'))
+  })
+})
+
+describe('company prep per-college visibility', () => {
+  const list = SEEDED_COMPANIES.map((c) => ({ code: c.code }))
+
+  it('defaults to everything visible when nothing is stored', () => {
+    const s = normaliseCompanyPrepSettings(undefined)
+    assert.deepEqual(s, { enabled: true, hiddenCompanies: [] })
+    assert.equal(applyCompanyPrepSettings(list, s).length, list.length)
+    assert.equal(applyCompanyPrepSettings(list, null).length, list.length)
+  })
+
+  it('master switch off hides every company, including deep links', () => {
+    const s = normaliseCompanyPrepSettings({ enabled: false, hiddenCompanies: [] })
+    assert.deepEqual(applyCompanyPrepSettings(list, s), [])
+    assert.equal(isCompanyVisibleForCollege('tcs-nqt', s), false)
+  })
+
+  it('hides only the listed companies when enabled', () => {
+    const s = normaliseCompanyPrepSettings({ enabled: true, hiddenCompanies: ['Capgemini', ' wipro-nlth '] })
+    assert.deepEqual(s.hiddenCompanies, ['capgemini', 'wipro-nlth'])
+    const visible = applyCompanyPrepSettings(list, s).map((c) => c.code)
+    assert.ok(!visible.includes('capgemini'))
+    assert.ok(!visible.includes('wipro-nlth'))
+    assert.ok(visible.includes('tcs-nqt'))
+    assert.equal(isCompanyVisibleForCollege('capgemini', s), false)
+    assert.equal(isCompanyVisibleForCollege('infosys', s), true)
+  })
+
+  it('drops junk codes, duplicates and non-string values', () => {
+    const s = normaliseCompanyPrepSettings({
+      enabled: 'yes',
+      hiddenCompanies: ['tcs-nqt', 'tcs-nqt', 42, null, 'bad code!', '../x'],
+      updatedBy: 'uid-1',
+    })
+    assert.equal(s.enabled, true)
+    assert.deepEqual(s.hiddenCompanies, ['tcs-nqt'])
+    assert.equal(s.updatedBy, 'uid-1')
   })
 })

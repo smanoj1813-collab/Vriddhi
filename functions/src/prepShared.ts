@@ -1062,3 +1062,59 @@ export function companyTopicIds(company: Pick<PrepCompany, 'sections'>): string[
   }
   return out
 }
+
+// ─── Company prep: per-college visibility ────────────────────────────────────
+//
+// Company guides are authored once for the platform, but a college may not
+// want all of them (or any of them) in front of its learners — a commerce
+// college might hide Capgemini, a college running its own drive might hide
+// the whole strip until placements start. The decision lives per college at
+// colleges/{collegeId}/config/prep → companyPrep and is applied server-side
+// on every company endpoint, so a hidden guide is hidden on deep links too.
+
+export interface CompanyPrepSettings {
+  /** Master switch: false hides the entire company-prep section for the college. */
+  enabled: boolean
+  /** Company codes hidden for this college (ignored when enabled is false). */
+  hiddenCompanies: string[]
+  updatedAt?: string
+  updatedBy?: string
+}
+
+export const DEFAULT_COMPANY_PREP_SETTINGS: CompanyPrepSettings = { enabled: true, hiddenCompanies: [] }
+
+/** Coerce whatever is stored (or posted) into a well-formed settings object. */
+export function normaliseCompanyPrepSettings(raw: unknown): CompanyPrepSettings {
+  const src = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const enabled = src.enabled === undefined ? true : Boolean(src.enabled)
+  const hidden = Array.isArray(src.hiddenCompanies) ? src.hiddenCompanies : []
+  const hiddenCompanies = Array.from(
+    new Set(
+      hidden
+        .filter((c): c is string => typeof c === 'string')
+        .map((c) => c.toLowerCase().trim())
+        .filter((c) => /^[a-z0-9-]+$/.test(c)),
+    ),
+  )
+  const out: CompanyPrepSettings = { enabled, hiddenCompanies }
+  if (typeof src.updatedAt === 'string') out.updatedAt = src.updatedAt
+  if (typeof src.updatedBy === 'string') out.updatedBy = src.updatedBy
+  return out
+}
+
+/** Filter a company list down to what a college's learners may see. */
+export function applyCompanyPrepSettings<T extends { code: string }>(
+  companies: T[],
+  settings: CompanyPrepSettings | null | undefined,
+): T[] {
+  if (!settings) return companies
+  if (!settings.enabled) return []
+  if (settings.hiddenCompanies.length === 0) return companies
+  const hidden = new Set(settings.hiddenCompanies)
+  return companies.filter((c) => !hidden.has(c.code))
+}
+
+/** True when a single company is visible under the given settings. */
+export function isCompanyVisibleForCollege(code: string, settings: CompanyPrepSettings | null | undefined): boolean {
+  return applyCompanyPrepSettings([{ code }], settings).length === 1
+}

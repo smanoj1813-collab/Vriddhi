@@ -27,6 +27,7 @@ import { Router, Response } from 'express'
 import { db, auth } from '../config/firebase'
 import { FieldValue } from 'firebase-admin/firestore'
 import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
+import { getAuth } from 'firebase-admin/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
 import {
@@ -43,6 +44,10 @@ import {
   normaliseSubtopics,
   validateCompanyCatalog,
   companyTopicIds,
+  normaliseCompanyPrepSettings,
+  applyCompanyPrepSettings,
+  DEFAULT_COMPANY_PREP_SETTINGS,
+  type CompanyPrepSettings,
   PrepCompany,
   PrepSubject,
   PrepTopic,
@@ -591,11 +596,129 @@ async function loadCompanies(): Promise<PrepCompany[]> {
   return snap.docs.map((d) => ({ ...(d.data() as PrepCompany), code: d.id }))
 }
 
+// Per-college visibility. The public /prep pages are anonymous, so the
+// college is resolved in this order:
+//   1. verified ID token claim (signed-in student / staff), if a bearer is sent;
+//   2. explicit ?collegeId= (the hub passes the learner's college when known);
+//   3. none → platform defaults (everything published is visible).
+// Token verification here is best-effort: an invalid or missing token simply
+// means "anonymous", it never blocks the public catalogue.
+const COMPANY_PREP_CONFIG_DOC = 'prep'
+
+function companyPrepSettingsRef(collegeId: string) {
+  return db.collection('colleges').doc(collegeId).collection('config').doc(COMPANY_PREP_CONFIG_DOC)
+}
+
+async function loadCompanyPrepSettings(collegeId: string | undefined): Promise<CompanyPrepSettings> {
+  if (!collegeId) return DEFAULT_COMPANY_PREP_SETTINGS
+  try {
+    const snap = await companyPrepSettingsRef(collegeId).get()
+    return normaliseCompanyPrepSettings(snap.exists ? (snap.data() as any)?.companyPrep : undefined)
+  } catch (err) {
+    console.warn('[Prep] company prep settings unreadable for', collegeId, err)
+    return DEFAULT_COMPANY_PREP_SETTINGS
+  }
+}
+
+async function resolvePublicCaller(req: any): Promise<{ isSuperadmin: boolean; collegeId?: string }> {
+  const header = String(req.headers?.authorization || '')
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : ''
+  if (token) {
+    try {
+      const decoded = (await getAuth().verifyIdToken(token)) as unknown as { role?: unknown; collegeId?: unknown }
+      const role = String(decoded.role || '').toLowerCase()
+      const claimCollege = typeof decoded.collegeId === 'string' && decoded.collegeId ? decoded.collegeId : undefined
+      if (role === 'superadmin') {
+        // Superadmin may preview any college's view with ?collegeId=.
+        const preview = typeof req.query?.collegeId === 'string' ? req.query.collegeId.trim() : ''
+        return { isSuperadmin: true, collegeId: preview || undefined }
+      }
+      if (claimCollege) return { isSuperadmin: false, collegeId: claimCollege }
+    } catch {
+      // fall through to anonymous handling
+    }
+  }
+  const queryCollege = typeof req.query?.collegeId === 'string' ? req.query.collegeId.trim() : ''
+  return { isSuperadmin: false, collegeId: /^[A-Za-z0-9_-]{1,64}$/.test(queryCollege) ? queryCollege : undefined }
+}
+
+/** Loads the guides a caller may see: publication state + their college's toggles. */
+async function loadVisibleCompanies(req: any): Promise<{ companies: PrepCompany[]; caller: { isSuperadmin: boolean; collegeId?: string }; settings: CompanyPrepSettings }> {
+  const caller = await resolvePublicCaller(req)
+  const [all, settings] = await Promise.all([loadCompanies(), loadCompanyPrepSettings(caller.collegeId)])
+  const published = all.filter((c) => companyVisible(c, caller.isSuperadmin))
+  // A superadmin previewing a college sees exactly what that college sees.
+  const companies = caller.collegeId ? applyCompanyPrepSettings(published, settings) : published
+  return { companies, caller, settings }
+}
+
+// GET /companies/settings?collegeId= — the college's visibility toggles.
+// College admins/principals read their own; superadmin reads any.
+router.get('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const collegeId = resolveCollegeForSettings(req)
+    if (!collegeId) {
+      res.status(400).json({ error: 'collegeId is required (superadmin) or must be on your account.' })
+      return
+    }
+    const settings = await loadCompanyPrepSettings(collegeId)
+    const all = (await loadCompanies()).filter((c) => c.status === 'published')
+    const companies = all
+      .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+      .map((c) => ({ code: c.code, name: c.name, testName: c.testName, tier: c.tier, programs: c.eligibility?.programs || [], hidden: settings.hiddenCompanies.includes(c.code) }))
+    res.json({ success: true, collegeId, settings, companies })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to load company prep settings', detail: err.message })
+  }
+})
+
+// PUT /companies/settings — save the toggles. Body: { collegeId?, enabled, hiddenCompanies }.
+router.put('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const collegeId = resolveCollegeForSettings(req)
+    if (!collegeId) {
+      res.status(400).json({ error: 'collegeId is required (superadmin) or must be on your account.' })
+      return
+    }
+    const known = new Set((await loadCompanies()).map((c) => c.code))
+    const incoming = normaliseCompanyPrepSettings(req.body || {})
+    const unknown = incoming.hiddenCompanies.filter((c) => !known.has(c))
+    if (unknown.length) {
+      res.status(400).json({ error: `Unknown company code(s): ${unknown.join(', ')}` })
+      return
+    }
+    const settings: CompanyPrepSettings = {
+      enabled: incoming.enabled,
+      hiddenCompanies: incoming.hiddenCompanies,
+      updatedAt: new Date().toISOString(),
+      updatedBy: req.user!.uid,
+    }
+    await companyPrepSettingsRef(collegeId).set({ companyPrep: settings }, { merge: true })
+    res.json({ success: true, collegeId, settings })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to save company prep settings', detail: err.message })
+  }
+})
+
+const SETTINGS_ROLES = new Set(['admin', 'principal', 'hod'])
+function resolveCollegeForSettings(req: AuthenticatedRequest): string | null {
+  const role = req.user?.role || ''
+  if (role === 'superadmin') {
+    const requested =
+      (typeof req.query?.collegeId === 'string' && req.query.collegeId) ||
+      (typeof req.body?.collegeId === 'string' && req.body.collegeId) ||
+      req.user?.collegeId ||
+      ''
+    return requested ? String(requested).trim() : null
+  }
+  if (SETTINGS_ROLES.has(role) && req.user?.collegeId) return req.user.collegeId
+  return null
+}
+
 // GET /companies?program=bca&audience=tech
 router.get('/companies', async (req, res) => {
   try {
-    const isSuperadmin = (req as any).user?.role === 'superadmin'
-    let companies = (await loadCompanies()).filter((c) => companyVisible(c, isSuperadmin))
+    let { companies } = await loadVisibleCompanies(req)
 
     const program = String(req.query.program || '').toLowerCase().trim()
     if (program) companies = companies.filter((c) => (c.eligibility?.programs || []).includes(program))
@@ -618,10 +741,11 @@ router.get('/companies', async (req, res) => {
 // GET /companies/:code — full guide plus the resolved topic cards it maps to.
 router.get('/companies/:code', async (req, res) => {
   try {
-    const isSuperadmin = (req as any).user?.role === 'superadmin'
     const code = String(req.params.code || '').toLowerCase().trim()
-    const company = (await loadCompanies()).find((c) => c.code === code)
-    if (!company || !companyVisible(company, isSuperadmin)) {
+    const { companies, caller } = await loadVisibleCompanies(req)
+    const isSuperadmin = caller.isSuperadmin
+    const company = companies.find((c) => c.code === code)
+    if (!company) {
       res.status(404).json({ error: 'Company prep guide not found' })
       return
     }
@@ -677,10 +801,10 @@ router.get('/companies/:code', async (req, res) => {
 // real paper. Sections without mapped topics (coding, games) contribute none.
 router.get('/companies/:code/mock', async (req, res) => {
   try {
-    const isSuperadmin = (req as any).user?.role === 'superadmin'
     const code = String(req.params.code || '').toLowerCase().trim()
-    const company = (await loadCompanies()).find((c) => c.code === code)
-    if (!company || !companyVisible(company, isSuperadmin)) {
+    const { companies } = await loadVisibleCompanies(req)
+    const company = companies.find((c) => c.code === code)
+    if (!company) {
       res.status(404).json({ error: 'Company prep guide not found' })
       return
     }
