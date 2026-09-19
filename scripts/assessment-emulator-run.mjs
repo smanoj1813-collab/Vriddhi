@@ -4,8 +4,13 @@
  * Requires the Auth, Firestore and Functions emulators to be running.
  * It never uses the production project because all endpoints are localhost.
  */
-import * as admin from '../functions/node_modules/firebase-admin/lib/index.js'
+import { createRequire } from 'node:module'
 import { mkdir, writeFile } from 'node:fs/promises'
+
+// firebase-admin is CommonJS in the Functions package; createRequire keeps
+// this runner portable under Node 22 ESM without relying on package exports.
+const require = createRequire(import.meta.url)
+const admin = require('../functions/node_modules/firebase-admin')
 
 const PROJECT_ID = 'demo-vriddhi-assessment'
 const REGION = 'asia-south1'
