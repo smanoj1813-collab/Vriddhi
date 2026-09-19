@@ -25,6 +25,117 @@ export type PrepDifficulty = 'basic' | 'core' | 'advanced'
 export type PrepStatus = 'draft' | 'in_review' | 'published'
 export type PrepTier = 'free' | 'premium'
 
+/**
+ * Which catalogue a subject belongs to.
+ *  - academic: semester-wise university curriculum (BBA, B.Com, M.Com, ...)
+ *  - aptitude: placement aptitude shared by every program (QA, LR, Verbal)
+ *  - company:  company-specific placement prep (reserved for the next phase)
+ * Absent on legacy records — treated as 'academic'.
+ */
+export type PrepTrack = 'academic' | 'aptitude' | 'company'
+
+/**
+ * Who a topic is pitched at. Aptitude topics are shared across programs, so
+ * this tag lets the same "Percentages" page serve everyone while
+ * "Permutations & Probability" is flagged for tech / PG audiences.
+ *  - ug:   non-technical undergraduate (BBA, B.Com, BA, B.Sc)
+ *  - pg:   non-technical postgraduate (MBA, M.Com)
+ *  - tech: technical / IT hiring (BCA, MCA, engineering-pattern papers)
+ */
+export type PrepAudience = 'ug' | 'pg' | 'tech'
+
+// ── Company-specific placement prep ─────────────────────────────────────────
+//
+// A PrepCompany describes one recruiter's assessment (pattern, eligibility,
+// rounds) and maps each test section onto the shared aptitude topics that
+// already exist, so company prep re-uses the QA / LR / VA catalogue instead of
+// duplicating it. Stored in Firestore under `prep_companies/{code}`.
+
+export type PrepCompanyTier = 'mass' | 'premium'
+
+export interface PrepCompanySection {
+  id: string
+  /** Section name as the recruiter labels it, e.g. "Numerical Ability". */
+  name: string
+  questions?: number
+  /** Minutes allotted to the section; omit when the timer is shared. */
+  minutes?: number
+  /** Free-text note, e.g. "shared 25-minute timer with Advanced Reasoning". */
+  note?: string
+  /**
+   * Aptitude topic ids (qa-* / lr-* / va-*) tested in this section, most
+   * frequent first. Empty for sections the shared catalogue does not cover
+   * (coding, games, spoken English) — `coverage` explains what to do instead.
+   */
+  topicIds: string[]
+  /** 'catalogue' = fully covered by mapped topics; 'partial' / 'external' = see coverage note. */
+  coverage: 'catalogue' | 'partial' | 'external'
+  coverageNote?: string
+}
+
+export interface PrepCompanyRound {
+  id: string
+  name: string
+  /** What happens in this round and what is evaluated. */
+  detail: string
+  /** True when failing this round ends the process. */
+  eliminator?: boolean
+}
+
+export interface PrepCompanyEligibility {
+  /** Program codes from PREP_PROGRAM_CATALOG this drive typically accepts. */
+  programs: string[]
+  /** Human-readable degree list as the recruiter phrases it. */
+  degrees: string
+  minPercentage?: string
+  backlogs?: string
+  gap?: string
+  age?: string
+  note?: string
+}
+
+export interface PrepCompany {
+  /** URL-safe code, e.g. 'tcs-nqt'. */
+  code: string
+  name: string
+  /** Drive / test name, e.g. "TCS National Qualifier Test (NQT)". */
+  testName: string
+  tagline: string
+  /** Which learners this drive is relevant to; drives the hub filter. */
+  audience: PrepAudience[]
+  tier: PrepCompanyTier
+  /** Assessment vendor / platform, e.g. "TCS iON", "AMCAT / SHL", "HackerRank". */
+  platform?: string
+  totalMinutes?: number
+  totalQuestions?: number
+  negativeMarking: boolean
+  sectionalCutoff: boolean
+  eligibility: PrepCompanyEligibility
+  sections: PrepCompanySection[]
+  rounds: PrepCompanyRound[]
+  /** Markdown: how to prepare, ordered strategy, what trips candidates up. */
+  strategyMd: string
+  /** Short bullet tips shown as chips / list. */
+  quickTips: string[]
+  /** Roles / CTC bands as commonly reported; phrased as ranges, not promises. */
+  rolesMd?: string
+  /** ISO date the pattern was last verified against public sources. */
+  patternVerifiedOn: string
+  /** Public sources consulted for the pattern (URLs). */
+  sources: string[]
+  status: 'draft' | 'in_review' | 'published'
+  order: number
+  updatedAt?: string
+}
+
+/** A granular sub-topic with its own short brief (rendered under the topic). */
+export interface PrepSubtopic {
+  id: string
+  title: string
+  /** 2-6 lines of Markdown: what it is, the key idea/formula, the exam angle. */
+  briefMd: string
+}
+
 export interface PrepFormula {
   id: string
   label: string
@@ -61,7 +172,10 @@ export interface PrepTopicContent {
   howToSolve: PrepHowToSolve[]
   moduleNumber?: number
   moduleName?: string
+  /** Sub-topic titles (kept for the list views and legacy records). */
   subtopics?: string[]
+  /** Sub-topics with briefs. When present, `subtopics` mirrors its titles. */
+  subtopicDetails?: PrepSubtopic[]
   examFrequency?: 'very_high' | 'high' | 'moderate'
   pyqHighlights?: string[]
 }
@@ -79,6 +193,8 @@ export interface PrepTopic extends PrepTopicContent {
   reviewedBy?: string | null
   publishedAt?: string | null
   tier: PrepTier
+  /** Audience tags for shared (aptitude) topics. Absent => everyone. */
+  audience?: PrepAudience[]
   updatedAt?: string
 }
 
@@ -87,6 +203,8 @@ export interface PrepSubject {
   name: string
   stream: PrepStream
   programs: string[] // ['bba', 'bcom', 'mba', ...]
+  /** Catalogue this subject belongs to. Absent on legacy records => 'academic'. */
+  track?: PrepTrack
   /** UG vs PG. Absent on legacy (BBA) records — inferred as undergraduate. */
   degreeLevel?: PrepDegreeLevel
   /** PG programs run 4 semesters, so they get their own year grouping. */
@@ -175,6 +293,41 @@ export function validatePublishTransition(
 }
 
 /**
+ * Accepts sub-topics as plain strings, as `{ title, briefMd }` objects, or a
+ * mix of both, and returns the two synchronised shapes the topic stores:
+ * `subtopics` (titles only, for list views and legacy readers) and
+ * `subtopicDetails` (titles + briefs). Entries without a title are dropped.
+ */
+export function normaliseSubtopics(raw: unknown): {
+  subtopics: string[]
+  subtopicDetails: PrepSubtopic[]
+} {
+  const list = Array.isArray(raw) ? raw : []
+  const details: PrepSubtopic[] = []
+  list.forEach((entry: any, idx: number) => {
+    if (typeof entry === 'string') {
+      const title = entry.trim()
+      if (title) details.push({ id: `sub-${idx + 1}`, title, briefMd: '' })
+      return
+    }
+    if (entry && typeof entry === 'object') {
+      const title = String(entry.title ?? entry.name ?? entry.label ?? '').trim()
+      if (!title) return
+      const briefMd = String(entry.briefMd ?? entry.brief ?? entry.summary ?? entry.description ?? '').trim()
+      const id = String(entry.id || `sub-${idx + 1}`).trim() || `sub-${idx + 1}`
+      details.push({ id, title, briefMd })
+    }
+  })
+  const hasAnyBrief = details.some((d) => d.briefMd.length > 0)
+  return {
+    subtopics: details.map((d) => d.title),
+    // Only persist the detailed shape when at least one brief exists, so a
+    // plain string list round-trips unchanged.
+    subtopicDetails: hasAnyBrief ? details : [],
+  }
+}
+
+/**
  * Parses and validates structured AI or curator output into the 4 mandatory sections:
  * 1. explanationMd (Markdown content)
  * 2. formulas (Formula cards with example Q&A)
@@ -249,10 +402,9 @@ export function parsePrepDraft(raw: unknown): {
   // Optional module & subtopics metadata
   const moduleNumber = Number(parsed.moduleNumber) || undefined
   const moduleName = typeof parsed.moduleName === 'string' && parsed.moduleName.trim() ? parsed.moduleName.trim() : undefined
-  const rawSubtopics = Array.isArray(parsed.subtopics) ? parsed.subtopics : []
-  const subtopics = rawSubtopics
-    .map((s: any) => (typeof s === 'string' ? s.trim() : String(s || '').trim()))
-    .filter(Boolean)
+  const { subtopics, subtopicDetails } = normaliseSubtopics(
+    parsed.subtopicDetails ?? parsed.subtopics
+  )
 
   const examFrequency = ['very_high', 'high', 'moderate'].includes(parsed.examFrequency)
     ? parsed.examFrequency
@@ -276,6 +428,7 @@ export function parsePrepDraft(raw: unknown): {
       ...(moduleNumber ? { moduleNumber } : {}),
       ...(moduleName ? { moduleName } : {}),
       ...(subtopics.length > 0 ? { subtopics } : {}),
+      ...(subtopicDetails.length > 0 ? { subtopicDetails } : {}),
       ...(examFrequency ? { examFrequency } : {}),
       ...(pyqHighlights.length > 0 ? { pyqHighlights } : {}),
     },
@@ -357,10 +510,10 @@ Difficulty Level: "${difficulty}"
 You MUST output ONLY a valid JSON object matching this schema with NO markdown code fences and NO conversational filler:
 {
   "subtopics": [
-    "Granular subtopic 1 covering fundamental definition and scope",
-    "Granular subtopic 2 covering core analytical framework or mechanism",
-    "Granular subtopic 3 covering practical corporate application",
-    "Granular subtopic 4 covering examination pitfalls and model answers"
+    { "title": "Granular subtopic 1 covering fundamental definition and scope", "briefMd": "3-5 line Markdown brief: what it is, the key idea or formula, and how examiners test it" },
+    { "title": "Granular subtopic 2 covering core analytical framework or mechanism", "briefMd": "3-5 line Markdown brief" },
+    { "title": "Granular subtopic 3 covering practical corporate application", "briefMd": "3-5 line Markdown brief" },
+    { "title": "Granular subtopic 4 covering examination pitfalls and model answers", "briefMd": "3-5 line Markdown brief" }
   ],
   "explanationMd": "# Comprehensive Markdown Explanation\\n\\n### Core Concept & Intuition\\nExplain the concept clearly with high academic rigour, accompanied by an intuitive modern business case analogy (e.g. Tata, Reliance, Infosys, Zomato, Apple).\\n\\n### Key Principles & Frameworks\\nBreak down the essential principles, rules, or components systematically using bullet points, comparison tables, or clear headings.\\n\\n### Real-World Business Application\\nHow corporate leaders, accountants, financial analysts, or operations managers apply this in practice in India.\\n\\n### Examination Focus & Model Structure\\nKey points university examiners award full marks for in 5-mark and 10-mark questions.",
   "formulas": [
@@ -442,6 +595,22 @@ export const PREP_PROGRAM_CATALOG: PrepProgramInfo[] = [
 /** Lowercase program codes, e.g. ['bba', 'bcom', ...]. */
 export const PREP_PROGRAM_CODES: string[] = PREP_PROGRAM_CATALOG.map((p) => p.code)
 
+/**
+ * Non-program catalogues that can also be seeded. 'aptitude' is the shared
+ * placement bundle (Quantitative Aptitude, Logical Reasoning, Verbal Ability)
+ * that every program lists.
+ */
+export const PREP_TRACK_SEED_CODES: string[] = ['aptitude', 'companies']
+
+/** Everything `/prep/seed-all` understands: program codes + track bundles. */
+export const PREP_SEED_CODES: string[] = [...PREP_PROGRAM_CODES, ...PREP_TRACK_SEED_CODES]
+
+/** Normalises a subject's catalogue; legacy records without the field are academic. */
+export function effectiveTrack(subject?: { track?: PrepTrack | string | null } | null): PrepTrack {
+  const t = subject?.track
+  return t === 'aptitude' || t === 'company' ? t : 'academic'
+}
+
 export function getPrepProgramInfo(code?: string | null): PrepProgramInfo | null {
   if (!code) return null
   const norm = code.toLowerCase().trim()
@@ -503,7 +672,7 @@ export function resolveSeedPrograms(
   const errors: string[] = []
 
   if (input === undefined || input === null || input === '') {
-    return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+    return { programs: [...PREP_SEED_CODES], all: true, errors }
   }
 
   let rawList: unknown[] = []
@@ -512,7 +681,7 @@ export function resolveSeedPrograms(
   } else if (typeof input === 'string') {
     const trimmed = input.trim()
     if (!trimmed || trimmed.toLowerCase() === 'all') {
-      return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+      return { programs: [...PREP_SEED_CODES], all: true, errors }
     }
     rawList = trimmed.split(',')
   } else {
@@ -528,10 +697,10 @@ export function resolveSeedPrograms(
     const code = String(entry ?? '').toLowerCase().trim()
     if (!code) continue
     if (code === 'all') {
-      return { programs: [...PREP_PROGRAM_CODES], all: true, errors }
+      return { programs: [...PREP_SEED_CODES], all: true, errors }
     }
-    if (!PREP_PROGRAM_CODES.includes(code)) {
-      errors.push(`Unknown program "${String(entry)}". Valid codes: ${PREP_PROGRAM_CODES.join(', ')}.`)
+    if (!PREP_SEED_CODES.includes(code)) {
+      errors.push(`Unknown program "${String(entry)}". Valid codes: ${PREP_SEED_CODES.join(', ')}.`)
       continue
     }
     if (!resolved.includes(code)) resolved.push(code)
@@ -684,6 +853,30 @@ export function validatePrepCatalog(bundle: PrepCatalogBundle): CatalogIntegrity
       if (!Array.isArray(topic.featuredQuestionIds) || topic.featuredQuestionIds.length === 0) {
         warn('TOPIC_NO_FEATURED_QUESTIONS', `Topic "${topic.id}" features no practice questions.`)
       }
+      if (topic.subtopicDetails !== undefined) {
+        if (!Array.isArray(topic.subtopicDetails)) {
+          err('TOPIC_BAD_SUBTOPIC_DETAILS', `Topic "${topic.id}" subtopicDetails must be an array.`)
+        } else {
+          const seen = new Set<string>()
+          for (const sub of topic.subtopicDetails) {
+            if (!sub?.id || !sub?.title?.trim()) {
+              err('SUBTOPIC_MISSING_ID_OR_TITLE', `Topic "${topic.id}" has a sub-topic without id/title.`)
+              continue
+            }
+            if (seen.has(sub.id)) {
+              err('DUPLICATE_SUBTOPIC_ID', `Topic "${topic.id}" repeats sub-topic id "${sub.id}".`)
+            }
+            seen.add(sub.id)
+            if (typeof sub.briefMd !== 'string' || sub.briefMd.trim().length < 20) {
+              warn('SUBTOPIC_SHORT_BRIEF', `Sub-topic "${sub.id}" of topic "${topic.id}" has no brief (under 20 characters).`)
+            }
+          }
+          const titles = topic.subtopicDetails.map((d) => d.title)
+          if (Array.isArray(topic.subtopics) && topic.subtopics.join('\u0001') !== titles.join('\u0001')) {
+            warn('SUBTOPICS_OUT_OF_SYNC', `Topic "${topic.id}" subtopics[] does not mirror subtopicDetails titles.`)
+          }
+        }
+      }
     }
   }
 
@@ -757,4 +950,171 @@ export function validatePrepCatalog(bundle: PrepCatalogBundle): CatalogIntegrity
     warningCount: issues.length - errorCount,
     valid: errorCount === 0,
   }
+}
+
+// ── Company catalogue integrity ─────────────────────────────────────────────
+
+export interface CompanyCatalogBundle {
+  companies: PrepCompany[]
+  /** Every aptitude topic id the company sections may reference. */
+  knownTopicIds: Set<string> | string[]
+}
+
+/**
+ * Verifies a company-prep bundle: unique codes, well-formed sections / rounds,
+ * every mapped topic id resolves to a seeded aptitude topic, every section
+ * that claims catalogue coverage actually maps at least one topic, and the
+ * eligibility programs are valid catalogue codes.
+ */
+export function validateCompanyCatalog(bundle: CompanyCatalogBundle): CatalogIntegrityReport {
+  const issues: CatalogIssue[] = []
+  const err = (code: string, message: string) => issues.push({ level: 'error', code, message })
+  const warn = (code: string, message: string) => issues.push({ level: 'warning', code, message })
+
+  const companies = Array.isArray(bundle?.companies) ? bundle.companies : []
+  const known = bundle?.knownTopicIds instanceof Set ? bundle.knownTopicIds : new Set(bundle?.knownTopicIds || [])
+  const codes = new Set<string>()
+
+  for (const c of companies) {
+    if (!c?.code || !/^[a-z0-9-]+$/.test(c.code)) {
+      err('COMPANY_BAD_CODE', `Company "${c?.name || '?'}" needs a lowercase URL-safe code.`)
+      continue
+    }
+    if (codes.has(c.code)) err('DUPLICATE_COMPANY_CODE', `Duplicate company code "${c.code}".`)
+    codes.add(c.code)
+
+    if (!c.name || !c.testName) err('COMPANY_MISSING_NAME', `Company "${c.code}" needs name and testName.`)
+    if (!c.strategyMd || c.strategyMd.trim().length < 200) {
+      err('COMPANY_THIN_STRATEGY', `Company "${c.code}" strategyMd is under 200 characters.`)
+    }
+    if (!Array.isArray(c.audience) || c.audience.length === 0) {
+      err('COMPANY_NO_AUDIENCE', `Company "${c.code}" has no audience.`)
+    }
+    if (!c.patternVerifiedOn || Number.isNaN(Date.parse(c.patternVerifiedOn))) {
+      err('COMPANY_BAD_VERIFIED_DATE', `Company "${c.code}" patternVerifiedOn must be an ISO date.`)
+    }
+    if (!Array.isArray(c.sources) || c.sources.length === 0) {
+      warn('COMPANY_NO_SOURCES', `Company "${c.code}" lists no public sources for its pattern.`)
+    }
+
+    const programs = c.eligibility?.programs || []
+    if (programs.length === 0) err('COMPANY_NO_PROGRAMS', `Company "${c.code}" eligibility lists no programs.`)
+    for (const p of programs) {
+      if (!PREP_PROGRAM_CODES.includes(p)) err('COMPANY_UNKNOWN_PROGRAM', `Company "${c.code}" eligibility has unknown program "${p}".`)
+    }
+
+    const sectionIds = new Set<string>()
+    if (!Array.isArray(c.sections) || c.sections.length === 0) {
+      err('COMPANY_NO_SECTIONS', `Company "${c.code}" has no sections.`)
+    }
+    let mappedAny = false
+    for (const sec of c.sections || []) {
+      if (!sec.id || sectionIds.has(sec.id)) err('COMPANY_BAD_SECTION_ID', `Company "${c.code}" has a missing/duplicate section id "${sec.id}".`)
+      sectionIds.add(sec.id)
+      if (!sec.name) err('COMPANY_SECTION_NO_NAME', `Company "${c.code}" section "${sec.id}" has no name.`)
+      const ids = Array.isArray(sec.topicIds) ? sec.topicIds : []
+      for (const tid of ids) {
+        if (!known.has(tid)) err('COMPANY_UNKNOWN_TOPIC', `Company "${c.code}" section "${sec.id}" maps unknown topic "${tid}".`)
+      }
+      if (new Set(ids).size !== ids.length) warn('COMPANY_DUP_TOPIC', `Company "${c.code}" section "${sec.id}" repeats a topic id.`)
+      if (sec.coverage === 'catalogue' && ids.length === 0) {
+        err('COMPANY_SECTION_UNMAPPED', `Company "${c.code}" section "${sec.id}" claims catalogue coverage but maps no topics.`)
+      }
+      if (sec.coverage !== 'catalogue' && !(sec.coverageNote && sec.coverageNote.trim().length >= 20)) {
+        warn('COMPANY_SECTION_NO_COVERAGE_NOTE', `Company "${c.code}" section "${sec.id}" is ${sec.coverage} but has no coverage note.`)
+      }
+      if (ids.length > 0) mappedAny = true
+    }
+    if (!mappedAny) err('COMPANY_NOTHING_MAPPED', `Company "${c.code}" maps no aptitude topics at all.`)
+
+    const roundIds = new Set<string>()
+    if (!Array.isArray(c.rounds) || c.rounds.length === 0) warn('COMPANY_NO_ROUNDS', `Company "${c.code}" lists no rounds.`)
+    for (const r of c.rounds || []) {
+      if (!r.id || roundIds.has(r.id)) err('COMPANY_BAD_ROUND_ID', `Company "${c.code}" has a missing/duplicate round id "${r.id}".`)
+      roundIds.add(r.id)
+      if (!r.name || !r.detail) err('COMPANY_ROUND_INCOMPLETE', `Company "${c.code}" round "${r.id}" needs name and detail.`)
+    }
+  }
+
+  const errorCount = issues.filter((i) => i.level === 'error').length
+  const warningCount = issues.length - errorCount
+  return {
+    programCode: 'companies',
+    subjectCount: companies.length,
+    topicCount: companies.reduce((n, c) => n + (c.sections || []).length, 0),
+    questionCount: 0,
+    issues,
+    errorCount,
+    warningCount,
+    valid: errorCount === 0,
+  }
+}
+
+/**
+ * Collects the distinct aptitude topic ids a company tests, most-frequent
+ * first (section order, then position within the section). Used to build the
+ * "topics to prepare" checklist and to sample a company mock.
+ */
+export function companyTopicIds(company: Pick<PrepCompany, 'sections'>): string[] {
+  const out: string[] = []
+  for (const sec of company?.sections || []) {
+    for (const tid of sec.topicIds || []) if (!out.includes(tid)) out.push(tid)
+  }
+  return out
+}
+
+// ─── Company prep: per-college visibility ────────────────────────────────────
+//
+// Company guides are authored once for the platform, but a college may not
+// want all of them (or any of them) in front of its learners — a commerce
+// college might hide Capgemini, a college running its own drive might hide
+// the whole strip until placements start. The decision lives per college at
+// colleges/{collegeId}/config/prep → companyPrep and is applied server-side
+// on every company endpoint, so a hidden guide is hidden on deep links too.
+
+export interface CompanyPrepSettings {
+  /** Master switch: false hides the entire company-prep section for the college. */
+  enabled: boolean
+  /** Company codes hidden for this college (ignored when enabled is false). */
+  hiddenCompanies: string[]
+  updatedAt?: string
+  updatedBy?: string
+}
+
+export const DEFAULT_COMPANY_PREP_SETTINGS: CompanyPrepSettings = { enabled: true, hiddenCompanies: [] }
+
+/** Coerce whatever is stored (or posted) into a well-formed settings object. */
+export function normaliseCompanyPrepSettings(raw: unknown): CompanyPrepSettings {
+  const src = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const enabled = src.enabled === undefined ? true : Boolean(src.enabled)
+  const hidden = Array.isArray(src.hiddenCompanies) ? src.hiddenCompanies : []
+  const hiddenCompanies = Array.from(
+    new Set(
+      hidden
+        .filter((c): c is string => typeof c === 'string')
+        .map((c) => c.toLowerCase().trim())
+        .filter((c) => /^[a-z0-9-]+$/.test(c)),
+    ),
+  )
+  const out: CompanyPrepSettings = { enabled, hiddenCompanies }
+  if (typeof src.updatedAt === 'string') out.updatedAt = src.updatedAt
+  if (typeof src.updatedBy === 'string') out.updatedBy = src.updatedBy
+  return out
+}
+
+/** Filter a company list down to what a college's learners may see. */
+export function applyCompanyPrepSettings<T extends { code: string }>(
+  companies: T[],
+  settings: CompanyPrepSettings | null | undefined,
+): T[] {
+  if (!settings) return companies
+  if (!settings.enabled) return []
+  if (settings.hiddenCompanies.length === 0) return companies
+  const hidden = new Set(settings.hiddenCompanies)
+  return companies.filter((c) => !hidden.has(c.code))
+}
+
+/** True when a single company is visible under the given settings. */
+export function isCompanyVisibleForCollege(code: string, settings: CompanyPrepSettings | null | undefined): boolean {
+  return applyCompanyPrepSettings([{ code }], settings).length === 1
 }

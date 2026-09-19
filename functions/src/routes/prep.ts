@@ -27,6 +27,7 @@ import { Router, Response } from 'express'
 import { db, auth } from '../config/firebase'
 import { FieldValue } from 'firebase-admin/firestore'
 import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
+import { getAuth } from 'firebase-admin/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
 import {
@@ -39,6 +40,15 @@ import {
   chunkArray,
   getPrepProgramsForLevel,
   effectiveDegreeLevel,
+  effectiveTrack,
+  normaliseSubtopics,
+  validateCompanyCatalog,
+  companyTopicIds,
+  normaliseCompanyPrepSettings,
+  applyCompanyPrepSettings,
+  DEFAULT_COMPANY_PREP_SETTINGS,
+  type CompanyPrepSettings,
+  PrepCompany,
   PrepSubject,
   PrepTopic,
   UniversalQuestion,
@@ -68,6 +78,8 @@ import {
   SEEDED_BCOM_TOPICS,
   SEEDED_BCOM_QUESTIONS,
 } from '../data/bcomSeedData'
+import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../data/aptitudeSeedData'
+import { SEEDED_COMPANIES } from '../data/companySeedData'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
@@ -89,7 +101,13 @@ const PREP_SEED_BUNDLES: Array<{
   { code: 'bsc', label: 'B.Sc', subjects: BSC_SUBJECTS, topics: SEEDED_BSC_TOPICS, questions: SEEDED_BSC_QUESTIONS },
   { code: 'ba', label: 'BA', subjects: BA_SUBJECTS, topics: SEEDED_BA_TOPICS, questions: SEEDED_BA_QUESTIONS },
   { code: 'mcom', label: 'M.Com', subjects: MCOM_SUBJECTS, topics: SEEDED_MCOM_TOPICS, questions: SEEDED_MCOM_QUESTIONS },
+  // Shared placement-aptitude track (QA / LR / Verbal). Not a program: the
+  // subjects list every UG & PG program, so seeding once serves them all.
+  { code: 'aptitude', label: 'Placement Aptitude', subjects: APTITUDE_SUBJECTS, topics: SEEDED_APTITUDE_TOPICS, questions: SEEDED_APTITUDE_QUESTIONS },
 ]
+
+/** Seed code for the company-prep catalogue (prep_companies). */
+const COMPANY_SEED_CODE = 'companies'
 
 /** Firestore allows at most 500 writes per commit; stay well under it. */
 const FIRESTORE_BATCH_LIMIT = 400
@@ -243,7 +261,7 @@ When writing answers for 10-mark questions:
 // Publicly lists prep subjects. Filterable by program (e.g. 'bba'), stream, and yearGroup.
 router.get('/subjects', async (req, res) => {
   try {
-    const { program, stream, yearGroup, degreeLevel } = req.query
+    const { program, stream, yearGroup, degreeLevel, track } = req.query
     const snap = await db.collection('prep_subjects').get()
 
     let subjects: PrepSubject[] = snap.docs.map((d) => {
@@ -278,8 +296,15 @@ router.get('/subjects', async (req, res) => {
     if (typeof degreeLevel === 'string' && degreeLevel.trim() && degreeLevel !== 'all') {
       const lvl = degreeLevel.toLowerCase().trim()
       // effectiveDegreeLevel infers 'undergraduate' for legacy records (BBA)
-      // that predate the degreeLevel field.
-      subjects = subjects.filter((s) => effectiveDegreeLevel(s) === lvl)
+      // that predate the degreeLevel field. Shared aptitude subjects carry no
+      // degree level and are relevant to both, so they pass this filter.
+      subjects = subjects.filter((s) => effectiveTrack(s) === 'aptitude' || effectiveDegreeLevel(s) === lvl)
+    }
+
+    if (typeof track === 'string' && track.trim() && track !== 'all') {
+      const tr = track.toLowerCase().trim()
+      // effectiveTrack treats legacy subjects without a track as 'academic'.
+      subjects = subjects.filter((s) => effectiveTrack(s) === tr)
     }
 
     subjects.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
@@ -494,8 +519,19 @@ router.post('/content/save', verifyAuth, async (req: AuthenticatedRequest, res: 
     const topicRef = db.collection('prep_subjects').doc(subjectId).collection('topics').doc(topicId)
     const now = new Date().toISOString()
 
+    // Keep the two sub-topic shapes in sync: the Studio edits
+    // `subtopicDetails` (title + brief); `subtopics` must mirror the titles
+    // for the older readers (prep-app, legacy viewer).
+    const subtopicPatch: Record<string, unknown> = {}
+    if (fields.subtopicDetails !== undefined || fields.subtopics !== undefined) {
+      const norm = normaliseSubtopics(fields.subtopicDetails ?? fields.subtopics)
+      subtopicPatch.subtopics = norm.subtopics
+      subtopicPatch.subtopicDetails = norm.subtopicDetails
+    }
+
     const payload = {
       ...fields,
+      ...subtopicPatch,
       id: topicId,
       subjectId,
       generatedBy: 'curator',
@@ -540,6 +576,292 @@ router.post('/subjects', verifyAuth, async (req: AuthenticatedRequest, res: Resp
     res.json({ success: true, message: 'Subject saved successfully.', data: subjectData })
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to save subject', detail: err.message })
+  }
+})
+
+// ── Company prep ────────────────────────────────────────────────────────────
+//
+// Company guides live in prep_companies/{code}. Anonymous callers see only
+// published guides; the superadmin sees everything. When the collection has
+// not been seeded yet we fall back to the in-repo seed so the public page is
+// never empty after a deploy.
+
+function companyVisible(c: PrepCompany, isSuperadmin: boolean): boolean {
+  return isSuperadmin || c.status === 'published'
+}
+
+async function loadCompanies(): Promise<PrepCompany[]> {
+  const snap = await db.collection('prep_companies').get()
+  if (snap.empty) return [...SEEDED_COMPANIES]
+  return snap.docs.map((d) => ({ ...(d.data() as PrepCompany), code: d.id }))
+}
+
+// Per-college visibility. The public /prep pages are anonymous, so the
+// college is resolved in this order:
+//   1. verified ID token claim (signed-in student / staff), if a bearer is sent;
+//   2. explicit ?collegeId= (the hub passes the learner's college when known);
+//   3. none → platform defaults (everything published is visible).
+// Token verification here is best-effort: an invalid or missing token simply
+// means "anonymous", it never blocks the public catalogue.
+const COMPANY_PREP_CONFIG_DOC = 'prep'
+
+function companyPrepSettingsRef(collegeId: string) {
+  return db.collection('colleges').doc(collegeId).collection('config').doc(COMPANY_PREP_CONFIG_DOC)
+}
+
+async function loadCompanyPrepSettings(collegeId: string | undefined): Promise<CompanyPrepSettings> {
+  if (!collegeId) return DEFAULT_COMPANY_PREP_SETTINGS
+  try {
+    const snap = await companyPrepSettingsRef(collegeId).get()
+    return normaliseCompanyPrepSettings(snap.exists ? (snap.data() as any)?.companyPrep : undefined)
+  } catch (err) {
+    console.warn('[Prep] company prep settings unreadable for', collegeId, err)
+    return DEFAULT_COMPANY_PREP_SETTINGS
+  }
+}
+
+async function resolvePublicCaller(req: any): Promise<{ isSuperadmin: boolean; collegeId?: string }> {
+  const header = String(req.headers?.authorization || '')
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : ''
+  if (token) {
+    try {
+      const decoded = (await getAuth().verifyIdToken(token)) as unknown as { role?: unknown; collegeId?: unknown }
+      const role = String(decoded.role || '').toLowerCase()
+      const claimCollege = typeof decoded.collegeId === 'string' && decoded.collegeId ? decoded.collegeId : undefined
+      if (role === 'superadmin') {
+        // Superadmin may preview any college's view with ?collegeId=.
+        const preview = typeof req.query?.collegeId === 'string' ? req.query.collegeId.trim() : ''
+        return { isSuperadmin: true, collegeId: preview || undefined }
+      }
+      if (claimCollege) return { isSuperadmin: false, collegeId: claimCollege }
+    } catch {
+      // fall through to anonymous handling
+    }
+  }
+  const queryCollege = typeof req.query?.collegeId === 'string' ? req.query.collegeId.trim() : ''
+  return { isSuperadmin: false, collegeId: /^[A-Za-z0-9_-]{1,64}$/.test(queryCollege) ? queryCollege : undefined }
+}
+
+/** Loads the guides a caller may see: publication state + their college's toggles. */
+async function loadVisibleCompanies(req: any): Promise<{ companies: PrepCompany[]; caller: { isSuperadmin: boolean; collegeId?: string }; settings: CompanyPrepSettings }> {
+  const caller = await resolvePublicCaller(req)
+  const [all, settings] = await Promise.all([loadCompanies(), loadCompanyPrepSettings(caller.collegeId)])
+  const published = all.filter((c) => companyVisible(c, caller.isSuperadmin))
+  // A superadmin previewing a college sees exactly what that college sees.
+  const companies = caller.collegeId ? applyCompanyPrepSettings(published, settings) : published
+  return { companies, caller, settings }
+}
+
+// GET /companies/settings?collegeId= — the college's visibility toggles.
+// College admins/principals read their own; superadmin reads any.
+router.get('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const collegeId = resolveCollegeForSettings(req)
+    if (!collegeId) {
+      res.status(400).json({ error: 'collegeId is required (superadmin) or must be on your account.' })
+      return
+    }
+    const settings = await loadCompanyPrepSettings(collegeId)
+    const all = (await loadCompanies()).filter((c) => c.status === 'published')
+    const companies = all
+      .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+      .map((c) => ({ code: c.code, name: c.name, testName: c.testName, tier: c.tier, programs: c.eligibility?.programs || [], hidden: settings.hiddenCompanies.includes(c.code) }))
+    res.json({ success: true, collegeId, settings, companies })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to load company prep settings', detail: err.message })
+  }
+})
+
+// PUT /companies/settings — save the toggles. Body: { collegeId?, enabled, hiddenCompanies }.
+router.put('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const collegeId = resolveCollegeForSettings(req)
+    if (!collegeId) {
+      res.status(400).json({ error: 'collegeId is required (superadmin) or must be on your account.' })
+      return
+    }
+    const known = new Set((await loadCompanies()).map((c) => c.code))
+    const incoming = normaliseCompanyPrepSettings(req.body || {})
+    const unknown = incoming.hiddenCompanies.filter((c) => !known.has(c))
+    if (unknown.length) {
+      res.status(400).json({ error: `Unknown company code(s): ${unknown.join(', ')}` })
+      return
+    }
+    const settings: CompanyPrepSettings = {
+      enabled: incoming.enabled,
+      hiddenCompanies: incoming.hiddenCompanies,
+      updatedAt: new Date().toISOString(),
+      updatedBy: req.user!.uid,
+    }
+    await companyPrepSettingsRef(collegeId).set({ companyPrep: settings }, { merge: true })
+    res.json({ success: true, collegeId, settings })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to save company prep settings', detail: err.message })
+  }
+})
+
+const SETTINGS_ROLES = new Set(['admin', 'principal', 'hod'])
+function resolveCollegeForSettings(req: AuthenticatedRequest): string | null {
+  const role = req.user?.role || ''
+  if (role === 'superadmin') {
+    const requested =
+      (typeof req.query?.collegeId === 'string' && req.query.collegeId) ||
+      (typeof req.body?.collegeId === 'string' && req.body.collegeId) ||
+      req.user?.collegeId ||
+      ''
+    return requested ? String(requested).trim() : null
+  }
+  if (SETTINGS_ROLES.has(role) && req.user?.collegeId) return req.user.collegeId
+  return null
+}
+
+// GET /companies?program=bca&audience=tech
+router.get('/companies', async (req, res) => {
+  try {
+    let { companies } = await loadVisibleCompanies(req)
+
+    const program = String(req.query.program || '').toLowerCase().trim()
+    if (program) companies = companies.filter((c) => (c.eligibility?.programs || []).includes(program))
+    const audience = String(req.query.audience || '').toLowerCase().trim()
+    if (audience) companies = companies.filter((c) => (c.audience || []).includes(audience as any))
+
+    companies.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+    // List view: strip the long markdown so the hub payload stays small.
+    const data = companies.map(({ strategyMd, rolesMd, ...rest }) => ({
+      ...rest,
+      topicCount: companyTopicIds(rest).length,
+    }))
+    res.json({ success: true, count: data.length, data })
+  } catch (err: any) {
+    console.error('[Prep] GET /companies error:', err)
+    res.status(500).json({ error: 'Failed to fetch company prep guides', detail: err.message })
+  }
+})
+
+// GET /companies/:code — full guide plus the resolved topic cards it maps to.
+router.get('/companies/:code', async (req, res) => {
+  try {
+    const code = String(req.params.code || '').toLowerCase().trim()
+    const { companies, caller } = await loadVisibleCompanies(req)
+    const isSuperadmin = caller.isSuperadmin
+    const company = companies.find((c) => c.code === code)
+    if (!company) {
+      res.status(404).json({ error: 'Company prep guide not found' })
+      return
+    }
+
+    // Resolve the mapped topics to lightweight cards (title, subject, module,
+    // difficulty, frequency) so the client can render the checklist without
+    // N round trips. Prefer Firestore (curated edits) and fall back to seed.
+    const wanted = companyTopicIds(company)
+    const seededById = new Map(Object.values(SEEDED_APTITUDE_TOPICS).flat().map((t) => [t.id, t]))
+    const cards: Array<{
+      id: string
+      subjectId: string
+      title: string
+      moduleName?: string
+      difficulty: string
+      examFrequency?: string
+      subtopicCount: number
+    }> = []
+    const subjectsSnap = await db.collection('prep_subjects').where('track', '==', 'aptitude').get()
+    const liveTopics = new Map<string, any>()
+    for (const subj of subjectsSnap.docs) {
+      const topicsSnap = await subj.ref.collection('topics').get()
+      for (const t of topicsSnap.docs) {
+        const data = t.data()
+        if (isSuperadmin || data.status === 'published') liveTopics.set(t.id, { ...data, id: t.id })
+      }
+    }
+    for (const tid of wanted) {
+      const t = liveTopics.get(tid) || (liveTopics.size === 0 ? seededById.get(tid) : undefined)
+      if (!t) continue
+      cards.push({
+        id: t.id,
+        subjectId: t.subjectId,
+        title: t.title,
+        moduleName: t.moduleName,
+        difficulty: t.difficulty,
+        examFrequency: t.examFrequency,
+        subtopicCount: Array.isArray(t.subtopicDetails) && t.subtopicDetails.length > 0
+          ? t.subtopicDetails.length
+          : Array.isArray(t.subtopics) ? t.subtopics.length : 0,
+      })
+    }
+
+    res.json({ success: true, data: company, topics: cards })
+  } catch (err: any) {
+    console.error('[Prep] GET /companies/:code error:', err)
+    res.status(500).json({ error: 'Failed to fetch company prep guide', detail: err.message })
+  }
+})
+
+// GET /companies/:code/mock?count=20 — sample approved questions from the
+// company's mapped topics, weighted by section size so the mix resembles the
+// real paper. Sections without mapped topics (coding, games) contribute none.
+router.get('/companies/:code/mock', async (req, res) => {
+  try {
+    const code = String(req.params.code || '').toLowerCase().trim()
+    const { companies } = await loadVisibleCompanies(req)
+    const company = companies.find((c) => c.code === code)
+    if (!company) {
+      res.status(404).json({ error: 'Company prep guide not found' })
+      return
+    }
+    const count = Math.min(Math.max(Number(req.query.count) || 20, 5), 30)
+
+    // Weight by the real paper's section size, but discount 'partial'
+    // sections (spoken / game-based blocks the MCQ pool only approximates) so
+    // the mock is dominated by sections the catalogue genuinely covers.
+    const sectionWeight = (sec: PrepCompany['sections'][number]) =>
+      sec.coverage === 'catalogue' ? (sec.questions || 10) : Math.max(2, Math.round((sec.questions || 10) / 5))
+    const mappedSections = company.sections.filter((sec) => (sec.topicIds || []).length > 0)
+    const weightTotal = mappedSections.reduce((n, sec) => n + sectionWeight(sec), 0)
+
+    const snap = await db.collection('universalQuestions').where('status', '==', 'approved').where('prepTags.stream', '==', 'aptitude').get()
+    let pool: UniversalQuestion[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<UniversalQuestion, 'id'>) }))
+    if (pool.length === 0) pool = SEEDED_APTITUDE_QUESTIONS
+
+    const used = new Set<string>()
+    const out: Array<UniversalQuestion & { sectionId: string; sectionName: string }> = []
+    for (const sec of mappedSections) {
+      const share = Math.max(1, Math.round((count * sectionWeight(sec)) / weightTotal))
+      const secPool = pool.filter((q) => !used.has(q.id) && q.prepTags.topicIds.some((tid) => sec.topicIds.includes(tid)))
+      for (const q of samplePracticeQuestions(secPool, share)) {
+        used.add(q.id)
+        out.push({ ...q, sectionId: sec.id, sectionName: sec.name })
+      }
+    }
+    res.json({ success: true, count: out.length, data: out.slice(0, count) })
+  } catch (err: any) {
+    console.error('[Prep] GET /companies/:code/mock error:', err)
+    res.status(500).json({ error: 'Failed to build company mock', detail: err.message })
+  }
+})
+
+// POST /companies (superadmin) — create or update a guide in place.
+router.post('/companies', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const body = (req.body || {}) as Partial<PrepCompany>
+    const code = String(body.code || '').toLowerCase().trim()
+    if (!code || !/^[a-z0-9-]+$/.test(code)) {
+      res.status(400).json({ error: 'code is required and must be lowercase, URL-safe.' })
+      return
+    }
+    const report = validateCompanyCatalog({
+      companies: [{ ...(body as PrepCompany), code }],
+      knownTopicIds: Object.values(SEEDED_APTITUDE_TOPICS).flat().map((t) => t.id),
+    })
+    if (!report.valid) {
+      res.status(400).json({ error: 'Company guide failed validation.', issues: report.issues })
+      return
+    }
+    const payload = { ...body, code, updatedAt: new Date().toISOString() }
+    await db.collection('prep_companies').doc(code).set(payload, { merge: true })
+    res.json({ success: true, data: payload, warnings: report.issues })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to save company guide', detail: err.message })
   }
 })
 
@@ -813,10 +1135,14 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
     const bundles = selection.programs
       .map((code) => PREP_SEED_BUNDLES.find((b) => b.code === code))
       .filter((b): b is (typeof PREP_SEED_BUNDLES)[number] => Boolean(b))
+    // Company-prep bundle: not a subject/topic bundle, so handled separately.
+    const seedCompanies = selection.programs.includes(COMPANY_SEED_CODE)
     // Valid program codes that simply have no seed bundle yet.
-    const unseedable = selection.programs.filter((code) => !seedableCodes.includes(code))
+    const unseedable = selection.programs.filter(
+      (code) => !seedableCodes.includes(code) && code !== COMPANY_SEED_CODE
+    )
 
-    if (selection.errors.length > 0 && bundles.length === 0) {
+    if (selection.errors.length > 0 && bundles.length === 0 && !seedCompanies) {
       res.status(400).json({
         error: 'No seedable programs matched the request.',
         errors: selection.errors,
@@ -825,7 +1151,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       return
     }
 
-    if (bundles.length === 0) {
+    if (bundles.length === 0 && !seedCompanies) {
       res.status(400).json({
         error: 'The requested programs have no seed data yet.',
         errors: selection.errors,
@@ -893,6 +1219,26 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       })
     }
 
+    if (seedCompanies) {
+      const report = validateCompanyCatalog({
+        companies: SEEDED_COMPANIES,
+        knownTopicIds: Object.values(SEEDED_APTITUDE_TOPICS).flat().map((t) => t.id),
+      })
+      for (const company of SEEDED_COMPANIES) {
+        writes.push({ ref: db.collection('prep_companies').doc(company.code), data: company as any })
+      }
+      perProgram.push({
+        code: COMPANY_SEED_CODE,
+        label: 'Company Prep',
+        subjectCount: SEEDED_COMPANIES.length,
+        topicCount: 0,
+        questionCount: 0,
+        valid: report.valid,
+        errorCount: report.errorCount,
+        warningCount: report.warningCount,
+      })
+    }
+
     // Commit in chunks; Firestore rejects batches larger than 500 writes.
     const chunks = chunkArray(writes, FIRESTORE_BATCH_LIMIT)
     for (const chunk of chunks) {
@@ -912,7 +1258,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
 
     res.json({
       success: true,
-      message: `Seeded ${bundles.length} program(s): ${totals.subjectCount} subjects, ${totals.topicCount} topics and ${totals.questionCount} universal practice questions across ${chunks.length} commit(s).`,
+      message: `Seeded ${perProgram.length} bundle(s): ${totals.subjectCount - (seedCompanies ? SEEDED_COMPANIES.length : 0)} subjects, ${totals.topicCount} topics, ${totals.questionCount} universal practice questions${seedCompanies ? ` and ${SEEDED_COMPANIES.length} company prep guides` : ''} across ${chunks.length} commit(s).`,
       programs: selection.programs,
       errors: selection.errors,
       unseedable,

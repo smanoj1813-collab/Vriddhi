@@ -6,11 +6,29 @@
 
 import { apiUrl, assertJsonResponse } from '@/shared/api/apiBase'
 
+/**
+ * 'academic' = university-syllabus subjects scoped to a program/semester.
+ * 'aptitude' = placement-prep catalogues (QA / LR / Verbal) shared by every
+ * program. Legacy subjects without a track are academic.
+ */
+export type PrepTrack = 'academic' | 'aptitude' | 'company'
+
+/** Which learners a topic is primarily aimed at (aptitude track only). */
+export type PrepAudience = 'ug' | 'pg' | 'tech'
+
+export interface PrepSubtopic {
+  id: string
+  title: string
+  briefMd: string
+}
+
 export interface PrepSubject {
   id: string
   name: string
-  stream: 'commerce' | 'management' | 'aptitude' | 'economics' | 'finance' | 'law' | 'strategy' | 'operations' | 'taxation'
+  stream: 'commerce' | 'management' | 'aptitude' | 'communication' | 'economics' | 'finance' | 'law' | 'strategy' | 'operations' | 'taxation'
   programs: string[]
+  track?: PrepTrack
+  degreeLevel?: 'undergraduate' | 'postgraduate'
   yearGroup?: '1st-year' | '2nd-year' | 'final-year'
   semester?: number
   universityRegion?: 'karnataka' | 'national'
@@ -61,8 +79,11 @@ export interface PrepTopic {
   moduleNumber?: number
   moduleName?: string
   subtopics?: string[]
+  /** Sub-topics with a short brief each; `subtopics` mirrors the titles. */
+  subtopicDetails?: PrepSubtopic[]
   examFrequency?: 'very_high' | 'high' | 'moderate'
   pyqHighlights?: string[]
+  audience?: PrepAudience[]
   explanationMd: string
   formulas: PrepFormula[]
   tricks: PrepTrick[]
@@ -92,6 +113,76 @@ export interface UniversalQuestion {
     program?: string
   }
 }
+
+// ── Company-specific placement prep (mirrors functions/src/prepShared.ts) ──
+
+export interface PrepCompanySection {
+  id: string
+  name: string
+  questions?: number
+  minutes?: number
+  note?: string
+  topicIds: string[]
+  coverage: 'catalogue' | 'partial' | 'external'
+  coverageNote?: string
+}
+
+export interface PrepCompanyRound {
+  id: string
+  name: string
+  detail: string
+  eliminator?: boolean
+}
+
+export interface PrepCompanyEligibility {
+  programs: string[]
+  degrees: string
+  minPercentage?: string
+  backlogs?: string
+  gap?: string
+  age?: string
+  note?: string
+}
+
+export interface PrepCompany {
+  code: string
+  name: string
+  testName: string
+  tagline: string
+  audience: PrepAudience[]
+  tier: 'mass' | 'premium'
+  platform?: string
+  totalMinutes?: number
+  totalQuestions?: number
+  negativeMarking: boolean
+  sectionalCutoff: boolean
+  eligibility: PrepCompanyEligibility
+  sections: PrepCompanySection[]
+  rounds: PrepCompanyRound[]
+  strategyMd?: string
+  quickTips: string[]
+  rolesMd?: string
+  patternVerifiedOn: string
+  sources: string[]
+  status: 'draft' | 'in_review' | 'published'
+  order: number
+  updatedAt?: string
+  /** List endpoint only: number of distinct aptitude topics mapped. */
+  topicCount?: number
+}
+
+/** Lightweight topic card returned with a company guide. */
+export interface PrepCompanyTopicCard {
+  id: string
+  subjectId: string
+  title: string
+  moduleName?: string
+  difficulty: string
+  examFrequency?: string
+  subtopicCount: number
+}
+
+export type PrepCompanyMockQuestion = UniversalQuestion & { sectionId: string; sectionName: string }
 
 export interface LearnerProgressData {
   topicsCompleted?: Record<
@@ -301,4 +392,114 @@ export async function seedPrepCatalog(programs?: string | string[]): Promise<Pre
     body: JSON.stringify(programs ? { programs } : { programs: 'all' }),
   })
   return res.json()
+}
+
+/** Legacy subjects have no track; treat them as academic. */
+export function effectivePrepTrack(subject: Pick<PrepSubject, 'track'> | null | undefined): PrepTrack {
+  return subject?.track === 'aptitude' ? 'aptitude' : 'academic'
+}
+
+/**
+ * Returns the sub-topics of a topic as detail records, synthesising empty
+ * briefs for legacy topics that only carry a `subtopics` title list.
+ */
+export function topicSubtopics(topic: Pick<PrepTopic, 'subtopics' | 'subtopicDetails'> | null | undefined): PrepSubtopic[] {
+  if (!topic) return []
+  if (Array.isArray(topic.subtopicDetails) && topic.subtopicDetails.length > 0) return topic.subtopicDetails
+  return (topic.subtopics ?? []).map((title, idx) => ({ id: `sub-${idx + 1}`, title, briefMd: '' }))
+}
+
+/**
+ * The public /prep pages are anonymous, so when the learner's college is
+ * known client-side it is passed along and the server applies that college's
+ * company-prep toggles. Signed-in learners are resolved from the token instead.
+ */
+function learnerCollegeId(): string | undefined {
+  try {
+    const raw = localStorage.getItem('vriddhi.prep.collegeId') || sessionStorage.getItem('vriddhi.prep.collegeId')
+    return raw && /^[A-Za-z0-9_-]{1,64}$/.test(raw) ? raw : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function rememberLearnerCollege(collegeId: string | null | undefined): void {
+  try {
+    if (collegeId) localStorage.setItem('vriddhi.prep.collegeId', collegeId)
+  } catch {}
+}
+
+function withCollege(qs: URLSearchParams): URLSearchParams {
+  const c = learnerCollegeId()
+  if (c && !qs.has('collegeId')) qs.set('collegeId', c)
+  return qs
+}
+
+export async function fetchPrepCompanies(params?: { program?: string; audience?: string; collegeId?: string }): Promise<PrepCompany[]> {
+  const qs = new URLSearchParams()
+  if (params?.program) qs.set('program', params.program)
+  if (params?.audience) qs.set('audience', params.audience)
+  if (params?.collegeId) qs.set('collegeId', params.collegeId)
+  withCollege(qs)
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  const res = await authedFetch(`/prep/companies${suffix}`)
+  const json = await res.json()
+  return json.data as PrepCompany[]
+}
+
+export async function fetchPrepCompany(code: string): Promise<{ company: PrepCompany; topics: PrepCompanyTopicCard[] }> {
+  const qs = withCollege(new URLSearchParams())
+  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}${qs.toString() ? `?${qs}` : ''}`)
+  const json = await res.json()
+  return { company: json.data as PrepCompany, topics: (json.topics || []) as PrepCompanyTopicCard[] }
+}
+
+export async function fetchPrepCompanyMock(code: string, count = 20): Promise<PrepCompanyMockQuestion[]> {
+  const qs = withCollege(new URLSearchParams({ count: String(count) }))
+  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}/mock?${qs}`)
+  const json = await res.json()
+  return (json.data || []) as PrepCompanyMockQuestion[]
+}
+
+// ─── Company prep: per-college visibility toggles ───────────────────────────
+
+export interface CompanyPrepSettings {
+  enabled: boolean
+  hiddenCompanies: string[]
+  updatedAt?: string
+  updatedBy?: string
+}
+
+export interface CompanyPrepSettingsRow {
+  code: string
+  name: string
+  testName: string
+  tier: string
+  programs: string[]
+  hidden: boolean
+}
+
+export async function fetchCompanyPrepSettings(collegeId?: string): Promise<{
+  collegeId: string
+  settings: CompanyPrepSettings
+  companies: CompanyPrepSettingsRow[]
+}> {
+  const qs = collegeId ? `?collegeId=${encodeURIComponent(collegeId)}` : ''
+  const res = await authedFetch(`/prep/companies/settings${qs}`)
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to load company prep settings')
+  return { collegeId: json.collegeId, settings: json.settings, companies: json.companies || [] }
+}
+
+export async function saveCompanyPrepSettings(
+  settings: { enabled: boolean; hiddenCompanies: string[] },
+  collegeId?: string,
+): Promise<CompanyPrepSettings> {
+  const res = await authedFetch('/prep/companies/settings', {
+    method: 'PUT',
+    body: JSON.stringify({ ...settings, ...(collegeId ? { collegeId } : {}) }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to save company prep settings')
+  return json.settings as CompanyPrepSettings
 }

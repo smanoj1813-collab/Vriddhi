@@ -14,6 +14,7 @@ import { useNotification } from '../../../shared/providers/NotificationProvider'
 import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import AiStudyContentTab from './AiStudyContentTab'
+import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
@@ -663,6 +664,15 @@ export default function Settings() {
                   </button>
                 </div>
               </div>
+
+              {/* Placement prep visibility — which company guides this
+                  college's learners see on /prep. Saved via the prep API
+                  (server-enforced), independent of the profile fields above. */}
+              {user?.collegeId && ['admin', 'principal', 'hod', 'superadmin'].includes(user.role) && (
+                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+                  <CompanyPrepVisibilityPanel collegeId={user.role === 'superadmin' ? user.collegeId : undefined} collegeName={collegeName} embedded />
+                </div>
+              )}
             </SettingsCard>
           )}
 

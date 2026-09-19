@@ -11,6 +11,7 @@ export interface PrepSubject {
     | 'commerce'
     | 'management'
     | 'aptitude'
+    | 'communication'
     | 'economics'
     | 'finance'
     | 'law'
@@ -65,6 +66,12 @@ export interface PyqTag {
   semester?: number;
 }
 
+export interface PrepSubtopic {
+  id: string;
+  title: string;
+  briefMd: string;
+}
+
 export interface PrepTopic {
   id: string;
   subjectId: string;
@@ -74,6 +81,8 @@ export interface PrepTopic {
   moduleNumber?: number;
   moduleName?: string;
   subtopics?: string[];
+  /** Sub-topics with a short brief each; `subtopics` mirrors the titles. */
+  subtopicDetails?: PrepSubtopic[];
   examFrequency?: 'very_high' | 'high' | 'moderate';
   pyqHighlights?: string[];
   explanationMd: string;

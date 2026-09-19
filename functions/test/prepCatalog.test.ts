@@ -19,6 +19,7 @@ import {
   validatePrepCatalog,
   PREP_PROGRAM_CATALOG,
   PREP_PROGRAM_CODES,
+  PREP_SEED_CODES,
   getPrepProgramsForLevel,
   resolveSeedPrograms,
   chunkArray,
@@ -33,6 +34,7 @@ import { MCOM_SUBJECTS, SEEDED_MCOM_TOPICS, SEEDED_MCOM_QUESTIONS } from '../src
 import { BSC_SUBJECTS, SEEDED_BSC_TOPICS, SEEDED_BSC_QUESTIONS } from '../src/data/bscSeedData.ts'
 import { BA_SUBJECTS, SEEDED_BA_TOPICS, SEEDED_BA_QUESTIONS } from '../src/data/baSeedData.ts'
 import { BCOM_SUBJECTS, SEEDED_BCOM_TOPICS, SEEDED_BCOM_QUESTIONS } from '../src/data/bcomSeedData.ts'
+import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../src/data/aptitudeSeedData.ts'
 
 interface ProgramFixture {
   programCode: string
@@ -415,12 +417,116 @@ describe('derived B.Com catalogue (bcom-tagged slice of the UG bundles)', () => 
 })
 
 
+describe('shared placement-aptitude catalogue (QA / LR / Verbal)', () => {
+  const bundle: PrepCatalogBundle = {
+    programCode: 'aptitude',
+    subjects: APTITUDE_SUBJECTS,
+    topics: SEEDED_APTITUDE_TOPICS,
+    questions: SEEDED_APTITUDE_QUESTIONS,
+  }
+  const topics = flattenTopics(SEEDED_APTITUDE_TOPICS)
+
+  it('reports zero integrity errors', () => {
+    const report = validatePrepCatalog(bundle)
+    const messages = report.issues
+      .filter((i) => i.level === 'error')
+      .map((i) => `${i.code}: ${i.message}`)
+    assert.deepEqual(messages, [], `aptitude integrity errors:\n${messages.join('\n')}`)
+    assert.equal(report.valid, true)
+  })
+
+  it('ships three aptitude subjects on the aptitude track for every program', () => {
+    assert.deepEqual(
+      APTITUDE_SUBJECTS.map((s) => s.id),
+      ['apt-quantitative-aptitude', 'apt-logical-reasoning', 'apt-verbal-ability'],
+    )
+    for (const subject of APTITUDE_SUBJECTS) {
+      assert.equal(subject.track, 'aptitude', `${subject.id} is not on the aptitude track`)
+      assert.equal(subject.stream === 'aptitude' || subject.stream === 'communication', true)
+      assert.deepEqual([...subject.programs].sort(), [...PREP_PROGRAM_CODES].sort(), `${subject.id} must list every program`)
+      assert.equal(subject.topicCount, (SEEDED_APTITUDE_TOPICS[subject.id] ?? []).length)
+    }
+  })
+
+  it('every topic is grouped into a named module and ordered sequentially per subject', () => {
+    for (const subject of APTITUDE_SUBJECTS) {
+      const list = SEEDED_APTITUDE_TOPICS[subject.id] ?? []
+      assert.ok(list.length >= 12, `${subject.id} has only ${list.length} topics`)
+      assert.deepEqual(list.map((t) => t.order), list.map((_, i) => i + 1), `${subject.id} order out of sequence`)
+      for (const t of list) {
+        assert.ok(t.moduleNumber >= 1, `${t.id} missing moduleNumber`)
+        assert.ok(t.moduleName && t.moduleName.length > 5, `${t.id} missing moduleName`)
+        // Module numbers must never decrease as order increases.
+      }
+      for (let i = 1; i < list.length; i++) {
+        assert.ok(list[i].moduleNumber >= list[i - 1].moduleNumber, `${list[i].id} module number regresses`)
+      }
+    }
+  })
+
+  it('every topic has sub-topics with briefs, and the legacy title list mirrors them', () => {
+    for (const t of topics) {
+      const details = t.subtopicDetails ?? []
+      assert.ok(details.length >= 4, `${t.id} has only ${details.length} sub-topics`)
+      assert.deepEqual(t.subtopics, details.map((d) => d.title), `${t.id} subtopics/subtopicDetails drift`)
+      const ids = new Set<string>()
+      for (const d of details) {
+        assert.ok(d.id && !ids.has(d.id), `${t.id} duplicate sub-topic id ${d.id}`)
+        ids.add(d.id)
+        assert.ok(d.title.trim().length >= 3, `${t.id}/${d.id} empty title`)
+        assert.ok(d.briefMd.trim().length >= 80, `${t.id}/${d.id} brief too short (${d.briefMd.length} chars)`)
+      }
+    }
+  })
+
+  it('every topic ships explanation, formulas, tricks, how-to-solve and an audience', () => {
+    for (const t of topics) {
+      assert.ok(t.explanationMd.length >= 800, `${t.id} explanation is thin`)
+      assert.ok(t.formulas.length >= 1, `${t.id} has no formulas`)
+      assert.ok(t.tricks.length >= 1, `${t.id} has no tricks`)
+      assert.ok(t.howToSolve.length >= 2, `${t.id} has fewer than two how-to-solve steps`)
+      assert.ok(Array.isArray(t.audience) && t.audience.length >= 1, `${t.id} has no audience`)
+      assert.ok(['very_high', 'high', 'moderate'].includes(t.examFrequency as string), `${t.id} bad examFrequency`)
+      assert.equal(t.status, 'published')
+    }
+  })
+
+  it('every topic has at least two approved practice questions that resolve back to it', () => {
+    const byTopic = new Map<string, number>()
+    const ids = new Set<string>()
+    for (const q of SEEDED_APTITUDE_QUESTIONS) {
+      assert.ok(!ids.has(q.id), `duplicate question id ${q.id}`)
+      ids.add(q.id)
+      assert.equal(q.status, 'approved')
+      assert.equal(q.prepTags.stream, 'aptitude')
+      assert.ok(q.options.length >= 2 && q.correctIndex >= 0 && q.correctIndex < q.options.length, `${q.id} bad options`)
+      assert.ok(q.explanation.trim().length >= 20, `${q.id} explanation too short`)
+      for (const tid of q.prepTags.topicIds) byTopic.set(tid, (byTopic.get(tid) ?? 0) + 1)
+    }
+    for (const t of topics) {
+      assert.ok((byTopic.get(t.id) ?? 0) >= 2, `${t.id} has ${byTopic.get(t.id) ?? 0} questions`)
+      for (const fid of t.featuredQuestionIds) assert.ok(ids.has(fid), `${t.id} features unknown question ${fid}`)
+    }
+  })
+
+  it('does not collide with any academic catalogue ids', () => {
+    const academicSubjectIds = new Set(
+      [...MCOM_SUBJECTS, ...BSC_SUBJECTS, ...BA_SUBJECTS, ...BCOM_SUBJECTS, ...BBA_SUBJECTS].map((s) => s.id),
+    )
+    const academicQuestionIds = new Set(
+      [...SEEDED_MCOM_QUESTIONS, ...SEEDED_BSC_QUESTIONS, ...SEEDED_BA_QUESTIONS, ...SEEDED_BCOM_QUESTIONS, ...SEEDED_UNIVERSAL_QUESTIONS].map((q) => q.id),
+    )
+    for (const s of APTITUDE_SUBJECTS) assert.ok(!academicSubjectIds.has(s.id), `subject id collision ${s.id}`)
+    for (const q of SEEDED_APTITUDE_QUESTIONS) assert.ok(!academicQuestionIds.has(q.id), `question id collision ${q.id}`)
+  })
+})
+
 describe('resolveSeedPrograms (master seeder selection)', () => {
   it('defaults to every program when nothing is supplied', () => {
     for (const input of [undefined, null, '', 'all', 'ALL']) {
       const r = resolveSeedPrograms(input)
       assert.equal(r.all, true, `expected all=true for ${JSON.stringify(input)}`)
-      assert.deepEqual(r.programs, PREP_PROGRAM_CODES)
+      assert.deepEqual(r.programs, PREP_SEED_CODES)
       assert.deepEqual(r.errors, [])
     }
   })
@@ -467,7 +573,16 @@ describe('resolveSeedPrograms (master seeder selection)', () => {
   it('escalates to all when the token "all" appears inside a list', () => {
     const r = resolveSeedPrograms('ba,all')
     assert.equal(r.all, true)
-    assert.deepEqual(r.programs, PREP_PROGRAM_CODES)
+    assert.deepEqual(r.programs, PREP_SEED_CODES)
+  })
+
+  it('accepts the shared aptitude track code alongside program codes', () => {
+    const r = resolveSeedPrograms('aptitude,bba')
+    assert.deepEqual(r.programs, ['aptitude', 'bba'])
+    assert.deepEqual(r.errors, [])
+    // PREP_SEED_CODES is a superset of the program codes.
+    for (const code of PREP_PROGRAM_CODES) assert.ok(PREP_SEED_CODES.includes(code))
+    assert.ok(PREP_SEED_CODES.includes('aptitude'))
   })
 })
 
