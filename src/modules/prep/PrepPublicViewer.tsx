@@ -26,17 +26,19 @@ import {
   CardActionArea,
   Chip,
   CircularProgress,
+  Collapse,
   Container,
   Divider,
   Grid,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
 import {
-  ArrowLeft,
   Assignment,
   AutoAwesome,
   Calculate,
+  ChevronRight,
   FormatListNumbered,
   Lightbulb,
   MenuBook,
@@ -56,7 +58,22 @@ import {
 } from '@/shared/services/prepContentService';
 import { formatStreamLabel } from '@/shared/utils/prepHelpers';
 import { CompanyStrip, CompanyView } from './PrepCompanyViews';
-import { AUDIENCE_LABELS, DifficultyChip, PROGRAMS, PROGRAM_LABELS, PrepMarkdown, ShareLinkButton, renderInline } from './prepPublicShared';
+import {
+  AUDIENCE_LABELS,
+  DifficultyChip,
+  PROGRAM_LABELS,
+  PrepMarkdown,
+  PrepPageNav,
+  ProgramControl,
+  SectionHeader,
+  ShareLinkButton,
+  readStoredProgram,
+  rememberProgram,
+  renderInline,
+  streamColor,
+  topicCountLabel,
+  yearGroupLabel,
+} from './prepPublicShared';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 
 // ─── Header (shared by all three views) ─────────────────────────────────────
@@ -64,13 +81,20 @@ import { useAuth } from '@/modules/auth/context/AuthContext';
 function PrepHeader() {
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-      <Container maxWidth="lg" sx={{ py: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Container maxWidth="lg" sx={{ py: 1.75, display: 'flex', alignItems: 'center', gap: 1 }}>
         <MenuBook color="primary" />
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>
-          Vriddhi <span style={{ color: 'primary.main' }}>Prep</span>
+        <Typography
+          component={Link}
+          to="/prep"
+          variant="h6"
+          sx={{ fontWeight: 800, color: 'text.primary', textDecoration: 'none', '&:hover': { color: 'primary.main' } }}
+        >
+          Vriddhi <Box component="span" sx={{ color: 'primary.main' }}>Prep</Box>
         </Typography>
+        {/* Student-facing: what the page is for. (The old line led with NEP
+            2020 / CBCS, which is internal vocabulary — §1 problem 8.) */}
         <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, ml: 1 }}>
-          Platform-wide NEP 2020 / CBCS study packs — no college or account needed
+          Free study packs &amp; placement prep for UG / PG students
         </Typography>
         <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
           <Button size="small" component={Link} to="/">Open Vriddhi</Button>
@@ -80,32 +104,6 @@ function PrepHeader() {
     </Box>
   );
 }
-
-// ─── Program bar (hub + subject views) ──────────────────────────────────────
-
-function ProgramBar({
-  active,
-  onPick,
-}: {
-  active: string;
-  onPick: (code: string) => void;
-}) {
-  return (
-    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} useFlexGap>
-      {PROGRAMS.map((p) => (
-        <Chip
-          key={p.code}
-          label={`${p.label}${p.level === 'postgraduate' ? ' (PG)' : ''}`}
-          onClick={() => onPick(p.code)}
-          color={active === p.code ? 'primary' : 'default'}
-          variant={active === p.code ? 'filled' : 'outlined'}
-        />
-      ))}
-    </Stack>
-  );
-}
-
-
 
 /** One sub-topic row: title always visible, brief expands on tap. */
 function SubtopicBrief({ index, title, briefMd }: { index: number; title: string; briefMd: string }) {
@@ -143,15 +141,139 @@ function SubtopicBrief({ index, title, briefMd }: { index: number; title: string
   );
 }
 
-// ─── View 1: Hub (subject grid for a program) ───────────────────────────────
+// ─── View 1: Hub — "study my subjects" and "prepare for placements" ─────────
+//
+// Rebuilt from a flat catalog grid (one identical card per subject, chips
+// before titles, three stacked sections) into a learner's entry point:
+//
+//   • two jobs side by side above the fold — semester accordion on the left
+//     (7/12), tinted placement band on the right (5/12);
+//   • on a phone the placement band comes FIRST as a horizontal-scroll strip,
+//     then the accordion, so both are reachable in one thumb-scroll;
+//   • title first, one line of metadata (`5 topics`), no description in the
+//     grid — those live on the subject page;
+//   • hierarchy by semester, with the last-opened semester remembered per
+//     program so a reload (or a back-navigation from a subject) lands where
+//     the learner left off.
+
+/** Per-program memory of which semester groups were expanded. */
+function openSemestersKey(program: string): string {
+  return `vriddhi.prep.openSemesters.${program}`;
+}
+
+function readOpenSemesters(program: string): string[] | null {
+  try {
+    const raw = localStorage.getItem(openSemestersKey(program));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((k): k is string => typeof k === 'string') : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeOpenSemesters(program: string, keys: string[]): void {
+  try {
+    localStorage.setItem(openSemestersKey(program), JSON.stringify(keys));
+  } catch {
+    /* private mode / quota — the accordion simply starts at semester 1 */
+  }
+}
+
+interface SemesterGroup {
+  key: string;
+  label: string;
+  /** `2nd year` — only when every subject in the group agrees on it. */
+  yearLabel: string | null;
+  subjects: PrepSubject[];
+}
+
+/** Syllabus order, then name, so ties stay stable across refetches. */
+function sortSubjects(list: PrepSubject[]): PrepSubject[] {
+  return [...list].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
+}
+
+function unanimousYearLabel(subjects: PrepSubject[]): string | null {
+  const labels = new Set(subjects.map((s) => yearGroupLabel(s.yearGroup)).filter(Boolean));
+  return labels.size === 1 ? [...labels][0] : null;
+}
+
+/**
+ * §5.1 grouping rule: by `semester` when present, else by `yearGroup`, else a
+ * catch-all — never a blank hole and never an arbitrary grid position.
+ */
+function groupAcademicSubjects(subjects: PrepSubject[]): SemesterGroup[] {
+  const bySemester = new Map<number, PrepSubject[]>();
+  const byYear = new Map<string, PrepSubject[]>();
+  const other: PrepSubject[] = [];
+
+  for (const subject of subjects) {
+    if (typeof subject.semester === 'number' && subject.semester > 0) {
+      const list = bySemester.get(subject.semester) || [];
+      list.push(subject);
+      bySemester.set(subject.semester, list);
+    } else if (subject.yearGroup) {
+      const list = byYear.get(subject.yearGroup) || [];
+      list.push(subject);
+      byYear.set(subject.yearGroup, list);
+    } else {
+      other.push(subject);
+    }
+  }
+
+  const groups: SemesterGroup[] = [];
+  for (const semester of [...bySemester.keys()].sort((a, b) => a - b)) {
+    const items = sortSubjects(bySemester.get(semester) || []);
+    groups.push({
+      key: `sem-${semester}`,
+      label: `Semester ${semester}`,
+      yearLabel: unanimousYearLabel(items),
+      subjects: items,
+    });
+  }
+  // Year groups keep syllabus order (1st → 2nd → final) and sort after the
+  // numbered semesters, since a program that ships both is rare and the
+  // numbered ones are the ones students navigate by.
+  const yearOrder = ['1st-year', '2nd-year', 'final-year'];
+  const years = [...byYear.keys()].sort((a, b) => {
+    const ia = yearOrder.indexOf(a);
+    const ib = yearOrder.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+  });
+  for (const year of years) {
+    groups.push({
+      key: `year-${year}`,
+      label: yearGroupLabel(year) || year,
+      yearLabel: null,
+      subjects: sortSubjects(byYear.get(year) || []),
+    });
+  }
+  if (other.length > 0) {
+    groups.push({ key: 'other', label: 'Other study packs', yearLabel: null, subjects: sortSubjects(other) });
+  }
+  return groups;
+}
+
+/** `/prep/subject/:id` plus the program the learner came from, so "back" lands
+ *  on the same catalog (and the same open semester) rather than a default. */
+function subjectPath(subjectId: string, program?: string | null): string {
+  return program ? `/prep/subject/${subjectId}?program=${program}` : `/prep/subject/${subjectId}`;
+}
 
 function HubView() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const requested = String(searchParams.get('program') || 'bba').toLowerCase();
-  const program = PROGRAM_LABELS[requested] ? requested : 'bba';
+  const fromUrl = String(searchParams.get('program') || '').toLowerCase();
+  // URL wins; otherwise the last program this device looked at; otherwise BBA.
+  const program = PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
+  // `?sem=3` — a subject/topic breadcrumb points back at the semester it lives
+  // in, so "back" reopens that group even if another one was expanded last.
+  const semParam = String(searchParams.get('sem') || '').trim();
+  const requestedSemester = /^\d{1,2}$/.test(semParam) ? `sem-${Number(semParam)}` : null;
+
   const [subjects, setSubjects] = useState<PrepSubject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -164,118 +286,444 @@ function HubView() {
     return () => {
       cancelled = true;
     };
-  }, [program]);
+  }, [program, attempt]);
 
   const pickProgram = (code: string) => {
+    rememberProgram(code);
     const next = new URLSearchParams(searchParams);
     next.set('program', code);
+    // A semester hint belongs to the program it was created under.
+    next.delete('sem');
+    // replace: paging through programs must not bury the browser back button.
     setSearchParams(next, { replace: true });
   };
 
   // Academic subjects are scoped to the program; aptitude subjects are the
   // shared placement catalogue (QA / LR / Verbal) listed for every program.
-  const academicSubjects = subjects.filter((s) => effectivePrepTrack(s) === 'academic');
-  const aptitudeSubjects = subjects.filter((s) => effectivePrepTrack(s) === 'aptitude');
+  const academicSubjects = useMemo(() => subjects.filter((s) => effectivePrepTrack(s) === 'academic'), [subjects]);
+  const aptitudeSubjects = useMemo(() => subjects.filter((s) => effectivePrepTrack(s) === 'aptitude'), [subjects]);
+  const groups = useMemo(() => groupAcademicSubjects(academicSubjects), [academicSubjects]);
+  const topicTotal = academicSubjects.reduce((n, s) => n + (s.topicCount || 0), 0);
+
+  // Expanded semester groups. `null` = not resolved yet for this program, so
+  // the first group renders open instead of flashing a collapsed accordion.
+  const [openKeys, setOpenKeys] = useState<string[] | null>(null);
+  useEffect(() => {
+    setOpenKeys(null);
+  }, [program, requestedSemester]);
+  useEffect(() => {
+    if (openKeys !== null || loading || groups.length === 0) return;
+    if (requestedSemester && groups.some((g) => g.key === requestedSemester)) {
+      setOpenKeys([requestedSemester]);
+      return;
+    }
+    const stored = (readOpenSemesters(program) || []).filter((k) => groups.some((g) => g.key === k));
+    setOpenKeys(stored.length > 0 ? stored : [groups[0].key]);
+  }, [openKeys, loading, groups, program, requestedSemester]);
+
+  const open = openKeys ?? (groups.length > 0 ? [groups[0].key] : []);
+  const toggleGroup = (key: string) => {
+    const next = open.includes(key) ? open.filter((k) => k !== key) : [...open, key];
+    setOpenKeys(next);
+    writeOpenSemesters(program, next);
+  };
+
+  const nothingPublished = !loading && !error && subjects.length === 0;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Stack spacing={2}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-          <ProgramBar active={program} onPick={pickProgram} />
-          <ShareLinkButton path={`/prep?program=${program}`} />
-        </Stack>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          {PROGRAM_LABELS[program]} — Prep Catalog
-        </Typography>
-        {loading ? (
-          <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>
-        ) : error ? (
-          <Card><Box sx={{ p: 3, color: 'error.main' }}>{error}</Box></Card>
-        ) : subjects.length > 0 && (academicSubjects.length === 0 || aptitudeSubjects.length > 0) ? (
-          <Stack spacing={3}>
-            {academicSubjects.length > 0 ? (
-              <SubjectSection
-                title="Academic subjects"
-                subtitle={`${PROGRAM_LABELS[program]} syllabus — semester-wise study packs.`}
-                subjects={academicSubjects}
-              />
-            ) : null}
-            {aptitudeSubjects.length > 0 ? (
-              <SubjectSection
-                title="Placement aptitude"
-                subtitle="Quantitative Aptitude, Logical Reasoning and Verbal Ability — the shared core of TCS NQT, Infosys, Wipro, Accenture and Capgemini tests, for every UG and PG program."
-                subjects={aptitudeSubjects}
-              />
-            ) : null}
-            <CompanyStrip program={program} />
-          </Stack>
-        ) : subjects.length === 0 ? (
-          <Card>
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h6" gutterBottom>No published {PROGRAM_LABELS[program]} subjects yet</Typography>
-              <Typography variant="body2" color="text.secondary">
-                This program's catalogue has not been seeded or published. A superadmin can do that from
-                Superadmin → Prep Content Studio (tick the program and press “Seed”), after which it will
-                appear here automatically.
+    <>
+      <ProgramControl
+        active={program}
+        onPick={pickProgram}
+        action={<ShareLinkButton path={`/prep?program=${program}`} compact />}
+      />
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
+        {error ? (
+          <Card variant="outlined">
+            <Stack spacing={1.5} sx={{ p: 3, alignItems: 'flex-start' }}>
+              <Typography sx={{ fontWeight: 700 }}>Could not load the {PROGRAM_LABELS[program]} catalog</Typography>
+              <Typography variant="body2" color="error.main">{error}</Typography>
+              <Button size="small" variant="outlined" onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
+            </Stack>
+          </Card>
+        ) : nothingPublished ? (
+          <Card variant="outlined">
+            <Box sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }} gutterBottom>
+                No published {PROGRAM_LABELS[program]} packs yet
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 620, mx: 'auto' }}>
+                Study packs for this program are still being written. Try another program above — the placement
+                aptitude packs are shared by every UG and PG program.
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+                A superadmin can seed this catalog from Superadmin → Prep Content Studio.
               </Typography>
             </Box>
           </Card>
         ) : (
-          <Stack spacing={3}>
-            <SubjectSection title="Academic subjects" subjects={academicSubjects} />
-            <CompanyStrip program={program} />
-          </Stack>
+          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ alignItems: 'flex-start' }}>
+            {/* Study column first in the DOM (it is the page's main job, so a
+                screen reader meets it first); the placement band is pulled
+                above it visually on a phone with CSS order (§3.2). */}
+            <Grid size={{ xs: 12, md: 7 }} sx={{ order: { xs: 2, md: 1 }, minWidth: 0 }}>
+              <Stack spacing={1.5}>
+                <SectionHeader
+                  kicker="Study"
+                  title="Study your subjects"
+                  meta={
+                    loading
+                      ? `Loading ${PROGRAM_LABELS[program]} packs…`
+                      : `${PROGRAM_LABELS[program]} · ${academicSubjects.length} subject${academicSubjects.length === 1 ? '' : 's'} · ${topicTotal} topics`
+                  }
+                />
+                {loading ? (
+                  <Stack spacing={1}>
+                    {[0, 1, 2, 3].map((i) => (
+                      <Skeleton key={i} variant="rounded" height={48} sx={{ borderRadius: 2.5 }} />
+                    ))}
+                  </Stack>
+                ) : groups.length === 0 ? (
+                  <EmptyBlock
+                    title={`No ${PROGRAM_LABELS[program]} subjects published yet`}
+                    body="The semester packs for this program are still being written. The aptitude packs and company guides for placement prep are available right now."
+                  />
+                ) : (
+                  <Stack spacing={1}>
+                    {groups.map((group) => (
+                      <SemesterSection
+                        key={group.key}
+                        group={group}
+                        program={program}
+                        open={open.includes(group.key)}
+                        onToggle={() => toggleGroup(group.key)}
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
+            </Grid>
+            <Grid size={{ xs: 12, md: 5 }} sx={{ order: { xs: 1, md: 2 }, minWidth: 0 }}>
+              <PlacementBlock program={program} subjects={aptitudeSubjects} loading={loading} />
+            </Grid>
+          </Grid>
         )}
-      </Stack>
-    </Container>
+      </Container>
+    </>
   );
 }
 
-function SubjectSection({ title, subtitle, subjects }: { title: string; subtitle?: string; subjects: PrepSubject[] }) {
+/** Dashed placeholder so a block never renders as an empty hole (§3.2). */
+function EmptyBlock({ title, body }: { title: string; body: string }) {
   return (
-    <Stack spacing={1.5}>
-      <Box>
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>{title}</Typography>
-        {subtitle ? <Typography variant="body2" color="text.secondary">{subtitle}</Typography> : null}
+    <Box
+      sx={{
+        border: '1px dashed',
+        borderColor: 'divider',
+        borderRadius: 2.5,
+        px: 2,
+        py: 3,
+        textAlign: 'center',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Typography sx={{ fontWeight: 700, fontSize: 15 }}>{title}</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: 460, mx: 'auto' }}>
+        {body}
+      </Typography>
+    </Box>
+  );
+}
+
+/** One collapsible semester: `Semester 3 · 2nd year · 3 subjects`. */
+function SemesterSection({
+  group,
+  program,
+  open,
+  onToggle,
+}: {
+  group: SemesterGroup;
+  program: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const buttonId = `prep-sem-${group.key}-toggle`;
+  const panelId = `prep-sem-${group.key}-panel`;
+  const meta = [group.yearLabel, `${group.subjects.length} subject${group.subjects.length === 1 ? '' : 's'}`]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2.5, bgcolor: 'background.paper', overflow: 'hidden' }}>
+      <Box
+        component="button"
+        type="button"
+        id={buttonId}
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={onToggle}
+        sx={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.75,
+          px: 1.25,
+          py: 1,
+          font: 'inherit',
+          textAlign: 'left',
+          color: 'text.primary',
+          border: 0,
+          cursor: 'pointer',
+          bgcolor: open ? 'action.hover' : 'transparent',
+          '&:hover': { bgcolor: 'action.hover' },
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'secondary.main', outlineOffset: -2 },
+        }}
+      >
+        <ChevronRight
+          aria-hidden
+          sx={{
+            fontSize: 20,
+            flexShrink: 0,
+            color: 'text.secondary',
+            transition: 'transform .18s ease',
+            transform: open ? 'rotate(90deg)' : 'none',
+          }}
+        />
+        <Typography
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            fontWeight: 800,
+            fontSize: 15,
+            lineHeight: 1.35,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {group.label}
+          <Box component="span" sx={{ fontWeight: 600, fontSize: 13, color: 'text.secondary' }}>
+            {' · '}
+            {meta}
+          </Box>
+        </Typography>
       </Box>
-      <Grid container spacing={2}>
-        {subjects.map((subject) => {
-          const isAptitude = effectivePrepTrack(subject) === 'aptitude';
-          return (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={subject.id}>
-              <Card variant="outlined" sx={{ height: '100%' }}>
-                <CardActionArea component={Link} to={`/prep/subject/${subject.id}`} sx={{ height: '100%', p: 2 }}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }} useFlexGap>
-                      <Chip size="small" label={formatStreamLabel(subject.stream)} color={isAptitude ? 'primary' : 'default'} variant={isAptitude ? 'outlined' : 'filled'} />
-                      {subject.semester ? <Chip size="small" variant="outlined" label={`Sem ${subject.semester}`} /> : null}
-                      {subject.yearGroup ? <Chip size="small" variant="outlined" label={subject.yearGroup} /> : null}
-                      {isAptitude ? <Chip size="small" variant="outlined" label="All programs" /> : null}
-                    </Stack>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {subject.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {subject.description || 'Curriculum-aligned study pack.'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {subject.topicCount || 0} topics
-                      {isAptitude ? ' · UG & PG · placement prep' : ` · ${subject.programs?.map((p) => PROGRAM_LABELS[p] || p).join(', ')}`}
-                    </Typography>
-                  </Stack>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
-    </Stack>
+      <Collapse in={open}>
+        <Box id={panelId} role="region" aria-labelledby={buttonId} sx={{ px: 1.25, pb: 1.25 }}>
+          <Stack spacing={0.75}>
+            {group.subjects.map((subject) => (
+              <SubjectRow key={subject.id} subject={subject} program={program} />
+            ))}
+          </Stack>
+        </Box>
+      </Collapse>
+    </Box>
+  );
+}
+
+/**
+ * One subject: a 3px rule in the stream colour, the title, and a single line
+ * of metadata. No chips before the title, no truncated description (§1 #2, #6).
+ */
+function SubjectRow({ subject, program }: { subject: PrepSubject; program: string }) {
+  const color = streamColor(subject.stream);
+  return (
+    <CardActionArea
+      component={Link}
+      to={subjectPath(subject.id, program)}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        px: 1.25,
+        py: 0.875,
+        borderRadius: 2,
+        bgcolor: 'background.default',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderLeft: `3px solid ${color}`,
+        '&:hover': { borderColor: 'primary.light', borderLeftColor: color, bgcolor: 'action.hover' },
+        '&:focus-visible': { outline: '2px solid', outlineColor: 'secondary.main', outlineOffset: 1 },
+      }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          sx={{
+            fontWeight: 700,
+            fontSize: 14.5,
+            lineHeight: 1.3,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {subject.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {topicCountLabel(subject.topicCount)}
+        </Typography>
+      </Box>
+      <ChevronRight aria-hidden sx={{ fontSize: 18, color: 'text.disabled', flexShrink: 0 }} />
+    </CardActionArea>
+  );
+}
+
+// ─── Placement block (aptitude tiles + company guides) ──────────────────────
+
+/**
+ * Short, tile-sized names for the three shared aptitude packs. The catalog
+ * names are correct on the subject page but too long for a 130px tile, so the
+ * hub uses these; anything added later falls back to its own name.
+ */
+const APTITUDE_TILES: Record<string, { monogram: string; label: string }> = {
+  'apt-quantitative-aptitude': { monogram: 'QA', label: 'Quantitative Aptitude' },
+  'apt-logical-reasoning': { monogram: 'LR', label: 'Logical Reasoning' },
+  'apt-verbal-ability': { monogram: 'VA', label: 'Verbal Ability' },
+};
+
+function aptitudeTile(subject: PrepSubject): { monogram: string; label: string } {
+  const known = APTITUDE_TILES[subject.id];
+  if (known) return known;
+  const words = subject.name.split(/[\s&,/-]+/).filter(Boolean);
+  const monogram = words.slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  return { monogram: monogram || 'AP', label: subject.name };
+}
+
+/**
+ * The tinted band that makes placement prep visible without scrolling (§1 #4):
+ * three compact aptitude tiles + the company guides, always rendered — a
+ * college that hides company prep simply loses the company sub-block.
+ */
+function PlacementBlock({ program, subjects, loading }: { program: string; subjects: PrepSubject[]; loading: boolean }) {
+  return (
+    <Box
+      sx={{
+        borderRadius: 3,
+        border: '1px solid',
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+        p: { xs: 1.5, md: 2 },
+        backgroundImage: (theme) =>
+          theme.palette.mode === 'dark'
+            ? 'linear-gradient(155deg, rgba(99,102,241,0.20) 0%, rgba(13,148,136,0.12) 55%, rgba(19,27,46,0) 100%)'
+            : 'linear-gradient(155deg, rgba(99,102,241,0.10) 0%, rgba(13,148,136,0.07) 55%, rgba(255,255,255,0) 100%)',
+      }}
+    >
+      <SectionHeader
+        kicker="Placement"
+        title="Prepare for placements"
+        meta="The aptitude core every recruiter tests, plus company-wise guides."
+      />
+
+      <Box sx={{ mt: 1.5 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} variant="rounded" height={86} sx={{ flex: 1, borderRadius: 2 }} />
+            ))}
+          </Box>
+        ) : subjects.length === 0 ? (
+          <EmptyBlock
+            title="Aptitude packs not published yet"
+            body="Quantitative Aptitude, Logical Reasoning and Verbal Ability are being published for all programs."
+          />
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              flexWrap: { xs: 'nowrap', md: 'wrap' },
+              overflowX: { xs: 'auto', md: 'visible' },
+              pb: { xs: 0.5, md: 0 },
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            {subjects.map((subject) => (
+              <Box key={subject.id} sx={{ flex: { xs: '0 0 132px', md: '1 1 calc(33.333% - 6px)' }, minWidth: 0 }}>
+                <AptitudeTile subject={subject} program={program} />
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <CompanyStrip program={program} />
+      </Box>
+    </Box>
+  );
+}
+
+function AptitudeTile({ subject, program }: { subject: PrepSubject; program: string }) {
+  const { monogram, label } = aptitudeTile(subject);
+  const color = streamColor(subject.stream);
+  return (
+    <CardActionArea
+      component={Link}
+      to={subjectPath(subject.id, program)}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: 0.75,
+        p: 1.25,
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        '&:hover': { borderColor: 'primary.light', bgcolor: 'action.hover' },
+        '&:focus-visible': { outline: '2px solid', outlineColor: 'secondary.main', outlineOffset: 1 },
+      }}
+    >
+      <Box
+        aria-hidden
+        sx={{
+          width: 30,
+          height: 30,
+          borderRadius: 1.5,
+          display: 'grid',
+          placeItems: 'center',
+          // Tinted swatch, near-black letters: the colour stays decorative so
+          // the monogram keeps ≥ 4.5:1 contrast in both themes.
+          bgcolor: `${color}24`,
+          color: 'text.primary',
+          fontSize: 12,
+          fontWeight: 800,
+          letterSpacing: '.02em',
+        }}
+      >
+        {monogram}
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          sx={{
+            fontWeight: 800,
+            fontSize: 13.5,
+            lineHeight: 1.25,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {topicCountLabel(subject.topicCount)}
+        </Typography>
+      </Box>
+    </CardActionArea>
   );
 }
 
 // ─── View 2: Subject (topic list) ───────────────────────────────────────────
 
 function SubjectView({ subjectId }: { subjectId: string }) {
+  const [searchParams] = useSearchParams();
+  const urlProgram = String(searchParams.get('program') || '').toLowerCase();
   const [subject, setSubject] = useState<PrepSubject | null>(null);
   const [topics, setTopics] = useState<PrepTopic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -306,6 +754,18 @@ function SubjectView({ subjectId }: { subjectId: string }) {
   if (!subject) return null;
 
   const isAptitude = effectivePrepTrack(subject) === 'aptitude';
+  // The hub links here with `?program=`, so "back" returns to the catalog the
+  // learner was actually browsing; a bare deep link falls back to the
+  // subject's own program list.
+  const backProgram = PROGRAM_LABELS[urlProgram] ? urlProgram : subject.programs?.[0] || readStoredProgram() || 'bba';
+  const hubPath = `/prep?program=${backProgram}`;
+  const crumbs = [
+    { label: 'Prep', to: '/prep' },
+    { label: PROGRAM_LABELS[backProgram] || backProgram, to: hubPath },
+    isAptitude ? { label: 'Placement aptitude', to: hubPath } : null,
+    subject.semester ? { label: `Semester ${subject.semester}`, to: `${hubPath}&sem=${subject.semester}` } : null,
+    { label: subject.name },
+  ];
   // Group topics by module (moduleNumber + moduleName). Academic subjects use
   // one topic per module, which collapses to a single group and renders as
   // before; aptitude subjects have several topics per module.
@@ -323,12 +783,7 @@ function SubjectView({ subjectId }: { subjectId: string }) {
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Stack spacing={2}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-          <Button component={Link} to={`/prep?program=${subject.programs?.[0] || 'bba'}`} startIcon={<ArrowLeft />} size="small">
-            Back to {PROGRAM_LABELS[subject.programs?.[0] || ''] || 'catalog'}
-          </Button>
-          <ShareLinkButton path={`/prep/subject/${subject.id}`} />
-        </Stack>
+        <PrepPageNav crumbs={crumbs} sharePath={`/prep/subject/${subject.id}`} backTo={hubPath} />
         <Typography variant="h4" sx={{ fontWeight: 800 }}>{subject.name}</Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} useFlexGap>
           <Chip label={formatStreamLabel(subject.stream)} size="small" />
@@ -370,7 +825,11 @@ function SubjectView({ subjectId }: { subjectId: string }) {
                     return (
                       <Grid size={{ xs: 12, sm: 6 }} key={topic.id}>
                         <Card variant="outlined" sx={{ height: '100%' }}>
-                          <CardActionArea component={Link} to={`/prep/subject/${subject.id}/topic/${topic.id}`} sx={{ height: '100%', p: 2 }}>
+                          <CardActionArea
+                            component={Link}
+                            to={`/prep/subject/${subject.id}/topic/${topic.id}?program=${backProgram}`}
+                            sx={{ height: '100%', p: 2 }}
+                          >
                             <Stack spacing={1}>
                               <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -408,7 +867,12 @@ function SubjectView({ subjectId }: { subjectId: string }) {
 // ─── View 3: Topic (the four sections + practice preview) ───────────────────
 
 function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string }) {
+  const [searchParams] = useSearchParams();
+  const urlProgram = String(searchParams.get('program') || '').toLowerCase();
   const [topic, setTopic] = useState<PrepTopic | null>(null);
+  // Fetched only to name the breadcrumb (`… › Business Statistics › Topic`);
+  // a failure here must never block the topic itself.
+  const [subject, setSubject] = useState<PrepSubject | null>(null);
   const [practice, setPractice] = useState<UniversalQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -421,15 +885,17 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
     setActiveSection('explanation');
     Promise.all([
       fetchPrepTopic(subjectId, topicId).catch(() => null),
+      fetchPrepSubject(subjectId).catch(() => null),
       fetchPracticeQuestions({ topicId, count: 6 }).catch(() => []),
     ])
-      .then(([top, questions]) => {
+      .then(([top, subj, questions]) => {
         if (cancelled) return;
         if (!top) {
           setError('This topic does not exist or is not published.');
           return;
         }
         setTopic(top);
+        setSubject(subj);
         setPractice(questions);
       })
       .finally(() => !cancelled && setLoading(false));
@@ -441,6 +907,19 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
   if (loading) return <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
   if (error) return <Container maxWidth="lg" sx={{ py: 3 }}><Card><Box sx={{ p: 3, color: 'error.main' }}>{error}</Box></Card></Container>;
   if (!topic) return null;
+
+  const backProgram = PROGRAM_LABELS[urlProgram] ? urlProgram : subject?.programs?.[0] || readStoredProgram() || 'bba';
+  const hubPath = `/prep?program=${backProgram}`;
+  const subjectHref = `/prep/subject/${subjectId}?program=${backProgram}`;
+  const isAptitudeSubject = effectivePrepTrack(subject) === 'aptitude';
+  const crumbs = [
+    { label: 'Prep', to: '/prep' },
+    { label: PROGRAM_LABELS[backProgram] || backProgram, to: hubPath },
+    isAptitudeSubject ? { label: 'Placement aptitude', to: hubPath } : null,
+    subject?.semester ? { label: `Semester ${subject.semester}`, to: `${hubPath}&sem=${subject.semester}` } : null,
+    { label: subject?.name || 'Subject', to: subjectHref },
+    { label: topic.title },
+  ];
 
   const subtopics = topicSubtopics(topic);
 
@@ -455,12 +934,11 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Stack spacing={2}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-          <Button component={Link} to={`/prep/subject/${subjectId}`} startIcon={<ArrowLeft />} size="small">
-            Back to subject
-          </Button>
-          <ShareLinkButton path={`/prep/subject/${subjectId}/topic/${topicId}`} />
-        </Stack>
+        <PrepPageNav
+          crumbs={crumbs}
+          sharePath={`/prep/subject/${subjectId}/topic/${topicId}`}
+          backTo={subjectHref}
+        />
 
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <AutoAwesome color="primary" fontSize="small" />

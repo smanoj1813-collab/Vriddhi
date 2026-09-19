@@ -40,14 +40,40 @@ async function mount(file, props) {
   await act(async () => { reactRoot.render(React.createElement(Comp, props)); });
   await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
 
+  const settle = async () => { await act(async () => { await new Promise((r) => setTimeout(r, 20)); }); };
+
   return {
     text: () => host.textContent.replace(/\s+/g, ' ').trim(),
+    /**
+     * Like text(), but without anything inside a collapsed MUI Collapse.
+     * Collapse keeps its children mounted with `visibility: hidden` (correct
+     * for screen readers), so textContent alone would "see" closed accordions.
+     */
+    openText: () => {
+      const clone = host.cloneNode(true);
+      clone.querySelectorAll('.MuiCollapse-hidden').forEach((el) => el.remove());
+      return clone.textContent.replace(/\s+/g, ' ').trim();
+    },
     // <input> values never appear in textContent, so form state has to be read
     // off the elements themselves.
     value: (id) => {
       const el = host.querySelector(`#${id}`);
       return el ? el.value : null;
     },
+    el: (selector) => host.querySelector(selector),
+    all: (selector) => [...host.querySelectorAll(selector)],
+    /** The first element whose own text is exactly `label` (a button/pill). */
+    byText: (label, selector = 'button') =>
+      [...host.querySelectorAll(selector)].find((e) => (e.textContent || '').replace(/\s+/g, ' ').trim() === label) ?? null,
+    /** Real click through React's event system, then let effects settle. */
+    click: async (target) => {
+      const el = typeof target === 'string' ? host.querySelector(target) : target;
+      if (!el) throw new Error(`nothing to click for ${typeof target === 'string' ? target : '<element>'}`);
+      await act(async () => { el.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true })); });
+      await settle();
+    },
+    hrefs: (selector = 'a') => [...host.querySelectorAll(selector)].map((a) => a.getAttribute('href')),
+    host,
     unmount: async () => { await act(async () => reactRoot.unmount()); host.remove(); },
   };
 }
@@ -62,7 +88,8 @@ let crashes = 0;
 async function section(label, file, props, assertions) {
   try {
     const view = await mount(file, props);
-    assertions(view.text(), view);
+    // Awaited: assertions may be async (click a toggle, then read the DOM).
+    await assertions(view.text(), view);
     await view.unmount();
   } catch (err) {
     crashes++;
@@ -347,6 +374,308 @@ globalThis.__RC_CALLABLE_DATA = {};
 await section('curriculum (error)', '/src/modules/student/pages/StudentCurriculumPage.tsx', {}, (t) => {
   check('curriculum (error): surfaces the callable failure with a retry', /Could not load your curriculum/.test(t) && /Try again/.test(t), t);
 });
+
+
+// ── Public /prep hub (docs/handoff-prep-hub-redesign.md §3, §7) ──────────────
+// The hub was rebuilt from a flat card grid into two jobs side by side: a
+// semester accordion and a placement band. These checks pin the parts the
+// brief calls out — title-first rows, one line of metadata, no descriptions or
+// stream chips in the grid, semester grouping (with the yearGroup / "other"
+// fallbacks), the UG/PG program control, the eligibility-filtered company row,
+// and the "college hid company prep" case where the band must lose the company
+// sub-block without leaving a hole.
+const PREP_VIEWER = '/src/modules/prep/PrepPublicViewer.tsx';
+
+const prepSubjects = [
+  // Semester 1 — BBA, all 1st-year.
+  { id: 'bba-micro', name: 'Microeconomics', stream: 'economics', track: 'academic', programs: ['bba', 'bcom'],
+    yearGroup: '1st-year', semester: 1, order: 1, topicCount: 5, status: 'published',
+    description: 'Demand, supply and elasticity explained for first-year commerce students.' },
+  { id: 'bba-mpa', name: 'Management Principles & Applications', stream: 'management', track: 'academic', programs: ['bba'],
+    yearGroup: '1st-year', semester: 1, order: 2, topicCount: 5, status: 'published',
+    description: 'Fayol to Mintzberg, with cases from Indian firms.' },
+  { id: 'bba-accounting', name: 'Fundamentals of Business Accounting', stream: 'commerce', track: 'academic', programs: ['bba', 'bcom', 'mcom'],
+    yearGroup: '1st-year', semester: 1, order: 3, topicCount: 5, status: 'published',
+    description: 'Journals, ledgers and the trial balance.' },
+  // Semester 2 — note `stream: 'aptitude'` on an ACADEMIC subject: the split is
+  // by track, never by stream, or the hub would file maths under placements.
+  { id: 'bba-ob', name: 'Organizational Behaviour', stream: 'management', track: 'academic', programs: ['bba'],
+    yearGroup: '1st-year', semester: 2, order: 4, topicCount: 5, status: 'published',
+    description: 'Motivation, groups and leadership.' },
+  { id: 'bba-math', name: 'Business Mathematics & Quantitative Techniques', stream: 'aptitude', track: 'academic', programs: ['bba'],
+    yearGroup: '1st-year', semester: 2, order: 5, topicCount: 5, status: 'published',
+    description: 'Matrices, calculus and linear programming for commerce.' },
+  // Semester 3 — 2nd year.
+  { id: 'bba-cost', name: 'Cost Accounting', stream: 'commerce', track: 'academic', programs: ['bba', 'bcom'],
+    yearGroup: '2nd-year', semester: 3, order: 7, topicCount: 5, status: 'published', description: 'Costing methods.' },
+  { id: 'bba-stats', name: 'Business Statistics', stream: 'aptitude', track: 'academic', programs: ['bba'],
+    yearGroup: '2nd-year', semester: 3, order: 8, topicCount: 5, status: 'published', description: 'Measures of central tendency.' },
+  // M.Com: one numbered semester, one year-group-only subject and one with
+  // neither — the two documented fallbacks (§5.1).
+  { id: 'mcom-adv-accounting', name: 'Advanced Corporate Accounting', stream: 'commerce', track: 'academic', programs: ['mcom'],
+    yearGroup: '1st-year', semester: 1, order: 1, topicCount: 6, status: 'published', description: 'Consolidation and branch accounts.' },
+  { id: 'mcom-research', name: 'Business Research Methods', stream: 'management', track: 'academic', programs: ['mcom'],
+    yearGroup: '1st-year', order: 9, topicCount: 4, status: 'published', description: 'Sampling, hypotheses and SPSS.' },
+  { id: 'mcom-elective', name: 'Elective Pack', stream: 'strategy', track: 'academic', programs: ['mcom'],
+    order: 12, topicCount: 3, status: 'published', description: 'An elective with no semester or year yet.' },
+  // Shared placement aptitude catalogue — every program.
+  { id: 'apt-quantitative-aptitude', name: 'Quantitative Aptitude', stream: 'aptitude', track: 'aptitude',
+    programs: ['bba', 'bcom', 'ba', 'bsc', 'bca', 'mba', 'mcom', 'mca'], order: 101, topicCount: 24, status: 'published',
+    description: 'Numbers, percentages, time-speed-work, algebra, probability and DI.' },
+  { id: 'apt-logical-reasoning', name: 'Logical Reasoning', stream: 'aptitude', track: 'aptitude',
+    programs: ['bba', 'bcom', 'ba', 'bsc', 'bca', 'mba', 'mcom', 'mca'], order: 102, topicCount: 20, status: 'published',
+    description: 'Series, coding-decoding, blood relations, seating arrangement.' },
+  { id: 'apt-verbal-ability', name: 'Verbal Ability & Reading Skills', stream: 'communication', track: 'aptitude',
+    programs: ['bba', 'bcom', 'ba', 'bsc', 'bca', 'mba', 'mcom', 'mca'], order: 103, topicCount: 18, status: 'published',
+    description: 'Grammar, vocabulary, comprehension and sentence correction.' },
+];
+
+const company = (code, name, programs, extra = {}) => ({
+  code, name, testName: `${name} Online Test`, tagline: `${name} tagline.`, audience: ['ug'], tier: 'mass',
+  totalMinutes: 100, totalQuestions: 60, negativeMarking: false, sectionalCutoff: true,
+  eligibility: { programs, degrees: 'Any graduate' }, sections: [], rounds: [], quickTips: [],
+  patternVerifiedOn: '2026-09-01', sources: [], status: 'published', order: 1, topicCount: 12, ...extra,
+});
+
+const prepCompanies = [
+  company('tcs-nqt', 'TCS', ['bba', 'bcom', 'ba', 'bsc', 'bca', 'mba', 'mcom', 'mca']),
+  company('infosys', 'Infosys', ['bba', 'bcom', 'ba', 'bsc', 'bca', 'mba', 'mcom', 'mca']),
+  company('wipro-nlth', 'Wipro', ['bba', 'bcom', 'bsc', 'bca']),
+  // Capgemini hires tech/PG only — it must NOT show for BBA (§7).
+  company('capgemini', 'Capgemini', ['bca', 'bsc', 'mca']),
+];
+
+const prepTopic = {
+  id: 'bba-micro-t1', subjectId: 'bba-micro', title: 'Demand, Supply & Equilibrium', order: 1, difficulty: 'core',
+  moduleNumber: 1, moduleName: 'Module 1: Microeconomics', subtopics: ['Demand'], explanationMd: '## Demand',
+  formulas: [], tricks: [], howToSolve: [], featuredQuestionIds: [], status: 'published',
+  generatedBy: 'curator', contentVersion: 1, tier: 'free',
+};
+
+const prepQuestion = {
+  id: 'q-qa-1', questionText: 'If 20% of x is 40, what is x?', options: ['100', '200', '160', '80'], correctIndex: 1,
+  explanation: 'x = 40 / 0.2 = 200.', difficulty: 'basic', status: 'approved',
+  prepTags: { subjectId: 'apt-quantitative-aptitude', topicIds: ['qa-percentages'] },
+  sectionId: 'quant', sectionName: 'Quantitative Ability',
+};
+
+function resetPrep(fixture = {}, { search = '', params = {} } = {}) {
+  globalThis.__RC_PREP = { subjects: prepSubjects, companies: prepCompanies, ...fixture };
+  globalThis.__RC_PREP_CALLS = [];
+  globalThis.__RC_SEARCH = search;
+  globalThis.__RC_SEARCH_SETS = [];
+  globalThis.__RC_PARAMS = params;
+  for (const key of ['vriddhi.prep.program', 'vriddhi.prep.collegeId',
+    'vriddhi.prep.openSemesters.bba', 'vriddhi.prep.openSemesters.mcom', 'vriddhi.prep.openSemesters.bca']) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
+}
+
+const callsTo = (fn) => (globalThis.__RC_PREP_CALLS ?? []).filter((c) => c.fn === fn);
+/** The accordion's header lines, in render order. */
+const groupHeaders = (view) => view.all('button[aria-expanded]').map((b) => b.textContent.replace(/\s+/g, ' ').trim());
+/** header text → aria-expanded, i.e. what the learner can actually see. */
+const expandedGroups = (view) => Object.fromEntries(
+  view.all('button[aria-expanded]').map((b) => [b.textContent.replace(/\s+/g, ' ').trim(), b.getAttribute('aria-expanded')]));
+/** The breadcrumb, crumb by crumb (textContent alone runs them together). */
+const crumbs = (view) => view.all('nav[aria-label="Breadcrumb"] li').map((li) => li.textContent.trim());
+
+// ── Hub, BBA, default arrival ────────────────────────────────────────────────
+resetPrep();
+await section('prep hub (bba)', PREP_VIEWER, { view: 'hub' }, (t, view) => {
+  const ot = view.openText();
+  check('prep hub: mounts without throwing', true);
+  check('prep hub: both jobs render — study column and placement band',
+    /Study your subjects/.test(t) && /Prepare for placements/.test(t), t);
+  check('prep hub: program control groups UG and PG instead of suffixing "(PG)"',
+    /Undergraduate/.test(t) && /Postgraduate/.test(t) && !/\(PG\)/.test(t), t);
+  const active = view.all('[aria-current="true"]');
+  check('prep hub: the selected program is marked with aria-current',
+    active.length === 1 && active[0].textContent.trim() === 'BBA', active.map((a) => a.textContent).join('|'));
+  check('prep hub: the catalog is grouped by semester, in order, with year + count on the header',
+    JSON.stringify(groupHeaders(view)) === JSON.stringify([
+      'Semester 1 · 1st year · 3 subjects',
+      'Semester 2 · 1st year · 2 subjects',
+      'Semester 3 · 2nd year · 2 subjects',
+    ]), groupHeaders(view).join(' | '));
+  check('prep hub: semester 1 is open on arrival and lists its subjects, title first',
+    t.includes('Microeconomics') && t.includes('Management Principles & Applications')
+    && t.includes('Fundamentals of Business Accounting'), t);
+  check('prep hub: later semesters stay collapsed instead of becoming a wall of cards',
+    !ot.includes('Organizational Behaviour') && !ot.includes('Cost Accounting'), ot);
+  // textContent runs "…Applications" and "5 topics" together, and the study
+  // column's own total says "35 topics" — so exclude a preceding digit.
+  const fiveTopicRows = (ot.match(/(?<!\d)5 topics/g) ?? []).length;
+  check('prep hub: each visible subject row carries exactly one metadata line ("5 topics")',
+    fiveTopicRows === 3, `count=${fiveTopicRows} tail=${ot.slice(-320)}`);
+  check('prep hub: no descriptions in the grid — those live on the subject page',
+    !ot.includes('Demand, supply and elasticity') && !ot.includes('Journals, ledgers'), ot);
+  check('prep hub: no stream chip, no program list, no "All programs" noise on a row',
+    !ot.includes('Quantitative Aptitude & Reasoning') && !ot.includes('Managerial Economics')
+    && !ot.includes('BA, B.Com, BBA') && !/All programs/.test(ot), ot);
+  check('prep hub: the three aptitude packs are compact tiles in the band',
+    /Quantitative Aptitude/.test(t) && /Logical Reasoning/.test(t) && /Verbal Ability/.test(t)
+    && /24 topics/.test(t) && /20 topics/.test(t) && /18 topics/.test(t), t);
+  check('prep hub: aptitude is filed under placements, never under a semester',
+    groupHeaders(view).every((h) => !/· 6[23] subjects/.test(h)) && !t.includes('Semester 101'), groupHeaders(view).join(' | '));
+  check('prep hub: company guides render as a compact row inside the band',
+    /Company guides/.test(t) && t.includes('TCS') && t.includes('Infosys') && t.includes('Wipro')
+    && /Take a 20-question mock/.test(t), t);
+  check('prep hub: Capgemini is filtered out for BBA by eligibility', !t.includes('Capgemini'), t);
+  check('prep hub: renders from ONE subjects + ONE companies request (no per-card fetches)',
+    callsTo('subjects').length === 1 && callsTo('companies').length === 1 && callsTo('subject').length === 0,
+    JSON.stringify(globalThis.__RC_PREP_CALLS));
+  check('prep hub: subject rows deep-link with the program they were browsed under',
+    view.hrefs().includes('/prep/subject/bba-micro?program=bba'), view.hrefs().join(' '));
+  check('prep hub: the mock CTA lands on the company mock tab',
+    view.hrefs().some((h) => /^\/prep\/company\/tcs-nqt\?tab=mock/.test(h)), view.hrefs().join(' '));
+  check('prep hub: keeps a share control for the page', view.all('[aria-label*="Share"]').length === 1, '');
+  check('prep hub: the header no longer leads with NEP 2020 / CBCS jargon',
+    !/NEP 2020 \/ CBCS study packs/.test(t) && /Free study packs/.test(t), t);
+});
+
+// ── Hub interaction: semester memory + program switch ────────────────────────
+resetPrep();
+await section('prep hub (accordion + program switch)', PREP_VIEWER, { view: 'hub' }, async (t, view) => {
+  check('prep hub (interaction): mounts without throwing', true);
+  const sem2 = view.all('button[aria-expanded]').find((b) => /Semester 2/.test(b.textContent));
+  check('prep hub (interaction): semester headers are buttons with aria-expanded + aria-controls',
+    Boolean(sem2) && sem2.getAttribute('aria-expanded') === 'false' && Boolean(sem2.getAttribute('aria-controls')), '');
+  await view.click(sem2);
+  const after = view.openText();
+  check('prep hub (interaction): tapping a semester expands it in place',
+    sem2.getAttribute('aria-expanded') === 'true' && after.includes('Organizational Behaviour')
+    && after.includes('Business Mathematics & Quantitative Techniques'), after);
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem('vriddhi.prep.openSemesters.bba') ?? 'null'); } catch { /* ignore */ }
+  check('prep hub (interaction): open semesters are remembered per program',
+    Array.isArray(stored) && stored.includes('sem-1') && stored.includes('sem-2'), JSON.stringify(stored));
+
+  const mcom = view.byText('M.Com');
+  check('prep hub (interaction): M.Com is its own pill, with no "(PG)" suffix', Boolean(mcom), '');
+  await view.click(mcom);
+  const switched = view.openText();
+  check('prep hub (interaction): switching program updates the URL query',
+    (globalThis.__RC_SEARCH_SETS ?? []).includes('?program=mcom'), JSON.stringify(globalThis.__RC_SEARCH_SETS));
+  check('prep hub (interaction): switching program refetches that catalog exactly once',
+    callsTo('subjects').length === 2 && callsTo('subjects')[1].params.program === 'mcom'
+    && callsTo('companies').length === 2, JSON.stringify(globalThis.__RC_PREP_CALLS));
+  check('prep hub (interaction): the new program shows its own subjects and hides BBA ones',
+    switched.includes('Advanced Corporate Accounting') && !switched.includes('Microeconomics'), switched);
+  check('prep hub (interaction): the study column reports what it is showing',
+    /M\.Com · 4 subjects · 18 topics/.test(switched), switched);
+  check('prep hub (interaction): a subject shared with another program is listed here too',
+    switched.includes('Fundamentals of Business Accounting'), switched);
+  check('prep hub (interaction): no semester → year group, no year group → "Other study packs"',
+    JSON.stringify(groupHeaders(view)) === JSON.stringify([
+      'Semester 1 · 1st year · 2 subjects',
+      '1st year · 1 subject',
+      'Other study packs · 1 subject',
+    ]), groupHeaders(view).join(' | '));
+  const other = view.all('button[aria-expanded]').find((b) => /Other study packs/.test(b.textContent));
+  await view.click(other);
+  check('prep hub (interaction): the catch-all group opens onto its subject',
+    view.openText().includes('Elective Pack'), view.openText());
+  check('prep hub (interaction): the chosen program is remembered on this device',
+    localStorage.getItem('vriddhi.prep.program') === 'mcom', localStorage.getItem('vriddhi.prep.program'));
+});
+
+// ── Reloading restores the program and the open semester ─────────────────────
+resetPrep({}, { search: '?program=bba' });
+try { localStorage.setItem('vriddhi.prep.openSemesters.bba', JSON.stringify(['sem-3'])); } catch { /* ignore */ }
+await section('prep hub (reload)', PREP_VIEWER, { view: 'hub' }, (t, view) => {
+  const ot = view.openText();
+  const expanded = expandedGroups(view);
+  check('prep hub (reload): reopens the semester the learner left open, and only that one',
+    ot.includes('Cost Accounting') && ot.includes('Business Statistics')
+    && expanded['Semester 3 · 2nd year · 2 subjects'] === 'true'
+    && expanded['Semester 1 · 1st year · 3 subjects'] === 'false', JSON.stringify(expanded));
+});
+
+// ── A `?sem=` hint from a breadcrumb wins over the stored semester ───────────
+resetPrep({}, { search: '?program=bba&sem=2' });
+await section('prep hub (?sem hint)', PREP_VIEWER, { view: 'hub' }, (t, view) => {
+  const ot = view.openText();
+  const expanded = expandedGroups(view);
+  check('prep hub (?sem): opens the semester the learner came back from',
+    ot.includes('Organizational Behaviour')
+    && expanded['Semester 2 · 1st year · 2 subjects'] === 'true'
+    && expanded['Semester 1 · 1st year · 3 subjects'] === 'false', JSON.stringify(expanded));
+});
+
+// ── BCA: Capgemini becomes eligible ─────────────────────────────────────────
+resetPrep({}, { search: '?program=bca' });
+await section('prep hub (bca)', PREP_VIEWER, { view: 'hub' }, (t) => {
+  check('prep hub (bca): mounts without throwing', true);
+  check('prep hub (bca): Capgemini IS offered to BCA — the filter is eligibility, not a hardcode',
+    t.includes('Capgemini'), t);
+  check('prep hub (bca): the placement band still leads with the aptitude tiles',
+    /Prepare for placements/.test(t) && /Quantitative Aptitude/.test(t), t);
+  check('prep hub (bca): with no BCA syllabus published the study block explains itself',
+    /No BCA subjects published yet/.test(t), t);
+  check('prep hub (bca): still exactly one subjects + one companies request',
+    callsTo('subjects').length === 1 && callsTo('companies').length === 1, JSON.stringify(globalThis.__RC_PREP_CALLS));
+});
+
+// ── College hides company prep (§5.3 / §7) ───────────────────────────────────
+resetPrep({ companies: [] });
+await section('prep hub (company prep hidden)', PREP_VIEWER, { view: 'hub' }, (t) => {
+  check('prep hub (hidden companies): mounts without throwing', true);
+  check('prep hub (hidden companies): the band survives — aptitude is always there',
+    /Prepare for placements/.test(t) && /Quantitative Aptitude/.test(t) && /Logical Reasoning/.test(t), t);
+  check('prep hub (hidden companies): no company row and no mock CTA left behind',
+    !/Company guides/.test(t) && !/Take a 20-question mock/.test(t), t);
+  check('prep hub (hidden companies): the study column is untouched',
+    /Semester 1 · 1st year · 3 subjects/.test(t), t);
+});
+
+// ── Nothing published at all ─────────────────────────────────────────────────
+resetPrep({ subjects: [], companies: [] });
+await section('prep hub (empty catalog)', PREP_VIEWER, { view: 'hub' }, (t) => {
+  check('prep hub (empty): says the catalog is not published instead of rendering a shell',
+    /No published BBA packs yet/.test(t), t);
+});
+
+// ── Subject + topic + company pages share one breadcrumb treatment ───────────
+resetPrep({ topics: [prepTopic] }, { search: '?program=bba', params: { subjectId: 'bba-micro' } });
+await section('prep subject page', PREP_VIEWER, { view: 'subject' }, (t, view) => {
+  check('prep subject: mounts without throwing', true);
+  check('prep subject: breadcrumb is Prep › BBA › Semester 1 › subject (§3.1)',
+    JSON.stringify(crumbs(view)) === JSON.stringify(['Prep', 'BBA', 'Semester 1', 'Microeconomics']), crumbs(view).join(' | '));
+  check('prep subject: the current page is the aria-current crumb, not a link',
+    view.all('[aria-current="page"]').length === 1
+    && view.all('[aria-current="page"]')[0].textContent.trim() === 'Microeconomics', '');
+  check('prep subject: keeps its share control', /Share \/ copy link/.test(t), t);
+  check('prep subject: topic links carry the program so "back" returns to the same catalog',
+    view.hrefs().includes('/prep/subject/bba-micro/topic/bba-micro-t1?program=bba'), view.hrefs().join(' '));
+});
+
+resetPrep({ topics: [prepTopic] }, { search: '?program=bba', params: { subjectId: 'bba-micro', topicId: 'bba-micro-t1' } });
+await section('prep topic page', PREP_VIEWER, { view: 'topic' }, (t, view) => {
+  check('prep topic: mounts without throwing', true);
+  check('prep topic: breadcrumb names program, semester, subject and topic',
+    JSON.stringify(crumbs(view)) === JSON.stringify(
+      ['Prep', 'BBA', 'Semester 1', 'Microeconomics', 'Demand, Supply & Equilibrium']), crumbs(view).join(' | '));
+  check('prep topic: the subject crumb links back to the subject with its program',
+    view.hrefs().includes('/prep/subject/bba-micro?program=bba'), view.hrefs().join(' '));
+  check('prep topic: the semester crumb links back to that semester on the hub',
+    view.hrefs().includes('/prep?program=bba&sem=1'), view.hrefs().join(' '));
+  check('prep topic: still renders every content section',
+    /Explanation/.test(t) && /Formulas/.test(t) && /Tricks/.test(t) && /How to Solve/.test(t) && /Practice/.test(t), t);
+});
+
+resetPrep({ questions: [prepQuestion] }, { search: '?program=bca&tab=mock', params: { companyCode: 'capgemini' } });
+await section('prep company page', PREP_VIEWER, { view: 'company' }, (t, view) => {
+  check('prep company: mounts without throwing', true);
+  check('prep company: breadcrumb matches the subject/topic pages',
+    JSON.stringify(crumbs(view)) === JSON.stringify(['Prep', 'BCA', 'Placement', 'Capgemini']), crumbs(view).join(' | '));
+  check('prep company: ?tab=mock opens the mock rather than the pattern tab',
+    /questions sampled from the topics this test uses/.test(t), t);
+  check('prep company: keeps the checklist tab with its progress label',
+    /Topics to prepare/.test(t), t);
+});
+
+resetPrep();
 
 
 await server.close();
