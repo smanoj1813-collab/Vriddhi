@@ -11,12 +11,11 @@
 // topics that already exist, so the checklist links straight into them.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
   Card,
-  CardActionArea,
   Chip,
   CircularProgress,
   Container,
@@ -26,7 +25,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ArrowLeft, Assignment, Business, CheckCircle, RadioButtonUnchecked, Refresh, Timer } from '@mui/icons-material';
+import { Assignment, Business, CheckCircle, RadioButtonUnchecked, Refresh, Timer } from '@mui/icons-material';
 import {
   fetchPrepCompanies,
   fetchPrepCompany,
@@ -41,7 +40,7 @@ import {
   DifficultyChip,
   PROGRAM_LABELS,
   PrepMarkdown,
-  ShareLinkButton,
+  PrepPageNav,
   renderInline,
 } from './prepPublicShared';
 
@@ -87,6 +86,22 @@ function useCompanyChecklist(code: string) {
 
 // ─── Hub strip ──────────────────────────────────────────────────────────────
 
+/** `TCS` → TCS, `Infosys` → IN, `Wipro` → WI — a monogram for the pill. */
+function companyMonogram(name: string): string {
+  const clean = (name || '').trim();
+  if (!clean) return '•';
+  if (clean.length <= 4 && clean === clean.toUpperCase()) return clean;
+  return clean.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || clean.slice(0, 2).toUpperCase();
+}
+
+/**
+ * Company guides inside the hub's placement block. Was a second grid of big
+ * cards below the fold (§1 #4); now a compact row of monogram pills that fits
+ * the band, with the full pattern/rounds/checklist one tap away.
+ *
+ * Renders nothing at all when the API returns no companies — a college that
+ * hides company prep must not be left with an empty box (§5.3).
+ */
 export function CompanyStrip({ program }: { program: string }) {
   const [companies, setCompanies] = useState<PrepCompany[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,60 +118,119 @@ export function CompanyStrip({ program }: { program: string }) {
     };
   }, [program]);
 
-  if (loading) return <LinearProgress />;
+  if (loading) return <LinearProgress sx={{ borderRadius: 3 }} />;
   if (companies.length === 0) return null;
 
+  const label = PROGRAM_LABELS[program] || program;
+
   return (
-    <Stack spacing={1.5}>
-      <Box>
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>Company-specific prep</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Exam pattern, eligibility, rounds and a topic checklist for recruiters that hire {PROGRAM_LABELS[program] || program} graduates — each guide maps onto the aptitude topics above.
+    <Box>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{ fontSize: 11, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: 'text.secondary' }}
+        >
+          Company guides
         </Typography>
-      </Box>
-      <Grid container spacing={2}>
+        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+          hiring {label}
+        </Typography>
+      </Stack>
+
+      <Box sx={{ mt: 1, display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
         {companies.map((c) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.code}>
-            <Card variant="outlined" sx={{ height: '100%' }}>
-              <CardActionArea component={Link} to={`/prep/company/${c.code}`} sx={{ height: '100%', p: 2 }}>
-                <Stack spacing={1}>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                    <Business color="primary" fontSize="small" />
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{c.name}</Typography>
-                    {c.negativeMarking ? <Chip size="small" color="error" variant="outlined" label="Negative marking" /> : <Chip size="small" variant="outlined" label="No negative marking" />}
-                  </Stack>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{c.testName}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {c.tagline}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {c.sections.length} sections{c.totalMinutes ? ` · ${c.totalMinutes} min` : ''} · {c.topicCount ?? 0} topics to prepare · pattern checked {formatVerified(c.patternVerifiedOn)}
-                  </Typography>
-                </Stack>
-              </CardActionArea>
-            </Card>
-          </Grid>
+          <Box
+            key={c.code}
+            component={Link}
+            to={`/prep/company/${c.code}?program=${program}`}
+            title={`${c.testName}${c.totalMinutes ? ` · ${c.totalMinutes} min` : ''}${c.totalQuestions ? ` · ~${c.totalQuestions} questions` : ''}`}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.75,
+              px: 1,
+              py: 0.5,
+              borderRadius: 999,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              color: 'text.primary',
+              textDecoration: 'none',
+              '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+              '&:focus-visible': { outline: '2px solid', outlineColor: 'secondary.main', outlineOffset: 2 },
+            }}
+          >
+            <Box
+              aria-hidden
+              sx={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                display: 'grid',
+                placeItems: 'center',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                fontSize: 9.5,
+                fontWeight: 800,
+                letterSpacing: '.02em',
+                flexShrink: 0,
+              }}
+            >
+              {companyMonogram(c.name)}
+            </Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>{c.name}</Typography>
+          </Box>
         ))}
-      </Grid>
-    </Stack>
+      </Box>
+
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+        Pattern, eligibility, rounds and a topic checklist per recruiter.
+      </Typography>
+
+      <Button
+        size="small"
+        variant="outlined"
+        component={Link}
+        to={`/prep/company/${companies[0].code}?tab=mock&program=${program}`}
+        startIcon={<Assignment fontSize="small" />}
+        sx={{ mt: 1 }}
+      >
+        Take a 20-question mock
+      </Button>
+    </Box>
   );
 }
 
 // ─── Company page ───────────────────────────────────────────────────────────
 
+const TAB_IDS = ['overview', 'checklist', 'strategy', 'mock'] as const;
+type TabId = (typeof TAB_IDS)[number];
+
+function isTabId(value: string | null): value is TabId {
+  return Boolean(value) && (TAB_IDS as readonly string[]).includes(value as string);
+}
+
 export function CompanyView({ code }: { code: string }) {
+  const [searchParams] = useSearchParams();
+  // `?tab=mock` lets the hub's "Take a 20-question mock" land straight on the
+  // mock instead of the pattern tab. Same route, just a query param.
+  const tabParam = searchParams.get('tab');
+  const urlProgram = String(searchParams.get('program') || '').toLowerCase();
   const [company, setCompany] = useState<PrepCompany | null>(null);
   const [topics, setTopics] = useState<PrepCompanyTopicCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<'overview' | 'checklist' | 'strategy' | 'mock'>('overview');
+  const [tab, setTab] = useState<TabId>(isTabId(tabParam) ? tabParam : 'overview');
   const { done, toggle } = useCompanyChecklist(code);
+
+  useEffect(() => {
+    setTab(isTabId(tabParam) ? tabParam : 'overview');
+  }, [code, tabParam]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setTab('overview');
     fetchPrepCompany(code)
       .then(({ company: c, topics: t }) => {
         if (cancelled) return;
@@ -187,17 +261,24 @@ export function CompanyView({ code }: { code: string }) {
     );
   }
 
-  const backProgram = company.eligibility.programs[0] || 'bba';
+  // The hub links here with `?program=`; a bare deep link falls back to the
+  // first program this recruiter's eligibility lists.
+  const backProgram = PROGRAM_LABELS[urlProgram] ? urlProgram : company.eligibility.programs[0] || 'bba';
+  const hubPath = `/prep?program=${backProgram}`;
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Stack spacing={2}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
-          <Button component={Link} to={`/prep?program=${backProgram}`} startIcon={<ArrowLeft />} size="small">
-            Back to catalog
-          </Button>
-          <ShareLinkButton path={`/prep/company/${company.code}`} />
-        </Stack>
+        <PrepPageNav
+          crumbs={[
+            { label: 'Prep', to: '/prep' },
+            { label: PROGRAM_LABELS[backProgram] || backProgram, to: hubPath },
+            { label: 'Placement', to: hubPath },
+            { label: company.name },
+          ]}
+          sharePath={`/prep/company/${company.code}`}
+          backTo={hubPath}
+        />
 
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Business color="primary" />
