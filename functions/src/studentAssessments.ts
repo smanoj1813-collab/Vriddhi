@@ -55,7 +55,8 @@ interface StaffIdentity {
 
 function timestampToDate(value: unknown): Date | null {
   if (!value) return null
-  if (value instanceof admin.firestore.Timestamp) return value.toDate()
+  const Timestamp = admin.firestore.Timestamp
+  if (Timestamp && value instanceof Timestamp) return value.toDate()
   if (value instanceof Date) return value
   if (typeof value === 'object' && value !== null && 'toDate' in value) {
     const converted = (value as { toDate: () => Date }).toDate()
