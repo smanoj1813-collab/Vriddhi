@@ -96,7 +96,20 @@ for (let index = 0; index < STUDENTS; index += 1) {
 const report = { runId, students: STUDENTS, testId, calls: {}, errors: [], startedAt: new Date().toISOString() }
 async function counted(name, token, data) {
   report.calls[name] = (report.calls[name] || 0) + 1
-  return invoke(name, token, data)
+  const result = await invoke(name, token, { ...data, __costTrace: true })
+  const trace = result.costTrace
+  if (trace) {
+    report.cost = report.cost || { reads: 0, writes: 0, byOperation: {} }
+    report.cost.reads += Number(trace.reads) || 0
+    report.cost.writes += Number(trace.writes) || 0
+    report.cost.byOperation[trace.operation] = report.cost.byOperation[trace.operation] || { calls: 0, reads: 0, writes: 0, paths: {} }
+    const aggregate = report.cost.byOperation[trace.operation]
+    aggregate.calls += 1
+    aggregate.reads += Number(trace.reads) || 0
+    aggregate.writes += Number(trace.writes) || 0
+    aggregate.paths[trace.path] = (aggregate.paths[trace.path] || 0) + 1
+  }
+  return result
 }
 for (const student of students) {
   try {

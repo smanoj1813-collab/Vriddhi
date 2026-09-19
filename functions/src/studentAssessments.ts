@@ -10,6 +10,7 @@ import {
 } from './assessmentGrading'
 import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
 import { geminiClient, openaiClient, deepseekClient } from './config/aiProviders'
+import { maybeTrace, traceRequested } from './assessmentCostTrace'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
@@ -780,6 +781,7 @@ export const startMyStudentTest = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const costTrace = traceRequested(request.data)
     const student = await resolveStudent(uid, request.auth?.token || {})
     const resolved = await resolveOwnTest(String(request.data?.testId || ''), student)
     const { start, end, duration } = testWindow(resolved.test)
@@ -791,6 +793,7 @@ export const startMyStudentTest = onCall(
     if (now > end) throw new HttpsError('deadline-exceeded', 'Test window has closed')
     const questions = await loadTestQuestions(resolved.testId, resolved.test)
     if (questions.length === 0) throw new HttpsError('failed-precondition', 'Test has no published questions')
+    const frozenChunkCount = buildFrozenQuestionChunks(questions).length
 
     // Materialise the answer-key-free snapshot once. Resume reads this bounded
     // collection instead of one assessmentQuestions document per question;
@@ -900,11 +903,18 @@ export const startMyStudentTest = onCall(
       return { startedAt: now.toISOString(), endsAt: endsAt.toISOString(), resumed: false }
     })
 
-    return {
+    const response = {
       studentAssessmentId: assessmentRef.id,
       testId: resolved.testId,
       ...result,
     }
+    return maybeTrace(costTrace, response, {
+      operation: 'startMyStudentTest',
+      path: 'start-with-frozen-chunks',
+      reads: 2 + 1 + questions.length + 2,
+      writes: (Number(resolved.test.questionChunksVersion || 0) < 1 ? frozenChunkCount : 0) + 2 + (answerIndexExternal ? 1 : 0),
+      notes: ['identity=2', 'scheduledTest=1', 'assessmentQuestions=query', 'transaction=2']
+    })
   }
 )
 
@@ -913,6 +923,7 @@ export const getMyActiveStudentTest = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const costTrace = traceRequested(request.data)
     const student = await resolveStudent(uid, request.auth?.token || {})
     const resolved = await resolveOwnTest(String(request.data?.testId || ''), student)
     if (resolved.test.status === 'cancelled') {
@@ -934,7 +945,7 @@ export const getMyActiveStudentTest = onCall(
     const savedAnswers = Array.isArray(row.answers) ? row.answers : []
     const answers: Record<string, ServerAnswer> = {}
     savedAnswers.forEach((answer: ServerAnswer) => { if (answer.questionId) answers[answer.questionId] = answer })
-    return {
+    const response = {
       studentAssessmentId: assessment.id,
       assessmentId: resolved.testId,
       testId: resolved.testId,
@@ -964,6 +975,12 @@ export const getMyActiveStudentTest = onCall(
       shuffleSections: resolved.test.shuffleSections === true,
       scheduledStart: iso(resolved.test.startDateTime || resolved.test.scheduledAt),
     }
+    return maybeTrace(costTrace, response, {
+      operation: 'getMyActiveStudentTest', path: frozenQuestions ? 'frozen-chunks' : 'legacy-questions',
+      reads: 2 + 1 + 1 + (frozenQuestions ? Math.ceil(questions.length / 25) : questions.length),
+      writes: 0,
+      notes: ['identity=2', 'scheduledTest=1', 'attempt=1']
+    })
   }
 )
 
@@ -1006,6 +1023,7 @@ export const autosaveMyStudentTest = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const costTrace = traceRequested(request.data)
     const assessmentId = String(request.data?.studentAssessmentId || '')
     if (!assessmentId || assessmentId.includes('/')) throw new HttpsError('invalid-argument', 'Invalid attempt ID')
     const db = admin.firestore()
@@ -1102,7 +1120,13 @@ export const autosaveMyStudentTest = onCall(
         receivedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
     }
-    return { success: true, savedAt: new Date().toISOString(), timeSpent }
+    return maybeTrace(costTrace, { success: true, savedAt: new Date().toISOString(), timeSpent }, {
+      operation: 'autosaveMyStudentTest',
+      path: hasDelta && !legacyStudentId ? 'indexed-fast-path' : 'legacy-fallback',
+      reads: hasDelta && !legacyStudentId ? 2 : 2 + (hasLegacy ? 1 : 0),
+      writes: 1 + (proctorEvents.length > 0 && meaningfulEvents.length > 0 ? 1 : 0),
+      notes: ['attempt=1', 'transaction=1', 'answerIndex-inline-or-meta']
+    })
   }
 )
 
