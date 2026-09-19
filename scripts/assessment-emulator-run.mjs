@@ -44,7 +44,9 @@ async function invoke(name, token, data) {
   })
   const payload = await response.json()
   if (!response.ok || payload.error) throw new Error(`${name}: ${JSON.stringify(payload)}`)
-  return payload.data
+  const result = payload.data ?? payload.result
+  if (!result) throw new Error(`${name}: callable returned no data: ${JSON.stringify(payload)}`)
+  return result
 }
 async function signIn(email, password) {
   const response = await fetch(`${AUTH_API}/accounts:signInWithPassword?key=fake-api-key`, {
