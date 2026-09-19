@@ -11,7 +11,7 @@ import { apiUrl, assertJsonResponse } from '@/shared/api/apiBase'
  * 'aptitude' = placement-prep catalogues (QA / LR / Verbal) shared by every
  * program. Legacy subjects without a track are academic.
  */
-export type PrepTrack = 'academic' | 'aptitude'
+export type PrepTrack = 'academic' | 'aptitude' | 'company'
 
 /** Which learners a topic is primarily aimed at (aptitude track only). */
 export type PrepAudience = 'ug' | 'pg' | 'tech'
@@ -113,6 +113,76 @@ export interface UniversalQuestion {
     program?: string
   }
 }
+
+// ── Company-specific placement prep (mirrors functions/src/prepShared.ts) ──
+
+export interface PrepCompanySection {
+  id: string
+  name: string
+  questions?: number
+  minutes?: number
+  note?: string
+  topicIds: string[]
+  coverage: 'catalogue' | 'partial' | 'external'
+  coverageNote?: string
+}
+
+export interface PrepCompanyRound {
+  id: string
+  name: string
+  detail: string
+  eliminator?: boolean
+}
+
+export interface PrepCompanyEligibility {
+  programs: string[]
+  degrees: string
+  minPercentage?: string
+  backlogs?: string
+  gap?: string
+  age?: string
+  note?: string
+}
+
+export interface PrepCompany {
+  code: string
+  name: string
+  testName: string
+  tagline: string
+  audience: PrepAudience[]
+  tier: 'mass' | 'premium'
+  platform?: string
+  totalMinutes?: number
+  totalQuestions?: number
+  negativeMarking: boolean
+  sectionalCutoff: boolean
+  eligibility: PrepCompanyEligibility
+  sections: PrepCompanySection[]
+  rounds: PrepCompanyRound[]
+  strategyMd?: string
+  quickTips: string[]
+  rolesMd?: string
+  patternVerifiedOn: string
+  sources: string[]
+  status: 'draft' | 'in_review' | 'published'
+  order: number
+  updatedAt?: string
+  /** List endpoint only: number of distinct aptitude topics mapped. */
+  topicCount?: number
+}
+
+/** Lightweight topic card returned with a company guide. */
+export interface PrepCompanyTopicCard {
+  id: string
+  subjectId: string
+  title: string
+  moduleName?: string
+  difficulty: string
+  examFrequency?: string
+  subtopicCount: number
+}
+
+export type PrepCompanyMockQuestion = UniversalQuestion & { sectionId: string; sectionName: string }
 
 export interface LearnerProgressData {
   topicsCompleted?: Record<
@@ -337,4 +407,26 @@ export function topicSubtopics(topic: Pick<PrepTopic, 'subtopics' | 'subtopicDet
   if (!topic) return []
   if (Array.isArray(topic.subtopicDetails) && topic.subtopicDetails.length > 0) return topic.subtopicDetails
   return (topic.subtopics ?? []).map((title, idx) => ({ id: `sub-${idx + 1}`, title, briefMd: '' }))
+}
+
+export async function fetchPrepCompanies(params?: { program?: string; audience?: string }): Promise<PrepCompany[]> {
+  const qs = new URLSearchParams()
+  if (params?.program) qs.set('program', params.program)
+  if (params?.audience) qs.set('audience', params.audience)
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  const res = await authedFetch(`/prep/companies${suffix}`)
+  const json = await res.json()
+  return json.data as PrepCompany[]
+}
+
+export async function fetchPrepCompany(code: string): Promise<{ company: PrepCompany; topics: PrepCompanyTopicCard[] }> {
+  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}`)
+  const json = await res.json()
+  return { company: json.data as PrepCompany, topics: (json.topics || []) as PrepCompanyTopicCard[] }
+}
+
+export async function fetchPrepCompanyMock(code: string, count = 20): Promise<PrepCompanyMockQuestion[]> {
+  const res = await authedFetch(`/prep/companies/${encodeURIComponent(code)}/mock?count=${count}`)
+  const json = await res.json()
+  return (json.data || []) as PrepCompanyMockQuestion[]
 }

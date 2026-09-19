@@ -55,6 +55,9 @@ const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
   // Shared placement-aptitude track (Quant / Reasoning / Verbal) — not a
   // program; one seed serves every UG & PG program.
   { code: 'aptitude', label: 'Aptitude (QA · LR · Verbal)' },
+  // Company placement guides (TCS, Infosys, Wipro, Accenture, Capgemini,
+  // Cognizant) — pattern + section→topic map over the aptitude catalogue.
+  { code: 'companies', label: 'Company Prep' },
 ];
 
 export default function PrepContentStudioTab() {

@@ -16,4 +16,5 @@ export const prepRoutes: RouteObject[] = [
   { path: '/prep', element: <PrepPublicViewer view="hub" /> },
   { path: '/prep/subject/:subjectId', element: <PrepPublicViewer view="subject" /> },
   { path: '/prep/subject/:subjectId/topic/:topicId', element: <PrepPublicViewer view="topic" /> },
+  { path: '/prep/company/:companyCode', element: <PrepPublicViewer view="company" /> },
 ];

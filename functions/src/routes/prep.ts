@@ -41,6 +41,9 @@ import {
   effectiveDegreeLevel,
   effectiveTrack,
   normaliseSubtopics,
+  validateCompanyCatalog,
+  companyTopicIds,
+  PrepCompany,
   PrepSubject,
   PrepTopic,
   UniversalQuestion,
@@ -71,6 +74,7 @@ import {
   SEEDED_BCOM_QUESTIONS,
 } from '../data/bcomSeedData'
 import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../data/aptitudeSeedData'
+import { SEEDED_COMPANIES } from '../data/companySeedData'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
@@ -96,6 +100,9 @@ const PREP_SEED_BUNDLES: Array<{
   // subjects list every UG & PG program, so seeding once serves them all.
   { code: 'aptitude', label: 'Placement Aptitude', subjects: APTITUDE_SUBJECTS, topics: SEEDED_APTITUDE_TOPICS, questions: SEEDED_APTITUDE_QUESTIONS },
 ]
+
+/** Seed code for the company-prep catalogue (prep_companies). */
+const COMPANY_SEED_CODE = 'companies'
 
 /** Firestore allows at most 500 writes per commit; stay well under it. */
 const FIRESTORE_BATCH_LIMIT = 400
@@ -567,6 +574,173 @@ router.post('/subjects', verifyAuth, async (req: AuthenticatedRequest, res: Resp
   }
 })
 
+// ── Company prep ────────────────────────────────────────────────────────────
+//
+// Company guides live in prep_companies/{code}. Anonymous callers see only
+// published guides; the superadmin sees everything. When the collection has
+// not been seeded yet we fall back to the in-repo seed so the public page is
+// never empty after a deploy.
+
+function companyVisible(c: PrepCompany, isSuperadmin: boolean): boolean {
+  return isSuperadmin || c.status === 'published'
+}
+
+async function loadCompanies(): Promise<PrepCompany[]> {
+  const snap = await db.collection('prep_companies').get()
+  if (snap.empty) return [...SEEDED_COMPANIES]
+  return snap.docs.map((d) => ({ ...(d.data() as PrepCompany), code: d.id }))
+}
+
+// GET /companies?program=bca&audience=tech
+router.get('/companies', async (req, res) => {
+  try {
+    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    let companies = (await loadCompanies()).filter((c) => companyVisible(c, isSuperadmin))
+
+    const program = String(req.query.program || '').toLowerCase().trim()
+    if (program) companies = companies.filter((c) => (c.eligibility?.programs || []).includes(program))
+    const audience = String(req.query.audience || '').toLowerCase().trim()
+    if (audience) companies = companies.filter((c) => (c.audience || []).includes(audience as any))
+
+    companies.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+    // List view: strip the long markdown so the hub payload stays small.
+    const data = companies.map(({ strategyMd, rolesMd, ...rest }) => ({
+      ...rest,
+      topicCount: companyTopicIds(rest).length,
+    }))
+    res.json({ success: true, count: data.length, data })
+  } catch (err: any) {
+    console.error('[Prep] GET /companies error:', err)
+    res.status(500).json({ error: 'Failed to fetch company prep guides', detail: err.message })
+  }
+})
+
+// GET /companies/:code — full guide plus the resolved topic cards it maps to.
+router.get('/companies/:code', async (req, res) => {
+  try {
+    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    const code = String(req.params.code || '').toLowerCase().trim()
+    const company = (await loadCompanies()).find((c) => c.code === code)
+    if (!company || !companyVisible(company, isSuperadmin)) {
+      res.status(404).json({ error: 'Company prep guide not found' })
+      return
+    }
+
+    // Resolve the mapped topics to lightweight cards (title, subject, module,
+    // difficulty, frequency) so the client can render the checklist without
+    // N round trips. Prefer Firestore (curated edits) and fall back to seed.
+    const wanted = companyTopicIds(company)
+    const seededById = new Map(Object.values(SEEDED_APTITUDE_TOPICS).flat().map((t) => [t.id, t]))
+    const cards: Array<{
+      id: string
+      subjectId: string
+      title: string
+      moduleName?: string
+      difficulty: string
+      examFrequency?: string
+      subtopicCount: number
+    }> = []
+    const subjectsSnap = await db.collection('prep_subjects').where('track', '==', 'aptitude').get()
+    const liveTopics = new Map<string, any>()
+    for (const subj of subjectsSnap.docs) {
+      const topicsSnap = await subj.ref.collection('topics').get()
+      for (const t of topicsSnap.docs) {
+        const data = t.data()
+        if (isSuperadmin || data.status === 'published') liveTopics.set(t.id, { ...data, id: t.id })
+      }
+    }
+    for (const tid of wanted) {
+      const t = liveTopics.get(tid) || (liveTopics.size === 0 ? seededById.get(tid) : undefined)
+      if (!t) continue
+      cards.push({
+        id: t.id,
+        subjectId: t.subjectId,
+        title: t.title,
+        moduleName: t.moduleName,
+        difficulty: t.difficulty,
+        examFrequency: t.examFrequency,
+        subtopicCount: Array.isArray(t.subtopicDetails) && t.subtopicDetails.length > 0
+          ? t.subtopicDetails.length
+          : Array.isArray(t.subtopics) ? t.subtopics.length : 0,
+      })
+    }
+
+    res.json({ success: true, data: company, topics: cards })
+  } catch (err: any) {
+    console.error('[Prep] GET /companies/:code error:', err)
+    res.status(500).json({ error: 'Failed to fetch company prep guide', detail: err.message })
+  }
+})
+
+// GET /companies/:code/mock?count=20 — sample approved questions from the
+// company's mapped topics, weighted by section size so the mix resembles the
+// real paper. Sections without mapped topics (coding, games) contribute none.
+router.get('/companies/:code/mock', async (req, res) => {
+  try {
+    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    const code = String(req.params.code || '').toLowerCase().trim()
+    const company = (await loadCompanies()).find((c) => c.code === code)
+    if (!company || !companyVisible(company, isSuperadmin)) {
+      res.status(404).json({ error: 'Company prep guide not found' })
+      return
+    }
+    const count = Math.min(Math.max(Number(req.query.count) || 20, 5), 30)
+
+    // Weight by the real paper's section size, but discount 'partial'
+    // sections (spoken / game-based blocks the MCQ pool only approximates) so
+    // the mock is dominated by sections the catalogue genuinely covers.
+    const sectionWeight = (sec: PrepCompany['sections'][number]) =>
+      sec.coverage === 'catalogue' ? (sec.questions || 10) : Math.max(2, Math.round((sec.questions || 10) / 5))
+    const mappedSections = company.sections.filter((sec) => (sec.topicIds || []).length > 0)
+    const weightTotal = mappedSections.reduce((n, sec) => n + sectionWeight(sec), 0)
+
+    const snap = await db.collection('universalQuestions').where('status', '==', 'approved').where('prepTags.stream', '==', 'aptitude').get()
+    let pool: UniversalQuestion[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<UniversalQuestion, 'id'>) }))
+    if (pool.length === 0) pool = SEEDED_APTITUDE_QUESTIONS
+
+    const used = new Set<string>()
+    const out: Array<UniversalQuestion & { sectionId: string; sectionName: string }> = []
+    for (const sec of mappedSections) {
+      const share = Math.max(1, Math.round((count * sectionWeight(sec)) / weightTotal))
+      const secPool = pool.filter((q) => !used.has(q.id) && q.prepTags.topicIds.some((tid) => sec.topicIds.includes(tid)))
+      for (const q of samplePracticeQuestions(secPool, share)) {
+        used.add(q.id)
+        out.push({ ...q, sectionId: sec.id, sectionName: sec.name })
+      }
+    }
+    res.json({ success: true, count: out.length, data: out.slice(0, count) })
+  } catch (err: any) {
+    console.error('[Prep] GET /companies/:code/mock error:', err)
+    res.status(500).json({ error: 'Failed to build company mock', detail: err.message })
+  }
+})
+
+// POST /companies (superadmin) — create or update a guide in place.
+router.post('/companies', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const body = (req.body || {}) as Partial<PrepCompany>
+    const code = String(body.code || '').toLowerCase().trim()
+    if (!code || !/^[a-z0-9-]+$/.test(code)) {
+      res.status(400).json({ error: 'code is required and must be lowercase, URL-safe.' })
+      return
+    }
+    const report = validateCompanyCatalog({
+      companies: [{ ...(body as PrepCompany), code }],
+      knownTopicIds: Object.values(SEEDED_APTITUDE_TOPICS).flat().map((t) => t.id),
+    })
+    if (!report.valid) {
+      res.status(400).json({ error: 'Company guide failed validation.', issues: report.issues })
+      return
+    }
+    const payload = { ...body, code, updatedAt: new Date().toISOString() }
+    await db.collection('prep_companies').doc(code).set(payload, { merge: true })
+    res.json({ success: true, data: payload, warnings: report.issues })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to save company guide', detail: err.message })
+  }
+})
+
 // ── GET /practice (Randomly sample questions from approved pool) ────────────
 router.get('/practice', async (req, res) => {
   try {
@@ -837,10 +1011,14 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
     const bundles = selection.programs
       .map((code) => PREP_SEED_BUNDLES.find((b) => b.code === code))
       .filter((b): b is (typeof PREP_SEED_BUNDLES)[number] => Boolean(b))
+    // Company-prep bundle: not a subject/topic bundle, so handled separately.
+    const seedCompanies = selection.programs.includes(COMPANY_SEED_CODE)
     // Valid program codes that simply have no seed bundle yet.
-    const unseedable = selection.programs.filter((code) => !seedableCodes.includes(code))
+    const unseedable = selection.programs.filter(
+      (code) => !seedableCodes.includes(code) && code !== COMPANY_SEED_CODE
+    )
 
-    if (selection.errors.length > 0 && bundles.length === 0) {
+    if (selection.errors.length > 0 && bundles.length === 0 && !seedCompanies) {
       res.status(400).json({
         error: 'No seedable programs matched the request.',
         errors: selection.errors,
@@ -849,7 +1027,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       return
     }
 
-    if (bundles.length === 0) {
+    if (bundles.length === 0 && !seedCompanies) {
       res.status(400).json({
         error: 'The requested programs have no seed data yet.',
         errors: selection.errors,
@@ -917,6 +1095,26 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       })
     }
 
+    if (seedCompanies) {
+      const report = validateCompanyCatalog({
+        companies: SEEDED_COMPANIES,
+        knownTopicIds: Object.values(SEEDED_APTITUDE_TOPICS).flat().map((t) => t.id),
+      })
+      for (const company of SEEDED_COMPANIES) {
+        writes.push({ ref: db.collection('prep_companies').doc(company.code), data: company as any })
+      }
+      perProgram.push({
+        code: COMPANY_SEED_CODE,
+        label: 'Company Prep',
+        subjectCount: SEEDED_COMPANIES.length,
+        topicCount: 0,
+        questionCount: 0,
+        valid: report.valid,
+        errorCount: report.errorCount,
+        warningCount: report.warningCount,
+      })
+    }
+
     // Commit in chunks; Firestore rejects batches larger than 500 writes.
     const chunks = chunkArray(writes, FIRESTORE_BATCH_LIMIT)
     for (const chunk of chunks) {
@@ -936,7 +1134,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
 
     res.json({
       success: true,
-      message: `Seeded ${bundles.length} program(s): ${totals.subjectCount} subjects, ${totals.topicCount} topics and ${totals.questionCount} universal practice questions across ${chunks.length} commit(s).`,
+      message: `Seeded ${perProgram.length} bundle(s): ${totals.subjectCount - (seedCompanies ? SEEDED_COMPANIES.length : 0)} subjects, ${totals.topicCount} topics, ${totals.questionCount} universal practice questions${seedCompanies ? ` and ${SEEDED_COMPANIES.length} company prep guides` : ''} across ${chunks.length} commit(s).`,
       programs: selection.programs,
       errors: selection.errors,
       unseedable,

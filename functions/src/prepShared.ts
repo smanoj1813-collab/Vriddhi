@@ -44,6 +44,90 @@ export type PrepTrack = 'academic' | 'aptitude' | 'company'
  */
 export type PrepAudience = 'ug' | 'pg' | 'tech'
 
+// ── Company-specific placement prep ─────────────────────────────────────────
+//
+// A PrepCompany describes one recruiter's assessment (pattern, eligibility,
+// rounds) and maps each test section onto the shared aptitude topics that
+// already exist, so company prep re-uses the QA / LR / VA catalogue instead of
+// duplicating it. Stored in Firestore under `prep_companies/{code}`.
+
+export type PrepCompanyTier = 'mass' | 'premium'
+
+export interface PrepCompanySection {
+  id: string
+  /** Section name as the recruiter labels it, e.g. "Numerical Ability". */
+  name: string
+  questions?: number
+  /** Minutes allotted to the section; omit when the timer is shared. */
+  minutes?: number
+  /** Free-text note, e.g. "shared 25-minute timer with Advanced Reasoning". */
+  note?: string
+  /**
+   * Aptitude topic ids (qa-* / lr-* / va-*) tested in this section, most
+   * frequent first. Empty for sections the shared catalogue does not cover
+   * (coding, games, spoken English) — `coverage` explains what to do instead.
+   */
+  topicIds: string[]
+  /** 'catalogue' = fully covered by mapped topics; 'partial' / 'external' = see coverage note. */
+  coverage: 'catalogue' | 'partial' | 'external'
+  coverageNote?: string
+}
+
+export interface PrepCompanyRound {
+  id: string
+  name: string
+  /** What happens in this round and what is evaluated. */
+  detail: string
+  /** True when failing this round ends the process. */
+  eliminator?: boolean
+}
+
+export interface PrepCompanyEligibility {
+  /** Program codes from PREP_PROGRAM_CATALOG this drive typically accepts. */
+  programs: string[]
+  /** Human-readable degree list as the recruiter phrases it. */
+  degrees: string
+  minPercentage?: string
+  backlogs?: string
+  gap?: string
+  age?: string
+  note?: string
+}
+
+export interface PrepCompany {
+  /** URL-safe code, e.g. 'tcs-nqt'. */
+  code: string
+  name: string
+  /** Drive / test name, e.g. "TCS National Qualifier Test (NQT)". */
+  testName: string
+  tagline: string
+  /** Which learners this drive is relevant to; drives the hub filter. */
+  audience: PrepAudience[]
+  tier: PrepCompanyTier
+  /** Assessment vendor / platform, e.g. "TCS iON", "AMCAT / SHL", "HackerRank". */
+  platform?: string
+  totalMinutes?: number
+  totalQuestions?: number
+  negativeMarking: boolean
+  sectionalCutoff: boolean
+  eligibility: PrepCompanyEligibility
+  sections: PrepCompanySection[]
+  rounds: PrepCompanyRound[]
+  /** Markdown: how to prepare, ordered strategy, what trips candidates up. */
+  strategyMd: string
+  /** Short bullet tips shown as chips / list. */
+  quickTips: string[]
+  /** Roles / CTC bands as commonly reported; phrased as ranges, not promises. */
+  rolesMd?: string
+  /** ISO date the pattern was last verified against public sources. */
+  patternVerifiedOn: string
+  /** Public sources consulted for the pattern (URLs). */
+  sources: string[]
+  status: 'draft' | 'in_review' | 'published'
+  order: number
+  updatedAt?: string
+}
+
 /** A granular sub-topic with its own short brief (rendered under the topic). */
 export interface PrepSubtopic {
   id: string
@@ -516,7 +600,7 @@ export const PREP_PROGRAM_CODES: string[] = PREP_PROGRAM_CATALOG.map((p) => p.co
  * placement bundle (Quantitative Aptitude, Logical Reasoning, Verbal Ability)
  * that every program lists.
  */
-export const PREP_TRACK_SEED_CODES: string[] = ['aptitude']
+export const PREP_TRACK_SEED_CODES: string[] = ['aptitude', 'companies']
 
 /** Everything `/prep/seed-all` understands: program codes + track bundles. */
 export const PREP_SEED_CODES: string[] = [...PREP_PROGRAM_CODES, ...PREP_TRACK_SEED_CODES]
@@ -866,4 +950,115 @@ export function validatePrepCatalog(bundle: PrepCatalogBundle): CatalogIntegrity
     warningCount: issues.length - errorCount,
     valid: errorCount === 0,
   }
+}
+
+// ── Company catalogue integrity ─────────────────────────────────────────────
+
+export interface CompanyCatalogBundle {
+  companies: PrepCompany[]
+  /** Every aptitude topic id the company sections may reference. */
+  knownTopicIds: Set<string> | string[]
+}
+
+/**
+ * Verifies a company-prep bundle: unique codes, well-formed sections / rounds,
+ * every mapped topic id resolves to a seeded aptitude topic, every section
+ * that claims catalogue coverage actually maps at least one topic, and the
+ * eligibility programs are valid catalogue codes.
+ */
+export function validateCompanyCatalog(bundle: CompanyCatalogBundle): CatalogIntegrityReport {
+  const issues: CatalogIssue[] = []
+  const err = (code: string, message: string) => issues.push({ level: 'error', code, message })
+  const warn = (code: string, message: string) => issues.push({ level: 'warning', code, message })
+
+  const companies = Array.isArray(bundle?.companies) ? bundle.companies : []
+  const known = bundle?.knownTopicIds instanceof Set ? bundle.knownTopicIds : new Set(bundle?.knownTopicIds || [])
+  const codes = new Set<string>()
+
+  for (const c of companies) {
+    if (!c?.code || !/^[a-z0-9-]+$/.test(c.code)) {
+      err('COMPANY_BAD_CODE', `Company "${c?.name || '?'}" needs a lowercase URL-safe code.`)
+      continue
+    }
+    if (codes.has(c.code)) err('DUPLICATE_COMPANY_CODE', `Duplicate company code "${c.code}".`)
+    codes.add(c.code)
+
+    if (!c.name || !c.testName) err('COMPANY_MISSING_NAME', `Company "${c.code}" needs name and testName.`)
+    if (!c.strategyMd || c.strategyMd.trim().length < 200) {
+      err('COMPANY_THIN_STRATEGY', `Company "${c.code}" strategyMd is under 200 characters.`)
+    }
+    if (!Array.isArray(c.audience) || c.audience.length === 0) {
+      err('COMPANY_NO_AUDIENCE', `Company "${c.code}" has no audience.`)
+    }
+    if (!c.patternVerifiedOn || Number.isNaN(Date.parse(c.patternVerifiedOn))) {
+      err('COMPANY_BAD_VERIFIED_DATE', `Company "${c.code}" patternVerifiedOn must be an ISO date.`)
+    }
+    if (!Array.isArray(c.sources) || c.sources.length === 0) {
+      warn('COMPANY_NO_SOURCES', `Company "${c.code}" lists no public sources for its pattern.`)
+    }
+
+    const programs = c.eligibility?.programs || []
+    if (programs.length === 0) err('COMPANY_NO_PROGRAMS', `Company "${c.code}" eligibility lists no programs.`)
+    for (const p of programs) {
+      if (!PREP_PROGRAM_CODES.includes(p)) err('COMPANY_UNKNOWN_PROGRAM', `Company "${c.code}" eligibility has unknown program "${p}".`)
+    }
+
+    const sectionIds = new Set<string>()
+    if (!Array.isArray(c.sections) || c.sections.length === 0) {
+      err('COMPANY_NO_SECTIONS', `Company "${c.code}" has no sections.`)
+    }
+    let mappedAny = false
+    for (const sec of c.sections || []) {
+      if (!sec.id || sectionIds.has(sec.id)) err('COMPANY_BAD_SECTION_ID', `Company "${c.code}" has a missing/duplicate section id "${sec.id}".`)
+      sectionIds.add(sec.id)
+      if (!sec.name) err('COMPANY_SECTION_NO_NAME', `Company "${c.code}" section "${sec.id}" has no name.`)
+      const ids = Array.isArray(sec.topicIds) ? sec.topicIds : []
+      for (const tid of ids) {
+        if (!known.has(tid)) err('COMPANY_UNKNOWN_TOPIC', `Company "${c.code}" section "${sec.id}" maps unknown topic "${tid}".`)
+      }
+      if (new Set(ids).size !== ids.length) warn('COMPANY_DUP_TOPIC', `Company "${c.code}" section "${sec.id}" repeats a topic id.`)
+      if (sec.coverage === 'catalogue' && ids.length === 0) {
+        err('COMPANY_SECTION_UNMAPPED', `Company "${c.code}" section "${sec.id}" claims catalogue coverage but maps no topics.`)
+      }
+      if (sec.coverage !== 'catalogue' && !(sec.coverageNote && sec.coverageNote.trim().length >= 20)) {
+        warn('COMPANY_SECTION_NO_COVERAGE_NOTE', `Company "${c.code}" section "${sec.id}" is ${sec.coverage} but has no coverage note.`)
+      }
+      if (ids.length > 0) mappedAny = true
+    }
+    if (!mappedAny) err('COMPANY_NOTHING_MAPPED', `Company "${c.code}" maps no aptitude topics at all.`)
+
+    const roundIds = new Set<string>()
+    if (!Array.isArray(c.rounds) || c.rounds.length === 0) warn('COMPANY_NO_ROUNDS', `Company "${c.code}" lists no rounds.`)
+    for (const r of c.rounds || []) {
+      if (!r.id || roundIds.has(r.id)) err('COMPANY_BAD_ROUND_ID', `Company "${c.code}" has a missing/duplicate round id "${r.id}".`)
+      roundIds.add(r.id)
+      if (!r.name || !r.detail) err('COMPANY_ROUND_INCOMPLETE', `Company "${c.code}" round "${r.id}" needs name and detail.`)
+    }
+  }
+
+  const errorCount = issues.filter((i) => i.level === 'error').length
+  const warningCount = issues.length - errorCount
+  return {
+    programCode: 'companies',
+    subjectCount: companies.length,
+    topicCount: companies.reduce((n, c) => n + (c.sections || []).length, 0),
+    questionCount: 0,
+    issues,
+    errorCount,
+    warningCount,
+    valid: errorCount === 0,
+  }
+}
+
+/**
+ * Collects the distinct aptitude topic ids a company tests, most-frequent
+ * first (section order, then position within the section). Used to build the
+ * "topics to prepare" checklist and to sample a company mock.
+ */
+export function companyTopicIds(company: Pick<PrepCompany, 'sections'>): string[] {
+  const out: string[] = []
+  for (const sec of company?.sections || []) {
+    for (const tid of sec.topicIds || []) if (!out.includes(tid)) out.push(tid)
+  }
+  return out
 }
