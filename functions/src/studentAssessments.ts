@@ -200,6 +200,13 @@ export interface FrozenQuestionChunk {
  * JSON representation because Firestore's 1 MiB limit applies to the encoded
  * document, not to the number of questions alone.
  */
+function frozenPublicQuestion(question: ServerQuestion): ReturnType<typeof publicQuestion> {
+  // `publicQuestion` is also used for callable responses, where undefined
+  // fields are harmless. Firestore rejects undefined values in chunk docs, so
+  // strip them before materialising the immutable snapshot.
+  return JSON.parse(JSON.stringify(publicQuestion(question))) as ReturnType<typeof publicQuestion>
+}
+
 export function buildFrozenQuestionChunks(questions: ServerQuestion[]): FrozenQuestionChunk[] {
   const chunks: FrozenQuestionChunk[] = []
   let current: ReturnType<typeof publicQuestion>[] = []
@@ -211,10 +218,11 @@ export function buildFrozenQuestionChunks(questions: ServerQuestion[]): FrozenQu
     current = []
   }
   questions.slice(0, MAX_QUESTIONS).forEach((question) => {
-    const candidate = [...current, publicQuestion(question)]
+    const snapshot = frozenPublicQuestion(question)
+    const candidate = [...current, snapshot]
     const candidateBytes = Buffer.byteLength(JSON.stringify({ questions: candidate }), 'utf8')
     if (current.length > 0 && (current.length >= FROZEN_QUESTION_CHUNK_SIZE || candidateBytes > MAX_FROZEN_CHUNK_BYTES)) flush()
-    current.push(publicQuestion(question))
+    current.push(snapshot)
   })
   flush()
   return chunks
