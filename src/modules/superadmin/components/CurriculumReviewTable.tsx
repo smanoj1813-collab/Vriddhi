@@ -69,6 +69,27 @@ export function CurriculumReviewTable({
   const [editingCourseHours, setEditingCourseHours] = useState<string | null>(null);
   const [courseHoursValue, setCourseHoursValue] = useState<string>("");
 
+  // Course-level branch editing. The upload template's pre-filled Program
+  // Info sheet used to stamp every course with the wrong branch (a B.Com
+  // upload saved as "BBA"), and the branch was not editable anywhere — the
+  // only remedy was a full re-upload. This lets a reviewer correct the
+  // branch (and the assignment title that derives from it) in place.
+  const [editingCourseBranch, setEditingCourseBranch] = useState<string | null>(null);
+  const [courseBranchValue, setCourseBranchValue] = useState<string>("");
+
+  const handleSaveCourseBranch = async (course: ParsedCourse) => {
+    const branch = courseBranchValue.trim();
+    if (!branch) {
+      setLocalError("Branch cannot be empty — enter the program, e.g. B.Com");
+      return;
+    }
+    if (onUpdateCourse) {
+      await onUpdateCourse(course.id, { branch, isEdited: true });
+    }
+    setEditingCourseBranch(null);
+    setLocalError(null);
+  };
+
   const handleSaveCourseHours = async (course: ParsedCourse) => {
     const parsed = Number(courseHoursValue);
     if (courseHoursValue.trim() === "" || !Number.isFinite(parsed) || parsed < 0) {
@@ -254,8 +275,71 @@ export function CurriculumReviewTable({
                         <Chip label={course.courseType} size="small" variant="outlined" sx={{ ml: 1 }} />
                       )}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {course.branch ?? "N/A"} · Sem {course.semester ?? 0} · {course.credits ?? 0} credits · {modules.length} modules · {course.totalHours === null ? "hours not set" : `${course.totalHours} hrs`} · {course.totalMarks ?? 0} marks
+                    <Typography variant="caption" color="text.secondary" component="div">
+                      {editingCourseBranch === course.id ? (
+                        <Stack
+                          component="span"
+                          direction="row"
+                          spacing={0.5}
+                          sx={{ alignItems: "center", display: "inline-flex" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <TextField
+                            size="small"
+                            label="Branch"
+                            value={courseBranchValue}
+                            autoFocus
+                            onChange={(e) => setCourseBranchValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveCourseBranch(course);
+                            }}
+                            sx={{ width: 140 }}
+                          />
+                          <Tooltip title="Save branch">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveCourseBranch(course);
+                              }}
+                            >
+                              <Save fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Cancel">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCourseBranch(null);
+                              }}
+                            >
+                              <Cancel fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      ) : (
+                        <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25 }}>
+                          {course.branch ?? "N/A"}
+                          {!readOnly && onUpdateCourse && (
+                            <Tooltip title="Correct the program/branch (e.g. B.Com)">
+                              <IconButton
+                                size="small"
+                                aria-label="Edit branch"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCourseBranchValue(course.branch ?? "");
+                                  setEditingCourseBranch(course.id);
+                                }}
+                              >
+                                <Edit sx={{ fontSize: 14 }} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      )}
+                      {" · "}Sem {course.semester ?? 0} · {course.credits ?? 0} credits · {modules.length} modules · {course.totalHours === null ? "hours not set" : `${course.totalHours} hrs`} · {course.totalMarks ?? 0} marks
                     </Typography>
                   </Box>
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
