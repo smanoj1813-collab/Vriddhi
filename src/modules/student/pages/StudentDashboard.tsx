@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStudentData } from '../hooks/useStudentData';
+import StudentAcademicSummary from '../components/StudentAcademicSummary';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings,
@@ -319,6 +320,10 @@ export default function StudentDashboard() {
           color={pendingFees > 0 ? 'rose' : 'emerald'}
         />
       </div>
+
+      {/* Deterministic academic context (getMyStudentAcademicContext callable).
+          Renders nothing when the backend feature gate is off. */}
+      <StudentAcademicSummary />
 
       {/* Quick Actions Grid */}
       <div>

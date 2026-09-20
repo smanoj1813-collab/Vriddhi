@@ -6,6 +6,7 @@
 
 import * as XLSX from 'xlsx';
 import type { SyllabusExtract, ParsedCourse, ParsedModule, CourseType, SyllabusFormat } from '../types/curriculum';
+import { detectTemplateSampleIssues } from './templateSampleGuards';
 
 export interface TemplateValidationError {
   sheet: string;
@@ -51,7 +52,9 @@ export function generateCurriculumTemplate(): Blob {
     [''],
     ['INSTRUCTIONS:'],
     ['1. Do NOT rename any sheet tabs. Do NOT add/delete columns.'],
-    ['2. Fill "Program Info" first.'],
+    ['2. Fill "Program Info" first — it ships BLANK on purpose. Enter YOUR'],
+    ['   program\'s real values (e.g. Program Name: Bachelor of Commerce,'],
+    ['   Branch / Stream: B.Com). Whatever you leave here labels every course.'],
     ['3. Add ALL courses in "Course Matrix" (one row per course).'],
     ['4. Add module breakdown in "Modules" (one row per module).'],
     ['5. Add outcomes in "Outcomes" (one per row).'],
@@ -64,18 +67,25 @@ export function generateCurriculumTemplate(): Blob {
     ['• Credits/Hours/Marks: numbers only'],
     ['• Topics: separate multiple topics with | (pipe)'],
     ['• Leave optional cells blank — do not write "NA" or "-"'],
+    ['• The Course Matrix/Modules/Outcomes/References/Skills sheets contain'],
+    ['   EXAMPLE rows (BBA Cost Accounting etc.) — replace or delete them.'],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(instructions), 'Instructions');
 
   // Sheet 2: Program Info
+  // Values are deliberately BLANK: pre-filled sample values ("Bachelor of
+  // Business Administration" / "BBA") used to leak into uploads when a
+  // college filled its courses but not this sheet, stamping the whole
+  // curriculum with the wrong program. The parser warns when Branch / Stream
+  // stays blank, and when old sample values are still present.
   const programInfo = [
     ['Field', 'Value'],
-    ['University Name', 'University of Mysore'],
-    ['Program Name', 'Bachelor of Business Administration'],
-    ['Scheme / Regulation', 'SEP 2026-2027'],
-    ['Branch / Stream', 'BBA'],
-    ['Total Semesters', '6'],
-    ['Academic Year', '2026-2027'],
+    ['University Name', ''],
+    ['Program Name', ''],
+    ['Scheme / Regulation', ''],
+    ['Branch / Stream', ''],
+    ['Total Semesters', ''],
+    ['Academic Year', ''],
     ['Total Program Credits', ''],
     ['Total Program Marks', ''],
   ];
@@ -341,6 +351,13 @@ externalMarks: row[9] !== '' ? Number(row[9]) : undefined,
   const totalMarks = courses.reduce((s, c) => s + c.totalMarks, 0);
 
   const confidenceScore = errors.length === 0 ? 95 : errors.length < 3 ? 80 : 60;
+
+  // Sample-data guard: flag leftover template example values (or a blank
+  // Branch / Stream) as WARNINGS so a B.Com upload whose Program Info sheet
+  // still says "BBA" is caught at preview time instead of silently
+  // labelling every saved course with the wrong program. Warnings never
+  // block a genuine BBA curriculum.
+  warnings.push(...detectTemplateSampleIssues(programInfo, courses));
 
   const extract: SyllabusExtract = {
     id: '',

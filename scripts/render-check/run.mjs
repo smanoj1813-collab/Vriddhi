@@ -131,6 +131,136 @@ await section('today card', '/src/modules/admin/components/FacultyAttendanceToda
     check('today card: reports the roster size (3 faculty)', t.includes('3 faculty'), t);
   });
 
+// ── Phase 1 deterministic academic context (student / faculty / paper) ──────
+// The fixtures mirror the deployed asia-south1 callables' response contracts
+// exactly (including the `{ enabled: false }` feature gate and the spread
+// Firestore document fields the normaliser must drop).
+
+const studentContextFixture = {
+  enabled: true,
+  context: {
+    kind: 'student', generatedFor: '2026-09-21', collegeId: 'college-a',
+    student: { id: 'academic-student-a', uid: 'faculty-1', collegeId: 'college-a', name: 'Bala Kumar', branch: 'BCA', batch: '2026', semester: 3, section: 'A' },
+    classes: [
+      { id: 'cls-1', collegeId: 'college-a', date: '2026-09-21', startTime: '09:00', endTime: '10:00', subject: 'DBMS', subjectCode: 'CS301', facultyName: 'Dr Rao', room: 'R-101', status: 'scheduled', topicsCovered: ['Joins', 'Indexes'], branch: 'BCA', batch: '2026', semester: 3, section: 'A' },
+    ],
+    pendingAssignments: [
+      { id: 'asg-1', collegeId: 'college-a', title: 'ER Diagram', courseName: 'DBMS', courseCode: 'CS301', dueDate: '2026-09-23T00:00:00.000Z', status: 'published' },
+    ],
+    upcomingTests: [
+      { id: 'test-1', collegeId: 'college-a', title: 'Midterm', subject: 'DBMS', startDateTime: '2026-09-25T09:00:00.000Z', status: 'published' },
+    ],
+    curriculum: [
+      { id: 'cur-1', collegeId: 'college-a', status: 'approved', courseCode: 'CS301', courseName: 'DBMS', semester: 3, modules: [{ id: 'm1' }, { id: 'm2' }] },
+    ],
+    attendance: {
+      records: [{ date: '2026-09-18', status: 'present' }, { date: '2026-09-19', status: 'absent' }],
+      present: 1, absent: 1, percentage: 50,
+    },
+  },
+};
+
+// A signed-in student sees their scoped day: classes, pending work, tests and
+// the attendance figure the backend computed.
+globalThis.__RC_ROLE = 'student';
+globalThis.__RC_CALLABLE_DATA = { getMyStudentAcademicContext: studentContextFixture };
+await section('student academic summary', '/src/modules/student/components/StudentAcademicSummary.tsx', {}, (t) => {
+  check('summary: mounts without throwing', true);
+  check('summary: names the generated-for date', t.includes('2026-09-21'), t);
+  check('summary: lists the cohort-targeted class with room and topics',
+    t.includes('DBMS') && t.includes('Dr Rao') && t.includes('R-101') && t.includes('Joins'), t);
+  check('summary: lists the pending assignment (submitted ones never reach this list)',
+    t.includes('ER Diagram'), t);
+  check('summary: lists the upcoming assessment', t.includes('Midterm'), t);
+  check('summary: renders the deterministic attendance figure (50%)', t.includes('50%'), t);
+  check('summary: shows the curriculum course count', /1 course in your curriculum/.test(t), t);
+});
+
+// Feature gate off: the surface renders nothing at all (UI is not broken).
+globalThis.__RC_CALLABLE_DATA = { getMyStudentAcademicContext: { enabled: false } };
+await section('student academic summary (gate off)', '/src/modules/student/components/StudentAcademicSummary.tsx', {}, (t) => {
+  check('summary (gate off): renders nothing instead of an error or zeros', t === '', t);
+});
+
+// Unauthenticated rejection: a clean, actionable alert — not a crash.
+globalThis.__RC_CALLABLE_DATA = {};
+globalThis.__RC_CALLABLE_ERRORS = {
+  getMyStudentAcademicContext: { code: 'functions/unauthenticated', message: 'Authentication is required' },
+};
+await section('student academic summary (unauthenticated)', '/src/modules/student/components/StudentAcademicSummary.tsx', {}, (t) => {
+  check('summary (unauthenticated): shows the mapped session-expired wording', /session has expired/i.test(t), t);
+  check('summary (unauthenticated): offers a retry', /Retry/.test(t), t);
+});
+globalThis.__RC_CALLABLE_ERRORS = {};
+
+const facultyContextFixture = {
+  enabled: true,
+  context: {
+    kind: 'faculty', generatedFor: '2026-09-21', collegeId: 'college-a', facultyId: 'faculty-1',
+    courses: [
+      { id: 'course-1', collegeId: 'college-a', courseCode: 'CS301', courseName: 'DBMS', modules: [{ id: 'm1' }] },
+      { id: 'course-2', collegeId: 'college-a', courseCode: 'CS302', courseName: 'Operating Systems', modules: [] },
+    ],
+    completedTopics: ['Normalization'],
+    upcomingSessions: [
+      { id: 'ses-1', date: '2026-09-22', courseId: 'course-1', courseCode: 'CS301', topicIds: ['t1'], topicNames: ['Joins'], status: 'scheduled' },
+    ],
+    assignmentHistory: [
+      { id: 'fas-1', courseId: 'course-1', courseCode: 'CS301', title: 'Normalization Worksheet', dueDate: '2026-09-25', status: 'published' },
+      { id: 'fas-2', courseId: 'course-1', courseCode: 'CS301', title: 'Graded Worksheet', status: 'graded' },
+    ],
+    assessmentHistory: [
+      { id: 'fat-1', courseId: 'course-1', courseCode: 'CS301', title: 'Quiz 1', scheduledAt: '2026-09-24T09:00:00.000Z', status: 'published' },
+      { id: 'fat-2', courseId: 'course-2', courseCode: 'CS302', title: 'Old Quiz', scheduledAt: '2026-09-01T09:00:00.000Z', status: 'completed' },
+    ],
+  },
+};
+
+globalThis.__RC_ROLE = 'faculty';
+globalThis.__RC_CALLABLE_DATA = { getFacultyAcademicContext: facultyContextFixture };
+await section('faculty academic planner', '/src/modules/faculty/components/FacultyAcademicPlanner.tsx', {}, (t) => {
+  check('planner: mounts without throwing', true);
+  check('planner: lists both college courses with codes', t.includes('CS301 — DBMS') && t.includes('CS302 — Operating Systems'), t);
+  check('planner: lists the upcoming session on its date', t.includes('CS301') && t.includes('Sep 22'), t);
+  check('planner: shows open assignments but not graded ones as open',
+    t.includes('Normalization Worksheet') && !/Graded Worksheet/.test(t), t);
+  check('planner: shows upcoming assessments but not completed ones',
+    t.includes('Quiz 1') && !/Old Quiz/.test(t), t);
+});
+
+// The paper context: metadata only — the raw backend payload carries question
+// text that the frontend contract must never surface.
+const paperContextFixture = {
+  enabled: true,
+  context: {
+    kind: 'paper', generatedFor: '2026-09-21', collegeId: 'college-a',
+    course: { id: 'course-1', collegeId: 'college-a', courseCode: 'CS301', courseName: 'DBMS', modules: [] },
+    candidates: [
+      { id: 'q1', courseCode: 'CS301', difficulty: 'easy', bloomsLevel: 'remember', questionText: 'TOP SECRET QUESTION TEXT', correctAnswer: 'TOP SECRET ANSWER', approved: true },
+      { id: 'q2', courseCode: 'CS301', difficulty: 'hard', bloomsLevel: 'apply', approved: true },
+    ],
+    blueprint: { totalQuestions: 5, totalMarks: 50, sections: [{ name: 'Section A', count: 3, marks: 6 }] },
+    recentlyUsedQuestionIds: ['q9'],
+    distributions: { difficulty: { easy: 1, hard: 1 }, blooms: { remember: 1, apply: 1 } },
+  },
+};
+
+globalThis.__RC_ROLE = 'faculty';
+globalThis.__RC_CALLABLE_DATA = { getPaperAcademicContext: paperContextFixture };
+await section('paper academic insights', '/src/modules/faculty/components/PaperAcademicInsights.tsx', { courseId: 'course-1' }, (t) => {
+  check('insights: mounts without throwing', true);
+  check('insights: counts the approved candidates', /2\s*approved candidates/.test(t), t);
+  check('insights: renders difficulty and Blooms distributions',
+    /easy: 1/.test(t) && /hard: 1/.test(t) && /remember: 1/.test(t) && /apply: 1/.test(t), t);
+  check('insights: shows the stored blueprint totals', t.includes('5 questions') && t.includes('50 marks'), t);
+  check('insights: never renders question text or answer keys',
+    !/TOP SECRET/.test(t), t);
+  check('insights: states the metadata-only contract', /answer keys are never included/.test(t), t);
+});
+
+globalThis.__RC_ROLE = undefined;
+globalThis.__RC_CALLABLE_DATA = {};
+
 // ── Faculty "My Attendance" page ─────────────────────────────────────────────
 await section('my attendance', '/src/modules/faculty/pages/FacultySelfAttendance.tsx', {}, (t) => {
   check('my attendance: mounts without throwing', true);
@@ -374,6 +504,8 @@ globalThis.__RC_CALLABLE_DATA = {};
 await section('curriculum (error)', '/src/modules/student/pages/StudentCurriculumPage.tsx', {}, (t) => {
   check('curriculum (error): surfaces the callable failure with a retry', /Could not load your curriculum/.test(t) && /Try again/.test(t), t);
 });
+
+
 
 
 // ── Public /prep hub (docs/handoff-prep-hub-redesign.md §3, §7) ──────────────

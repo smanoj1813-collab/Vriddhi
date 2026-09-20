@@ -80,6 +80,53 @@ export async function fetchPrepCompany(code: string): Promise<any> {
   return { company: found, topics: data().companyTopics ?? [] };
 }
 
+// Company-visibility settings (CompanyPrepVisibilityPanel): stubbed with an
+// empty-but-well-shaped store so the panel renders its empty state.
+export interface CompanyPrepSettingsRow {
+  code: string
+  name: string
+  testName: string
+  tier: string
+  programs: string[]
+  hidden: boolean
+}
+
+let __companyPrepSettings = { enabled: true, hiddenCompanies: [] as string[] }
+
+export async function fetchCompanyPrepSettings(_collegeId?: string): Promise<{
+  collegeId: string
+  settings: { enabled: boolean; hiddenCompanies: string[] }
+  companies: CompanyPrepSettingsRow[]
+}> {
+  return { collegeId: 'college-a', settings: __companyPrepSettings, companies: [] }
+}
+
+export async function saveCompanyPrepSettings(
+  settings: { enabled: boolean; hiddenCompanies: string[] },
+  _collegeId?: string,
+): Promise<{ enabled: boolean; hiddenCompanies: string[] }> {
+  __companyPrepSettings = settings
+  return settings
+}
+
+// Admin content-studio surfaces (PrepContentStudioTab): write paths are
+// recorded no-ops; reads come from the fixtures the runner stages.
+export async function generatePrepDraft(_payload?: any): Promise<any> {
+  return { ok: true, topic: null }
+}
+export async function publishPrepTopic(_payload?: any): Promise<any> {
+  return { ok: true }
+}
+export async function savePrepTopic(_subjectId?: string, _topic?: any): Promise<any> {
+  return { ok: true }
+}
+export async function savePrepSubject(_subject?: any): Promise<any> {
+  return { ok: true }
+}
+export async function seedPrepCatalog(_programs?: string | string[]): Promise<any> {
+  return { ok: true, seeded: 0 }
+}
+
 export async function fetchPrepCompanyMock(code: string, count = 20): Promise<any[]> {
   record('companyMock', { code, count });
   return data().questions ?? [];

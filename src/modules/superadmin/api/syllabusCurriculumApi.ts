@@ -5,7 +5,7 @@
 import { db } from '@/Firebase/config';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, limit, Timestamp, Query, QueryDocumentSnapshot,
+  query, where, orderBy, limit, Timestamp, writeBatch, Query, QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
 
@@ -448,6 +448,53 @@ export async function assignCurriculumToCollege(input: AssignCurriculumInput): P
     updatedAt: now.toDate().toISOString(),
     assignedAt: now.toDate().toISOString(),
   } as CurriculumDoc;
+}
+
+/**
+ * Reverses an assignment: deletes the curriculum document and every faculty
+ * mapping that points at it, and returns the source extract to `approved`
+ * (with the college linkage cleared) so it can be corrected in the Review
+ * tab and assigned again.
+ *
+ * Exists because a mis-stamped upload (e.g. a B.Com curriculum labelled BBA
+ * by the template's pre-filled Program Info) could previously only be fixed
+ * by re-uploading — with no way to remove the wrong document already live in
+ * the college.
+ */
+export async function unassignCurriculumFromCollege(curriculumId: string): Promise<void> {
+  const ref = doc(db, "curriculum", curriculumId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Curriculum not found");
+  const data = snap.data() as { syllabusExtractId?: string | null };
+
+  // Remove faculty mappings that reference this curriculum, in bounded
+  // chunks (query + batch delete, 100 at a time) rather than an unbounded
+  // collection read.
+  const mappingsCollection = collection(db, "curriculumFacultyMappings");
+  for (;;) {
+    const mappingsSnap = await getDocs(
+      query(mappingsCollection, where("curriculumId", "==", curriculumId), limit(100))
+    );
+    if (mappingsSnap.empty) break;
+    const batch = writeBatch(db);
+    mappingsSnap.docs.forEach((mappingDoc) => batch.delete(mappingDoc.ref));
+    await batch.commit();
+    if (mappingsSnap.size < 100) break;
+  }
+
+  await deleteDoc(ref);
+
+  const extractId = String(data.syllabusExtractId || "");
+  if (extractId) {
+    await updateDoc(doc(db, "syllabusExtracts", extractId), {
+      status: "approved" as CurriculumStatus,
+      collegeId: null,
+      collegeName: null,
+      assignedAt: null,
+      assignedBy: null,
+      updatedAt: Timestamp.now(),
+    });
+  }
 }
 
 export async function getCurriculumStats(): Promise<CurriculumStats> {

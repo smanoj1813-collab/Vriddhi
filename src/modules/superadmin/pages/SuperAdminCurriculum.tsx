@@ -19,7 +19,7 @@ import SyllabusUploader from '../components/SyllabusUploader';
 import { CurriculumReviewTable } from '../components/CurriculumReviewTable';
 import { CurriculumAssignmentDialog } from '../components/CurriculumAssignmentDialog';
 import { useSyllabusExtracts, useCurriculumStats } from '../hooks/useSyllabusCurriculum';
-import { assignCurriculumToCollege, updateExtractCourse, updateExtractModule } from '../api/syllabusCurriculumApi';
+import { assignCurriculumToCollege, updateExtractCourse, updateExtractModule, unassignCurriculumFromCollege } from '../api/syllabusCurriculumApi';
 import type { SyllabusExtract, CollegeOption, ParsedCourse, ParsedModule } from '../types/curriculum';
 import StandardizedCurriculumUploader from '../components/StandardizedCurriculumUploader';
 
@@ -239,6 +239,29 @@ export default function SuperAdminCurriculum() {
     }
   };
 
+  // ─── Unassign (remove a wrongly assigned curriculum from its college) ──
+  // Deletes the curriculum doc + its faculty mappings and returns the source
+  // extract to the Review flow, so a mis-stamped assignment (e.g. B.Com
+  // labelled BBA) can be corrected and re-assigned without re-uploading.
+  const handleUnassign = async (curriculumId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Remove this curriculum from its college? Faculty mappings for it are removed too, and the extract returns to the Review tab (Approved).')) return;
+    try {
+      await unassignCurriculumFromCollege(curriculumId);
+      setNotification({ type: 'success', message: 'Curriculum unassigned. It is back in Review → Approved for correction.' });
+      refreshExtracts();
+      refreshStats();
+      fetchAssigned();
+      setTimeout(() => setNotification(null), 4000);
+    } catch (err) {
+      console.error('Unassign failed:', err);
+      setNotification({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to unassign curriculum',
+      });
+    }
+  };
+
   const handleDeleteExtract = async (extractId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm('Delete this syllabus extract permanently?')) return;
@@ -449,6 +472,15 @@ export default function SuperAdminCurriculum() {
                       <Typography variant="caption" color="text.secondary">
                         {item.assignedAt ? new Date(item.assignedAt).toLocaleDateString() : '-'}
                       </Typography>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        title="Unassign from college (returns the extract to Review)"
+                        onClick={(ev) => handleUnassign(item.id, ev as unknown as React.MouseEvent)}
+                        sx={{ '&:hover': { bgcolor: 'error.light' } }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
                     </Box>
                   </Paper>
                 ))}

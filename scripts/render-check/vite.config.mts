@@ -27,6 +27,9 @@ export default defineConfig({
       { find: '@/Firebase/config', replacement: stub('firebaseConfig.ts') },
       { find: /^firebase\/firestore$/, replacement: stub('firestore.ts') },
       { find: /^firebase\/functions$/, replacement: stub('functions.ts') },
+      // The app config's VitePWA plugin owns this virtual module; swap it for
+      // a no-op so the module graph can resolve without the plugin chain.
+      { find: 'virtual:pwa-register/react', replacement: stub('pwaRegister.ts') },
       { find: /^react-router-dom$/, replacement: stub('react-router-dom.tsx') },
       { find: '@', replacement: path.resolve(root, './src') },
     ],

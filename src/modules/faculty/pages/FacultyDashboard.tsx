@@ -6,6 +6,7 @@ import {
   collection, query, where, getDocs, orderBy, limit,
 } from 'firebase/firestore';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
+import FacultyAcademicPlanner from '../components/FacultyAcademicPlanner';
 import {
   Box,
   Typography,
@@ -278,6 +279,10 @@ export default function FacultyDashboard() {
           </Grid>
         ))}
       </Grid>
+
+      {/* Deterministic academic planning (getFacultyAcademicContext callable).
+          Renders nothing when the backend feature gate is off. */}
+      <FacultyAcademicPlanner />
 
       <Grid container spacing={3}>
         {/* Today's Schedule */}
