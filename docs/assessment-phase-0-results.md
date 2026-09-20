@@ -40,6 +40,20 @@ kept as a scale-watch result. The fixture sends ten dirty autosaves per student
 and one ordinary proctor batch summary, so the result is sensitive to workload
 shape.
 
+## Hardening fixture result
+
+The legacy/submission fixture also passed with zero errors:
+
+- full-answer legacy autosave;
+- high-severity direct proctor event;
+- authoritative submission;
+- objective score preservation;
+- finalized attempt status.
+
+The academic context fixture passed separately for student, faculty and paper
+contexts, including cohort filtering, submitted-assignment exclusion, attendance
+calculation and unapproved-question exclusion.
+
 ## Remaining production gate
 
 Before enabling Phase 1/2 features for real users:
