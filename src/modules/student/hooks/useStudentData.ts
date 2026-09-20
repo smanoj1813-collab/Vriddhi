@@ -31,6 +31,10 @@ import {
   type StudentTestCardData,
 } from '../api/studentDataApi';
 import { useAuth } from '../../auth/context/AuthContext';
+import {
+  isStudentAssessmentActionable,
+  withEffectiveStudentAssessmentLifecycle,
+} from '@/shared/utils/assessmentLifecycle';
 
 export interface UseStudentDataReturn {
   student: StudentProfile | null;
@@ -275,7 +279,8 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       const feeData = results[2].status === 'fulfilled' ? results[2].value : null;
       const scheduleData = results[3].status === 'fulfilled' ? results[3].value : [];
       const notificationData = results[4].status === 'fulfilled' ? results[4].value : [];
-      const testData = results[5].status === 'fulfilled' ? results[5].value : [];
+      const rawTestData = results[5].status === 'fulfilled' ? results[5].value : [];
+      const testData = rawTestData.map((test) => withEffectiveStudentAssessmentLifecycle(test));
 
       setAttendance(mapAttendance(attendanceData));
       setAssignments(mapAssignments(assignmentData));
@@ -283,13 +288,17 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       setSchedule(mapSchedule(scheduleData));
       setNotifications(mapNotifications(notificationData));
       setTests(testData);
-      setAssessments(mapAssessments(testData));
+      // The dashboard panel is explicitly "Available Assessments". Keep the
+      // full history in `tests`, but never turn upcoming/completed/missed (or a
+      // stale expired `available`) row into a Start Test card.
+      const actionableTests = testData.filter((test) => isStudentAssessmentActionable(test));
+      setAssessments(mapAssessments(actionableTests));
 
       const pendingAssignments = assignmentData.filter(
         (a) => a.status === 'pending' || a.status === 'overdue'
       ).length;
       const upcomingTests = testData.filter(
-        (t) => t.status === 'upcoming' || t.status === 'available'
+        (t) => t.status === 'upcoming' || isStudentAssessmentActionable(t)
       ).length;
 
       setStats({

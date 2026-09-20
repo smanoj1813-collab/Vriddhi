@@ -4,6 +4,7 @@ import {
   buildFacultyAcademicContext,
   buildPaperAcademicContext,
   buildStudentAcademicContext,
+  facultyCoursesFromCurriculum,
   type AcademicStudent,
   type ContextAssignment,
   type ContextClass,
@@ -13,6 +14,7 @@ import {
   type FacultyAssignment,
   type FacultyAssessment,
   type FacultyCourse,
+  type FacultyCurriculumMapping,
   type FacultySession,
 } from './context'
 
@@ -85,8 +87,41 @@ function assignmentTargetsStudent(value: admin.firestore.DocumentData, student: 
 function asAssignment(id: string, value: admin.firestore.DocumentData): ContextAssignment {
   return { id, title: String(value.title || value.name || 'Assignment'), ...value, dueDate: value.dueDate ? new Date(value.dueDate.toDate?.() || value.dueDate).toISOString() : '' }
 }
+function dateTime(value: unknown): string {
+  if (!value) return ''
+  const converted = typeof value === 'object' && value !== null && 'toDate' in value
+    ? (value as { toDate: () => Date }).toDate()
+    : new Date(String(value))
+  return converted instanceof Date && !Number.isNaN(converted.getTime()) ? converted.toISOString() : ''
+}
 function asTest(id: string, value: admin.firestore.DocumentData): ContextTest {
-  return { id, title: String(value.title || value.paperTitle || 'Assessment'), ...value, startDateTime: String(value.startDateTime?.toDate?.() || value.startDateTime || value.scheduledAt || '') }
+  return {
+    id,
+    title: String(value.title || value.paperTitle || 'Assessment'),
+    ...value,
+    startDateTime: dateTime(value.startDateTime || value.scheduledAt),
+    endDateTime: dateTime(value.endDateTime),
+  }
+}
+
+async function facultyIdentityAliases(
+  uid: string,
+  token: Record<string, unknown>
+): Promise<{ ids: Set<string>; email: string }> {
+  const db = admin.firestore()
+  const [profileDocs, userDoc] = await Promise.all([
+    db.collection('faculty').where('uid', '==', uid).limit(2).get(),
+    db.collection('users').doc(uid).get(),
+  ])
+  const ids = new Set<string>([uid])
+  let email = String(token.email || userDoc.data()?.email || '').trim().toLowerCase()
+  profileDocs.docs.forEach((profileDoc) => {
+    const profile = profileDoc.data()
+    ids.add(profileDoc.id)
+    if (profile.facultyId) ids.add(String(profile.facultyId))
+    if (!email && profile.email) email = String(profile.email).trim().toLowerCase()
+  })
+  return { ids, email }
 }
 
 export const getMyStudentAcademicContext = onCall(
@@ -111,8 +146,13 @@ export const getMyStudentAcademicContext = onCall(
         .filter((doc) => assignmentTargetsStudent(doc.data(), student))
         .map((doc) => asAssignment(doc.id, doc.data())),
       tests: testDocs.docs.map((doc) => asTest(doc.id, doc.data())),
-      curriculum: curriculumDocs.docs.map((doc) => ({ id: doc.id, ...doc.data(), courseCode: String(doc.data().courseCode || ''), courseName: String(doc.data().courseName || doc.data().name || ''), modules: Array.isArray(doc.data().modules) ? doc.data().modules : [] })) as ContextCurriculum[],
+      curriculum: facultyCoursesFromCurriculum(curriculumDocs.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        courses: Array.isArray(doc.data().courses) ? doc.data().courses : [],
+      }))) as ContextCurriculum[],
       attendance: attendanceDocs.docs.map((doc) => ({ date: String(doc.data().date || '').slice(0, 10), status: String(doc.data().status || '') })) as ContextAttendance[],
+      now: new Date().toISOString(),
     })
     return { enabled: true, context }
   }
@@ -129,19 +169,42 @@ export const getFacultyAcademicContext = onCall(
     if (!collegeId) throw new HttpsError('failed-precondition', 'College scope is required')
     const today = dateKey(request.data?.date || new Date().toISOString())
     const db = admin.firestore()
-    const [courseDocs, sessionDocs, assignmentDocs, assessmentDocs] = await Promise.all([
+    const [courseDocs, mappingDocs, sessionDocs, assignmentDocs, assessmentDocs, aliases] = await Promise.all([
       db.collection('curriculum').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
+      db.collection('curriculumFacultyMappings').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('classSessions').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('assignments').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('scheduledTests').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
+      facultyIdentityAliases(uid, token),
     ])
-    const courses = courseDocs.docs.map((doc) => ({ id: doc.id, collegeId, courseCode: String(doc.data().courseCode || ''), courseName: String(doc.data().courseName || doc.data().name || ''), modules: Array.isArray(doc.data().modules) ? doc.data().modules : [] })) as FacultyCourse[]
+    const plans = courseDocs.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+      collegeId,
+      courses: Array.isArray(doc.data().courses) ? doc.data().courses : [],
+    }))
+    const allMappings = mappingDocs.docs.map((doc) => ({
+      ...(doc.data() as FacultyCurriculumMapping),
+      id: doc.id,
+    }))
+    const isPersonalFacultyView = role === 'faculty' || role === 'hod'
+    const facultyMappings = allMappings.filter((mapping) => {
+      if (!isPersonalFacultyView) return true
+      const mappingEmail = String(mapping.facultyEmail || '').trim().toLowerCase()
+      return aliases.ids.has(String(mapping.facultyId || ''))
+        || Boolean(aliases.email && mappingEmail && aliases.email === mappingEmail)
+    })
+    const courses = facultyCoursesFromCurriculum(
+      plans,
+      isPersonalFacultyView ? facultyMappings : undefined
+    ) as FacultyCourse[]
     const context = buildFacultyAcademicContext({
       facultyId: uid, collegeId, courseId: request.data?.courseId ? String(request.data.courseId) : undefined, courses,
       today, sessions: sessionDocs.docs.map((doc) => ({ id: doc.id, ...doc.data(), date: String(doc.data().date || '').slice(0, 10) })) as FacultySession[],
       assignments: assignmentDocs.docs.map((doc) => ({ id: doc.id, ...doc.data(), title: String(doc.data().title || '') })) as FacultyAssignment[],
       assessments: assessmentDocs.docs.map((doc) => ({ id: doc.id, ...doc.data(), title: String(doc.data().title || doc.data().paperTitle || '') })) as FacultyAssessment[],
       completedTopics: [],
+      scopeToCourses: isPersonalFacultyView,
     })
     return { enabled: true, context }
   }

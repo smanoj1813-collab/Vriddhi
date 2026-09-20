@@ -642,6 +642,39 @@ function testWindow(test: admin.firestore.DocumentData) {
   return { start, end, duration }
 }
 
+export function deriveStudentAssessmentLifecycle(input: {
+  studentStatus: string
+  startMs: number
+  endMs: number
+  nowMs: number
+  resultReleased?: boolean
+}): { status: string; canStart: boolean; canResume: boolean } {
+  const { studentStatus, startMs, endMs, nowMs } = input
+  let status = 'upcoming'
+  if (input.resultReleased) status = 'graded'
+  else if (studentStatus === 'graded' || studentStatus === 'submitted') status = 'completed'
+  else if (studentStatus === 'in_progress') status = nowMs > endMs ? 'completed' : 'ongoing'
+  else if (nowMs > endMs) status = 'missed'
+  else if (nowMs >= startMs) status = 'available'
+  return {
+    status,
+    canStart: studentStatus === 'not_started' && status === 'available',
+    canResume: studentStatus === 'in_progress' && status === 'ongoing',
+  }
+}
+
+export function effectiveManagedAssessmentStatus(
+  storedStatus: string,
+  startMs: number,
+  endMs: number,
+  nowMs = Date.now()
+): string {
+  if (['cancelled', 'completed'].includes(storedStatus)) return storedStatus
+  if (['published', 'ongoing'].includes(storedStatus) && nowMs > endMs) return 'completed'
+  if (['published', 'ongoing'].includes(storedStatus) && nowMs >= startMs) return 'ongoing'
+  return storedStatus
+}
+
 function serializeCard(
   testId: string,
   test: admin.firestore.DocumentData,
@@ -652,13 +685,13 @@ function serializeCard(
   const studentStatus = String(row?.status || 'not_started')
   const releaseAt = timestampToDate(test.resultPublishDate) || end
   const resultReleased = studentStatus === 'graded' && now >= releaseAt.getTime()
-  let status = 'upcoming'
-  if (resultReleased) status = 'graded'
-  else if (studentStatus === 'graded') status = 'completed'
-  else if (studentStatus === 'submitted') status = 'completed'
-  else if (studentStatus === 'in_progress') status = 'ongoing'
-  else if (now > end.getTime()) status = 'missed'
-  else if (now >= start.getTime()) status = 'available'
+  const lifecycle = deriveStudentAssessmentLifecycle({
+    studentStatus,
+    startMs: start.getTime(),
+    endMs: end.getTime(),
+    nowMs: now,
+    resultReleased,
+  })
 
   return {
     id: testId,
@@ -670,10 +703,10 @@ function serializeCard(
     duration,
     startDateTime: start.toISOString(),
     endDateTime: end.toISOString(),
-    status,
+    status: lifecycle.status,
     studentStatus,
-    canStart: studentStatus === 'not_started' && status === 'available',
-    canResume: studentStatus === 'in_progress',
+    canStart: lifecycle.canStart,
+    canResume: lifecycle.canResume,
     marksObtained: resultReleased ? Number(row?.marksObtained) || 0 : undefined,
     percentage: resultReleased ? Number(row?.percentage) || 0 : undefined,
     grade: resultReleased ? String(row?.grade || '') : undefined,
@@ -1450,12 +1483,22 @@ export const listManagedAssessmentTests = onCall(
       .where('collegeId', '==', collegeId)
       .orderBy('createdAt', 'desc').limit(200)
       .get()
+    const now = Date.now()
     return {
       tests: snapshot.docs.map((test) => {
         const data = test.data()
+        const start = timestampToDate(data.startDateTime || data.scheduledAt)
+        const end = timestampToDate(data.endDateTime)
+        const status = start && end
+          ? effectiveManagedAssessmentStatus(String(data.status || ''), start.getTime(), end.getTime(), now)
+          : String(data.status || '')
         return {
           id: test.id,
           ...data,
+          // Never trust a stale persisted lifecycle label in the staff UI.
+          // The scheduled cleanup still heals storage, while this read is
+          // immediately correct even if that scheduler has not run/deployed.
+          status,
           startDateTime: iso(data.startDateTime),
           endDateTime: iso(data.endDateTime),
           resultPublishDate: iso(data.resultPublishDate) || null,
@@ -1511,6 +1554,15 @@ export async function resolvePaperSchedulableQuestions(paper: admin.firestore.Do
     })
   }
   return out
+}
+
+/** Approved papers are a college-scoped reusable template, never a consumable record. */
+export function isApprovedPaperReusableByCollegeStaff(
+  paper: Record<string, unknown>,
+  collegeId: string
+): boolean {
+  return String(paper.collegeId || '') === collegeId
+    && ['approved', 'published'].includes(String(paper.status || ''))
 }
 
 export const checkPaperScheduling = onCall(
@@ -1590,12 +1642,13 @@ export const scheduleAssessmentTest = onCall(
     if (!paperDoc.exists || !paper || paper.collegeId !== collegeId) {
       throw new HttpsError('not-found', 'Paper was not found in this college')
     }
-    if (!['approved', 'published'].includes(String(paper.status || ''))) {
+    if (!isApprovedPaperReusableByCollegeStaff(paper, collegeId)) {
       throw new HttpsError('failed-precondition', 'Paper must be approved before scheduling')
     }
-    if (staff.role === 'faculty' && paper.createdBy && paper.createdBy !== uid) {
-      throw new HttpsError('permission-denied', 'Faculty may schedule only their own approved papers')
-    }
+    // Do not restrict by `createdBy`: approval promotes the paper into the
+    // college's reusable paper library. Every schedule freezes its own question
+    // snapshot below, so using it for another department/test cannot mutate or
+    // consume the source paper.
 
     const testRef = db.collection('scheduledTests').doc()
     const questions = await loadTestQuestions(testRef.id, { paperId })
@@ -2402,12 +2455,23 @@ export const autoSubmitExpiredStudentTests = onSchedule(
     // Close out tests whose window has ended: published/ongoing → completed.
     // Nothing else ever moved the stored status, so a test whose window had
     // passed kept showing "ongoing" in the scheduler forever.
-    const endedTests = await admin.firestore().collection('scheduledTests')
-      .where('status', 'in', ['published', 'ongoing'])
-      .where('endDateTime', '<=', now)
-      .limit(100)
-      .get()
-    const completions = await Promise.allSettled(endedTests.docs.map((testDoc) =>
+    // Query each live status separately and check the timestamp in memory.
+    // The old `status in (...) + endDateTime <= now` query requires a composite
+    // index that normal `deploy:all` does not deploy, so production cleanup
+    // could fail forever and leave tests labelled ongoing.
+    const liveTestSnapshots = await Promise.all(
+      ['published', 'ongoing'].map((status) => admin.firestore().collection('scheduledTests')
+        .where('status', '==', status)
+        .limit(250)
+        .get())
+    )
+    const endedTests = liveTestSnapshots
+      .flatMap((snapshot) => snapshot.docs)
+      .filter((testDoc) => {
+        const end = timestampToDate(testDoc.data().endDateTime)
+        return Boolean(end && end.getTime() <= now.toMillis())
+      })
+    const completions = await Promise.allSettled(endedTests.map((testDoc) =>
       testDoc.ref.update({
         status: 'completed',
         completedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -2417,11 +2481,11 @@ export const autoSubmitExpiredStudentTests = onSchedule(
     const completionFailures = completions.filter((outcome) => outcome.status === 'rejected').length
     if (completionFailures > 0) {
       logger.error('[StudentAssessments] Some ended tests could not be completed', {
-        scanned: endedTests.size,
+        scanned: endedTests.length,
         failures: completionFailures,
       })
-    } else if (endedTests.size > 0) {
-      logger.info('[StudentAssessments] Ended tests marked completed', { scanned: endedTests.size })
+    } else if (endedTests.length > 0) {
+      logger.info('[StudentAssessments] Ended tests marked completed', { scanned: endedTests.length })
     }
   }
 )

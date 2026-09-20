@@ -8,7 +8,12 @@
 
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { resolvePaperSchedulableQuestions } from '../src/studentAssessments'
+import {
+  deriveStudentAssessmentLifecycle,
+  effectiveManagedAssessmentStatus,
+  isApprovedPaperReusableByCollegeStaff,
+  resolvePaperSchedulableQuestions,
+} from '../src/studentAssessments'
 import { findSchedulingProblem } from '../src/questionTypes'
 
 const MCQ_WITH_OPTIONS = {
@@ -28,6 +33,30 @@ const SHORT_ANSWER = {
   type: 'short_answer',
   marks: 5,
 }
+
+describe('assessment lifecycle and reusable approved papers', () => {
+  it('allows approved college papers to be reused by staff other than their author', () => {
+    const paper = { collegeId: 'college-1', status: 'approved', createdBy: 'another-faculty' }
+    assert.equal(isApprovedPaperReusableByCollegeStaff(paper, 'college-1'), true)
+    assert.equal(isApprovedPaperReusableByCollegeStaff(paper, 'college-2'), false)
+    assert.equal(isApprovedPaperReusableByCollegeStaff({ ...paper, status: 'draft' }, 'college-1'), false)
+  })
+
+  it('derives completed/missed states from the time window even when storage is stale', () => {
+    const nowMs = Date.parse('2026-09-20T12:00:00Z')
+    const startMs = Date.parse('2026-09-18T09:00:00Z')
+    const endMs = Date.parse('2026-09-18T10:00:00Z')
+    assert.equal(effectiveManagedAssessmentStatus('ongoing', startMs, endMs, nowMs), 'completed')
+    assert.deepEqual(
+      deriveStudentAssessmentLifecycle({ studentStatus: 'not_started', startMs, endMs, nowMs }),
+      { status: 'missed', canStart: false, canResume: false }
+    )
+    assert.deepEqual(
+      deriveStudentAssessmentLifecycle({ studentStatus: 'in_progress', startMs, endMs, nowMs }),
+      { status: 'completed', canStart: false, canResume: false }
+    )
+  })
+})
 
 describe('resolvePaperSchedulableQuestions', () => {
   it('resolves embedded sections in order with options normalised', async () => {

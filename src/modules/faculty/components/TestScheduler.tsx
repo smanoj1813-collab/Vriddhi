@@ -1,7 +1,8 @@
 // src/modules/faculty/components/TestScheduler.tsx
 // FIXED: usePapers and useScheduledTests imported from useAssessment (they exist there)
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box, Typography, Button, Stack, Card, CardContent, TextField, Select, MenuItem,
   FormControl, InputLabel, Chip, IconButton, Dialog, DialogTitle, DialogContent,
@@ -20,12 +21,13 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { usePapers, useScheduledTests } from '../../../hooks/useAssessment';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { auth, db, functions } from '../../../Firebase/config';
+import { db, functions } from '../../../Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,
 } from '../../../types/assessment';
 import { isPaperOnlineReady, paperQuestionCount } from '../../../shared/utils/paperReadiness';
+import { effectiveScheduledAssessmentStatus } from '../../../shared/utils/assessmentLifecycle';
 import { format } from 'date-fns';
 
 interface TestSchedulerProps {
@@ -55,6 +57,8 @@ const toDate = (value: unknown): Date => {
 
 const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const deepLinkHandled = useRef(false);
   const { papers, loading: papersLoading, error: papersError } = usePapers(collegeId);
   const { tests, schedule, publish, cancel, loading: testsLoading, error: testsError } = useScheduledTests(collegeId);
 
@@ -336,14 +340,34 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
   };
 
   const typedTests = (tests || []) as ScheduledTest[];
-  // Only list papers that are ONLINE-ready — they must carry a structured
-  // question set (sections or a question-bank link). File-only "Ready to use"
-  // papers stay printable but cannot be scheduled online.
+  // Approval promotes a paper into the college's reusable source library.
+  // Scheduling freezes questions into each test, so do not hide approved
+  // papers merely because a different faculty member created them.
   const typedPapers = (papers || []).filter((paper: AssessmentPaper) =>
     ['approved', 'published'].includes(String(paper.status))
     && isPaperOnlineReady(paper)
-    && (!auth.currentUser || paper.createdBy === auth.currentUser.uid)
   ) as AssessmentPaper[];
+
+  // Paper Review / Generated Papers can deep-link directly into a fresh
+  // schedule while retaining the source paper for any later department/test.
+  useEffect(() => {
+    if (deepLinkHandled.current || papersLoading) return;
+    const requestedPaperId = searchParams.get('paperId');
+    if (!requestedPaperId) {
+      deepLinkHandled.current = true;
+      return;
+    }
+    const requested = typedPapers.find((paper) => paper.id === requestedPaperId);
+    deepLinkHandled.current = true;
+    if (!requested) {
+      setError('That paper is not approved and online-ready for scheduling.');
+      return;
+    }
+    setSelectedPaper(requested);
+    setTestTitle(requested.title ? `${requested.title} - Test` : 'Scheduled Test');
+    if (requested.duration > 0) setDurationMinutes(requested.duration);
+    setShowScheduler(true);
+  }, [papersLoading, searchParams, typedPapers]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -371,6 +395,7 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {typedTests.map((test: ScheduledTest) => {
+                const effectiveStatus = effectiveScheduledAssessmentStatus(test);
                 // College-wide list: faculty may publish/cancel only their own
                 // tests (enforced server-side too) — hide the actions otherwise
                 // so a guaranteed-rejected click never appears.
@@ -383,7 +408,7 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>{test.title}</Typography>
-                      <Chip size="small" label={test.status} color={getStatusColor(test.status)} />
+                      <Chip size="small" label={effectiveStatus} color={getStatusColor(effectiveStatus)} />
                     </Box>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                       {(test as any).description || 'No description'}
@@ -396,12 +421,12 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                       <Chip size="small" icon={<PeopleIcon fontSize="small" />} label={((test as any).visibility || 'all').replace(/_/g, ' ')} />
                     </Stack>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
-                      {canManage && test.status === 'scheduled' && (
+                      {canManage && effectiveStatus === 'scheduled' && (
                         <Button size="small" variant="outlined" startIcon={<PublishIcon />} onClick={() => handlePublishTest(test.id)}>
                           Publish
                         </Button>
                       )}
-                      {canManage && test.status !== 'completed' && test.status !== 'cancelled' && (
+                      {canManage && effectiveStatus !== 'completed' && effectiveStatus !== 'cancelled' && (
                         <Button size="small" color="error" startIcon={<CancelIcon />} onClick={() => handleCancelTest(test.id)}>
                           Cancel
                         </Button>
@@ -437,6 +462,10 @@ const TestScheduler: React.FC<TestSchedulerProps> = ({ collegeId }) => {
                     Click a paper to select it — click the SAME paper again (or “Clear
                     selection”) to deselect it and pick another.
                   </Typography>
+                  <Alert severity="info" sx={{ mt: 1.5 }}>
+                    Approved papers are reusable college templates. Each test receives its own frozen copy, so you can
+                    schedule the same paper again for another date, branch, batch, section, or department.
+                  </Alert>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
                     {typedPapers.map((paper: AssessmentPaper) => (
                       <Card

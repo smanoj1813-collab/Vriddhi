@@ -101,14 +101,23 @@ export default function Assessments() {
         <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
           Assessments
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/admin/papers/builder')}
-          sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' } }}
-        >
-          Create Assessment
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<PlayArrowIcon />}
+            onClick={() => navigate('/admin/schedule-tests')}
+          >
+            Schedule approved paper
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/admin/papers/builder')}
+            sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' } }}
+          >
+            Create Assessment
+          </Button>
+        </Stack>
       </Box>
 
       {/* Stats */}
