@@ -55,8 +55,12 @@ try {
   await db.collection('questions').doc(`${runId}-approved`).set({ collegeId: 'academic-college', approved: true, difficulty: 'easy', bloomsLevel: 'remember' })
   await db.collection('questions').doc(`${runId}-rejected`).set({ collegeId: 'academic-college', approved: false, difficulty: 'hard', bloomsLevel: 'apply' })
   const context = await call('getMyStudentAcademicContext', student.token, { date: '2026-09-21' })
-  check('student context enabled', context.enabled === true, JSON.stringify(context))
-  check('student sees only cohort class', context.context.classes.length === 1 && context.context.classes[0].id.endsWith('class-a'))
+  if (process.argv.includes('--expect-disabled')) {
+    check('academic context disabled by default', context.enabled === false, JSON.stringify(context))
+    report.success = true
+  } else {
+    check('student context enabled', context.enabled === true, JSON.stringify(context))
+    check('student sees only cohort class', context.context.classes.length === 1 && context.context.classes[0].id.endsWith('class-a'))
   check('student sees only cohort assignment', context.context.pendingAssignments.length === 1 && context.context.pendingAssignments[0].id.endsWith('assignment-a'))
   check('submitted assignment excluded', !context.context.pendingAssignments.some((item) => item.id.endsWith('submitted')))
   check('attendance calculated', context.context.attendance.percentage === 50)
@@ -67,6 +71,7 @@ try {
   check('paper context enabled', paperContext.enabled === true)
   check('unapproved question excluded', paperContext.context.candidates.length === 1 && paperContext.context.candidates[0].id.endsWith('approved'))
   report.success = true
+  }
 } catch (error) {
   report.errors.push(error instanceof Error ? error.message : String(error))
   report.success = false
