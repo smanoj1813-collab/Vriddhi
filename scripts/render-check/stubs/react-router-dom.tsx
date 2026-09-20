@@ -15,6 +15,11 @@ export function useNavigate() { return (to: any) => { (globalThis as any).__navi
 export function MemoryRouter({ children }: any) { return children; }
 export function useLocation() { return { pathname: '/admin/dashboard', search: (globalThis as any).__RC_SEARCH ?? '' }; }
 export function useParams() { return (globalThis as any).__RC_PARAMS ?? {}; }
+// Route shells (Layout, RoleRoute) render-through stubs: children only.
+export function Navigate(_p: any) { return null; }
+export function Outlet() { return null; }
+export function BrowserRouter({ children }: any) { return children; }
+export function useRoutes(_routes: any) { return null; }
 
 export function useSearchParams() {
   const [search, setSearch] = React.useState<string>(() => String((globalThis as any).__RC_SEARCH ?? ''));
@@ -29,4 +34,4 @@ export function useSearchParams() {
   return [params, setParams];
 }
 
-export default { Link, NavLink, useNavigate, MemoryRouter, useLocation, useParams, useSearchParams };
+export default { Link, NavLink, useNavigate, MemoryRouter, useLocation, useParams, useSearchParams, Navigate, Outlet, BrowserRouter, useRoutes };

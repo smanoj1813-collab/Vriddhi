@@ -9,11 +9,18 @@
 const store = (globalThis as unknown) as {
   __RC_CALLABLE_DATA?: Record<string, unknown>;
   __RC_CALLABLE_CALLS?: string[];
+  __RC_CALLABLE_ERRORS?: Record<string, { code: string; message: string }>;
 };
+
+export function getFunctions(..._a: any[]) { return { __stub: 'functions' }; }
 
 export function httpsCallable(_functions: unknown, name: string) {
   return async (_payload?: unknown) => {
     store.__RC_CALLABLE_CALLS = [...(store.__RC_CALLABLE_CALLS ?? []), name];
+    const failure = store.__RC_CALLABLE_ERRORS?.[name];
+    if (failure) {
+      throw Object.assign(new Error(failure.message), { code: failure.code });
+    }
     const data = store.__RC_CALLABLE_DATA?.[name];
     if (data === undefined) {
       // Mirror the real SDK: an unknown/undeployed function rejects, so the
@@ -35,4 +42,4 @@ export class HttpsError extends Error {
   }
 }
 
-export default { httpsCallable, HttpsError };
+export default { getFunctions, httpsCallable, HttpsError };

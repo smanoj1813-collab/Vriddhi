@@ -18,6 +18,7 @@ import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Question as BankQuestion } from '../../admin/types/questionBank'
 import PaperBuilder from '../components/PaperBuilder'
 import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
+import PaperAcademicInsights from '../components/PaperAcademicInsights'
 import { isSameSubject } from '@/shared/utils/curriculumMatcher'
 import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims'
 
@@ -797,6 +798,13 @@ export default function FacultyPaperGenerator() {
                 </div>
               )}
             </div>
+
+            {/* Deterministic approved-question-pool context
+                (getPaperAcademicContext callable) — metadata only: counts,
+                difficulty/Blooms distributions and the stored blueprint for
+                the selected course. Renders nothing when disabled or when no
+                course is selected. */}
+            <PaperAcademicInsights courseId={selectedCourseId || undefined} />
 
             {/* Paper Configuration */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
