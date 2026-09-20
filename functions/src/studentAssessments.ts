@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin'
+import admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
@@ -10,11 +10,17 @@ import {
 } from './assessmentGrading'
 import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
 import { geminiClient, openaiClient, deepseekClient } from './config/aiProviders'
+import { maybeTrace, traceRequested } from './assessmentCostTrace'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
 const MAX_QUESTIONS = 400
 const MAX_ANSWER_TEXT = 20_000
+// Frozen public question snapshots are deliberately small: this keeps each
+// Firestore document comfortably below the 1 MiB limit even when a question
+// contains long case text, images and matching metadata.
+const FROZEN_QUESTION_CHUNK_SIZE = 25
+const MAX_FROZEN_CHUNK_BYTES = 750_000
 const MAX_PROCTOR_DETAILS_BYTES = 4_000
 // Bounded size of the compact answer index (400 q x ~10 options). Larger indexes
 // move to a studentAssessments/{id}/meta/answerIndex subdocument.
@@ -50,7 +56,8 @@ interface StaffIdentity {
 
 function timestampToDate(value: unknown): Date | null {
   if (!value) return null
-  if (value instanceof admin.firestore.Timestamp) return value.toDate()
+  const Timestamp = admin.firestore.Timestamp
+  if (Timestamp && value instanceof Timestamp) return value.toDate()
   if (value instanceof Date) return value
   if (typeof value === 'object' && value !== null && 'toDate' in value) {
     const converted = (value as { toDate: () => Date }).toDate()
@@ -181,6 +188,77 @@ function normalizeQuestion(data: admin.firestore.DocumentData, id: string, order
     ...(raw.caseText ? { caseText: String(raw.caseText) } : {}),
     ...(Array.isArray(raw.matchPairs) ? { matchPairs: raw.matchPairs } : {}),
   }
+}
+
+export interface FrozenQuestionChunk {
+  chunkId: string
+  ordinal: number
+  questions: ReturnType<typeof publicQuestion>[]
+}
+
+/**
+ * Builds bounded, answer-key-free snapshots. The size check is based on the
+ * JSON representation because Firestore's 1 MiB limit applies to the encoded
+ * document, not to the number of questions alone.
+ */
+function frozenPublicQuestion(question: ServerQuestion): ReturnType<typeof publicQuestion> {
+  // `publicQuestion` is also used for callable responses, where undefined
+  // fields are harmless. Firestore rejects undefined values in chunk docs, so
+  // strip them before materialising the immutable snapshot.
+  return JSON.parse(JSON.stringify(publicQuestion(question))) as ReturnType<typeof publicQuestion>
+}
+
+export function buildFrozenQuestionChunks(questions: ServerQuestion[]): FrozenQuestionChunk[] {
+  const chunks: FrozenQuestionChunk[] = []
+  let current: ReturnType<typeof publicQuestion>[] = []
+  let ordinal = 0
+  const flush = () => {
+    if (current.length === 0) return
+    chunks.push({ chunkId: `chunk-${String(ordinal).padStart(3, '0')}`, ordinal, questions: current })
+    ordinal += 1
+    current = []
+  }
+  questions.slice(0, MAX_QUESTIONS).forEach((question) => {
+    const snapshot = frozenPublicQuestion(question)
+    const candidate = [...current, snapshot]
+    const candidateBytes = Buffer.byteLength(JSON.stringify({ questions: candidate }), 'utf8')
+    if (current.length > 0 && (current.length >= FROZEN_QUESTION_CHUNK_SIZE || candidateBytes > MAX_FROZEN_CHUNK_BYTES)) flush()
+    current.push(snapshot)
+  })
+  flush()
+  return chunks
+}
+
+async function loadFrozenQuestionChunks(testId: string): Promise<ReturnType<typeof publicQuestion>[] | null> {
+  const snapshot = await admin.firestore()
+    .collection('scheduledTests').doc(testId).collection('questionChunks')
+    .orderBy('ordinal').get()
+  if (snapshot.empty) return null
+  const questions = snapshot.docs.flatMap((doc) => {
+    const value = doc.data().questions
+    return Array.isArray(value) ? value : []
+  })
+  return questions.length > 0 ? questions : null
+}
+
+async function writeFrozenQuestionChunks(
+  testId: string,
+  questions: ServerQuestion[]
+): Promise<void> {
+  const db = admin.firestore()
+  const chunks = buildFrozenQuestionChunks(questions)
+  if (chunks.length === 0) return
+  const batch = db.batch()
+  chunks.forEach((chunk) => {
+    batch.set(db.collection('scheduledTests').doc(testId).collection('questionChunks').doc(chunk.chunkId), {
+      version: 1,
+      ordinal: chunk.ordinal,
+      questions: chunk.questions,
+      questionCount: chunk.questions.length,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: false })
+  })
+  await batch.commit()
 }
 
 async function loadTestQuestions(
@@ -703,6 +781,7 @@ export const startMyStudentTest = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const costTrace = traceRequested(request.data)
     const student = await resolveStudent(uid, request.auth?.token || {})
     const resolved = await resolveOwnTest(String(request.data?.testId || ''), student)
     const { start, end, duration } = testWindow(resolved.test)
@@ -714,6 +793,14 @@ export const startMyStudentTest = onCall(
     if (now > end) throw new HttpsError('deadline-exceeded', 'Test window has closed')
     const questions = await loadTestQuestions(resolved.testId, resolved.test)
     if (questions.length === 0) throw new HttpsError('failed-precondition', 'Test has no published questions')
+    const frozenChunkCount = buildFrozenQuestionChunks(questions).length
+
+    // Materialise the answer-key-free snapshot once. Resume reads this bounded
+    // collection instead of one assessmentQuestions document per question;
+    // legacy tests simply continue through loadTestQuestions below.
+    if (Number(resolved.test.questionChunksVersion || 0) < 1) {
+      await writeFrozenQuestionChunks(resolved.testId, questions)
+    }
 
     const assessmentRef = rowRef(resolved.testId, student.id)
     // Compact validation data frozen at start so autosave never has to load
@@ -753,6 +840,7 @@ export const startMyStudentTest = onCall(
           writeAnswerIndex(transaction)
           transaction.update(assessmentRef, {
             ...(answerIndexExternal ? { answerIndexRef: 'meta/answerIndex' } : { answerIndex }),
+            ...(Number(resolved.test.questionChunksVersion || 0) >= 1 ? { questionChunksVersion: 1 } : {}),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           })
         }
@@ -784,6 +872,7 @@ export const startMyStudentTest = onCall(
         totalQuestions: questions.length,
         duration,
         status: 'in_progress',
+        questionChunksVersion: 1,
         answers: [],
         ...(answerIndexExternal ? { answerIndexRef: 'meta/answerIndex' } : { answerIndex }),
         startedAt: admin.firestore.Timestamp.fromDate(now),
@@ -808,16 +897,24 @@ export const startMyStudentTest = onCall(
           : {}),
         totalStarted: admin.firestore.FieldValue.increment(1),
         status: 'ongoing',
+        ...(Number(resolved.test.questionChunksVersion || 0) < 1 ? { questionChunksVersion: 1 } : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
       return { startedAt: now.toISOString(), endsAt: endsAt.toISOString(), resumed: false }
     })
 
-    return {
+    const response = {
       studentAssessmentId: assessmentRef.id,
       testId: resolved.testId,
       ...result,
     }
+    return maybeTrace(costTrace, response, {
+      operation: 'startMyStudentTest',
+      path: 'start-with-frozen-chunks',
+      reads: 2 + 1 + questions.length + 2,
+      writes: (Number(resolved.test.questionChunksVersion || 0) < 1 ? frozenChunkCount : 0) + 2 + (answerIndexExternal ? 1 : 0),
+      notes: ['identity=2', 'scheduledTest=1', 'assessmentQuestions=query', 'transaction=2']
+    })
   }
 )
 
@@ -826,6 +923,7 @@ export const getMyActiveStudentTest = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const costTrace = traceRequested(request.data)
     const student = await resolveStudent(uid, request.auth?.token || {})
     const resolved = await resolveOwnTest(String(request.data?.testId || ''), student)
     if (resolved.test.status === 'cancelled') {
@@ -836,11 +934,18 @@ export const getMyActiveStudentTest = onCall(
     if (!assessment.exists || row?.status !== 'in_progress') {
       throw new HttpsError('failed-precondition', 'Start the test before loading questions')
     }
-    const questions = await loadTestQuestions(resolved.testId, resolved.test)
+    // New attempts have immutable public chunks; old attempts retain the
+    // legacy question-document fallback until they are next started/resumed.
+    const frozenQuestions = Number(row.questionChunksVersion || 0) >= 1
+      ? await loadFrozenQuestionChunks(resolved.testId)
+      : null
+    const questions = frozenQuestions
+      ? frozenQuestions as unknown as ServerQuestion[]
+      : await loadTestQuestions(resolved.testId, resolved.test)
     const savedAnswers = Array.isArray(row.answers) ? row.answers : []
     const answers: Record<string, ServerAnswer> = {}
     savedAnswers.forEach((answer: ServerAnswer) => { if (answer.questionId) answers[answer.questionId] = answer })
-    return {
+    const response = {
       studentAssessmentId: assessment.id,
       assessmentId: resolved.testId,
       testId: resolved.testId,
@@ -870,6 +975,12 @@ export const getMyActiveStudentTest = onCall(
       shuffleSections: resolved.test.shuffleSections === true,
       scheduledStart: iso(resolved.test.startDateTime || resolved.test.scheduledAt),
     }
+    return maybeTrace(costTrace, response, {
+      operation: 'getMyActiveStudentTest', path: frozenQuestions ? 'frozen-chunks' : 'legacy-questions',
+      reads: 2 + 1 + 1 + (frozenQuestions ? Math.ceil(questions.length / 25) : questions.length),
+      writes: 0,
+      notes: ['identity=2', 'scheduledTest=1', 'attempt=1']
+    })
   }
 )
 
@@ -912,6 +1023,7 @@ export const autosaveMyStudentTest = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const costTrace = traceRequested(request.data)
     const assessmentId = String(request.data?.studentAssessmentId || '')
     if (!assessmentId || assessmentId.includes('/')) throw new HttpsError('invalid-argument', 'Invalid attempt ID')
     const db = admin.firestore()
@@ -1008,7 +1120,13 @@ export const autosaveMyStudentTest = onCall(
         receivedAt: admin.firestore.FieldValue.serverTimestamp(),
       })
     }
-    return { success: true, savedAt: new Date().toISOString(), timeSpent }
+    return maybeTrace(costTrace, { success: true, savedAt: new Date().toISOString(), timeSpent }, {
+      operation: 'autosaveMyStudentTest',
+      path: hasDelta && !legacyStudentId ? 'indexed-fast-path' : 'legacy-fallback',
+      reads: hasDelta && !legacyStudentId ? 2 : 2 + (hasLegacy ? 1 : 0),
+      writes: 1 + (proctorEvents.length > 0 && meaningfulEvents.length > 0 ? 1 : 0),
+      notes: ['attempt=1', 'transaction=1', 'answerIndex-inline-or-meta']
+    })
   }
 )
 

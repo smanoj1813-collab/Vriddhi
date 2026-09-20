@@ -107,6 +107,7 @@ import {
 // ─── Student journey: real CGPA, cohort standing, readiness ───
 import { getMyAcademicJourney } from './studentJourney'
 import { getMyCurriculum } from './studentCurriculum'
+import { getMyStudentAcademicContext, getFacultyAcademicContext, getPaperAcademicContext } from './academic/contextCallables'
 // ─── Admission Center: the funnel before a student record exists ───
 import {
   saveAdmissionApplication,
@@ -277,6 +278,9 @@ export {
   markAllMyNotificationsRead,
   getMyAcademicJourney,
   getMyCurriculum,
+  getMyStudentAcademicContext,
+  getFacultyAcademicContext,
+  getPaperAcademicContext,
   saveAdmissionApplication,
   transitionAdmissionStage,
   listAdmissionApplications,

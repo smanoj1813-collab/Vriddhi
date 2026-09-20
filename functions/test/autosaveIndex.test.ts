@@ -5,6 +5,7 @@ import {
   type ServerQuestion,
 } from '../src/assessmentGrading'
 import {
+  buildFrozenQuestionChunks,
   mergeAnswers,
   questionsToIndex,
   sanitizeAnswers,
@@ -100,6 +101,25 @@ const DELTA_INPUT: Record<string, Record<string, unknown>> = {
   'q-0005': 'not-an-object',
   'q-9999': { questionId: 'q-9999', selectedOptionId: 'a' },
 }
+
+describe('frozen question chunks (start/resume read path)', () => {
+  it('bounds chunks and strips answer keys from the public snapshot', () => {
+    const source = Array.from({ length: 51 }, (_, index) => ({
+      ...questions()[index % questions().length],
+      id: `q-${index}`,
+      questionId: `q-${index}`,
+      text: 'Question '.repeat(20),
+    }))
+    const chunks = buildFrozenQuestionChunks(source)
+    assert.equal(chunks.length, 3)
+    assert.deepEqual(chunks.map((chunk) => chunk.questions.length), [25, 25, 1])
+    const first = chunks[0].questions[0] as Record<string, unknown>
+    assert.equal('correctAnswer' in first, false)
+    const option = (first.options as Array<Record<string, unknown>>)[0]
+    assert.equal('isCorrect' in option, false)
+    assert.ok(Buffer.byteLength(JSON.stringify(chunks[0]), 'utf8') < 750_000)
+  })
+})
 
 describe('answer index validation (autosave fast path)', () => {
   it('produces byte-identical answers to the legacy question-based validation', () => {

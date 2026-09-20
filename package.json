@@ -19,7 +19,12 @@
     "build:functions": "npm --prefix functions run build",
     "test:functions:unit": "npm --prefix functions run test:unit",
     "test:rules": "npm --prefix functions run test:rules",
-    "test:render": "node --import ./scripts/render-check/domsetup.mjs scripts/render-check/run.mjs"
+    "test:render": "node --import ./scripts/render-check/domsetup.mjs scripts/render-check/run.mjs",
+    "assessment:baseline": "node scripts/assessment-cost-baseline.mjs",
+    "assessment:load-fixture": "node scripts/assessment-cost-load-fixture.mjs",
+    "assessment:emulator": "node scripts/assessment-emulator-run.mjs",
+    "academic:emulator": "node scripts/academic-emulator-fixture.mjs",
+    "assessment:legacy-fixture": "node scripts/assessment-legacy-submit-fixture.mjs"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
