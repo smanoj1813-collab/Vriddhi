@@ -33,6 +33,8 @@ import {
 import { provisionUser } from './userProvisioning'
 import { grantUserRole, diagnoseIdentity } from './roleManagement'
 import { bulkProvisionStaff } from './staffAuth'
+import { updateFacultyBranches } from './facultyManagement'
+import { bulkUpdateStudentAcademicFields } from './studentManagement'
 import { resetUserPassword, syncIdentityClaims } from './accountManagement'
 import { auditAndRepairIdentities } from './identityRepair'
 import { syncMyIdentity } from './selfIdentity'
@@ -209,6 +211,8 @@ export {
   bulkCreateStudentAccounts,
   provisionUser,
   bulkProvisionStaff,
+  updateFacultyBranches,
+  bulkUpdateStudentAcademicFields,
   resetUserPassword,
   syncIdentityClaims,
   grantUserRole,

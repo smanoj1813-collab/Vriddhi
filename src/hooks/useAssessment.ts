@@ -20,6 +20,10 @@ import {
   startStudentAssessment,
   submitStudentAssessment,
 } from '../modules/student/api/testApi';
+import {
+  isStudentAssessmentActionable,
+  withEffectiveStudentAssessmentLifecycle,
+} from '../shared/utils/assessmentLifecycle';
 import type {
   StudentTestCard,
   TestResultSummary,
@@ -92,7 +96,7 @@ export const useStudentTests = (
         'getMyStudentTests',
         {}
       );
-      setTests(result.tests);
+      setTests(result.tests.map((test) => withEffectiveStudentAssessmentLifecycle(test)));
     } catch (err) {
       setTests([]);
       setError(errorMessage(err, 'Could not load assessments.'));
@@ -106,7 +110,7 @@ export const useStudentTests = (
   return {
     tests,
     upcomingTests: tests.filter((test) => test.status === 'upcoming'),
-    availableTests: tests.filter((test) => test.status === 'ongoing' || test.status === 'available' || test.canStart),
+    availableTests: tests.filter((test) => isStudentAssessmentActionable(test)),
     completedTests: tests.filter((test) => test.status === 'completed' || test.status === 'graded'),
     loading,
     error,

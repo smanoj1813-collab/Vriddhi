@@ -57,6 +57,7 @@ export interface ContextTest {
   title: string
   subject?: string
   startDateTime: string
+  endDateTime?: string
   status?: string
 }
 
@@ -106,9 +107,128 @@ export interface StudentAcademicContext {
 export interface FacultyCourse {
   id: string
   collegeId?: string
+  curriculumId?: string
+  status?: string
+  branch?: string
+  semester?: number
   courseCode: string
   courseName: string
   modules: ContextModule[]
+}
+
+export interface FacultyCurriculumPlan {
+  id: string
+  collegeId?: string
+  status?: string
+  branch?: string
+  semester?: number
+  courses?: unknown[]
+}
+
+export interface FacultyCurriculumMapping {
+  curriculumId?: string
+  facultyId?: string
+  facultyEmail?: string
+  courseId?: string
+  courseCode?: string
+  courseName?: string
+  modulesCount?: number
+  status?: string
+}
+
+const record = (value: unknown): Record<string, unknown> =>
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+
+function curriculumModule(value: unknown, index: number): ContextModule {
+  const module = record(value)
+  const rawTopics = Array.isArray(module.topics) ? module.topics : []
+  return {
+    id: String(module.id || `module-${index + 1}`),
+    name: String(module.name || module.moduleName || module.title || `Module ${index + 1}`),
+    order: Number(module.order || module.moduleNo) || index + 1,
+    topics: rawTopics.map((topic, topicIndex) => {
+      const item = record(topic)
+      return {
+        id: String(item.id || `topic-${topicIndex + 1}`),
+        title: typeof topic === 'string'
+          ? topic
+          : String(item.title || item.name || `Topic ${topicIndex + 1}`),
+        order: Number(item.order) || topicIndex + 1,
+      }
+    }),
+  }
+}
+
+/**
+ * Curriculum documents are plans containing a `courses[]` array, not course
+ * documents themselves. Flattening that shape here prevents the faculty
+ * planner from rendering the plan wrapper as "— — Course / 0 modules".
+ *
+ * When mappings are supplied, only courses explicitly assigned to the faculty
+ * are returned. Legacy mappings may identify a course by id, code, or name;
+ * all three are supported. A metadata-only fallback preserves the mapping's
+ * real module count if its old curriculum document is no longer available.
+ */
+export function facultyCoursesFromCurriculum(
+  plans: FacultyCurriculumPlan[],
+  mappings?: FacultyCurriculumMapping[]
+): FacultyCourse[] {
+  const flattened = plans
+    .filter((plan) => !plan.status || ['active', 'approved', 'published', 'assigned'].includes(String(plan.status).toLowerCase()))
+    .flatMap((plan) => {
+      const courses = Array.isArray(plan.courses) ? plan.courses : []
+      return courses.map((value, index) => {
+        const course = record(value)
+        const modules = Array.isArray(course.modules) ? course.modules : []
+        return {
+          id: String(course.id || `${plan.id}-course-${index + 1}`),
+          collegeId: plan.collegeId,
+          curriculumId: plan.id,
+          status: String(course.status || plan.status || ''),
+          branch: String(course.branch || plan.branch || ''),
+          semester: Number(course.semester || plan.semester) || undefined,
+          courseCode: String(course.code || course.courseCode || ''),
+          courseName: String(course.name || course.courseName || course.title || ''),
+          modules: modules.map(curriculumModule),
+        } satisfies FacultyCourse
+      })
+    })
+
+  if (!mappings) return flattened
+
+  const activeMappings = mappings.filter((mapping) => !mapping.status || String(mapping.status).toLowerCase() === 'active')
+  const resolved: FacultyCourse[] = []
+  const seen = new Set<string>()
+  for (const mapping of activeMappings) {
+    const curriculumId = String(mapping.curriculumId || '')
+    const courseId = String(mapping.courseId || '')
+    const courseCode = String(mapping.courseCode || '').trim().toLowerCase()
+    const courseName = String(mapping.courseName || '').trim().toLowerCase()
+    const match = flattened.find((course) =>
+      (!curriculumId || course.curriculumId === curriculumId)
+      && (
+        (courseId && course.id === courseId)
+        || (courseCode && course.courseCode.trim().toLowerCase() === courseCode)
+        || (courseName && course.courseName.trim().toLowerCase() === courseName)
+      )
+    )
+    const moduleCount = Math.max(0, Math.min(100, Number(mapping.modulesCount) || 0))
+    const course = match || {
+      id: courseId || `${curriculumId || 'curriculum'}-${courseCode || courseName || resolved.length + 1}`,
+      curriculumId: curriculumId || undefined,
+      courseCode: String(mapping.courseCode || ''),
+      courseName: String(mapping.courseName || ''),
+      modules: Array.from({ length: moduleCount }, (_, index) => curriculumModule({}, index)),
+    }
+    const key = `${course.curriculumId || ''}|${course.id}|${course.courseCode.toLowerCase()}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      resolved.push(course)
+    }
+  }
+  return resolved
 }
 
 export interface FacultySession {
@@ -208,6 +328,7 @@ export function buildStudentAcademicContext(input: {
   tests: ContextTest[]
   curriculum: ContextCurriculum[]
   attendance: ContextAttendance[]
+  now?: string
 }): StudentAcademicContext {
   const { student } = input
   const classes = input.classes
@@ -219,10 +340,13 @@ export function buildStudentAcademicContext(input: {
     && !item.submitted
     && !['submitted', 'graded', 'cancelled'].includes(lower(item.status))
   ))
-  const upcomingTests = sortByDate(input.tests.filter((item) =>
-    sameCollege(student.collegeId, item)
-    && !['cancelled', 'completed'].includes(lower(item.status))
-  ).map((item) => ({ ...item, startDateTime: item.startDateTime })))
+  const nowMs = Date.parse(input.now || `${input.date}T23:59:59.999Z`)
+  const upcomingTests = sortByDate(input.tests.filter((item) => {
+    if (!sameCollege(student.collegeId, item)) return false
+    if (['cancelled', 'completed'].includes(lower(item.status))) return false
+    const endMs = Date.parse(item.endDateTime || '')
+    return !Number.isFinite(endMs) || !Number.isFinite(nowMs) || endMs >= nowMs
+  }).map((item) => ({ ...item, startDateTime: item.startDateTime })))
   const curriculum = input.curriculum
     .filter((item) => sameCollege(student.collegeId, item))
     .filter((item) => !item.status || ['approved', 'published', 'active'].includes(lower(item.status)))
@@ -248,11 +372,22 @@ export function buildFacultyAcademicContext(input: {
   assessments: FacultyAssessment[]
   completedTopics: string[]
   today?: string
+  /** Limit history to the supplied (assigned) courses even without a filter. */
+  scopeToCourses?: boolean
 }): FacultyAcademicContext {
-  const courseIds = input.courseId ? new Set([input.courseId]) : null
-  const courses = input.courses.filter((course) => sameCollege(input.collegeId, course) && (!courseIds || courseIds.has(course.id)))
+  const availableCourses = input.courses.filter((course) => sameCollege(input.collegeId, course))
+  const courses = input.courseId
+    ? availableCourses.filter((course) => course.id === input.courseId)
+    : availableCourses
+  const shouldScope = Boolean(input.courseId || input.scopeToCourses)
+  const courseIds = new Set(courses.map((course) => course.id).filter(Boolean))
+  const courseCodes = new Set(courses.map((course) => lower(course.courseCode)).filter(Boolean))
   const matchesCourse = (item: { courseId?: string; courseCode?: string }) =>
-    !courseIds || Boolean(item.courseId && courseIds.has(item.courseId))
+    !shouldScope
+    || Boolean(
+      (item.courseId && courseIds.has(item.courseId))
+      || (item.courseCode && courseCodes.has(lower(item.courseCode)))
+    )
   const upcomingSessions = input.sessions
     .filter(matchesCourse)
     .filter((item) => !input.today || item.date >= input.today)

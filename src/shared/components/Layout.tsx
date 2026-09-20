@@ -65,9 +65,11 @@ import {
   ExpandMore,
   ExpandLess,
   RateReview,
+  InstallMobile,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
+import { isPwaStandalone, requestPwaInstall } from '../pwa/install';
 
 const DRAWER_EXPANDED_WIDTH = 260;
 const DRAWER_COLLAPSED_WIDTH = 76;
@@ -430,6 +432,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const effectiveRole = user?.role || "admin";
+  const showInstallApp = !isPwaStandalone();
 
   const filteredNav = React.useMemo(() => {
     const seen = new Set<string>();
@@ -877,6 +880,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Footer / Controls */}
       <Box sx={{ p: 1.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
+        {showInstallApp && (
+          <ListItemButton
+            onClick={requestPwaInstall}
+            sx={{
+              borderRadius: 2,
+              justifyContent: collapsed ? "center" : "flex-start",
+              px: collapsed ? 1.5 : 2,
+              py: 0.8,
+              color: "primary.main",
+              "&:hover": { bgcolor: resolvedMode === 'dark' ? 'rgba(20,184,166,0.1)' : '#f0fdfa' },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 36, color: "primary.main", justifyContent: "center" }}>
+              <InstallMobile fontSize="small" />
+            </ListItemIcon>
+            {!collapsed && (
+              <ListItemText
+                primary={<Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 600 }}>Install app</Typography>}
+              />
+            )}
+          </ListItemButton>
+        )}
+
         <ListItemButton
           onClick={toggleMode}
           sx={{
@@ -1046,6 +1072,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               </Box>
               <Divider />
+              {showInstallApp && (
+                <MenuItem onClick={() => {
+                  setUserMenuAnchor(null);
+                  requestPwaInstall();
+                }}>
+                  <ListItemIcon><InstallMobile fontSize="small" /></ListItemIcon>
+                  <ListItemText primary="Install app" secondary="Add Vriddhi to this device" />
+                </MenuItem>
+              )}
               <MenuItem onClick={() => {
                 setUserMenuAnchor(null);
                 if (effectiveRole === 'faculty' || effectiveRole === 'mentor') navigate('/faculty/settings');

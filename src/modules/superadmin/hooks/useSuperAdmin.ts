@@ -14,6 +14,8 @@ import {
   updateAdminStatus,
   importUsers,
   importFaculty,
+  createFaculty,
+  bulkUpdateStudentAcademicFields,
   getDashboardStats,
   bulkUpdateCollegeStatus,
   listStudents,
@@ -65,11 +67,15 @@ import {
   type FacultyImportPayload,
   type ListStudentsOptions,
   type UpdateStudentInput,
+  type BulkStudentAcademicUpdateInput,
+  type BulkStudentAcademicUpdateResult,
   type College,
   type Admin,
   type AdminRole,
   type Student,
   type Faculty,
+  type CreateFacultyInput,
+  type CreateFacultyResult,
   type ListFacultyOptions,
   type UpdateFacultyInput,
   type PaginatedResult,
@@ -309,6 +315,21 @@ export const useUpdateStudent = () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.studentDetail(data.id) });
       queryClient.invalidateQueries({ queryKey: superAdminKeys.dashboard() });
       queryClient.setQueryData(superAdminKeys.studentDetail(data.id), data);
+    },
+  });
+};
+
+export const useBulkUpdateStudentAcademicFields = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    BulkStudentAcademicUpdateResult,
+    SuperAdminApiError,
+    BulkStudentAcademicUpdateInput
+  >({
+    mutationFn: bulkUpdateStudentAcademicFields,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.students() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.dashboard() });
     },
   });
 };
@@ -577,6 +598,18 @@ export const useUpdateSystemConfig = () => {
 // ═══════════════════════════════════════════════════════════════════════
 // FACULTY HOOKS
 // ═══════════════════════════════════════════════════════════════════════
+export const useCreateFaculty = () => {
+  const queryClient = useQueryClient();
+  return useMutation<CreateFacultyResult, SuperAdminApiError, CreateFacultyInput>({
+    mutationFn: createFaculty,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.faculty() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.colleges() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.dashboard() });
+    },
+  });
+};
+
 export const useFacultyList = (options: ListFacultyOptions = {}, queryOptions?: Omit<UseQueryOptions<PaginatedResult<Faculty>, SuperAdminApiError>, "queryKey" | "queryFn">) => {
   return useQuery<PaginatedResult<Faculty>, SuperAdminApiError>({
     queryKey: superAdminKeys.facultyList(options),

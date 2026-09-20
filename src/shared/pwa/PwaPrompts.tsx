@@ -2,8 +2,13 @@
 // PwaPrompts — service-worker registration + "update available" and
 // "install app" banners. Frontend-only; safe on every route.
 // ═══════════════════════════════════════════════════════════════════════
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import {
+  isPwaStandalone,
+  PWA_INSTALL_REQUEST_EVENT,
+  pwaInstallGuidance,
+} from './install'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -23,13 +28,6 @@ function installRecentlyDismissed(): boolean {
   }
 }
 
-function isStandalone(): boolean {
-  return (
-    window.matchMedia?.('(display-mode: standalone)').matches ||
-    (navigator as unknown as { standalone?: boolean }).standalone === true
-  )
-}
-
 const bannerStyle: React.CSSProperties = {
   position: 'fixed',
   left: 16,
@@ -37,7 +35,7 @@ const bannerStyle: React.CSSProperties = {
   bottom: 'calc(16px + env(safe-area-inset-bottom))',
   zIndex: 2000,
   margin: '0 auto',
-  maxWidth: 520,
+  maxWidth: 560,
   background: '#0f172a',
   color: '#fff',
   borderRadius: 14,
@@ -45,6 +43,7 @@ const bannerStyle: React.CSSProperties = {
   boxShadow: '0 10px 30px rgba(0,0,0,.25)',
   display: 'flex',
   alignItems: 'center',
+  flexWrap: 'wrap',
   gap: 12,
   fontFamily: 'Inter, system-ui, sans-serif',
   fontSize: 14,
@@ -58,6 +57,7 @@ const btn = (primary: boolean): React.CSSProperties => ({
   cursor: 'pointer',
   background: primary ? '#14b8a6' : 'transparent',
   color: primary ? '#052e2b' : '#cbd5e1',
+  whiteSpace: 'nowrap',
 })
 
 export const PwaPrompts: React.FC = () => {
@@ -74,37 +74,88 @@ export const PwaPrompts: React.FC = () => {
 
   // Install flow (Chrome/Edge/Android). iOS has no event; Safari users use
   // Share → Add to Home Screen.
+  const installEventRef = useRef<BeforeInstallPromptEvent | null>(null)
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstall, setShowInstall] = useState(false)
+  const [showInstallHelp, setShowInstallHelp] = useState(false)
 
-  useEffect(() => {
-    if (isStandalone() || installRecentlyDismissed()) return
-    const onPrompt = (e: Event) => {
-      e.preventDefault()
-      setInstallEvent(e as BeforeInstallPromptEvent)
-      setShowInstall(true)
-    }
-    const onInstalled = () => { setShowInstall(false); setInstallEvent(null) }
-    window.addEventListener('beforeinstallprompt', onPrompt)
-    window.addEventListener('appinstalled', onInstalled)
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt)
-      window.removeEventListener('appinstalled', onInstalled)
-    }
-  }, [])
+  const rememberInstallEvent = (event: BeforeInstallPromptEvent | null) => {
+    installEventRef.current = event
+    setInstallEvent(event)
+  }
 
   const dismissInstall = () => {
     setShowInstall(false)
     try { localStorage.setItem(INSTALL_DISMISSED_KEY, String(Date.now())) } catch { /* ignore */ }
   }
 
+  const promptForInstall = async (event: BeforeInstallPromptEvent) => {
+    setShowInstall(false)
+    setShowInstallHelp(false)
+    try {
+      await event.prompt()
+      const { outcome } = await event.userChoice
+      if (outcome === 'dismissed') dismissInstall()
+    } catch {
+      // The browser may invalidate a captured event or enforce a prompt
+      // cooldown. Keep the user moving with menu-based instructions.
+      setShowInstallHelp(true)
+    } finally {
+      rememberInstallEvent(null) // A beforeinstallprompt event can only be used once.
+    }
+  }
+
+  useEffect(() => {
+    const onPrompt = (event: Event) => {
+      event.preventDefault()
+      const promptEvent = event as BeforeInstallPromptEvent
+      rememberInstallEvent(promptEvent)
+      // "Not now" suppresses only the automatic banner. The permanent Install
+      // App menu remains able to use this captured event immediately.
+      if (!isPwaStandalone() && !installRecentlyDismissed()) setShowInstall(true)
+    }
+    const onInstalled = () => {
+      setShowInstall(false)
+      setShowInstallHelp(false)
+      rememberInstallEvent(null)
+      try { localStorage.removeItem(INSTALL_DISMISSED_KEY) } catch { /* ignore */ }
+    }
+    const onManualInstallRequest = () => {
+      if (isPwaStandalone()) return
+      // A manual request explicitly reverses the earlier "Not now" choice.
+      try { localStorage.removeItem(INSTALL_DISMISSED_KEY) } catch { /* ignore */ }
+      const promptEvent = installEventRef.current
+      if (promptEvent) {
+        void promptForInstall(promptEvent)
+      } else {
+        // iOS never emits beforeinstallprompt; Chrome may also impose a native
+        // cooldown after its own prompt is dismissed. Give the exact fallback.
+        setShowInstall(false)
+        setShowInstallHelp(true)
+      }
+    }
+
+    // Always capture beforeinstallprompt, even during the 14-day automatic
+    // banner cooldown. Previously the early return here made re-installing from
+    // inside the app impossible after "Not now".
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    window.addEventListener(PWA_INSTALL_REQUEST_EVENT, onManualInstallRequest)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+      window.removeEventListener(PWA_INSTALL_REQUEST_EVENT, onManualInstallRequest)
+    }
+  }, [])
+
   const doInstall = async () => {
-    if (!installEvent) return
-    await installEvent.prompt()
-    const { outcome } = await installEvent.userChoice
-    if (outcome === 'dismissed') dismissInstall()
-    else setShowInstall(false)
-    setInstallEvent(null)
+    const event = installEvent || installEventRef.current
+    if (!event) {
+      setShowInstall(false)
+      setShowInstallHelp(true)
+      return
+    }
+    await promptForInstall(event)
   }
 
   if (needRefresh) {
@@ -113,6 +164,16 @@ export const PwaPrompts: React.FC = () => {
         <span style={{ flex: 1 }}>A new version of Vriddhi is available.</span>
         <button style={btn(false)} onClick={() => setNeedRefresh(false)}>Later</button>
         <button style={btn(true)} onClick={() => updateServiceWorker(true)}>Reload</button>
+      </div>
+    )
+  }
+
+  if (showInstallHelp) {
+    return (
+      <div role="dialog" aria-label="How to install Vriddhi" style={bannerStyle}>
+        <img src="/icons/icon-192.png" alt="" width={36} height={36} style={{ borderRadius: 9 }} />
+        <span style={{ flex: 1 }}>{pwaInstallGuidance(navigator.userAgent)}</span>
+        <button style={btn(true)} onClick={() => setShowInstallHelp(false)}>Got it</button>
       </div>
     )
   }

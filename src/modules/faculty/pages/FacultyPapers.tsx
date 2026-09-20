@@ -692,6 +692,12 @@ export default function FacultyPapers() {
             const status = statusConfig[paper.verificationStatus] || fallbackStatus
             const badges = paperBadges(paper)
             const isAuthor = paper.createdByUid === (user?.uid || user?.id)
+            const canSchedule = badges.online && [
+              'verified', 'approved-by-hod', 'not-required', 'approved', 'published',
+            ].includes(paper.verificationStatus)
+            const schedulePath = ['admin', 'principal', 'superadmin'].includes(user?.role || '')
+              ? '/admin/schedule-tests'
+              : '/faculty/assessments'
             // Slice 1: authors may re-open their own file-only "Ready to use"
             // papers to add structured questions (server enforces the same gate).
             const canEdit = (canReview || isAuthor)
@@ -808,6 +814,15 @@ export default function FacultyPapers() {
                       <AlertTriangle className="w-4 h-4" />
                       Changes requested
                     </span>
+                  )}
+                  {canSchedule && (
+                    <Link
+                      to={`${schedulePath}?paperId=${encodeURIComponent(paper.id)}`}
+                      title="Create another independent test from this reusable approved paper"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/10 text-sm font-semibold text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/20 transition-colors"
+                    >
+                      <Calendar className="w-4 h-4" /> Schedule / reuse
+                    </Link>
                   )}
                   {canEdit && (
                     <button

@@ -55,6 +55,7 @@ interface StaffImportRow {
   collegeCode?: string
   collegeName?: string
   department?: string
+  branches?: string[]
   designation?: string
   employmentType?: string
   joiningDate?: string
@@ -130,6 +131,17 @@ interface BulkStaffResult {
 const STAFF_PROFILE_COLLECTION = 'faculty'
 // Roles that may land in the staff profile collection.
 const ALLOWED_STAFF_ROLES: StaffRole[] = ['faculty', 'hod', 'principal', 'admin']
+
+function normalizeFacultyBranches(row: StaffImportRow): string[] {
+  const raw = Array.isArray(row.branches) && row.branches.length ? row.branches : [row.department]
+  return Array.from(
+    new Set(raw.map((branch) => String(branch || '').trim()).filter(Boolean))
+  )
+}
+
+function hodBranchKey(branch: string): string {
+  return branch.replace(/%/g, '%25').replace(/\//g, '%2F')
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -309,10 +321,19 @@ export const bulkProvisionStaff = onCall(
             ? 'hod'
             : 'faculty'
 
-      const department = String(row.department || '').trim()
+      const branches = normalizeFacultyBranches(row)
+      const department = branches[0] || ''
       const facultyId = String(row.facultyId || `FAC${Date.now()}${i}`).trim()
       const password = defaultPassword ? String(defaultPassword) : generateRandomPassword()
 
+      if (facultyId.includes('/')) {
+        fail('Faculty ID cannot contain /')
+        continue
+      }
+      if (branches.length > 20 || branches.some((branch) => branch.length > 100)) {
+        fail('Use at most 20 branches, each 100 characters or fewer')
+        continue
+      }
       if (seenEmails.has(email)) {
         fail('Duplicate email in the uploaded file')
         continue
@@ -324,6 +345,24 @@ export const bulkProvisionStaff = onCall(
 
       let profilePreexistedInCollege = false
       try {
+        // A faculty ID is the profile document key. Never allow a new email to
+        // overwrite somebody else's profile merely because the operator typed
+        // an existing ID in the single-create form or CSV.
+        const idProfile = await admin
+          .firestore()
+          .collection(STAFF_PROFILE_COLLECTION)
+          .doc(facultyId)
+          .get()
+        if (idProfile.exists) {
+          const idData = idProfile.data() || {}
+          const idEmail = normalizeEmail(idData.email)
+          const idCollege = String(idData.collegeId || '')
+          if (idEmail !== email || (idCollege && idCollege !== collegeId)) {
+            fail(`Faculty ID ${facultyId} is already assigned to another profile`)
+            continue
+          }
+        }
+
         // ── Existing profile for this email? Decide per `onExisting`.
         //    'skip'  → report the row as SKIPPED (not failed): the account
         //              already works, we simply cannot hand out its password.
@@ -423,6 +462,7 @@ export const bulkProvisionStaff = onCall(
           collegeName: String(college.name || '').trim(),
           collegeCode: String(college.code || '').trim(),
           department,
+          branches,
           designation: String(row.designation || (role === 'principal' ? 'Principal' : 'Assistant Professor')),
           employmentType: String(row.employmentType || 'FULL_TIME'),
           joiningDate: String(row.joiningDate || ''),
@@ -476,6 +516,7 @@ export const bulkProvisionStaff = onCall(
             collegeId,
             collegeCode: String(college.code || '').trim(),
             department,
+            branches,
             phone: String(row.phone || '').trim(),
             avatar: String(row.profilePhotoUrl || ''),
             facultyDocId: facultyId,
@@ -485,22 +526,27 @@ export const bulkProvisionStaff = onCall(
           { merge: true }
         )
 
-        // HOD directory doc (mirrors the client import).
-        if (role === 'hod' && department) {
-          batch.set(
-            db.collection('hods').doc(`${collegeId}_${department}`),
-            {
-              facultyId,
-              uid,
-              collegeId,
-              department,
-              name,
-              email,
-              role: 'hod',
-              assignedAt: now,
-            },
-            { merge: true }
-          )
+        // One HOD directory row per assigned branch. `department` remains the
+        // primary branch for older HOD screens, while `branches` represents the
+        // complete assignment.
+        if (role === 'hod') {
+          for (const branch of branches) {
+            batch.set(
+              db.collection('hods').doc(`${collegeId}_${hodBranchKey(branch)}`),
+              {
+                facultyId,
+                uid,
+                collegeId,
+                department: branch,
+                branches,
+                name,
+                email,
+                role: 'hod',
+                assignedAt: now,
+              },
+              { merge: true }
+            )
+          }
         }
 
         // The college counter only moves for a genuinely new profile, otherwise

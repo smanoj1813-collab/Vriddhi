@@ -51,9 +51,13 @@ import {
   type Student,
   type ListStudentsOptions,
   type UpdateStudentInput,
+  type BulkStudentAcademicUpdateInput,
+  type BulkStudentAcademicUpdateResult,
   type ImportUsersInput,
   type ImportResult,
   type FacultyImportPayload,
+  type CreateFacultyInput,
+  type CreateFacultyResult,
   type Faculty,
   type ListFacultyOptions,
   type UpdateFacultyInput,
@@ -90,8 +94,12 @@ export {
   type CreateCollegeInput,
   type Admin,
   type Student,
+  type BulkStudentAcademicUpdateInput,
+  type BulkStudentAcademicUpdateResult,
   type ImportResult,
   type Faculty,
+  type CreateFacultyInput,
+  type CreateFacultyResult,
   type UpdateFacultyInput,
   type DashboardStats,
   type RecentActivity,
@@ -175,6 +183,7 @@ function docToAdmin(docSnap: QueryDocumentSnapshot<DocumentData>): Admin {
 
 function docToStudent(docSnap: QueryDocumentSnapshot<DocumentData>): Student {
   const data = docSnap.data();
+  const branch = String(data.branch || data.department || "").trim();
   return {
     id: docSnap.id,
     name: data.name || "",
@@ -185,7 +194,8 @@ function docToStudent(docSnap: QueryDocumentSnapshot<DocumentData>): Student {
     batch: data.batch || "",
     division: data.division || "",
     mentor: data.mentor,
-    department: data.department,
+    branch,
+    department: branch,
     status: data.status || "active",
     createdAt: data.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
     updatedAt: data.updatedAt?.toDate?.().toISOString(),
@@ -199,6 +209,11 @@ function docToFaculty(docSnap: QueryDocumentSnapshot<DocumentData>): Faculty {
   const data = docSnap.data();
   const firstName = data.firstName || "";
   const lastName = data.lastName || "";
+  const branches = Array.from(new Set(
+    (Array.isArray(data.branches) && data.branches.length ? data.branches : [data.department])
+      .map((value: unknown) => String(value || "").trim())
+      .filter(Boolean)
+  ));
   return {
     id: docSnap.id,
     facultyId: data.facultyId || docSnap.id,
@@ -211,7 +226,8 @@ function docToFaculty(docSnap: QueryDocumentSnapshot<DocumentData>): Faculty {
     collegeId: data.collegeId || "",
     collegeName: data.collegeName || "",
     collegeCode: data.collegeCode || "",
-    department: data.department || "",
+    department: String(data.department || branches[0] || "").trim(),
+    branches,
     designation: data.designation || "Assistant Professor",
     employmentType: data.employmentType || "FULL_TIME",
     joiningDate: data.joiningDate || "",
@@ -693,13 +709,55 @@ export async function getStudentByIdSuperAdmin(studentId: string): Promise<Stude
 export async function updateStudentSuperAdmin(studentId: string, updates: UpdateStudentInput): Promise<Student> {
   try {
     const docRef = doc(db, "students", studentId);
-    await updateDoc(docRef, { ...stripUndefined(updates), updatedAt: Timestamp.now() });
+    const branch = updates.branch ?? updates.department;
+    const normalizedUpdates = {
+      ...stripUndefined(updates),
+      ...(branch !== undefined
+        ? { branch: String(branch).trim(), department: String(branch).trim() }
+        : {}),
+      updatedAt: Timestamp.now(),
+    };
+    await updateDoc(docRef, normalizedUpdates);
 
     const updated = await getDoc(docRef);
     if (!updated.exists()) throw new SuperAdminApiError("Student not found after update");
     return docToStudent(updated as QueryDocumentSnapshot<DocumentData>);
   } catch (error) {
     throw new SuperAdminApiError(error instanceof Error ? error.message : "Failed to update student");
+  }
+}
+
+/**
+ * Changes the cohort fields for a selected set of students. This goes through
+ * an Admin SDK callable because every student has up to three representations
+ * (`students`, `users`, and the college mirror) that must stay in sync.
+ */
+export async function bulkUpdateStudentAcademicFields(
+  input: BulkStudentAcademicUpdateInput
+): Promise<BulkStudentAcademicUpdateResult> {
+  const studentIds = Array.from(new Set(input.studentIds.map((id) => id.trim()).filter(Boolean)));
+  const batch = input.batch === undefined ? undefined : input.batch.trim();
+  const branch = input.branch === undefined ? undefined : input.branch.trim();
+
+  if (studentIds.length === 0) throw new SuperAdminApiError("Select at least one student");
+  if (studentIds.length > 500) throw new SuperAdminApiError("Update at most 500 students at a time");
+  if (batch === undefined && branch === undefined) {
+    throw new SuperAdminApiError("Choose a batch and/or branch to update");
+  }
+  if (batch !== undefined && !batch) throw new SuperAdminApiError("Batch cannot be empty");
+  if (branch !== undefined && !branch) throw new SuperAdminApiError("Branch cannot be empty");
+
+  try {
+    const updateAcademicFields = httpsCallable<
+      BulkStudentAcademicUpdateInput,
+      BulkStudentAcademicUpdateResult
+    >(functions, "bulkUpdateStudentAcademicFields", { timeout: 120_000 });
+    const result = await updateAcademicFields({ studentIds, batch, branch });
+    return result.data;
+  } catch (error) {
+    throw new SuperAdminApiError(
+      describeIdentityError(error, "bulkUpdateStudentAcademicFields")
+    );
   }
 }
 
@@ -1070,7 +1128,8 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
     gender: f.gender,
     collegeName: f.collegeName,
     collegeCode: f.collegeCode,
-    department: f.department,
+    department: f.department || f.branches?.[0],
+    branches: f.branches,
     designation: f.designation,
     employmentType: f.employmentType,
     joiningDate: f.joiningDate,
@@ -1223,6 +1282,63 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
     warnings,
     authVerified,
     failedRows,
+  };
+}
+
+/** Provision one faculty account and atomically link it to the selected college. */
+export async function createFaculty(input: CreateFacultyInput): Promise<CreateFacultyResult> {
+  const branches = Array.from(new Set(input.branches.map((value) => value.trim()).filter(Boolean)));
+  if (!input.collegeId.trim()) throw new SuperAdminApiError("Select a college");
+  if (!input.facultyId.trim()) throw new SuperAdminApiError("Faculty ID is required");
+  if (input.facultyId.includes("/")) throw new SuperAdminApiError("Faculty ID cannot contain /");
+  if (!input.firstName.trim()) throw new SuperAdminApiError("First name is required");
+  if (!/^\S+@\S+\.\S+$/.test(input.email.trim())) {
+    throw new SuperAdminApiError("Enter a valid email address");
+  }
+  if (branches.length === 0) throw new SuperAdminApiError("Add at least one branch");
+  if (branches.length > 20 || branches.some((branch) => branch.length > 100)) {
+    throw new SuperAdminApiError("Use at most 20 branches, each 100 characters or fewer");
+  }
+
+  const result = await importFaculty({
+    collegeId: input.collegeId.trim(),
+    deliveryMode: input.deliveryMode || "temp-password",
+    onExisting: "skip",
+    faculty: [{
+      facultyId: input.facultyId.trim(),
+      firstName: input.firstName.trim(),
+      lastName: input.lastName?.trim(),
+      email: input.email.trim().toLowerCase(),
+      phone: input.phone?.trim(),
+      gender: input.gender?.trim(),
+      branches,
+      department: branches[0],
+      designation: input.designation?.trim() || "Assistant Professor",
+      employmentType: input.employmentType || "FULL_TIME",
+      joiningDate: input.joiningDate,
+      qualification: input.qualification?.trim(),
+      specialization: input.specialization?.trim(),
+      experienceYears: input.experienceYears || 0,
+      isHOD: !!input.isHOD,
+    }],
+  });
+
+  const row = result.imported[0];
+  if (!row || row.status === "skipped") {
+    const message = row?.status === "skipped"
+      ? "A faculty account with this email already exists in the selected college"
+      : result.errors[0] || "Faculty account could not be created";
+    throw new SuperAdminApiError(message);
+  }
+
+  return {
+    facultyId: row.docId || row.id || input.facultyId.trim(),
+    uid: row.uid,
+    email: row.email,
+    name: row.name || `${input.firstName} ${input.lastName || ""}`.trim(),
+    temporaryPassword: row.password,
+    resetLink: row.resetLink,
+    delivery: row.delivery,
   };
 }
 
@@ -1902,14 +2018,14 @@ export async function listFaculty(options: ListFacultyOptions = {}): Promise<Pag
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
-    if (options.department) items = items.filter(f => f.department === options.department);
+    if (options.department) items = items.filter(f => f.branches.includes(options.department!));
     if (options.search) {
       const searchLower = options.search.toLowerCase();
       items = items.filter(f =>
         f.firstName.toLowerCase().includes(searchLower) ||
         f.lastName.toLowerCase().includes(searchLower) ||
         f.email.toLowerCase().includes(searchLower) ||
-        f.department.toLowerCase().includes(searchLower) ||
+        f.branches.some((branch) => branch.toLowerCase().includes(searchLower)) ||
         f.designation.toLowerCase().includes(searchLower) ||
         f.facultyId.toLowerCase().includes(searchLower)
       );
@@ -1935,11 +2051,36 @@ export async function getFacultyById(facultyId: string): Promise<Faculty | null>
 export async function updateFaculty(facultyId: string, updates: UpdateFacultyInput): Promise<Faculty> {
   try {
     const docRef = doc(db, "faculty", facultyId);
-    await updateDoc(docRef, { ...stripUndefined(updates), updatedAt: Timestamp.now() });
+    const directUpdates: UpdateFacultyInput = { ...updates };
+    const requestedBranches = updates.branches
+      ?? (updates.department !== undefined ? [updates.department] : undefined);
+
+    // Branches also live on users/{uid} and (for HODs) hods/{college_branch}.
+    // A callable updates all of those Admin-SDK-side; a client-only update would
+    // leave the faculty login scoped to the old primary branch.
+    let normalizedBranches: string[] | undefined;
+    if (requestedBranches !== undefined) {
+      normalizedBranches = Array.from(new Set(requestedBranches.map((value) => value.trim()).filter(Boolean)));
+      if (normalizedBranches.length === 0) throw new SuperAdminApiError("Add at least one branch");
+      delete directUpdates.branches;
+      delete directUpdates.department;
+    }
+
+    if (Object.keys(stripUndefined(directUpdates)).length > 0) {
+      await updateDoc(docRef, { ...stripUndefined(directUpdates), updatedAt: Timestamp.now() });
+    }
+    if (normalizedBranches) {
+      const syncBranches = httpsCallable<
+        { facultyId: string; branches: string[] },
+        { success: boolean; branches: string[]; department: string }
+      >(functions, "updateFacultyBranches");
+      await syncBranches({ facultyId, branches: normalizedBranches });
+    }
     const updated = await getDoc(docRef);
     if (!updated.exists()) throw new SuperAdminApiError("Faculty not found after update");
     return docToFaculty(updated as QueryDocumentSnapshot<DocumentData>);
   } catch (error) {
+    if (error instanceof SuperAdminApiError) throw error;
     throw new SuperAdminApiError(error instanceof Error ? error.message : "Failed to update faculty");
   }
 }

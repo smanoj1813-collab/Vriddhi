@@ -105,31 +105,38 @@ const FacultyImport: React.FC = () => {
         return
       }
 
-      const facultyData = validation.validRows.map((row: Record<string, string>) => ({
-        facultyId: row.facultyId,
-        firstName: row.firstName,
-        lastName: row.lastName || '',
-        email: row.email,
-        phone: row.phone || '',
-        gender: row.gender || '',
-        // Tenancy always comes from the selected college — never from the CSV
-        // and never from a hardcoded default. A row-level code that differs
-        // from the selected college is exactly how faculty ended up labelled
-        // with one college while linked (collegeId) to another.
-        collegeCode: selectedCollegeCode,
-        collegeName: selectedCollegeName,
-        department: row.department || '',
-        designation: row.designation || '',
-        employmentType: (row.employmentType ? normalizeEmploymentType(row.employmentType) : 'FULL_TIME') as 'FULL_TIME' | 'PART_TIME' | 'VISITING' | 'ADJUNCT',
-        joiningDate: row.joiningDate || '',
-        qualification: row.qualification || '',
-        specialization: row.specialization || '',
-        subjectsUG: parseSubjects(row.subjectsUG || ''),
-        subjectsPG: parseSubjects(row.subjectsPG || ''),
-        experienceYears: row.experienceYears ? parseFloat(row.experienceYears) : 0,
-        isHOD: parseBoolean(row.isHOD || ''),
-        profilePhotoUrl: row.profilePhotoUrl || '',
-      }))
+      const facultyData = validation.validRows.map((row: Record<string, string>) => {
+        const branches = Array.from(new Set([
+          ...(row.department ? [row.department.trim()] : []),
+          ...parseSubjects(row.branches || ''),
+        ].filter(Boolean)))
+        return {
+          facultyId: row.facultyId,
+          firstName: row.firstName,
+          lastName: row.lastName || '',
+          email: row.email,
+          phone: row.phone || '',
+          gender: row.gender || '',
+          // Tenancy always comes from the selected college — never from the CSV
+          // and never from a hardcoded default. A row-level code that differs
+          // from the selected college is exactly how faculty ended up labelled
+          // with one college while linked (collegeId) to another.
+          collegeCode: selectedCollegeCode,
+          collegeName: selectedCollegeName,
+          department: branches[0] || '',
+          branches,
+          designation: row.designation || '',
+          employmentType: (row.employmentType ? normalizeEmploymentType(row.employmentType) : 'FULL_TIME') as 'FULL_TIME' | 'PART_TIME' | 'VISITING' | 'ADJUNCT',
+          joiningDate: row.joiningDate || '',
+          qualification: row.qualification || '',
+          specialization: row.specialization || '',
+          subjectsUG: parseSubjects(row.subjectsUG || ''),
+          subjectsPG: parseSubjects(row.subjectsPG || ''),
+          experienceYears: row.experienceYears ? parseFloat(row.experienceYears) : 0,
+          isHOD: parseBoolean(row.isHOD || ''),
+          profilePhotoUrl: row.profilePhotoUrl || '',
+        }
+      })
 
       const result = await importFaculty.mutateAsync({
         collegeId: selectedCollege,
@@ -315,7 +322,8 @@ const FacultyImport: React.FC = () => {
                   <th className="text-left px-4 py-3 font-medium">Email</th>
                   <th className="text-left px-4 py-3 font-medium">Phone</th>
                   <th className="text-left px-4 py-3 font-medium">College Code</th>
-                  <th className="text-left px-4 py-3 font-medium">Department</th>
+                  <th className="text-left px-4 py-3 font-medium">Primary Branch</th>
+                  <th className="text-left px-4 py-3 font-medium">All Branches</th>
                   <th className="text-left px-4 py-3 font-medium">Designation</th>
                   <th className="text-left px-4 py-3 font-medium">Employment</th>
                   <th className="text-left px-4 py-3 font-medium">UG Subjects</th>
@@ -336,7 +344,8 @@ const FacultyImport: React.FC = () => {
                       <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{row.email || '—'}</td>
                       <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.phone || '—'}</td>
                       <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.collegeCode || selectedCollegeCode || '—'}</td>
-                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.department || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.department || parseSubjects(row.branches || '')[0] || '—'}</td>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.branches || row.department || '—'}</td>
                       <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.designation || '—'}</td>
                       <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.employmentType || '—'}</td>
                       <td className="px-4 py-2 text-slate-600 dark:text-slate-400 text-xs">{row.subjectsUG || '—'}</td>

@@ -8,6 +8,7 @@ import {
   Edit3, Copy
 } from 'lucide-react'
 import type { UpdateFacultyInput } from '../types/superAdmin'
+import BranchMultiInput from '../components/BranchMultiInput'
 
 const SuperAdminFacultyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -38,6 +39,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
         email: faculty.email,
         phone: faculty.phone,
         gender: faculty.gender,
+        branches: faculty.branches,
         department: faculty.department,
         designation: faculty.designation,
         employmentType: faculty.employmentType,
@@ -55,12 +57,16 @@ const SuperAdminFacultyDetail: React.FC = () => {
 
   const handleSave = async () => {
     if (!id) return
+    if (!formData.branches?.length) {
+      showError('Add at least one branch before saving')
+      return
+    }
     try {
       await updateFaculty.mutateAsync({ facultyId: id, updates: formData })
       showSuccess('Faculty updated successfully')
       setIsEditing(false)
-    } catch {
-      showError('Failed to update faculty')
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to update faculty')
     }
   }
 
@@ -119,9 +125,12 @@ const SuperAdminFacultyDetail: React.FC = () => {
       <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">{label}</label>
       {options ? (
         <select
-          value={(formData[name] as string) || ''}
-          onChange={e => setFormData((prev: UpdateFacultyInput) => ({ ...prev, [name]: e.target.value }))}
-          className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          value={name === 'isHOD' ? String(formData.isHOD ?? '') : String(formData[name] ?? '')}
+          onChange={e => setFormData((prev: UpdateFacultyInput) => ({
+            ...prev,
+            [name]: name === 'isHOD' ? e.target.value === 'true' : e.target.value,
+          }))}
+          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="">Select {label}</option>
           {options.map(o => <option key={o} value={o}>{o}</option>)}
@@ -257,7 +266,21 @@ const SuperAdminFacultyDetail: React.FC = () => {
             </h2>
             {!isEditing ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoRow label="Department" value={faculty.department} icon={Building2} />
+                <InfoRow
+                  label="Branches / programs"
+                  value={faculty.branches.length ? (
+                    <span className="flex flex-wrap gap-1.5 pt-1">
+                      {faculty.branches.map((branch, index) => (
+                        <span key={branch} className={`rounded-full px-2 py-0.5 text-xs ${index === 0
+                          ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200'
+                          : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
+                          {index === 0 ? `Primary: ${branch}` : branch}
+                        </span>
+                      ))}
+                    </span>
+                  ) : '—'}
+                  icon={Building2}
+                />
                 <InfoRow label="Designation" value={faculty.designation} icon={Award} />
                 <InfoRow label="Employment Type" value={faculty.employmentType?.replace('_', ' ')} icon={Calendar} />
                 <InfoRow label="Joining Date" value={faculty.joiningDate} icon={Calendar} />
@@ -268,7 +291,13 @@ const SuperAdminFacultyDetail: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <EditField label="Department" name="department" />
+                <div className="md:col-span-2 mb-2">
+                  <BranchMultiInput
+                    value={formData.branches || []}
+                    onChange={(branches) => setFormData((prev) => ({ ...prev, branches, department: branches[0] || '' }))}
+                    required
+                  />
+                </div>
                 <EditField label="Designation" name="designation" />
                 <EditField label="Employment Type" name="employmentType" options={['FULL_TIME', 'PART_TIME', 'ADJUNCT', 'VISITING']} />
                 <EditField label="Joining Date" name="joiningDate" type="date" />
