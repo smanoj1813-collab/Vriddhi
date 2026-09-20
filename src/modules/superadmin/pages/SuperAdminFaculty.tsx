@@ -5,13 +5,14 @@ import { useNotification } from '../../../shared/providers/NotificationProvider'
 import {
   Users, Search, Filter, ArrowLeft, Trash2, Eye,
   GraduationCap, Mail, Phone, MapPin, Key,
-  CheckCircle, XCircle, Download, KeyRound, AlertTriangle
+  CheckCircle, XCircle, Download, KeyRound, AlertTriangle, UserPlus
 } from 'lucide-react'
 import type { Faculty } from '../api/superAdminApi'
 import { sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '@/Firebase/config'
 import { runIdentityRepair, type RepairResult } from '../api/identityApi'
 import BulkCredentialReset from '../components/BulkCredentialReset'
+import CreateFacultyDialog from '../components/CreateFacultyDialog'
 
 const SuperAdminFaculty: React.FC = () => {
   const navigate = useNavigate()
@@ -34,6 +35,7 @@ const SuperAdminFaculty: React.FC = () => {
   const [resetEmailState, setResetEmailState] = useState<Record<string, 'sending' | 'sent' | 'error'>>({})
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showBulkReset, setShowBulkReset] = useState(false)
+  const [showCreateFaculty, setShowCreateFaculty] = useState(false)
 
   const { data: facultyData, isLoading, refetch } = useFacultyList({
     status: statusFilter,
@@ -47,11 +49,11 @@ const SuperAdminFaculty: React.FC = () => {
   const faculty = facultyData?.items || []
   const colleges = collegesData?.items || []
 
-  const departments = Array.from(new Set(faculty.map(f => f.department).filter(Boolean)))
+  const departments = Array.from(new Set(faculty.flatMap(f => f.branches || [f.department]).filter(Boolean))).sort()
 
   const filteredFaculty = faculty.filter((f: Faculty) => {
     if (collegeFilter !== 'all' && f.collegeId !== collegeFilter) return false
-    if (departmentFilter !== 'all' && f.department !== departmentFilter) return false
+    if (departmentFilter !== 'all' && !(f.branches || [f.department]).includes(departmentFilter)) return false
     return true
   })
 
@@ -171,13 +173,14 @@ const SuperAdminFaculty: React.FC = () => {
   }
 
   const handleExportCSV = () => {
-    const headers = ['Faculty ID', 'Name', 'Email', 'Phone', 'Department', 'Designation', 'College', 'Status', 'HOD']
+    const headers = ['Faculty ID', 'Name', 'Email', 'Phone', 'Primary Branch', 'All Branches', 'Designation', 'College', 'Status', 'HOD']
     const rows = filteredFaculty.map((f: Faculty) => [
       f.facultyId,
       `${f.firstName} ${f.lastName}`,
       f.email,
       f.phone,
       f.department,
+      f.branches.join('; '),
       f.designation,
       f.collegeName,
       f.status,
@@ -238,8 +241,11 @@ const SuperAdminFaculty: React.FC = () => {
           >
             <Key className="w-4 h-4" /> {fixingPasswords ? 'Reconciling…' : 'Fix Missing Logins'}
           </button>
-          <button onClick={() => navigate('/superadmin/faculty/import')} className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-slate-900 dark:text-white rounded-lg transition-colors text-sm">
-            <GraduationCap className="w-4 h-4" /> Import Faculty
+          <button onClick={() => navigate('/superadmin/faculty/import')} className="flex items-center gap-2 px-4 py-2 border border-teal-600 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors text-sm">
+            <GraduationCap className="w-4 h-4" /> Bulk Import
+          </button>
+          <button onClick={() => setShowCreateFaculty(true)} className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors text-sm">
+            <UserPlus className="w-4 h-4" /> Add Faculty
           </button>
         </div>
       </div>
@@ -272,7 +278,7 @@ const SuperAdminFaculty: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by name, email, ID, department..."
+            placeholder="Search by name, email, ID, branch..."
             className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
           />
         </div>
@@ -312,7 +318,7 @@ const SuperAdminFaculty: React.FC = () => {
               onChange={e => setDepartmentFilter(e.target.value)}
               className="pl-10 pr-8 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 appearance-none"
             >
-              <option value="all">All Departments</option>
+              <option value="all">All Branches</option>
               {departments.map((d: string) => (
                 <option key={d} value={d}>{d}</option>
               ))}
@@ -338,7 +344,7 @@ const SuperAdminFaculty: React.FC = () => {
                 </th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Faculty</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Contact</th>
-                <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Department</th>
+                <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Branches</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Designation</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">College</th>
                 <th className="text-left text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Status</th>
@@ -380,7 +386,21 @@ const SuperAdminFaculty: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{f.department || '—'}</span>
+                    {f.branches.length > 0 ? (
+                      <div className="flex max-w-xs flex-wrap gap-1.5">
+                        {f.branches.map((branch, index) => (
+                          <span
+                            key={branch}
+                            className={`rounded-full px-2 py-0.5 text-xs ${index === 0
+                              ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200'
+                              : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}
+                            title={index === 0 ? 'Primary branch' : 'Additional branch'}
+                          >
+                            {branch}
+                          </span>
+                        ))}
+                      </div>
+                    ) : <span className="text-sm text-slate-500">—</span>}
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-slate-700 dark:text-slate-300">{f.designation}</span>
@@ -582,9 +602,17 @@ const SuperAdminFaculty: React.FC = () => {
           collegeId={collegeFilter !== 'all' ? collegeFilter : filteredFaculty[0]?.collegeId || ''}
           collegeName={colleges.find((c) => c.id === collegeFilter)?.name}
           collection="faculty"
-          items={filteredFaculty.filter((f) => selectedIds.has(f.id)).map((f) => ({ id: f.id, name: `${f.firstName} ${f.lastName}`.trim() || f.email, email: f.email, department: f.department }))}
+          items={filteredFaculty.filter((f) => selectedIds.has(f.id)).map((f) => ({ id: f.id, name: `${f.firstName} ${f.lastName}`.trim() || f.email, email: f.email, department: f.branches.join(', ') }))}
           onClose={() => setShowBulkReset(false)}
           title={`Regenerate ${selectedIds.size} faculty credential(s)`}
+        />
+      )}
+
+      {showCreateFaculty && (
+        <CreateFacultyDialog
+          colleges={colleges}
+          onClose={() => setShowCreateFaculty(false)}
+          onCreated={(facultyId) => navigate(`/superadmin/faculty/${facultyId}`)}
         />
       )}
     </div>

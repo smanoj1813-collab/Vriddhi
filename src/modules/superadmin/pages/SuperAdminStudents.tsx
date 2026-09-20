@@ -2,9 +2,10 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudents, useColleges, useUpdateStudent, useResetStudentPassword } from '../hooks/useSuperAdmin';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
-import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2, KeyRound } from "lucide-react";
+import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2, KeyRound, Info } from "lucide-react";
 import type { Student, College } from '../types/superAdmin';
 import BulkCredentialReset from '../components/BulkCredentialReset';
+import BulkStudentAcademicUpdate from '../components/BulkStudentAcademicUpdate';
 
 const SuperAdminStudents: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const SuperAdminStudents: React.FC = () => {
   } | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkReset, setShowBulkReset] = useState(false);
+  const [showBulkAcademicUpdate, setShowBulkAcademicUpdate] = useState(false);
 
   const { data, isLoading } = useStudents({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -42,6 +44,10 @@ const SuperAdminStudents: React.FC = () => {
     // Use current displayed students (already filtered by college/status/search via query)
     return students;
   }, [students]);
+  const selectedStudents = useMemo(
+    () => students.filter((student) => selectedIds.has(student.id)),
+    [students, selectedIds]
+  );
 
   const allSelected = filteredForBulk.length > 0 && filteredForBulk.every((s) => selectedIds.has(s.id));
   const toggleAll = () => {
@@ -138,14 +144,25 @@ const SuperAdminStudents: React.FC = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm">Manage all students across colleges</p>
           </div>
         </div>
-        {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => setShowBulkReset(true)}
-            className="btn-primary flex items-center gap-2"
+            onClick={() => setShowBulkAcademicUpdate(true)}
+            disabled={selectedStudents.length === 0}
+            title={selectedStudents.length ? 'Change the selected students’ batch and/or branch' : 'Select students first'}
+            className="btn-primary flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <KeyRound className="w-4 h-4" /> Regenerate {selectedIds.size} credential(s)
+            <GraduationCap className="w-4 h-4" /> Bulk change batch / branch
+            {selectedStudents.length > 0 && ` (${selectedStudents.length})`}
           </button>
-        )}
+          {selectedStudents.length > 0 && (
+            <button
+              onClick={() => setShowBulkReset(true)}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <KeyRound className="w-4 h-4" /> Regenerate {selectedStudents.length} credential(s)
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -165,6 +182,14 @@ const SuperAdminStudents: React.FC = () => {
         <div className="glass-card p-4">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Colleges</p>
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{colleges.length}</p>
+        </div>
+      </div>
+
+      <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+        <Info className="mt-0.5 h-4 w-4 shrink-0" />
+        <div>
+          <p className="font-medium">To change student batch or branch in bulk</p>
+          <p className="mt-0.5 text-xs">Filter the list if needed, select the student rows (or Select all), then click <strong>Bulk change batch / branch</strong>. Only the fields you choose are updated.</p>
         </div>
       </div>
 
@@ -230,7 +255,7 @@ const SuperAdminStudents: React.FC = () => {
               <th className="table-header">College</th>
               <th className="table-header text-center">Batch</th>
               <th className="table-header text-center">Division</th>
-              <th className="table-header text-center">Department</th>
+              <th className="table-header text-center">Branch</th>
               <th className="table-header text-center">Status</th>
               <th className="table-header text-center">Actions</th>
             </tr>
@@ -329,7 +354,7 @@ const SuperAdminStudents: React.FC = () => {
                 <input type="text" value={editForm.mentor || ""} onChange={e => setEditForm({ ...editForm, mentor: e.target.value })} className="input-field" />
               </div>
               <div>
-                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Department</label>
+                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Branch / program</label>
                 <input type="text" value={editForm.department || ""} onChange={e => setEditForm({ ...editForm, department: e.target.value })} className="input-field" />
               </div>
               <div>
@@ -379,8 +404,8 @@ const SuperAdminStudents: React.FC = () => {
                 <span className="text-slate-900 dark:text-white font-medium">{selectedStudent.division}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600 dark:text-slate-400">Department</span>
-                <span className="text-slate-900 dark:text-white font-medium">{selectedStudent.department || "—"}</span>
+                <span className="text-slate-600 dark:text-slate-400">Branch / program</span>
+                <span className="text-slate-900 dark:text-white font-medium">{selectedStudent.branch || selectedStudent.department || "—"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Mentor</span>
@@ -470,12 +495,23 @@ const SuperAdminStudents: React.FC = () => {
 
       {showBulkReset && (
         <BulkCredentialReset
-          collegeId={collegeFilter !== 'all' ? collegeFilter : students[0]?.collegeId || ''}
+          collegeId={collegeFilter !== 'all' ? collegeFilter : selectedStudents[0]?.collegeId || ''}
           collegeName={colleges.find((c) => c.id === collegeFilter)?.name}
           collection="students"
-          items={students.filter((s) => selectedIds.has(s.id)).map((s) => ({ id: s.id, name: s.name, email: s.email, regNo: s.regNo, department: s.department }))}
+          items={selectedStudents.map((s) => ({ id: s.id, name: s.name, email: s.email, regNo: s.regNo, department: s.branch || s.department }))}
           onClose={() => setShowBulkReset(false)}
-          title={`Regenerate ${selectedIds.size} student credential(s)`}
+          title={`Regenerate ${selectedStudents.length} student credential(s)`}
+        />
+      )}
+
+      {showBulkAcademicUpdate && (
+        <BulkStudentAcademicUpdate
+          students={selectedStudents}
+          onClose={() => setShowBulkAcademicUpdate(false)}
+          onUpdated={() => {
+            setShowBulkAcademicUpdate(false)
+            setSelectedIds(new Set())
+          }}
         />
       )}
     </div>

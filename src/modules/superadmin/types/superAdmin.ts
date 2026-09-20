@@ -179,6 +179,9 @@ export interface Student {
   batch: string;
   division: string;
   mentor?: string;
+  /** Canonical academic program. Legacy rows may only have `department`. */
+  branch?: string;
+  /** Backwards-compatible alias for branch used by older imports and screens. */
   department?: string;
   status: StudentStatus;
   createdAt: string;
@@ -206,9 +209,24 @@ export interface UpdateStudentInput {
   batch?: string;
   division?: string;
   mentor?: string;
+  /** Updating this field also keeps the legacy `department` alias in sync. */
+  branch?: string;
   department?: string;
   status?: StudentStatus;
   phone?: string;
+}
+
+export interface BulkStudentAcademicUpdateInput {
+  studentIds: string[];
+  /** Omit a value to leave that field unchanged for every selected student. */
+  batch?: string;
+  branch?: string;
+}
+
+export interface BulkStudentAcademicUpdateResult {
+  requested: number;
+  updated: number;
+  missingIds: string[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -301,8 +319,11 @@ export interface FacultyImportEntry {
   phone?: string;
   gender?: string;
   collegeName?: string;
-  collegeCode: string;
+  collegeCode?: string;
+  /** Primary branch retained for backwards compatibility. */
   department?: string;
+  /** Every branch/program this faculty member may teach. */
+  branches?: string[];
   designation?: string;
   employmentType?: EmploymentType;
   joiningDate?: string;
@@ -328,6 +349,35 @@ export interface FacultyImportPayload {
   onProgress?: (progress: BatchProgress) => void;
 }
 
+export interface CreateFacultyInput {
+  collegeId: string;
+  facultyId: string;
+  firstName: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  gender?: string;
+  branches: string[];
+  designation?: string;
+  employmentType?: EmploymentType;
+  joiningDate?: string;
+  qualification?: string;
+  specialization?: string;
+  experienceYears?: number;
+  isHOD?: boolean;
+  deliveryMode?: 'temp-password' | 'reset-email';
+}
+
+export interface CreateFacultyResult {
+  facultyId: string;
+  uid?: string;
+  email: string;
+  name: string;
+  temporaryPassword?: string;
+  resetLink?: string;
+  delivery?: 'temp-password' | 'reset-link' | 'none';
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // FACULTY TYPES
 // ═══════════════════════════════════════════════════════════════════════
@@ -343,7 +393,10 @@ export interface Faculty {
   collegeId: string;
   collegeName: string;
   collegeCode: string;
+  /** Primary branch used by legacy single-department features (and HOD scope). */
   department: string;
+  /** All branches/programs assigned to this faculty member. */
+  branches: string[];
   designation: string;
   employmentType: EmploymentType;
   joiningDate: string;
@@ -377,6 +430,8 @@ export interface UpdateFacultyInput {
   email?: string;
   phone?: string;
   gender?: string;
+  /** First branch is mirrored to `department` for legacy consumers. */
+  branches?: string[];
   department?: string;
   designation?: string;
   employmentType?: EmploymentType;

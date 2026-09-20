@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { parseCSV, validateCSV } from './parseCSV';
+import { generateCSVTemplate, parseCSV, validateCSV } from './parseCSV';
 
 const HEADER = 'Student Name,Email Address,Registration Number,Phone Number';
 
@@ -111,4 +111,16 @@ test('rejected rows carry their original data so they can be exported', () => {
   assert.equal(rejected.row.email, 'ada@college.edu');
   assert.equal(rejected.row.regNo, 'R002');
   assert.equal(rejected.rowNumber, 3); // 1-based sheet row, header included
+});
+
+test('faculty template preserves multiple branches and comma-containing samples', () => {
+  const template = generateCSVTemplate('faculty');
+  const parsed = parseCSV(template, 'faculty');
+
+  assert.equal(parsed.rows.length, 1);
+  assert.equal(parsed.rows[0].department, 'Commerce');
+  assert.equal(parsed.rows[0].branches, 'B.Com,BBA');
+  assert.equal(parsed.rows[0].qualification, 'M.Com, UGC-NET');
+  assert.equal(parsed.rows[0].subjectsUG, 'BCom101,BCom102');
+  assert.deepEqual(parsed.unknownHeaders, []);
 });

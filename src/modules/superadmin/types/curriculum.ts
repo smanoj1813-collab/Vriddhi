@@ -146,6 +146,7 @@ export interface CurriculumStats {
 export interface CollegeOption {
   id: string;
   name: string;
+  code?: string;
 }
 
 // ─── Curriculum Document (assigned to college) ──────────────────────────

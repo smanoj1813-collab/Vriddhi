@@ -4,7 +4,7 @@
 // Flow: REVIEW → click Assign → pick college + courses → ASSIGNED
 // ═══════════════════════════════════════════════════════════════════════
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Tabs, Tab, Paper, Stack, Chip, IconButton, Button, CircularProgress, Alert } from '@mui/material';
 import {
   UploadFile as UploadIcon,
@@ -66,7 +66,11 @@ export default function SuperAdminCurriculum() {
       setCollegesLoading(true);
       try {
         const snap = await getDocs(collection(db, 'colleges'));
-        const list = snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id }));
+        const list = snap.docs.map((d) => ({
+          id: d.id,
+          name: d.data().name || d.id,
+          code: d.data().code || undefined,
+        }));
         setColleges(Array.isArray(list) ? list : []);
       } catch (e) {
         console.error('Failed to load colleges:', e);
@@ -100,6 +104,10 @@ export default function SuperAdminCurriculum() {
   // DEFENSIVE: ensure arrays even if hook returns garbage
   const safeItems = Array.isArray(items) ? items : [];
   const safeExtracts = Array.isArray(extracts) ? extracts : [];
+  const collegesById = useMemo(
+    () => new Map(colleges.map((college) => [college.id, college])),
+    [colleges]
+  );
   // FIX: Show both `review` and `approved` extracts so items approved but not
   // yet assigned don't disappear from the UI. (Assigned/archived stay in Assigned tab.)
   const displayItems = (safeExtracts.length > 0 ? safeExtracts : safeItems).filter(
@@ -453,37 +461,51 @@ export default function SuperAdminCurriculum() {
               </Box>
             ) : Array.isArray(assignedCurriculum) && assignedCurriculum.length > 0 ? (
               <Stack spacing={2}>
-                {assignedCurriculum.map((item: any) => (
-                  <Paper key={item.id ?? Math.random()} variant="outlined" sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                          {item.title ?? 'Untitled Curriculum'}
+                {assignedCurriculum.map((item: any) => {
+                  const collegeId = String(item.collegeId || item.assignedCollegeId || '').trim();
+                  const linkedCollege = collegesById.get(collegeId);
+                  const storedCollegeName = String(item.collegeName || item.assignedCollegeName || '').trim();
+                  const collegeName = linkedCollege?.name || storedCollegeName || (collegeId ? `College ${collegeId}` : 'College not recorded');
+                  const assignedDate = item.assignedAt?.toDate?.() || (item.assignedAt ? new Date(item.assignedAt) : null);
+                  return (
+                    <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                            {item.title ?? 'Untitled Curriculum'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600, color: linkedCollege || storedCollegeName ? 'primary.main' : 'warning.main' }}>
+                            Assigned college: {collegeName}{linkedCollege?.code ? ` (${linkedCollege.code})` : ''}
+                          </Typography>
+                          {collegeId && !linkedCollege && (
+                            <Typography variant="caption" color="warning.main" sx={{ display: 'block' }}>
+                              Stored college ID: {collegeId} — the linked college was not found in the current college directory.
+                            </Typography>
+                          )}
+                          <Stack direction="row" spacing={1} useFlexGap sx={{ mt: 1, flexWrap: 'wrap' }}>
+                            <Chip label={`${item.branch ?? 'N/A'}`} size="small" variant="outlined" />
+                            <Chip label={`Sem ${item.semester ?? 0}`} size="small" variant="outlined" />
+                            <Chip label={`${item.totalCourses ?? 0} courses`} size="small" variant="outlined" />
+                            <Chip label={`${item.totalHours ?? 0} hrs`} size="small" variant="outlined" />
+                            <Chip label={`${item.totalMarks ?? 0} marks`} size="small" variant="outlined" />
+                          </Stack>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                          {assignedDate && !Number.isNaN(assignedDate.getTime()) ? assignedDate.toLocaleDateString() : '-'}
                         </Typography>
-                        <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-                          <Chip label={item.collegeName ?? 'Unknown College'} size="small" color="primary" />
-                          <Chip label={`${item.branch ?? 'N/A'}`} size="small" variant="outlined" />
-                          <Chip label={`Sem ${item.semester ?? 0}`} size="small" variant="outlined" />
-                          <Chip label={`${item.totalCourses ?? 0} courses`} size="small" variant="outlined" />
-                          <Chip label={`${item.totalHours ?? 0} hrs`} size="small" variant="outlined" />
-                          <Chip label={`${item.totalMarks ?? 0} marks`} size="small" variant="outlined" />
-                        </Stack>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          title="Unassign from college (returns the extract to Review)"
+                          onClick={(ev) => handleUnassign(item.id, ev as unknown as React.MouseEvent)}
+                          sx={{ '&:hover': { bgcolor: 'error.light' } }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
                       </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.assignedAt ? new Date(item.assignedAt).toLocaleDateString() : '-'}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        title="Unassign from college (returns the extract to Review)"
-                        onClick={(ev) => handleUnassign(item.id, ev as unknown as React.MouseEvent)}
-                        sx={{ '&:hover': { bgcolor: 'error.light' } }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Paper>
-                ))}
+                    </Paper>
+                  );
+                })}
               </Stack>
             ) : (
               <Typography color="text.secondary" align="center" sx={{ py: 4 }}>

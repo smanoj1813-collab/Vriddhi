@@ -166,7 +166,12 @@ const FACULTY_COLUMNS: ColumnMapping[] = [
   {
     field: 'department',
     required: false,
-    aliases: ['department', 'dept', 'branch', 'discipline'],
+    aliases: ['department', 'dept', 'branch', 'primary branch', 'primary_branch', 'discipline'],
+  },
+  {
+    field: 'branches',
+    required: false,
+    aliases: ['branches', 'assigned branches', 'assigned_branches', 'programs', 'faculty branches'],
   },
   {
     field: 'designation',
@@ -220,7 +225,7 @@ const FACULTY_COLUMNS: ColumnMapping[] = [
   {
     field: 'profilePhotoUrl',
     required: false,
-    aliases: ['profile photo', 'profilephoto', 'profile_photo', 'photo url', 'photo_url', 'image url', 'image_url', 'avatar'],
+    aliases: ['profile photo', 'profile photo url', 'profilephoto', 'profile_photo', 'photo url', 'photo_url', 'image url', 'image_url', 'avatar'],
   },
 ];
 
@@ -584,6 +589,8 @@ export function downloadCsv(filename: string, headers: string[], rows: Array<Arr
  * Generate a CSV template for download
  */
 export function generateCSVTemplate(type: ImportType = 'students'): string {
+  const escape = (value: string) =>
+    /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
   if (type === 'students') {
     const headers = [
       'Student Name',
@@ -613,7 +620,7 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       'Male',
       '123 Main St, Bangalore',
     ];
-    return [headers.join(','), sampleRow.join(',')].join('\n');
+    return [headers.map(escape).join(','), sampleRow.map(escape).join(',')].join('\n');
   } else {
     const headers = [
       'Faculty ID',
@@ -624,6 +631,7 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       'Gender',
       'College Code',
       'Department',
+      'Branches',
       'Designation',
       'Employment Type',
       'Joining Date',
@@ -644,6 +652,7 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       'Female',
       'VA-001',
       'Commerce',
+      'B.Com,BBA',
       'Assistant Professor',
       'Full Time',
       '2026-06-15',
@@ -655,7 +664,7 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       'No',
       '',
     ];
-    return [headers.join(','), sampleRow.join(',')].join('\n');
+    return [headers.map(escape).join(','), sampleRow.map(escape).join(',')].join('\n');
   }
 }
 
