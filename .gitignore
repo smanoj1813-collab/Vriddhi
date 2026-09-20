@@ -40,6 +40,7 @@ Thumbs.db
 
 # Firebase
 .firebase/
+functions/.env
 
 # Service-account keys. These are full project-admin credentials: anyone
 # holding one can mint custom claims, read every Firestore document and

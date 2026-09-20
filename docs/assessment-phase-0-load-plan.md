@@ -38,6 +38,26 @@ It writes an `artifacts/phase0-*.json` report and never targets production. The
 runner reports callable success/error counts; Firestore internal read counts
 still require emulator request-log/tracer collection described below.
 
+## Academic fixture
+
+After Phase 0 assessment verification, prepare the academic context fixture:
+
+```powershell
+Set-Content functions/.env 'ACADEMIC_INTELLIGENCE_ENABLED=true'
+npm --prefix functions run build
+firebase emulators:start --project demo-vriddhi-assessment --only auth,firestore,functions
+```
+
+In a second PowerShell window:
+
+```powershell
+npm run academic:emulator
+```
+
+The flag is local-only and `functions/.env` is ignored. The fixture checks cohort
+isolation, submitted-assignment exclusion and attendance calculation. Do not
+set this flag in production yet.
+
 ## Emulator measurement gate
 
 Before rollout, run the fixture against a disposable Firebase emulator project
