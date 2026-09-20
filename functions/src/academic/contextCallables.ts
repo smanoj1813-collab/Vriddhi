@@ -60,6 +60,28 @@ async function studentIdentity(uid: string, token: Record<string, unknown>): Pro
 function asClass(id: string, value: admin.firestore.DocumentData): ContextClass {
   return { id, ...value, date: String(value.date || value.sessionDate || '').slice(0, 10), topics: Array.isArray(value.topicsCovered) ? value.topicsCovered.map(String) : [] }
 }
+function assignmentTargetsStudent(value: admin.firestore.DocumentData, student: AcademicStudent): boolean {
+  const targetStudents = Array.isArray(value.targetStudents) ? value.targetStudents.map(String) : []
+  if (targetStudents.length > 0 && ![student.id, student.uid || '', String(value.regNo || '')].some((id) => id && targetStudents.includes(id))) return false
+  const targetSections = Array.isArray(value.targetSections) ? value.targetSections : []
+  if (targetSections.length > 0) {
+    const section = String(student.section || student.division || '').toLowerCase().replace(/^section\\s+/, '')
+    const matched = targetSections.some((target: unknown) => {
+      const item = (target || {}) as Record<string, unknown>
+      const expected = String(item.section || item.division || item.sectionName || item.sectionId || '').toLowerCase().replace(/^section\\s+/, '')
+      return expected && expected === section
+        && (!item.branch || String(item.branch) === String(student.branch || ''))
+        && (!item.batch || String(item.batch) === String(student.batch || ''))
+        && (!item.semester || Number(item.semester) === Number(student.semester || 0))
+    })
+    if (!matched) return false
+  }
+  if (value.branch && String(value.branch) !== String(student.branch || '')) return false
+  if (value.batch && String(value.batch) !== String(student.batch || '')) return false
+  if (value.semester && Number(value.semester) !== Number(student.semester || 0)) return false
+  return true
+}
+
 function asAssignment(id: string, value: admin.firestore.DocumentData): ContextAssignment {
   return { id, title: String(value.title || value.name || 'Assignment'), ...value, dueDate: value.dueDate ? new Date(value.dueDate.toDate?.() || value.dueDate).toISOString() : '' }
 }
@@ -85,7 +107,9 @@ export const getMyStudentAcademicContext = onCall(
     const context = buildStudentAcademicContext({
       student, date,
       classes: classDocs.docs.map((doc) => asClass(doc.id, doc.data())),
-      assignments: assignmentDocs.docs.map((doc) => asAssignment(doc.id, doc.data())),
+      assignments: assignmentDocs.docs
+        .filter((doc) => assignmentTargetsStudent(doc.data(), student))
+        .map((doc) => asAssignment(doc.id, doc.data())),
       tests: testDocs.docs.map((doc) => asTest(doc.id, doc.data())),
       curriculum: curriculumDocs.docs.map((doc) => ({ id: doc.id, ...doc.data(), courseCode: String(doc.data().courseCode || ''), courseName: String(doc.data().courseName || doc.data().name || ''), modules: Array.isArray(doc.data().modules) ? doc.data().modules : [] })) as ContextCurriculum[],
       attendance: attendanceDocs.docs.map((doc) => ({ date: String(doc.data().date || '').slice(0, 10), status: String(doc.data().status || '') })) as ContextAttendance[],
