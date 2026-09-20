@@ -38,6 +38,18 @@ It writes an `artifacts/phase0-*.json` report and never targets production. The
 runner reports callable success/error counts; Firestore internal read counts
 still require emulator request-log/tracer collection described below.
 
+## Legacy and submission fixture
+
+With the emulators running, run:
+
+```powershell
+npm run assessment:legacy-fixture
+```
+
+This creates a pre-deployment attempt without `studentUid`, `answerIndex` or
+frozen chunks, then verifies legacy full-answer autosave, high-severity direct
+proctor logging, authoritative submission, grading and final attempt status.
+
 ## Academic fixture
 
 After Phase 0 assessment verification, prepare the academic context fixture:
