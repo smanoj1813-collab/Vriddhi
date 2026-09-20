@@ -6,6 +6,7 @@ import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 import type { TranslationKey } from '../../../shared/i18n';
+import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install';
 import {
   LayoutDashboard,
   Calendar,
@@ -30,6 +31,7 @@ import {
   UserCheck,
   Milestone,
   BookMarked,
+  Download,
 } from 'lucide-react';
 
 interface NavItem {
@@ -85,6 +87,7 @@ export default function StudentSidebar() {
   const { t } = useTranslation();
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const showInstallApp = !isPwaStandalone();
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('vriddhi-student-collapsed') === 'true';
   });
@@ -254,6 +257,18 @@ export default function StudentSidebar() {
             <div className="px-1 pb-1">
               <LanguageSwitcher compact showLabel={false} className="w-full" />
             </div>
+          )}
+          {showInstallApp && (
+            <button
+              onClick={requestPwaInstall}
+              title={isCollapsed ? 'Install app' : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors
+                ${isCollapsed ? 'justify-center' : ''}
+              `}
+            >
+              <Download className="w-4 h-4 shrink-0" />
+              {!isCollapsed && <span>Install app</span>}
+            </button>
           )}
           {/* Theme Toggle */}
           <button
