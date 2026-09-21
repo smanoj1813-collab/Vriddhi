@@ -810,6 +810,195 @@ await section('prep company page', PREP_VIEWER, { view: 'company' }, (t, view) =
 resetPrep();
 
 
+// ── Student "My Challans" ──────────────────────────────────────────────────
+// The challan data path end to end on the student side: the college-scoped
+// query the hook issues, the document mapping, the status filters, and the
+// printable sheet a student takes to the bank. This is the flow that rendered a
+// permanent "No challans yet" while the rows existed (the collection had no
+// Firestore rule, so the read was denied and the failure only reached the log).
+const { toasts: challanToasts } = await server.ssrLoadModule('/scripts/render-check/stubs/notificationProvider.ts');
+const challanRow = {
+  id: 'challan-1',
+  data: () => ({
+    challanNo: 'CH-202609-BCA-000123',
+    type: 'university_exam',
+    category: 'university_exam',
+    studentId: 'student-domain-a',
+    studentName: 'Bala Kumar',
+    regNo: '21BCA045',
+    course: 'BCA',
+    batch: '2021-2024',
+    semester: '5',
+    examTitle: 'DCBCS503 Theory End-term Examination',
+    examType: 'regular',
+    amount: 2450,
+    breakdown: [
+      { label: 'Exam fee', amount: 1500 },
+      { label: 'Marks card fee', amount: 450 },
+      { label: 'Processing fee', amount: 500 },
+    ],
+    bankDetails: {
+      bankName: 'State Bank of India', accountNo: '123456789012', ifsc: 'SBIN0040093',
+      branch: 'BCU Campus Branch, Bengaluru', accountName: 'BCU - Examination Fees',
+    },
+    collegeCode: 'COLLEGE', collegeName: 'Vriddhi College', university: 'BCU',
+    status: 'generated',
+    generatedAt: '2026-09-01T06:00:00.000Z',
+    dueDate: '2026-09-30',
+    createdAt: '2026-09-01T06:00:00.000Z',
+  }),
+};
+
+globalThis.__RC_FIRESTORE_DOCS = [challanRow];
+await section('student challans', '/src/modules/student/pages/StudentChallans.tsx', {}, async (t, view) => {
+  check('challans: mounts without throwing', true);
+  check('challans: shows the challan the college issued for this student',
+    t.includes('CH-202609-BCA-000123') && t.includes('DCBCS503 Theory End-term Examination'), t);
+  check('challans: shows the amount and the due date', t.includes('\u20B92,450') && /Due 30 Sep/.test(t), t);
+  check('challans: labels the row with its bank-payment status', /To pay/.test(t), t);
+  check('challans: warns that a payable challan must be stamped at the bank',
+    /Print this challan and pay at State Bank of India/.test(t), t);
+  const printButton = view.byText('View & print', 'button');
+  check('challans: offers one primary action per challan', !!printButton, t);
+  if (printButton) {
+    await view.click(printButton);
+    const sheet = view.text();
+    check('challans: the challan sheet carries all three bank copies',
+      /BANK COPY/.test(sheet) && /UNIVERSITY COPY/.test(sheet) && /STUDENT COPY/.test(sheet), sheet.slice(0, 200));
+    check('challans: the sheet writes the amount in words for the bank teller',
+      /Two Thousand Four Hundred Fifty Rupees Only/.test(sheet), sheet.slice(0, 200));
+    check('challans: the sheet names the university account to credit',
+      /SBIN0040093/.test(sheet) && /123456789012/.test(sheet), sheet.slice(0, 300));
+  }
+  check('challans: no toast spam on a plain render', challanToasts.length === 0, challanToasts.join('|'));
+});
+globalThis.__RC_FIRESTORE_DOCS = [];
+
+// Empty ledger (nothing issued yet) must read as "nothing issued", never as a
+// silent blank panel.
+await section('student challans (empty)', '/src/modules/student/pages/StudentChallans.tsx', {}, (t) => {
+  check('challans (empty): explains why the list is empty', /No challans yet/.test(t) && /as soon as the college generates/.test(t), t);
+});
+
+
+// ── Phone shell (installed PWA) ────────────────────────────────────────────
+// The bottom bar and the "More" sheet are what replaced the desktop drawer on
+// a phone, so they have to render on their own — and the two of them together
+// have to cover every destination the sidebar used to list.
+await section('student bottom nav', '/src/modules/student/components/StudentBottomNav.tsx', { onOpenMore: () => {} }, (t, view) => {
+  const links = view.all('nav a');
+  check('bottom nav: mounts without throwing', true);
+  check('bottom nav: offers the four primary destinations', links.length === 4, `${links.length} links`);
+  check('bottom nav: the destinations are the student routes',
+    view.hrefs('nav a').join(' ') === '/student/dashboard /student/assessments /student/fees /student/notifications',
+    view.hrefs('nav a').join(' '));
+  check('bottom nav: everything else is reachable through More', !!view.byText('More', 'button'), t);
+});
+
+await section('student more sheet', '/src/modules/student/components/StudentMoreSheet.tsx', { open: true, onClose: () => {}, onSignOut: () => {} }, (t, view) => {
+  check('more sheet: mounts without throwing', true);
+  check('more sheet: groups the destinations', /Academics/.test(t) && /Fees & exams/.test(t) && /Account/.test(t), t);
+  // Label text is asserted through the routes: without a LanguageProvider the
+  // translated entries fall back to their keys, but every tile must still point
+  // at the page the sidebar used to list.
+  const sheetHrefs = view.hrefs('a');
+  check('more sheet: keeps the pages a phone has no tab for',
+    ['/student/attendance', '/student/assignments', '/student/grades', '/student/timetable',
+      '/student/challans', '/student/hall-tickets', '/student/materials', '/student/library']
+      .every((path) => sheetHrefs.includes(path)),
+    sheetHrefs.join(' '));
+  check('more sheet: signs the student out from the same place', /Sign out|Sign Out|signOut/i.test(t), t);
+  check('more sheet: does not duplicate what the tab bar already owns',
+    !/\bDashboard\b/.test(t) && !/\bNotifications\b/.test(t), t);
+});
+
+
+// ── Exam clipboard lockdown ────────────────────────────────────────────────
+// The mobile PWA regression this guards: a `paste` listener alone is not a
+// clipboard block on a phone. Android keyboards commit their clipboard chip as
+// an ordinary `insertText`, and drag-and-drop never fires `paste` at all — while
+// Indic students still have to be able to type through an IME. So the rules
+// below pin all four paths in one go.
+const { applyExamLockdown } = await server.ssrLoadModule('/src/shared/utils/examLockdown.ts');
+{
+  const host = document.createElement('div');
+  document.body.appendChild(host);
+  const field = document.createElement('textarea');
+  host.appendChild(field);
+
+  const blocked = [];
+  const dispose = applyExamLockdown({
+    root: host,
+    onBlock: (reason, details) => blocked.push({ reason, details }),
+  });
+
+  const fire = (type) => {
+    const event = new window.Event(type, { bubbles: true, cancelable: true });
+    field.dispatchEvent(event);
+    return event;
+  };
+  const fireInput = (inputType, data) => {
+    const event = new window.Event('beforeinput', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'inputType', { value: inputType });
+    Object.defineProperty(event, 'data', { value: data });
+    field.dispatchEvent(event);
+    return event;
+  };
+  const fireKey = (key, modifiers = {}) => {
+    const event = new window.Event('keydown', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'key', { value: key });
+    for (const [name, value] of Object.entries(modifiers)) Object.defineProperty(event, name, { value });
+    field.dispatchEvent(event);
+    return event;
+  };
+
+  check('lockdown: a paste into the answer box is cancelled', fire('paste').defaultPrevented);
+  check('lockdown: a keyboard clipboard-chip burst (long insertText) is cancelled',
+    fireInput('insertText', 'The quick brown fox jumps over the lazy dog').defaultPrevented);
+  check('lockdown: a dragged-in selection is cancelled', fire('drop').defaultPrevented);
+  check('lockdown: the long-press menu is cancelled', fire('contextmenu').defaultPrevented);
+  check('lockdown: Ctrl+V and Ctrl+Shift+V are cancelled',
+    fireKey('v', { ctrlKey: true }).defaultPrevented && fireKey('v', { ctrlKey: true, shiftKey: true }).defaultPrevented);
+  check('lockdown: copying the question out is cancelled', fire('copy').defaultPrevented);
+  check('lockdown: typing one character still works',
+    !fireInput('insertText', 'a').defaultPrevented && !fireInput('insertText', 'Th').defaultPrevented);
+  check('lockdown: IME composition (Kannada transliteration) still works',
+    !fireInput('insertCompositionText', 'ಶಿಕ್ಷಣ ಇಲಾಖ').defaultPrevented);
+  check('lockdown: ordinary keys are untouched', !fireKey('Tab').defaultPrevented && !fireKey('a').defaultPrevented);
+  check('lockdown: every block is reported to the exam page for logging',
+    blocked.some((b) => b.reason === 'paste_attempt')
+      && blocked.some((b) => b.reason === 'drop_attempt')
+      && blocked.some((b) => b.reason === 'keyboard_shortcut')
+      && blocked.some((b) => b.reason === 'bulk_input'),
+    JSON.stringify(blocked.map((b) => b.reason)));
+
+  dispose();
+  check('lockdown: teardown hands the clipboard back to the student', !fire('paste').defaultPrevented);
+  field.remove();
+  host.remove();
+}
+
+// The answer field itself also refuses clipboard events, so a surface that
+// renders QuestionRenderer outside the exam page is still covered.
+await section('question renderer (clipboard locked)', '/src/modules/student/components/QuestionRenderer.tsx', {
+  question: { id: 'q1', type: 'short_answer', text: 'Explain normalisation.', marks: 5, difficulty: 'medium', options: [] },
+  answer: {},
+  onAnswer: () => {},
+  isFlagged: false,
+  onToggleFlag: () => {},
+  questionNumber: 1,
+  lockClipboard: true,
+}, (t, view) => {
+  const field = view.el('textarea');
+  check('question: the short-answer field renders', !!field, t);
+  if (field) {
+    const paste = new window.Event('paste', { bubbles: true, cancelable: true });
+    field.dispatchEvent(paste);
+    check('question: the answer field cancels a paste before React sees it', paste.defaultPrevented);
+  }
+});
+
+
 await server.close();
 
 const failed = checks.filter((c) => !c.ok);

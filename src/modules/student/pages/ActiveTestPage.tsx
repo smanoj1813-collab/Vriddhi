@@ -19,7 +19,21 @@ import {
 } from '../api/testApi';
 import QuestionRenderer from '../components/QuestionRenderer';
 import { MathRenderer } from '../components/MathRenderer';
+import { applyExamLockdown, type ExamBlockReason } from '../../../shared/utils/examLockdown';
 import type { ActiveTest, BasicProctorEvent, PaperQuestion, StudentAnswer } from '../types/assessment';
+
+// What the student is told when the clipboard lockdown stops an action. The
+// action itself is blocked whether or not the faculty enabled proctoring —
+// only the reporting of it depends on that flag.
+const BLOCK_MESSAGES: Record<ExamBlockReason, string> = {
+  paste_attempt: 'Pasting is disabled during this test. Type your own answer.',
+  copy_attempt: 'Copying is disabled during this test.',
+  cut_attempt: 'Cutting is disabled during this test.',
+  context_menu: 'The long-press menu is disabled during this test.',
+  drop_attempt: 'Dropping text into the answer box is disabled during this test.',
+  bulk_input: 'That text arrived too fast to be typed — please type your own answer.',
+  keyboard_shortcut: 'This shortcut is disabled during the test.',
+};
 
 // Deterministic per-student presentation: the same student always sees the
 // same shuffled order (so a refresh/resume is stable), while two students see
@@ -134,6 +148,9 @@ const ActiveTestPage: React.FC = () => {
 
   // refs mirror state for intervals/closures
   const submitLock = useRef(false);
+  // Root of the exam surface: the clipboard lockdown scopes its selection and
+  // callout suppression to this subtree (falling back to <body> if unset).
+  const examRootRef = useRef<HTMLDivElement>(null);
   const answersRef = useRef<Record<string, Partial<StudentAnswer>>>({});
   const proctorEventsRef = useRef<BasicProctorEvent[]>([]);
   const timeRemainingRef = useRef(0);
@@ -457,54 +474,29 @@ const ActiveTestPage: React.FC = () => {
         warn('You exited fullscreen. Re-enter to continue.');
       }
     };
-    const onCopy = (e: Event) => {
-      if (!proctored) return;
-      recordProctorEvent('copy_attempt');
-      e.preventDefault();
-      warn('Copying is disabled during this test.');
-    };
-    const onPaste = (e: Event) => {
-      if (!proctored) return;
-      recordProctorEvent('paste_attempt');
-      e.preventDefault();
-      warn('Pasting is disabled during this test.');
-    };
-    const onContextMenu = (e: Event) => {
-      if (!proctored) return;
-      recordProctorEvent('context_menu');
-      e.preventDefault();
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!proctored) return;
-      const key = e.key.toLowerCase();
-      const blocked =
-        (e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a', 'p', 's'].includes(key) ||
-        key === 'printscreen' ||
-        key === 'f12' ||
-        (e.altKey && key === 'tab');
-      if (blocked) {
-        recordProctorEvent('keyboard_shortcut', { key: e.key });
-        e.preventDefault();
-        warn('This shortcut is disabled during the test.');
-      }
-    };
+    // Clipboard lockdown: enforced for EVERY test, proctored or not. The old
+    // gate on `enableProctoring` left unproctored papers wide open to pasted
+    // answers, and bubble-phase `paste` listeners never covered the mobile
+    // paths (long-press Paste, keyboard clipboard chip, drag-and-drop).
+    // See src/shared/utils/examLockdown.ts.
+    const disposeLockdown = applyExamLockdown({
+      root: examRootRef.current,
+      onBlock: (reason, details) => {
+        recordProctorEvent(reason, details);
+        warn(BLOCK_MESSAGES[reason] ?? 'That action is disabled during this test.');
+      },
+    });
 
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     document.addEventListener('fullscreenchange', onFullscreenChange);
-    document.addEventListener('copy', onCopy);
-    document.addEventListener('paste', onPaste);
-    document.addEventListener('contextmenu', onContextMenu);
-    document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('fullscreenchange', onFullscreenChange);
-      document.removeEventListener('copy', onCopy);
-      document.removeEventListener('paste', onPaste);
-      document.removeEventListener('contextmenu', onContextMenu);
-      document.removeEventListener('keydown', onKeyDown);
+      disposeLockdown();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTest, submitted, recordProctorEvent, flushNow, doSubmit]);
 
   /* ─── helpers ─── */
@@ -719,10 +711,15 @@ const ActiveTestPage: React.FC = () => {
             <MathRenderer text={activeTest.title} inline /> · {questions.length} questions ·{' '}
             {formatTime(timeRemaining)} remaining
           </Typography>
-          {activeTest.enableProctoring && (
+          {activeTest.enableProctoring ? (
             <Alert severity="warning" sx={{ textAlign: 'left', mb: 2 }} icon={<Security />}>
               Proctoring active: the test opens in fullscreen. Tab switches, clipboard use and
               shortcut keys are logged.
+            </Alert>
+          ) : (
+            <Alert severity="info" sx={{ textAlign: 'left', mb: 2 }} icon={<Security />}>
+              Copy, paste, drag-and-drop and the long-press menu are switched off while you answer.
+              Type every answer yourself — pasted text is rejected.
             </Alert>
           )}
           {timeRemaining <= 300 && (
@@ -737,7 +734,7 @@ const ActiveTestPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+    <Box ref={examRootRef} sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Paper elevation={2} sx={{ position: 'sticky', top: 0, zIndex: 50, px: { xs: 1.5, md: 4 }, py: { xs: 1, md: 2 }, pt: { xs: 'calc(8px + env(safe-area-inset-top))', md: 2 }, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: { xs: 1, md: 2 }, borderRadius: 0 }}>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '0.95rem', md: '1.25rem' } }} noWrap>{activeTest.title}</Typography>
@@ -801,6 +798,7 @@ const ActiveTestPage: React.FC = () => {
                 isFlagged={!!answers[currentQ.id]?.isFlagged}
                 onToggleFlag={() => toggleFlag(currentQ.id)}
                 questionNumber={currentQIndex + 1}
+                lockClipboard
               />
 
               {!isMobile && (

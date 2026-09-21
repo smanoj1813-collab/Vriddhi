@@ -493,6 +493,50 @@ service cloud.firestore {
         }
       }
 
+      // University exam-fee challans (Karnataka-pattern 3-copy bank slips:
+      // src/modules/admin/pages/ChallanManagement.tsx,
+      // src/modules/student/pages/StudentChallans.tsx).
+      //
+      // This block is the reason the student portal's "My Challans" screen was
+      // empty. The collection had no rule, so the catch-all at the bottom of
+      // this file denied EVERY read — the admin screen logged permission-denied
+      // into the console and the student page rendered "No challans yet" even
+      // for rows that had been generated for them.
+      //
+      // A challan is a personal financial document (the university's bank
+      // account, the student's reg no, the exact amount owed), so a student is
+      // admitted only to the rows that name them — never to the college-wide
+      // list the finance office reads. Ownership is resolved the same way the
+      // fee ledger resolves it, through `studentId` matching the caller's own
+      // student record; the client query therefore carries the `studentId`
+      // predicate, because a LIST an unbounded rule must not be attempted.
+      match /challans/{docId} {
+        allow get, list: if isSignedIn() && (isSuperadmin()
+          || (isStaff() && collegeId() == collegeId)
+          || (role() == 'student' && collegeId() == collegeId
+            && 'studentId' in resource.data && ownsStudentId(resource.data.studentId)));
+        // Generation stamps the student, the amount and a due date; the number
+        // is what a bank is asked to collect, so it may not be negative and a
+        // fresh challan always starts life as `generated`.
+        allow create: if (isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId))
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId != ''
+          && request.resource.data.amount is number
+          && request.resource.data.amount >= 0
+          && request.resource.data.status == 'generated';
+        // Verification against the bank reference is a finance-office action.
+        // A student may never move their own challan to `verified`, and nobody
+        // edits the amount or the addressee after issue — those two fields are
+        // what a stamped slip is reconciled against.
+        allow update: if (isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId))
+          && request.resource.data.studentId == resource.data.studentId
+          && request.resource.data.amount == resource.data.amount;
+        allow delete: if isSuperadmin()
+          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+      }
+
       match /faculty/{docId} {
         allow get: if isSignedIn() && (isSuperadmin() || isStaff());
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());

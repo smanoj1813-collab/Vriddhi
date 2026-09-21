@@ -368,7 +368,7 @@ function GenerateChallanModal({ onClose, onGenerate, students }: {
 }
 
 export default function ChallanManagement() {
-  const { challans, loading, filters, summary, updateFilters, refresh, createBulkChallans, verifyChallan, rejectChallan } = useChallanData()
+  const { challans, loading, error, filters, summary, updateFilters, refresh, createBulkChallans, verifyChallan, rejectChallan } = useChallanData()
   const { students } = useFeeData()
   const { showSuccess, showError } = useNotification()
   const [selected, setSelected] = useState<Challan | null>(null)
@@ -411,6 +411,12 @@ export default function ChallanManagement() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm dark:border-rose-900/60 dark:bg-rose-950/30">
+          <p className="font-bold text-rose-800 dark:text-rose-200">Challans could not be loaded</p>
+          <p className="mt-1 text-xs text-rose-700 dark:text-rose-300">{error}</p>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>

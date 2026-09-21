@@ -23,8 +23,11 @@ import { auth, db } from '@/Firebase/config'
 
 const MAX_READS = 500
 
-function getCollegeId(): string {
-  const id = localStorage.getItem('vriddhi_college_id')
+function getCollegeId(explicit?: string | null): string {
+  // Callers that already know their tenant (a student page resolving the
+  // college from its own profile) pass it in; everyone else falls back to the
+  // key AuthContext persists from the verified token claim.
+  const id = (explicit && explicit.trim()) || localStorage.getItem('vriddhi_college_id')
   if (!id) {
     throw new Error(
       'This sign-in carries no college to scope fee queries to. Sign out and back in so the token is refreshed; if it persists, ask an administrator to link this profile to a college.'
@@ -33,12 +36,12 @@ function getCollegeId(): string {
   return id
 }
 
-function collegeRef(path: string) {
-  return collection(db, 'colleges', getCollegeId(), path)
+function collegeRef(path: string, collegeId?: string | null) {
+  return collection(db, 'colleges', getCollegeId(collegeId), path)
 }
 
-function collegeDocRef(path: string) {
-  return doc(db, 'colleges', getCollegeId(), path)
+function collegeDocRef(path: string, collegeId?: string | null) {
+  return doc(db, 'colleges', getCollegeId(collegeId), path)
 }
 
 function asString(value: unknown): string {
@@ -541,7 +544,8 @@ export interface CreateChallanInput {
   remarks?: string
 }
 
-function mapChallan(id: string, raw: Record<string, unknown>): Challan {
+/** Exported so the student portal can map the same rows without re-declaring the shape. */
+export function mapChallan(id: string, raw: Record<string, unknown>): Challan {
   return {
     id,
     challanNo: String(raw.challanNo || ''),
@@ -586,17 +590,23 @@ function mapChallan(id: string, raw: Record<string, unknown>): Challan {
 }
 
 // ─── Challan Reads ─────────────────────────────────────
-export async function fetchChallans(filters?: { studentId?: string; status?: ChallanStatus; type?: ChallanType }): Promise<Challan[]> {
+export async function fetchChallans(filters?: {
+  studentId?: string
+  status?: ChallanStatus
+  type?: ChallanType
+  /** Tenant override for callers outside the admin module (student portal). */
+  collegeId?: string | null
+}): Promise<Challan[]> {
   const constraints: any[] = [limit(MAX_READS)]
   if (filters?.studentId) constraints.push(where('studentId', '==', filters.studentId))
   if (filters?.status) constraints.push(where('status', '==', filters.status))
   if (filters?.type) constraints.push(where('type', '==', filters.type))
-  const snap = await getDocs(query(collegeRef('challans'), ...constraints))
+  const snap = await getDocs(query(collegeRef('challans', filters?.collegeId), ...constraints))
   return snap.docs.map(d => mapChallan(d.id, d.data() as Record<string, unknown>)).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 }
 
-export async function fetchChallanById(id: string): Promise<Challan | null> {
-  const snap = await getDoc(collegeDocRef(`challans/${id}`))
+export async function fetchChallanById(id: string, collegeId?: string | null): Promise<Challan | null> {
+  const snap = await getDoc(collegeDocRef(`challans/${id}`, collegeId))
   if (!snap.exists()) return null
   return mapChallan(snap.id, snap.data() as Record<string, unknown>)
 }
@@ -608,6 +618,7 @@ export async function createChallan(input: CreateChallanInput): Promise<Challan>
   const breakdown = input.breakdown || [{ label: `${input.type.replace('_', ' ')} Fee`, amount: input.amount }]
   
   const docRef = await addDoc(collegeRef('challans'), {
+    collegeId,
     challanNo,
     type: input.type,
     category: input.type === 'eligibility' ? 'eligibility' : 'university_exam',

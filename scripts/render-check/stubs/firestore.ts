@@ -10,7 +10,16 @@ export async function getDoc(ref: any) {
   calls.push('getDoc:' + (ref?.__path ?? '?'));
   return { exists: () => false, data: () => undefined, id: '' };
 }
-export async function getDocs(_q: any) { return { empty: true, size: 0, docs: [], forEach: () => {} }; }
+export async function getDocs(_q: any) {
+  // A render check can stand in for real rows by setting
+  // globalThis.__RC_FIRESTORE_DOCS to [{ id, data: () => ({...}) }]. Unset,
+  // the stub behaves exactly as before: an empty collection.
+  const seeded = (globalThis as any).__RC_FIRESTORE_DOCS;
+  if (Array.isArray(seeded) && seeded.length > 0) {
+    return { empty: false, size: seeded.length, docs: seeded, forEach: (cb: any) => seeded.forEach(cb) };
+  }
+  return { empty: true, size: 0, docs: [], forEach: () => {} };
+}
 export async function setDoc(..._a: any[]) { calls.push('setDoc'); }
 // Write/listen surfaces reached by pages further down the module graph
 // (curriculum, superadmin, layout). They are stubs like everything else here:

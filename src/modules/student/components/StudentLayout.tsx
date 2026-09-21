@@ -1,7 +1,12 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
 import StudentSidebar from './StudentSidebar';
+import StudentTopBar from './StudentTopBar';
+import StudentBottomNav from './StudentBottomNav';
+import StudentMoreSheet from './StudentMoreSheet';
+import DesktopViewNotice from '../../../shared/components/DesktopViewNotice';
+import { useStudentData } from '../hooks/useStudentData';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import FloatingAIChatWidget from '../../../shared/components/FloatingAIChatWidget';
@@ -25,8 +30,10 @@ function LoadingContentLabel() {
 export default function StudentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, logout, loading } = useAuth();
   const { t } = useTranslation();
+  const { profile, unreadNotifications } = useStudentData();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // While a student is actively taking a test, the app chrome (sidebar, top
   // padding, floating chat) is removed so there is nothing to navigate away
@@ -38,6 +45,18 @@ export default function StudentLayout() {
       navigate('/student/login', { replace: true });
     }
   }, [loading, user, navigate]);
+
+  // Any route change closes the sheet — a student tapping a tile should land
+  // on the page, not on a menu that is still covering it.
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  const handleSignOut = useCallback(async () => {
+    setMoreOpen(false);
+    await logout();
+    navigate('/student/login', { replace: true });
+  }, [logout, navigate]);
 
   if (loading) {
     return (
@@ -76,6 +95,8 @@ export default function StudentLayout() {
 
   if (inActiveTest) {
     // Full-bleed test surface: no sidebar, no app padding, no floating widget.
+    // The clipboard lockdown lives on the test page itself, so nothing here is
+    // needed for exam integrity.
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100">
         <Suspense fallback={<PageLoader />}>
@@ -87,14 +108,29 @@ export default function StudentLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 transition-colors duration-200">
-      <StudentSidebar />
-      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-12 pt-[calc(4rem+env(safe-area-inset-top))] md:pt-0" style={{ paddingBottom: 'max(3rem, env(safe-area-inset-bottom))' }}>
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <StudentTopBar unreadNotifications={unreadNotifications} />
+      <StudentSidebar onSignOut={() => void handleSignOut()} />
+      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0 pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-12">
+        <div className="px-3 py-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
         </div>
       </main>
+      <StudentBottomNav
+        onOpenMore={() => setMoreOpen(true)}
+        moreOpen={moreOpen}
+        unreadNotifications={unreadNotifications}
+      />
+      <StudentMoreSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        onSignOut={() => void handleSignOut()}
+        studentName={profile?.name}
+        studentMeta={[profile?.regNo, profile?.course, profile?.batch].filter(Boolean).join(' • ')}
+        unreadNotifications={unreadNotifications}
+      />
+      <DesktopViewNotice />
       <FloatingAIChatWidget />
     </div>
   );

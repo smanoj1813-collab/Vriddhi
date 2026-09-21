@@ -16,6 +16,10 @@ import {
 export function useChallanData(studentId?: string) {
   const [loading, setLoading] = useState(true)
   const [challans, setChallans] = useState<Challan[]>([])
+  // An empty challan table used to be indistinguishable from a denied read:
+  // every failure went to console.error, so the finance desk saw "no challans"
+  // and students saw the same on their own page. Keep the reason attachable.
+  const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<{ status: ChallanStatus | 'all'; type: ChallanType | 'all'; search: string }>({
     status: 'all',
     type: 'all',
@@ -38,8 +42,13 @@ export function useChallanData(studentId?: string) {
         )
       }
       setChallans(filtered)
+      setError(null)
     } catch (e) {
       console.error('[useChallanData] Failed:', e)
+      const message = e instanceof Error ? e.message : String(e)
+      setError(/permission|insufficient/i.test(message)
+        ? 'Firestore refused the read (permission-denied). The colleges/{collegeId}/challans rules must be deployed for this collection to be visible.'
+        : message)
     } finally {
       setLoading(false)
     }
@@ -128,6 +137,7 @@ export function useChallanData(studentId?: string) {
   return {
     loading,
     challans,
+    error,
     filters,
     summary,
     updateFilters,

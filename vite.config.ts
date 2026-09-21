@@ -18,14 +18,44 @@ export default defineConfig(({ mode }) => {
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        // `minimal-ui` lets a phone that cannot honour standalone (older
+        // iOS Add-to-Home-Screen, some WebView launchers) still open the app
+        // chrome-free-ish instead of falling back to a full browser tab.
+        display_override: ['standalone', 'minimal-ui', 'browser'],
+        // Portrait keeps an exam layout stable — a mid-test rotation would
+        // otherwise reflow the question card and the thumb navigation bar.
         orientation: 'portrait',
         background_color: '#ffffff',
         theme_color: '#0d9488',
         lang: 'en',
         categories: ['education', 'productivity'],
+        // Long-press the app icon → jump straight to what a student opens most.
+        shortcuts: [
+          {
+            name: 'My Tests',
+            short_name: 'Tests',
+            description: 'Scheduled and ongoing assessments',
+            url: '/student/assessments',
+            icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Fees & Challans',
+            short_name: 'Fees',
+            description: 'Fee ledger and university exam fee challans',
+            url: '/student/challans',
+            icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Attendance',
+            short_name: 'Attendance',
+            description: 'Your attendance record',
+            url: '/student/attendance',
+            icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },

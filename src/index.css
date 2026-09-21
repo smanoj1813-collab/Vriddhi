@@ -221,3 +221,109 @@
   box-shadow: var(--vriddhi-shadow-md) !important;
   color: var(--vriddhi-text) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Mobile / installed-PWA layer
+   The student app is used mostly from the installed icon on a phone, so the
+   rules below are what make it behave like one: no rubber-band zoom jumps, no
+   300 ms tap delay, no phantom horizontal scroll, notches respected, and
+   thumb-sized touch targets — plus the print stylesheet that lets a student
+   hand a bank a real challan rather than a screenshot.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-top { padding-top: env(safe-area-inset-top); }
+  .pb-float { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+  /* Filter rows that scroll sideways on a phone must not show a scrollbar. */
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .tap-target { min-height: 44px; min-width: 44px; }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(24px); opacity: 0.5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+html {
+  /* Phones otherwise re-flow font sizes on orientation change and on focus,
+     which is what makes a fixed-height layout jump around mid-form. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (max-width: 767px) {
+  /* Long university names, challan numbers and reg nos used to push the page
+     wider than the screen, which reads as "this is a desktop site". */
+  h1, h2, h3, p, span, td, th, button, label {
+    overflow-wrap: anywhere;
+  }
+  /* Keep the safe-area notch from clipping the bottom bar on a gesture phone. */
+  body {
+    overscroll-behavior-x: none;
+  }
+  /* Momentum scrolling inside horizontally panning strips. */
+  .overflow-x-auto, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Hide scrollbars on touch devices: the OS draws its own overlay indicator. */
+@media (pointer: coarse) {
+  * { scrollbar-width: none; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  button, a, input, select, textarea, [role="button"] {
+    /* Removes the 300 ms double-tap-zoom delay on every tap. */
+    touch-action: manipulation;
+  }
+}
+
+/* Printing a document (e.g. a bank challan) from the phone shows the sheet
+   only — not the sidebar, bottom bar or the modal chrome around it. */
+@media print {
+  #root { visibility: hidden; }
+  .print-sheet, .print-sheet * { visibility: visible; }
+  .print-sheet {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  .print-hide { display: none !important; }
+  @page { margin: 12mm; }
+}
+
+/* Data tables are the last desktop-shaped thing on most screens: they carry
+   px-5 padding and a nowrap header, so a six-column table is 900px wide on a
+   360px phone. On phones the rhythm tightens so the common ones fit — the
+   wrapper keeps `overflow-x-auto`, so a genuinely wide table still scrolls
+   instead of pushing the whole page sideways. */
+@media (max-width: 767px) {
+  .overflow-x-auto table,
+  .table-container table {
+    font-size: 0.75rem;
+  }
+  .overflow-x-auto table th,
+  .overflow-x-auto table td,
+  .table-container table th,
+  .table-container table td {
+    padding: 0.5rem 0.6rem !important;
+    white-space: normal;
+  }
+  .overflow-x-auto table td p,
+  .table-container table td p {
+    font-size: inherit;
+  }
+}

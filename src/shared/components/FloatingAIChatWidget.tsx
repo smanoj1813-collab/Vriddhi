@@ -159,7 +159,7 @@ Ask me anything in plain language — a concept you want explained, your attenda
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 font-sans sm:inset-x-auto sm:right-6 sm:bottom-6">
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
@@ -178,7 +178,7 @@ Ask me anything in plain language — a concept you want explained, your attenda
 
       {/* Floating Chat Window */}
       {isOpen && (
-        <div className="w-[360px] sm:w-[420px] h-[580px] max-h-[85vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
+        <div className="w-full sm:w-[420px] h-[70vh] sm:h-[580px] max-h-[85vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-700 text-white shadow-md">
             <div className="flex items-center gap-2.5">
