@@ -23,6 +23,7 @@ const StudentAssignments = lazy(() => import('./pages/StudentAssignments'));
 const StudentFacultyConnectPage = lazy(() => import('./pages/StudentFacultyConnectPage'));
 const StudentJourneyPage = lazy(() => import('./pages/StudentJourneyPage'));
 const StudentCurriculumPage = lazy(() => import('./pages/StudentCurriculumPage'));
+const StudentHallTickets = lazy(() => import('./pages/StudentHallTickets'));
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -64,6 +65,7 @@ export const studentRoutes: RouteObject[] = [
       { path: 'timetable', element: <StudentTimetable /> },
       { path: 'fees', element: <StudentFeePortal /> },
       { path: 'fee-portal', element: <StudentFeePortal /> },
+      { path: 'hall-tickets', element: <StudentHallTickets /> },
       { path: 'library', element: <StudentLibrary /> },
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },

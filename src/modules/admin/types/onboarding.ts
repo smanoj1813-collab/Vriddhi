@@ -19,6 +19,15 @@ export interface StudentOnboardingData {
   semester: string;
   division: string;
   mentorId: string;
+  // UUCMS Integration - Karnataka Govt
+  uucmsCandidateId: string;
+  uucmsUSN: string;
+  uucmsStatus: string;
+  puRegistrationNo: string;
+  category: string;
+  aadhaarNo: string;
+  scheme: string;
+  universityId: string;
 }
 
 export interface FacultyOnboardingData {

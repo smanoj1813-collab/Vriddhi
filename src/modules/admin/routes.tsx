@@ -35,6 +35,9 @@ const _LegacyReviewQueuePage = lazy(() => import('./pages/ReviewQueuePage'));
 const _LegacyAdminUniversalBank = lazy(() => import('./pages/AdminUniversalBank'));
 const Settings = lazy(() => import('./pages/Settings'));
 const View360 = lazy(() => import('./pages/View360'));
+const ExamManagement = lazy(() => import('./pages/ExamManagement'));
+const UUCMSIntegration = lazy(() => import('./pages/UUCMSIntegration'));
+const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard'));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Lazy loading wrappers
@@ -129,6 +132,10 @@ export const adminRoutes: RouteObject[] = [
       { path: 'admissions', element: <LazyPage><AdmissionCenter /></LazyPage> },
       { path: 'papers/builder', element: <LazyPage><PaperBuilder /></LazyPage> },
       { path: 'papers/generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
+      // Karnataka University Features - Competitive with Uniclare
+      { path: 'exam-management', element: <LazyPage><ExamManagement /></LazyPage> },
+      { path: 'uucms-integration', element: <LazyPage><UUCMSIntegration /></LazyPage> },
+      { path: 'bcu-compliance', element: <LazyPage><BCUComplianceDashboard /></LazyPage> },
     ],
   },
 ];

@@ -60,7 +60,7 @@ function numeric(value: unknown): number {
 // ─── Types ──────────────────────────────────────────────
 
 export type FeeStatus = 'paid' | 'pending' | 'overdue' | 'partial' | 'waived'
-export type FeeCategory = 'tuition' | 'exam' | 'library' | 'lab' | 'hostel' | 'transport' | 'misc'
+export type FeeCategory = 'tuition' | 'exam' | 'university_exam' | 'eligibility' | 'library' | 'lab' | 'hostel' | 'transport' | 'misc'
 export type PaymentMode = 'cash' | 'card' | 'upi' | 'netbanking' | 'cheque' | 'dd'
 
 export interface FeeStructure {

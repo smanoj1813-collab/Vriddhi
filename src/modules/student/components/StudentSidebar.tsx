@@ -45,6 +45,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
   { id: 'attendance', label: 'Attendance', path: '/student/attendance', icon: Calendar },
+  { id: 'halltickets', label: 'Hall Tickets', path: '/student/hall-tickets', icon: Download },
   { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen },
   { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText },
   { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp },

@@ -336,6 +336,17 @@ const principalNav: SidebarEntry[] = [
 
   {
     kind: "group",
+    label: "University Exams",
+    icon: <AccountBalance fontSize="small" />,
+    children: [
+      { label: "Exam Management", path: "/admin/exam-management", icon: <Description fontSize="small" /> },
+      { label: "UUCMS Integration", path: "/admin/uucms-integration", icon: <Business fontSize="small" /> },
+      { label: "BCU Compliance", path: "/admin/bcu-compliance", icon: <CheckCircle fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
     label: "Assessments",
     icon: <Assignment fontSize="small" />,
     children: [
