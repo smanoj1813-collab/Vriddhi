@@ -17,6 +17,7 @@ import { AutoAwesome, RestartAlt } from '@mui/icons-material';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
+import { FIVE_MARKS_PRESETS, TEN_MARKS_PRESETS, autoGradeAnswer, FIVE_MARKS_RUBRICS, TEN_MARKS_RUBRICS } from '@/shared/utils/autoGrading';
 
 /**
  * Manual grading queue for test submissions.
@@ -86,6 +87,23 @@ interface SuggestionResponse {
 
 const halfOf = (marks: number): number => Math.round((marks / 2) * 4) / 4;
 const round2 = (value: number): number => Math.round(value * 100) / 100;
+
+const getQuickPresets = (maxMarks: number) => {
+  if (maxMarks === 5) return FIVE_MARKS_PRESETS;
+  if (maxMarks === 10) return TEN_MARKS_PRESETS;
+  // Default for other marks: 0, half, full
+  return [
+    { label: '0 - No attempt', marks: 0, color: 'rose' },
+    { label: `${halfOf(maxMarks)} - Half`, marks: halfOf(maxMarks), color: 'amber' },
+    { label: `${maxMarks} - Full`, marks: maxMarks, color: 'emerald' },
+  ];
+};
+
+const getRubricForMarks = (maxMarks: number) => {
+  if (maxMarks === 5) return FIVE_MARKS_RUBRICS[0];
+  if (maxMarks === 10) return TEN_MARKS_RUBRICS[0];
+  return null;
+};
 
 export default function AssessmentGradingQueue({ onCountChange }: { onCountChange?: (count: number) => void }) {
   const { user } = useAuth();
@@ -290,14 +308,38 @@ export default function AssessmentGradingQueue({ onCountChange }: { onCountChang
                           {response.answer || 'Not answered'}
                         </Typography>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mt: 1.25 }}>
-                          <Button size="small" variant={questionMarks[response.questionId] === 0 ? 'contained' : 'outlined'} onClick={() => setMark(0)}>
-                            0
-                          </Button>
-                          <Button size="small" variant={questionMarks[response.questionId] === halfOf(response.marks) ? 'contained' : 'outlined'} onClick={() => setMark(halfOf(response.marks))}>
-                            ½
-                          </Button>
-                          <Button size="small" variant={questionMarks[response.questionId] === response.marks ? 'contained' : 'outlined'} onClick={() => setMark(response.marks)}>
-                            Full
+                          {/* 5 Marks & 10 Marks Quick Presets - One Click Grading */}
+                          {getQuickPresets(response.marks).map((preset) => (
+                            <Button
+                              key={preset.marks}
+                              size="small"
+                              variant={questionMarks[response.questionId] === preset.marks ? 'contained' : 'outlined'}
+                              color={
+                                preset.color === 'emerald' ? 'success' :
+                                preset.color === 'rose' ? 'error' :
+                                preset.color === 'amber' ? 'warning' : 'primary'
+                              }
+                              onClick={() => setMark(preset.marks)}
+                              sx={{ minWidth: 0, px: 1.5 }}
+                            >
+                              {response.marks === 5 || response.marks === 10 ? `${preset.marks}` : preset.label.includes('No attempt') ? '0' : preset.label.includes('Full') ? 'Full' : '½'}
+                            </Button>
+                          ))}
+                          {/* Auto-grade button for this question */}
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={<AutoAwesome fontSize="small" />}
+                            onClick={() => {
+                              const rubric = getRubricForMarks(response.marks);
+                              if (rubric) {
+                                const autoResult = autoGradeAnswer(response.answer, response.marks as 5 | 10, rubric);
+                                setMark(autoResult.suggestedMarks);
+                              }
+                            }}
+                          >
+                            Auto
                           </Button>
                           <TextField
                             size="small"

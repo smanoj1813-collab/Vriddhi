@@ -283,6 +283,7 @@ const facultyNav: SidebarEntry[] = [
       { label: "Question Bank", path: "/faculty/question-bank", icon: <QuestionAnswer fontSize="small" /> },
       { label: "Universal Bank", path: "/faculty/universal-bank", icon: <QuestionAnswer fontSize="small" /> },
       { label: "Assessment Schedule", path: "/faculty/assessments", icon: <Assignment fontSize="small" /> },
+      { label: "Auto-Grading 5M/10M", path: "/faculty/auto-grading", icon: <Assessment fontSize="small" /> },
     ],
   },
 
@@ -342,6 +343,7 @@ const principalNav: SidebarEntry[] = [
       { label: "Exam Management", path: "/admin/exam-management", icon: <Description fontSize="small" /> },
       { label: "UUCMS Integration", path: "/admin/uucms-integration", icon: <Business fontSize="small" /> },
       { label: "BCU Compliance", path: "/admin/bcu-compliance", icon: <CheckCircle fontSize="small" /> },
+      { label: "Result Importer", path: "/admin/result-importer", icon: <Assessment fontSize="small" /> },
     ],
   },
 

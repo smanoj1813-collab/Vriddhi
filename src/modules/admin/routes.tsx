@@ -38,6 +38,7 @@ const View360 = lazy(() => import('./pages/View360'));
 const ExamManagement = lazy(() => import('./pages/ExamManagement'));
 const UUCMSIntegration = lazy(() => import('./pages/UUCMSIntegration'));
 const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard'));
+const ResultImporter = lazy(() => import('./pages/ResultImporter'));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Lazy loading wrappers
@@ -136,6 +137,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'exam-management', element: <LazyPage><ExamManagement /></LazyPage> },
       { path: 'uucms-integration', element: <LazyPage><UUCMSIntegration /></LazyPage> },
       { path: 'bcu-compliance', element: <LazyPage><BCUComplianceDashboard /></LazyPage> },
+      { path: 'result-importer', element: <LazyPage><ResultImporter /></LazyPage> },
     ],
   },
 ];
