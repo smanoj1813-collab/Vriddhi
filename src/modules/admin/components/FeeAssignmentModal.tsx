@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Calendar, Check, Loader2, X } from 'lucide-react'
 import type { CreateFeePaymentInput, FeeCategory, FeeStudent, FeeStructure } from '../api/feeApi'
 
-const CATEGORIES: FeeCategory[] = ['tuition', 'exam', 'library', 'lab', 'hostel', 'transport', 'misc']
+const CATEGORIES: FeeCategory[] = ['tuition', 'exam', 'university_exam', 'eligibility', 'library', 'lab', 'hostel', 'transport', 'misc']
 
 export default function FeeAssignmentModal({
   students,

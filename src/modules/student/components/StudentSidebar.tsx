@@ -8,6 +8,7 @@ import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 import type { TranslationKey } from '../../../shared/i18n';
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install';
 import {
+  Receipt,
   LayoutDashboard,
   Calendar,
   BookOpen,
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library },
   { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock },
   { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard },
+  { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt },
   { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap },
   { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays },
   { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell },

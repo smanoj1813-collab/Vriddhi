@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BookOpen, Check, Loader2, X } from 'lucide-react'
 import type { FeeCategory, FeeStructure } from '../api/feeApi'
 
-const CATEGORIES: FeeCategory[] = ['tuition', 'exam', 'library', 'lab', 'hostel', 'transport', 'misc']
+const CATEGORIES: FeeCategory[] = ['tuition', 'exam', 'university_exam', 'eligibility', 'library', 'lab', 'hostel', 'transport', 'misc']
 const EMPTY: Omit<FeeStructure, 'id'> = {
   name: '', category: 'tuition', amount: 0, course: '', batch: '', dueDate: new Date().toISOString().slice(0, 10),
   academicYear: new Date().getFullYear().toString(), semester: '', description: '', lateFeePerDay: 0,

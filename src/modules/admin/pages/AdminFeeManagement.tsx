@@ -27,6 +27,8 @@ const STATUS_CONFIG: Record<FeeStatus, { label: string; color: string; bg: strin
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   tuition: GraduationCap,
   exam: BookOpen,
+  university_exam: BookOpen,
+  eligibility: GraduationCap,
   library: BookOpen,
   lab: Activity,
   hostel: Users,
@@ -825,6 +827,8 @@ export default function AdminFeeManagement() {
                   <option value="all">All Categories</option>
                   <option value="tuition">Tuition</option>
                   <option value="exam">Exam</option>
+                  <option value="university_exam">University Exam (BCU/BNU)</option>
+                  <option value="eligibility">Eligibility (UUCMS)</option>
                   <option value="library">Library</option>
                   <option value="lab">Lab</option>
                   <option value="hostel">Hostel</option>

@@ -361,7 +361,15 @@ const principalNav: SidebarEntry[] = [
     ],
   },
 
-  { kind: "link", label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+  {
+    kind: "group",
+    label: "Finance",
+    icon: <AttachMoney fontSize="small" />,
+    children: [
+      { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
+    ],
+  },
 
   {
     kind: "group",
