@@ -23,7 +23,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { ref, uploadBytes } from 'firebase/storage'
+import { getFile, ref, uploadBytes } from 'firebase/storage'
 import {
   get as getDatabaseValue,
   ref as databaseRef,
@@ -1132,6 +1132,78 @@ describe('paper authoring storage', () => {
       ref(storage, `paper-files/${COLLEGE_A}/other-faculty/paper-new/paper_exam.pdf`),
       contents,
       { contentType: 'application/pdf' }
+    ))
+  })
+})
+
+describe('teaching materials storage', () => {
+  it('allows staff uploads only in their own tenant', async () => {
+    const contents = new Uint8Array([37, 80, 68, 70])
+    await assertSucceeds(uploadBytes(
+      ref(facultyContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000000_notes.pdf`),
+      contents,
+      { contentType: 'application/pdf' }
+    ))
+    // Other college's tenant — the cross-tenant boundary.
+    await assertFails(uploadBytes(
+      ref(facultyBContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000000_notes.pdf`),
+      contents,
+      { contentType: 'application/pdf' }
+    ))
+    // facultyBContext is tenant COLLEGE_B, so writing into B must succeed.
+    await assertSucceeds(uploadBytes(
+      ref(facultyBContext().storage(), `colleges/${COLLEGE_B}/materials/1700000000001_notes.pdf`),
+      contents,
+      { contentType: 'application/pdf' }
+    ))
+  })
+
+  it('lets same-college students read but never write', async () => {
+    const contents = new Uint8Array([37, 80, 68, 70])
+    await assertSucceeds(uploadBytes(
+      ref(facultyContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000002_handout.pdf`),
+      contents,
+      { contentType: 'application/pdf' }
+    ))
+    await assertSucceeds(getFile(
+      ref(studentContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000002_handout.pdf`)
+    ))
+    // A student of the OTHER college cannot read A's materials.
+    const otherCollegeStudent = testEnv.authenticatedContext('student-b', {
+      role: 'student',
+      collegeId: COLLEGE_B,
+    })
+    await assertFails(getFile(
+      ref(otherCollegeStudent.storage(), `colleges/${COLLEGE_A}/materials/1700000000002_handout.pdf`)
+    ))
+    await assertFails(uploadBytes(
+      ref(studentContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000003_x.pdf`),
+      contents,
+      { contentType: 'application/pdf' }
+    ))
+  })
+
+  it('lets a superadmin read any tenant and rejects unsupported types and oversize files', async () => {
+    const contents = new Uint8Array([37, 80, 68, 70])
+    await assertSucceeds(uploadBytes(
+      ref(facultyContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000004_video.mp4`),
+      contents,
+      { contentType: 'video/mp4' }
+    ))
+    await assertSucceeds(getFile(
+      ref(superadminContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000004_video.mp4`)
+    ))
+    // HTML is not a teaching material type.
+    await assertFails(uploadBytes(
+      ref(facultyContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000005_page.html`),
+      new TextEncoder().encode('<script>alert(1)</script>'),
+      { contentType: 'text/html' }
+    ))
+    // Anything above the 50 MB contract is rejected before upload completes.
+    await assertFails(uploadBytes(
+      ref(facultyContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000006_big.mp4`),
+      new Uint8Array(51 * 1024 * 1024),
+      { contentType: 'video/mp4' }
     ))
   })
 })

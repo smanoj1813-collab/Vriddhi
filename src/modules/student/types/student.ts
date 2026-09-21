@@ -8,6 +8,8 @@ export interface SubmissionFile {
   storagePath?: string;
   type?: string;
   size?: number;
+  /** 'driveLink' = external Google Drive link (no stored bytes); default is an uploaded file. */
+  kind?: 'file' | 'driveLink';
 }
 
 /* ─── Assignment ─── */

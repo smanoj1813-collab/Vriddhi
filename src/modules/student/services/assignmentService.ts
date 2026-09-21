@@ -4,6 +4,7 @@ import { deleteObject, ref, uploadBytes } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { functions, storage } from '@/Firebase/config';
 import type { AssignmentSubmission, SubmissionFile } from '../types/student';
+import { validateDriveLink } from '@/shared/utils/driveLink';
 
 export interface SubmitAssignmentOptions {
   onProgress?: (progress: number) => void;
@@ -15,6 +16,17 @@ interface UploadedSubmissionFile {
   storagePath: string;
   contentType: string;
   size: number;
+  /** Present only for Drive-link attachments. */
+  kind?: 'file' | 'driveLink';
+  url?: string;
+}
+
+/** A Google Drive file link submitted instead of (or alongside) an upload. */
+export interface SubmissionDriveLink {
+  /** Short label the student gives the link (shown to faculty). */
+  name: string;
+  /** Canonical https://drive.google.com/file/d/{id}/view URL. */
+  url: string;
 }
 
 interface BeginSubmissionResponse {
@@ -97,19 +109,25 @@ export function isImageFile(fileName: string): boolean {
  * Creates an expiring server-side upload session, uploads each validated file,
  * and asks the server to verify Storage metadata and transactionally finalize
  * exactly one submission. Failed sessions are cancelled and cleaned up.
+ *
+ * `links` are optional Google Drive attachments: no bytes are uploaded for
+ * them (the file stays in the student's own Drive), so they cost nothing in
+ * storage. The server accepts ONLY canonical drive.google.com file links.
  */
-export async function submitAssignmentWithFiles(
+export async function submitAssignmentWithAttachments(
   assignmentId: string,
   studentId: string,
   files: File[],
+  links: SubmissionDriveLink[],
   remarks: string,
   options: SubmitAssignmentOptions = {}
 ): Promise<AssignmentSubmission> {
   if (!assignmentId || !studentId) {
     throw new Error('Missing assignment or student profile.');
   }
-  if (files.length < 1 || files.length > MAX_FILES) {
-    throw new Error(`Attach between 1 and ${MAX_FILES} files.`);
+  const attachmentCount = files.length + links.length;
+  if (attachmentCount < 1 || attachmentCount > MAX_FILES) {
+    throw new Error(`Attach between 1 and ${MAX_FILES} files or Drive links.`);
   }
   if (remarks.length > 2000) {
     throw new Error('Comments cannot exceed 2,000 characters.');
@@ -117,6 +135,13 @@ export async function submitAssignmentWithFiles(
   files.forEach((file) => {
     const result = validateFile(file);
     if (!result.valid) throw new Error(result.error);
+  });
+  links.forEach((link) => {
+    if (!link.name.trim()) {
+      throw new Error('Each Drive link needs a short label so your instructor knows what it is.');
+    }
+    const check = validateDriveLink(link.url);
+    if (!check.valid) throw new Error(check.error || 'Invalid Drive link.');
   });
 
   let sessionId = '';
@@ -144,24 +169,36 @@ export async function submitAssignmentWithFiles(
         contentType: file.type,
         size: file.size,
       });
-      options.onProgress?.(Math.round(((index + 1) / files.length) * 90));
+      options.onProgress?.(
+        files.length > 0 ? Math.round(((index + 1) / files.length) * 90) : 90
+      );
     }
 
-    const finalized = (await finalizeSubmission({
-      assignmentId,
-      sessionId,
-      remarks: remarks.trim(),
-      files: uploaded,
-    })).data;
+      const linkEntries: UploadedSubmissionFile[] = links.map((link) => ({
+        name: link.name.trim().slice(0, 150),
+        storagePath: '',
+        contentType: '',
+        size: 0,
+        kind: 'driveLink',
+        url: link.url,
+      }));
+
+      const finalized = (await finalizeSubmission({
+        assignmentId,
+        sessionId,
+        remarks: remarks.trim(),
+        files: [...uploaded, ...linkEntries],
+      })).data;
     options.onProgress?.(100);
 
     const submissionFiles: SubmissionFile[] = finalized.files.map((file, index) => ({
-      id: `${index}-${file.storagePath}`,
+      id: `${index}-${file.storagePath || file.url || file.name}`,
       name: file.name,
-      url: '',
-      type: file.contentType,
+      url: file.url || '',
+      type: file.contentType || (file.kind === 'driveLink' ? 'driveLink' : undefined),
       size: file.size,
-      storagePath: file.storagePath,
+      storagePath: file.storagePath || undefined,
+      kind: file.kind,
     }));
 
     return {
@@ -189,11 +226,21 @@ export async function submitAssignmentWithFiles(
   }
 }
 
+export async function submitAssignmentWithFiles(
+  assignmentId: string,
+  studentId: string,
+  files: File[],
+  remarks: string,
+  options?: SubmitAssignmentOptions
+): Promise<AssignmentSubmission> {
+  return submitAssignmentWithAttachments(assignmentId, studentId, files, [], remarks, options);
+}
+
 export async function submitAssignment(
   assignmentId: string,
   studentId: string,
   files: File[],
   remarks?: string
 ): Promise<AssignmentSubmission> {
-  return submitAssignmentWithFiles(assignmentId, studentId, files, remarks || '');
+  return submitAssignmentWithAttachments(assignmentId, studentId, files, [], remarks || '');
 }

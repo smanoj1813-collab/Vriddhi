@@ -11,7 +11,7 @@
 // The table builders are pure and unit tested; only `triggerDownload` touches
 // the DOM.
 
-import * as XLSX from 'xlsx';
+import * as XLSX from '@e965/xlsx';
 import { jsPDF } from 'jspdf';
 
 import {

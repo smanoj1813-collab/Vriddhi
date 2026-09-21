@@ -226,6 +226,30 @@ service firebase.storage {
       allow delete: if isSuperadmin();
     }
 
+    // Faculty teaching materials: colleges/{collegeId}/materials/{fileName}
+    // (filename may contain subfolders from the upload UI's sanitised names).
+    //
+    // HISTORY: this path contract was missing from the claims-only rewrite, so
+    // the client's Storage upload was DENIED for every faculty upload and the
+    // code silently fell back to embedding the whole file as a base64 data URL
+    // inside the Firestore material doc — 7x the per-GB cost of Storage AND
+    // capped at Firestore's 1 MiB doc limit (any file over ~700 KB failed to
+    // save at all). This block restores the intended contract: real files in
+    // cheap Storage, staff-write only, 50 MB cap.
+    match /colleges/{collegeId}/materials/{fileName=**} {
+      allow read: if isSignedIn()
+        && (isSuperadmin() || (tenantCollege() == collegeId && (isStaff() || role() == 'student')));
+      allow create, update: if isStaff()
+        && tenantCollege() == collegeId
+        && request.resource.size <= 50 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches(
+          'application/pdf|application/msword|application/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application/vnd\.ms-powerpoint|application/vnd\.openxmlformats-officedocument\.presentationml\.presentation|image/.*|video/mp4|video/quicktime|video/webm'
+        );
+      allow delete: if isSuperadmin()
+        || (isStaff() && tenantCollege() == collegeId);
+    }
+
     // No implicit authenticated-user access. Additional product workflows
     // receive explicit path contracts as they are implemented.
     match /{allPaths=**} {
