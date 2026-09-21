@@ -10,7 +10,8 @@ import {
   TrendingDown, Minus, User, Layers, Activity, Loader2
 } from 'lucide-react'
 import { useDashboardData } from '../../admin/hooks/useDashboardData'
-import { useCollegeJourney, useFacultyJourney, useStudentJourney } from '../hooks/useJourney'
+import { useCollegeJourney, useFacultyJourney, useStudentJourney, useFacultyTimeline, useStudentTimeline } from '../hooks/useJourney'
+import PWAInstallCard from '@/shared/components/PWAInstallCard'
 
 // ─── Helper Components ──────────────────────────────────
 
@@ -153,6 +154,11 @@ const CollegeJourney = () => {
 
   return (
     <div className="space-y-6">
+      <div className="p-4 rounded-xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 text-sm">
+        <p className="font-bold text-teal-800 dark:text-teal-200">Connected Timeline — Real Data Sources</p>
+        <p className="text-teal-700 dark:text-teal-300 text-xs mt-1">Auto-generates milestones from: Exam Sessions, University Notifications (Uniclare-style alerts), Fee Payments, Challans (BCU/BNU), Grade Records, Attendance, UUCMS Sync. Previously milestones subcollection was empty — now connected.</p>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat, i) => <StatCard key={i} {...stat} />)}
       </div>
@@ -220,6 +226,14 @@ const CollegeJourney = () => {
 
 const FacultyJourney = () => {
   const { data, loading } = useFacultyJourney()
+  const facultyEmail = (() => {
+    try {
+      const raw = localStorage.getItem('vriddhi_user')
+      return raw ? JSON.parse(raw).email || '' : ''
+    } catch { return '' }
+  })()
+  const facultyName = data?.faculty.name || ''
+  const { milestones: facultyMilestones, loading: timelineLoading } = useFacultyTimeline(facultyEmail, facultyName)
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-500" /></div>
@@ -289,8 +303,14 @@ const FacultyJourney = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />Career Timeline</h3>
-          <p className="text-slate-500 text-center py-10">Faculty timeline data coming soon</p>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />Career Timeline — Connected to Real Data</h3>
+          {timelineLoading ? (
+            <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
+          ) : facultyMilestones.length === 0 ? (
+            <p className="text-slate-500 text-center py-10">No faculty activity yet. Create assessments, papers to see timeline.</p>
+          ) : (
+            <Timeline milestones={facultyMilestones} />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -362,6 +382,7 @@ const StudentJourney = () => {
   const { students, loading: studentsLoading } = useDashboardData()
   const [selectedStudentId, setSelectedStudentId] = useState<string>('')
   const { data: studentData, allStudents, loading } = useStudentJourney(selectedStudentId)
+  const { milestones: studentTimeline, loading: studentTimelineLoading } = useStudentTimeline(selectedStudentId)
 
   useEffect(() => {
     if (students.length > 0 && !selectedStudentId) {
@@ -521,8 +542,21 @@ const StudentJourney = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-emerald-400" />Academic Timeline</h3>
-          <p className="text-slate-500 text-center py-10">Student timeline data coming soon</p>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-emerald-400" />Academic Timeline — Connected (Fees, Challans, Hall Tickets, Results)</h3>
+          {studentTimelineLoading ? (
+            <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
+          ) : studentTimeline.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-slate-500">No timeline yet. Timeline auto-connects from:</p>
+              <div className="flex flex-wrap gap-2 justify-center mt-3">
+                {['Fee Payments','Challans','Hall Tickets','Grade Records','Assessments'].map(t => (
+                  <span key={t} className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">{t}</span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Timeline milestones={studentTimeline} />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -633,9 +667,13 @@ export default function Journey() {
   return (
     <div className="page-container">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Journey</h1>
-        <p className="text-slate-600 dark:text-slate-400">Track progress, predict outcomes, and plan the path ahead</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Journey — College, Faculty, Student Connected</h1>
+        <p className="text-slate-600 dark:text-slate-400">Track progress across real data: exam sessions, UUCMS sync, fee collection, challans, hall tickets, results, assessments — all connected now</p>
       </div>
+
+      <PWAInstallCard variant="banner" />
+
+      
 
       <div className="flex gap-2 mb-6">
         {tabs.map((tab) => (

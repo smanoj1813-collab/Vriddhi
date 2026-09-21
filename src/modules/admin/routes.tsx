@@ -35,6 +35,12 @@ const _LegacyReviewQueuePage = lazy(() => import('./pages/ReviewQueuePage'));
 const _LegacyAdminUniversalBank = lazy(() => import('./pages/AdminUniversalBank'));
 const Settings = lazy(() => import('./pages/Settings'));
 const View360 = lazy(() => import('./pages/View360'));
+const ExamManagement = lazy(() => import('./pages/ExamManagement'));
+const UUCMSIntegration = lazy(() => import('./pages/UUCMSIntegration'));
+const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard'));
+const ResultImporter = lazy(() => import('./pages/ResultImporter'));
+const ChallanManagement = lazy(() => import('./pages/ChallanManagement'));
+const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Lazy loading wrappers
@@ -129,6 +135,14 @@ export const adminRoutes: RouteObject[] = [
       { path: 'admissions', element: <LazyPage><AdmissionCenter /></LazyPage> },
       { path: 'papers/builder', element: <LazyPage><PaperBuilder /></LazyPage> },
       { path: 'papers/generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
+      // Karnataka University Features - Competitive with Uniclare
+      { path: 'exam-management', element: <LazyPage><ExamManagement /></LazyPage> },
+      { path: 'uucms-integration', element: <LazyPage><UUCMSIntegration /></LazyPage> },
+      { path: 'bcu-compliance', element: <LazyPage><BCUComplianceDashboard /></LazyPage> },
+      { path: 'result-importer', element: <LazyPage><ResultImporter /></LazyPage> },
+      { path: 'challans', element: <LazyPage><ChallanManagement /></LazyPage> },
+      { path: 'install-app', element: <LazyPage><PWAInstallPage /></LazyPage> },
+      { path: 'pwa-install', element: <LazyPage><PWAInstallPage /></LazyPage> },
     ],
   },
 ];

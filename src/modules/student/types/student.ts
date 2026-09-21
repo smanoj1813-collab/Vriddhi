@@ -146,6 +146,21 @@ export interface StudentDashboardStats {
   lowAttendanceSubjects?: number;
 }
 
+/* ─── UUCMS ─── */
+export interface UUCMSInfo {
+  candidateId?: string;
+  usn?: string;
+  applicationNo?: string;
+  puRegistrationNo?: string;
+  category?: string;
+  aadhaarNo?: string;
+  status?: 'not_registered' | 'candidate_generated' | 'submitted' | 'document_verification' | 'pay_fees' | 'fee_paid' | 'principal_approved' | 'active';
+  scheme?: string;
+  universityId?: string;
+  eligibilityStatus?: string;
+  lastSyncedAt?: string;
+}
+
 /* ─── Profile ─── */
 export interface StudentProfile {
   id?: string;
@@ -162,4 +177,14 @@ export interface StudentProfile {
   avatar?: string;
   collegeId?: string;
   course?: string;
+  // UUCMS - Karnataka
+  uucmsCandidateId?: string;
+  uucmsUSN?: string;
+  uucmsStatus?: UUCMSInfo['status'];
+  puRegistrationNo?: string;
+  category?: string;
+  aadhaarNo?: string;
+  scheme?: string;
+  universityId?: string;
+  uucmsInfo?: UUCMSInfo;
 }

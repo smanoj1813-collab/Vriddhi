@@ -283,9 +283,19 @@ const facultyNav: SidebarEntry[] = [
       { label: "Question Bank", path: "/faculty/question-bank", icon: <QuestionAnswer fontSize="small" /> },
       { label: "Universal Bank", path: "/faculty/universal-bank", icon: <QuestionAnswer fontSize="small" /> },
       { label: "Assessment Schedule", path: "/faculty/assessments", icon: <Assignment fontSize="small" /> },
+      { label: "Auto-Grading 5M/10M", path: "/faculty/auto-grading", icon: <Assessment fontSize="small" /> },
     ],
   },
 
+  {
+    kind: "group",
+    label: "Insights",
+    icon: <TrendingUp fontSize="small" />,
+    children: [
+      { label: "Journey", path: "/faculty/journey", icon: <TrendingUp fontSize="small" /> },
+    ],
+  },
+  { kind: "link", label: "Install App", path: "/faculty/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
   { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
   { kind: "link", label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" /> },
@@ -336,6 +346,18 @@ const principalNav: SidebarEntry[] = [
 
   {
     kind: "group",
+    label: "University Exams",
+    icon: <AccountBalance fontSize="small" />,
+    children: [
+      { label: "Exam Management", path: "/admin/exam-management", icon: <Description fontSize="small" /> },
+      { label: "UUCMS Integration", path: "/admin/uucms-integration", icon: <Business fontSize="small" /> },
+      { label: "BCU Compliance", path: "/admin/bcu-compliance", icon: <CheckCircle fontSize="small" /> },
+      { label: "Result Importer", path: "/admin/result-importer", icon: <Assessment fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
     label: "Assessments",
     icon: <Assignment fontSize="small" />,
     children: [
@@ -348,7 +370,15 @@ const principalNav: SidebarEntry[] = [
     ],
   },
 
-  { kind: "link", label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+  {
+    kind: "group",
+    label: "Finance",
+    icon: <AttachMoney fontSize="small" />,
+    children: [
+      { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
+    ],
+  },
 
   {
     kind: "group",
@@ -361,6 +391,7 @@ const principalNav: SidebarEntry[] = [
     ],
   },
 
+  { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" /> },
 ];
 

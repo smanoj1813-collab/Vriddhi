@@ -60,7 +60,7 @@ function numeric(value: unknown): number {
 // ─── Types ──────────────────────────────────────────────
 
 export type FeeStatus = 'paid' | 'pending' | 'overdue' | 'partial' | 'waived'
-export type FeeCategory = 'tuition' | 'exam' | 'library' | 'lab' | 'hostel' | 'transport' | 'misc'
+export type FeeCategory = 'tuition' | 'exam' | 'university_exam' | 'eligibility' | 'library' | 'lab' | 'hostel' | 'transport' | 'misc'
 export type PaymentMode = 'cash' | 'card' | 'upi' | 'netbanking' | 'cheque' | 'dd'
 
 export interface FeeStructure {
@@ -455,7 +455,7 @@ export function getCourseWiseSummary(payments: FeePayment[]) {
 }
 
 export function getCategoryWiseSummary(payments: FeePayment[]) {
-  const categories: FeeCategory[] = ['tuition', 'exam', 'library', 'lab', 'hostel', 'transport', 'misc']
+  const categories: FeeCategory[] = ['tuition', 'exam', 'university_exam', 'eligibility', 'library', 'lab', 'hostel', 'transport', 'misc']
   return categories.map(category => {
     const rows = payments.filter(p => p.category === category)
     return {
@@ -465,6 +465,333 @@ export function getCategoryWiseSummary(payments: FeePayment[]) {
       count: rows.length,
     }
   }).filter(c => c.count > 0)
+}
+
+// ─── Challan Types (Karnataka University - BCU/BNU) ───────────────────────
+export type ChallanStatus = 'generated' | 'paid_at_bank' | 'verified' | 'rejected' | 'expired'
+export type ChallanType = 'university_exam' | 'eligibility' | 'revaluation' | 'marks_card' | 'other'
+
+export interface ChallanBreakdown {
+  label: string
+  amount: number
+}
+
+export interface Challan {
+  id: string
+  challanNo: string // CH-202425-BCA-000001
+  type: ChallanType
+  category: FeeCategory
+  studentId: string
+  studentName: string
+  regNo: string
+  usn?: string
+  course: string
+  batch: string
+  semester: string
+  examSessionId?: string
+  examTitle?: string
+  examType?: 'regular' | 'supplementary' | 'revaluation' | 'improvement'
+  subjects?: Array<{ code: string; name: string }>
+  amount: number
+  breakdown: ChallanBreakdown[]
+  bankDetails: {
+    bankName: string
+    accountNo: string
+    ifsc: string
+    branch: string
+    accountName: string
+  }
+  collegeCode: string
+  collegeName: string
+  university: 'BCU' | 'BNU' | 'Davangere' | 'Rani Channamma' | 'Other'
+  status: ChallanStatus
+  generatedAt: string
+  dueDate: string
+  paidAt?: string
+  verifiedAt?: string
+  verifiedBy?: string
+  bankReferenceNo?: string
+  bankStampUrl?: string
+  remarks?: string
+  feePaymentId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateChallanInput {
+  type: ChallanType
+  studentId: string
+  studentName: string
+  regNo: string
+  usn?: string
+  course: string
+  batch: string
+  semester: string
+  examSessionId?: string
+  examTitle?: string
+  examType?: 'regular' | 'supplementary' | 'revaluation' | 'improvement'
+  subjects?: Array<{ code: string; name: string }>
+  amount: number
+  breakdown?: ChallanBreakdown[]
+  dueDate: string
+  university?: 'BCU' | 'BNU' | 'Davangere' | 'Rani Channamma' | 'Other'
+  collegeCode?: string
+  collegeName?: string
+  bankDetails?: Challan['bankDetails']
+  remarks?: string
+}
+
+function mapChallan(id: string, raw: Record<string, unknown>): Challan {
+  return {
+    id,
+    challanNo: String(raw.challanNo || ''),
+    type: (raw.type || 'university_exam') as ChallanType,
+    category: (raw.category || 'university_exam') as FeeCategory,
+    studentId: String(raw.studentId || ''),
+    studentName: String(raw.studentName || ''),
+    regNo: String(raw.regNo || ''),
+    usn: raw.usn ? String(raw.usn) : undefined,
+    course: String(raw.course || ''),
+    batch: String(raw.batch || ''),
+    semester: String(raw.semester || ''),
+    examSessionId: raw.examSessionId ? String(raw.examSessionId) : undefined,
+    examTitle: raw.examTitle ? String(raw.examTitle) : undefined,
+    examType: raw.examType as Challan['examType'],
+    subjects: Array.isArray(raw.subjects) ? raw.subjects as Challan['subjects'] : undefined,
+    amount: numeric(raw.amount),
+    breakdown: Array.isArray(raw.breakdown) ? raw.breakdown as ChallanBreakdown[] : [],
+    bankDetails: (raw.bankDetails as Challan['bankDetails']) || {
+      bankName: 'State Bank of India',
+      accountNo: '000000000000',
+      ifsc: 'SBIN0000000',
+      branch: 'BCU Branch',
+      accountName: 'Bangalore City University',
+    },
+    collegeCode: String(raw.collegeCode || ''),
+    collegeName: String(raw.collegeName || ''),
+    university: (raw.university || 'BCU') as Challan['university'],
+    status: (raw.status || 'generated') as ChallanStatus,
+    generatedAt: asString(raw.generatedAt),
+    dueDate: asString(raw.dueDate).slice(0, 10),
+    paidAt: raw.paidAt ? asString(raw.paidAt) : undefined,
+    verifiedAt: raw.verifiedAt ? asString(raw.verifiedAt) : undefined,
+    verifiedBy: raw.verifiedBy ? String(raw.verifiedBy) : undefined,
+    bankReferenceNo: raw.bankReferenceNo ? String(raw.bankReferenceNo) : undefined,
+    bankStampUrl: raw.bankStampUrl ? String(raw.bankStampUrl) : undefined,
+    remarks: raw.remarks ? String(raw.remarks) : undefined,
+    feePaymentId: raw.feePaymentId ? String(raw.feePaymentId) : undefined,
+    createdAt: asString(raw.createdAt),
+    updatedAt: asString(raw.updatedAt),
+  }
+}
+
+// ─── Challan Reads ─────────────────────────────────────
+export async function fetchChallans(filters?: { studentId?: string; status?: ChallanStatus; type?: ChallanType }): Promise<Challan[]> {
+  const constraints: any[] = [limit(MAX_READS)]
+  if (filters?.studentId) constraints.push(where('studentId', '==', filters.studentId))
+  if (filters?.status) constraints.push(where('status', '==', filters.status))
+  if (filters?.type) constraints.push(where('type', '==', filters.type))
+  const snap = await getDocs(query(collegeRef('challans'), ...constraints))
+  return snap.docs.map(d => mapChallan(d.id, d.data() as Record<string, unknown>)).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+}
+
+export async function fetchChallanById(id: string): Promise<Challan | null> {
+  const snap = await getDoc(collegeDocRef(`challans/${id}`))
+  if (!snap.exists()) return null
+  return mapChallan(snap.id, snap.data() as Record<string, unknown>)
+}
+
+// ─── Challan Mutations ─────────────────────────────────
+export async function createChallan(input: CreateChallanInput): Promise<Challan> {
+  const collegeId = getCollegeId()
+  const challanNo = `CH-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${input.course.toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`
+  const breakdown = input.breakdown || [{ label: `${input.type.replace('_', ' ')} Fee`, amount: input.amount }]
+  
+  const docRef = await addDoc(collegeRef('challans'), {
+    challanNo,
+    type: input.type,
+    category: input.type === 'eligibility' ? 'eligibility' : 'university_exam',
+    studentId: input.studentId,
+    studentName: input.studentName,
+    regNo: input.regNo,
+    usn: input.usn || input.regNo,
+    course: input.course,
+    batch: input.batch,
+    semester: input.semester,
+    examSessionId: input.examSessionId || '',
+    examTitle: input.examTitle || '',
+    examType: input.examType || 'regular',
+    subjects: input.subjects || [],
+    amount: input.amount,
+    breakdown,
+    bankDetails: input.bankDetails || {
+      bankName: 'State Bank of India',
+      accountNo: '123456789012',
+      ifsc: 'SBIN0040093',
+      branch: 'BCU Campus Branch, Bengaluru',
+      accountName: input.university ? `${input.university} - Examination Fees` : 'Bangalore City University - Examination Fees',
+    },
+    collegeCode: input.collegeCode || collegeId.slice(0, 8).toUpperCase(),
+    collegeName: input.collegeName || 'College',
+    university: input.university || 'BCU',
+    status: 'generated',
+    generatedAt: serverTimestamp(),
+    dueDate: input.dueDate,
+    remarks: input.remarks || '',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+
+  // Also create a feePayment entry for tracking
+  const feePaymentRef = await addDoc(collegeRef('feePayments'), {
+    studentId: input.studentId,
+    studentName: input.studentName,
+    regNo: input.regNo,
+    course: input.course,
+    batch: input.batch,
+    category: input.type === 'eligibility' ? 'eligibility' : 'university_exam',
+    amount: input.amount,
+    paidAmount: 0,
+    status: 'pending',
+    dueDate: input.dueDate,
+    challanId: docRef.id,
+    challanNo,
+    examSessionId: input.examSessionId || '',
+    remarks: `Challan ${challanNo} for ${input.examTitle || input.type}`,
+    collegeId,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+
+  await updateDoc(docRef, { feePaymentId: feePaymentRef.id })
+
+  return {
+    id: docRef.id,
+    challanNo,
+    type: input.type,
+    category: input.type === 'eligibility' ? 'eligibility' : 'university_exam',
+    studentId: input.studentId,
+    studentName: input.studentName,
+    regNo: input.regNo,
+    usn: input.usn,
+    course: input.course,
+    batch: input.batch,
+    semester: input.semester,
+    examSessionId: input.examSessionId,
+    examTitle: input.examTitle,
+    examType: input.examType,
+    subjects: input.subjects,
+    amount: input.amount,
+    breakdown,
+    bankDetails: input.bankDetails || {
+      bankName: 'State Bank of India',
+      accountNo: '123456789012',
+      ifsc: 'SBIN0040093',
+      branch: 'BCU Campus Branch, Bengaluru',
+      accountName: `${input.university || 'BCU'} - Examination Fees`,
+    },
+    collegeCode: input.collegeCode || collegeId.slice(0, 8).toUpperCase(),
+    collegeName: input.collegeName || 'College',
+    university: input.university || 'BCU',
+    status: 'generated',
+    generatedAt: new Date().toISOString(),
+    dueDate: input.dueDate,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    feePaymentId: feePaymentRef.id,
+  }
+}
+
+export async function createBulkChallans(inputs: CreateChallanInput[]): Promise<{ created: number; failed: number; errors: string[] }> {
+  let created = 0
+  let failed = 0
+  const errors: string[] = []
+  for (const input of inputs) {
+    try {
+      await createChallan(input)
+      created++
+    } catch (e) {
+      failed++
+      errors.push(`${input.regNo}: ${e instanceof Error ? e.message : 'Failed'}`)
+    }
+  }
+  return { created, failed, errors }
+}
+
+export async function verifyChallan(challanId: string, bankReferenceNo: string, remarks?: string): Promise<boolean> {
+  const ref = collegeDocRef(`challans/${challanId}`)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) throw new Error('Challan not found')
+  const data = snap.data() as Record<string, unknown>
+  if (data.status === 'verified') throw new Error('Challan already verified')
+  
+  await updateDoc(ref, {
+    status: 'verified',
+    bankReferenceNo,
+    verifiedAt: serverTimestamp(),
+    verifiedBy: auth.currentUser?.displayName || auth.currentUser?.email || 'Admin',
+    remarks: remarks || data.remarks || '',
+    updatedAt: serverTimestamp(),
+  })
+
+  // Update linked feePayment to paid
+  const feePaymentId = data.feePaymentId as string
+  if (feePaymentId) {
+    const feeRef = collegeDocRef(`feePayments/${feePaymentId}`)
+    const feeSnap = await getDoc(feeRef)
+    if (feeSnap.exists()) {
+      const receiptNo = `RCP-CH-${Date.now()}`
+      const transactionId = `TXN-CH-${bankReferenceNo}`
+      await updateDoc(feeRef, {
+        paidAmount: data.amount,
+        status: 'paid',
+        paidDate: today(),
+        paymentMode: 'dd',
+        transactionId,
+        receiptNo,
+        bankReferenceNo,
+        verifiedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+      const txnRef = doc(collection(feeRef, 'transactions'))
+      await updateDoc(feeRef, {}) // dummy to keep transaction
+      const { addDoc: addTxnDoc, collection: coll, serverTimestamp: st } = await import('firebase/firestore')
+      await addTxnDoc(coll(feeRef, 'transactions'), {
+        type: 'payment',
+        amount: data.amount,
+        paymentMode: 'dd',
+        transactionId,
+        receiptNo,
+        bankReferenceNo,
+        remarks: `Challan ${data.challanNo} verified - Bank Ref ${bankReferenceNo}`,
+        performedBy: auth.currentUser?.displayName || auth.currentUser?.email || 'Admin',
+        createdAt: st(),
+      })
+    }
+  }
+
+  return true
+}
+
+export async function markChallanPaidAtBank(challanId: string, bankStampUrl?: string): Promise<boolean> {
+  const ref = collegeDocRef(`challans/${challanId}`)
+  await updateDoc(ref, {
+    status: 'paid_at_bank',
+    paidAt: serverTimestamp(),
+    bankStampUrl: bankStampUrl || '',
+    updatedAt: serverTimestamp(),
+  })
+  return true
+}
+
+export async function rejectChallan(challanId: string, reason: string): Promise<boolean> {
+  const ref = collegeDocRef(`challans/${challanId}`)
+  await updateDoc(ref, {
+    status: 'rejected',
+    remarks: reason,
+    updatedAt: serverTimestamp(),
+  })
+  return true
 }
 
 export function getMonthlyCollection(payments: FeePayment[]) {

@@ -8,6 +8,7 @@ import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 import type { TranslationKey } from '../../../shared/i18n';
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install';
 import {
+  Receipt,
   LayoutDashboard,
   Calendar,
   BookOpen,
@@ -45,6 +46,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
   { id: 'attendance', label: 'Attendance', path: '/student/attendance', icon: Calendar },
+  { id: 'halltickets', label: 'Hall Tickets', path: '/student/hall-tickets', icon: Download },
   { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen },
   { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText },
   { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp },
@@ -54,9 +56,11 @@ const navItems: NavItem[] = [
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library },
   { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock },
   { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard },
+  { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt },
   { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap },
   { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays },
   { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell },
+  { id: 'install-app', label: 'Install App', path: '/student/install-app', icon: Download },
   { id: 'settings', label: 'Settings', path: '/student/settings', icon: Settings },
 ];
 

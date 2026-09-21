@@ -325,13 +325,14 @@ export default function StudentDashboard() {
           Renders nothing when the backend feature gate is off. */}
       <StudentAcademicSummary />
 
-      {/* Quick Actions Grid */}
+      {/* Quick Actions Grid - Karnataka University Features */}
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-teal-600" />
-          {t('student.quickNav')}
+          {t('student.quickNav')} - Karnataka University
         </h2>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3">
+          <QuickAction to="/student/hall-tickets" icon={FileText} label="Hall Tickets" color="rose" />
           <QuickAction to="/student/attendance" icon={Calendar} label={t('nav.attendance')} color="teal" />
           <QuickAction to="/student/assessments" icon={BookOpen} label={t('nav.assessments')} color="blue" />
           <QuickAction to="/student/assignments" icon={FileText} label={t('nav.assignments')} color="amber" />
@@ -343,7 +344,12 @@ export default function StudentDashboard() {
           <QuickAction to="/student/library" icon={BookOpen} label={t('student.eLibrary')} color="blue" />
           <QuickAction to="/student/events" icon={CalendarDays} label={t('student.campusEvents')} color="amber" />
           <QuickAction to="/student/notifications" icon={Bell} label={t('student.alerts')} color="violet" />
-          <QuickAction to="/student/settings" icon={Settings} label={t('student.preferences')} color="teal" />
+        </div>
+        <div className="mt-3 p-3 bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-950/20 dark:to-blue-950/20 border border-teal-200/50 dark:border-teal-800/50 rounded-xl">
+          <p className="text-xs font-bold text-teal-800 dark:text-teal-200 flex items-center gap-2">
+            <GraduationCap size={14} />
+            New: Karnataka University Features - Hall Tickets, Room Allotment, UUCMS Sync, BCU Compliance (Beating Uniclare)
+          </p>
         </div>
       </div>
 

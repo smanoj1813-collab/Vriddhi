@@ -36,7 +36,9 @@ const COLORS = {
 const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   tuition: { icon: GraduationCap, color: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300', label: 'Tuition' },
   exam: { icon: BookOpen, color: 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300', label: 'Exam' },
-  library: { icon: Library, color: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300', label: 'Library' },
+  university_exam: { icon: BookOpen, color: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300', label: 'University Exam (BCU)' },
+  eligibility: { icon: GraduationCap, color: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300', label: 'Eligibility (UUCMS)' },
+  library: { icon: Library, color: 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300', label: 'Library' },
   lab: { icon: Beaker, color: 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300', label: 'Lab' },
   hostel: { icon: Activity, color: 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300', label: 'Hostel' },
   transport: { icon: Activity, color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300', label: 'Transport' },

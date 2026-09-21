@@ -9,7 +9,9 @@
     "rootDir": "src",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017",
+    "target": "es2018",
+    "lib": ["es2018", "dom", "esnext.asynciterable"],
+    "skipLibCheck": true,
     "typeRoots": ["./node_modules/@types"]
   },
   "compileOnSave": true,

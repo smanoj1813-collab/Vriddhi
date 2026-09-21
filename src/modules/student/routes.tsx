@@ -14,6 +14,7 @@ const StudentLibrary = lazy(() => import('./pages/StudentLibrary'));
 const StudentEvents = lazy(() => import('./pages/StudentEvents'));
 const StudentNotificationsPage = lazy(() => import('./pages/StudentNotificationsPage'));
 const StudentFeePortal = lazy(() => import('./pages/StudentFeePortal'));
+const StudentChallans = lazy(() => import('./pages/StudentChallans'));
 const StudentTestDashboard = lazy(() => import('./pages/StudentTestDashboard'));
 const TestInstructionsPage = lazy(() => import('./pages/TestInstructionsPage'));
 const ActiveTestPage = lazy(() => import('./pages/ActiveTestPage'));
@@ -23,6 +24,8 @@ const StudentAssignments = lazy(() => import('./pages/StudentAssignments'));
 const StudentFacultyConnectPage = lazy(() => import('./pages/StudentFacultyConnectPage'));
 const StudentJourneyPage = lazy(() => import('./pages/StudentJourneyPage'));
 const StudentCurriculumPage = lazy(() => import('./pages/StudentCurriculumPage'));
+const StudentHallTickets = lazy(() => import('./pages/StudentHallTickets'));
+const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -64,10 +67,14 @@ export const studentRoutes: RouteObject[] = [
       { path: 'timetable', element: <StudentTimetable /> },
       { path: 'fees', element: <StudentFeePortal /> },
       { path: 'fee-portal', element: <StudentFeePortal /> },
+      { path: 'challans', element: <StudentChallans /> },
+      { path: 'hall-tickets', element: <StudentHallTickets /> },
       { path: 'library', element: <StudentLibrary /> },
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },
       { path: 'settings', element: <StudentSettings /> },
+      { path: 'install-app', element: <PWAInstallPage /> },
+      { path: 'pwa-install', element: <PWAInstallPage /> },
     ],
   },
 ];
