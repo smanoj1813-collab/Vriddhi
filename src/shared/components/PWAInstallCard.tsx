@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Download, Smartphone, CheckCircle, Bell, WifiOff, Zap, QrCode, Share, Chrome, Apple } from 'lucide-react'
+import { Download, Smartphone, CheckCircle, Bell, WifiOff, Zap, QrCode, Share, Globe } from 'lucide-react'
 import { isPwaStandalone, requestPwaInstall, pwaInstallGuidance } from '../pwa/install'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -155,7 +155,7 @@ export default function PWAInstallCard({ variant = 'card' }: { variant?: 'card' 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl">
           <h4 className="font-bold text-sm flex items-center gap-2">
-            <Chrome size={16} className="text-blue-600" /> Android / Chrome / Edge
+            <Globe size={16} className="text-blue-600" /> Android / Chrome / Edge
           </h4>
           <ol className="text-xs text-slate-600 dark:text-slate-400 mt-2 space-y-1.5 list-decimal list-inside">
             <li>Tap the Install button above</li>
@@ -169,7 +169,7 @@ export default function PWAInstallCard({ variant = 'card' }: { variant?: 'card' 
         </div>
         <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl">
           <h4 className="font-bold text-sm flex items-center gap-2">
-            <Apple size={16} className="text-slate-800 dark:text-white" /> iPhone / iPad (Safari)
+            <Smartphone size={16} className="text-slate-800 dark:text-white" /> iPhone / iPad (Safari)
           </h4>
           <ol className="text-xs text-slate-600 dark:text-slate-400 mt-2 space-y-1.5 list-decimal list-inside">
             <li>Open Vriddhi in Safari (not Chrome)</li>

@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import { fetchStudentTimelineFromRealData } from '@/modules/admin/api/journeyMilestonesApi';
 import PWAInstallCard from '@/shared/components/PWAInstallCard';
 import type { Milestone } from '@/modules/admin/api/journeyApi';
+import { useStudentProfile } from '../hooks/useStudentProfile';
+import { useAuth } from '../../auth/context/AuthContext';
 
 // ------------------------------------------------------------------
 // Student journey: enrolment → placement, from real records.
@@ -100,15 +102,18 @@ function EmptyNote({ title, body }: { title: string; body: string }) {
 
 export default function StudentJourneyPage() {
   const { journey, loading, error, refresh } = useMyJourney();
+  const { user } = useAuth();
+  const { profile: studentProfile } = useStudentProfile(user?.uid);
   const navigate = useNavigate();
   const [realTimeline, setRealTimeline] = useState<Milestone[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(true);
 
   useEffect(() => {
     const loadTimeline = async () => {
-      if (!journey?.profile?.id) { setTimelineLoading(false); return; }
+      const studentId = studentProfile?.id;
+      if (!studentId) { setTimelineLoading(false); return; }
       try {
-        const data = await fetchStudentTimelineFromRealData(journey.profile.id);
+        const data = await fetchStudentTimelineFromRealData(studentId);
         setRealTimeline(data);
       } catch (e) {
         console.error('[StudentJourney] timeline failed', e);
@@ -117,7 +122,7 @@ export default function StudentJourneyPage() {
       }
     };
     loadTimeline();
-  }, [journey?.profile?.id]);
+  }, [studentProfile?.id]);
 
   if (loading) {
     return (
