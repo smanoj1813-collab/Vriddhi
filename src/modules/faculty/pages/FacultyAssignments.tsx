@@ -7,7 +7,7 @@ import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import {
   ChevronLeft, Plus, X, Check, Search, Calendar,
   Clock, Users, FileText, Trash2, CheckCircle2,
-  BarChart3, Send, BookOpen, Target, Loader2, AlertTriangle, Upload, Eye, Download
+  BarChart3, Send, BookOpen, Target, Loader2, AlertTriangle, Upload, Eye, Download, ExternalLink
 } from 'lucide-react'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { useAuth } from '../../auth/context/AuthContext'
@@ -724,16 +724,28 @@ export default function FacultyAssignments() {
                         {sub.studentRegNo && <p className="text-xs text-slate-600 dark:text-slate-400">{sub.studentRegNo}</p>}
                         {sub.attachments?.length ? (
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {sub.attachments.map((file, index) => (
-                              <button
-                                key={`${file.storagePath || file.name}-${index}`}
-                                type="button"
-                                onClick={() => void handleDownloadSubmission(sub, file)}
-                                className="inline-flex items-center gap-1 text-xs text-teal-700 dark:text-teal-300 hover:underline"
-                              >
-                                <Download className="w-3 h-3" /> {file.name}
-                              </button>
-                            ))}
+                            {sub.attachments.map((file, index) =>
+                              file.kind === 'driveLink' && file.url ? (
+                                <a
+                                  key={`drive-${file.url}-${index}`}
+                                  href={file.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-teal-700 dark:text-teal-300 hover:underline"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> {file.name} (Drive)
+                                </a>
+                              ) : (
+                                <button
+                                  key={`${file.storagePath || file.name}-${index}`}
+                                  type="button"
+                                  onClick={() => void handleDownloadSubmission(sub, file)}
+                                  className="inline-flex items-center gap-1 text-xs text-teal-700 dark:text-teal-300 hover:underline"
+                                >
+                                  <Download className="w-3 h-3" /> {file.name}
+                                </button>
+                              )
+                            )}
                           </div>
                         ) : null}
                       </div>

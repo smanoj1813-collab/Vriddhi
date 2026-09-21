@@ -190,9 +190,30 @@ interface StudentIdentity {
 
 interface SubmissionFileInput {
   name: string
+  /** Uploads only; empty for Drive links. */
   storagePath: string
+  /** Uploads only; empty for Drive links. */
   contentType: string
+  /** Uploads only; 0 for Drive links. */
   size: number
+  /** Omitted or 'file' = uploaded object; 'driveLink' = external Drive file link. */
+  kind?: 'file' | 'driveLink'
+  /** Drive links only: canonical https://drive.google.com/file/d/{id}/view */
+  url?: string
+}
+
+// Only canonical Google Drive FILE links are accepted as external attachments.
+// Faculty click these, so every other URL shape (folders, uc?id=, other
+// domains, other schemes) is a phishing vector and is rejected.
+const DRIVE_FILE_URL_PATTERN =
+  /^https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]{10,}\/(?:view|preview)(?:[?#].*)?$/
+
+export function normalizeDriveFileUrl(value: string): string {
+  const url = (value || '').trim()
+  const match = url.match(DRIVE_FILE_URL_PATTERN)
+  if (!match) return ''
+  const id = url.match(/\/file\/d\/([a-zA-Z0-9_-]{10,})/)?.[1] || ''
+  return `https://drive.google.com/file/d/${id}/view`
 }
 
 const ASSIGNMENT_STATUSES = ['published', 'ongoing', 'closed', 'graded']
@@ -430,37 +451,64 @@ export const beginMyAssignmentSubmission = onCall(
   }
 )
 
+const MAX_ASSIGNMENT_DRIVE_LINKS = 3
+
 function parseSubmissionFiles(value: unknown, expectedPrefix: string): SubmissionFileInput[] {
   if (!Array.isArray(value) || value.length < 1 || value.length > MAX_ASSIGNMENT_FILES) {
     throw new HttpsError(
       'invalid-argument',
-      `Between 1 and ${MAX_ASSIGNMENT_FILES} files are required`
+      `Between 1 and ${MAX_ASSIGNMENT_FILES} attachments (files or Drive links) are required`
     )
   }
-  return value.map((candidate, index) => {
+  const parsed: SubmissionFileInput[] = value.map((candidate, index) => {
     if (!candidate || typeof candidate !== 'object') {
-      throw new HttpsError('invalid-argument', `File ${index + 1} is invalid`)
+      throw new HttpsError('invalid-argument', `Attachment ${index + 1} is invalid`)
     }
     const file = candidate as Record<string, unknown>
-    const parsed = {
-      name: String(file.name || '').trim(),
+    const name = String(file.name || '').trim()
+    const kind = file.kind === 'driveLink' ? 'driveLink' : 'file'
+
+    if (kind === 'driveLink') {
+      // External attachment: no bytes stored on our side. Validate strictly —
+      // faculty will click whatever lands in the submission.
+      const url = normalizeDriveFileUrl(String(file.url || ''))
+      if (!name || name.length > 150 || !url) {
+        throw new HttpsError(
+          'invalid-argument',
+          `Drive link ${index + 1} is invalid — use the file's "Anyone with the link" URL`
+        )
+      }
+      return { name, storagePath: '', contentType: '', size: 0, kind, url }
+    }
+
+    const upload = {
+      name,
       storagePath: String(file.storagePath || ''),
       contentType: String(file.contentType || ''),
       size: Number(file.size),
     }
     if (
-      !parsed.name
-      || !parsed.storagePath.startsWith(`${expectedPrefix}/`)
-      || parsed.storagePath.slice(expectedPrefix.length + 1).includes('/')
-      || !ASSIGNMENT_CONTENT_TYPE.test(parsed.contentType)
-      || !Number.isFinite(parsed.size)
-      || parsed.size < 1
-      || parsed.size > MAX_ASSIGNMENT_FILE_SIZE
+      !upload.name
+      || !upload.storagePath.startsWith(`${expectedPrefix}/`)
+      || upload.storagePath.slice(expectedPrefix.length + 1).includes('/')
+      || !ASSIGNMENT_CONTENT_TYPE.test(upload.contentType)
+      || !Number.isFinite(upload.size)
+      || upload.size < 1
+      || upload.size > MAX_ASSIGNMENT_FILE_SIZE
     ) {
       throw new HttpsError('invalid-argument', `File ${index + 1} does not meet upload policy`)
     }
-    return parsed
+    return { ...upload, kind }
   })
+
+  const linkCount = parsed.filter((f) => f.kind === 'driveLink').length
+  if (linkCount > MAX_ASSIGNMENT_DRIVE_LINKS) {
+    throw new HttpsError(
+      'invalid-argument',
+      `At most ${MAX_ASSIGNMENT_DRIVE_LINKS} Drive links are allowed per submission`
+    )
+  }
+  return parsed
 }
 
 export const finalizeMyAssignmentSubmission = onCall(
@@ -502,10 +550,13 @@ export const finalizeMyAssignmentSubmission = onCall(
       throw new HttpsError('failed-precondition', 'Submission upload session is invalid or expired')
     }
 
-    // Never trust browser-provided file metadata. Verify every object in the
-    // bucket before making the submission visible to faculty.
+    // Never trust browser-provided file metadata. Verify every UPLOADED object
+    // in the bucket before making the submission visible to faculty. Drive
+    // links carry no storagePath and are validated by shape in
+    // parseSubmissionFiles (canonical drive.google.com file URLs only).
+    const uploaded = files.filter((file) => file.kind !== 'driveLink')
     const bucket = admin.storage().bucket()
-    await Promise.all(files.map(async (file, index) => {
+    await Promise.all(uploaded.map(async (file, index) => {
       try {
         const [metadata] = await bucket.file(file.storagePath).getMetadata()
         const storedSize = Number(metadata.size)

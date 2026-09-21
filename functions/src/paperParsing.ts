@@ -39,16 +39,15 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { extractRawText } from 'mammoth'
 // Type-only import: erased at compile time, so pdfjs is NOT loaded here.
 //
-// pdfjs-dist's legacy build probes for `canvas` (and polyfills DOMMatrix /
-// Path2D) the moment it is required, which costs seconds. Because index.ts
-// pulls this module in, that cost landed on every function's cold start AND
-// on the deploy-time discovery step, where the CLI allows only 10s to
-// enumerate backends — large deploys failed with "User code failed to load.
-// Cannot determine backend specification. Timeout after 10000".
+// pdfjs-dist 6.x is a heavy ESM package; requiring it at module load cost
+// seconds of cold start for EVERY function (index.ts pulls this module in)
+// AND tripped the deploy-time discovery step, where the CLI allows only 10s
+// to enumerate backends — large deploys failed with "User code failed to
+// load. Cannot determine backend specification. Timeout after 10000".
 //
 // Firebase's own guidance for that error is to defer initialization instead
 // of raising the timeout, so the library is now imported on first PDF parse.
-import type * as PdfJsLib from 'pdfjs-dist/legacy/build/pdf.js'
+import type * as PdfJsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { SchemaType, type GenerateContentRequest, type ResponseSchema } from '@google/generative-ai'
 import { geminiClient } from './config/aiProviders'
 import {
@@ -132,13 +131,13 @@ export interface ExtractedPaperText {
 let pdfjsModule: typeof PdfJsLib | null = null
 
 /**
- * Loads pdfjs-dist on demand. The legacy build is CJS, so depending on how
- * the runtime interops it the namespace lands either on the module object or
- * on `.default`; both are handled rather than assumed.
+ * Loads pdfjs-dist on demand. The 6.x legacy build is ESM, so the namespace
+ * lands on the module object (a `.default` fallback is kept for runtime
+ * interop differences rather than assumed away).
  */
 async function loadPdfJs(): Promise<typeof PdfJsLib> {
   if (!pdfjsModule) {
-    const loaded: any = await import('pdfjs-dist/legacy/build/pdf.js')
+    const loaded: any = await import('pdfjs-dist/legacy/build/pdf.mjs')
     pdfjsModule = (loaded && loaded.getDocument ? loaded : loaded?.default) as typeof PdfJsLib
   }
   return pdfjsModule
@@ -175,7 +174,8 @@ export async function extractPaperText(buffer: Buffer, contentType: string): Pro
       }
       return { text: pageParts.join('\n'), kind: 'pdf', pages: doc.numPages }
     } finally {
-      await doc.destroy().catch(() => undefined)
+      // pdfjs 6: destroy() moved from the document proxy to the loading task.
+      await task.destroy().catch(() => undefined)
     }
   }
   if (contentType === DOCX_TYPE) {

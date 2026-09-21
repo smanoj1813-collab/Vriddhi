@@ -4,7 +4,7 @@
 // Replaces fragile DOCX parsing with structured data entry
 // ═══════════════════════════════════════════════════════════════════════
 
-import * as XLSX from 'xlsx';
+import * as XLSX from '@e965/xlsx';
 import type { SyllabusExtract, ParsedCourse, ParsedModule, CourseType, SyllabusFormat } from '../types/curriculum';
 import { detectTemplateSampleIssues } from './templateSampleGuards';
 

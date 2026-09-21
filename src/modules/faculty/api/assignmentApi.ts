@@ -85,6 +85,8 @@ export interface Submission {
     type?: string
     contentType?: string
     size: number
+    /** 'driveLink' = external Google Drive file link (no stored bytes). */
+    kind?: 'file' | 'driveLink'
   }>
   
   // Status

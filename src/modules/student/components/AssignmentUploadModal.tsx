@@ -1,15 +1,17 @@
 // src/modules/student/components/AssignmentUploadModal.tsx
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, File, Image as ImageIcon, Loader2, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
+import { X, Upload, File, Image as ImageIcon, Loader2, CheckCircle2, AlertTriangle, FileText, Link as LinkIcon } from 'lucide-react';
 import type { Assignment } from '../types/student';
 import {
-  submitAssignmentWithFiles,
+  submitAssignmentWithAttachments,
   validateFile,
   formatFileSize,
   getAllowedFileTypes,
   isImageFile,
+  type SubmissionDriveLink,
 } from '../services/assignmentService';
+import { validateDriveLink } from '@/shared/utils/driveLink';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 
@@ -26,6 +28,9 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
   const studentId = profile?.id || '';
 
   const [files, setFiles] = useState<File[]>([]);
+  const [links, setLinks] = useState<SubmissionDriveLink[]>([]);
+  const [linkInput, setLinkInput] = useState('');
+  const [linkLabel, setLinkLabel] = useState('');
   const [comment, setComment] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -74,9 +79,26 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const addDriveLink = () => {
+    const check = validateDriveLink(linkInput);
+    if (!check.valid || !check.url) {
+      setError(check.error || 'Invalid Drive link');
+      return;
+    }
+    const label = linkLabel.trim() || 'Google Drive file';
+    setError(null);
+    setLinks(prev => [...prev, { name: label.slice(0, 150), url: check.url! }].slice(0, 3));
+    setLinkInput('');
+    setLinkLabel('');
+  };
+
+  const removeLink = (index: number) => {
+    setLinks(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
-    if (files.length === 0) {
-      setError('Please select at least one file');
+    if (files.length === 0 && links.length === 0) {
+      setError('Add at least one file or a Google Drive link');
       return;
     }
     if (!studentId) {
@@ -88,7 +110,7 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
     setError(null);
 
     try {
-      await submitAssignmentWithFiles(assignment.id, studentId, files, comment, {
+      await submitAssignmentWithAttachments(assignment.id, studentId, files, links, comment, {
         onProgress: setUploadProgress,
       });
 
@@ -106,6 +128,9 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
 
   const reset = () => {
     setFiles([]);
+    setLinks([]);
+    setLinkInput('');
+    setLinkLabel('');
     setComment('');
     setError(null);
     setSuccess(false);
@@ -220,6 +245,69 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
                   </div>
                 )}
 
+                {/* Google Drive link (optional, for large files like videos) */}
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LinkIcon size={14} className="text-teal-400" />
+                    <span className="text-sm text-slate-300 font-medium">…or attach a Google Drive link</span>
+                  </div>
+                  {links.length < 3 ? (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          value={linkLabel}
+                          onChange={(e) => setLinkLabel(e.target.value)}
+                          placeholder="Label (e.g. Video solution)"
+                          className="w-40 shrink-0 px-3 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+                        />
+                        <input
+                          value={linkInput}
+                          onChange={(e) => setLinkInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addDriveLink(); } }}
+                          placeholder="https://drive.google.com/file/d/…/view"
+                          className="flex-1 min-w-0 px-3 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+                        />
+                        <button
+                          onClick={addDriveLink}
+                          className="px-3 py-2 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-medium hover:bg-teal-500/30 transition-colors shrink-0"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        In Google Drive: share the file as <span className="text-slate-400">Anyone with the link → Viewer</span>, then copy its link.
+                        The file stays in your Drive — nothing is uploaded to Vriddhi, so this is ideal for large files like videos.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500">Maximum 3 Drive links per submission.</p>
+                  )}
+                  {links.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {links.map((link, index) => (
+                        <div
+                          key={`${link.url}-${index}`}
+                          className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/30"
+                        >
+                          <div className="p-2 rounded-lg bg-slate-700/50">
+                            <LinkIcon size={16} className="text-teal-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">{link.name}</p>
+                            <p className="text-xs text-slate-500 truncate">Google Drive link — no upload needed</p>
+                          </div>
+                          <button
+                            onClick={() => removeLink(index)}
+                            className="p-1 rounded hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Comment */}
                 <div className="mt-4">
                   <label className="text-sm text-slate-300 font-medium mb-2 block">Comment (Optional)</label>
@@ -275,7 +363,7 @@ export default function AssignmentUploadModal({ assignment, isOpen, onClose, onS
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={uploading || files.length === 0}
+                disabled={uploading || (files.length === 0 && links.length === 0)}
                 className="px-6 py-2 rounded-lg text-sm font-medium bg-teal-500 hover:bg-teal-400 disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors flex items-center gap-2"
               >
                 {uploading ? (

@@ -124,7 +124,32 @@ export default function FacultyUploadMaterial() {
     }
   }
 
+  // Per-type client caps — must stay at or below the server caps in
+  // storage.rules (50 MB hard cap on /colleges/{id}/materials/).
+  const MATERIAL_SIZE_LIMITS: Record<MaterialType, number> = {
+    pdf: 25 * 1024 * 1024,
+    document: 25 * 1024 * 1024,
+    presentation: 25 * 1024 * 1024,
+    image: 15 * 1024 * 1024,
+    video: 50 * 1024 * 1024,
+    link: 0,
+  }
+
+  // Last-resort escape hatch: if Storage is unreachable, embed tiny files as a
+  // data URL in the Firestore doc. Base64 inflates size ~33% and Firestore
+  // documents hard-cap at 1 MiB, so only files up to 300 KB can ever fit.
+  // Anything larger MUST fail with a visible error — the old behaviour was to
+  // base64 everything, which silently broke every upload over ~700 KB.
+  const BASE64_FALLBACK_MAX_BYTES = 300 * 1024
+
   const uploadFileToStorage = async (file: File): Promise<string> => {
+    const limit = MATERIAL_SIZE_LIMITS[uploadType]
+    if (limit > 0 && file.size > limit) {
+      throw new Error(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB — the limit for ${uploadType} materials is ${Math.round(limit / 1024 / 1024)} MB.`)
+    }
+    if (file.size < 1) {
+      throw new Error('The selected file is empty.')
+    }
     try {
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
       const storagePath = `colleges/${collegeId}/materials/${Date.now()}_${sanitizedName}`
@@ -132,12 +157,16 @@ export default function FacultyUploadMaterial() {
       await uploadBytes(storageRef, file, { contentType: file.type })
       return await getDownloadURL(storageRef)
     } catch (storageErr) {
-      console.warn('[FacultyUploadMaterial] Cloud Storage upload failed, creating base64 data URL:', storageErr)
-      return new Promise((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result as string)
-        reader.readAsDataURL(file)
-      })
+      if (file.size <= BASE64_FALLBACK_MAX_BYTES) {
+        console.warn('[FacultyUploadMaterial] Cloud Storage upload failed, storing small file as base64 data URL:', storageErr)
+        return new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.readAsDataURL(file)
+        })
+      }
+      console.error('[FacultyUploadMaterial] Cloud Storage upload failed and file is too large for the fallback:', storageErr)
+      throw new Error('Cloud Storage upload failed. The file is too large to fall back to in-database storage — please retry, or share the file via an external link instead.')
     }
   }
 
@@ -491,7 +520,7 @@ export default function FacultyUploadMaterial() {
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
                     {uploadType === 'pdf' && 'PDF document up to 25MB'}
-                    {uploadType === 'video' && 'Video file up to 100MB'}
+                    {uploadType === 'video' && 'Video file up to 50MB (MP4/MOV/WebM)'}
                     {uploadType === 'image' && 'Image file up to 15MB'}
                     {uploadType === 'document' && 'Word document (.doc, .docx) up to 25MB'}
                     {uploadType === 'presentation' && 'PowerPoint (.ppt, .pptx) up to 25MB'}
