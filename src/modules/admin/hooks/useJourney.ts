@@ -22,6 +22,11 @@ import {
   ScoreRecord,
   AttendanceRecord,
 } from '../api/journeyApi'
+import {
+  fetchCollegeMilestonesFromRealData,
+  fetchFacultyTimelineFromRealData,
+  fetchStudentTimelineFromRealData,
+} from '../api/journeyMilestonesApi'
 
 export interface StudentJourneyData {
   student: { id: string; name: string; regNo: string; course: string; batch: string; branch: string }
@@ -83,15 +88,97 @@ export function useCollegeJourney() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await fetchMilestones()
-      setMilestones(data)
+      // Try real-data milestones first (exam sessions, fees, challans, notifications, UUCMS sync)
+      const realData = await fetchCollegeMilestonesFromRealData()
+      if (realData.length > 0) {
+        setMilestones(realData)
+      } else {
+        // Fallback to legacy subcollection milestones
+        const data = await fetchMilestones()
+        setMilestones(data)
+      }
       loadedRef.current = true
     } catch (error) {
       console.error('Error fetching milestones:', error)
+      // Final fallback to legacy
+      try {
+        const data = await fetchMilestones()
+        setMilestones(data)
+      } catch {}
     } finally {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!loadedRef.current) fetchData()
+  }, [fetchData])
+
+  const refresh = useCallback(() => {
+    loadedRef.current = false
+    fetchData()
+  }, [fetchData])
+
+  return { milestones, loading, refresh }
+}
+
+// Real faculty timeline from assessments, papers, etc.
+export function useFacultyTimeline(facultyEmail: string, facultyName: string) {
+  const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [loading, setLoading] = useState(true)
+  const loadedRef = useRef(false)
+
+  const fetchData = useCallback(async () => {
+    if (!facultyEmail && !facultyName) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      const data = await fetchFacultyTimelineFromRealData(facultyEmail, facultyName)
+      setMilestones(data)
+      loadedRef.current = true
+    } catch (e) {
+      console.error('[useFacultyTimeline] failed', e)
+    } finally {
+      setLoading(false)
+    }
+  }, [facultyEmail, facultyName])
+
+  useEffect(() => {
+    if (!loadedRef.current) fetchData()
+  }, [fetchData])
+
+  const refresh = useCallback(() => {
+    loadedRef.current = false
+    fetchData()
+  }, [fetchData])
+
+  return { milestones, loading, refresh }
+}
+
+// Real student timeline from fees, challans, hall tickets, grades, assessments
+export function useStudentTimeline(studentId: string) {
+  const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [loading, setLoading] = useState(true)
+  const loadedRef = useRef(false)
+
+  const fetchData = useCallback(async () => {
+    if (!studentId) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      const data = await fetchStudentTimelineFromRealData(studentId)
+      setMilestones(data)
+      loadedRef.current = true
+    } catch (e) {
+      console.error('[useStudentTimeline] failed', e)
+    } finally {
+      setLoading(false)
+    }
+  }, [studentId])
 
   useEffect(() => {
     if (!loadedRef.current) fetchData()

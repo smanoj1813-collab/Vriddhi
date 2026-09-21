@@ -9,6 +9,7 @@ import {
   Bell, Loader2
 } from 'lucide-react';
 import { calculateBCUAttendanceMarks } from '@/shared/utils/bcuCompliance';
+import PWAInstallCard from '@/shared/components/PWAInstallCard';
 
 interface HallTicketDoc {
   id: string;
@@ -122,6 +123,8 @@ export default function StudentHallTickets() {
           Download your university exam hall tickets - BCU, BNU, Davangere, Rani Channamma
         </p>
       </div>
+
+      <PWAInstallCard variant="banner" />
 
       {/* Info Banner - Uniclare feature parity */}
       <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 text-white">

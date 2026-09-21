@@ -40,6 +40,7 @@ const UUCMSIntegration = lazy(() => import('./pages/UUCMSIntegration'));
 const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard'));
 const ResultImporter = lazy(() => import('./pages/ResultImporter'));
 const ChallanManagement = lazy(() => import('./pages/ChallanManagement'));
+const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Lazy loading wrappers
@@ -140,6 +141,8 @@ export const adminRoutes: RouteObject[] = [
       { path: 'bcu-compliance', element: <LazyPage><BCUComplianceDashboard /></LazyPage> },
       { path: 'result-importer', element: <LazyPage><ResultImporter /></LazyPage> },
       { path: 'challans', element: <LazyPage><ChallanManagement /></LazyPage> },
+      { path: 'install-app', element: <LazyPage><PWAInstallPage /></LazyPage> },
+      { path: 'pwa-install', element: <LazyPage><PWAInstallPage /></LazyPage> },
     ],
   },
 ];

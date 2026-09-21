@@ -25,6 +25,7 @@ const StudentFacultyConnectPage = lazy(() => import('./pages/StudentFacultyConne
 const StudentJourneyPage = lazy(() => import('./pages/StudentJourneyPage'));
 const StudentCurriculumPage = lazy(() => import('./pages/StudentCurriculumPage'));
 const StudentHallTickets = lazy(() => import('./pages/StudentHallTickets'));
+const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -72,6 +73,8 @@ export const studentRoutes: RouteObject[] = [
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },
       { path: 'settings', element: <StudentSettings /> },
+      { path: 'install-app', element: <PWAInstallPage /> },
+      { path: 'pwa-install', element: <PWAInstallPage /> },
     ],
   },
 ];

@@ -287,6 +287,15 @@ const facultyNav: SidebarEntry[] = [
     ],
   },
 
+  {
+    kind: "group",
+    label: "Insights",
+    icon: <TrendingUp fontSize="small" />,
+    children: [
+      { label: "Journey", path: "/faculty/journey", icon: <TrendingUp fontSize="small" /> },
+    ],
+  },
+  { kind: "link", label: "Install App", path: "/faculty/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
   { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
   { kind: "link", label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" /> },
@@ -382,6 +391,7 @@ const principalNav: SidebarEntry[] = [
     ],
   },
 
+  { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" /> },
 ];
 

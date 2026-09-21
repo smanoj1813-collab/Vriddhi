@@ -60,6 +60,7 @@ const navItems: NavItem[] = [
   { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap },
   { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays },
   { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell },
+  { id: 'install-app', label: 'Install App', path: '/student/install-app', icon: Download },
   { id: 'settings', label: 'Settings', path: '/student/settings', icon: Settings },
 ];
 

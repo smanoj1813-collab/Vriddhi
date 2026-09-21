@@ -2,10 +2,14 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft, GraduationCap, Trophy, CalendarCheck, Target,
   CheckCircle2, Circle, Clock, AlertTriangle, RefreshCw,
-  TrendingUp, Briefcase, Info, Lock,
+  TrendingUp, Briefcase, Info, Lock, Download, Bell, FileText, CreditCard, Receipt
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMyJourney, buildJourneyStages, type StageState } from '../hooks/useMyJourney';
+import { useEffect, useState } from 'react';
+import { fetchStudentTimelineFromRealData } from '@/modules/admin/api/journeyMilestonesApi';
+import PWAInstallCard from '@/shared/components/PWAInstallCard';
+import type { Milestone } from '@/modules/admin/api/journeyApi';
 
 // ------------------------------------------------------------------
 // Student journey: enrolment → placement, from real records.
@@ -97,6 +101,23 @@ function EmptyNote({ title, body }: { title: string; body: string }) {
 export default function StudentJourneyPage() {
   const { journey, loading, error, refresh } = useMyJourney();
   const navigate = useNavigate();
+  const [realTimeline, setRealTimeline] = useState<Milestone[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTimeline = async () => {
+      if (!journey?.profile?.id) { setTimelineLoading(false); return; }
+      try {
+        const data = await fetchStudentTimelineFromRealData(journey.profile.id);
+        setRealTimeline(data);
+      } catch (e) {
+        console.error('[StudentJourney] timeline failed', e);
+      } finally {
+        setTimelineLoading(false);
+      }
+    };
+    loadTimeline();
+  }, [journey?.profile?.id]);
 
   if (loading) {
     return (
@@ -269,6 +290,63 @@ export default function StudentJourneyPage() {
           </div>
         </div>
       </div>
+
+      {/* Connected Timeline - Fees, Challans, Hall Tickets, Results */}
+      <div className="p-5 md:p-6 rounded-3xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 shadow-sm">
+        <h2 className="font-bold text-slate-900 dark:text-white text-sm mb-4 flex items-center gap-2">
+          <FileText className="w-4 h-4 text-teal-500" /> Connected Journey — Fees, Challans, Hall Tickets, Results (Uniclare parity)
+        </h2>
+        {timelineLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : realTimeline.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-xs text-slate-500">No timeline yet — auto-connects from fee payments, challans, hall tickets, grades, assessments</p>
+            <div className="flex flex-wrap gap-2 justify-center mt-3">
+              {[
+                { icon: CreditCard, label: 'Fee Payments' },
+                { icon: Receipt, label: 'Challans' },
+                { icon: Download, label: 'Hall Tickets' },
+                { icon: Trophy, label: 'Results' },
+                { icon: Target, label: 'Assessments' }
+              ].map(({ icon: Icon, label }) => (
+                <span key={label} className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  <Icon className="w-3 h-3" /> {label}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="relative">
+            <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-slate-200 dark:bg-slate-800" />
+            <div className="space-y-4">
+              {realTimeline.map((m) => {
+                const statusColor = m.status === 'completed' ? 'bg-emerald-500 border-emerald-400' : m.status === 'active' ? 'bg-amber-500 border-amber-400' : m.status === 'warning' ? 'bg-rose-500 border-rose-400' : 'bg-slate-300 border-slate-400';
+                const Icon = m.id.includes('fee') ? CreditCard : m.id.includes('challan') ? Receipt : m.id.includes('ht') || m.id.includes('hall') ? Download : m.id.includes('grade') ? Trophy : Target;
+                return (
+                  <div key={m.id} className="relative flex items-start gap-4">
+                    <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${statusColor} text-white`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-xs text-slate-900 dark:text-white">{m.title}</h4>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${m.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : m.status === 'active' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : m.status === 'warning' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>{m.status}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{m.date} • {m.description}</p>
+                      {m.metric && <p className="text-[11px] text-teal-600 dark:text-teal-400 mt-1">{m.metric}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* PWA Install Card - Uniclare parity */}
+      <PWAInstallCard variant="banner" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Semester progression */}
