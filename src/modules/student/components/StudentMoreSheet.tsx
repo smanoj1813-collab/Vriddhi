@@ -4,9 +4,10 @@ import { Download, LogOut, Moon, Sun, X } from 'lucide-react'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher'
+import TextSizeControl from '../../../shared/components/TextSizeControl'
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install'
 import type { TranslationKey } from '../../../shared/i18n'
-import { MOBILE_TAB_IDS, STUDENT_NAV_GROUPS, STUDENT_NAV_ITEMS } from '../studentNav'
+import { STUDENT_NAV_GROUPS, moreSheetItems } from '../studentNav'
 
 interface StudentMoreSheetProps {
   open: boolean
@@ -17,12 +18,12 @@ interface StudentMoreSheetProps {
   unreadNotifications?: number
 }
 
-const TAB_IDS: string[] = [...MOBILE_TAB_IDS]
-
 /**
  * The "More" sheet — the mobile answer to the desktop sidebar. Everything a
  * student does not reach daily lives here as thumb-sized tiles, so the phone
- * layout never falls back to scrolling a long desktop nav list.
+ * layout never falls back to scrolling a long desktop nav list. Fees and
+ * Notifications live here too: they are checked occasionally, and the two
+ * bottom-bar hubs (Academics, Learning) now own the daily study pages.
  */
 export default function StudentMoreSheet({
   open,
@@ -35,9 +36,7 @@ export default function StudentMoreSheet({
   const { t } = useTranslation()
   const { resolvedMode, toggleMode } = useThemeMode()
   const showInstall = !isPwaStandalone()
-  const sheetItems = STUDENT_NAV_ITEMS.filter(
-    (item) => !TAB_IDS.includes(item.id as (typeof TAB_IDS)[number]) && (showInstall || item.id !== 'install-app')
-  )
+  const sheetItems = moreSheetItems({ showInstallApp: showInstall })
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
@@ -121,6 +120,7 @@ export default function StudentMoreSheet({
         </div>
 
         <div className="mt-2 space-y-2 px-4">
+          <TextSizeControl className="justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900" />
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <LanguageSwitcher compact showLabel={false} className="w-full" />

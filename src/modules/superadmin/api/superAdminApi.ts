@@ -738,21 +738,25 @@ export async function bulkUpdateStudentAcademicFields(
   const studentIds = Array.from(new Set(input.studentIds.map((id) => id.trim()).filter(Boolean)));
   const batch = input.batch === undefined ? undefined : input.batch.trim();
   const branch = input.branch === undefined ? undefined : input.branch.trim();
+  const semester = input.semester === undefined ? undefined : Number(input.semester);
 
   if (studentIds.length === 0) throw new SuperAdminApiError("Select at least one student");
   if (studentIds.length > 500) throw new SuperAdminApiError("Update at most 500 students at a time");
-  if (batch === undefined && branch === undefined) {
-    throw new SuperAdminApiError("Choose a batch and/or branch to update");
+  if (batch === undefined && branch === undefined && semester === undefined) {
+    throw new SuperAdminApiError("Choose a batch, branch and/or semester to update");
   }
   if (batch !== undefined && !batch) throw new SuperAdminApiError("Batch cannot be empty");
   if (branch !== undefined && !branch) throw new SuperAdminApiError("Branch cannot be empty");
+  if (semester !== undefined && (!Number.isInteger(semester) || semester < 1 || semester > 12)) {
+    throw new SuperAdminApiError("Semester must be a whole number between 1 and 12");
+  }
 
   try {
     const updateAcademicFields = httpsCallable<
       BulkStudentAcademicUpdateInput,
       BulkStudentAcademicUpdateResult
     >(functions, "bulkUpdateStudentAcademicFields", { timeout: 120_000 });
-    const result = await updateAcademicFields({ studentIds, batch, branch });
+    const result = await updateAcademicFields({ studentIds, batch, branch, semester });
     return result.data;
   } catch (error) {
     throw new SuperAdminApiError(

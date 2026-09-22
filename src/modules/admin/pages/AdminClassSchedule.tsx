@@ -33,6 +33,7 @@ import {
   Paper,
   Checkbox,
   FormControlLabel,
+  Autocomplete,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -58,6 +59,7 @@ import {
   type SessionConflict,
 } from '../api/classSessionApi'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
+import type { SubjectInfo } from '../api/scheduleApi'
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 const CLASS_TYPES: ClassType[] = ['lecture', 'lab', 'tutorial', 'seminar', 'workshop']
@@ -199,11 +201,27 @@ const AdminClassSchedule: React.FC = () => {
 
   const daySchedules = weeklySchedule[selectedDay] || []
 
-  // Get subjects for selected faculty only
+  // Subjects the selected faculty is mapped to, then every other subject the
+  // college teaches. A principal (or an admin covering for a faculty member
+  // whose subject mapping is missing) can always pick a subject, and can type
+  // one that is not in the list at all — the subject is a required field, but
+  // an empty dropdown must never be the reason a class cannot be scheduled.
   const facultySubjects = useMemo(() => {
     if (!formData.facultyId) return []
     return subjects.filter(s => s.facultyId === formData.facultyId)
   }, [formData.facultyId, subjects])
+
+  const subjectOptions = useMemo(() => {
+    const seen = new Set<string>()
+    const options: SubjectInfo[] = []
+    for (const subject of [...facultySubjects, ...subjects]) {
+      const key = subject.name.trim().toLowerCase()
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      options.push(subject)
+    }
+    return options
+  }, [facultySubjects, subjects])
 
   const resetAssignmentForm = () => {
     setAttachAssignment(false)
@@ -254,8 +272,19 @@ const AdminClassSchedule: React.FC = () => {
   }
 
   const handleSubmit = () => {
-    if (!formData.subject || !formData.facultyId || !formData.branch || !formData.batch || !formData.room) {
-      setSnackbar({ open: true, message: 'Please fill all required fields', severity: 'error' })
+    const missing = ([
+      ['Subject', formData.subject],
+      ['Faculty', formData.facultyId],
+      ['Branch', formData.branch],
+      ['Batch', formData.batch],
+      ['Room', formData.room],
+    ] as Array<[string, string]>).filter(([, value]) => !value).map(([label]) => label)
+    if (missing.length > 0) {
+      setSnackbar({
+        open: true,
+        message: `Please fill: ${missing.join(', ')}. Type the subject name if it is not in the list.`,
+        severity: 'error',
+      })
       return
     }
 
@@ -824,38 +853,50 @@ const AdminClassSchedule: React.FC = () => {
               </FormControl>
             </Box>
 
-            {/* Subject */}
+            {/* Subject — pick from the college's subjects or type one in */}
             <Box sx={{ flex: '1 1 250px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Subject *</InputLabel>
-                <Select
-                  value={formData.subject}
-                  onChange={e => {
-                    const selected = facultySubjects.find(s => s.name === e.target.value)
-                    setFormData(prev => ({
-                      ...prev,
-                      subject: e.target.value,
-                      subjectCode: selected?.code || '',
-                    }))
-                  }}
-                  label="Subject *"
-                  disabled={!formData.facultyId || facultySubjects.length === 0}
-                >
-                  {facultySubjects.length === 0 && (
-                    <MenuItem value="" disabled>
-                      {formData.facultyId ? 'No subjects found for this faculty' : 'Select a faculty first'}
-                    </MenuItem>
-                  )}
-                  {facultySubjects.map(s => (
-                    <MenuItem key={`${s.name}_${s.facultyId}`} value={s.name}>
-                      {s.name} {s.code && `(${s.code})`}
-                    </MenuItem>
-                  ))}
-                  {formData.subject && !facultySubjects.some(s => s.name === formData.subject) && (
-                    <MenuItem value={formData.subject}>{formData.subject}</MenuItem>
-                  )}
-                </Select>
-              </FormControl>
+              <Autocomplete<SubjectInfo, false, false, true>
+                freeSolo
+                size="small"
+                options={subjectOptions}
+                value={formData.subject}
+                groupBy={option =>
+                  typeof option === 'string'
+                    ? 'Typed subject'
+                    : option.facultyId && option.facultyId === formData.facultyId
+                      ? 'This faculty'
+                      : 'Other subjects in this college'
+                }
+                getOptionLabel={option =>
+                  typeof option === 'string' ? option : `${option.name}${option.code ? ` (${option.code})` : ''}`
+                }
+                isOptionEqualToValue={(option, value) =>
+                  (typeof option === 'string' ? option : option.name) ===
+                  (typeof value === 'string' ? value : value.name)
+                }
+                onChange={(_, value) => {
+                  const name = typeof value === 'string' ? value : value?.name || ''
+                  const code = typeof value === 'string' ? '' : value?.code || ''
+                  setFormData(prev => ({ ...prev, subject: name, subjectCode: code }))
+                }}
+                onInputChange={(_, inputValue, reason) => {
+                  if (reason === 'input' || reason === 'clear') {
+                    setFormData(prev => ({ ...prev, subject: inputValue, subjectCode: '' }))
+                  }
+                }}
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    label="Subject *"
+                    placeholder="Type to search, or type a new subject"
+                    helperText={
+                      facultySubjects.length === 0
+                        ? 'No subject is mapped to this faculty yet — type the subject name to schedule the class.'
+                        : 'Not in the list? Type the subject name.'
+                    }
+                  />
+                )}
+              />
             </Box>
 
             {/* Branch */}
@@ -1073,7 +1114,7 @@ const AdminClassSchedule: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={isCreating || isUpdating || !formData.subject || !formData.facultyId || !formData.branch || !formData.batch || !formData.room}
+            disabled={isCreating || isUpdating}
           >
             {editingId ? (isUpdating ? 'Updating...' : 'Update') : (isCreating ? 'Creating...' : 'Create')}
           </Button>

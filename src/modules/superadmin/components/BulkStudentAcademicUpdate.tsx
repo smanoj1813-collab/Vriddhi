@@ -17,8 +17,10 @@ export default function BulkStudentAcademicUpdate({
 }: BulkStudentAcademicUpdateProps) {
   const [changeBatch, setChangeBatch] = useState(true)
   const [changeBranch, setChangeBranch] = useState(false)
+  const [changeSemester, setChangeSemester] = useState(false)
   const [batch, setBatch] = useState('')
   const [branch, setBranch] = useState('')
+  const [semester, setSemester] = useState('1')
   const [error, setError] = useState('')
   const updateStudents = useBulkUpdateStudentAcademicFields()
   const { showSuccess } = useNotification()
@@ -26,8 +28,13 @@ export default function BulkStudentAcademicUpdate({
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError('')
-    if (!changeBatch && !changeBranch) {
+    if (!changeBatch && !changeBranch && !changeSemester) {
       setError('Choose at least one field to change.')
+      return
+    }
+    const semesterNumber = Number(semester)
+    if (changeSemester && (!Number.isInteger(semesterNumber) || semesterNumber < 1 || semesterNumber > 12)) {
+      setError('Semester must be a whole number between 1 and 12.')
       return
     }
     if ((changeBatch && !batch.trim()) || (changeBranch && !branch.trim())) {
@@ -39,6 +46,7 @@ export default function BulkStudentAcademicUpdate({
         studentIds: students.map((student) => student.id),
         ...(changeBatch ? { batch: batch.trim() } : {}),
         ...(changeBranch ? { branch: branch.trim() } : {}),
+        ...(changeSemester ? { semester: semesterNumber } : {}),
       })
       const missing = result.missingIds.length ? ` ${result.missingIds.length} missing record(s) were skipped.` : ''
       showSuccess(`Updated ${result.updated} student${result.updated === 1 ? '' : 's'}.${missing}`)
@@ -57,7 +65,7 @@ export default function BulkStudentAcademicUpdate({
               <GraduationCap className="h-5 w-5 text-blue-700 dark:text-blue-300" />
             </span>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Change batch / branch in bulk</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Change batch / branch / semester in bulk</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">{students.length} selected student{students.length === 1 ? '' : 's'}</p>
             </div>
           </div>
@@ -105,6 +113,29 @@ export default function BulkStudentAcademicUpdate({
                 className="input-field disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="e.g. B.Com"
               />
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+              <label className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <input type="checkbox" checked={changeSemester} onChange={(event) => setChangeSemester(event.target.checked)} className="rounded" />
+                Change semester
+              </label>
+              <select
+                value={semester}
+                onChange={(event) => setSemester(event.target.value)}
+                disabled={!changeSemester}
+                className="input-field disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Semester"
+              >
+                {Array.from({ length: 12 }, (_, index) => index + 1).map((value) => (
+                  <option key={value} value={String(value)}>
+                    Semester {value}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Use this to move a whole cohort to the next semester in one step.
+              </p>
             </div>
           </div>
 

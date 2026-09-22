@@ -1,8 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Grid2x2, Bell } from 'lucide-react'
+import { Grid2x2 } from 'lucide-react'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import type { TranslationKey } from '../../../shared/i18n'
-import { MOBILE_TAB_IDS, STUDENT_NAV_ITEMS, findNavItem, type StudentNavItem } from '../studentNav'
+import { findNavItem, mobileTabItems } from '../studentNav'
 
 interface StudentBottomNavProps {
   onOpenMore: () => void
@@ -10,22 +10,12 @@ interface StudentBottomNavProps {
   moreOpen?: boolean
 }
 
-const TAB_IDS: string[] = [...MOBILE_TAB_IDS]
-
-function tabItems(): StudentNavItem[] {
-  const picked = TAB_IDS
-    .map((id) => STUDENT_NAV_ITEMS.find((item) => item.id === id))
-    .filter((item): item is StudentNavItem => !!item)
-  // Keep the configured order, and fall back to Dashboard if a tab id is
-  // ever renamed, so the bar never renders three items.
-  return picked.length === TAB_IDS.length ? picked : [STUDENT_NAV_ITEMS[0], ...picked].slice(0, TAB_IDS.length)
-}
-
 /**
- * Thumb-reachable primary navigation for the installed phone app. The desktop
- * sidebar stays for `md+`; on a phone the drawer was the only way to move
- * around, which is why the portal read as a desktop site squeezed into a
- * narrow window.
+ * Thumb-reachable primary navigation for the installed phone app: Dashboard,
+ * Academics, Assessments, Learning — then "More" for the occasional pages
+ * (Fees, Notifications, Events, Settings…). The desktop sidebar stays for
+ * `md+`; on a phone the drawer was the only way to move around, which is why
+ * the portal read as a desktop site squeezed into a narrow window.
  */
 export default function StudentBottomNav({ onOpenMore, unreadNotifications = 0, moreOpen = false }: StudentBottomNavProps) {
   const location = useLocation()
@@ -38,9 +28,9 @@ export default function StudentBottomNav({ onOpenMore, unreadNotifications = 0, 
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0f1729]/95 backdrop-blur-md safe-area-bottom"
     >
       <ul className="flex items-stretch justify-around px-1 pt-1">
-        {tabItems().map((item) => {
+        {mobileTabItems().map((item) => {
           const isActive = active?.id === item.id
-          const Icon = item.id === 'notifications' ? Bell : item.icon
+          const Icon = item.icon
           const label = item.translationKey ? t(item.translationKey as TranslationKey) : item.label
           return (
             <li key={item.id} className="flex-1">
@@ -85,7 +75,12 @@ export default function StudentBottomNav({ onOpenMore, unreadNotifications = 0, 
                 moreOpen ? 'bg-teal-600 dark:bg-teal-400' : 'bg-transparent'
               }`}
             />
-            <Grid2x2 className="h-[22px] w-[22px]" />
+            <span className="relative">
+              <Grid2x2 className="h-[22px] w-[22px]" />
+              {unreadNotifications > 0 && !moreOpen && (
+                <span className="absolute -right-2 -top-1.5 h-2 w-2 rounded-full bg-rose-500" />
+              )}
+            </span>
             <span className="text-[10px] font-medium leading-none">More</span>
           </button>
         </li>

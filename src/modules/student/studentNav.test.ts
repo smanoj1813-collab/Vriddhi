@@ -1,6 +1,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { STUDENT_NAV_GROUPS, STUDENT_NAV_ITEMS, findNavItem, groupTilesByNavSection } from './studentNav'
+import {
+  MOBILE_TAB_IDS,
+  STUDENT_NAV_GROUPS,
+  STUDENT_NAV_ITEMS,
+  findNavItem,
+  groupTilesByNavSection,
+  mobileTabItems,
+  moreSheetItems,
+  navItemsInGroup,
+} from './studentNav'
 
 const DASHBOARD_TILES = [
   '/student/hall-tickets', '/student/attendance', '/student/assessments', '/student/assignments',
@@ -51,5 +60,76 @@ test('nav model: every item belongs to a declared group', () => {
   const declared = new Set(STUDENT_NAV_GROUPS.map((g) => g.id))
   for (const item of STUDENT_NAV_ITEMS) {
     assert.ok(declared.has(item.group), `${item.id} has group "${item.group}"`)
+  }
+})
+
+// ── Phone bottom bar ────────────────────────────────────────────────────
+// The bar carries Dashboard, Academics, Assessments, Learning and "More".
+// Fees and Notifications moved inside "More"; Academics and Learning were
+// pulled out as their own section hubs.
+test('bottom bar: the four tabs are Dashboard, Academics, Assessments, Learning', () => {
+  assert.deepEqual([...MOBILE_TAB_IDS], ['dashboard', 'academics', 'assessments', 'learning'])
+  const labels = mobileTabItems().map((item) => item.label)
+  assert.deepEqual(labels, ['Dashboard', 'Academics', 'Assessments', 'Learning'])
+})
+
+test('bottom bar: every tab resolves to a real route and an icon', () => {
+  for (const item of mobileTabItems()) {
+    assert.ok(item.path.startsWith('/student/'), `${item.id} has a student route`)
+    assert.ok(item.icon, `${item.id} has an icon`)
+  }
+})
+
+test('More sheet: fees and notifications are inside More, not tabs', () => {
+  const ids = moreSheetItems().map((item) => item.id)
+  assert.ok(ids.includes('fees'), 'Fees is reachable from More')
+  assert.ok(ids.includes('notifications'), 'Notifications is reachable from More')
+  for (const tabId of MOBILE_TAB_IDS) {
+    assert.ok(!ids.includes(tabId), `${tabId} is a tab, so it is not repeated in More`)
+  }
+})
+
+test('More sheet: hubs are tabs, never tiles inside the menu they head', () => {
+  const ids = moreSheetItems().map((item) => item.id)
+  assert.ok(!ids.includes('academics'))
+  assert.ok(!ids.includes('learning'))
+  // The installed app has nothing left to install, so that row is dropped.
+  assert.ok(!moreSheetItems({ showInstallApp: false }).map((item) => item.id).includes('install-app'))
+})
+
+test('hubs: a section hub lists its own group and never itself', () => {
+  const academics = navItemsInGroup('academics')
+  assert.ok(academics.length >= 4)
+  assert.ok(academics.every((item) => item.group === 'academics' && !item.hub))
+  assert.ok(academics.some((item) => item.id === 'attendance'))
+  assert.ok(academics.some((item) => item.id === 'grades'))
+  // Dashboard and Assessments already have a bottom-bar tab of their own.
+  assert.ok(!academics.map((item) => item.id).includes('dashboard'))
+  assert.ok(!academics.map((item) => item.id).includes('assessments'))
+
+  const learning = navItemsInGroup('practice')
+  assert.ok(learning.every((item) => item.group === 'practice' && !item.hub))
+  assert.ok(learning.some((item) => item.id === 'materials'))
+
+  // Both hubs are reachable by their own URL and light up as the active tab.
+  assert.equal(findNavItem('/student/academics')?.id, 'academics')
+  assert.equal(findNavItem('/student/learning')?.id, 'learning')
+  // …without swallowing their children.
+  assert.equal(findNavItem('/student/academics/extra')?.id, 'academics')
+  assert.equal(findNavItem('/student/attendance')?.id, 'attendance')
+})
+
+test('hubs: a hub is a declared group, and every listed page carries a hint', () => {
+  const declared = new Set(STUDENT_NAV_GROUPS.map((group) => group.id))
+  for (const item of STUDENT_NAV_ITEMS.filter((entry) => entry.hub)) {
+    assert.ok(declared.has(item.group), `${item.id} belongs to a declared group`)
+    assert.ok(navItemsInGroup(item.group).length >= 2, `${item.id} heads a group with pages to show`)
+  }
+  // The hub pages print one line per tile; a tile without a hint renders as a
+  // bare label, which is exactly the dead-end list this feature replaced.
+  for (const group of ['academics', 'practice'] as const) {
+    for (const item of navItemsInGroup(group)) {
+      assert.ok(item.hint, `${item.id} has a hint for the hub page`)
+    }
   }
 })

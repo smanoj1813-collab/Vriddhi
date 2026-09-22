@@ -26,6 +26,8 @@ const StudentJourneyPage = lazy(() => import('./pages/StudentJourneyPage'));
 const StudentCurriculumPage = lazy(() => import('./pages/StudentCurriculumPage'));
 const StudentHallTickets = lazy(() => import('./pages/StudentHallTickets'));
 const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
+// Phone section hubs — the "Academics" and "Learning" bottom-bar tabs.
+const StudentHubPage = lazy(() => import('./pages/StudentHubPage'));
 
 export const studentRoutes: RouteObject[] = [
   {
@@ -43,6 +45,10 @@ export const studentRoutes: RouteObject[] = [
     children: [
       { index: true, element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
+
+      // Section hubs reached from the phone's bottom bar
+      { path: 'academics', element: <StudentHubPage group="academics" /> },
+      { path: 'learning', element: <StudentHubPage group="practice" /> },
 
       // Core pages
       { path: 'attendance', element: <AttendancePage /> },

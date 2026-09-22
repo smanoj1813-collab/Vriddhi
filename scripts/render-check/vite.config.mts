@@ -22,9 +22,17 @@ export default defineConfig({
     alias: [
       // Order matters: the specific '@' aliases must precede the bare fallback.
       { find: '@/modules/auth/context/AuthContext', replacement: stub('AuthContext.ts') },
+      // …and the relative spelling a page inside the same module uses
+      // ('../../auth/context/AuthContext' from the student pages).
+      { find: /(?:\.\.\/)+auth\/context\/AuthContext$/, replacement: stub('AuthContext.ts') },
       { find: '@/shared/api/staffAttendanceApi', replacement: stub('staffAttendanceApi.ts') },
       { find: '@/shared/services/prepContentService', replacement: stub('prepContentService.ts') },
       { find: '@/Firebase/config', replacement: stub('firebaseConfig.ts') },
+      // Relative spellings of the same module ('../../../Firebase/config' from
+      // the student API layer). Without this the real config initialises the
+      // Firebase SDK and every render that reaches a callable dies on
+      // `auth/invalid-api-key` instead of on the assertions.
+      { find: /(?:\.\.\/)+Firebase\/config$/, replacement: stub('firebaseConfig.ts') },
       // The student shell reads its identity from a context provider; the stub
       // lets a page mount without the whole data layer.
       // The student shell reads its identity from a context provider; these

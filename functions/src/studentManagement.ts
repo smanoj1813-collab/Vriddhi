@@ -9,12 +9,23 @@ interface BulkAcademicInput {
   studentIds?: unknown
   batch?: unknown
   branch?: unknown
+  semester?: unknown
 }
 
 interface BulkAcademicResult {
   requested: number
   updated: number
   missingIds: string[]
+}
+
+/** Semester is a small whole number; anything else is a client bug, not data. */
+function optionalSemester(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const semester = Number(value)
+  if (!Number.isInteger(semester) || semester < 1 || semester > 12) {
+    throw new HttpsError('invalid-argument', 'Semester must be a whole number between 1 and 12')
+  }
+  return semester
 }
 
 function optionalField(value: unknown, name: string): string | undefined {
@@ -28,8 +39,9 @@ function optionalField(value: unknown, name: string): string | undefined {
 }
 
 /**
- * Bulk change student batch and/or branch while keeping the canonical student
- * profile, the auth lookup document, and the per-college mirror consistent.
+ * Bulk change a student cohort's batch, branch and/or semester while keeping
+ * the canonical student profile, the auth lookup document, and the per-college
+ * mirror consistent. An omitted field is left untouched for every student.
  */
 export const bulkUpdateStudentAcademicFields = onCall(
   {
@@ -57,8 +69,9 @@ export const bulkUpdateStudentAcademicFields = onCall(
 
     const nextBatch = optionalField(input.batch, 'Batch')
     const nextBranch = optionalField(input.branch, 'Branch')
-    if (nextBatch === undefined && nextBranch === undefined) {
-      throw new HttpsError('invalid-argument', 'Choose a batch and/or branch to update')
+    const nextSemester = optionalSemester(input.semester)
+    if (nextBatch === undefined && nextBranch === undefined && nextSemester === undefined) {
+      throw new HttpsError('invalid-argument', 'Choose a batch, branch and/or semester to update')
     }
 
     const db = admin.firestore()
@@ -76,6 +89,7 @@ export const bulkUpdateStudentAcademicFields = onCall(
         const student = snapshot.data() || {}
         const academicUpdates: Record<string, unknown> = { updatedAt: now }
         if (nextBatch !== undefined) academicUpdates.batch = nextBatch
+        if (nextSemester !== undefined) academicUpdates.semester = nextSemester
         if (nextBranch !== undefined) {
           // `branch` is canonical; `department` keeps legacy roster and report
           // queries working until all old consumers have migrated.

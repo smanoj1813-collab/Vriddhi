@@ -5,6 +5,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler'
 import {
   gradeAssessmentPaper,
   gradeFromPercentage,
+  summarizePaperOutcome,
   type ServerAnswer,
   type ServerQuestion,
 } from './assessmentGrading'
@@ -1381,10 +1382,6 @@ export const getMyStudentTestResult = onCall(
     const questions = await loadTestQuestions(resolved.testId, resolved.test)
     const answers = Array.isArray(row?.answers) ? row.answers as ServerAnswer[] : []
     const answerMap = new Map(answers.map((answer) => [answer.questionId, answer]))
-    const gradeMap = new Map(
-      (Array.isArray(row?.gradingBreakdown) ? row.gradingBreakdown : [])
-        .map((grade: admin.firestore.DocumentData) => [String(grade.questionId), grade])
-    )
     const publishDate = timestampToDate(resolved.test.resultPublishDate)
     const endDate = timestampToDate(resolved.test.endDateTime)
     const reviewReleased = row?.status === 'graded'
@@ -1392,19 +1389,22 @@ export const getMyStudentTestResult = onCall(
     if (row?.status === 'graded' && !reviewReleased) {
       throw new HttpsError('failed-precondition', 'Result has been graded but is not released yet')
     }
-
-    const sectionMap = new Map<string, { total: number; correct: number; incorrect: number; score: number; totalMarks: number }>()
+    // The outcome of every question is derived from the marks each grader
+    // actually awarded (`gradingBreakdown`), not from the objective-only
+    // counters written at submit time. A paper containing descriptive
+    // questions is graded by faculty as "manual_graded + marks", so counting
+    // by status label alone reported 0 correct — and therefore 0/0/0 in the
+    // overview — on a paper that scored 15/20.
+    const paperOutcome = summarizePaperOutcome({
+      questions,
+      answers,
+      gradingBreakdown: Array.isArray(row?.gradingBreakdown) ? row.gradingBreakdown : [],
+      applyMarks: row?.status === 'graded',
+    })
+    const outcomeByQuestion = new Map(paperOutcome.perQuestion.map((item) => [item.questionId, item]))
     const questionResults = questions.map((question) => {
       const answer = answerMap.get(question.id)
-      const grade = gradeMap.get(question.id)
-      const sectionName = question.sectionName || 'General'
-      const section = sectionMap.get(sectionName) || { total: 0, correct: 0, incorrect: 0, score: 0, totalMarks: 0 }
-      section.total += 1
-      section.totalMarks += question.marks
-      if (grade?.status === 'correct') section.correct += 1
-      if (grade?.status === 'incorrect') section.incorrect += 1
-      section.score += Number(grade?.marksObtained) || 0
-      sectionMap.set(sectionName, section)
+      const outcome = outcomeByQuestion.get(question.id)
       return {
         questionId: question.id,
         questionText: question.text,
@@ -1413,20 +1413,28 @@ export const getMyStudentTestResult = onCall(
         options: reviewReleased ? question.options.map((option) => option.text) : undefined,
         correctAnswer: reviewReleased ? correctAnswerText(question) : undefined,
         studentAnswer: reviewReleased ? answerText(question, answer) : undefined,
-        isCorrect: reviewReleased && grade?.status === 'correct',
-        isAttempted: Boolean(answerText(question, answer)),
+        isCorrect: reviewReleased && outcome?.status === 'correct',
+        isAttempted: outcome?.isAttempted ?? Boolean(answerText(question, answer)),
         explanation: reviewReleased ? question.explanation : undefined,
-        status: String(grade?.status || (answer ? 'pending_manual' : 'unattempted')),
-        marksObtained: row?.status === 'graded' ? grade?.marksObtained ?? null : null,
-        sectionName,
+        status: outcome?.status || 'unattempted',
+        marksObtained: row?.status === 'graded' ? outcome?.marksObtained ?? null : null,
+        sectionName: outcome?.sectionName || question.sectionName || 'General',
       }
     })
-    const sectionScores = [...sectionMap.entries()].map(([sectionName, section]) => ({
-      sectionName,
-      ...section,
-      percentage: section.totalMarks > 0 ? Math.round((section.score / section.totalMarks) * 100) : 0,
-      timeTaken: 0,
-      accuracy: section.total > 0 ? Math.round((section.correct / section.total) * 100) : 0,
+    const sectionScores = paperOutcome.sections.map((section) => ({
+      sectionName: section.sectionName,
+      total: section.total,
+      correct: section.correct,
+      partial: section.partial,
+      incorrect: section.incorrect,
+      unattempted: section.unattempted,
+      pending: section.pending,
+      score: section.score,
+      totalMarks: section.totalMarks,
+      correctMarks: section.correctMarks,
+      percentage: section.percentage,
+      timeTaken: section.timeTaken,
+      accuracy: section.accuracy,
     }))
     const totalMarks = Number(row?.totalMarks) || 0
     const marksObtained = row?.status === 'graded' ? Number(row.marksObtained) || 0 : 0
@@ -1442,10 +1450,14 @@ export const getMyStudentTestResult = onCall(
       gradePoint: row?.status === 'graded' ? Number(row.gradePoint) || 0 : 0,
       timeSpent: Number(row?.timeSpent) || 0,
       totalQuestions: questions.length,
-      answeredCount: Number(row?.answeredCount) || answers.length,
-      correctCount: Number(row?.objectiveCorrectCount) || 0,
-      incorrectCount: Number(row?.objectiveIncorrectCount) || 0,
-      unattemptedCount: Number(row?.unattemptedCount) || 0,
+      answeredCount: paperOutcome.answeredCount,
+      correctCount: paperOutcome.correctCount,
+      partialCount: paperOutcome.partialCount,
+      incorrectCount: paperOutcome.incorrectCount,
+      unattemptedCount: paperOutcome.unattemptedCount,
+      pendingCount: paperOutcome.pendingCount,
+      correctMarks: paperOutcome.correctMarks,
+      awardedMarks: paperOutcome.awardedMarks,
       sectionScores,
       questionResults,
       leaderboard: [],
