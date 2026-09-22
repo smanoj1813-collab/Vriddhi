@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -35,9 +36,24 @@ async function mount(file, props) {
   document.body.appendChild(host);
   const reactRoot = createRoot(host);
 
+  // The admin pages read through react-query; without a client they throw
+  // "No QueryClient set". Every mount gets a fresh one so no section sees a
+  // previous section's cache.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+
   // Two passes: the first mounts and fires effects, the second lets the
   // awaited fixtures resolve and re-render.
-  await act(async () => { reactRoot.render(React.createElement(Comp, props)); });
+  await act(async () => {
+    reactRoot.render(
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        React.createElement(Comp, props)
+      )
+    );
+  });
   await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
 
   const settle = async () => { await act(async () => { await new Promise((r) => setTimeout(r, 20)); }); };
@@ -73,8 +89,35 @@ async function mount(file, props) {
       await settle();
     },
     hrefs: (selector = 'a') => [...host.querySelectorAll(selector)].map((a) => a.getAttribute('href')),
+    /**
+     * MUI renders Dialogs (and Snackbars) into a portal on <body>, so they are
+     * invisible to the querySelector calls above — a dialog check has to look
+     * at the document instead.
+     */
+    dialog: () => document.querySelector('.MuiDialog-root'),
+    dialogText: () => (document.querySelector('.MuiDialog-root')?.textContent ?? '').replace(/\s+/g, ' ').trim(),
+    dialogEl: (selector) => document.querySelector('.MuiDialog-root')?.querySelector(selector) ?? null,
+    dialogButtons: () => [...(document.querySelector('.MuiDialog-root')?.querySelectorAll('button') ?? [])],
+    /** Everything the student/principal can see, portals included. */
+    bodyText: () => (document.body.textContent ?? '').replace(/\s+/g, ' ').trim(),
+    /**
+     * Type into an input the way a browser does. React only notices a change
+     * made through the native value setter followed by an `input` event, so a
+     * plain `el.value = ...` would leave the component's state behind.
+     */
+    type: async (target, text) => {
+      const el = typeof target === 'string' ? host.querySelector(target) : target;
+      if (!el) throw new Error(`nothing to type into for ${typeof target === 'string' ? target : '<element>'}`);
+      await act(async () => {
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(el, text);
+        el.dispatchEvent(new window.Event('input', { bubbles: true }));
+      });
+      await settle();
+      return el;
+    },
     host,
-    unmount: async () => { await act(async () => reactRoot.unmount()); host.remove(); },
+    unmount: async () => { await act(async () => reactRoot.unmount()); queryClient.clear(); host.remove(); },
   };
 }
 
@@ -1098,10 +1141,6 @@ await section('question renderer (clipboard locked)', '/src/modules/student/comp
 }
 
 
-await server.close();
-
-const failed = checks.filter((c) => !c.ok);
-console.log(`\n${checks.length - failed.length}/${checks.length} checks passed, ${crashes} mount crash(es)`);
 // ── Completed assessment result ────────────────────────────────────────────
 // The reported bug: a paper whose descriptive answers a faculty member marked
 // (status `manual_graded` + marks) rendered "Correct 0/8 · Incorrect 0/8 ·
@@ -1282,5 +1321,119 @@ await section('student top bar', '/src/modules/student/components/StudentTopBar.
       }
     }
   });
+
+// ── Scheduling a class in a college that has no subject list ────────────────
+// What the principal reported: with no subject mapped to the faculty member
+// the Subject box was a dropdown with nothing in it and the Create button
+// refused to open, so a class could not be scheduled at all. The fixture is
+// exactly that college — one faculty member and no subjectsUG / subjectsPG —
+// so the dropdown is genuinely empty and only free text can get the class in.
+const scheduleFixtureDocs = [
+  { id: 'fac-1', data: () => ({ collegeId: 'college-a', name: 'Dr Rao', department: 'Commerce' }) },
+];
+const scheduleFixtureDoc = { data: { collegeId: 'college-a', name: 'Dr Rao' } };
+
+localStorage.setItem('vriddhi_college_id', 'college-a');
+globalThis.__RC_FIRESTORE_DOCS = scheduleFixtureDocs;
+globalThis.__RC_FIRESTORE_DOC = scheduleFixtureDoc;
+globalThis.__RC_LOCATION_STATE = null;
+
+await section('schedule dialog', '/src/modules/admin/pages/AdminClassSchedule.tsx', {}, async (t, view) => {
+  check('schedule dialog: mounts without throwing', true);
+  const addClass = view.byText('Add Class');
+  check('schedule dialog: the page offers Add Class', !!addClass, t.slice(0, 200));
+  if (!addClass) return;
+  await view.click(addClass);
+
+  const dialog = view.dialogText();
+  check('schedule dialog: opens on click', /Add New Class Schedule/.test(dialog), dialog);
+
+  const subject = view.dialogEl('input[placeholder="Type to search, or type a new subject"]');
+  check('schedule dialog: the subject can be typed, not only picked from a list',
+    !!subject && !subject.disabled && !subject.readOnly,
+    subject ? `disabled=${subject.disabled} readOnly=${subject.readOnly}` : 'no subject input in the dialog');
+
+  const create = view.dialogButtons().find((b) => (b.textContent ?? '').trim() === 'Create');
+  check('schedule dialog: Create is not dead while the subject list is empty', !!create && !create.disabled,
+    `create=${!!create} disabled=${create?.disabled}`);
+
+  // Submitting with nothing filled in must name what is missing — the old
+  // button simply refused to be pressed.
+  if (create) {
+    await view.click(create);
+    const told = view.bodyText();
+    check('schedule dialog: names the missing fields instead of refusing to submit',
+      /Please fill:/.test(told) && /Subject/.test(told), told.slice(-260));
+  }
+
+  // …and the same button lets the class through once a subject is typed.
+  if (subject && create) {
+    await view.type(subject, 'Business Statistics');
+    check('schedule dialog: a typed subject stays in the box', subject.value === 'Business Statistics', subject.value);
+    await view.click(create);
+    const told = view.bodyText();
+    check('schedule dialog: the typed subject clears the Subject complaint',
+      /Please fill:/.test(told) && !/Please fill: Subject/.test(told), told.slice(-260));
+  }
+});
+
+// The curriculum page hands the dialog a prefill; this is the "Schedule Class"
+// route a principal takes, and it has to end in a written class.
+globalThis.__RC_LOCATION_STATE = {
+  prefill: {
+    subject: 'Business Statistics',
+    subjectCode: 'BST101',
+    facultyId: 'fac-1',
+    branch: 'BCA',
+    batch: '2026',
+    semester: 4,
+    division: 'A',
+    section: 'A',
+  },
+};
+
+await section('schedule dialog (prefilled)', '/src/modules/admin/pages/AdminClassSchedule.tsx', {}, async (t, view) => {
+  check('prefilled schedule: mounts without throwing', true);
+  const dialog = view.dialogText();
+  check('prefilled schedule: opens from the curriculum prefill', /Add New Class Schedule/.test(dialog), dialog);
+  check('prefilled schedule: says to type the subject when none is mapped',
+    /No subject is mapped to this faculty yet/.test(dialog), dialog);
+
+  const subject = view.dialogEl('input[placeholder="Type to search, or type a new subject"]');
+  check('prefilled schedule: keeps the prefill as free text', subject?.value === 'Business Statistics', subject?.value);
+
+  const room = view.dialogEl('input[placeholder="e.g. 301-A"]');
+  check('prefilled schedule: still asks for the room', !!room, dialog.slice(0, 160));
+  if (!room) return;
+  await view.type(room, '301-A');
+
+  const create = view.dialogButtons().find((b) => (b.textContent ?? '').trim() === 'Create');
+  if (!create) {
+    check('prefilled schedule: Create is offered', false, dialog);
+    return;
+  }
+  globalThis.__RC_WRITES = [];
+  await view.click(create);
+  const write = (globalThis.__RC_WRITES ?? []).find((w) => w.path === 'addDoc');
+  check('prefilled schedule: the class is written to the schedule collection', !!write,
+    JSON.stringify(globalThis.__RC_WRITES ?? []).slice(0, 240));
+  check('prefilled schedule: the write carries the typed subject, room and cohort',
+    write?.data?.subject === 'Business Statistics' && write?.data?.room === '301-A'
+      && write?.data?.branch === 'BCA' && write?.data?.semester === 4,
+    JSON.stringify(write?.data ?? {}).slice(0, 300));
+  check('prefilled schedule: tells the principal it worked',
+    /Schedule created successfully/.test(view.bodyText()), view.bodyText().slice(-220));
+});
+
+globalThis.__RC_LOCATION_STATE = null;
+globalThis.__RC_WRITES = [];
+
+// Closing the dev server and printing the tally has to happen after the LAST
+// section: a summary placed above the sections reports a stale total and lets a
+// failure further down exit 0.
+await server.close();
+
+const failed = checks.filter((c) => !c.ok);
+console.log(`\n${checks.length - failed.length}/${checks.length} checks passed, ${crashes} mount crash(es)`);
 
 process.exit(failed.length === 0 && crashes === 0 ? 0 : 1);

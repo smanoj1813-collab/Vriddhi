@@ -13,7 +13,16 @@ export const Link = React.forwardRef(function Link({ to, children, ...rest }: an
 export function NavLink(p: any) { return React.createElement(Link, p); }
 export function useNavigate() { return (to: any) => { (globalThis as any).__navigated = to; }; }
 export function MemoryRouter({ children }: any) { return children; }
-export function useLocation() { return { pathname: '/admin/dashboard', search: (globalThis as any).__RC_SEARCH ?? '' }; }
+// `state` is what a page reads after a navigate({ state }) — the curriculum
+// page hands the schedule dialog its prefill that way. A check sets
+// globalThis.__RC_LOCATION_STATE to stand in for it.
+export function useLocation() {
+  return {
+    pathname: (globalThis as any).__RC_PATHNAME ?? '/admin/dashboard',
+    search: (globalThis as any).__RC_SEARCH ?? '',
+    state: (globalThis as any).__RC_LOCATION_STATE ?? null,
+  };
+}
 export function useParams() { return (globalThis as any).__RC_PARAMS ?? {}; }
 // Route shells (Layout, RoleRoute) render-through stubs: children only.
 export function Navigate(_p: any) { return null; }
