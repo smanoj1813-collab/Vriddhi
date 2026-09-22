@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Moon, School, Sun } from 'lucide-react'
+import { Bell, LogOut, Moon, School, Sun } from 'lucide-react'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import { findNavItem } from '../studentNav'
@@ -7,18 +8,22 @@ import type { TranslationKey } from '../../../shared/i18n'
 
 interface StudentTopBarProps {
   unreadNotifications?: number
+  /** Sign the student out. Omitted on the login shell, which has no session. */
+  onSignOut?: () => void
 }
 
 /**
  * Compact phone app bar. It replaces the desktop brand header on small
- * screens: the page the student is on, a bell, and the theme toggle — nothing
- * that needs a hover state or a mouse.
+ * screens: the page the student is on, a bell, the theme toggle and — because
+ * the only other way out of the portal lived at the bottom of the "More"
+ * sheet — a sign-out button within thumb's reach of the top of the screen.
  */
-export default function StudentTopBar({ unreadNotifications = 0 }: StudentTopBarProps) {
+export default function StudentTopBar({ unreadNotifications = 0, onSignOut }: StudentTopBarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { resolvedMode, toggleMode } = useThemeMode()
   const { t } = useTranslation()
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
   const item = findNavItem(location.pathname)
   const pageTitle = item ? (item.translationKey ? t(item.translationKey as TranslationKey) : item.label) : 'Vriddhi'
 
@@ -57,7 +62,53 @@ export default function StudentTopBar({ unreadNotifications = 0 }: StudentTopBar
             </span>
           )}
         </button>
+        {onSignOut && (
+          <button
+            type="button"
+            onClick={() => setConfirmSignOut(true)}
+            aria-label={t('common.signOut')}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-rose-600 transition-colors active:bg-rose-50 dark:text-rose-400 dark:active:bg-rose-950/40"
+          >
+            <LogOut className="h-[18px] w-[18px]" />
+          </button>
+        )}
       </div>
+
+      {confirmSignOut && onSignOut && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-6" role="dialog" aria-modal="true" aria-label={t('common.signOut')}>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setConfirmSignOut(false)}
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+          />
+          <div className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-[#131b2e]">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Sign out of Vriddhi?</h2>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              You will be taken back to the login screen. Anything you have not submitted is already saved on the server.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmSignOut(false)}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors active:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:active:bg-slate-800"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmSignOut(false)
+                  onSignOut()
+                }}
+                className="flex-1 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white transition-colors active:bg-rose-700"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

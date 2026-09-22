@@ -168,15 +168,28 @@ export interface TestResultDetail {
   totalQuestions: number;
   answeredCount: number;
   correctCount: number;
+  /** Answers that earned some, but not all, of their marks. */
+  partialCount?: number;
   incorrectCount: number;
   unattemptedCount: number;
+  /** Descriptive answers the faculty has not marked yet (graded papers: 0). */
+  pendingCount?: number;
+  /** Marks carried by the fully-correct answers. */
+  correctMarks?: number;
+  /** Every mark awarded, auto and manual together. */
+  awardedMarks?: number;
   sectionScores: {
     sectionName: string;
     total: number;
     correct: number;
+    partial?: number;
     incorrect: number;
+    unattempted?: number;
+    pending?: number;
     score: number;
     totalMarks: number;
+    /** Marks carried by this section's fully-correct answers. */
+    correctMarks?: number;
     percentage: number;
     timeTaken: number;
     accuracy: number;
@@ -185,7 +198,12 @@ export interface TestResultDetail {
     questionId: string;
     questionText: string;
     questionType?: string;
+    sectionName?: string;
     marks: number;
+    /** null while the answer is still being graded. */
+    marksObtained?: number | null;
+    /** correct | partial | incorrect | unattempted | pending_manual */
+    status?: string;
     options?: string[];
     correctAnswer?: string;
     studentAnswer?: string;

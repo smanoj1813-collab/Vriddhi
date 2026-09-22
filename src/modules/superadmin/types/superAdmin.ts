@@ -221,6 +221,8 @@ export interface BulkStudentAcademicUpdateInput {
   /** Omit a value to leave that field unchanged for every selected student. */
   batch?: string;
   branch?: string;
+  /** Semester number, 1–12. Omit to leave the semester untouched. */
+  semester?: number;
 }
 
 export interface BulkStudentAcademicUpdateResult {

@@ -6,7 +6,8 @@ import StudentTopBar from './StudentTopBar';
 import StudentBottomNav from './StudentBottomNav';
 import StudentMoreSheet from './StudentMoreSheet';
 import DesktopViewNotice from '../../../shared/components/DesktopViewNotice';
-import { useStudentData } from '../hooks/useStudentData';
+import { useStudentData } from '../hooks/useStudentData'
+import { useBackToExit } from '../hooks/useBackToExit';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import FloatingAIChatWidget from '../../../shared/components/FloatingAIChatWidget';
@@ -38,7 +39,12 @@ export default function StudentLayout() {
   // While a student is actively taking a test, the app chrome (sidebar, top
   // padding, floating chat) is removed so there is nothing to navigate away
   // to. The test page is route-scoped, so this is robust to test state.
-  const inActiveTest = /\/(test|assessments)\/[^/]+\/take$/.test(location.pathname);
+  const inActiveTest = /\/(test|assessments)\/[^/]+\/take$/.test(location.pathname)
+
+  // Home screen of the portal: the system back gesture there means "close the
+  // app", not "walk back through the portal's history".
+  const isPortalHome = ['/student', '/student/', '/student/dashboard'].includes(location.pathname)
+  const { exitHint } = useBackToExit(isPortalHome && !inActiveTest);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -108,7 +114,7 @@ export default function StudentLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 transition-colors duration-200">
-      <StudentTopBar unreadNotifications={unreadNotifications} />
+      <StudentTopBar unreadNotifications={unreadNotifications} onSignOut={() => void handleSignOut()} />
       <StudentSidebar onSignOut={() => void handleSignOut()} />
       <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0 pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-12">
         <div className="px-3 py-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -130,6 +136,13 @@ export default function StudentLayout() {
         studentMeta={[profile?.regNo, profile?.course, profile?.batch].filter(Boolean).join(' • ')}
         unreadNotifications={unreadNotifications}
       />
+      {exitHint && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[65] flex justify-center px-6 md:hidden">
+          <div className="rounded-full bg-slate-900/90 px-4 py-2 text-xs font-semibold text-white shadow-lg dark:bg-slate-100/95 dark:text-slate-900">
+            {t('common.pressBackAgainToExit')}
+          </div>
+        </div>
+      )}
       <DesktopViewNotice />
       <FloatingAIChatWidget />
     </div>

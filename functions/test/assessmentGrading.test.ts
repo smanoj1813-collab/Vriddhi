@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 import {
   gradeAssessmentPaper,
   gradeFromPercentage,
+  summarizePaperOutcome,
   type ServerQuestion,
 } from '../src/assessmentGrading'
 
@@ -92,5 +93,101 @@ describe('server assessment grading', () => {
   it('derives grade bands only on the server', () => {
     assert.deepEqual(gradeFromPercentage(90), { grade: 'A+', gradePoint: 10 })
     assert.deepEqual(gradeFromPercentage(39.99), { grade: 'F', gradePoint: 0 })
+  })
+})
+
+// ── Result-page outcome summary ─────────────────────────────────────────
+// Regression: a paper with descriptive questions is graded as
+// `manual_graded` + marks, which used to be counted as "0 correct" — the
+// student's result page then read 0/8 correct, 0/8 incorrect, 0/8
+// unattempted even though it showed 15/20 marks.
+describe('summarizePaperOutcome', () => {
+  const mcq = (id: string, marks = 1): ServerQuestion =>
+    question({ id, questionId: id, marks, type: 'mcq', sectionName: 'Section A — MCQ' })
+  const shortAnswer = (id: string, marks: number): ServerQuestion =>
+    question({ id, questionId: id, marks, type: 'short_answer', sectionName: 'Section B — Short answers', options: [] })
+
+  it('counts manually graded answers by the marks they were awarded', () => {
+    const questions = [
+      mcq('a1'), mcq('a2'), mcq('a3'), mcq('a4'), mcq('a5'),
+      shortAnswer('b1', 5), shortAnswer('b2', 5), shortAnswer('b3', 5),
+    ]
+    const answers = questions.map((q) => ({ questionId: q.id, textAnswer: 'answer', isFlagged: false }))
+    const gradingBreakdown = [
+      ...['a1', 'a2', 'a3', 'a4', 'a5'].map((questionId) => ({ questionId, status: 'manual_graded', marksObtained: 1 })),
+      { questionId: 'b1', status: 'manual_graded', marksObtained: 4 },
+      { questionId: 'b2', status: 'manual_graded', marksObtained: 3 },
+      { questionId: 'b3', status: 'manual_graded', marksObtained: 3 },
+    ]
+    const summary = summarizePaperOutcome({ questions, answers, gradingBreakdown })
+
+    // 5 full-marks answers are correct, the three short answers earned part of
+    // their marks — never "0 correct" for a paper worth 15/20.
+    assert.equal(summary.correctCount, 5)
+    assert.equal(summary.partialCount, 3)
+    assert.equal(summary.incorrectCount, 0)
+    assert.equal(summary.unattemptedCount, 0)
+    assert.equal(summary.correctMarks, 5)
+    assert.equal(summary.awardedMarks, 15)
+    assert.equal(summary.totalMarks, 20)
+    assert.equal(summary.answeredCount, 8)
+
+    const sectionA = summary.sections.find((s) => s.sectionName === 'Section A — MCQ')
+    const sectionB = summary.sections.find((s) => s.sectionName === 'Section B — Short answers')
+    assert.deepEqual(
+      { correct: sectionA?.correct, total: sectionA?.total, score: sectionA?.score, totalMarks: sectionA?.totalMarks, correctMarks: sectionA?.correctMarks, percentage: sectionA?.percentage },
+      { correct: 5, total: 5, score: 5, totalMarks: 5, correctMarks: 5, percentage: 100 }
+    )
+    assert.deepEqual(
+      { correct: sectionB?.correct, partial: sectionB?.partial, total: sectionB?.total, score: sectionB?.score, totalMarks: sectionB?.totalMarks, percentage: sectionB?.percentage },
+      { correct: 0, partial: 3, total: 3, score: 10, totalMarks: 15, percentage: 67 }
+    )
+  })
+
+  it('counts auto-graded objective answers, penalties and blanks honestly', () => {
+    const questions = [mcq('right'), question({ id: 'wrong', questionId: 'wrong', marks: 2, type: 'mcq', negativeMarks: 0.5 }), mcq('blank')]
+    const answers = [
+      { questionId: 'right', selectedOptionId: 'a', isFlagged: false },
+      { questionId: 'wrong', selectedOptionId: 'b', isFlagged: false },
+    ]
+    const summary = summarizePaperOutcome({
+      questions,
+      answers,
+      gradingBreakdown: [
+        { questionId: 'right', status: 'correct', marksObtained: 1 },
+        { questionId: 'wrong', status: 'incorrect', marksObtained: -0.5 },
+        { questionId: 'blank', status: 'unattempted', marksObtained: 0 },
+      ],
+    })
+    assert.equal(summary.correctCount, 1)
+    assert.equal(summary.incorrectCount, 1)
+    assert.equal(summary.unattemptedCount, 1)
+    assert.equal(summary.awardedMarks, 0.5)
+    assert.equal(summary.correctMarks, 1)
+  })
+
+  it('hides awarded marks and reports pending while the paper is ungraded', () => {
+    const questions = [shortAnswer('b1', 10), mcq('a1')]
+    const summary = summarizePaperOutcome({
+      questions,
+      answers: [{ questionId: 'b1', textAnswer: 'essay text', isFlagged: false }],
+      gradingBreakdown: [{ questionId: 'b1', status: 'pending_manual', marksObtained: null }],
+      applyMarks: false,
+    })
+    assert.equal(summary.pendingCount, 1)
+    assert.equal(summary.unattemptedCount, 1)
+    assert.equal(summary.correctCount, 0)
+    assert.equal(summary.perQuestion[0].marksObtained, null)
+  })
+
+  it('treats a blank answer as unattempted even when the blank earned no marks', () => {
+    const summary = summarizePaperOutcome({
+      questions: [shortAnswer('b1', 5)],
+      answers: [],
+      gradingBreakdown: [{ questionId: 'b1', status: 'incorrect', marksObtained: 0 }],
+    })
+    assert.equal(summary.unattemptedCount, 1)
+    assert.equal(summary.incorrectCount, 0)
+    assert.equal(summary.perQuestion[0].status, 'unattempted')
   })
 })

@@ -148,10 +148,10 @@ const SuperAdminStudents: React.FC = () => {
           <button
             onClick={() => setShowBulkAcademicUpdate(true)}
             disabled={selectedStudents.length === 0}
-            title={selectedStudents.length ? 'Change the selected students’ batch and/or branch' : 'Select students first'}
+            title={selectedStudents.length ? 'Change the selected students’ batch, branch and/or semester' : 'Select students first'}
             className="btn-primary flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <GraduationCap className="w-4 h-4" /> Bulk change batch / branch
+            <GraduationCap className="w-4 h-4" /> Bulk change batch / branch / semester
             {selectedStudents.length > 0 && ` (${selectedStudents.length})`}
           </button>
           {selectedStudents.length > 0 && (
@@ -188,8 +188,8 @@ const SuperAdminStudents: React.FC = () => {
       <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
-          <p className="font-medium">To change student batch or branch in bulk</p>
-          <p className="mt-0.5 text-xs">Filter the list if needed, select the student rows (or Select all), then click <strong>Bulk change batch / branch</strong>. Only the fields you choose are updated.</p>
+          <p className="font-medium">To change student batch, branch or semester in bulk</p>
+          <p className="mt-0.5 text-xs">Filter the list if needed, select the student rows (or Select all), then click <strong>Bulk change batch / branch / semester</strong>. Only the fields you choose are updated.</p>
         </div>
       </div>
 

@@ -19,6 +19,8 @@ import {
   BookMarked,
   UserCheck,
   Receipt,
+  School,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 import type { TranslationKey } from '../../shared/i18n'
@@ -37,31 +39,85 @@ export interface StudentNavItem {
   badge?: 'notifications'
   /** Extra route spellings that should still light this item up. */
   aliases?: string[]
+  /**
+   * A section landing page that collects the other pages of its group. Hubs
+   * are reached from the phone's bottom bar, so they never appear as a tile
+   * inside the very list they are the header of.
+   */
+  hub?: boolean
+  /** One line of "what will I find here", used on the section hub pages. */
+  hint?: string
 }
 
 export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard, group: 'academics', translationKey: 'nav.dashboard' },
-  { id: 'attendance', label: 'Attendance', path: '/student/attendance', icon: Calendar, group: 'academics', translationKey: 'nav.attendance' },
-  { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen, group: 'academics', translationKey: 'nav.assessments' },
-  { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText, group: 'academics', translationKey: 'nav.assignments' },
-  { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp, group: 'academics', translationKey: 'nav.grades' },
-  { id: 'curriculum', label: 'Curriculum', path: '/student/curriculum', icon: BookMarked, group: 'academics', translationKey: 'nav.curriculum' },
-  { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock, group: 'academics', translationKey: 'nav.timetable' },
-  { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library, group: 'practice', translationKey: 'nav.materials' },
-  { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap, group: 'practice', translationKey: 'nav.library' },
-  { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone, group: 'practice', translationKey: 'nav.journey' },
-  { id: 'faculty-connect', label: 'Faculty Connect', path: '/student/faculty-connect', icon: UserCheck, group: 'practice', aliases: ['/student/mentorship'] },
-  { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard, group: 'money', translationKey: 'nav.fees', aliases: ['/student/fee-portal'] },
-  { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt, group: 'money' },
-  { id: 'halltickets', label: 'Hall Tickets', path: '/student/hall-tickets', icon: Download, group: 'money' },
-  { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays, group: 'account', translationKey: 'nav.events' },
-  { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell, group: 'account', translationKey: 'nav.notifications', badge: 'notifications' },
+  // Section hub: the phone's "Academics" tab. It owns the pages that belong to
+  // the same heading on the sidebar and the dashboard quick tiles.
+  { id: 'academics', label: 'Academics', path: '/student/academics', icon: School, group: 'academics', hub: true },
+  { id: 'attendance', label: 'Attendance', path: '/student/attendance', icon: Calendar, group: 'academics', translationKey: 'nav.attendance', hint: 'Present / absent record and attendance percentage' },
+  { id: 'assessments', label: 'Assessments', path: '/student/assessments', icon: BookOpen, group: 'academics', translationKey: 'nav.assessments', hint: 'Tests, results and detailed performance analysis' },
+  { id: 'assignments', label: 'Assignments', path: '/student/assignments', icon: FileText, group: 'academics', translationKey: 'nav.assignments', hint: 'Submit your work and track what is pending' },
+  { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp, group: 'academics', translationKey: 'nav.grades', hint: 'Marks, credits and GPA' },
+  { id: 'curriculum', label: 'Curriculum', path: '/student/curriculum', icon: BookMarked, group: 'academics', translationKey: 'nav.curriculum', hint: 'Your syllabus and how far it has been taught' },
+  { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock, group: 'academics', translationKey: 'nav.timetable', hint: 'Weekly class schedule with rooms and faculty' },
+  // Section hub: the phone's "Learning" tab.
+  { id: 'learning', label: 'Learning', path: '/student/learning', icon: Sparkles, group: 'practice', hub: true },
+  { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library, group: 'practice', translationKey: 'nav.materials', hint: 'Notes, slides and study material shared by faculty' },
+  { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap, group: 'practice', translationKey: 'nav.library', hint: 'Books, journals and e-resources' },
+  { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone, group: 'practice', translationKey: 'nav.journey', hint: 'Your progress across the programme' },
+  { id: 'faculty-connect', label: 'Faculty Connect', path: '/student/faculty-connect', icon: UserCheck, group: 'practice', aliases: ['/student/mentorship'], hint: 'Ask a mentor or a faculty member' },
+  { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard, group: 'money', translationKey: 'nav.fees', aliases: ['/student/fee-portal'], hint: 'Dues, payments and receipts' },
+  { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt, group: 'money', hint: 'Fee challans issued to you' },
+  { id: 'halltickets', label: 'Hall Tickets', path: '/student/hall-tickets', icon: Download, group: 'money', hint: 'Download your exam hall tickets' },
+  { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays, group: 'account', translationKey: 'nav.events', hint: 'Campus events and activities' },
+  { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell, group: 'account', translationKey: 'nav.notifications', badge: 'notifications', hint: 'Announcements and alerts for you' },
   { id: 'install-app', label: 'Install App', path: '/student/install-app', icon: Download, group: 'account', aliases: ['/student/pwa-install'] },
-  { id: 'settings', label: 'Settings', path: '/student/settings', icon: Settings, group: 'account', translationKey: 'nav.settings' },
+  { id: 'settings', label: 'Settings', path: '/student/settings', icon: Settings, group: 'account', translationKey: 'nav.settings', hint: 'Language, theme and account preferences' },
 ]
 
-/** The four destinations a student reaches with a thumb, plus "More". */
-export const MOBILE_TAB_IDS = ['dashboard', 'assessments', 'fees', 'notifications'] as const
+/**
+ * The four destinations a student reaches with a thumb, plus "More": the two
+ * daily-use pages (Dashboard, Assessments) and the two section hubs
+ * (Academics, Learning). Fees and Notifications live inside "More" — they are
+ * checked occasionally, not every session.
+ */
+export const MOBILE_TAB_IDS = ['dashboard', 'academics', 'assessments', 'learning'] as const
+
+/** The bottom-bar tabs in configured order, tolerant of a renamed id. */
+export function mobileTabItems(): StudentNavItem[] {
+  const picked = (MOBILE_TAB_IDS as readonly string[])
+    .map((id) => STUDENT_NAV_ITEMS.find((item) => item.id === id))
+    .filter((item): item is StudentNavItem => !!item)
+  // Keep the configured order; if a tab id is ever renamed, fall back to
+  // leading with Dashboard so the bar never renders three items.
+  return picked.length === MOBILE_TAB_IDS.length ? picked : [STUDENT_NAV_ITEMS[0], ...picked].slice(0, MOBILE_TAB_IDS.length)
+}
+
+/**
+ * Everything the "More" sheet lists: the pages that are not already a bottom
+ * tab, and not the hubs themselves (a hub is a tab; listing it in More would
+ * be a link to the menu the student is standing in).
+ */
+export function moreSheetItems(options: { showInstallApp?: boolean } = {}): StudentNavItem[] {
+  const showInstallApp = options.showInstallApp !== false
+  return STUDENT_NAV_ITEMS.filter(
+    (item) =>
+      !(MOBILE_TAB_IDS as readonly string[]).includes(item.id)
+      && !item.hub
+      && (showInstallApp || item.id !== 'install-app')
+  )
+}
+
+/**
+ * The pages that sit under a section heading, minus the hub that heads it and
+ * minus anything that already owns a bottom-bar tab (a hub that repeats the
+ * tab the student just tapped is a dead end, not a shortcut).
+ */
+export function navItemsInGroup(group: StudentNavGroup): StudentNavItem[] {
+  return STUDENT_NAV_ITEMS.filter(
+    (item) => item.group === group && !item.hub && !(MOBILE_TAB_IDS as readonly string[]).includes(item.id)
+  )
+}
 
 export const STUDENT_NAV_GROUPS: Array<{ id: StudentNavGroup; label: string }> = [
   { id: 'academics', label: 'Academics' },

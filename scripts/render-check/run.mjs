@@ -929,12 +929,15 @@ await section('student challans (empty)', '/src/modules/student/pages/StudentCha
 // The bottom bar and the "More" sheet are what replaced the desktop drawer on
 // a phone, so they have to render on their own — and the two of them together
 // have to cover every destination the sidebar used to list.
-await section('student bottom nav', '/src/modules/student/components/StudentBottomNav.tsx', { onOpenMore: () => {} }, (t, view) => {
+await section('student bottom nav', '/src/modules/student/components/StudentBottomNav.tsx', { onOpenMore: () => {}, unreadNotifications: 3 }, (t, view) => {
   const links = view.all('nav a');
   check('bottom nav: mounts without throwing', true);
   check('bottom nav: offers the four primary destinations', links.length === 4, `${links.length} links`);
-  check('bottom nav: the destinations are the student routes',
-    view.hrefs('nav a').join(' ') === '/student/dashboard /student/assessments /student/fees /student/notifications',
+  check('bottom nav: Dashboard, Academics, Assessments and Learning are the tabs',
+    view.hrefs('nav a').join(' ') === '/student/dashboard /student/academics /student/assessments /student/learning',
+    view.hrefs('nav a').join(' '));
+  check('bottom nav: Fees and Notifications are no longer tabs',
+    !view.hrefs('nav a').some((href) => href === '/student/fees' || href === '/student/notifications'),
     view.hrefs('nav a').join(' '));
   check('bottom nav: everything else is reachable through More', !!view.byText('More', 'button'), t);
 });
@@ -952,8 +955,13 @@ await section('student more sheet', '/src/modules/student/components/StudentMore
       .every((path) => sheetHrefs.includes(path)),
     sheetHrefs.join(' '));
   check('more sheet: signs the student out from the same place', /Sign out|Sign Out|signOut/i.test(t), t);
-  check('more sheet: does not duplicate what the tab bar already owns',
-    !/\bDashboard\b/.test(t) && !/\bNotifications\b/.test(t), t);
+  check('more sheet: Fees and Notifications now live inside More',
+    sheetHrefs.includes('/student/fees') && sheetHrefs.includes('/student/notifications'), sheetHrefs.join(' '));
+  check('more sheet: a section hub is not a tile inside the menu it heads',
+    !sheetHrefs.includes('/student/academics') && !sheetHrefs.includes('/student/learning'), sheetHrefs.join(' '));
+  check('more sheet: does not duplicate a bottom tab',
+    !sheetHrefs.includes('/student/dashboard') && !sheetHrefs.includes('/student/assessments'), sheetHrefs.join(' '));
+  check('more sheet: carries the reader text-size control', /Text size/.test(t) && /100%/.test(t), t);
 });
 
 
@@ -1094,4 +1102,185 @@ await server.close();
 
 const failed = checks.filter((c) => !c.ok);
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed, ${crashes} mount crash(es)`);
+// ── Completed assessment result ────────────────────────────────────────────
+// The reported bug: a paper whose descriptive answers a faculty member marked
+// (status `manual_graded` + marks) rendered "Correct 0/8 · Incorrect 0/8 ·
+// Unattempted 0/8" in the performance summary and "0/5 correct · 5/5 marks"
+// under Section A, next to a correct 15/20 score. Marks are the source of
+// truth, so the page must read 5 correct (5 marks) and 3 partially correct
+// (10 of 15 marks), and the section table has to agree with the overview.
+const gradedPaperFixture = {
+  studentAssessmentId: 'sa-1',
+  assessmentId: 'test-1',
+  title: 'Unit Test 1 — Business Statistics',
+  subject: 'Business Statistics',
+  totalMarks: 20,
+  marksObtained: 15,
+  percentage: 75,
+  grade: 'B',
+  gradePoint: 7,
+  timeSpent: 1800,
+  totalQuestions: 8,
+  answeredCount: 8,
+  correctCount: 5,
+  partialCount: 3,
+  incorrectCount: 0,
+  unattemptedCount: 0,
+  pendingCount: 0,
+  correctMarks: 5,
+  awardedMarks: 15,
+  sectionScores: [
+    { sectionName: 'Section A — MCQ', total: 5, correct: 5, partial: 0, incorrect: 0, unattempted: 0, score: 5, totalMarks: 5, correctMarks: 5, percentage: 100, timeTaken: 0, accuracy: 100 },
+    { sectionName: 'Section B — Short answers', total: 3, correct: 0, partial: 3, incorrect: 0, unattempted: 0, score: 10, totalMarks: 15, correctMarks: 0, percentage: 67, timeTaken: 0, accuracy: 0 },
+  ],
+  questionResults: [
+    ...['a1', 'a2', 'a3', 'a4', 'a5'].map((id, index) => ({
+      questionId: id,
+      questionText: `MCQ ${index + 1}`,
+      questionType: 'mcq',
+      sectionName: 'Section A — MCQ',
+      marks: 1,
+      marksObtained: 1,
+      status: 'manual_graded',
+      options: ['Option A', 'Option B'],
+      correctAnswer: 'Option A',
+      studentAnswer: 'Option A',
+      isCorrect: true,
+      isAttempted: true,
+    })),
+    ...[
+      { id: 'b1', awarded: 4 },
+      { id: 'b2', awarded: 3 },
+      { id: 'b3', awarded: 3 },
+    ].map(({ id, awarded }) => ({
+      questionId: id,
+      questionText: `Explain with an example (${id})`,
+      questionType: 'short_answer',
+      sectionName: 'Section B — Short answers',
+      marks: 5,
+      marksObtained: awarded,
+      status: 'manual_graded',
+      studentAnswer: 'The index number measures relative change…',
+      isCorrect: false,
+      isAttempted: true,
+    })),
+  ],
+  leaderboard: [],
+  rank: 0,
+  totalStudents: 0,
+  facultyFeedback: 'Good work on the objective part.',
+  submittedAt: '2026-09-20T10:00:00.000Z',
+  gradedAt: '2026-09-21T10:00:00.000Z',
+  passingPercentage: 40,
+  percentile: 0,
+  completedAt: '2026-09-20T10:00:00.000Z',
+  flaggedCount: 0,
+  pendingManualGrading: false,
+  autoScore: 0,
+  autoMax: 0,
+  manualPending: false,
+  reviewReleased: true,
+};
+
+globalThis.__RC_PARAMS = { testId: 'test-1' };
+globalThis.__RC_FIRESTORE_DOC = { data: { collegeId: 'college-a', studentDocId: 'student-1', name: 'Bala Kumar' } };
+globalThis.__RC_CALLABLE_DATA = { getMyStudentTestResult: gradedPaperFixture };
+
+await section('assessment result', '/src/modules/student/pages/TestResultPage.tsx', {}, async (t, view) => {
+  check('result: mounts without throwing', true);
+  check('result: keeps the score card percentage and marks',
+    t.includes('75%') && t.includes('15/20'), t);
+  check('result: performance summary counts the five full-mark answers',
+    t.includes('Correct') && t.includes('5/8'), t);
+  check('result: the three short answers read as partially correct, not zero',
+    /Partially correct/.test(t) && t.includes('3/8'), t);
+  check('result: unattempted is zero, not a copy of the question count',
+    /Unattempted0\/8/.test(t.replace(/\s+/g, '')) || /Unattempted0\/8/.test(t.replace(/\s+/g, ' ')), t);
+  check('result: shows the marks carried by the correct answers',
+    t.includes('5 marks'), t);
+  check('result: section A reads 5/5 correct with 5/5 marks',
+    /Section A — MCQ/.test(t) && t.includes('5/5'), t);
+  check('result: section B shows its 10/15 marks next to the partial count',
+    t.includes('10/15'), t);
+  check('result: Section Analysis tab is offered', !!view.byText('Section Analysis', 'button'), t);
+  check('result: offers the reader text-size control', /Text size/.test(t) && /100%/.test(t), t);
+
+  const analysisTab = view.byText('Section Analysis', 'button');
+  if (analysisTab) {
+    await view.click(analysisTab);
+    const analysis = view.text();
+    check('section analysis: every section is listed with its rows',
+      /Section A — MCQ/.test(analysis) && /Section B — Short answers/.test(analysis), analysis);
+    check('section analysis: carries the partial column the summary relies on',
+      /Partial/.test(analysis) && /Unattempted/.test(analysis), analysis);
+    check('section analysis: totals row adds up to the paper (5 correct, 3 partial, 0 incorrect)',
+      /Total/.test(analysis) && analysis.includes('5') && analysis.includes('3'), analysis);
+    check('section analysis: explains how partial marks are counted',
+      /partially correct answers earned some, not all, of their marks/i.test(analysis), analysis);
+  }
+});
+
+// A paper whose marks were never recorded must not be shown as zeros: the
+// answer sheet is still with the faculty, and the page says so.
+globalThis.__RC_CALLABLE_DATA = {
+  getMyStudentTestResult: {
+    ...gradedPaperFixture,
+    pendingManualGrading: true,
+    gradedAt: undefined,
+  },
+};
+await section('assessment result (awaiting grading)', '/src/modules/student/pages/TestResultPage.tsx', {}, (t) => {
+  check('result (awaiting): mounts without throwing', true);
+  check('result (awaiting): explains that descriptive answers are still with the faculty',
+    /awaiting grading/i.test(t), t);
+});
+
+globalThis.__RC_CALLABLE_DATA = {};
+globalThis.__RC_FIRESTORE_DOC = undefined;
+globalThis.__RC_PARAMS = undefined;
+
+// ── Section hubs (the phone's Academics / Learning tabs) ───────────────────
+await section('academics hub', '/src/modules/student/pages/StudentHubPage.tsx', { group: 'academics' }, (t, view) => {
+  const hrefs = view.hrefs('a');
+  check('academics hub: mounts without throwing', true);
+  check('academics hub: lists the academic pages as tiles',
+    ['/student/attendance', '/student/assignments', '/student/grades', '/student/timetable', '/student/curriculum']
+      .every((path) => hrefs.includes(path)), hrefs.join(' '));
+  check('academics hub: does not re-list the tabs that already exist',
+    !hrefs.includes('/student/dashboard') && !hrefs.includes('/student/assessments') && !hrefs.includes('/student/academics'),
+    hrefs.join(' '));
+  check('academics hub: explains what each page is for', /attendance percentage/i.test(t), t);
+});
+
+await section('learning hub', '/src/modules/student/pages/StudentHubPage.tsx', { group: 'practice' }, (t, view) => {
+  const hrefs = view.hrefs('a');
+  check('learning hub: mounts without throwing', true);
+  check('learning hub: lists the study pages as tiles',
+    ['/student/materials', '/student/library', '/student/journey', '/student/faculty-connect']
+      .every((path) => hrefs.includes(path)), hrefs.join(' '));
+  check('learning hub: signs nothing extra into the hub', !hrefs.includes('/student/learning'), hrefs.join(' '));
+});
+
+// ── Phone app bar (sign out at the top) ────────────────────────────────────
+let signedOut = 0;
+await section('student top bar', '/src/modules/student/components/StudentTopBar.tsx',
+  { unreadNotifications: 4, onSignOut: () => { signedOut += 1; } }, async (t, view) => {
+    check('top bar: mounts without throwing', true);
+    check('top bar: shows the unread notification count', !/^$/.test(t) && /4/.test(t), t);
+    const logout = view.all('button').find((b) => /sign out|signout/i.test(b.getAttribute('aria-label') ?? ''));
+    check('top bar: offers sign out in the top bar', !!logout, t);
+    if (logout) {
+      await view.click(logout);
+      const dialog = view.text();
+      check('top bar: asks for confirmation before signing out',
+        /Sign out of Vriddhi\?/.test(dialog), dialog);
+      const confirm = view.all('button').find((b) => (b.textContent ?? '').trim() === 'Sign out');
+      check('top bar: the confirmation is a real second step', !!confirm, dialog);
+      if (confirm) {
+        await view.click(confirm);
+        check('top bar: confirming signs the student out exactly once', signedOut === 1, String(signedOut));
+      }
+    }
+  });
+
 process.exit(failed.length === 0 && crashes === 0 ? 0 : 1);
