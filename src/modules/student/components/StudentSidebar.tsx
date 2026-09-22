@@ -4,11 +4,11 @@ import { useStudentData } from '../hooks/useStudentData';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
+import VriddhiLogo from '../../../shared/components/VriddhiLogo';
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install';
 import type { TranslationKey } from '../../../shared/i18n';
 import { STUDENT_NAV_ITEMS } from '../studentNav';
 import {
-  School,
   ChevronRight,
   Sun,
   Moon,
@@ -68,19 +68,20 @@ export default function StudentSidebar({ onSignOut }: { onSignOut: () => void })
     >
       {/* Brand Header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <Link to="/student/dashboard" className="flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
-            <School className="w-5 h-5 text-white" />
-          </div>
+        <Link
+          to="/student/dashboard"
+          className="flex items-center gap-3 overflow-hidden"
+          aria-label="Vriddhi Institutions"
+        >
+          {isCollapsed ? (
+            <VriddhiLogo variant="mark" height={32} reverse={resolvedMode === 'dark'} className="shrink-0" />
+          ) : (
+            <VriddhiLogo variant="horizontal" height={32} reverse={resolvedMode === 'dark'} className="shrink-0" />
+          )}
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="font-extrabold text-base tracking-tight bg-gradient-to-r from-teal-600 to-teal-800 dark:from-teal-400 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
-                Vriddhi
-              </span>
-              <span className="text-[10px] font-semibold text-teal-600 dark:text-teal-400 tracking-wider uppercase">
-                {t('nav.studentPortal')}
-              </span>
-            </div>
+            <span className="text-[10px] font-semibold text-teal-600 dark:text-teal-400 tracking-wider uppercase truncate">
+              {t('nav.studentPortal')}
+            </span>
           )}
         </Link>
         <button

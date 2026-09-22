@@ -83,8 +83,14 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-500/25 mb-4">
-            <School size={34} className="text-white" />
+                    <div className="mx-auto mb-4 w-36 h-36 rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200/80 dark:ring-white/10 shadow-lg shadow-teal-500/10 flex items-center justify-center">
+            <img
+              src="/brand/hero/vriddhi-mark-hero-light@600.png"
+              alt="Vriddhi Institutions"
+              width={144}
+              height={144}
+              className="w-[92%] h-[92%] object-contain"
+            />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">
             {t('brand.portal')}
