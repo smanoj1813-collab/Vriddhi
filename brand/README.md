@@ -109,8 +109,18 @@ The exported files already include it.
 | Version | Minimum |
 | --- | --- |
 | Horizontal lockup | 120px wide (30mm in print) |
-| Mark | 16px — below 32px use `vriddhi-store-icon-simple` |
-| Badge / favicon | 16px |
+| Mark | 16px, but below 32px use `vriddhi-store-icon-simple` |
+| Badge / favicon | 16px — the shipped app icons already use the simplified brain |
+
+The **simplified brain** is the same silhouette with the fold strokes dropped.
+In the React component it is one prop, and the `badge` variant applies it
+automatically:
+
+```tsx
+<VriddhiLogo variant="mark" height={20} simple />   // icon-sized
+<VriddhiLogo variant="badge" />                     // already simplified
+<VriddhiLogo variant="horizontal" height={34} />    // full detail
+```
 
 **Do**
 

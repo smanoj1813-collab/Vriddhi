@@ -30,7 +30,12 @@ const TYPES = {
 
 const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
-  if (urlPath === '/' || urlPath === '') urlPath = '/brand/preview.html';
+  if (urlPath === '/' || urlPath === '') {
+    // redirect rather than rewrite: a rewrite leaving the browser on "/" makes
+    // every relative path in the page resolve against the wrong base
+    res.writeHead(302, { Location: '/brand/preview.html' });
+    return res.end();
+  }
 
   const abs = path.join(REPO, path.normalize(urlPath).replace(/^(\.\.[/\\])+/, ''));
   if (!abs.startsWith(REPO) || !fs.existsSync(abs) || fs.statSync(abs).isDirectory()) {

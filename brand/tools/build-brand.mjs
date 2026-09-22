@@ -222,7 +222,7 @@ const GEO = {
   bottom: 0,
   leftOuter: -104,
   vWidth: 96,
-  vArm: 37,
+  vArm: 32,
   cutY: -86,
   torchCx: 50,
   handleHWBottom: 10.5,
@@ -354,7 +354,7 @@ function pathBounds(paths) {
  */
 function buildMark(opt = {}) {
   const g = { ...GEO, ...opt };
-  const { variant = 'arm', barbHalf = 20, length = 40, notch = 8, foldHW = 1.6 } = g;
+  const { variant = 'arm', barbHalf = 22, length = 44, notch = 14, foldHW = 1.6 } = g;
   const center = g.leftOuter + g.vWidth / 2;
   const innerVertexY = g.capTop * (g.vArm / (g.vWidth / 2));
 
@@ -497,8 +497,11 @@ function buildMark(opt = {}) {
   };
 }
 
-const SIMPLE_MARK = buildMark({ simple: true, barbHalf: 25, length: 46, notch: 10 });
-const MARK = buildMark({ variant: 'arm', barbHalf: 25, length: 44, notch: 10 });
+// The arrow treatment is shared: the simplified mark must line up with the
+// detailed one, otherwise the app icons and the logo would be different marks.
+const MARK_OPTS = { variant: 'arm', barbHalf: 22, length: 44, notch: 14 };
+const MARK = buildMark(MARK_OPTS);
+const SIMPLE_MARK = buildMark({ ...MARK_OPTS, simple: true });
 
 /* =========================================================================
  * 4. WORDMARK
@@ -799,6 +802,11 @@ export interface VriddhiLogoProps {
   reverse?: boolean;
   /** Rendered height in pixels (the aspect ratio is preserved). */
   height?: number | string;
+  /**
+   * Drops the brain's fold detail. The 'badge' variant does this by default,
+   * because below ~32px the folds stop being readable and turn into noise.
+   */
+  simple?: boolean;
   className?: string;
   title?: string;
 }
@@ -813,6 +821,8 @@ const VIEWBOXES: Record<VriddhiLogoVariant, [number, number, number, number]> = 
 
 const MARK_INK = '${inkPaths}';
 const BRAIN = '${MARK.brainContours.join(' ')}';
+/** Same silhouette with the fold detail dropped — for icons and tiny sizes. */
+const BRAIN_SIMPLE = '${SIMPLE_MARK.brainContours.join(' ')}';
 const BRAIN_T = { x: ${n(MARK.brainTransform.tx)}, y: ${n(MARK.brainTransform.ty)}, s: ${n(MARK.brainTransform.scale)} };
 const WORD = '${TEXT.word.d}';
 const SUB = '${TEXT.sub.d}';
@@ -826,6 +836,7 @@ export default function VriddhiLogo({
   height,
   className,
   title = 'Vriddhi Institutions',
+  simple,
 }: VriddhiLogoProps) {
   const uid = useId().replace(/[:]/g, '');
   const id = (name: string) => \`\${name}-\${uid}\`;
@@ -836,11 +847,14 @@ export default function VriddhiLogo({
   const sub = mono ?? (reverse ? '#5eead4' : '#0d9488');
   const flat = (v: string) => (mono ? mono : v);
 
+  const useSimple = simple ?? variant === 'badge';
+  const brainPath = useSimple ? BRAIN_SIMPLE : BRAIN;
+
   const mark = (
     <>
       <path d={MARK_INK} fill={ink} />
       <g transform={\`translate(\${BRAIN_T.x} \${BRAIN_T.y}) scale(\${BRAIN_T.s})\`}>
-        <path fillRule="evenodd" fill={brain} d={BRAIN} />
+        <path fillRule="evenodd" fill={brain} d={brainPath} />
       </g>
     </>
   );
@@ -889,7 +903,7 @@ export default function VriddhiLogo({
           <g transform={\`translate(${n(badgeTx)} ${n(badgeTy)}) scale(${n(badgeScale)})\`}>
             <path d={MARK_INK} fill={mono ?? '#ffffff'} />
             <g transform={\`translate(\${BRAIN_T.x} \${BRAIN_T.y}) scale(\${BRAIN_T.s})\`}>
-              <path fillRule="evenodd" fill={mono ?? '#ffffff'} d={BRAIN} />
+              <path fillRule="evenodd" fill={mono ?? '#ffffff'} d={brainPath} />
             </g>
           </g>
         </>
@@ -968,8 +982,9 @@ fs.mkdirSync(path.dirname(componentPath), { recursive: true });
 fs.writeFileSync(componentPath, reactComponent());
 
 fs.mkdirSync(path.join(REPO, 'public', 'icons'), { recursive: true });
-fs.writeFileSync(path.join(REPO, 'public', 'icons', 'icon.svg'), badgeMark(MARK));
-fs.writeFileSync(path.join(REPO, 'public', 'icons', 'maskable.svg'), badgeMark(MARK, { radius: 0, pad: 0.3 }));
+// icons are always small: the simplified mark keeps the brain readable
+fs.writeFileSync(path.join(REPO, 'public', 'icons', 'icon.svg'), badgeMark(SIMPLE_MARK));
+fs.writeFileSync(path.join(REPO, 'public', 'icons', 'maskable.svg'), badgeMark(SIMPLE_MARK, { radius: 0, pad: 0.3 }));
 
 async function exportPng() {
   if (!sharp) return console.log('· sharp unavailable — SVG only');
@@ -988,12 +1003,12 @@ async function exportPng() {
     ['brand/logo/png/vriddhi-mark-mono-black@1024.png', fromSvg('vriddhi-mark-mono-black.svg'), 1024, '#ffffff'],
     ['brand/logo/png/vriddhi-mark-mono-white@1024.png', fromSvg('vriddhi-mark-mono-white.svg'), 1024, C.slate900],
     ['brand/logo/png/vriddhi-mark-badge@1024.png', fromSvg('vriddhi-mark-badge.svg'), 1024, null],
-    ['public/icons/icon-192.png', fromSvg('vriddhi-mark-badge.svg'), 192, null],
-    ['public/icons/icon-512.png', fromSvg('vriddhi-mark-badge.svg'), 512, null],
-    ['public/icons/apple-touch-icon.png', fromSvg('vriddhi-mark-badge.svg'), 180, null],
-    ['public/icons/favicon-32.png', fromSvg('vriddhi-mark-badge.svg'), 32, null],
-    ['public/icons/favicon-48.png', fromSvg('vriddhi-mark-badge.svg'), 48, null],
-    ['public/icons/maskable-512.png', badgeMark(MARK, { radius: 0, pad: 0.3 }), 512, null],
+    ['public/icons/icon-192.png', badgeMark(SIMPLE_MARK), 192, null],
+    ['public/icons/icon-512.png', badgeMark(SIMPLE_MARK), 512, null],
+    ['public/icons/apple-touch-icon.png', badgeMark(SIMPLE_MARK), 180, null],
+    ['public/icons/favicon-32.png', badgeMark(SIMPLE_MARK), 32, null],
+    ['public/icons/favicon-48.png', badgeMark(SIMPLE_MARK), 48, null],
+    ['public/icons/maskable-512.png', badgeMark(SIMPLE_MARK, { radius: 0, pad: 0.3 }), 512, null],
     ['brand/logo/png/vriddhi-logo-horizontal-lift@1600.png', fromSvg('vriddhi-logo-horizontal-lift.svg'), 1600, null],
     ['brand/logo/png/vriddhi-mark-lift@1024.png', fromSvg('vriddhi-mark-lift.svg'), 1024, null],
     ['brand/logo/png/vriddhi-store-icon@1024.png', fromSvg('vriddhi-store-icon.svg'), 1024, null],
@@ -1139,8 +1154,8 @@ async function systemSheet() {
   await add(stackedLockup(MARK, { theme: 'color', pad: 24 }), 290, 150, 340);
   await add(wordmarkOnly({ theme: 'color' }), 430, 520, 400);
   await add(markOnly(MARK, { theme: 'color', pad: 16 }), 240, 1060, 350);
-  await add(badgeMark(MARK, { size: 512 }), 200, 1290, 660);
-  await add(badgeMark(SIMPLE_MARK, { size: 512 }), 200, 1060, 660);
+  await add(badgeMark(SIMPLE_MARK, { size: 512 }), 200, 1290, 660);
+  await add(badgeMark(MARK, { size: 512 }), 200, 1060, 660);
 
   // small-size ladder (the honest test)
   for (const [i, px] of [72, 48, 32, 24, 16].entries()) {
