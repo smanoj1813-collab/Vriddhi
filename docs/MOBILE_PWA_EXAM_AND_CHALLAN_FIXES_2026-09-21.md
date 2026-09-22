@@ -186,6 +186,40 @@ what the rule allows.
 
 ---
 
+## 4. Two follow-ups from the same phone trial (22 Sep)
+
+**The tab-switch tally is gone from the student's header.** The running
+"`2 warnings`" chip and the "`Tab switches left: 3`" chip are removed. Counting,
+the faculty live log, the limit auto-submit, the alert fired on the switch itself
+and the at-limit dialog all stay — what a student sees is only what they can act
+on. A visible counter is a scoreboard they cannot influence: leaving the tab is
+being noticed either way, and showing the remaining budget on a phone turned a
+proctoring detail into a source of panic during the paper.
+
+**The 30-second section break now plays once per section, not once per crossing.**
+`navigateToIndex` used to gate *any* change of `sectionId`, so A → B → A cost a
+minute of exam time and penalised the reviewing the question palette invites.
+`src/modules/student/examSectionBreaks.ts` holds the rule (`shouldPlaySectionBreak`)
+plus `enteredSectionsFromAnswers`, so it is unit-tested instead of being buried in
+the page: a section is gated the first time the student lands in it and open
+afterwards in both directions. "Already entered" is seeded from the saved answers
+— `visitedAt` is written when a question is opened — because the set has to
+survive a reload; otherwise a refresh would bill a section the student had
+already worked through. The opening section is marked entered on load, since the
+student is standing in it rather than crossing into it.
+
+**The dashboard's quick actions are grouped.** 13 tiles in a `grid-cols-3` block
+read as a wall on a phone, so they are now four short lists under the headings the
+phone "More" sheet already uses (`groupTilesByNavSection` in `studentNav.ts`).
+The tiles own their route, icon and label; the *group* comes from the nav model,
+which is the point: neither surface can file a page under a different heading, and
+a route the model does not know falls into a trailing "More" block rather than
+disappearing from the dashboard.
+
+```bash
+npm run test:unit     # + examSectionBreaks (6) and studentNav grouping (6) cases
+```
+
 ## Deploy note
 
 The challan fix is **rules**, so it needs a rules deploy before students see any

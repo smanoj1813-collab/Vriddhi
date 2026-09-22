@@ -18,6 +18,11 @@ import {
   logProctorEvent,
 } from '../api/testApi';
 import QuestionRenderer from '../components/QuestionRenderer';
+import {
+  enteredSectionsFromAnswers,
+  sectionKeyOf,
+  shouldPlaySectionBreak,
+} from '../examSectionBreaks';
 import { MathRenderer } from '../components/MathRenderer';
 import { applyExamLockdown, type ExamBlockReason } from '../../../shared/utils/examLockdown';
 import type { ActiveTest, BasicProctorEvent, PaperQuestion, StudentAnswer } from '../types/assessment';
@@ -105,8 +110,10 @@ function buildDisplayQuestions(test: ActiveTest, studentId: string): PaperQuesti
 // delta), 3 s after the last change, with the 60 s tick as a safety net.
 const AUTOSAVE_INTERVAL_MS = 60_000;
 const AUTOSAVE_DEBOUNCE_MS = 3_000;
-// Mandatory break between exam sections: crossing a section boundary shows a
-// countdown screen before the new section's questions. The test clock runs on.
+// Mandatory break between exam sections: the first time a student lands in a
+// section they have not met yet, a countdown screen plays before its questions.
+// The test clock runs on. Returning to a section already entered is instant —
+// see ../examSectionBreaks.ts for why that is the whole rule.
 const SECTION_BREAK_SECONDS = 30;
 // Severity-high proctor events are still logged per-event (faculty live view);
 // every other type rides along in the next autosave payload.
@@ -138,9 +145,14 @@ const ActiveTestPage: React.FC = () => {
   // test's scheduling flags; null until the test has loaded.
   const [displayQuestions, setDisplayQuestions] = useState<PaperQuestion[] | null>(null);
   const [showTabLimitWarning, setShowTabLimitWarning] = useState(false);
-  // 30-second gap between sections: { targetIndex, sectionName } while the
-  // break countdown is showing; null while a section is being answered.
-  const [sectionTransition, setSectionTransition] = useState<{ targetIndex: number; sectionName: string } | null>(null);
+  // 30-second gap between sections: { targetIndex, sectionName, sectionKey }
+  // while the break countdown is showing; null while a section is being answered.
+  // sectionKey is carried here (not read off `questions` in the countdown
+  // effect below) because that effect runs before the display list exists.
+  const [sectionTransition, setSectionTransition] = useState<{ targetIndex: number; sectionName: string; sectionKey: string } | null>(null);
+  // Sections the student has already been inside this sitting. A ref, not
+  // state: nothing renders from it, and a re-render must not re-arm a break.
+  const enteredSectionsRef = useRef<Set<string>>(new Set());
   const [transitionRemaining, setTransitionRemaining] = useState(SECTION_BREAK_SECONDS);
 
   const collegeId = profile?.collegeId || user?.collegeId || '';
@@ -211,9 +223,17 @@ const ActiveTestPage: React.FC = () => {
         // in_progress → resume with restored answers + remaining time from startedAt
         const remaining = Math.max(0, Math.floor((new Date(test.endsAt).getTime() - Date.now()) / 1000));
         setActiveTest(test);
-        setDisplayQuestions(buildDisplayQuestions(test, studentId));
+        const displayOrder = buildDisplayQuestions(test, studentId);
+        setDisplayQuestions(displayOrder);
         setAnswers(test.answers || {});
         answersRef.current = test.answers || {};
+        // Which sections already owe nothing: the one the paper opens on (the
+        // student is standing in it, they did not cross into it), plus any
+        // section with saved work — so a reload never bills 30 seconds for
+        // material the student has already met.
+        const entered = enteredSectionsFromAnswers(test.questions, test.answers);
+        entered.add(sectionKeyOf(displayOrder[0]));
+        enteredSectionsRef.current = entered;
         setTimeRemaining(remaining);
         timeRemainingRef.current = remaining;
         setCurrentQIndex(0);
@@ -318,6 +338,8 @@ const ActiveTestPage: React.FC = () => {
   useEffect(() => {
     if (!sectionTransition || submitted) return;
     if (transitionRemaining <= 0) {
+      // The break has been paid for; from now on this section is open both ways.
+      enteredSectionsRef.current.add(sectionTransition.sectionKey);
       setCurrentQIndex(sectionTransition.targetIndex);
       setSectionTransition(null);
       return;
@@ -634,21 +656,21 @@ const ActiveTestPage: React.FC = () => {
   const isLastInSection = !!currentSection && currentQIndex === currentSection.indices[currentSection.indices.length - 1];
   const maxTabSwitches = activeTest.maxTabSwitches || 0;
 
-  // Section-aware navigation: moving within the same section is instant;
-  // crossing a section boundary plays the mandatory 30-second gap screen
-  // before the new section's first question.
+  // Section-aware navigation: within a section, and back into one the student
+  // has already been inside, is instant. Only a section they have not met yet
+  // owes the 30-second gap screen before its first question.
   const navigateToIndex = (idx: number) => {
     if (idx < 0 || idx >= questions.length || idx === currentQIndex) return;
     if (sectionTransition) return;
-    const targetKey = questions[idx].sectionId || 'sec-0';
-    const currentKey = currentQ.sectionId || 'sec-0';
-    if (targetKey === currentKey) {
+    const targetKey = sectionKeyOf(questions[idx]);
+    if (!shouldPlaySectionBreak({ targetKey, currentKey: sectionKeyOf(currentQ), enteredKeys: enteredSectionsRef.current })) {
+      enteredSectionsRef.current.add(targetKey);
       setCurrentQIndex(idx);
       return;
     }
     const targetSection = sections.find((g) => g.indices.includes(idx));
     setTransitionRemaining(SECTION_BREAK_SECONDS);
-    setSectionTransition({ targetIndex: idx, sectionName: targetSection?.name || 'Next section' });
+    setSectionTransition({ targetIndex: idx, sectionName: targetSection?.name || 'Next section', sectionKey: targetKey });
   };
 
   // Palette body shared by the desktop sidebar card and the phone bottom sheet.
@@ -745,17 +767,13 @@ const ActiveTestPage: React.FC = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 }, flexShrink: 0 }}>
-          {activeTest.enableProctoring && tabSwitchCount > 0 && (
-            <Chip icon={<Warning />} label={isMobile ? String(tabSwitchCount) : `${tabSwitchCount} warning${tabSwitchCount > 1 ? 's' : ''}`} color="warning" size="small" />
-          )}
-          {maxTabSwitches > 0 && (
-            <Chip
-              icon={<Warning />}
-              label={isMobile ? `${Math.max(0, maxTabSwitches - tabSwitchCount)} left` : `Tab switches left: ${Math.max(0, maxTabSwitches - tabSwitchCount)}`}
-              color={tabSwitchCount >= maxTabSwitches ? 'error' : 'warning'}
-              size="small"
-            />
-          )}
+          {/* Tab switching is still counted, still logged for the faculty live
+              view and still auto-submits at `maxTabSwitches` — but the running
+              tally is not shown here. A visible counter is a second scoreboard
+              the student cannot do anything about, and it advertises that
+              leaving the tab is being scored rather than noticed. The alert on
+              the switch itself and the at-limit dialog stay: those tell the
+              student something they can act on. */}
           <Chip icon={<Timer />} label={formatTime(timeRemaining)} color={timeRemaining < 300 ? 'error' : 'primary'} sx={{ fontWeight: 700, fontSize: { xs: '0.9rem', md: '1rem' }, px: { xs: 0, md: 1 }, fontVariantNumeric: 'tabular-nums' }} />
           {!isMobile && (
             <Button variant="contained" color="success" startIcon={<Send />} onClick={() => setShowSubmitConfirm(true)} disabled={submitting}>Submit</Button>

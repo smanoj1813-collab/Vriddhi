@@ -10,6 +10,8 @@ import {
 import type { Assessment, ClassSchedule } from '../types/student';
 import { deadlineCountdown, linkageBadgeText } from '../utils/deadlineCountdown';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
+import type { TranslationKey } from '../../../shared/i18n';
+import { groupTilesByNavSection } from '../studentNav';
 
 // ─── Sub-components ─────────────────────────────────────────────────
 
@@ -188,6 +190,34 @@ function QuickAction({ to, icon: Icon, label, color }: {
   );
 }
 
+// Every destination the dashboard offers as a tile. The list carries the route,
+// the icon and a label; the *heading* it appears under comes from the shared nav
+// model (studentNav), which is what keeps this in step with the phone "More"
+// sheet — a page cannot be under "Fees & exams" in one and "Account" in the
+// other, because neither surface decides its own group.
+const QUICK_ACTIONS: Array<{
+  to: string;
+  icon: React.ElementType;
+  color: string;
+  /** English label, used when there is no translation key. */
+  label: string;
+  labelKey?: TranslationKey;
+}> = [
+  { to: '/student/hall-tickets', icon: FileText, label: 'Hall Tickets', color: 'rose' },
+  { to: '/student/attendance', icon: Calendar, label: 'Attendance', labelKey: 'nav.attendance', color: 'teal' },
+  { to: '/student/assessments', icon: BookOpen, label: 'Assessments', labelKey: 'nav.assessments', color: 'blue' },
+  { to: '/student/assignments', icon: FileText, label: 'Assignments', labelKey: 'nav.assignments', color: 'amber' },
+  { to: '/student/grades', icon: TrendingUp, label: 'Grades', labelKey: 'student.gradesGpa', color: 'emerald' },
+  { to: '/student/materials', icon: Library, label: 'Materials', labelKey: 'student.studyNotes', color: 'violet' },
+  { to: '/student/timetable', icon: Clock, label: 'Timetable', labelKey: 'nav.timetable', color: 'rose' },
+  { to: '/student/curriculum', icon: BookMarked, label: 'Curriculum', labelKey: 'nav.curriculum', color: 'violet' },
+  { to: '/student/fees', icon: CreditCard, label: 'Fees', labelKey: 'student.feePortal', color: 'teal' },
+  { to: '/student/challans', icon: Receipt, label: 'Challans', color: 'emerald' },
+  { to: '/student/library', icon: BookOpen, label: 'Library', labelKey: 'student.eLibrary', color: 'blue' },
+  { to: '/student/events', icon: CalendarDays, label: 'Events', labelKey: 'student.campusEvents', color: 'amber' },
+  { to: '/student/notifications', icon: Bell, label: 'Notifications', labelKey: 'student.alerts', color: 'violet' },
+];
+
 // ─── Main Component ─────────────────────────────────────────────────
 
 export default function StudentDashboard() {
@@ -325,26 +355,35 @@ export default function StudentDashboard() {
           Renders nothing when the backend feature gate is off. */}
       <StudentAcademicSummary />
 
-      {/* Quick Actions Grid - Karnataka University Features */}
+      {/* Quick Actions — the 13 tiles the desktop rail and the phone "More"
+          sheet also carry, split into their nav groups instead of one wall of
+          icons. On a phone this is four short scannable lists of 2-3 tiles
+          rather than a 3-column grid of thirteen. */}
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-teal-600" />
           {t('student.quickNav')} - Karnataka University
         </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-3">
-          <QuickAction to="/student/hall-tickets" icon={FileText} label="Hall Tickets" color="rose" />
-          <QuickAction to="/student/attendance" icon={Calendar} label={t('nav.attendance')} color="teal" />
-          <QuickAction to="/student/assessments" icon={BookOpen} label={t('nav.assessments')} color="blue" />
-          <QuickAction to="/student/assignments" icon={FileText} label={t('nav.assignments')} color="amber" />
-          <QuickAction to="/student/grades" icon={TrendingUp} label={t('student.gradesGpa')} color="emerald" />
-          <QuickAction to="/student/materials" icon={Library} label={t('student.studyNotes')} color="violet" />
-          <QuickAction to="/student/timetable" icon={Clock} label={t('nav.timetable')} color="rose" />
-          <QuickAction to="/student/curriculum" icon={BookMarked} label={t('nav.curriculum')} color="violet" />
-          <QuickAction to="/student/fees" icon={CreditCard} label={t('student.feePortal')} color="teal" />
-          <QuickAction to="/student/challans" icon={Receipt} label="Challans" color="emerald" />
-          <QuickAction to="/student/library" icon={BookOpen} label={t('student.eLibrary')} color="blue" />
-          <QuickAction to="/student/events" icon={CalendarDays} label={t('student.campusEvents')} color="amber" />
-          <QuickAction to="/student/notifications" icon={Bell} label={t('student.alerts')} color="violet" />
+        <div className="space-y-4">
+          {groupTilesByNavSection(QUICK_ACTIONS).map((group) => (
+            <div key={group.id}>
+              <p className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="h-1 w-1 rounded-full bg-teal-500" aria-hidden="true" />
+                {group.label}
+              </p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+                {group.tiles.map((action) => (
+                  <QuickAction
+                    key={action.to}
+                    to={action.to}
+                    icon={action.icon}
+                    label={action.labelKey ? t(action.labelKey) : action.label}
+                    color={action.color}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
         <div className="mt-3 p-3 bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-950/20 dark:to-blue-950/20 border border-teal-200/50 dark:border-teal-800/50 rounded-xl">
           <p className="text-xs font-bold text-teal-800 dark:text-teal-200 flex items-center gap-2">

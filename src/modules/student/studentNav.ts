@@ -70,6 +70,7 @@ export const STUDENT_NAV_GROUPS: Array<{ id: StudentNavGroup; label: string }> =
   { id: 'account', label: 'Account' },
 ]
 
+// (groupTilesByNavSection lives below findNavItem, which it depends on.)
 const NAV_PATHS = new Map<string, string>(
   STUDENT_NAV_ITEMS.flatMap((item) => [[item.path, item.id] as [string, string], ...(item.aliases || []).map((alias) => [alias, item.id] as [string, string])])
 )
@@ -84,4 +85,24 @@ export function findNavItem(pathname: string): StudentNavItem | undefined {
     .sort(([a], [b]) => b.length - a.length)
   const ownerId = candidates[0] ? NAV_PATHS.get(candidates[0][0]) : undefined
   return STUDENT_NAV_ITEMS.find((item) => item.id === ownerId)
+}
+
+/**
+ * Group a list of student pages by the nav group their route belongs to — the
+ * same grouping the "More" sheet uses, so a page cannot sit under one heading
+ * on the dashboard and another on the phone. Tiles the nav model does not know
+ * fall into a trailing "More" block rather than being dropped: a silently
+ * missing link is the failure this helper exists to prevent.
+ */
+export function groupTilesByNavSection<T extends { to: string }>(
+  tiles: T[]
+): Array<{ id: StudentNavGroup | 'other'; label: string; tiles: T[] }> {
+  const grouped = STUDENT_NAV_GROUPS.map((group) => ({
+    id: group.id,
+    label: group.label,
+    tiles: tiles.filter((tile) => findNavItem(tile.to)?.group === group.id),
+  })).filter((group) => group.tiles.length > 0)
+  const known = new Set(grouped.flatMap((group) => group.tiles.map((tile) => tile.to)))
+  const orphaned = tiles.filter((tile) => !known.has(tile.to))
+  return orphaned.length > 0 ? [...grouped, { id: 'other' as const, label: 'More', tiles: orphaned }] : grouped
 }
