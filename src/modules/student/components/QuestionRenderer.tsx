@@ -28,9 +28,42 @@ interface QuestionRendererProps {
   onToggleFlag: () => void;
   questionNumber: number;
   showResult?: boolean;
+  /**
+   * Blocks clipboard actions on the answer fields themselves. The exam page
+   * also installs a document-level lockdown (see shared/utils/examLockdown),
+   * but React-level handlers on the input are the last line of defence when
+   * the answer field is rendered somewhere the lockdown does not reach.
+   */
+  lockClipboard?: boolean;
   resultStatus?: 'correct' | 'incorrect' | 'unattempted' | 'partial';
   correctAnswer?: string;
   marksObtained?: number;
+}
+
+/**
+ * Props that make an answer field paste-proof on a phone: the long-press
+ * "Paste", the keyboard's clipboard chip, drag-and-drop, and autocorrect
+ * pulling a previously saved answer back in.
+ */
+function clipboardGuardProps(lock: boolean) {
+  if (!lock) return {};
+  const block = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  return {
+    onPaste: block,
+    onCut: block,
+    onCopy: block,
+    onDrop: block,
+    onDragOver: block,
+    onContextMenu: block,
+    // Native autofill/spellcheck would be another clipboard-shaped hole.
+    spellCheck: false,
+    autoComplete: 'off' as const,
+    autoCorrect: 'off' as const,
+    autoCapitalize: 'sentences' as const,
+  };
 }
 
 const QuestionRenderer: React.FC<QuestionRendererProps> = ({
@@ -41,10 +74,13 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   onToggleFlag,
   questionNumber,
   showResult = false,
+  lockClipboard = false,
   resultStatus,
   correctAnswer,
   marksObtained,
 }) => {
+  const guard = clipboardGuardProps(!showResult && lockClipboard);
+
   const handleMCQChange = (optionId: string) => {
     onAnswer({
       selectedOptionId: optionId,
@@ -161,7 +197,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           borderColor: getResultColor(),
         }}
       >
-        <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
+        <Typography variant="body1" sx={{ fontSize: { xs: '1rem', sm: '1.05rem', md: '1.1rem' }, lineHeight: 1.7 }}>
           {question.text}
         </Typography>
         {question.caseText && (
@@ -272,6 +308,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             value={answer?.textAnswer || ''}
             onChange={(e) => handleTextChange(e.target.value)}
             disabled={showResult}
+            {...guard}
             placeholder="Type your answer here..."
             sx={{ maxWidth: 500 }}
           />
@@ -286,6 +323,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             value={answer?.textAnswer || ''}
             onChange={(e) => handleTextChange(e.target.value)}
             disabled={showResult}
+            {...guard}
             placeholder="Write your short answer here..."
           />
         )}
@@ -299,6 +337,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             value={answer?.textAnswer || ''}
             onChange={(e) => handleTextChange(e.target.value)}
             disabled={showResult}
+            {...guard}
             placeholder="Write your detailed answer here..."
           />
         )}
@@ -311,6 +350,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             value={answer?.numericalAnswer ?? ''}
             onChange={(e) => handleNumericalChange(e.target.value)}
             disabled={showResult}
+            {...guard}
             placeholder="Enter numerical value..."
             sx={{ maxWidth: 300 }}
           />
@@ -358,6 +398,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               value={answer?.textAnswer || ''}
               onChange={(e) => handleTextChange(e.target.value)}
               disabled={showResult}
+              {...guard}
             />
           </Box>
         )}

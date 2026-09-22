@@ -31,7 +31,10 @@ function ChallanDetailModal({ challan, onClose, onVerify, onReject }: {
   onVerify: (bankRef: string, remarks?: string) => Promise<boolean>
   onReject: (reason: string) => Promise<boolean>
 }) {
-  const [bankRef, setBankRef] = useState('')
+  // The student may have filed the reference from their phone already
+  // (StudentChallans -> "I paid"). Prefill it so the desk confirms rather than
+  // retypes a 16-character UTR, which is how a verification typo happens.
+  const [bankRef, setBankRef] = useState(challan.bankReferenceNo || '')
   const [remarks, setRemarks] = useState('')
   const [action, setAction] = useState<'view' | 'verify' | 'reject'>('view')
   const [processing, setProcessing] = useState(false)
@@ -134,7 +137,7 @@ function ChallanDetailModal({ challan, onClose, onVerify, onReject }: {
               <div className="flex justify-between"><span className="text-slate-500">IFSC</span><span className="font-mono font-bold">{challan.bankDetails.ifsc}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Branch</span><span className="font-bold">{challan.bankDetails.branch}</span></div>
             </div>
-            <p className="text-[11px] text-slate-500 mt-2">Student must pay at bank, get stamp, and upload stamped challan. Admin verifies with bank reference number.</p>
+            <p className="text-[11px] text-slate-500 mt-2">Student pays at the bank, gets the stamp, files the bank reference in the portal (no document upload) and hands the University Copy to the office. Admin verifies against the bank statement.</p>
           </div>
 
           {/* Subjects */}
@@ -148,6 +151,19 @@ function ChallanDetailModal({ challan, onClose, onVerify, onReject }: {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* What the student declared at the counter */}
+          {challan.status === 'paid_at_bank' && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+              <p className="text-xs font-bold text-blue-700 dark:text-blue-300">Declared by the student — awaiting verification</p>
+              <p className="text-sm mt-1">Bank Ref: <span className="font-mono font-bold">{challan.bankReferenceNo || 'not filed'}</span></p>
+              <p className="text-xs text-slate-500 mt-1">Filed {challan.paidAt ? new Date(challan.paidAt).toLocaleString('en-IN') : '—'}</p>
+              {challan.studentRemarks && (
+                <p className="text-xs mt-2 p-2 bg-white/70 dark:bg-slate-900/40 rounded-lg">{challan.studentRemarks}</p>
+              )}
+              <p className="text-[11px] text-slate-500 mt-2">Match this with the bank statement and the stamped University Copy, then verify below.</p>
             </div>
           )}
 
@@ -368,7 +384,7 @@ function GenerateChallanModal({ onClose, onGenerate, students }: {
 }
 
 export default function ChallanManagement() {
-  const { challans, loading, filters, summary, updateFilters, refresh, createBulkChallans, verifyChallan, rejectChallan } = useChallanData()
+  const { challans, loading, error, filters, summary, updateFilters, refresh, createBulkChallans, verifyChallan, rejectChallan } = useChallanData()
   const { students } = useFeeData()
   const { showSuccess, showError } = useNotification()
   const [selected, setSelected] = useState<Challan | null>(null)
@@ -411,6 +427,12 @@ export default function ChallanManagement() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm dark:border-rose-900/60 dark:bg-rose-950/30">
+          <p className="font-bold text-rose-800 dark:text-rose-200">Challans could not be loaded</p>
+          <p className="mt-1 text-xs text-rose-700 dark:text-rose-300">{error}</p>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>

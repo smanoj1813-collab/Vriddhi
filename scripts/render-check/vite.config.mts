@@ -25,6 +25,18 @@ export default defineConfig({
       { find: '@/shared/api/staffAttendanceApi', replacement: stub('staffAttendanceApi.ts') },
       { find: '@/shared/services/prepContentService', replacement: stub('prepContentService.ts') },
       { find: '@/Firebase/config', replacement: stub('firebaseConfig.ts') },
+      // The student shell reads its identity from a context provider; the stub
+      // lets a page mount without the whole data layer.
+      // The student shell reads its identity from a context provider; these
+      // stubs let a page mount without the whole data layer. Exact specifiers,
+      // because a regex alias replaces only the matched span and would eat the
+      // './' of a relative import.
+      { find: '@/modules/student/hooks/useStudentData', replacement: stub('useStudentData.ts') },
+      { find: '../hooks/useStudentData', replacement: stub('useStudentData.ts') },
+      { find: './useStudentData', replacement: stub('useStudentData.ts') },
+      // A string `find` (not a regex) because Vite replaces only the matched
+      // span: a regex that does not anchor at ^ would leave the '@/' prefix on.
+      { find: '@/shared/providers/NotificationProvider', replacement: stub('notificationProvider.ts') },
       { find: /^firebase\/firestore$/, replacement: stub('firestore.ts') },
       { find: /^firebase\/functions$/, replacement: stub('functions.ts') },
       // The app config's VitePWA plugin owns this virtual module; swap it for

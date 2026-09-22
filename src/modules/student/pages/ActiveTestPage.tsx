@@ -18,8 +18,27 @@ import {
   logProctorEvent,
 } from '../api/testApi';
 import QuestionRenderer from '../components/QuestionRenderer';
+import {
+  enteredSectionsFromAnswers,
+  sectionKeyOf,
+  shouldPlaySectionBreak,
+} from '../examSectionBreaks';
 import { MathRenderer } from '../components/MathRenderer';
+import { applyExamLockdown, type ExamBlockReason } from '../../../shared/utils/examLockdown';
 import type { ActiveTest, BasicProctorEvent, PaperQuestion, StudentAnswer } from '../types/assessment';
+
+// What the student is told when the clipboard lockdown stops an action. The
+// action itself is blocked whether or not the faculty enabled proctoring —
+// only the reporting of it depends on that flag.
+const BLOCK_MESSAGES: Record<ExamBlockReason, string> = {
+  paste_attempt: 'Pasting is disabled during this test. Type your own answer.',
+  copy_attempt: 'Copying is disabled during this test.',
+  cut_attempt: 'Cutting is disabled during this test.',
+  context_menu: 'The long-press menu is disabled during this test.',
+  drop_attempt: 'Dropping text into the answer box is disabled during this test.',
+  bulk_input: 'That text arrived too fast to be typed — please type your own answer.',
+  keyboard_shortcut: 'This shortcut is disabled during the test.',
+};
 
 // Deterministic per-student presentation: the same student always sees the
 // same shuffled order (so a refresh/resume is stable), while two students see
@@ -91,8 +110,10 @@ function buildDisplayQuestions(test: ActiveTest, studentId: string): PaperQuesti
 // delta), 3 s after the last change, with the 60 s tick as a safety net.
 const AUTOSAVE_INTERVAL_MS = 60_000;
 const AUTOSAVE_DEBOUNCE_MS = 3_000;
-// Mandatory break between exam sections: crossing a section boundary shows a
-// countdown screen before the new section's questions. The test clock runs on.
+// Mandatory break between exam sections: the first time a student lands in a
+// section they have not met yet, a countdown screen plays before its questions.
+// The test clock runs on. Returning to a section already entered is instant —
+// see ../examSectionBreaks.ts for why that is the whole rule.
 const SECTION_BREAK_SECONDS = 30;
 // Severity-high proctor events are still logged per-event (faculty live view);
 // every other type rides along in the next autosave payload.
@@ -124,9 +145,14 @@ const ActiveTestPage: React.FC = () => {
   // test's scheduling flags; null until the test has loaded.
   const [displayQuestions, setDisplayQuestions] = useState<PaperQuestion[] | null>(null);
   const [showTabLimitWarning, setShowTabLimitWarning] = useState(false);
-  // 30-second gap between sections: { targetIndex, sectionName } while the
-  // break countdown is showing; null while a section is being answered.
-  const [sectionTransition, setSectionTransition] = useState<{ targetIndex: number; sectionName: string } | null>(null);
+  // 30-second gap between sections: { targetIndex, sectionName, sectionKey }
+  // while the break countdown is showing; null while a section is being answered.
+  // sectionKey is carried here (not read off `questions` in the countdown
+  // effect below) because that effect runs before the display list exists.
+  const [sectionTransition, setSectionTransition] = useState<{ targetIndex: number; sectionName: string; sectionKey: string } | null>(null);
+  // Sections the student has already been inside this sitting. A ref, not
+  // state: nothing renders from it, and a re-render must not re-arm a break.
+  const enteredSectionsRef = useRef<Set<string>>(new Set());
   const [transitionRemaining, setTransitionRemaining] = useState(SECTION_BREAK_SECONDS);
 
   const collegeId = profile?.collegeId || user?.collegeId || '';
@@ -134,6 +160,9 @@ const ActiveTestPage: React.FC = () => {
 
   // refs mirror state for intervals/closures
   const submitLock = useRef(false);
+  // Root of the exam surface: the clipboard lockdown scopes its selection and
+  // callout suppression to this subtree (falling back to <body> if unset).
+  const examRootRef = useRef<HTMLDivElement>(null);
   const answersRef = useRef<Record<string, Partial<StudentAnswer>>>({});
   const proctorEventsRef = useRef<BasicProctorEvent[]>([]);
   const timeRemainingRef = useRef(0);
@@ -194,9 +223,17 @@ const ActiveTestPage: React.FC = () => {
         // in_progress → resume with restored answers + remaining time from startedAt
         const remaining = Math.max(0, Math.floor((new Date(test.endsAt).getTime() - Date.now()) / 1000));
         setActiveTest(test);
-        setDisplayQuestions(buildDisplayQuestions(test, studentId));
+        const displayOrder = buildDisplayQuestions(test, studentId);
+        setDisplayQuestions(displayOrder);
         setAnswers(test.answers || {});
         answersRef.current = test.answers || {};
+        // Which sections already owe nothing: the one the paper opens on (the
+        // student is standing in it, they did not cross into it), plus any
+        // section with saved work — so a reload never bills 30 seconds for
+        // material the student has already met.
+        const entered = enteredSectionsFromAnswers(test.questions, test.answers);
+        entered.add(sectionKeyOf(displayOrder[0]));
+        enteredSectionsRef.current = entered;
         setTimeRemaining(remaining);
         timeRemainingRef.current = remaining;
         setCurrentQIndex(0);
@@ -301,6 +338,8 @@ const ActiveTestPage: React.FC = () => {
   useEffect(() => {
     if (!sectionTransition || submitted) return;
     if (transitionRemaining <= 0) {
+      // The break has been paid for; from now on this section is open both ways.
+      enteredSectionsRef.current.add(sectionTransition.sectionKey);
       setCurrentQIndex(sectionTransition.targetIndex);
       setSectionTransition(null);
       return;
@@ -457,54 +496,29 @@ const ActiveTestPage: React.FC = () => {
         warn('You exited fullscreen. Re-enter to continue.');
       }
     };
-    const onCopy = (e: Event) => {
-      if (!proctored) return;
-      recordProctorEvent('copy_attempt');
-      e.preventDefault();
-      warn('Copying is disabled during this test.');
-    };
-    const onPaste = (e: Event) => {
-      if (!proctored) return;
-      recordProctorEvent('paste_attempt');
-      e.preventDefault();
-      warn('Pasting is disabled during this test.');
-    };
-    const onContextMenu = (e: Event) => {
-      if (!proctored) return;
-      recordProctorEvent('context_menu');
-      e.preventDefault();
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!proctored) return;
-      const key = e.key.toLowerCase();
-      const blocked =
-        (e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a', 'p', 's'].includes(key) ||
-        key === 'printscreen' ||
-        key === 'f12' ||
-        (e.altKey && key === 'tab');
-      if (blocked) {
-        recordProctorEvent('keyboard_shortcut', { key: e.key });
-        e.preventDefault();
-        warn('This shortcut is disabled during the test.');
-      }
-    };
+    // Clipboard lockdown: enforced for EVERY test, proctored or not. The old
+    // gate on `enableProctoring` left unproctored papers wide open to pasted
+    // answers, and bubble-phase `paste` listeners never covered the mobile
+    // paths (long-press Paste, keyboard clipboard chip, drag-and-drop).
+    // See src/shared/utils/examLockdown.ts.
+    const disposeLockdown = applyExamLockdown({
+      root: examRootRef.current,
+      onBlock: (reason, details) => {
+        recordProctorEvent(reason, details);
+        warn(BLOCK_MESSAGES[reason] ?? 'That action is disabled during this test.');
+      },
+    });
 
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     document.addEventListener('fullscreenchange', onFullscreenChange);
-    document.addEventListener('copy', onCopy);
-    document.addEventListener('paste', onPaste);
-    document.addEventListener('contextmenu', onContextMenu);
-    document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('fullscreenchange', onFullscreenChange);
-      document.removeEventListener('copy', onCopy);
-      document.removeEventListener('paste', onPaste);
-      document.removeEventListener('contextmenu', onContextMenu);
-      document.removeEventListener('keydown', onKeyDown);
+      disposeLockdown();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTest, submitted, recordProctorEvent, flushNow, doSubmit]);
 
   /* ─── helpers ─── */
@@ -642,21 +656,21 @@ const ActiveTestPage: React.FC = () => {
   const isLastInSection = !!currentSection && currentQIndex === currentSection.indices[currentSection.indices.length - 1];
   const maxTabSwitches = activeTest.maxTabSwitches || 0;
 
-  // Section-aware navigation: moving within the same section is instant;
-  // crossing a section boundary plays the mandatory 30-second gap screen
-  // before the new section's first question.
+  // Section-aware navigation: within a section, and back into one the student
+  // has already been inside, is instant. Only a section they have not met yet
+  // owes the 30-second gap screen before its first question.
   const navigateToIndex = (idx: number) => {
     if (idx < 0 || idx >= questions.length || idx === currentQIndex) return;
     if (sectionTransition) return;
-    const targetKey = questions[idx].sectionId || 'sec-0';
-    const currentKey = currentQ.sectionId || 'sec-0';
-    if (targetKey === currentKey) {
+    const targetKey = sectionKeyOf(questions[idx]);
+    if (!shouldPlaySectionBreak({ targetKey, currentKey: sectionKeyOf(currentQ), enteredKeys: enteredSectionsRef.current })) {
+      enteredSectionsRef.current.add(targetKey);
       setCurrentQIndex(idx);
       return;
     }
     const targetSection = sections.find((g) => g.indices.includes(idx));
     setTransitionRemaining(SECTION_BREAK_SECONDS);
-    setSectionTransition({ targetIndex: idx, sectionName: targetSection?.name || 'Next section' });
+    setSectionTransition({ targetIndex: idx, sectionName: targetSection?.name || 'Next section', sectionKey: targetKey });
   };
 
   // Palette body shared by the desktop sidebar card and the phone bottom sheet.
@@ -719,10 +733,15 @@ const ActiveTestPage: React.FC = () => {
             <MathRenderer text={activeTest.title} inline /> · {questions.length} questions ·{' '}
             {formatTime(timeRemaining)} remaining
           </Typography>
-          {activeTest.enableProctoring && (
+          {activeTest.enableProctoring ? (
             <Alert severity="warning" sx={{ textAlign: 'left', mb: 2 }} icon={<Security />}>
               Proctoring active: the test opens in fullscreen. Tab switches, clipboard use and
               shortcut keys are logged.
+            </Alert>
+          ) : (
+            <Alert severity="info" sx={{ textAlign: 'left', mb: 2 }} icon={<Security />}>
+              Copy, paste, drag-and-drop and the long-press menu are switched off while you answer.
+              Type every answer yourself — pasted text is rejected.
             </Alert>
           )}
           {timeRemaining <= 300 && (
@@ -737,7 +756,7 @@ const ActiveTestPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+    <Box ref={examRootRef} sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Paper elevation={2} sx={{ position: 'sticky', top: 0, zIndex: 50, px: { xs: 1.5, md: 4 }, py: { xs: 1, md: 2 }, pt: { xs: 'calc(8px + env(safe-area-inset-top))', md: 2 }, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: { xs: 1, md: 2 }, borderRadius: 0 }}>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '0.95rem', md: '1.25rem' } }} noWrap>{activeTest.title}</Typography>
@@ -748,17 +767,13 @@ const ActiveTestPage: React.FC = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 }, flexShrink: 0 }}>
-          {activeTest.enableProctoring && tabSwitchCount > 0 && (
-            <Chip icon={<Warning />} label={isMobile ? String(tabSwitchCount) : `${tabSwitchCount} warning${tabSwitchCount > 1 ? 's' : ''}`} color="warning" size="small" />
-          )}
-          {maxTabSwitches > 0 && (
-            <Chip
-              icon={<Warning />}
-              label={isMobile ? `${Math.max(0, maxTabSwitches - tabSwitchCount)} left` : `Tab switches left: ${Math.max(0, maxTabSwitches - tabSwitchCount)}`}
-              color={tabSwitchCount >= maxTabSwitches ? 'error' : 'warning'}
-              size="small"
-            />
-          )}
+          {/* Tab switching is still counted, still logged for the faculty live
+              view and still auto-submits at `maxTabSwitches` — but the running
+              tally is not shown here. A visible counter is a second scoreboard
+              the student cannot do anything about, and it advertises that
+              leaving the tab is being scored rather than noticed. The alert on
+              the switch itself and the at-limit dialog stay: those tell the
+              student something they can act on. */}
           <Chip icon={<Timer />} label={formatTime(timeRemaining)} color={timeRemaining < 300 ? 'error' : 'primary'} sx={{ fontWeight: 700, fontSize: { xs: '0.9rem', md: '1rem' }, px: { xs: 0, md: 1 }, fontVariantNumeric: 'tabular-nums' }} />
           {!isMobile && (
             <Button variant="contained" color="success" startIcon={<Send />} onClick={() => setShowSubmitConfirm(true)} disabled={submitting}>Submit</Button>
@@ -801,6 +816,7 @@ const ActiveTestPage: React.FC = () => {
                 isFlagged={!!answers[currentQ.id]?.isFlagged}
                 onToggleFlag={() => toggleFlag(currentQ.id)}
                 questionNumber={currentQIndex + 1}
+                lockClipboard
               />
 
               {!isMobile && (

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Button, Card, CardContent, Chip, List, ListItem,
   ListItemIcon, ListItemText, Checkbox, FormControlLabel, Alert,
-  AlertTitle, Stepper, Step, StepLabel, Paper, CircularProgress,
+  AlertTitle, Stepper, Step, StepLabel, Paper, CircularProgress, LinearProgress,
 } from '@mui/material';
 import {
   Fullscreen, ContentCopy, Timer, CheckCircle,
@@ -136,7 +136,7 @@ const TestInstructionsPage: React.FC = () => {
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900, mx: 'auto', minHeight: '100vh' }}>
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
+        <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.3rem', sm: '1.75rem', md: '2.125rem' }, lineHeight: 1.3 }} gutterBottom>
           {data.title}
         </Typography>
         {data.subject && (
@@ -193,11 +193,31 @@ const TestInstructionsPage: React.FC = () => {
         </Alert>
       )}
 
-      <Stepper activeStep={isInProgress ? STEPS.length - 1 : activeStep} alternativeLabel sx={{ mb: 4 }}>
-        {STEPS.map((label) => (
-          <Step key={label}><StepLabel>{label}</StepLabel></Step>
-        ))}
-      </Stepper>
+      {/* MUI's alternativeLabel stepper lays three captions out in ~500px of
+          width; on a 360px phone they collide and overlap the icons. Phones get
+          the same progress as a compact line instead. */}
+      <Box sx={{ display: { xs: 'none', sm: 'block' }, mb: 4 }}>
+        <Stepper activeStep={isInProgress ? STEPS.length - 1 : activeStep} alternativeLabel>
+          {STEPS.map((label) => (
+            <Step key={label}><StepLabel>{label}</StepLabel></Step>
+          ))}
+        </Stepper>
+      </Box>
+      <Box sx={{ display: { xs: 'block', sm: 'none' }, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+          <Typography variant="caption" sx={{ fontWeight: 700 }}>
+            {isInProgress ? STEPS[STEPS.length - 1] : STEPS[activeStep]}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {(isInProgress ? STEPS.length - 1 : activeStep) + 1}/{STEPS.length}
+          </Typography>
+        </Box>
+        <LinearProgress
+          variant="determinate"
+          value={(((isInProgress ? STEPS.length - 1 : activeStep) + 1) / STEPS.length) * 100}
+          sx={{ height: 6, borderRadius: 3 }}
+        />
+      </Box>
 
       {activeStep === 0 && (
         <Card sx={{ borderRadius: 3, mb: 3 }}>
@@ -339,9 +359,14 @@ const TestInstructionsPage: React.FC = () => {
             <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }} gutterBottom>
               <Security color="primary" /> Test Rules Agreement
             </Typography>
-            {data.enableProctoring && (
+            {data.enableProctoring ? (
               <Alert severity="info" sx={{ mb: 3 }}>
                 This is a <strong>proctored test</strong>. The following monitoring will be active:
+              </Alert>
+            ) : (
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Copy, paste, drag-and-drop and the long-press menu are disabled for this test.
+                Every answer must be typed on this device.
               </Alert>
             )}
 

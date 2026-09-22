@@ -8,15 +8,38 @@ export function orderBy(..._a: any[]) { return {}; }
 export function limit(_n: number) { return {}; }
 export async function getDoc(ref: any) {
   calls.push('getDoc:' + (ref?.__path ?? '?'));
+  // A check that needs a document to exist (a challan being declared paid, for
+  // instance) sets globalThis.__RC_FIRESTORE_DOC = { data: {...} }; unset, a
+  // read misses, exactly as an empty collection does.
+  const seeded = (globalThis as any).__RC_FIRESTORE_DOC;
+  if (seeded && seeded.data) {
+    const path = String(ref?.__path ?? '');
+    return { exists: () => true, data: () => seeded.data, id: path.split('/').pop() ?? '' };
+  }
   return { exists: () => false, data: () => undefined, id: '' };
 }
-export async function getDocs(_q: any) { return { empty: true, size: 0, docs: [], forEach: () => {} }; }
+export async function getDocs(_q: any) {
+  // A render check can stand in for real rows by setting
+  // globalThis.__RC_FIRESTORE_DOCS to [{ id, data: () => ({...}) }]. Unset,
+  // the stub behaves exactly as before: an empty collection.
+  const seeded = (globalThis as any).__RC_FIRESTORE_DOCS;
+  if (Array.isArray(seeded) && seeded.length > 0) {
+    return { empty: false, size: seeded.length, docs: seeded, forEach: (cb: any) => seeded.forEach(cb) };
+  }
+  return { empty: true, size: 0, docs: [], forEach: () => {} };
+}
 export async function setDoc(..._a: any[]) { calls.push('setDoc'); }
 // Write/listen surfaces reached by pages further down the module graph
 // (curriculum, superadmin, layout). They are stubs like everything else here:
 // recorded, never persisted.
 export async function addDoc(..._a: any[]) { calls.push('addDoc'); return { id: 'stub-id' }; }
-export async function updateDoc(..._a: any[]) { calls.push('updateDoc'); }
+export async function updateDoc(...a: any[]) {
+  calls.push('updateDoc');
+  // Beyond the bare call log, a check can assert what was written: the last
+  // argument is the merge payload, and the first carries the document path.
+  const writes = ((globalThis as any).__RC_WRITES ??= [] as any[]);
+  writes.push({ path: (a[0] as any)?.__path, data: a[a.length - 1] });
+}
 export async function deleteDoc(..._a: any[]) { calls.push('deleteDoc'); }
 export async function runTransaction(_db: any, fn: (t: any) => Promise<any>) {
   return fn({ set: async () => {}, update: async () => {}, get: async () => ({ exists: () => false, data: () => undefined }) });
@@ -35,8 +58,14 @@ export function collectionGroup(..._a: any[]) { return {}; }
 export function startAfter(..._a: any[]) { return {}; }
 export function endBefore(..._a: any[]) { return {}; }
 export class Timestamp {
+  // Real Timestamps carry the instant; fee code reads it back with toMillis(),
+  // so the stub has to keep the number rather than only hand out a Date.
+  private readonly ms = Date.now();
   static now() { return new Timestamp(); }
-  toDate() { return new Date(); }
+  toDate() { return new Date(this.ms); }
+  toMillis() { return this.ms; }
+  get seconds() { return Math.floor(this.ms / 1000); }
+  get nanoseconds() { return (this.ms % 1000) * 1e6; }
 }
 export default {
   collection, doc, query, where, orderBy, limit, getDoc, getDocs, setDoc,
