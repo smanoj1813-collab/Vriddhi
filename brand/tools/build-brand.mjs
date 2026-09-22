@@ -25,8 +25,10 @@ const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BRAND_DIR = path.resolve(HERE, '..');
 const REPO = path.resolve(BRAND_DIR, '..');
-const MODULES = process.env.BRAND_NODE_MODULES || path.join(HERE, 'node_modules');
-const FONT_DIR = process.env.BRAND_FONT_DIR || MODULES;
+// Prefer the repo's own devDependencies; BRAND_NODE_MODULES overrides for
+// sandboxes that keep the toolchain outside the checkout.
+const MODULES = process.env.BRAND_NODE_MODULES || path.join(REPO, 'node_modules');
+const FONT_DIR = process.env.BRAND_FONT_DIR || path.join(HERE, 'fonts');
 
 const opentype = require(path.join(MODULES, 'opentype.js'));
 const sharp = (() => {

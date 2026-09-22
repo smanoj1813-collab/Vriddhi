@@ -8,7 +8,12 @@
  *
  *   node brand/tools/extract-hero.mjs
  *
- * Outputs brand/hero/vriddhi-mark-hero-light.png (+ an @600 half size).
+ * Outputs the asset twice:
+ *   brand/hero/        — design source (full size, what the brand sheet shows)
+ *   public/brand/hero/ — the runtime copy, so the app's /brand/hero/... URL
+ *                        resolves in the production build as well as in dev.
+ *                        Vite only copies public/ into dist, so an app that
+ *                        referenced brand/ directly would 404 once deployed.
  *
  * Only the light bake is shipped. Keying the render against a dark surface is
  * not worth it here: the render's own background is noisy off-white, and the
@@ -25,12 +30,13 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const sharp = require(process.env.BRAND_NODE_MODULES
   ? path.join(process.env.BRAND_NODE_MODULES, 'sharp')
-  : 'sharp');
+  : path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'), 'node_modules', 'sharp'));
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
 const SRC = path.join(REPO, 'brand', 'logo', 'concepts', 'vriddhi-primary-lockup.png');
 const OUT = path.join(REPO, 'brand', 'hero');
+const OUT_PUBLIC = path.join(REPO, 'public', 'brand', 'hero');
 
 // the app's own surfaces, so the baked background matches exactly
 const LIGHT = { r: 255, g: 255, b: 255 };
@@ -135,17 +141,21 @@ function bake(background) {
 }
 
 fs.mkdirSync(OUT, { recursive: true });
+fs.mkdirSync(OUT_PUBLIC, { recursive: true });
 const jobs = [['vriddhi-mark-hero-light.png', LIGHT]];
 for (const [name, bg] of jobs) {
   const pixels = bake(bg);
-  const file = path.join(OUT, name);
-  // native = 1:1 with the source crop; also emit a 2x-friendly half size
-  await sharp(pixels, { raw: { width, height, channels: 3 } })
-    .png({ compressionLevel: 9 })
-    .toFile(file);
-  await sharp(pixels, { raw: { width, height, channels: 3 } })
-    .resize({ width: Math.round(width / 2) })
-    .png({ compressionLevel: 9 })
-    .toFile(file.replace(/\.png$/, '@600.png'));
-  console.log(`✓ brand/hero/${name}  (${width}x${height})`);
+  // native = 1:1 with the source crop, plus a half size for the login card
+  const sizes = [
+    [name, null],
+    [name.replace(/\.png$/, '@600.png'), Math.round(width / 2)],
+  ];
+  for (const [fileName, targetWidth] of sizes) {
+    const buf = await sharp(pixels, { raw: { width, height, channels: 3 } });
+    const out = targetWidth ? buf.resize({ width: targetWidth }) : buf;
+    const png = await out.png({ compressionLevel: 9 }).toBuffer();
+    fs.writeFileSync(path.join(OUT, fileName), png);
+    fs.writeFileSync(path.join(OUT_PUBLIC, fileName), png);
+  }
+  console.log(`✓ brand/hero/${name} + public/brand/hero/${name}  (${width}x${height})`);
 }

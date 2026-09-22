@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vriddhi — logo in the dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --teal-500: #14b8a6; --teal-600: #0d9488; --teal-700: #0f766e;
+    --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+    --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+    --slate-900: #0f172a; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--slate-100); font-family: Inter, -apple-system, "Segoe UI", sans-serif; color: var(--slate-900); -webkit-font-smoothing: antialiased; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 20px 80px; }
+  .page > h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+  .page > p.sub { color: var(--slate-600); font-size: 14px; margin: 0 0 26px; line-height: 1.6; max-width: 780px; }
+  h2 { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--slate-400); margin: 38px 0 14px; }
+
+  /* ---------- the real app shell, reproduced ---------- */
+  .shell { display: flex; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 16px; overflow: hidden; height: 560px; }
+  .shell.dark { background: #0b1220; border-color: #1e293b; }
+
+  .sidebar { width: 268px; background: var(--card); border-right: 1px solid var(--slate-200); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar.collapsed { width: 76px; }
+  .shell.dark .sidebar { background: #131b2e; border-right-color: #1e293b; }
+
+  .brandbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--slate-200); gap: 10px; }
+  .sidebar.collapsed .brandbar { justify-content: center; padding: 0; }
+  .shell.dark .brandbar { border-bottom-color: #1e293b; }
+  .brandbar .logos { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brandbar .logos img { height: 34px; width: auto; display: block; }
+  .brandbar .subtitle { font-size: 11px; font-weight: 500; color: var(--slate-500); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+  .shell.dark .brandbar .subtitle { color: var(--slate-400); }
+  .collapse { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: var(--slate-500); font-size: 14px; background: rgba(0,0,0,.03); }
+
+  .college { margin: 14px 14px 6px; padding: 11px 13px; border-radius: 12px; background: var(--slate-50); border: 1px solid var(--slate-200); display: flex; gap: 10px; align-items: center; }
+  .shell.dark .college { background: #0f172a; border-color: #1e293b; }
+  .college .dot { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--teal-500), var(--teal-700)); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .college .meta { min-width: 0; }
+  .college .meta b { display: block; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .college .meta span { font-size: 10.5px; color: var(--slate-400); }
+
+  .nav { padding: 8px 10px; overflow: hidden; }
+  .nav .item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; color: var(--slate-600); font-weight: 500; }
+  .shell.dark .nav .item { color: var(--slate-400); }
+  .nav .item.active { background: rgba(13,148,136,.1); color: var(--teal-700); font-weight: 700; }
+  .shell.dark .nav .item.active { background: rgba(20,184,166,.16); color: #5eead4; }
+  .nav .ico { width: 18px; text-align: center; font-size: 14px; opacity: .85; }
+  .sidebar.collapsed .nav .item { justify-content: center; padding: 10px 0; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 64px; background: var(--card); border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+  .shell.dark .topbar { background: #131b2e; border-bottom-color: #1e293b; }
+  .topbar .title { font-size: 15px; font-weight: 700; }
+  .topbar .crumbs { font-size: 12px; color: var(--slate-400); }
+  .topbar .right { display: flex; align-items: center; gap: 10px; }
+  .topbar .chip { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: rgba(13,148,136,.12); color: var(--teal-700); }
+  .shell.dark .topbar .chip { background: rgba(20,184,166,.18); color: #5eead4; }
+  .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; font-size:12px; font-weight:700; display:grid; place-items:center; }
+
+  .content { padding: 20px; background: var(--slate-50); flex: 1; overflow: hidden; }
+  .shell.dark .content { background: #0b1220; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { background: var(--card); border: 1px solid var(--slate-200); border-radius: 12px; padding: 14px; }
+  .shell.dark .stat { background: #131b2e; border-color: #1e293b; }
+  .stat .k { font-size: 11px; color: var(--slate-400); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .stat .v { font-size: 22px; font-weight: 800; margin-top: 6px; }
+  .stat .v small { font-size: 11px; font-weight: 600; color: var(--teal-600); margin-left: 6px; }
+  .panel { margin-top: 12px; background: var(--card); border: 1px solid var(--slate-200); border-radius: 12px; padding: 16px; }
+  .shell.dark .panel { background: #131b2e; border-color: #1e293b; }
+  .panel h3 { margin: 0 0 10px; font-size: 13px; font-weight: 700; }
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 74px; }
+  .bars i { flex: 1; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, var(--teal-500), var(--teal-700)); display: block; }
+
+  /* ---------- login ---------- */
+  .login-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .login { background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; align-items: center; }
+  .login.dark { background: #0b1220; border-color: #1e293b; }
+  .login .mount { width: 144px; height: 144px; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px rgba(13,148,136,.14); display: grid; place-items: center; overflow: hidden; }
+  .login.dark .mount { box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  .login .mount img { width: 92%; height: 92%; object-fit: contain; }
+  .login h3 { margin: 18px 0 2px; font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+  .login.dark h3 { color: #fff; }
+  .login p { margin: 0; font-size: 12.5px; color: var(--slate-500); }
+  .login .fields { width: 100%; max-width: 320px; margin-top: 18px; }
+  .login .field { background: #fff; border: 1px solid var(--slate-200); border-radius: 11px; padding: 11px 13px; font-size: 12.5px; color: var(--slate-400); margin-bottom: 9px; }
+  .login.dark .field { background: #131b2e; border-color: #1e293b; }
+  .login .btn { background: linear-gradient(135deg, var(--teal-500), var(--teal-700)); color: #fff; border-radius: 11px; padding: 12px; text-align: center; font-size: 13px; font-weight: 700; }
+  .login .note { margin-top: 14px; font-size: 11.5px; color: var(--slate-400); text-align: center; line-height: 1.6; }
+
+  /* ---------- mobile ---------- */
+  .phones { display: flex; gap: 20px; flex-wrap: wrap; }
+  .phone { width: 268px; background: var(--card); border: 1px solid var(--slate-200); border-radius: 26px; overflow: hidden; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
+  .phone .status { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 10px; color: var(--slate-400); }
+  .phone .head { padding: 0 14px 12px; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; gap: 10px; }
+  .phone .head img { height: 30px; width: auto; }
+  .phone .body { padding: 14px; display: grid; gap: 10px; background: var(--slate-50); }
+  .phone .tile { background: #fff; border: 1px solid var(--slate-200); border-radius: 12px; padding: 12px; font-size: 12px; font-weight: 600; }
+  .phone .tile span { display: block; font-size: 10.5px; color: var(--slate-400); font-weight: 500; margin-top: 3px; }
+  .phone .splash { background: linear-gradient(160deg, var(--teal-500), var(--teal-700)); height: 190px; display: grid; place-items: center; }
+  .phone .splash img { height: 74px; filter: brightness(0) invert(1); }
+  .phone .badge-row { display: flex; align-items: center; gap: 12px; padding: 12px; font-size: 11.5px; color: var(--slate-500); background: #fff; border-top: 1px solid var(--slate-200); }
+  .phone .badge-row img { width: 36px; height: 36px; border-radius: 9px; }
+  .phone .homeicon { width: 52px; text-align: center; }
+  .phone .homeicon img { width: 44px; height: 44px; border-radius: 12px; display: block; box-shadow: 0 3px 8px rgba(15,23,42,.16); }
+  .phone .homeicon span { font-size: 9.5px; color: var(--slate-500); display: block; margin-top: 4px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tag { font-size: 11px; font-weight: 600; color: var(--slate-600); background: #fff; border: 1px solid var(--slate-200); border-radius: 999px; padding: 5px 11px; }
+  .tag b { color: var(--teal-700); }
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--slate-400); text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Vriddhi logo — in the dashboard</h1>
+  <p class="sub">
+    The real app chrome, reproduced at 1:1 so the logo can be judged where it actually lives.
+    Every image here is the shipped asset — the same files the app imports — so what you see is
+    what ships. This page needs no Firebase project, which is why it exists: the real dashboard
+    requires live credentials to reach.
+  </p>
+
+  <h2>Sidebar — expanded and collapsed</h2>
+  <div class="legend">
+    <span class="tag">logo height <b>34px</b></span>
+    <span class="tag">collapsed → <b>mark</b></span>
+    <span class="tag">expanded → <b>horizontal lockup</b></span>
+  </div>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brandbar">
+        <div class="logos">
+          <img src="/brand/logo/svg/vriddhi-logo-horizontal.svg" alt="Vriddhi Institutions" />
+        </div>
+        <div class="collapse">‹</div>
+      </div>
+      <div class="college">
+        <div class="dot">V</div>
+        <div class="meta"><b>Vriddhi Institute of Technology</b><span>Bengaluru · 2026-27</span></div>
+      </div>
+      <nav class="nav">
+        <div class="item active"><span class="ico">▦</span> Dashboard</div>
+        <div class="item"><span class="ico">◍</span> Students</div>
+        <div class="item"><span class="ico">✓</span> Attendance</div>
+        <div class="item"><span class="ico">▤</span> Assessments</div>
+        <div class="item"><span class="ico">₹</span> Fees</div>
+        <div class="item"><span class="ico">⚙</span> Settings</div>
+      </nav>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div><div class="title">Dashboard</div><div class="crumbs">Home / Overview</div></div>
+        <div class="right"><span class="chip">ADMIN</span><div class="avatar">RA</div></div>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><div class="k">Students</div><div class="v">1,284<small>▲ 4%</small></div></div>
+          <div class="stat"><div class="k">Attendance</div><div class="v">91.6%<small>▲ 1.2</small></div></div>
+          <div class="stat"><div class="k">Fees collected</div><div class="v">₹62.4L<small>82%</small></div></div>
+        </div>
+        <div class="panel">
+          <h3>Attendance by week</h3>
+          <div class="bars">
+            <i style="height:52%"></i><i style="height:68%"></i><i style="height:44%"></i><i style="height:80%"></i>
+            <i style="height:92%"></i><i style="height:71%"></i><i style="height:86%"></i><i style="height:63%"></i>
+            <i style="height:57%"></i><i style="height:75%"></i><i style="height:88%"></i><i style="height:66%"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px" class="shell dark">
+    <aside class="sidebar collapsed">
+      <div class="brandbar">
+        <div class="logos"><img src="/brand/logo/svg/vriddhi-mark.svg" alt="" /></div>
+      </div>
+      <nav class="nav">
+        <div class="item active"><span class="ico">▦</span></div>
+        <div class="item"><span class="ico">◍</span></div>
+        <div class="item"><span class="ico">✓</span></div>
+        <div class="item"><span class="ico">▤</span></div>
+        <div class="item"><span class="ico">₹</span></div>
+      </nav>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div><div class="title">Dashboard</div><div class="crumbs">Dark mode · collapsed rail</div></div>
+        <div class="right"><span class="chip">ADMIN</span><div class="avatar">RA</div></div>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><div class="k">Students</div><div class="v">1,284<small>▲ 4%</small></div></div>
+          <div class="stat"><div class="k">Attendance</div><div class="v">91.6%<small>▲ 1.2</small></div></div>
+          <div class="stat"><div class="k">Fees collected</div><div class="v">₹62.4L<small>82%</small></div></div>
+        </div>
+        <div class="panel">
+          <h3>Attendance by week</h3>
+          <div class="bars">
+            <i style="height:52%"></i><i style="height:68%"></i><i style="height:44%"></i><i style="height:80%"></i>
+            <i style="height:92%"></i><i style="height:71%"></i><i style="height:86%"></i><i style="height:63%"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Login — where the render leads</h2>
+  <div class="login-wrap">
+    <div class="login">
+      <div class="mount"><img src="/brand/hero/vriddhi-mark-hero-light@600.png" alt="" /></div>
+      <h3>Vriddhi Portal</h3>
+      <p>Academic Management System</p>
+      <div class="fields">
+        <div class="field">you@college.edu</div>
+        <div class="field">••••••••</div>
+        <div class="btn">Sign in</div>
+      </div>
+      <div class="note">Light mode</div>
+    </div>
+    <div class="login dark">
+      <div class="mount"><img src="/brand/hero/vriddhi-mark-hero-light@600.png" alt="" /></div>
+      <h3>Vriddhi Portal</h3>
+      <p>Academic Management System</p>
+      <div class="fields">
+        <div class="field">you@college.edu</div>
+        <div class="field">••••••••</div>
+        <div class="btn">Sign in</div>
+      </div>
+      <div class="note">Dark mode — the artwork is mounted on a white card, so the brain's glow stays intact</div>
+    </div>
+  </div>
+
+  <h2>Mobile — app icon, install prompt and splash</h2>
+  <div class="phones">
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="head"><img src="/brand/logo/svg/vriddhi-mark.svg" alt="" /><b style="font-size:12.5px">Vriddhi</b></div>
+      <div class="body">
+        <div class="tile">Attendance<span>Mark today's period</span></div>
+        <div class="tile">Assessments<span>2 pending</span></div>
+        <div class="tile">Timetable<span>Next: Maths 11:00</span></div>
+      </div>
+      <div class="badge-row"><img src="/public/icons/icon-192.png" alt="" /> Install Vriddhi on this phone</div>
+    </div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="splash"><img src="/brand/logo/svg/vriddhi-mark-mono-white.svg" alt="" /></div>
+      <div class="homeicon" style="padding:14px 0 4px">
+        <img src="/public/icons/icon-192.png" alt="" />
+        <span>Vriddhi</span>
+      </div>
+      <div class="badge-row" style="border-top:none;justify-content:center;font-size:10.5px">
+        splash mark · home-screen icon (maskable)
+      </div>
+    </div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮</span></div>
+      <div class="head" style="justify-content:center"><img src="/public/icons/favicon-32.png" width="32" alt="" /></div>
+      <div class="body" style="text-align:center;font-size:11px;color:var(--slate-500);line-height:1.7">
+        Browser tab (32px)<br />
+        <img src="/public/icons/favicon-48.png" style="margin-top:10px" alt="" /><br />
+        Taskbar / pinned (48px)
+        <div style="margin-top:14px;font-size:10.5px;color:var(--slate-400)">
+          16px is the floor — the mark still reads because every path is flat geometry.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Assets served straight from <code>brand/</code> and <code>public/icons/</code> — the same files the app imports.</footer>
+</div>
+</body>
+</html>
