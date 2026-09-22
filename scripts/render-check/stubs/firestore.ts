@@ -32,7 +32,14 @@ export async function setDoc(..._a: any[]) { calls.push('setDoc'); }
 // Write/listen surfaces reached by pages further down the module graph
 // (curriculum, superadmin, layout). They are stubs like everything else here:
 // recorded, never persisted.
-export async function addDoc(..._a: any[]) { calls.push('addDoc'); return { id: 'stub-id' }; }
+export async function addDoc(_col: any, data?: any) {
+  calls.push('addDoc');
+  // Same idea as updateDoc: a check can assert what was written. Screens that
+  // create records (scheduling a class) are otherwise unverifiable here.
+  const writes = ((globalThis as any).__RC_WRITES ??= [] as any[]);
+  writes.push({ path: 'addDoc', data });
+  return { id: 'stub-id' };
+}
 export async function updateDoc(...a: any[]) {
   calls.push('updateDoc');
   // Beyond the bare call log, a check can assert what was written: the last

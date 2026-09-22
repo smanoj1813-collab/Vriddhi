@@ -35,9 +35,10 @@ define('cancelAnimationFrame', window.cancelAnimationFrame.bind(window));
 
 for (const key of [
   'HTMLElement', 'HTMLInputElement', 'HTMLAnchorElement', 'HTMLCanvasElement',
+  'HTMLLabelElement', 'HTMLSelectElement', 'HTMLTextAreaElement', 'HTMLDialogElement',
   'Element', 'Node', 'Text', 'DocumentFragment', 'Event', 'CustomEvent',
-  'MouseEvent', 'KeyboardEvent', 'SVGElement', 'DOMParser', 'XMLSerializer',
-  'ResizeObserver', 'MutationObserver', 'IntersectionObserver',
+  'MouseEvent', 'KeyboardEvent', 'FocusEvent', 'SVGElement', 'DOMParser', 'XMLSerializer',
+  'ResizeObserver', 'MutationObserver', 'IntersectionObserver', 'ShadowRoot', 'NodeList',
 ]) {
   define(key, window[key]);
 }
