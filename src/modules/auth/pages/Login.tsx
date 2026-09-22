@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
-import VriddhiLogo from '../../../shared/components/VriddhiLogo';
 
 import { dashboardPathFor, portalForRole } from '../roleRoutes';
 
@@ -84,11 +83,13 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="flex justify-center mb-4">
-            <VriddhiLogo
-              variant="mark"
-              height={72}
-              reverse={resolvedMode === "dark"}
+                    <div className="mx-auto mb-4 w-36 h-36 rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200/80 dark:ring-white/10 shadow-lg shadow-teal-500/10 flex items-center justify-center">
+            <img
+              src="/brand/hero/vriddhi-mark-hero-light@600.png"
+              alt="Vriddhi Institutions"
+              width={144}
+              height={144}
+              className="w-[92%] h-[92%] object-contain"
             />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">

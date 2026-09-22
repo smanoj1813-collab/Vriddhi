@@ -232,9 +232,9 @@ const GEO = {
   rimTop: -80,
   rimBottom: -72.5,
   rimHW: 28,
-  brainWidth: 62,
+  brainWidth: 57,
   brainHeight: 53,
-  brainBottom: -86.5,
+  brainBottom: -87,
 };
 
 /* ---- flame silhouette (the brain sits inside this) --------------------- */
@@ -354,7 +354,7 @@ function pathBounds(paths) {
  */
 function buildMark(opt = {}) {
   const g = { ...GEO, ...opt };
-  const { variant = 'arm', barbHalf = 22, length = 44, notch = 14, foldHW = 1.6 } = g;
+  const { variant = 'arm', barbHalf = 22, length = 44, notch = 14, foldHW = 2.2 } = g;
   const center = g.leftOuter + g.vWidth / 2;
   const innerVertexY = g.capTop * (g.vArm / (g.vWidth / 2));
 
@@ -416,44 +416,66 @@ function buildMark(opt = {}) {
   ].join(' ');
   const rim = roundRect(cx - g.rimHW, g.rimTop, g.rimHW * 2, g.rimBottom - g.rimTop, (g.rimBottom - g.rimTop) / 2);
 
-  /* ---- brain: a union of overlapping lobes -------------------------------
-   * Placing the lobes around an oval envelope means the merged outline is
-   * naturally bumpy — that scalloped edge is what makes a brain read as a
-   * brain. The folds and the midline split are then carved out of the field,
-   * so they are true negative space (the mark survives one-colour printing).
+  /* ---- brain ------------------------------------------------------------
+   * A brain pictogram needs two things, and a ring of equal lobes has neither:
+   * an irregular outline (uniform scallops look like a flower) and folds that
+   * curve (straight strokes look like ticks).
+   *
+   * The silhouette is therefore drawn by hand as a half-outline and mirrored —
+   * fully predictable, no radial-function surprises — and the gyri are smooth
+   * arcs sampled around it. Both are still carved from one implicit surface, so
+   * the folds stay true negative space.
    * -------------------------------------------------------------------- */
   const H = g.brainHeight;
   const HW = g.brainWidth / 2;
-  const yc = -H * 0.47; // centre of the envelope, in brain-local units
-
-  const envelope = (k) => (k < 0 ? 0.66 + 0.34 * Math.abs(k) : 1); // tapered at the bottom
-  const N = g.lobes ?? 15;
-  const lobeCircles = [];
-  const aEnv = HW * 0.74;
-  const bEnv = (H / 2) * 0.74;
-  const circumference = Math.PI * (3 * (aEnv + bEnv) - Math.sqrt((3 * aEnv + bEnv) * (aEnv + 3 * bEnv)));
-  const bump = (circumference / N) * 0.72;
-  for (let k = 0; k < N; k++) {
-    const phi = -Math.PI / 2 + (2 * Math.PI * k) / N;
-    const f = envelope(Math.sin(phi));
-    lobeCircles.push([0.78 * aEnv * f * Math.cos(phi), yc - 0.78 * bEnv * f * Math.sin(phi), bump]);
+  const yc = -H * 0.5; // centre of the envelope, in brain-local units
+  /* Brain profile.
+   * A radial outline gives smooth, rounded scallops; the irregularity comes from
+   * mixing several incommensurate frequencies rather than from alternating
+   * control points, which is what produced a sawtooth edge. The lower half is
+   * tapered so the shape narrows to the temporal lobes instead of ending as a
+   * ball. */
+  const outlinePtsRaw = [];
+  const STEPS = 220;
+  for (let i = 0; i < STEPS; i++) {
+    const th = (2 * Math.PI * i) / STEPS - Math.PI / 2;
+    const sn = Math.sin(th);
+    const cs = Math.cos(th);
+    const taper = sn > 0 ? 1 - 0.22 * sn * sn : 1; // narrower base
+    const lumps =
+      1 +
+      0.055 * Math.sin(13 * th + 0.7) +
+      0.042 * Math.sin(8 * th + 2.1) +
+      0.07 * Math.sin(3 * th + 1.2) +
+      0.035 * Math.sin(2 * th + 0.25);
+    outlinePtsRaw.push([HW * cs * taper * lumps, yc - (H / 2) * sn * lumps]);
   }
 
-  // Two short diagonal gyri per hemisphere. Each stroke is mirrored across the
-  // midline, so only the left hemisphere has to be authored.
+  const envelope = polySDF(flatten(outlinePtsRaw, 2, true));
+
+  /* Gyri.
+   * The trick to reading as a brain rather than a mask is variety: the strokes
+   * must not all start at the midline and fan out evenly. These are hand-drawn
+   * curls — one hooks inward, one floats free of the midline, one sweeps up —
+   * and each is mirrored across the midline. */
   const foldsL = [
-    [[-5, -H * 0.68], [-9, -H * 0.61], [-12.5, -H * 0.54]],
-    [[-5.5, -H * 0.34], [-9.5, -H * 0.4], [-13, -H * 0.31]],
-  ].slice(0, g.folds ?? 2);
+    // upper curl: leaves the midline, hooks down and back in
+    [[-0.06, -0.76], [-0.26, -0.82], [-0.46, -0.78], [-0.57, -0.66], [-0.48, -0.57], [-0.31, -0.58]],
+    // middle stroke: floats clear of the midline, arcs the other way
+    [[-0.70, -0.42], [-0.61, -0.29], [-0.42, -0.25], [-0.23, -0.30], [-0.12, -0.38]],
+    // lower stroke: sweeps out and slightly up, staying clear of the base
+    [[-0.06, -0.14], [-0.24, -0.18], [-0.42, -0.15], [-0.53, -0.06]],
+    // inner curl tying the upper strokes together
+    [[-0.14, -0.64], [-0.26, -0.60], [-0.30, -0.50]],
+  ].slice(0, g.folds ?? 4);
+
+  const foldPolylines = foldsL.map((pts) =>
+    flatten(pts.map(([nx, ny]) => [HW * nx, H * ny]), 10, false)
+  );
 
   const brainRaw = (x, y) => {
-    let d = Infinity;
-    for (const [bx, by, r] of lobeCircles) d = Math.min(d, Math.hypot(x - bx, y - by) - r);
-    // fill the middle so the union has no pinholes
-    const q = Math.hypot(x / (aEnv * 0.86), (y - yc) / (bEnv * 0.86));
-    d = Math.min(d, (q - 1) * Math.min(aEnv, bEnv));
-    // folds (mirrored across the midline)
-    for (const fold of foldsL) {
+    let d = envelope(x, y);
+    for (const fold of foldPolylines) {
       let fd = Infinity;
       for (let i = 0; i < fold.length - 1; i++) {
         fd = Math.min(fd, distSeg(x, y, fold[i][0], fold[i][1], fold[i + 1][0], fold[i + 1][1]));
@@ -461,18 +483,13 @@ function buildMark(opt = {}) {
       }
       d = Math.max(d, -(fd - foldHW));
     }
-    // midline split
-    d = Math.max(d, -(distSeg(x, y, 0, -H - 6, 0, 6) - 1.6));
+    // midline: overshoots the outline top and bottom so the base splits in two
+    d = Math.max(d, -(distSeg(x, y, 0, -H * 1.4, 0, H * 0.9) - 1.4));
     return d;
   };
 
   const simple = !!opt.simple; // icon variant: silhouette only, no fold detail
-  const simpleSDF = (x, y) => {
-    let d = Infinity;
-    for (const [bx, by, r] of lobeCircles) d = Math.min(d, Math.hypot(x - bx, y - by) - r);
-    const q = Math.hypot(x / (aEnv * 0.86), (y - yc) / (bEnv * 0.86));
-    return Math.min(d, (q - 1) * Math.min(aEnv, bEnv));
-  };
+  const simpleSDF = envelope;
   const sdf = simple ? simpleSDF : brainRaw;
   const raw = traceContours(sdf, { x0: -HW - 4, y0: -H - 4, x1: HW + 4, y1: 4 }, {
     samplesPerUnit: 22,
@@ -656,19 +673,21 @@ function horizontalLockup(mark, { theme = 'color', pad = 20 } = {}) {
   const mb = mark.box;
   const gapX = 42;
   const wordX = mb.x1 + gapX;
-  const blockH = TEXT.wordCaps + TEXT.lineGap + TEXT.subCaps;
-  const markCy = (mb.y0 + mb.y1) / 2;
-  const blockY = markCy - blockH / 2; // top of the wordmark block
+  // Baseline alignment: "INSTITUTIONS" sits on the same line as the foot of the
+  // mark, with "VRIDDHI" stacked above it. A vertically-centred block leaves the
+  // mark's baseline floating between the two lines, which reads as misaligned.
+  const subBaselineY = 0;
+  const wordBaselineY = subBaselineY - (TEXT.lineGap + TEXT.subCaps);
 
   const x0 = mb.x0 - pad;
   const y0 = mb.y0 - pad;
   const x1 = wordX + TEXT.word.width + pad;
-  const y1 = Math.max(mb.y1, blockY + blockH) + pad;
+  const y1 = Math.max(mb.y1, subBaselineY) + pad;
 
   const body = [
     markMarkup(mark, theme, '  '),
-    `<path transform="translate(${n(wordX)} ${n(blockY + TEXT.wordCaps)})" d="${TEXT.word.d}" fill="${p.word}"/>`,
-    `<path transform="translate(${n(wordX)} ${n(blockY + TEXT.wordCaps + TEXT.lineGap + TEXT.subCaps)})" d="${TEXT.sub.d}" fill="${p.sub}"/>`,
+    `<path transform="translate(${n(wordX)} ${n(wordBaselineY)})" d="${TEXT.word.d}" fill="${p.word}"/>`,
+    `<path transform="translate(${n(wordX)} ${n(subBaselineY)})" d="${TEXT.sub.d}" fill="${p.sub}"/>`,
   ].join('\n');
 
   return svgDoc([x0, y0, x1 - x0, y1 - y0], p.defs, body);

@@ -56,13 +56,38 @@ and a 10-metre banner from the same file.
 ```
 brand/
 ├── logo/
-│   ├── svg/            ← vector masters (use these wherever possible)
-│   └── png/            ← ready-made raster exports (white + transparent)
-├── concepts/           ← decision sheets: arrow treatments, shadow comparison
+│   ├── svg/                ← vector masters (use these wherever possible)
+│   └── png/                ← ready-made raster exports (white + transparent)
+├── hero/                   ← the concept render, extracted for hero moments
+├── concepts/               ← decision sheets: arrow, colour, shadow, system
 ├── tools/
-│   └── build-brand.mjs ← parametric generator; the single source of truth
+│   ├── build-brand.mjs     ← parametric generator; source of truth for the logo
+│   └── extract-hero.mjs    ← pulls the mark out of the concept render
 └── README.md
 ```
+
+### Logo vs. hero artwork
+
+There are two registers of the brand, and they are deliberately different tools:
+
+| | **Logo** (flat vector) | **Hero artwork** (render) |
+| --- | --- | --- |
+| Looks like | flat geometry, two-tone V, solid brain | dimensional V, soft shading, glowing brain |
+| Lives in | app chrome, favicons, documents, print, embroidery | login screens, splash, decks, campaign |
+| Works at | 16px to 10m, one colour to full colour | 200px and up, on a light surface |
+| Files | `logo/svg/*`, `logo/png/*` | `hero/vriddhi-mark-hero-light.png` |
+
+The render is the concept image that the logo was built from. It was kept rather
+than discarded because a dimensional, glowing mark is exactly right for a hero
+moment, and a flat mark is exactly right everywhere else.
+
+`brand/tools/extract-hero.mjs` crops the mark out of the concept render (it finds
+the gap between the mark and the wordmark automatically), then bakes the render's
+noisy off-white background to the app's white card so the glow composites without
+a halo. Only the light bake is shipped: the brain's glow is near-white, so keying
+it against a dark surface would either keep the render's background noise or eat
+the glow. In dark mode the artwork is mounted on a white card instead — which
+reads as intentional artwork and keeps the glow exactly as designed.
 
 ### Vector masters — `brand/logo/svg/`
 
