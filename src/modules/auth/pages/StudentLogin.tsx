@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
+import VriddhiLogo from '../../../shared/components/VriddhiLogo';
+import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 
 export default function StudentLogin() {
   const [email, setEmail] = useState('');
@@ -15,6 +17,7 @@ export default function StudentLogin() {
   const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { resolvedMode } = useThemeMode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +63,8 @@ export default function StudentLogin() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-500/25 mb-4">
-            <School size={34} className="text-white" />
+          <div className="flex justify-center mb-4">
+            <VriddhiLogo variant="mark" height={72} reverse={resolvedMode === "dark"} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">
             {t('auth.studentPortal')}

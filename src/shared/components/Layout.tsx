@@ -4,6 +4,7 @@ import { useAuth, type UserRole } from '../../modules/auth/context/AuthContext';
 import { useThemeMode } from "../contexts/ThemeProvider";
 import { useTranslation } from "../contexts/LanguageProvider";
 import LanguageSwitcher from "./LanguageSwitcher";
+import VriddhiLogo from "./VriddhiLogo";
 import type { TranslationKey } from "../i18n";
 import FloatingAIChatWidget from "./FloatingAIChatWidget";
 import {
@@ -824,16 +825,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           borderColor: "divider",
         }}
       >
-        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
-            <School sx={{ color: "#ffffff", fontSize: 22 }} />
-          </div>
+        <Link
+          to="/"
+          style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}
+          aria-label="Vriddhi Institutions"
+        >
+          {collapsed ? (
+            <VriddhiLogo variant="mark" height={34} reverse={resolvedMode === "dark"} className="shrink-0" />
+          ) : (
+            <VriddhiLogo variant="horizontal" height={34} reverse={resolvedMode === "dark"} className="shrink-0" />
+          )}
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-teal-600 to-teal-800 dark:from-teal-400 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
-                Vriddhi
-              </span>
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wide uppercase">
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wide uppercase truncate">
                 {t("brand.subtitle")}
               </span>
             </div>

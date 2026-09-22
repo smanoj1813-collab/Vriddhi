@@ -4,8 +4,8 @@
       <stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#0f766e"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#tile)"/>
-  <g transform="translate(276.48 361.9) scale(1.58)">
+  <rect width="512" height="512" rx="0" fill="url(#tile)"/>
+  <g transform="translate(270.63 331.64) scale(1.13)">
     <g class="vriddhi-mark">
       <path d="M -104 -100 L -56 0 L -14.72 -86 L -51.72 -86 L -56 -77.08 L -67 -100 Z" fill="#ffffff"/>
       <path d="M -14.18 -125.67 L -10.68 -75.18 L -28.89 -95.02 L -55.76 -96.82 Z" fill="#ffffff"/>
