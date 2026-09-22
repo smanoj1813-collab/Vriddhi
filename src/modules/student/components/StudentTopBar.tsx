@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, LogOut, Moon, School, Sun } from 'lucide-react'
+import { Bell, LogOut, Moon, Sun } from 'lucide-react'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
+import VriddhiLogo from '../../../shared/components/VriddhiLogo'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import { findNavItem } from '../studentNav'
 import type { TranslationKey } from '../../../shared/i18n'
@@ -30,9 +31,13 @@ export default function StudentTopBar({ unreadNotifications = 0, onSignOut }: St
   return (
     <header className="md:hidden fixed top-0 left-0 right-0 z-40 border-b border-slate-200/80 bg-white/92 backdrop-blur-md dark:border-slate-800 dark:bg-[#0b0f19]/92 pt-[env(safe-area-inset-top)]">
       <div className="flex h-14 items-center gap-2 px-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 shadow-sm">
-          <School className="h-[18px] w-[18px] text-white" />
-        </span>
+        <VriddhiLogo
+          variant="mark"
+          height={30}
+          reverse={resolvedMode === 'dark'}
+          className="shrink-0"
+          title="Vriddhi Institutions"
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-bold leading-tight text-slate-900 dark:text-white">
             {pageTitle}
