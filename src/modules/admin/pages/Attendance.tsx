@@ -45,6 +45,7 @@ import {
   summarizeAttendanceRecords,
 } from '../api/attendanceApi';
 import { useAuth } from '../../auth/context/AuthContext';
+import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope';
 import type { AttendanceSummary, ClassSession } from '../types/attendance';
 import {
   buildStudentAttendanceReport,
@@ -82,6 +83,7 @@ function useCollegeId(): string | undefined {
 
 export default function Attendance() {
   const collegeId = useCollegeId();
+  const { user } = useAuth();
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -198,7 +200,17 @@ export default function Attendance() {
         facultyName: s.facultyName || facultyData.get(s.facultyId)?.name || s.facultyId || 'Unknown',
       }));
 
-      setSessions(resolvedSessions);
+      // HOD/admin (≡ department head) see only their department's sessions.
+      // Principal keeps the college-wide list. Tolerant of untagged rows —
+      // see shared/utils/departmentScope.
+      const deptScope = shouldScopeToDepartment(user?.role)
+        ? String(user?.department ?? '').trim()
+        : '';
+      const scopedSessions = deptScope
+        ? resolvedSessions.filter((s) => docInDepartment(s, deptScope))
+        : resolvedSessions;
+
+      setSessions(scopedSessions);
       setSummary(summaryData);
       setStats(statsData);
       setFacultyMap(facultyData);
@@ -207,7 +219,7 @@ export default function Attendance() {
     } finally {
       setLoading(false);
     }
-  }, [collegeId, branch, batch, date]);
+  }, [collegeId, branch, batch, date, user?.role, user?.department]);
 
   useEffect(() => {
     fetchData();

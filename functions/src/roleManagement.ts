@@ -37,6 +37,9 @@ export const grantUserRole = onCall(
     const name = clean(input.name, 120)
     const role = clean(input.role, 30).toLowerCase() as Role
     const collegeId = clean(input.collegeId, 120) || null
+    // Optional department tag for admin/hod identities — stamped into the
+    // custom claim so Firestore rules can scope their reads (empty ⇒ wide).
+    const department = clean(input.department, 120) || null
     const providedPassword = clean(input.password, 128)
     if (!email || !email.includes('@') || !role || !ALLOWED_ROLES.includes(role)) {
       throw new HttpsError('invalid-argument', 'A valid email and supported role are required')
@@ -116,6 +119,9 @@ export const grantUserRole = onCall(
 
     await admin.auth().setCustomUserClaims(authUser.uid, {
       ...existingClaims, role, collegeId, mustChangePassword: created || existingClaims.mustChangePassword === true,
+      // Department tag for admin/hod scoping (preserved from the previous
+      // claims when the caller omits it, e.g. role toggles).
+      ...(department ? { department } : {}),
     })
 
     // Rules trust the custom claim before the profile document, so without this
@@ -130,6 +136,7 @@ export const grantUserRole = onCall(
     const batch: admin.firestore.WriteBatch = db.batch()
     batch.set(db.doc(`users/${authUser.uid}`), {
       uid: authUser.uid, email, name: resolvedName, role, collegeId,
+      ...(department ? { department } : {}),
       status: 'active', updatedAt: now, ...(created ? { createdAt: now } : {}),
       managedBy: request.auth.uid,
     }, { merge: true })

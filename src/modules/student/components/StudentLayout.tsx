@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
+import { dashboardPathFor } from '../../auth/roleRoutes';
 import StudentSidebar from './StudentSidebar';
 import StudentTopBar from './StudentTopBar';
 import StudentBottomNav from './StudentBottomNav';
@@ -89,7 +90,7 @@ export default function StudentLayout() {
             {t('auth.signedInAs')} <span className="font-semibold capitalize text-teal-600">{user.role}</span>.
           </p>
           <button
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => navigate(dashboardPathFor(user.role))}
             className="px-4 py-2 bg-teal-600 text-white rounded-xl text-sm font-medium hover:bg-teal-700 transition-colors"
           >
             {t('auth.goStaffDashboard')}

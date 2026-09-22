@@ -123,6 +123,36 @@ service cloud.firestore {
         || (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId());
     }
 
+    // -- Department scoping (admin ≡ department HOD) --------------------------
+    // The department tag on the ID-token custom claim. Absent/empty claim ⇒
+    // '' ⇒ no narrowing, exactly like the tolerant client filter in
+    // src/shared/utils/departmentScope.ts.
+    function claimDepartment() {
+      return isSignedIn() && 'department' in request.auth.token
+          && request.auth.token.department is string
+        ? request.auth.token.department.trim().lower()
+        : '';
+    }
+
+    // TRUE when the caller may point-read `data`. Only the admin/hod
+    // (department-head) identities are narrowed, and only when BOTH sides are
+    // tagged: no claim ⇒ college-wide; document without a usable department
+    // tag (or department 'All' — college-wide batches) ⇒ visible; otherwise a
+    // case-insensitive match. Deliberately NOT applied to `list` statements:
+    // a list rule that reads resource.data denies the whole query unless every
+    // candidate row satisfies it, and current client queries are scoped to
+    // collegeId only with client-side department filtering (see
+    // shared/utils/departmentScope). Row-level list enforcement is a follow-up
+    // that needs department predicates in the queries plus the backfill.
+    function deptScoped(data) {
+      return !(claimedRole() in ['admin', 'hod'])
+        || claimDepartment() == ''
+        || !('department' in data)
+        || !(data.department is string)
+        || data.department.trim().lower() in ['', 'all']
+        || data.department.trim().lower() == claimDepartment();
+    }
+
     // -- Shared rule functions (1000-expression budget) ----------------------
     // The whole file shares one 1000-expression budget; every helper below
     // replaces an inlined 4-6 expression pattern at each use site. Keep them
@@ -267,7 +297,7 @@ service cloud.firestore {
         || (isSignedIn() && 'email' in request.auth.token
           && resource.data.email == request.auth.token.email)
         || isSuperadmin()
-        || (isStaff() && sameCollege(resource.data));
+        || (isStaff() && sameCollege(resource.data) && deptScoped(resource.data));
       // A list is authorised per candidate document, so a query the client
       // constrains to the caller's own row (where('userId','==',auth.uid),
       // where('uid',…), or documentId) satisfies ownsStudentProfile and is
@@ -290,7 +320,7 @@ service cloud.firestore {
     match /faculty/{id} {
       allow get: if isSignedIn() && (isOwner(id)
         || isSuperadmin()
-        || sameCollege(resource.data)
+        || (sameCollege(resource.data) && deptScoped(resource.data))
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
       // Same reasoning as students: sign-in identity resolution queries faculty
@@ -372,7 +402,7 @@ service cloud.firestore {
       match /students/{id} {
         allow get: if ownsStudentProfile(id, resource.data)
           || isSuperadmin()
-          || (isStaff() && collegeId() == collegeId);
+          || (isStaff() && collegeId() == collegeId && deptScoped(resource.data));
         // `list` may reference resource.data because rules are evaluated per
         // candidate document; the client's query has to be constrained to rows
         // that satisfy the rule. The student branch therefore only admits a
@@ -553,7 +583,8 @@ service cloud.firestore {
       }
 
       match /faculty/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn() && (isSuperadmin()
+          || (isStaff() && deptScoped(resource.data)));
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
@@ -654,7 +685,9 @@ service cloud.firestore {
     }
 
     match /papers/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow get: if isSignedIn() && (isSuperadmin()
+        || (isStaff() && deptScoped(resource.data)));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow create: if isCollegeStaff()
         && sameCollege(request.resource.data)
         && request.resource.data.createdBy == request.auth.uid
@@ -695,7 +728,7 @@ service cloud.firestore {
 
     match /attendanceRecords/{id} {
       allow get: if ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
-        || (isStaff() && sameCollege(resource.data));
+        || (isStaff() && sameCollege(resource.data) && deptScoped(resource.data));
       allow list: if isSignedIn() && (isSuperadmin() || isStaff()
         // A list is authorised per candidate document, so a query the client scopes
         // with where('studentId','==',own record) admits exactly those rows.
@@ -802,7 +835,9 @@ service cloud.firestore {
     }
 
     match /classSessions/{sessionId} {
-      allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow get: if isSignedIn()
+        && (isStaff() || sameCollege(resource.data))
+        && deptScoped(resource.data);
       allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create, update: if tenantWrite(request.resource.data);
       allow delete: if tenantWrite(resource.data);
@@ -1152,14 +1187,18 @@ service cloud.firestore {
     }
 
     match /questionReviews/{docId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow get: if isSignedIn() && (isSuperadmin()
+        || (isStaff() && deptScoped(resource.data)));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin() || isCollegeStaff();
     }
 
     // Written by Cloud Functions only; the admin UI reads it through
     // src/modules/admin/api/assessmentsApi.ts.
     match /reviewQueue/{docId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow get: if isSignedIn() && (isSuperadmin()
+        || (isStaff() && deptScoped(resource.data)));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if false;
     }
 

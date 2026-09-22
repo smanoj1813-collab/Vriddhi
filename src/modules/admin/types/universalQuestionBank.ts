@@ -139,6 +139,8 @@ export interface QuestionReview {
   reviewerId?: string;
   reviewerName?: string;
   reviewComment?: string;
+  /** Department tag of the submitter — used for HOD-scoped review queues. */
+  department?: string;
   createdAt: string;
   updatedAt: string;
 }

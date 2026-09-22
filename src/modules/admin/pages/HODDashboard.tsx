@@ -632,6 +632,7 @@ interface ApprovalItem {
 function ApprovalsTab() {
   const { user } = useAuth()
   const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || ''
+  const myDept = (user?.department || '').trim().toLowerCase()
 
   const [approvals, setApprovals] = useState<ApprovalItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -653,17 +654,23 @@ function ApprovalsTab() {
 
       snap.docs.forEach(d => {
         const data = d.data()
-        if (data.status === 'rescheduled' || data.status === 'pending') {
-          list.push({
-            id: d.id,
-            type: 'schedule_reschedule',
-            title: `Reschedule: ${data.topic || data.subject || 'Class'}`,
-            requestedBy: data.createdByName || 'Faculty',
-            details: `Moved to ${data.date} at ${data.startTime || data.time || '10:00'} (Reason: ${data.reason || 'Not specified'})`,
-            date: data.date || new Date().toISOString().split('T')[0],
-            status: 'pending',
-          })
-        }
+        if (data.status !== 'rescheduled' && data.status !== 'pending') return
+        // Already approved/rejected by an HOD — it is history, not a request.
+        if (data.approvalStatus && data.approvalStatus !== 'pending') return
+        // Department scoping: sessions tagged with another department are not
+        // this HOD's queue. Untagged (older) sessions stay visible until a
+        // backfill tags them, so nothing silently disappears.
+        const docDept = String(data.department || '').trim().toLowerCase()
+        if (myDept && docDept && docDept !== myDept) return
+        list.push({
+          id: d.id,
+          type: 'schedule_reschedule',
+          title: `Reschedule: ${data.topic || data.subject || 'Class'}`,
+          requestedBy: data.createdByName || 'Faculty',
+          details: `Moved to ${data.date} at ${data.startTime || data.time || '10:00'} (Reason: ${data.reason || 'Not specified'})`,
+          date: data.date || new Date().toISOString().split('T')[0],
+          status: 'pending',
+        })
       })
 
       setApprovals(list)
@@ -672,7 +679,7 @@ function ApprovalsTab() {
     } finally {
       setLoading(false)
     }
-  }, [collegeId])
+  }, [collegeId, myDept])
 
   useEffect(() => {
     fetchApprovals()
@@ -756,7 +763,8 @@ function ApprovalsTab() {
 export default function HODDashboard() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
-  const data = useDashboardData()
+  // Department-scoped: students + their attendance/scores only.
+  const data = useDashboardData({ department: user?.department })
 
   const dept = user?.department || HOD_DEPT
 

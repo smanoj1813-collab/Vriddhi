@@ -45,6 +45,8 @@ export interface Student {
   phone?: string
   avatar?: string
   uid?: string
+  /** Department tag used for HOD scoping (absent on legacy rows). */
+  department?: string
 }
 
 export interface AttendanceRecord {

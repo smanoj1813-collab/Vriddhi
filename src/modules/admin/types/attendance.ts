@@ -51,4 +51,8 @@ export interface ClassSession {
   status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
   attendanceMarked?: boolean;
   markedAt?: string;
+  /** Department tag for HOD scoping (absent on legacy rows). */
+  department?: string;
+  /** HOD reschedule approval state — 'pending' until an HOD acts. */
+  approvalStatus?: string;
 }

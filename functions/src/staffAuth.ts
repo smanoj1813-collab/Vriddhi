@@ -162,8 +162,13 @@ async function ensureCollegeAuthUser(opts: {
   password: string
   collegeId: string
   role: StaffRole
+  /** Department tag stamped into the custom claim so Firestore rules can
+   *  scope admin/hod reads (empty ⇒ college-wide, matching the tolerant
+   *  frontend scoping in shared/utils/departmentScope). */
+  department?: string | null
 }): Promise<{ uid: string; reclaimed: boolean }> {
   const { email, name, password, collegeId, role } = opts
+  const department = String(opts.department ?? '').trim()
   const existing = await findAuthUserByEmail(email)
 
   if (existing) {
@@ -186,7 +191,11 @@ async function ensureCollegeAuthUser(opts: {
       ),
       withAuthQuotaRetry(
         `claims ${email}`,
-        () => admin.auth().setCustomUserClaims(existing.uid, { role, collegeId }),
+        () => admin.auth().setCustomUserClaims(existing.uid, {
+          role,
+          collegeId,
+          ...(department ? { department } : {}),
+        }),
         { note: noteThrottle }
       ),
     ])
@@ -200,7 +209,11 @@ async function ensureCollegeAuthUser(opts: {
   )
   await withAuthQuotaRetry(
     `claims ${email}`,
-    () => admin.auth().setCustomUserClaims(created.uid, { role, collegeId }),
+    () => admin.auth().setCustomUserClaims(created.uid, {
+      role,
+      collegeId,
+      ...(department ? { department } : {}),
+    }),
     { note: noteThrottle }
   )
   return { uid: created.uid, reclaimed: false }
@@ -409,6 +422,7 @@ export const bulkProvisionStaff = onCall(
           password,
           collegeId,
           role,
+          department,
         })
 
         // ── Prove the identity exists before touching Firestore. A row is only

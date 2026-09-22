@@ -39,7 +39,9 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
 
   // ── Administrative / college governance ───────────────────────
   'grade.manage': ['hod', 'principal', 'admin'],
-  'fees.manage': ['admin'],
+  // Fees are department day-to-day now that admin ≡ HOD; principal is out of
+  // the fee business (it keeps only the university-exam surface).
+  'fees.manage': ['admin', 'hod'],
   'college.manage': ['admin'],
   'users.manage': ['admin'],
 };
