@@ -222,9 +222,9 @@ const GEO = {
   bottom: 0,
   leftOuter: -104,
   vWidth: 96,
-  vArm: 32,
+  vArm: 27,
   cutY: -86,
-  torchCx: 50,
+  torchCx: 38,
   handleHWBottom: 10.5,
   handleHWTop: 11.5,
   cupTopY: -54,
@@ -361,13 +361,21 @@ function buildMark(opt = {}) {
   const outerRightAtCut = center + (g.vWidth / 2) * (g.cutY / g.capTop);
   const innerRightAtCut = center + (g.vWidth / 2 - g.vArm) * ((g.cutY - innerVertexY) / (g.capTop - innerVertexY));
 
-  const vBody = poly([
+  // The V is built as two halves that meet on the letter's centre line, so the
+  // two strokes can carry different colours (see V_TREATMENTS below). Above the
+  // counter's apex the halves are already separate arms, so the split is exact
+  // and the union is identical to a single V path.
+  const vLeft = poly([
     [g.leftOuter, g.capTop],
+    [center, g.bottom],
+    [center, innerVertexY],
+    [g.leftOuter + g.vArm, g.capTop],
+  ]);
+  const vRight = poly([
     [center, g.bottom],
     [outerRightAtCut, g.cutY],
     [innerRightAtCut, g.cutY],
     [center, innerVertexY],
-    [g.leftOuter + g.vArm, g.capTop],
   ]);
 
   const baseCenter = [(outerRightAtCut + innerRightAtCut) / 2, g.cutY];
@@ -481,7 +489,8 @@ function buildMark(opt = {}) {
 
   const apexY = Math.min(apex[1], leftBarb[1], rightBarb[1]);
   return {
-    vBody,
+    vLeft,
+    vRight,
     arrow,
     torch,
     rim,
@@ -557,6 +566,8 @@ const SHADOW_DEFS = (id = 'softShadow', { dy = 7, blur = 7, o = 0.22, color = '#
 const THEMES = {
   color: {
     v: 'url(#gradV)',
+    vL: C.teal700,
+    vR: 'url(#gradV)',
     arrow: 'url(#gradV)',
     torch: 'url(#gradTorch)',
     rim: C.teal600,
@@ -568,20 +579,23 @@ const THEMES = {
       <stop offset="0" stop-color="${C.teal400}"/><stop offset="0.5" stop-color="${C.teal500}"/><stop offset="1" stop-color="${C.teal700}"/>
     </linearGradient>
     <linearGradient id="gradTorch" gradientUnits="userSpaceOnUse" x1="0" y1="-84" x2="0" y2="6">
-      <stop offset="0" stop-color="${C.teal600}"/><stop offset="1" stop-color="${C.teal800}"/>
+      <stop offset="0" stop-color="${C.teal700}"/><stop offset="1" stop-color="${C.teal900}"/>
     </linearGradient>
     <linearGradient id="gradBrain" gradientUnits="userSpaceOnUse" x1="0" y1="-145" x2="0" y2="-88">
       <stop offset="0" stop-color="${C.teal300}"/><stop offset="1" stop-color="${C.teal500}"/>
     </linearGradient>${SHADOW_DEFS('softShadow', { dy: 6, blur: 6, o: 0.2 })}${SHADOW_DEFS('liftShadow', { dy: 11, blur: 13, o: 0.3 })}`,
   },
   depth: {
-    v: 'url(#gradV)', arrow: 'url(#gradV)', torch: 'url(#gradTorch)', rim: C.teal600,
+    v: 'url(#gradV)', vL: C.teal700, vR: 'url(#gradV)',
+    arrow: 'url(#gradV)', torch: 'url(#gradTorch)', rim: C.teal600,
     brain: 'url(#gradBrain)', word: C.slate900, sub: C.teal600,
     filter: 'url(#softShadow)',
     defs: '',
   },
   reverse: {
     v: C.teal300,
+    vL: '#14b8a6',
+    vR: '#5eead4',
     arrow: C.teal300,
     torch: C.teal400,
     rim: C.teal300,
@@ -599,12 +613,13 @@ const THEMES = {
 
 THEMES.depth.defs = THEMES.color.defs; // shares the gradients + the soft shadow filter
 
-function markMarkup(mark, theme, indent = '  ', { filter = THEMES[theme].filter || null } = {}) {
-  const p = THEMES[theme];
+function markMarkup(mark, theme, indent = '  ', { filter = THEMES[theme].filter || null, fills = null } = {}) {
+  const p = fills ? { ...THEMES[theme], ...fills } : THEMES[theme];
   const bt = mark.brainTransform;
   return [
     `${indent}<g class="vriddhi-mark"${filter ? ` filter="${filter}"` : ''}>`,
-    `${indent}  <path d="${mark.vBody}" fill="${p.v}"/>`,
+    `${indent}  <path d="${mark.vLeft}" fill="${p.vL ?? p.v}"/>`,
+    `${indent}  <path d="${mark.vRight}" fill="${p.vR ?? p.v}"/>`,
     `${indent}  <path d="${mark.arrow}" fill="${p.arrow}"/>`,
     `${indent}  <path d="${mark.torch}" fill="${p.torch}"/>`,
     `${indent}  <path d="${mark.rim}" fill="${p.rim}"/>`,
@@ -767,7 +782,9 @@ ${markMarkup(mark, 'white', '    ').replace(/url\(#grad[A-Za-z]+\)/g, '#ffffff')
 
 function reactComponent() {
   const mb = MARK.box;
-  const inkPaths = [MARK.vBody, MARK.arrow, MARK.torch, MARK.rim].join(' ');
+  const inkLeft = MARK.vLeft;
+  const inkRight = [MARK.vRight, MARK.arrow].join(' ');
+  const inkTorch = [MARK.torch, MARK.rim].join(' ');
   const wordX = mb.x1 + 42;
   const blockH = TEXT.wordCaps + TEXT.lineGap + TEXT.subCaps;
   const blockY = (mb.y0 + mb.y1) / 2 - blockH / 2;
@@ -819,7 +836,9 @@ const VIEWBOXES: Record<VriddhiLogoVariant, [number, number, number, number]> = 
   stacked: [${n(-20)}, ${n(mb.y0 - 20)}, ${n(Math.max(mb.x1 - mb.x0, TEXT.word.width) + 40)}, ${n(mb.y1 - mb.y0 + 34 + blockH + 40)}],
 };
 
-const MARK_INK = '${inkPaths}';
+const MARK_LEFT = '${inkLeft}';
+const MARK_RIGHT = '${inkRight}';
+const MARK_TORCH = '${inkTorch}';
 const BRAIN = '${MARK.brainContours.join(' ')}';
 /** Same silhouette with the fold detail dropped — for icons and tiny sizes. */
 const BRAIN_SIMPLE = '${SIMPLE_MARK.brainContours.join(' ')}';
@@ -841,7 +860,12 @@ export default function VriddhiLogo({
   const uid = useId().replace(/[:]/g, '');
   const id = (name: string) => \`\${name}-\${uid}\`;
 
-  const ink = mono ?? (reverse ? '#5eead4' : \`url(#\${id('ink')})\`);
+  // Two-tone V: the left stroke sits in shadow, the right stroke (and the
+  // arrow growing out of it) carries the light. The torch then repeats the
+  // same dark-to-light rhythm, so the mark alternates in a deliberate beat.
+  const inkLeft = mono ?? (reverse ? '#14b8a6' : '#0f766e');
+  const inkRight = mono ?? (reverse ? '#5eead4' : \`url(#\${id('ink')})\`);
+  const inkTorch = mono ?? (reverse ? '#5eead4' : \`url(#\${id('torch')})\`);
   const brain = mono ?? (reverse ? '#ffffff' : \`url(#\${id('brain')})\`);
   const word = mono ?? (reverse ? '#ffffff' : '#0f172a');
   const sub = mono ?? (reverse ? '#5eead4' : '#0d9488');
@@ -852,7 +876,9 @@ export default function VriddhiLogo({
 
   const mark = (
     <>
-      <path d={MARK_INK} fill={ink} />
+      <path d={MARK_LEFT} fill={inkLeft} />
+      <path d={MARK_RIGHT} fill={inkRight} />
+      <path d={MARK_TORCH} fill={inkTorch} />
       <g transform={\`translate(\${BRAIN_T.x} \${BRAIN_T.y}) scale(\${BRAIN_T.s})\`}>
         <path fillRule="evenodd" fill={brain} d={brainPath} />
       </g>
@@ -884,6 +910,10 @@ export default function VriddhiLogo({
             <stop offset="0.5" stopColor="#14b8a6" />
             <stop offset="1" stopColor="#0f766e" />
           </linearGradient>
+          <linearGradient id={id('torch')} gradientUnits="userSpaceOnUse" x1="0" y1="-84" x2="0" y2="6">
+            <stop offset="0" stopColor="#0f766e" />
+            <stop offset="1" stopColor="#134e4a" />
+          </linearGradient>
           <linearGradient id={id('brain')} gradientUnits="userSpaceOnUse" x1="0" y1="-140" x2="0" y2="-86">
             <stop offset="0" stopColor="#5eead4" />
             <stop offset="1" stopColor="#14b8a6" />
@@ -901,7 +931,9 @@ export default function VriddhiLogo({
         <>
           <rect width="512" height="512" rx="112" fill={flat(\`url(#\${id('tile')})\`)} />
           <g transform={\`translate(${n(badgeTx)} ${n(badgeTy)}) scale(${n(badgeScale)})\`}>
-            <path d={MARK_INK} fill={mono ?? '#ffffff'} />
+            <path d={MARK_LEFT} fill={mono ?? '#ffffff'} />
+            <path d={MARK_RIGHT} fill={mono ?? '#ffffff'} />
+            <path d={MARK_TORCH} fill={mono ?? '#ffffff'} />
             <g transform={\`translate(\${BRAIN_T.x} \${BRAIN_T.y}) scale(\${BRAIN_T.s})\`}>
               <path fillRule="evenodd" fill={mono ?? '#ffffff'} d={brainPath} />
             </g>
@@ -1129,6 +1161,73 @@ async function shadowSheet() {
   console.log('✓ shadow comparison sheet');
 }
 
+/** Dual-colour treatments for the V, rendered on the real mark. */
+const V_TREATMENTS = [
+  {
+    key: 'ribbon',
+    label: 'A · folded ribbon  (shipped)',
+    note: 'deep teal + bright teal — the two strokes read as one folded form',
+    fills: { vL: C.teal700, vR: 'url(#gradV)', arrow: 'url(#gradV)', torch: 'url(#gradTorch)', rim: C.teal600 },
+  },
+  {
+    key: 'contrast',
+    label: 'B · high contrast',
+    note: 'teal-800 left stroke — the strongest split, best on screens',
+    fills: { vL: C.teal900, vR: 'url(#gradV)', arrow: 'url(#gradV)', torch: 'url(#gradTorch)', rim: C.teal600 },
+  },
+  {
+    key: 'bright-stem',
+    label: 'C · bright stem',
+    note: 'light left stroke, dark right — reverses which stroke leads',
+    fills: { vL: C.teal400, vR: C.teal800, arrow: C.teal800, torch: 'url(#gradTorch)', rim: C.teal600 },
+  },
+  {
+    key: 'subtle',
+    label: 'D · subtle two-tone',
+    note: 'teal-600 against the gradient — quietest option, closest to flat',
+    fills: { vL: C.teal600, vR: 'url(#gradV)', arrow: 'url(#gradV)', torch: 'url(#gradTorch)', rim: C.teal600 },
+  },
+];
+
+async function colourSheet() {
+  if (!sharp) return;
+  const cellW = 560;
+  const cellH = 520;
+  const panels = [];
+
+  for (const [i, t] of V_TREATMENTS.entries()) {
+    const mb = MARK.box;
+    const sc = 200 / 236;
+    const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${(mb.x0 * sc).toFixed(1)} ${(mb.y0 * sc).toFixed(1)} ${((mb.x1 - mb.x0) * sc).toFixed(1)} ${((mb.y1 - mb.y0) * sc).toFixed(1)}" width="${Math.ceil((mb.x1 - mb.x0) * sc)}" height="${Math.ceil((mb.y1 - mb.y0) * sc)}">
+      <defs>${THEMES.color.defs}</defs>
+      <g transform="scale(${n(sc)})">${markMarkup(MARK, 'color', '', { fills: t.fills })}</g>
+    </svg>`;
+    const buf = await renderPng(markSvg, Math.ceil((mb.x1 - mb.x0) * sc));
+    const m = await sharp(buf).metadata();
+    panels.push({
+      input: buf,
+      left: Math.round((i % 2) * cellW + (cellW - m.width) / 2),
+      top: Math.round(Math.floor(i / 2) * cellH + 70),
+    });
+  }
+
+  const base = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cellW * 2} ${cellH * 2}" width="${cellW * 2}" height="${cellH * 2}">
+    <rect width="100%" height="100%" fill="#ffffff"/>
+    <line x1="${cellW}" y1="0" x2="${cellW}" y2="${cellH * 2}" stroke="#eef2f6" stroke-width="2"/>
+    <line x1="0" y1="${cellH}" x2="${cellW * 2}" y2="${cellH}" stroke="#eef2f6" stroke-width="2"/>
+    ${V_TREATMENTS.map((t, i) => {
+      const gx = (i % 2) * cellW;
+      const gy = Math.floor(i / 2) * cellH;
+      return `<text x="${gx + cellW / 2}" y="${gy + cellH - 78}" text-anchor="middle" font-family="Inter, DejaVu Sans, sans-serif" font-size="20" font-weight="600" fill="#0f172a">${t.label}</text>
+      <text x="${gx + cellW / 2}" y="${gy + cellH - 50}" text-anchor="middle" font-family="Inter, DejaVu Sans, sans-serif" font-size="15" fill="#64748b">${t.note}</text>`;
+    }).join('')}
+  </svg>`;
+
+  const baseBuf = await sharp(Buffer.from(base), { density: 72 }).png().toBuffer();
+  await sharp(baseBuf).composite(panels).png().toFile(path.join(BRAND_DIR, 'concepts', 'v-colour-treatments.png'));
+  console.log('✓ V colour treatment sheet');
+}
+
 /**
  * One-glance contact sheet of the whole system: lockups, mark, reverse,
  * one-colour, badge and the small-size ladder.
@@ -1185,6 +1284,7 @@ async function systemSheet() {
 
 await exportPng();
 if (process.argv.includes('--variants')) await variantSheet();
+if (process.argv.includes('--colour') || process.argv.includes('--variants')) await colourSheet();
 if (process.argv.includes('--sheet') || process.argv.includes('--variants')) await systemSheet();
 if (process.argv.includes('--shadow')) await shadowSheet();
 

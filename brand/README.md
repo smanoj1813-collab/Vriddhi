@@ -19,6 +19,31 @@ Together: **growing through knowledge.** The arrow doubles as the point of a
 stylus and the brain sits exactly where a flame burns, so the mark says
 "learning" without ever needing a graduation cap.
 
+### The two-tone V
+
+The V is built as two paths that meet on the letter's centre line, so each
+stroke carries its own colour — a deep-teal left stroke against the bright
+gradient — and the letter reads as one folded form instead of a solid wedge.
+Above the counter's apex the two halves are already separate arms, so the split
+is geometrically exact and the union is identical to a single V path. That is
+also why one-colour print stays seamless: both halves simply paint the same ink
+(verified by scanning the rendered raster for seams — zero pixels of gap).
+
+`brand/concepts/v-colour-treatments.png` renders four treatments on the real
+mark. **A (folded ribbon)** is shipped; the others are kept so the decision is
+easy to revisit.
+
+| Treatment | Left stroke | Right stroke |
+| --- | --- | --- |
+| **A · folded ribbon** *(shipped)* | teal-700 | gradient teal-400 → teal-700 |
+| B · high contrast | teal-900 | gradient |
+| C · bright stem | teal-400 | teal-800 |
+| D · subtle two-tone | teal-600 | gradient |
+
+The rest of the mark follows the same dark-to-light rhythm — the torch runs
+teal-700 → teal-900, the rim sits at teal-600, and the brain is teal-300 →
+teal-500 — so the five shapes alternate in a deliberate beat.
+
 Everything is **flat geometry**. There is no gradient baked into the artwork, no
 glow, no 3D render — those are presentation layers (see §6). That is what lets
 the logo work as a single-colour rubber stamp, an embroidered crest, a favicon
@@ -75,12 +100,13 @@ colour / black / white, and 1024px presentation icons.
 
 | Token | Hex | Where |
 | --- | --- | --- |
-| Teal 300 | `#5eead4` | Reverse lockup ink |
+| Teal 300 | `#5eead4` | Reverse lockup ink, brain gradient start |
 | Teal 400 | `#2dd4bf` | Gradient start (top of the ink) |
 | Teal 500 | `#14b8a6` | Gradient mid, icon tile, `brand.primary` |
 | Teal 600 | `#0d9488` | "INSTITUTIONS" line, rim bar, `theme-color` |
 | Teal 700 | `#0f766e` | Gradient end (bottom of the ink) |
 | Teal 800 | `#115e59` | Dark end of the torch gradient |
+| Teal 900 | `#134e4a` | Dark end of the torch gradient, alt left-stroke |
 | Slate 900 | `#0f172a` | "VRIDDHI" wordmark |
 | White | `#ffffff` | Reverse wordmark, icon glyph |
 
@@ -120,6 +146,7 @@ automatically:
 <VriddhiLogo variant="mark" height={20} simple />   // icon-sized
 <VriddhiLogo variant="badge" />                     // already simplified
 <VriddhiLogo variant="horizontal" height={34} />    // full detail
+<VriddhiLogo variant="mark" mono="#0f172a" />       // one colour
 ```
 
 **Do**
@@ -130,7 +157,8 @@ automatically:
 
 **Don't**
 
-- Don't recolour the mark outside the palette above.
+- Don't recolour the mark outside the palette above (the two-tone V is the one
+  place two colours meet — keep that split, the letter needs it to read).
 - Don't stretch, skew, rotate or add a stroke to the outlines.
 - Don't put the wordmark on a busy photo — use the stacked lockup instead.
 - Don't add a hard black **drop shadow, glow or bevel to the flat logo** — see

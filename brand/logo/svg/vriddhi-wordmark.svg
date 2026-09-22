@@ -5,7 +5,7 @@
       <stop offset="0" stop-color="#2dd4bf"/><stop offset="0.5" stop-color="#14b8a6"/><stop offset="1" stop-color="#0f766e"/>
     </linearGradient>
     <linearGradient id="gradTorch" gradientUnits="userSpaceOnUse" x1="0" y1="-84" x2="0" y2="6">
-      <stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#115e59"/>
+      <stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#134e4a"/>
     </linearGradient>
     <linearGradient id="gradBrain" gradientUnits="userSpaceOnUse" x1="0" y1="-145" x2="0" y2="-88">
       <stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#14b8a6"/>
