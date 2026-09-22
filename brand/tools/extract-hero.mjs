@@ -154,8 +154,13 @@ for (const [name, bg] of jobs) {
     const buf = await sharp(pixels, { raw: { width, height, channels: 3 } });
     const out = targetWidth ? buf.resize({ width: targetWidth }) : buf;
     const png = await out.png({ compressionLevel: 9 }).toBuffer();
+    // both sizes are brand assets; only the half size ships to the app, because
+    // it is what the login card renders — the full-size file would otherwise be
+    // precached by the service worker (585KB per install) for nothing on screen
     fs.writeFileSync(path.join(OUT, fileName), png);
-    fs.writeFileSync(path.join(OUT_PUBLIC, fileName), png);
+    if (targetWidth) fs.writeFileSync(path.join(OUT_PUBLIC, fileName), png);
   }
-  console.log(`✓ brand/hero/${name} + public/brand/hero/${name}  (${width}x${height})`);
+  // and drop any stale full-size copy from a previous run
+  fs.rmSync(path.join(OUT_PUBLIC, name), { force: true });
+  console.log(`✓ brand/hero/${name} + @600  ·  public/brand/hero/${name.replace(/\.png$/, '@600.png')}`);
 }
