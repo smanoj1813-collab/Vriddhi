@@ -516,6 +516,8 @@ export interface Challan {
   bankReferenceNo?: string
   bankStampUrl?: string
   remarks?: string
+  /** The student's own note when they declare the payment at the counter. */
+  studentRemarks?: string
   feePaymentId?: string
   createdAt: string
   updatedAt: string
@@ -583,6 +585,7 @@ export function mapChallan(id: string, raw: Record<string, unknown>): Challan {
     bankReferenceNo: raw.bankReferenceNo ? String(raw.bankReferenceNo) : undefined,
     bankStampUrl: raw.bankStampUrl ? String(raw.bankStampUrl) : undefined,
     remarks: raw.remarks ? String(raw.remarks) : undefined,
+    studentRemarks: raw.studentRemarks ? String(raw.studentRemarks) : undefined,
     feePaymentId: raw.feePaymentId ? String(raw.feePaymentId) : undefined,
     createdAt: asString(raw.createdAt),
     updatedAt: asString(raw.updatedAt),
@@ -596,8 +599,10 @@ export async function fetchChallans(filters?: {
   type?: ChallanType
   /** Tenant override for callers outside the admin module (student portal). */
   collegeId?: string | null
+  /** A digest only needs the newest few rows; do not read 500 for a banner. */
+  limit?: number
 }): Promise<Challan[]> {
-  const constraints: any[] = [limit(MAX_READS)]
+  const constraints: any[] = [limit(Math.min(filters?.limit ?? MAX_READS, MAX_READS))]
   if (filters?.studentId) constraints.push(where('studentId', '==', filters.studentId))
   if (filters?.status) constraints.push(where('status', '==', filters.status))
   if (filters?.type) constraints.push(where('type', '==', filters.type))
@@ -803,6 +808,73 @@ export async function rejectChallan(challanId: string, reason: string): Promise<
     updatedAt: serverTimestamp(),
   })
   return true
+}
+
+// ─── Student challan declaration (pay at bank → file the reference → verify) ─
+//
+// A student who has paid at the counter files the bank reference number from
+// their phone so the finance desk has something to reconcile against. There is
+// deliberately NO file upload here: the stamped copy is a paper record the
+// college collects at the office, and the challan row only needs the reference,
+// the date and the student's note. `bankStampUrl` stays the field the office
+// itself fills in (markChallanPaidAtBank / verifyChallan).
+//
+// The write is deliberately narrow, and `current-firestore.rules` restricts a
+// student's update to exactly these keys plus the paid timestamp: the addressee
+// and the amount are immutable, and `verified` remains a staff-only status.
+// Keep the validator and the rule in step — a new field here means updating the
+// rule's `hasOnly` list in the same change.
+
+export interface ChallanDeclarationInput {
+  bankReferenceNo: string
+  remarks?: string
+}
+
+/**
+ * Bank slips are photographed and typed under a counter's fluorescent lights:
+ * spaces and stray line breaks from a copy/paste are normal, so the reference
+ * is compacted before it is compared or stored.
+ */
+export function normaliseBankReference(value: string): string {
+  return (value || '').trim().replace(/\s+/g, '').toUpperCase()
+}
+
+/** Returns an error message, or null when the declaration can be filed. */
+export function validateChallanDeclaration(input: {
+  bankReferenceNo: string
+  remarks?: string
+}): string | null {
+  const reference = normaliseBankReference(input.bankReferenceNo)
+  if (!reference) return 'Enter the bank reference / UTR number printed on your stamped receipt.'
+  if (!/^[A-Z0-9/-]{6,40}$/.test(reference)) {
+    return 'The bank reference is the 6-40 character number on your receipt (letters, digits, / and - only).'
+  }
+  if ((input.remarks || '').length > 500) return 'Keep the note under 500 characters.'
+  return null
+}
+
+/**
+ * Files the student's declaration. Only the fields the rule admits are written,
+ * so a student can never edit the amount they owe, who the challan was issued
+ * to, or the verification outcome.
+ */
+export async function declareChallanPaidAtBank(
+  challanId: string,
+  input: ChallanDeclarationInput,
+  collegeId?: string | null
+): Promise<void> {
+  const invalid = validateChallanDeclaration(input)
+  if (invalid) throw new Error(invalid)
+  const remarks = (input.remarks || '').trim().slice(0, 500)
+  await updateDoc(collegeDocRef(`challans/${challanId}`, collegeId), {
+    status: 'paid_at_bank',
+    bankReferenceNo: normaliseBankReference(input.bankReferenceNo),
+    // An empty note is left out rather than stored as '': the office reads this
+    // field as "the student added something", and '' would look like they did.
+    ...(remarks ? { studentRemarks: remarks } : {}),
+    paidAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
 }
 
 export function getMonthlyCollection(payments: FeePayment[]) {

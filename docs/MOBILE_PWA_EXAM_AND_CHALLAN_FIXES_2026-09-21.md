@@ -140,6 +140,16 @@ exist.
   `status: 'generated'`; `update` may not rewrite the addressee or the amount,
   and only `admin`/`hod`/superadmin may verify. Students can never move their
   own challan to `verified`.
+* **Declaring a payment (there is no upload)** — a student owns exactly one
+  transition: `generated` / `rejected` / `expired` → `paid_at_bank`, and the rule
+  admits only `status`, `bankReferenceNo`, `studentRemarks`, `paidAt`,
+  `updatedAt` (`diff().affectedKeys().hasOnly([...])`, with the reference matching
+  the same `^[A-Za-z0-9/-]{6,40}$` the client validates). The bank keeps the
+  physical stamped copy for its own audit; a photograph added at the counter
+  proves nothing about who handed it in and would turn the portal into an image
+  host. `bankStampUrl` stays an office-filled field for the desk's own record,
+  and `storage.rules` deliberately has no challan path — a student upload there
+  would be rejected.
 * **API** — `feeApi.getCollegeId(explicit?)` / `collegeRef(path, collegeId)`
   accept a caller-supplied tenant, so the student page resolves the college from
   its own profile instead of the admin module's `localStorage` key;
@@ -159,10 +169,20 @@ exist.
 * `useChallanData` now surfaces `error` too, and `ChallanManagement` shows it —
   the same silent-empty-table failure on the admin side.
 
-Covered by the render checks: "student challans" mounts the page against a
-seeded document and asserts the challan number, the amount, the due date, the
-status, the three-copy sheet, the amount in words and the bank account, plus an
-empty-state check when nothing has been issued.
+The student therefore never re-keys a number at the desk and the office never
+loses the audit trail: `useMyChallans.declare()` files the reference, and
+`ChallanDetailModal` in `ChallanManagement.tsx` shows it under "Declared by the
+student — awaiting verification" and prefills the bank-reference input, so the
+desk confirms instead of typing a 16-character UTR from a photograph.
+
+Covered by the render checks: "student challans" mounts the page against two
+seeded documents (one awaiting payment, one filed from the phone) and asserts the
+challan number, the amount, the due date, the status, the three-copy sheet, the
+amount in words, the bank account, the "I paid" sheet (reference field present,
+no file input, submit disabled while empty) and that only an unpaid challan offers
+the declaration — plus an empty-state check when nothing has been issued, and a
+group that pins `declareChallanPaidAtBank`'s write path and payload keys against
+what the rule allows.
 
 ---
 

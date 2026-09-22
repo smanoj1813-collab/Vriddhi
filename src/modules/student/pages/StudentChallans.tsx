@@ -216,13 +216,143 @@ function ChallanPrintSheet({ challan, onClose }: { challan: Challan; onClose: ()
   )
 }
 
+/**
+ * "I paid at the bank" — the student files the reference the teller wrote on
+ * the stamped receipt. No photo, no upload: the paper copy is handed to the
+ * office, and the only thing the portal needs is the number the desk can match
+ * against the bank statement. `validateChallanDeclaration` in feeApi and the
+ * student `allow update` rule in current-firestore.rules describe the same
+ * shape — a field added here has to be admitted there.
+ */
+function DeclarePaymentSheet({
+  challan,
+  submitting,
+  error,
+  onClose,
+  onSubmit,
+}: {
+  challan: Challan
+  submitting: boolean
+  error: string | null
+  onClose: () => void
+  onSubmit: (input: { bankReferenceNo: string; remarks?: string }) => void
+}) {
+  const [reference, setReference] = useState('')
+  const [remarks, setRemarks] = useState('')
+
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label="Declare bank payment">
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0" />
+      <form
+        onSubmit={(event) => { event.preventDefault(); onSubmit({ bankReferenceNo: reference, remarks }) }}
+        className="relative w-full max-w-md rounded-t-3xl border-t border-slate-200 bg-white p-5 pb-[calc(20px+env(safe-area-inset-bottom))] shadow-2xl dark:border-slate-800 dark:bg-[#131b2e] sm:rounded-3xl sm:border sm:p-6"
+      >
+        <div className="mx-auto -mt-2 mb-4 h-1 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-600" />
+        <h2 className="text-base font-bold text-slate-900 dark:text-white">I paid this challan at the bank</h2>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          {challan.challanNo} • {inr(challan.amount)} • due {formatDate(challan.dueDate)}
+        </p>
+
+        <label htmlFor="bank-ref" className="mt-5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Bank reference / UTR number
+        </label>
+        <input
+          id="bank-ref"
+          value={reference}
+          onChange={(event) => setReference(event.target.value)}
+          placeholder="SBIN1234567890"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          inputMode="text"
+          maxLength={48}
+          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-mono text-base font-bold tracking-tight text-slate-900 outline-none transition-colors focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+        />
+        <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+          It is printed on the stamped receipt next to “Ref” / “UTR / RRN”. 6–40 characters.
+        </p>
+
+        <label htmlFor="bank-note" className="mt-4 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Note for the office (optional)
+        </label>
+        <textarea
+          id="bank-note"
+          value={remarks}
+          onChange={(event) => setRemarks(event.target.value)}
+          rows={2}
+          maxLength={500}
+          placeholder="Paid at SBI BCU Campus Branch counter 4 on 22 Sep, University Copy with the office."
+          className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-colors focus:border-teal-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+        />
+
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+          Filing this does <span className="font-bold">not</span> mark the fee paid. The finance office
+          matches your reference with the bank and the stamp on your University Copy — then the challan
+          turns green and your hall ticket unlocks.
+        </div>
+
+        {error && (
+          <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800/70 dark:bg-rose-950/40 dark:text-rose-200">
+            {error}
+          </p>
+        )}
+
+        <div className="mt-5 flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition-colors active:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            Not now
+          </button>
+          <button
+            type="submit"
+            disabled={submitting || !reference.trim()}
+            className="flex flex-[1.4] items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-teal-700 disabled:opacity-50"
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+            {submitting ? 'Filing…' : 'File declaration'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
 export default function StudentChallans() {
   const {
     challans, allChallans, loading, error, summary, refresh,
-    statusFilter, setStatusFilter, isOverdue,
+    statusFilter, setStatusFilter, isOverdue, declare, declaringId,
   } = useMyChallans()
   const { showSuccess, showError } = useNotification()
   const [selected, setSelected] = useState<Challan | null>(null)
+  const [declaring, setDeclaring] = useState<Challan | null>(null)
+  const [declarationError, setDeclarationError] = useState<string | null>(null)
+
+  const submitDeclaration = async (challan: Challan, input: { bankReferenceNo: string; remarks?: string }) => {
+    const result = await declare(challan, input)
+    if (result.ok) {
+      setDeclaring(null)
+      setDeclarationError(null)
+      showSuccess(result.message)
+    } else {
+      setDeclarationError(result.message)
+    }
+  }
+
+  const canDeclare = (challan: Challan) =>
+    challan.status === 'generated' || challan.status === 'rejected' || challan.status === 'expired'
 
   const copy = async (label: string, value: string) => {
     try {
@@ -330,7 +460,7 @@ export default function StudentChallans() {
           {[
             { title: '1. Download the challan', body: 'Tap View & print. The slip carries three copies, the amount, the university bank account and your details.' },
             { title: '2. Pay at the bank', body: 'Pay at the counter, the bank stamps all three copies and gives you the student copy plus a bank reference number.' },
-            { title: '3. Get it verified', body: 'Submit the university copy at the office. Once verified, your fee shows as paid and the hall ticket unlocks.' },
+            { title: '3. File the reference', body: 'Tap “I paid” and enter the bank reference — no photo needed. Hand the University Copy to the office; once verified, your fee shows paid and the hall ticket unlocks.' },
           ].map((step) => (
             <div key={step.title} className="rounded-xl bg-white/15 p-3.5 md:p-4">
               <p className="text-sm font-bold">{step.title}</p>
@@ -406,6 +536,14 @@ export default function StudentChallans() {
                       >
                         <Download className="h-4 w-4" /> View &amp; print
                       </button>
+                      {canDeclare(challan) && (
+                        <button
+                          onClick={() => { setDeclarationError(null); setDeclaring(challan) }}
+                          className="flex h-10 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 text-xs font-bold text-emerald-800 transition-colors active:bg-emerald-100 dark:border-emerald-800/70 dark:bg-emerald-950/40 dark:text-emerald-200"
+                        >
+                          <CheckCircle className="h-4 w-4" /> I paid
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -418,10 +556,19 @@ export default function StudentChallans() {
                       </span>
                     </p>
                   )}
+                  {challan.status === 'paid_at_bank' && (
+                    <p className="mt-3 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-2.5 text-xs text-blue-800 dark:border-blue-800/70 dark:bg-blue-950/30 dark:text-blue-200">
+                      <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        Filed from your side • Ref <span className="font-mono font-bold">{challan.bankReferenceNo || 'pending'}</span>
+                        {challan.paidAt ? ` • ${formatDate(challan.paidAt)}` : ''} — waiting for the office to match it with the bank.
+                      </span>
+                    </p>
+                  )}
                   {challan.status === 'generated' && (
                     <p className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200">
                       <Banknote className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      <span>Print this challan and pay at {challan.bankDetails.bankName}. The office marks it verified once the bank stamp matches.</span>
+                      <span>Print this challan and pay at {challan.bankDetails.bankName}, {challan.bankDetails.branch}. After paying, tap “I paid” and enter the bank reference printed on your stamped copy.</span>
                     </p>
                   )}
                   {challan.status === 'rejected' && (
@@ -443,6 +590,15 @@ export default function StudentChallans() {
       </p>
 
       {selected && <ChallanPrintSheet challan={selected} onClose={() => setSelected(null)} />}
+      {declaring && (
+        <DeclarePaymentSheet
+          challan={declaring}
+          submitting={declaringId === declaring.id}
+          error={declarationError}
+          onClose={() => { setDeclaring(null); setDeclarationError(null) }}
+          onSubmit={(input) => void submitDeclaration(declaring, input)}
+        />
+      )}
     </div>
   )
 }

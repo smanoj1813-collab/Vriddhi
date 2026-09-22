@@ -533,6 +533,21 @@ service cloud.firestore {
           || (role() in ['admin', 'hod'] && collegeId() == collegeId))
           && request.resource.data.studentId == resource.data.studentId
           && request.resource.data.amount == resource.data.amount;
+        // …but the student owns one transition: declaring that they paid at the
+        // counter. Exactly the fields of that declaration may change, only from
+        // a status that is still awaiting it, and only ever to `paid_at_bank`.
+        // There is no document upload in this flow — the stamped copy is handed
+        // in at the office, and storage.rules therefore has no challan path.
+        allow update: if isSignedIn() && role() == 'student' && collegeId() == collegeId
+          && 'studentId' in resource.data && ownsStudentId(resource.data.studentId)
+          && resource.data.status in ['generated', 'rejected', 'expired']
+          && request.resource.data.status == 'paid_at_bank'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+            ['status', 'bankReferenceNo', 'studentRemarks', 'paidAt', 'updatedAt'])
+          && request.resource.data.bankReferenceNo is string
+          && request.resource.data.bankReferenceNo.matches('^[A-Za-z0-9/-]{6,40}$')
+          && request.resource.data.amount == resource.data.amount
+          && request.resource.data.studentId == resource.data.studentId;
         allow delete: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }

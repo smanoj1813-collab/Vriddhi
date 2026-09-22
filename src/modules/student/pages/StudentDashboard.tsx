@@ -4,7 +4,7 @@ import { useStudentData } from '../hooks/useStudentData';
 import StudentAcademicSummary from '../components/StudentAcademicSummary';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
-  Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings,
+  Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings, Receipt,
   GraduationCap, Sparkles, User, CalendarDays, BookMarked
 } from 'lucide-react';
 import type { Assessment, ClassSchedule } from '../types/student';
@@ -341,6 +341,7 @@ export default function StudentDashboard() {
           <QuickAction to="/student/timetable" icon={Clock} label={t('nav.timetable')} color="rose" />
           <QuickAction to="/student/curriculum" icon={BookMarked} label={t('nav.curriculum')} color="violet" />
           <QuickAction to="/student/fees" icon={CreditCard} label={t('student.feePortal')} color="teal" />
+          <QuickAction to="/student/challans" icon={Receipt} label="Challans" color="emerald" />
           <QuickAction to="/student/library" icon={BookOpen} label={t('student.eLibrary')} color="blue" />
           <QuickAction to="/student/events" icon={CalendarDays} label={t('student.campusEvents')} color="amber" />
           <QuickAction to="/student/notifications" icon={Bell} label={t('student.alerts')} color="violet" />

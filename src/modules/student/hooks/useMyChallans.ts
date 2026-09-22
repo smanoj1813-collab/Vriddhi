@@ -9,7 +9,13 @@
 // the Firestore rule requires: an unbounded LIST is refused per document) and
 // surfaces the failure as text the student can act on.
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchChallans, type Challan, type ChallanStatus } from '@/modules/admin/api/feeApi'
+import {
+  declareChallanPaidAtBank,
+  fetchChallans,
+  validateChallanDeclaration,
+  type Challan,
+  type ChallanStatus,
+} from '@/modules/admin/api/feeApi'
 import { useStudentData } from './useStudentData'
 
 export interface MyChallansSummary {
@@ -47,6 +53,9 @@ export function useMyChallans() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<ChallanStatus | 'all' | 'overdue'>('all')
+  // Which challan's declaration is in flight — the row keeps its own spinner so
+  // a phone user can see the tap landed even on a slow connection.
+  const [declaringId, setDeclaringId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (profileLoading) return
@@ -98,9 +107,39 @@ export function useMyChallans() {
     }
   }, [challans])
 
+  /**
+   * "I paid at the bank" — the student files the bank reference (and an
+   * optional note) against their own challan. No document upload: the stamped
+   * copy is physical and gets handed in at the office. The rule allows exactly
+   * this write, from `generated`/`rejected`/`expired` to `paid_at_bank`, and
+   * nothing else — see colleges/{collegeId}/challans in the rules file.
+   */
+  const declare = useCallback(async (
+    challan: Challan,
+    input: { bankReferenceNo: string; remarks?: string }
+  ): Promise<{ ok: boolean; message: string }> => {
+    const invalid = validateChallanDeclaration(input)
+    if (invalid) return { ok: false, message: invalid }
+    if (!studentId) {
+      return { ok: false, message: 'Your student record is not linked to this login, so nothing can be filed against it.' }
+    }
+    setDeclaringId(challan.id)
+    try {
+      await declareChallanPaidAtBank(challan.id, input, collegeId)
+      await load()
+      return { ok: true, message: 'Filed. The finance office will match the reference with the bank and mark it verified.' }
+    } catch (err) {
+      return { ok: false, message: describeError(err) }
+    } finally {
+      setDeclaringId(null)
+    }
+  }, [collegeId, load, studentId])
+
   return {
     loading,
     error,
+    declaringId,
+    declare,
     challans: visible,
     allChallans: challans,
     summary,

@@ -849,7 +849,24 @@ const challanRow = {
   }),
 };
 
-globalThis.__RC_FIRESTORE_DOCS = [challanRow];
+// A second row, already declared paid from the phone: this is the state where
+// the office owes the student an answer, so the list has to show what they
+// filed instead of another "go to the bank" call to action.
+const filedRow = {
+  id: 'challan-2',
+  data: () => ({
+    ...challanRow.data(),
+    challanNo: 'CH-202609-BCA-000124',
+    examTitle: 'DCBCS504 Practical Examination',
+    amount: 1200,
+    status: 'paid_at_bank',
+    bankReferenceNo: 'SBIN01/2026/UTR4471',
+    studentRemarks: 'Paid at counter 4 on 22 Sep.',
+    paidAt: '2026-09-22T05:30:00.000Z',
+  }),
+};
+
+globalThis.__RC_FIRESTORE_DOCS = [challanRow, filedRow];
 await section('student challans', '/src/modules/student/pages/StudentChallans.tsx', {}, async (t, view) => {
   check('challans: mounts without throwing', true);
   check('challans: shows the challan the college issued for this student',
@@ -858,6 +875,11 @@ await section('student challans', '/src/modules/student/pages/StudentChallans.ts
   check('challans: labels the row with its bank-payment status', /To pay/.test(t), t);
   check('challans: warns that a payable challan must be stamped at the bank',
     /Print this challan and pay at State Bank of India/.test(t), t);
+  check('challans: a filed challan tells the student what the office is waiting for',
+    /Filed from your side/.test(t) && t.includes('SBIN01/2026/UTR4471') && /waiting for the office/.test(t), t);
+  check('challans: a filed challan is not asked to go back to the bank',
+    !/Print this challan and pay at State Bank of India/.test(t.split('DCBCS504')[1] ?? ''), t);
+
   const printButton = view.byText('View & print', 'button');
   check('challans: offers one primary action per challan', !!printButton, t);
   if (printButton) {
@@ -871,6 +893,28 @@ await section('student challans', '/src/modules/student/pages/StudentChallans.ts
       /SBIN0040093/.test(sheet) && /123456789012/.test(sheet), sheet.slice(0, 300));
   }
   check('challans: no toast spam on a plain render', challanToasts.length === 0, challanToasts.join('|'));
+
+  // The declaration sheet: reference field + an optional note, and nothing that
+  // looks like a file upload (the stamped copy stays physical).
+  const paidButton = view.all('button').find((b) => b.textContent?.trim() === 'I paid');
+  check('challans: an unpaid challan can be declared paid from the phone', !!paidButton, t);
+  if (paidButton) {
+    await view.click(paidButton);
+    const sheet = view.text();
+    const field = view.el('#bank-ref');
+    check('declare: the sheet asks for the bank reference only',
+      /Bank reference \/ UTR number/.test(sheet) && !!field, sheet.slice(0, 200));
+    check('declare: the sheet never asks for a file',
+      view.all('input[type=file]').length === 0 && !/choose file/i.test(sheet), sheet.slice(0, 120));
+    check('declare: the sheet says filing is not verification',
+      /not mark the fee paid/i.test(sheet), sheet.slice(0, 400));
+    const submit = view.all('button').find((b) => /File declaration/.test(b.textContent ?? ''));
+    check('declare: an empty reference keeps the submit disabled', !!submit?.disabled, sheet.slice(0, 200));
+    check('declare: the note is optional', !!view.el('#bank-note') && !view.el('#bank-note')?.hasAttribute('required'), t);
+  }
+  const paidButtons = view.all('button').filter((b) => b.textContent?.trim() === 'I paid');
+  check('challans: only a challan that still awaits payment can be declared',
+    paidButtons.length === 1, `${paidButtons.length} declare buttons`);
 });
 globalThis.__RC_FIRESTORE_DOCS = [];
 
@@ -997,6 +1041,53 @@ await section('question renderer (clipboard locked)', '/src/modules/student/comp
     check('question: the answer field cancels a paste before React sees it', paste.defaultPrevented);
   }
 });
+
+
+// ── The declaration write (only student-side mutation in this flow) ────────
+// current-firestore.rules admits exactly these keys from a student, so the
+// payload shape is pinned here: a "small extra field" added in the app would
+// otherwise pass every test and fail for every student on their phone.
+{
+  const { normaliseBankReference, validateChallanDeclaration, declareChallanPaidAtBank } =
+    await server.ssrLoadModule('/src/modules/admin/api/feeApi.ts');
+  check('declare: the reference is compacted and upper-cased',
+    normaliseBankReference(' sbin 01/2026/utr4471 ') === 'SBIN01/2026/UTR4471',
+    normaliseBankReference(' sbin 01/2026/utr4471 '));
+  check('declare: punctuation a bank never prints is refused here, not by the rule',
+    validateChallanDeclaration({ bankReferenceNo: 'SBIN #12' }) !== null);
+  check('declare: a real slip is accepted',
+    validateChallanDeclaration({ bankReferenceNo: 'SBIN01/2026/UTR4471', remarks: 'counter 4' }) === null,
+    String(validateChallanDeclaration({ bankReferenceNo: 'SBIN01/2026/UTR4471' })));
+  check('declare: an over-long note is refused instead of silently truncated',
+    validateChallanDeclaration({ bankReferenceNo: 'SBIN012026', remarks: 'x'.repeat(501) }) !== null);
+
+  globalThis.__RC_WRITES = [];
+  await declareChallanPaidAtBank('challan-1', { bankReferenceNo: 'sbin01/2026/utr4471', remarks: '   ' }, 'clg-x');
+  const write = globalThis.__RC_WRITES[0] ?? {};
+  check('declare: writes the challan under the student’s own college',
+    write.path === 'colleges/clg-x/challans/challan-1', String(write.path));
+  const allowed = ['status', 'bankReferenceNo', 'studentRemarks', 'paidAt', 'updatedAt'];
+  check('declare: touches only the keys the student update rule admits',
+    Object.keys(write.data ?? {}).length > 0 && Object.keys(write.data ?? {}).every((k) => allowed.includes(k)),
+    JSON.stringify(Object.keys(write.data ?? {})));
+  check('declare: a blank note is left out of the document',
+    !('studentRemarks' in (write.data ?? {})), JSON.stringify(write.data ?? {}));
+  check('declare: the amount and the addressee are never in a student payload',
+    !('amount' in (write.data ?? {})) && !('studentId' in (write.data ?? {})), JSON.stringify(write.data ?? {}));
+  check('declare: the status written is the one the office then verifies',
+    write.data?.status === 'paid_at_bank', String(write.data?.status));
+
+  globalThis.__RC_WRITES = [];
+  let refused = '';
+  try {
+    await declareChallanPaidAtBank('challan-1', { bankReferenceNo: 'AB12' }, 'clg-x');
+  } catch (err) {
+    refused = String(err?.message ?? err);
+  }
+  check('declare: a too-short reference never reaches Firestore',
+    refused.length > 0 && globalThis.__RC_WRITES.length === 0, `${refused}|${globalThis.__RC_WRITES.length} writes`);
+  globalThis.__RC_WRITES = [];
+}
 
 
 await server.close();
