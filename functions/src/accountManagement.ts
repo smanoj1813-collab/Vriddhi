@@ -287,7 +287,7 @@ export const syncIdentityClaims = onCall(
     const errors: string[] = []
 
     // Index every tenant profile doc by the uid it references.
-    const profileByUid = new Map<string, { role: string; collegeId: string | null }>()
+    const profileByUid = new Map<string, { role: string; collegeId: string | null; department: string | null }>()
     for (const { name, defaultRole } of BACKFILL_ROLE_COLLECTIONS.map((c) => ({
       name: c.name,
       defaultRole: c.role,
@@ -300,7 +300,9 @@ export const syncIdentityClaims = onCall(
           if (!uid || profileByUid.has(uid)) continue
           const role = String(d.role || defaultRole).toLowerCase()
           const collegeId = typeof d.collegeId === 'string' ? d.collegeId : null
-          profileByUid.set(uid, { role, collegeId })
+          const department =
+            typeof d.department === 'string' && d.department.trim() ? d.department.trim() : null
+          profileByUid.set(uid, { role, collegeId, department })
         }
       } catch (err: any) {
         errors.push(`${name}: ${err?.message || err}`)
@@ -326,8 +328,18 @@ export const syncIdentityClaims = onCall(
           continue
         }
         const collegeId = isSuper ? claims.collegeId ?? null : profile?.collegeId ?? null
+        // Re-stamp the department claim from the profile so identity repair
+        // keeps admin/hod rules scoping intact (empty ⇒ college-wide).
+        const department =
+          profile && typeof profile.department === 'string' && profile.department.trim()
+            ? profile.department.trim()
+            : null
         try {
-          await auth.setCustomUserClaims(record.uid, { role, collegeId })
+          await auth.setCustomUserClaims(record.uid, {
+            role,
+            collegeId,
+            ...(department !== null ? { department } : {}),
+          })
           updated++
         } catch (err: any) {
           errors.push(`claims(${record.uid}): ${err?.message || err}`)

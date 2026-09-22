@@ -13,7 +13,8 @@ import type { UserRole } from './context/auth'
 /** Landing route per role. Every role in VALID_ROLES must appear here. */
 export const ROLE_DASHBOARD: Record<UserRole, string> = {
   superadmin: '/superadmin/dashboard',
-  admin: '/admin/dashboard',
+  // Admin ≡ department HOD: same portal, same department landing as `hod`.
+  admin: '/admin/hod-dashboard',
   // A principal is not a faculty member: it uses the college-admin surface,
   // which is the only place its cross-department view exists.
   principal: '/admin/dashboard',

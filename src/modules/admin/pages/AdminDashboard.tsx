@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
+import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope'
 import FacultyAttendancePanel from '../components/FacultyAttendancePanel'
 import FacultyAttendanceTodayCard from '../components/FacultyAttendanceTodayCard'
 import { db } from '@/Firebase/config'
@@ -164,7 +165,10 @@ function getInitials(name: string | null | undefined): string {
 
 // ─── Firestore Data Hook ──────────────────────────────────────────────────────
 
-function useCollegeDashboardData(collegeId: string | undefined) {
+function useCollegeDashboardData(
+  collegeId: string | undefined,
+  viewer?: { role?: string; department?: string | null }
+) {
   const [data, setData] = useState<DashboardData>({
     totalUsers: 0, totalStudents: 0, totalFaculty: 0, totalMentors: 0, totalHODs: 0,
     avgAttendance: 0, departments: [], users: [], auditLogs: [], approvals: [], loading: true
@@ -188,9 +192,21 @@ function useCollegeDashboardData(collegeId: string | undefined) {
 
         if (cancelled) return
 
-        const students = studentsSnap.docs.map(d => d.data())
-        const faculty = facultySnap.docs.map(d => d.data())
-        const admins = adminsSnap.docs.map(d => d.data())
+        let students = studentsSnap.docs.map(d => d.data())
+        let faculty = facultySnap.docs.map(d => d.data())
+        let admins = adminsSnap.docs.map(d => d.data())
+
+        // HOD/admin (≡ department head) see only their department; the
+        // principal keeps the college-wide view. Tolerant of untagged rows —
+        // see shared/utils/departmentScope.
+        const deptScope = shouldScopeToDepartment(viewer?.role)
+          ? String(viewer?.department ?? '').trim()
+          : ''
+        if (deptScope) {
+          students = students.filter(s => docInDepartment(s, deptScope))
+          faculty = faculty.filter(f => docInDepartment(f, deptScope))
+          admins = admins.filter(a => docInDepartment(a, deptScope))
+        }
 
         const totalStudents = students.length
         const totalFaculty = faculty.length
@@ -281,7 +297,7 @@ function useCollegeDashboardData(collegeId: string | undefined) {
 
     fetchData()
     return () => { cancelled = true }
-  }, [collegeId])
+  }, [collegeId, viewer?.role, viewer?.department])
 
   return data
 }
@@ -454,18 +470,6 @@ function DepartmentOverview({ departments }: { departments: Department[] }) {
           </ResponsiveContainer>
         </div>
       )}
-    </div>
-  )
-}
-
-function ApprovalWorkflows() {
-  return (
-    <div className="animate-fade-in">
-      <SectionHeader title="Approval Workflows" icon={CheckCircle} />
-      <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-        <CheckCircle size={32} className="mx-auto mb-3 opacity-50" />
-        <p>No pending approvals</p>
-      </div>
     </div>
   )
 }
@@ -678,8 +682,9 @@ export default function AdminDashboard() {
     '/admin/students': 'users',
     '/departments': 'departments',
     '/admin/departments': 'departments',
-    '/approvals': 'approvals',
-    '/admin/approvals': 'approvals',
+    // Approvals moved to the HOD portal — legacy deep links land on Overview.
+    '/approvals': 'overview',
+    '/admin/approvals': 'overview',
     '/reports': 'reports',
     '/admin/reports': 'reports',
     '/audit': 'audit',
@@ -688,7 +693,8 @@ export default function AdminDashboard() {
     '/admin/settings': 'settings',
   }
 
-  const activeTab = searchParams.get('tab') || pathToTab[location.pathname] || 'overview'
+  const rawTab = searchParams.get('tab') || pathToTab[location.pathname] || 'overview'
+  const activeTab = rawTab === 'approvals' ? 'overview' : rawTab
 
   useEffect(() => {
     const tabFromPath = pathToTab[location.pathname]
@@ -699,14 +705,16 @@ export default function AdminDashboard() {
   }, [location.pathname])
 
   const collegeId = user?.collegeId
-  const dashboardData = useCollegeDashboardData(collegeId)
+  const dashboardData = useCollegeDashboardData(collegeId, user ?? undefined)
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'departments', label: 'Departments', icon: Building2 },
     { id: 'faculty-attendance', label: 'Faculty Attendance', icon: BadgeCheck },
-    { id: 'approvals', label: 'Approvals', icon: CheckCircle },
+    // Approvals (question papers, question review) live with the department
+    // HOD — see hodNav / HODDashboard. The principal's approvals surface was
+    // removed with them.
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'audit', label: 'Audit Logs', icon: Clock },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -816,7 +824,6 @@ export default function AdminDashboard() {
       case 'users': return <UserManagement users={dashboardData.users} collegeId={collegeId} />
       case 'departments': return <DepartmentOverview departments={dashboardData.departments} />
       case 'faculty-attendance': return <FacultyAttendancePanel collegeId={collegeId} compact />
-      case 'approvals': return <ApprovalWorkflows />
       case 'reports': return <ReportsAnalytics totalStudents={dashboardData.totalStudents} totalFaculty={dashboardData.totalFaculty} />
       case 'audit': return <AuditLogs />
       case 'settings': return <SystemSettings />
@@ -847,7 +854,6 @@ export default function AdminDashboard() {
                 {activeTab === 'users' && 'Manage all users, roles and permissions'}
                 {activeTab === 'departments' && 'Department performance and analytics'}
                 {activeTab === 'faculty-attendance' && 'Faculty self-marked attendance, analysis and downloads'}
-                {activeTab === 'approvals' && 'Review and approve pending requests'}
                 {activeTab === 'reports' && 'Generate and download reports'}
                 {activeTab === 'audit' && 'System activity and security logs'}
                 {activeTab === 'settings' && 'Configure system preferences'}

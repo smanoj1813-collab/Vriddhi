@@ -27,6 +27,7 @@ import {
   Activity,
   DashboardStats,
 } from '../api/dashboardApi'
+import { docInDepartment } from '@/shared/utils/departmentScope'
 
 export interface DashboardFilters {
   studentBranch: string
@@ -35,7 +36,17 @@ export interface DashboardFilters {
   attendanceBatch: string
 }
 
-export function useDashboardData() {
+export interface DashboardDataOptions {
+  /**
+   * When set (HOD/admin portal), students — and the attendance/scores that
+   * belong to them — are filtered to this department. Principal and other
+   * college-wide viewers simply omit the option.
+   */
+  department?: string | null
+}
+
+export function useDashboardData(options?: DashboardDataOptions) {
+  const department = options?.department ?? null
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<DashboardFilters>({
     studentBranch: 'all',
@@ -70,10 +81,24 @@ export function useDashboardData() {
         fetchActivities(),
       ])
 
-      setStudents(studentsData)
-      setAttendanceRecords(attendanceData)
+      // Department scope (HOD/admin): keep the viewer's students, then keep
+      // only the attendance/scores that belong to them. Tolerant of untagged
+      // legacy rows — see shared/utils/departmentScope.
+      const scope = (department || '').trim()
+      let studentsOut = studentsData
+      let attendanceOut = attendanceData
+      let scoresOut = scoresData
+      if (scope) {
+        studentsOut = studentsData.filter((s) => docInDepartment(s, scope))
+        const scopedIds = new Set(studentsOut.map((s) => s.id))
+        attendanceOut = attendanceData.filter((r) => scopedIds.has(r.studentId))
+        scoresOut = scoresData.filter((s) => scopedIds.has(s.studentId))
+      }
+
+      setStudents(studentsOut)
+      setAttendanceRecords(attendanceOut)
       setAssessments(assessmentsData)
-      setScores(scoresData)
+      setScores(scoresOut)
       setActivities(activitiesData)
       loadedRef.current = true
     } catch (error) {
@@ -81,7 +106,7 @@ export function useDashboardData() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [department])
 
   useEffect(() => {
     if (!loadedRef.current) {

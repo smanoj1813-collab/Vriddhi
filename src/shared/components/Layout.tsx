@@ -28,7 +28,6 @@ import {
   Collapse,
 } from "@mui/material";
 import {
-  Menu as MenuIcon,
   ChevronLeft,
   ChevronRight,
   Dashboard,
@@ -66,6 +65,8 @@ import {
   ExpandLess,
   RateReview,
   InstallMobile,
+  Apps,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
@@ -302,13 +303,13 @@ const facultyNav: SidebarEntry[] = [
 ];
 
 /**
- * College portal — same collapsible-group treatment as faculty, shared by
- * admins and principals. They share the admin route set; every path here
- * exists in src/modules/admin/routes.tsx. It MUST stay in sync with the
- * admin/principal slice of `navItems` above: pages that are added to the
- * flat list (Admission Center was the missed one) have to be added here too,
- * or they become unreachable for exactly the roles that render this nav.
- * HOD keeps the flat list (its route slice differs).
+ * Principal — the original full college portal, with exactly three things
+ * removed (per product decision): the question-paper pages (Paper Review,
+ * Paper Generator), the Question Bank (which also hosts question approval),
+ * and by extension the question review/approval surface. Those belong to the
+ * department HOD (`hodNav` below). Everything else — students, attendance,
+ * academics, university exams, assessments, grades, finance, insights —
+ * stays exactly as it was.
  */
 const principalNav: SidebarEntry[] = [
   { kind: "link", label: "Dashboard", path: "/admin/dashboard", icon: <Dashboard fontSize="small" /> },
@@ -363,6 +364,86 @@ const principalNav: SidebarEntry[] = [
     children: [
       { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
       { label: "Grade Records", path: "/admin/grade-records", icon: <Assessment fontSize="small" /> },
+      // REMOVED for principal (live in hodNav instead):
+      //   Question Bank · Paper Review · Paper Generator
+      { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Finance",
+    icon: <AttachMoney fontSize="small" />,
+    children: [
+      { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Insights",
+    icon: <TrendingUp fontSize="small" />,
+    children: [
+      { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" /> },
+      { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" /> },
+      { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" /> },
+    ],
+  },
+
+  { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
+  { kind: "link", label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" /> },
+];
+
+/**
+ * Department HOD portal — shared by the `hod` role and the former `admin`
+ * role (admin IS a department head now). Everything a department runs day to
+ * day: students, attendance, academics, assessments & approvals (question
+ * bank, paper review, AI papers), finance and insights. The university-exam
+ * slice stays with the principal, exactly as before. Lands on
+ * /admin/hod-dashboard (see ROLE_DASHBOARD).
+ */
+const hodNav: SidebarEntry[] = [
+  { kind: "link", label: "HOD Dashboard", path: "/admin/hod-dashboard", icon: <Dashboard fontSize="small" /> },
+
+  {
+    kind: "group",
+    label: "Students",
+    icon: <People fontSize="small" />,
+    children: [
+      { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+      { label: "360° View", path: "/admin/view360", icon: <Assessment fontSize="small" /> },
+      { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Attendance",
+    icon: <CalendarToday fontSize="small" />,
+    children: [
+      { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" /> },
+      { label: "Faculty Attendance", path: "/admin/faculty-attendance", icon: <BadgeIcon fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Academics",
+    icon: <School fontSize="small" />,
+    children: [
+      { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
+      { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Assessments",
+    icon: <Assignment fontSize="small" />,
+    children: [
+      { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
+      { label: "Grade Records", path: "/admin/grade-records", icon: <Assessment fontSize="small" /> },
       { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer fontSize="small" /> },
       { label: "Paper Review", path: "/admin/paper-review", icon: <Description fontSize="small" /> },
       { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" /> },
@@ -398,13 +479,97 @@ const principalNav: SidebarEntry[] = [
 /** Roles whose sidebar renders as collapsible master groups. */
 const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
   faculty: facultyNav,
-  // Admins and principals share the route set, so they share the grouped
-  // sidebar. Before this, `admin` fell through to the flat list — which meant
-  // a freshly created admin saw a different navigation shape than the
-  // principal in the same college (and had to scroll to reach newer pages
-  // like the Admission Center).
-  admin: principalNav,
+  // Admin ≡ department HOD: they get the HOD portal, not a separate admin
+  // surface. Principal gets the deliberately minimal university-exam nav.
+  admin: hodNav,
+  hod: hodNav,
   principal: principalNav,
+};
+
+// ─── Phone chrome (parity with the student portal) ───────────────────────────
+//
+// The student portal replaced the "desktop sidebar squeezed into a phone"
+// with a compact top bar, a thumb-reachable bottom tab bar and a "More"
+// sheet. The staff portals (faculty, principal, admin — plus HOD, mentor and
+// superadmin, which share this layout) get the same treatment: the two
+// breakpoints meet at MUI's `md` (900px), where the permanent drawer takes
+// over. Every path referenced here already exists in the role's nav above.
+
+interface MobileTab {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  /** Extra route spellings that should light this tab up (active state only). */
+  aliases?: string[];
+}
+
+interface MobileNavItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+}
+
+interface MobileNavSection {
+  label: string;
+  items: MobileNavItem[];
+}
+
+/** The four destinations a role reaches with a thumb, plus "More". */
+const mobileTabsByRole: Record<string, MobileTab[]> = {
+  faculty: [
+    { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
+    {
+      label: "Attendance",
+      path: "/faculty/my-attendance",
+      icon: <CheckCircle fontSize="small" />,
+      aliases: ["/faculty/attendance", "/faculty/attendance-marking", "/faculty/self-attendance"],
+    },
+    {
+      label: "Students",
+      path: "/faculty/student-analysis",
+      icon: <People fontSize="small" />,
+      aliases: ["/faculty/appointments", "/faculty/student-requests", "/faculty/view360"],
+    },
+    { label: "Assessments", path: "/faculty/assessments", icon: <Assignment fontSize="small" /> },
+  ],
+  mentor: [
+    { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
+    {
+      label: "Student Requests",
+      path: "/faculty/appointments",
+      icon: <People fontSize="small" />,
+      aliases: ["/faculty/student-requests"],
+    },
+    { label: "Students", path: "/faculty/student-analysis", icon: <Assessment fontSize="small" /> },
+    { label: "Attendance", path: "/faculty/attendance", icon: <CalendarToday fontSize="small" /> },
+  ],
+  admin: [
+    // Admin is a department HOD — same landing and tabs as `hod`.
+    { label: "HOD Dashboard", path: "/admin/hod-dashboard", icon: <Dashboard fontSize="small" /> },
+    { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+    { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" /> },
+    { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
+  ],
+  principal: [
+    // Original four tabs — the question/paper pages are NOT tabs, so nothing
+    // to remove here; they were dropped from principalNav (the More sheet).
+    { label: "Dashboard", path: "/admin/dashboard", icon: <Dashboard fontSize="small" /> },
+    { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+    { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" /> },
+    { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
+  ],
+  hod: [
+    { label: "HOD Dashboard", path: "/admin/hod-dashboard", icon: <Dashboard fontSize="small" /> },
+    { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+    { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" /> },
+    { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
+  ],
+  superadmin: [
+    { label: "Dashboard", path: "/superadmin/dashboard", icon: <Dashboard fontSize="small" /> },
+    { label: "Colleges", path: "/superadmin/colleges", icon: <Business fontSize="small" /> },
+    { label: "Admins", path: "/superadmin/admins", icon: <SupervisedUserCircle fontSize="small" /> },
+    { label: "Universities", path: "/superadmin/universities", icon: <AccountBalance fontSize="small" /> },
+  ],
 };
 
 /** True when the current location points at this nav path. */
@@ -422,12 +587,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     return localStorage.getItem('vriddhi-sidebar-collapsed') === 'true';
   });
   const [collegeName, setCollegeName] = useState<string>('');
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
+  // Phone-only "More" sheet — the mobile answer to the desktop sidebar,
+  // mirroring StudentMoreSheet on the student portal.
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const toggleCollapse = () => {
     const next = !collapsed;
@@ -454,10 +621,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     loadCollegeName();
   }, [user?.collegeId]);
 
-  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
-
   const handleLogout = async () => {
     setUserMenuAnchor(null);
+    setMoreOpen(false);
     await logout();
     navigate("/login");
   };
@@ -519,15 +685,121 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const followNavPath = (path: string) => {
     navigate(path);
-    setMobileOpen(false);
+    setMoreOpen(false);
   };
+
+  // ─── Phone chrome derivations ──────────────────────────────────────────────
+  // Tabs fall back to the role's first few destinations if a role ever gains
+  // no dedicated entry above, so the bar (and its More sheet) never vanishes.
+  const mobileTabs: MobileTab[] = React.useMemo(() => {
+    const predefined = mobileTabsByRole[effectiveRole];
+    if (predefined) return predefined;
+    return filteredNav.slice(0, 4).map((item) => ({
+      label: item.label,
+      path: item.path,
+      icon: item.icon,
+    }));
+  }, [effectiveRole, filteredNav]);
+
+  const isMobileTabActive = (tab: MobileTab) =>
+    [tab.path, ...(tab.aliases ?? [])].some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`)
+    );
+
+  /** Title shown in the phone top bar: the page the user is on. */
+  const pageTitle = React.useMemo(() => {
+    const candidates: { path: string; label: string }[] = [];
+    if (collapsibleNav) {
+      for (const entry of collapsibleNav) {
+        if (entry.kind === 'link') candidates.push({ path: entry.path, label: entry.label });
+        else for (const child of entry.children) candidates.push({ path: child.path, label: child.label });
+      }
+    } else {
+      for (const item of filteredNav) candidates.push({ path: item.path, label: item.label });
+    }
+    const matched = candidates
+      .filter((c) => pathname === c.path || pathname.startsWith(`${c.path}/`))
+      .sort((a, b) => b.path.length - a.path.length)[0];
+    if (matched) return navLabel(matched.label);
+    const dash = candidates.find((c) => c.path.endsWith('/dashboard'));
+    if (dash) return navLabel(dash.label);
+    return collegeName || t('brand.academicManagement');
+    // navLabel closes over t; both are stable per language.
+  }, [collapsibleNav, filteredNav, pathname, collegeName, navLabel, t]);
+
+  /**
+   * Sections rendered as tiles inside the More sheet: the role's whole nav
+   * (collapsible groups, or flat items bucketed by their section), minus the
+   * paths that already own a bottom-bar tab — a tile that repeats the tab the
+   * user just tapped is a dead end. Alias paths are active-state only, so
+   * e.g. "Mark Student Attendance" stays reachable from the sheet even
+   * though the Attendance tab lights up on it.
+   */
+  const mobileNavSections: MobileNavSection[] = React.useMemo(() => {
+    const tabPaths = new Set(mobileTabs.map((tab) => tab.path));
+    const sections: MobileNavSection[] = [];
+    if (collapsibleNav) {
+      const loose: MobileNavItem[] = [];
+      for (const entry of collapsibleNav) {
+        if (entry.kind === 'link') {
+          if (!tabPaths.has(entry.path)) {
+            loose.push({ label: entry.label, path: entry.path, icon: entry.icon });
+          }
+        } else {
+          const items = entry.children
+            .filter((child) => !tabPaths.has(child.path))
+            .map((child) => ({ label: child.label, path: child.path, icon: child.icon }));
+          if (items.length > 0) sections.push({ label: navLabel(entry.label), items });
+        }
+      }
+      if (loose.length > 0) sections.push({ label: 'Menu', items: loose });
+    } else {
+      const order: string[] = [];
+      const bySection = new Map<string, MobileNavItem[]>();
+      for (const item of filteredNav) {
+        if (tabPaths.has(item.path)) continue;
+        const key = item.section || 'Menu';
+        if (!bySection.has(key)) {
+          bySection.set(key, []);
+          order.push(key);
+        }
+        bySection.get(key)!.push({ label: item.label, path: item.path, icon: item.icon });
+      }
+      for (const key of order) sections.push({ label: key, items: bySection.get(key)! });
+    }
+    return sections;
+  }, [collapsibleNav, filteredNav, mobileTabs, navLabel]);
+
+  // Any route change closes the sheet — tapping a tile should land on the
+  // page, not on a menu that is still covering it.
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  // While the sheet is open the page behind it must not scroll (same
+  // behaviour as the student "More" sheet).
+  useEffect(() => {
+    if (!moreOpen || typeof document === 'undefined') return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [moreOpen]);
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "superadmin": return { bg: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300", label: t("role.superadmin") };
-      case "admin": return { bg: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300", label: t("role.admin") };
-      case "principal": return { bg: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", label: t("role.principal") };
+      // Admin IS a department HOD now: same badge, same portal title
+      // ("Head of Dept Portal"), same nav and department scoping as `hod`.
+      case "admin":
       case "hod": return { bg: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300", label: t("role.hod") };
+      case "principal": return { bg: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", label: t("role.principal") };
       case "mentor": return { bg: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", label: t("role.mentor") };
       case "faculty": return { bg: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", label: t("role.faculty") };
       default: return { bg: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200", label: role };
@@ -846,7 +1118,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
               <Tooltip title={collapsed ? (NAV_LABEL_KEYS[item.label] ? t(NAV_LABEL_KEYS[item.label]) : item.label) : ""} placement="right" arrow>
                 <ListItemButton
-                  onClick={() => { navigate(item.path); setMobileOpen(false); }}
+                  onClick={() => navigate(item.path)}
                   selected={isActive}
                   sx={{
                     borderRadius: 2,
@@ -1000,44 +1272,76 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           borderBottom: "1px solid",
           borderColor: "divider",
           boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)",
+          // Respect the notch in the installed PWA; the main area offsets by
+          // the same amount so the 64px toolbar still meets the content.
+          pt: { xs: "env(safe-area-inset-top)", md: 0 },
           transition: (theme) => theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
         }}
       >
-        <Toolbar sx={{ height: 64, px: { xs: 2, sm: 3 } }}>
-          {/* Mobile menu toggle */}
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          {/* Breadcrumb / Title */}
-          <Box sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5 }}>
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+        <Toolbar sx={{ minHeight: 64, px: { xs: 1.5, sm: 3 } }}>
+          {/* Title — the current page on phones (student top bar parity),
+              the college name on desktop. minWidth+truncate keeps long
+              names from wrapping the toolbar out of alignment. */}
+          <Box sx={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box
+              sx={{
+                display: { xs: "flex", md: "none" },
+                flexDirection: "column",
+                minWidth: 0,
+              }}
+            >
+              <span className="truncate text-[15px] font-bold leading-tight text-slate-900 dark:text-slate-100">
+                {pageTitle}
+              </span>
+              <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400">
                 {t("role.portal", { role: currentRoleInfo.label })}
               </span>
-              <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
+            </Box>
+            <Box
+              sx={{
+                display: { xs: "none", md: "flex" },
+                flexDirection: "column",
+                minWidth: 0,
+              }}
+            >
+              <span className="truncate text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                {t("role.portal", { role: currentRoleInfo.label })}
+              </span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="truncate text-base lg:text-lg font-bold text-slate-800 dark:text-slate-100">
                   {collegeName || t("brand.academicManagement")}
                 </span>
               </div>
-            </div>
+            </Box>
           </Box>
 
           {/* Right Header Utilities */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
             <LanguageSwitcher compact showLabel={false} className="hidden sm:inline-flex" />
             {/* Theme toggle */}
             <Tooltip title={resolvedMode === "dark" ? t("common.lightMode") : t("common.darkMode")}>
               <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1 }}>
                 {resolvedMode === "dark" ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+
+            {/* Explicit sign-out — previously buried in the drawer footer /
+                avatar menu, it now sits in the header on every screen size. */}
+            <Tooltip title={t("common.signOut")}>
+              <IconButton
+                onClick={handleLogout}
+                aria-label={t("common.signOut")}
+                size="small"
+                sx={{
+                  p: 1,
+                  color: "error.main",
+                  "&:hover": { bgcolor: "error.light", opacity: 0.15 },
+                }}
+              >
+                <ExitToApp fontSize="small" />
               </IconButton>
             </Tooltip>
 
@@ -1142,24 +1446,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           }),
         }}
       >
-        {/* Mobile Temporary Drawer */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: DRAWER_EXPANDED_WIDTH,
-              bgcolor: "background.paper",
-            },
-          }}
-        >
-          {drawerContent}
-        </Drawer>
-
         {/* Desktop Permanent Drawer */}
         <Drawer
           variant="permanent"
@@ -1190,7 +1476,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           minHeight: "100vh",
-          pt: "64px", // Top bar offset
+          // Clear the fixed header (plus the notch inset on phones) and, on
+          // phones, the bottom tab bar — same offsets the student layout uses.
+          pt: { xs: "calc(64px + env(safe-area-inset-top))", md: "64px" },
+          pb: { xs: "calc(64px + env(safe-area-inset-bottom))", md: 0 },
           bgcolor: "background.default",
           overflow: "auto",
           transition: (theme) => theme.transitions.create(['width', 'margin'], {
@@ -1203,6 +1492,176 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children || <Outlet />}
         </div>
       </Box>
+
+      {/* ─── Phone Bottom Tab Bar (student-portal parity) ─── */}
+      <nav
+        aria-label="Primary"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0f1729]/95 backdrop-blur-md safe-area-bottom min-[900px]:hidden"
+      >
+        <ul className="flex items-stretch justify-around px-1 pt-1">
+          {mobileTabs.map((tab) => {
+            const isActive = isMobileTabActive(tab);
+            const label = navLabel(tab.label);
+            return (
+              <li key={tab.path} className="flex-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => followNavPath(tab.path)}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-label={label}
+                  className={`relative flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-t-xl px-1 py-1.5 transition-colors ${
+                    isActive
+                      ? "text-teal-700 dark:text-teal-300"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0 h-0.5 w-8 rounded-full transition-all ${
+                      isActive ? "bg-teal-600 dark:bg-teal-400" : "bg-transparent"
+                    }`}
+                  />
+                  <span className="relative">{tab.icon}</span>
+                  <span
+                    className={`w-full truncate px-0.5 text-center text-[10px] leading-none ${
+                      isActive ? "font-bold" : "font-medium"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          <li className="flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              aria-expanded={moreOpen}
+              aria-label="More"
+              className={`relative flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-t-xl px-1 py-1.5 transition-colors ${
+                moreOpen
+                  ? "text-teal-700 dark:text-teal-300"
+                  : "text-slate-500 dark:text-slate-400"
+              }`}
+            >
+              <span
+                className={`absolute top-0 h-0.5 w-8 rounded-full transition-all ${
+                  moreOpen ? "bg-teal-600 dark:bg-teal-400" : "bg-transparent"
+                }`}
+              />
+              <Apps fontSize="small" />
+              <span className="text-[10px] font-medium leading-none">More</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      {/* ─── Phone "More" Sheet — the rest of the nav + controls + sign out ─── */}
+      {moreOpen && (
+        <div
+          className="fixed inset-0 z-[60] min-[900px]:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+        >
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMoreOpen(false)}
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] animate-[fadeIn_.15s_ease-out]"
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-slate-200 bg-white pb-[calc(16px+env(safe-area-inset-bottom))] shadow-2xl dark:border-slate-800 dark:bg-[#131b2e] animate-[sheetUp_.22s_cubic-bezier(.22,1,.36,1)]">
+            {/* Sheet header: who is signed in */}
+            <div className="sticky top-0 z-10 bg-white/95 px-4 pb-3 pt-2.5 backdrop-blur dark:bg-[#131b2e]/95">
+              <div className="mx-auto h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+              <div className="mt-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                    {user?.name || user?.displayName || "User"}
+                  </p>
+                  <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                    {[currentRoleInfo.label, collegeName].filter(Boolean).join(" • ")}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen(false)}
+                  aria-label="Close"
+                  className="-mr-1 rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <CloseIcon fontSize="small" />
+                </button>
+              </div>
+            </div>
+
+            {/* Tile grid: every destination not already on the bottom bar */}
+            <div className="space-y-5 px-4 pb-2">
+              {mobileNavSections.map((section) => (
+                <section key={section.label}>
+                  <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {section.label}
+                  </h2>
+                  <div className="grid grid-cols-3 gap-2">
+                    {section.items.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMoreOpen(false)}
+                        className="relative flex min-h-[84px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3 text-center transition-colors active:bg-teal-50 active:border-teal-300 dark:border-slate-800 dark:bg-slate-900/60 dark:active:bg-teal-950/40"
+                      >
+                        <span className="text-teal-700 dark:text-teal-300">{item.icon}</span>
+                        <span className="text-[11px] font-semibold leading-tight text-slate-700 dark:text-slate-200">
+                          {navLabel(item.label)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            {/* Controls: language, theme, install, sign out */}
+            <div className="mt-2 space-y-2 px-4">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <LanguageSwitcher compact showLabel={false} className="w-full" />
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleMode}
+                  aria-label={resolvedMode === "dark" ? "Light mode" : "Dark mode"}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors active:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                >
+                  {resolvedMode === "dark" ? (
+                    <LightMode fontSize="small" />
+                  ) : (
+                    <DarkMode fontSize="small" />
+                  )}
+                </button>
+              </div>
+              {showInstallApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    requestPwaInstall();
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2.5 text-xs font-bold text-teal-800 transition-colors active:bg-teal-100 dark:border-teal-800/60 dark:bg-teal-950/40 dark:text-teal-200"
+                >
+                  <InstallMobile fontSize="small" /> Install Vriddhi on this phone
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-700 transition-colors active:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+              >
+                <ExitToApp fontSize="small" /> {t("common.signOut")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Global Multi-Role AI Assistant ─── */}
       <FloatingAIChatWidget />

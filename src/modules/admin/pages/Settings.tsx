@@ -135,7 +135,7 @@ export default function Settings() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [role, setRole] = useState('Administrator')
+  const [role, setRole] = useState('HOD')
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileMsg, setProfileMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
@@ -249,7 +249,7 @@ export default function Settings() {
             setFullName(data.name || user.name || '')
             setEmail(data.email || user.email || '')
             setPhone(data.phone || user.phone || '')
-            setRole(data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : 'Administrator')
+            setRole(data.role === 'admin' || data.role === 'hod' ? t('role.hod') : data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : t('role.hod'))
             if (data.notificationPrefs) {
               setNotifications(prev => ({ ...prev, ...data.notificationPrefs }))
             }
@@ -265,7 +265,7 @@ export default function Settings() {
             setFullName(user.name || '')
             setEmail(user.email || '')
             setPhone(user.phone || '')
-            setRole(user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Administrator')
+            setRole(user.role === 'admin' || user.role === 'hod' ? t('role.hod') : user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : t('role.hod'))
           }
         } catch (e) {
           console.warn('Failed to load admin profile:', e)

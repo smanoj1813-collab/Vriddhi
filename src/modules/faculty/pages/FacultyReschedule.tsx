@@ -187,6 +187,11 @@ export default function FacultyReschedule() {
           originalTime: selected.time,
           status: 'rescheduled',
           reason: reason || 'Schedule adjustment',
+          // Reschedules take effect immediately, then land in the department
+          // HOD's approvals queue (HODDashboard). department lets the HOD of
+          // another department ignore it; approvalStatus tracks the action.
+          department: user?.department || '',
+          approvalStatus: 'pending',
           updatedAt: serverTimestamp(),
         })
 
@@ -216,6 +221,10 @@ export default function FacultyReschedule() {
           originalTime: selected.originalTime || selected.time,
           status: 'rescheduled',
           reason: reason || 'Schedule adjustment',
+          // Same contract as the ensure-branch: instant effect, HOD queue
+          // afterwards, department-scoped visibility.
+          department: user?.department || '',
+          approvalStatus: 'pending',
           updatedAt: serverTimestamp(),
         })
 

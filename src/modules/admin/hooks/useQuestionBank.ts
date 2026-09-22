@@ -7,6 +7,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
+import { filterByViewerDepartment } from '@/shared/utils/departmentScope';
 
 // Existing types (your current system)
 import {
@@ -762,7 +763,9 @@ export function useQuestionBank(): UseQuestionBankReturn {
     try {
       const result = await reviewQueueApi.getPending();
       if (result.success && result.data) {
-        setReviews(result.data);
+        // HOD/admin: only reviews tagged with their department (untagged
+        // legacy rows stay visible — see shared/utils/departmentScope).
+        setReviews(filterByViewerDepartment(result.data, user?.role, user?.department));
       } else {
         setErrorsUniversal(prev => ({ ...prev, reviews: result.error || 'Failed to load reviews' }));
       }
@@ -771,7 +774,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
     } finally {
       setLoadingUniversal(prev => ({ ...prev, reviews: false }));
     }
-  }, []);
+  }, [user?.role, user?.department]);
 
   const loadUniversalStats = useCallback(async () => {
     setLoadingUniversal(prev => ({ ...prev, stats: true }));
@@ -921,7 +924,12 @@ export function useQuestionBank(): UseQuestionBankReturn {
     setLoadingUniversal(prev => ({ ...prev, saving: true }));
     setErrorsUniversal(prev => ({ ...prev, save: null }));
     try {
-      const result = await reviewQueueApi.submit(review);
+      // Stamp the submitter's department so the HOD review queue can scope by
+      // it. Conditional spread: Firestore rejects explicit `undefined` values.
+      const result = await reviewQueueApi.submit({
+        ...review,
+        ...(user?.department ? { department: user.department } : {}),
+      });
       if (result.success) {
         globalCache.invalidate('reviews');
         return true;

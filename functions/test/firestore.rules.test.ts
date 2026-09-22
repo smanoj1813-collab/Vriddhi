@@ -1373,3 +1373,139 @@ describe('connect with mentors (faculty availability & appointments)', () => {
     await assertSucceeds(deleteDoc(doc(pDb, 'colleges', COLLEGE_A, 'facultyAppointments', id)))
   })
 })
+
+// ── Department scoping (admin ≡ department HOD) ─────────────────────────────
+// The `department` custom claim narrows admin/hod POINT reads via deptScoped()
+// in current-firestore.rules. Deliberate tolerances pinned here:
+//   - no claim, or an untagged document (or department 'All') ⇒ still visible
+//   - case-insensitive match between claim and document tag
+//   - `list` statements stay college-wide — current client queries are scoped
+//     to collegeId only and filter by department in the UI (departmentScope.ts),
+//     because a resource.data-dependent list rule would deny mixed-dept queries
+//     outright. Row-level list enforcement is future work.
+describe('department scoping for admin and hod claims', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'students', 'student-cse'), {
+          userId: 'auth-cse', name: 'CSE Student', collegeId: COLLEGE_A,
+          department: 'CSE', regNo: 'C001',
+        }),
+        setDoc(doc(db, 'students', 'student-cse-lower'), {
+          userId: 'auth-cse-lower', name: 'CSE Student (lowercase tag)',
+          collegeId: COLLEGE_A, department: 'cse', regNo: 'C002',
+        }),
+        setDoc(doc(db, 'students', 'student-eee'), {
+          userId: 'auth-eee', name: 'EEE Student', collegeId: COLLEGE_A,
+          department: 'EEE', regNo: 'E001',
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'students', 'E001'), {
+          userId: 'auth-eee', studentDocId: 'student-eee', name: 'EEE Student',
+          collegeId: COLLEGE_A, department: 'EEE',
+        }),
+        setDoc(doc(db, 'classSessions', 'session-cse'), {
+          collegeId: COLLEGE_A, department: 'CSE', facultyId: 'faculty-a',
+          branch: 'B.Com', batch: 'A', dayOfWeek: 1,
+          startTime: '09:00', endTime: '10:00',
+        }),
+        setDoc(doc(db, 'classSessions', 'session-eee'), {
+          collegeId: COLLEGE_A, department: 'EEE', facultyId: 'faculty-a',
+          branch: 'B.Com', batch: 'B', dayOfWeek: 2,
+          startTime: '10:00', endTime: '11:00',
+        }),
+        setDoc(doc(db, 'papers', 'paper-cse'), {
+          collegeId: COLLEGE_A, department: 'CSE', createdBy: 'faculty-a',
+          title: 'CSE Paper', status: 'draft', verificationStatus: 'draft',
+        }),
+        setDoc(doc(db, 'papers', 'paper-eee'), {
+          collegeId: COLLEGE_A, department: 'EEE', createdBy: 'faculty-a',
+          title: 'EEE Paper', status: 'draft', verificationStatus: 'draft',
+        }),
+        setDoc(doc(db, 'questionReviews', 'qr-cse'), {
+          collegeId: COLLEGE_A, department: 'CSE', status: 'pending',
+        }),
+        setDoc(doc(db, 'questionReviews', 'qr-eee'), {
+          collegeId: COLLEGE_A, department: 'EEE', status: 'pending',
+        }),
+      ])
+    })
+  })
+
+  function adminCseContext() {
+    return testEnv.authenticatedContext('admin-cse', {
+      role: 'admin', collegeId: COLLEGE_A, department: 'CSE',
+    })
+  }
+
+  function hodCseContext() {
+    return testEnv.authenticatedContext('hod-cse', {
+      role: 'hod', collegeId: COLLEGE_A, department: 'CSE',
+    })
+  }
+
+  it('narrows admin point reads to their department, case-insensitively and tolerantly', async () => {
+    const db = adminCseContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'students', 'student-cse')))
+    // Lowercase document tag matches the uppercase claim.
+    await assertSucceeds(getDoc(doc(db, 'students', 'student-cse-lower')))
+    // Another department is not readable…
+    await assertFails(getDoc(doc(db, 'students', 'student-eee')))
+    // …but an untagged legacy row stays visible (tolerant default until the
+    // backfill stamps it), including inside the college path.
+    await assertSucceeds(getDoc(doc(db, 'students', STUDENT_ID)))
+    await assertSucceeds(getDoc(doc(db, 'colleges', COLLEGE_A, 'students', 'A001')))
+    await assertFails(getDoc(doc(db, 'colleges', COLLEGE_A, 'students', 'E001')))
+    // Tenancy is unchanged: another college never becomes readable.
+    await assertFails(getDoc(doc(db, 'students', 'student-domain-c')))
+  })
+
+  it('keeps list queries college-wide so existing collegeId-scoped clients keep working', async () => {
+    const db = adminCseContext().firestore()
+    const snap = await assertSucceeds(
+      getDocs(query(collection(db, 'students'), where('collegeId', '==', COLLEGE_A)))
+    )
+    // Server does not drop other-department rows from the list; the client
+    // filters them (shared/utils/departmentScope). If list were dept-scoped
+    // without query predicates this whole request would be permission-denied.
+    assert.ok(snap.docs.some((d) => d.id === 'student-eee'))
+    assert.ok(snap.docs.some((d) => d.id === 'student-cse'))
+  })
+
+  it('applies the same narrowing to hod claims on sessions, papers and reviews', async () => {
+    const db = hodCseContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'classSessions', 'session-cse')))
+    await assertFails(getDoc(doc(db, 'classSessions', 'session-eee')))
+    await assertSucceeds(getDoc(doc(db, 'papers', 'paper-cse')))
+    await assertFails(getDoc(doc(db, 'papers', 'paper-eee')))
+    await assertSucceeds(getDoc(doc(db, 'questionReviews', 'qr-cse')))
+    await assertFails(getDoc(doc(db, 'questionReviews', 'qr-eee')))
+    // Lists of the same collections remain college-wide.
+    await assertSucceeds(getDocs(query(collection(db, 'papers'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(db, 'classSessions'), where('collegeId', '==', COLLEGE_A))))
+  })
+
+  it('does not narrow principals, faculty or superadmins, even with a department claim', async () => {
+    const principal = testEnv.authenticatedContext('principal-a', {
+      role: 'principal', collegeId: COLLEGE_A, department: 'CSE',
+    }).firestore()
+    await assertSucceeds(getDoc(doc(principal, 'students', 'student-eee')))
+    await assertSucceeds(getDoc(doc(principal, 'classSessions', 'session-eee')))
+
+    const faculty = testEnv.authenticatedContext('faculty-a', {
+      role: 'faculty', collegeId: COLLEGE_A, department: 'CSE',
+    }).firestore()
+    await assertSucceeds(getDoc(doc(faculty, 'students', 'student-eee')))
+    await assertSucceeds(getDoc(doc(faculty, 'papers', 'paper-eee')))
+
+    const superadmin = superadminContext().firestore()
+    await assertSucceeds(getDoc(doc(superadmin, 'students', 'student-eee')))
+  })
+
+  it('an admin without a department claim keeps the full college view', async () => {
+    const db = adminContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'students', 'student-eee')))
+    await assertSucceeds(getDoc(doc(db, 'classSessions', 'session-eee')))
+    await assertSucceeds(getDoc(doc(db, 'papers', 'paper-eee')))
+  })
+})

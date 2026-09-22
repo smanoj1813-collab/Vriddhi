@@ -1,6 +1,7 @@
 import { lazy, Suspense, Component, type ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { RoleRoute } from '@/routes/components/RoleRoute';
+import type { UserRole } from '@/modules/auth/context/AuthContext';
 import Layout from '@/shared/components/Layout';
 
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
@@ -95,6 +96,17 @@ function LazyPage({ children }: { children: ReactNode }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // Admin Routes — paths MUST match Layout.tsx navItems exactly
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Question paper / question bank / question approval are HOD territory now.
+// The principal's sidebar drops them; these wrappers make sure a bookmarked
+// or hand-typed URL bounces the principal out too, instead of silently
+// rendering a page the nav no longer advertises. (AI Question Generator is
+// deliberately NOT in this list — principal keeps it.)
+const QUESTION_WORKFLOW_ROLES: UserRole[] = ['admin', 'hod', 'superadmin'];
+const questionWorkflowOnly = (node: ReactNode) => (
+  <RoleRoute allowedRoles={QUESTION_WORKFLOW_ROLES}>{node}</RoleRoute>
+);
+
 export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
@@ -115,12 +127,12 @@ export const adminRoutes: RouteObject[] = [
       { path: 'test-reports', element: <LazyPage><AssessmentTestReportsPage /></LazyPage> },
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
-      { path: 'question-bank', element: <LazyPage><QuestionBank initialTab="college" /></LazyPage> },
+      { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
-      { path: 'universal-bank', element: <LazyPage><QuestionBank initialTab="universal" /></LazyPage> },
-      { path: 'review-queue', element: <LazyPage><QuestionBank initialTab="review" /></LazyPage> },
-      { path: 'paper-review', element: <LazyPage><PaperReview /></LazyPage> },
-      { path: 'paper-generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
+      { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },
+      { path: 'review-queue', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="review" /></LazyPage>) },
+      { path: 'paper-review', element: questionWorkflowOnly(<LazyPage><PaperReview /></LazyPage>) },
+      { path: 'paper-generator', element: questionWorkflowOnly(<LazyPage><PaperGeneratorAdmin /></LazyPage>) },
       { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },
       { path: 'curriculum', element: <LazyPage><AdminCurriculum /></LazyPage> },
       { path: 'curriculum-progress', element: <LazyPage><CurriculumProgress /></LazyPage> },
@@ -133,8 +145,8 @@ export const adminRoutes: RouteObject[] = [
       { path: 'ai-questions', element: <LazyPage><AIQuestionsPage /></LazyPage> },
       { path: 'onboarding', element: <LazyPage><CollegeOnboarding /></LazyPage> },
       { path: 'admissions', element: <LazyPage><AdmissionCenter /></LazyPage> },
-      { path: 'papers/builder', element: <LazyPage><PaperBuilder /></LazyPage> },
-      { path: 'papers/generator', element: <LazyPage><PaperGeneratorAdmin /></LazyPage> },
+      { path: 'papers/builder', element: questionWorkflowOnly(<LazyPage><PaperBuilder /></LazyPage>) },
+      { path: 'papers/generator', element: questionWorkflowOnly(<LazyPage><PaperGeneratorAdmin /></LazyPage>) },
       // Karnataka University Features - Competitive with Uniclare
       { path: 'exam-management', element: <LazyPage><ExamManagement /></LazyPage> },
       { path: 'uucms-integration', element: <LazyPage><UUCMSIntegration /></LazyPage> },

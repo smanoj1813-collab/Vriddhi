@@ -301,8 +301,21 @@ export const relinkFacultyToCollege = onCall(
           try {
             const user = await admin.auth().getUser(uid)
             const claims = user.customClaims || {}
-            if (claims.collegeId !== collegeId) {
-              await admin.auth().setCustomUserClaims(uid, { ...claims, collegeId })
+            // Keep the department claim in step with the link (HOD relinks
+            // carry the college's department) so rules scoping stays correct.
+            const nextDepartment =
+              typeof c.department === 'string' && c.department.trim()
+                ? c.department.trim()
+                : typeof claims.department === 'string'
+                  ? claims.department
+                  : null
+            const departmentChanged = nextDepartment !== null && claims.department !== nextDepartment
+            if (claims.collegeId !== collegeId || departmentChanged) {
+              await admin.auth().setCustomUserClaims(uid, {
+                ...claims,
+                collegeId,
+                ...(nextDepartment !== null ? { department: nextDepartment } : {}),
+              })
               await admin.auth().revokeRefreshTokens(uid)
               claimsUpdated++
             }
