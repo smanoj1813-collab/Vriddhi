@@ -94,6 +94,10 @@ import {
   completeClassSession,
   getCurriculumProgress,
 } from './classSchedule'
+// ─── Auto curriculum ↔ faculty mapping (preview + apply) ───
+import { autoMapCurriculum, applyAutoMapping } from './autoCurriculumMapping'
+// ─── Bulk schedule import: validate → clash-check → (optional) write ───
+import { bulkImportWeeklySchedules } from './scheduleImport'
 // ─── Assignment completion analytics (course/module/batch/division) ───
 import { getAssignmentAnalytics } from './assignmentAnalytics'
 // ─── Announcements: server-authoritative targeting + per-recipient reads ───
@@ -272,6 +276,9 @@ export {
   ensureClassSession,
   completeClassSession,
   getCurriculumProgress,
+  autoMapCurriculum,
+  applyAutoMapping,
+  bulkImportWeeklySchedules,
   getAssignmentAnalytics,
   sendAnnouncement,
   listCollegeAnnouncements,

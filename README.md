@@ -39,7 +39,8 @@ fees, timetables, and more — powered by Firebase and modern React.
   plus a one-click **curated platform seed** (759 B.Com / BA / B.Sc questions organised
   subject → topic → sub-topic) loaded from Superadmin → Question Bank.
 - **AI paper generator** producing question papers from the question bank via Gemini / OpenAI / DeepSeek.
-- **Curriculum management** — standardized curriculum upload, syllabus parsing, and mapping.
+- **Curriculum management** — standardized curriculum upload, syllabus parsing, and mapping, including **auto-mapping** that suggests a scored faculty for every unmapped course (subject/branch/experience/load scoring, preview → approve — see `docs/auto-curriculum-mapping.md`).
+- **Bulk timetable import** — CSV upload with server-side validation, de-duplication, clash detection (same engine as session generation) and curriculum-mapping cross-reference; preview a per-row report, then apply.
 - **Fees** management and a student fee portal.
 - **Timetable / scheduling** for classes and tests, with rescheduling for faculty.
 - **Analytics & "View 360"** student insights, plus a superadmin multi-college comparison.
