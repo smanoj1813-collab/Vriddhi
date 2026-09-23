@@ -8,22 +8,24 @@
 // The CSVs are generated + validated by `data/question-bank/generate_seed.py`
 // and use the exact column order the app's bulk-import parser expects:
 //
-//   text,subject,type,difficulty,unit,marks,options,correctAnswer,
+//   text,subject,type,difficulty,unit,subtopic,marks,options,correctAnswer,
 //   explanation,tags,batch,branch,isPYQ,examYear,examName
+//
+// `unit` is the topic tier and `subtopic` the third tier of the hierarchy in
+// `data/question-bank/structure.py`; they land in topicId and subTopicId.
 //
 // Everything in this module is pure (no Firestore) so it can be unit tested
 // with `npm run test:unit`.
 // ═══════════════════════════════════════════════════════════════════════
 
 // Vite's `?raw` suffix inlines the file as a string at build time.
+//
+// Only the combined CSV is bundled. `BCom_/BA_/BSc_QuestionBank.csv` are exact
+// subsets of it (same header, same row order, one branch each), so inlining all
+// four would ship ~450 KB of duplicated text in the superadmin chunk; the
+// per-programme datasets are filtered out of the combined one instead.
 // @ts-ignore — typed by vite/client, but keep the fallback for tsx/node tests
 import allCsv from '../../../../data/question-bank/All_QuestionBank.csv?raw';
-// @ts-ignore
-import bcomCsv from '../../../../data/question-bank/BCom_QuestionBank.csv?raw';
-// @ts-ignore
-import baCsv from '../../../../data/question-bank/BA_QuestionBank.csv?raw';
-// @ts-ignore
-import bscCsv from '../../../../data/question-bank/BSc_QuestionBank.csv?raw';
 
 import type {
   CreatedBy,
@@ -41,9 +43,9 @@ import type {
 // ───────────────────────────────────────────────────────────────────────
 
 export const SEED_CSV_HEADERS = [
-  'text', 'subject', 'type', 'difficulty', 'unit', 'marks', 'options',
-  'correctAnswer', 'explanation', 'tags', 'batch', 'branch', 'isPYQ',
-  'examYear', 'examName',
+  'text', 'subject', 'type', 'difficulty', 'unit', 'subtopic', 'marks',
+  'options', 'correctAnswer', 'explanation', 'tags', 'batch', 'branch',
+  'isPYQ', 'examYear', 'examName',
 ] as const;
 
 export type SeedFileKey = 'all' | 'bcom' | 'ba' | 'bsc';
@@ -65,34 +67,63 @@ export interface SeedFile {
  */
 export const SEED_BRANCHES = ['B.Com', 'BA', 'B.Sc'] as const;
 
+/** The combined dataset, exactly as `generate_seed.py` wrote it. */
+export const SEED_ALL_CSV = String(allCsv ?? '');
+
+/**
+ * Filters the combined CSV down to one programme.
+ *
+ * Rows are matched on the `branch` column *by header position* rather than by a
+ * fixed index, so a future column reorder cannot silently produce an empty
+ * dataset. The raw-comma split is safe here because the generator forbids commas
+ * inside any field — the same rule `parseSeedCsv` relies on.
+ */
+export function filterSeedCsvByBranch(csvText: string, branch: string): string {
+  const lines = String(csvText || '').replace(/\r\n?/g, '\n').trim().split('\n');
+  if (lines.length < 2) return String(csvText || '');
+
+  const header = lines[0].split(',');
+  const branchIdx = header.findIndex((h) => h.trim().replace(/^"|"$/g, '') === 'branch');
+  if (branchIdx < 0) return String(csvText || '');
+
+  const wanted = branch.trim().toLowerCase();
+  const kept = lines.slice(1).filter((line) => {
+    if (!line.trim()) return false;
+    const cell = line.split(',')[branchIdx] || '';
+    return cell.trim().replace(/^"|"$/g, '').toLowerCase() === wanted;
+  });
+
+  return [lines[0], ...kept].join('\n');
+}
+
 export const SEED_FILES: SeedFile[] = [
   {
     key: 'all',
     label: 'All programmes (B.Com + BA + B.Sc)',
     branch: null,
-    expectedRows: 240,
-    csv: String(allCsv ?? ''),
+    expectedRows: 759,
+    csv: SEED_ALL_CSV,
   },
   {
     key: 'bcom',
-    label: 'B.Com — 4 subjects × 4 topics × 5 questions',
+    label: 'B.Com — 4 subjects × 16 topics × 48 sub-topics',
     branch: 'B.Com',
-    expectedRows: 80,
-    csv: String(bcomCsv ?? ''),
+    expectedRows: 262,
+    csv: filterSeedCsvByBranch(SEED_ALL_CSV, 'B.Com'),
   },
   {
     key: 'ba',
-    label: 'BA — 4 subjects × 4 topics × 5 questions',
+    label: 'BA — 4 subjects × 16 topics × 48 sub-topics',
     branch: 'BA',
-    expectedRows: 80,
-    csv: String(baCsv ?? ''),
+    expectedRows: 238,
+    csv: filterSeedCsvByBranch(SEED_ALL_CSV, 'BA'),
   },
   {
     key: 'bsc',
-    label: 'B.Sc — 4 subjects × 4 topics × 5 questions',
+    label: 'B.Sc — 4 subjects × 16 topics × 48 sub-topics',
     branch: 'B.Sc',
-    expectedRows: 80,
-    csv: String(bscCsv ?? ''),
+    expectedRows: 259,
+    csv: filterSeedCsvByBranch(SEED_ALL_CSV, 'B.Sc'),
   },
 ];
 
@@ -113,6 +144,8 @@ export interface SeedRow {
   difficulty: string;
   /** CSV `unit` column — maps to the universal bank's topicId. */
   unit: string;
+  /** CSV `subtopic` column — maps to the universal bank's subTopicId. */
+  subtopic: string;
   marks: number;
   /** Raw `A|B|C|D` option string from the CSV. */
   optionsRaw: string;
@@ -170,6 +203,7 @@ export function parseSeedCsv(csvText: string): SeedRow[] {
       type: get('type') || 'mcq',
       difficulty: get('difficulty') || 'medium',
       unit: get('unit'),
+      subtopic: get('subtopic'),
       // The legacy bulk importer defaults a missing/blank marks cell to 10; the
       // seed is a 1–2 mark bank, so default to 1 and never invent 10-mark rows.
       marks: Number.parseInt(get('marks'), 10) || 1,
@@ -537,6 +571,9 @@ export function buildSeedPayload(
   const tags = buildSeedTags(row, source);
   const subjectId = row.subject.trim() || 'General';
   const topicId = row.unit.trim() || 'General';
+  // Third tier of the hierarchy. Blank when a CSV predates the `subtopic`
+  // column, which the universal schema treats as "no sub-topic".
+  const subTopicId = row.subtopic.trim();
   const marks = Number.isFinite(row.marks) && row.marks > 0 ? row.marks : 1;
   const language = detectSeedLanguage(row.text);
 
@@ -562,7 +599,7 @@ export function buildSeedPayload(
   const meta = {
     subjectId,
     topicId,
-    subTopicId: '',
+    subTopicId,
     difficulty: toUniversalDifficulty(row.difficulty),
     questionType,
     marks,
@@ -582,6 +619,7 @@ export function buildSeedPayload(
     // can preview/inspect the payload before it is written.)
     subjectName: subjectId,
     topicName: topicId,
+    subTopicName: subTopicId,
     bloomLevel: bloomLevelFor(questionType, toUniversalDifficulty(row.difficulty)),
     // Seed provenance — not part of the core schema but harmless extra fields
     // that make a seeded row traceable back to the CSV it came from.
@@ -601,7 +639,7 @@ export function buildSeedPayload(
     hint: '',
     subjectId,
     topicId,
-    subTopicId: '',
+    subTopicId,
     difficulty: toUniversalDifficulty(row.difficulty),
     questionType,
     marks,
@@ -616,6 +654,7 @@ export function buildSeedPayload(
     subject: subjectId,
     topic: topicId,
     unit: topicId,
+    subTopic: subTopicId,
     branch: row.branch || '',
     batch: row.batch || '',
     explanationText: row.explanation || '',
@@ -657,6 +696,12 @@ export interface ResolvedSeed {
   subjects: SeedFacetCount[];
   types: SeedFacetCount[];
   difficulties: SeedFacetCount[];
+  /** Distinct topic (`unit`) values in the resolved set. */
+  topicCount: number;
+  /** Distinct sub-topic values — 0 only for a CSV that predates the column. */
+  subTopicCount: number;
+  /** Rows with no sub-topic (legacy-shaped CSV), surfaced in the preview. */
+  rowsWithoutSubTopic: number;
   totalMarks: number;
 }
 
@@ -675,6 +720,9 @@ export function resolveSeedRows(
     .filter((v) => v.valid)
     .map((v) => v.row)
     .filter((row) => wanted.size === 0 || wanted.has(String(row.branch || '').trim().toLowerCase()));
+
+  const distinct = (keyOf: (row: SeedRow) => string): number =>
+    new Set(validRows.map(keyOf).filter(Boolean)).size;
 
   const countBy = (keyOf: (row: SeedRow) => string): SeedFacetCount[] => {
     const map = new Map<string, number>();
@@ -696,6 +744,9 @@ export function resolveSeedRows(
     subjects: countBy((row) => row.subject),
     types: countBy((row) => toUniversalQuestionType(row.type, row.options.length > 0)),
     difficulties: countBy((row) => toUniversalDifficulty(row.difficulty)),
+    topicCount: distinct((row) => `${row.subject}\u0000${row.unit}`),
+    subTopicCount: distinct((row) => `${row.subject}\u0000${row.unit}\u0000${row.subtopic}`),
+    rowsWithoutSubTopic: validRows.filter((row) => !row.subtopic.trim()).length,
     totalMarks: validRows.reduce((sum, row) => sum + (Number.isFinite(row.marks) ? row.marks : 0), 0),
   };
 }

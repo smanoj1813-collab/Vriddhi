@@ -75,6 +75,13 @@ const STEPS = ['Dataset', 'Review', 'Result'];
 /** Writes per question: meta + content + review. Shown before committing. */
 const DOCS_PER_QUESTION = 3;
 
+/**
+ * Firestore's Spark (free) plan allows 500 writes per day. The full bank is far
+ * past that, so the dialog tells a superadmin to stage it by programme instead
+ * of letting the run die partway through with a quota error.
+ */
+const SPARK_DAILY_WRITE_QUOTA = 500;
+
 interface SeedQuestionBankDialogProps {
   open: boolean;
   onClose: () => void;
@@ -385,6 +392,12 @@ const SeedQuestionBankDialog: React.FC<SeedQuestionBankDialogProps> = ({
                 <Chip label={`${resolved.rows.length} valid questions`} color="primary" />
                 <Chip label={`${resolved.totalMarks} total marks`} variant="outlined" />
                 <Chip label={`${resolved.subjects.length} subjects`} variant="outlined" />
+                <Chip label={`${resolved.topicCount} topics`} variant="outlined" />
+                <Chip
+                  label={`${resolved.subTopicCount} sub-topics`}
+                  variant="outlined"
+                  color="secondary"
+                />
                 {resolved.types.map((t) => (
                   <Chip key={t.name} label={`${t.name}: ${t.count}`} size="small" variant="outlined" />
                 ))}
@@ -405,6 +418,15 @@ const SeedQuestionBankDialog: React.FC<SeedQuestionBankDialogProps> = ({
                   />
                 )}
               </Stack>
+
+              {resolved.rowsWithoutSubTopic > 0 && (
+                <Alert severity="info" sx={{ mb: 1.5 }}>
+                  {resolved.rowsWithoutSubTopic} row(s) have no sub-topic and will be seeded with{' '}
+                  <code>subTopicId</code> empty, so the bank&apos;s sub-topic filter will not match
+                  them. Regenerate the CSVs with{' '}
+                  <code>python3 data/question-bank/generate_seed.py</code> to backfill it.
+                </Alert>
+              )}
 
               {resolved.invalid.length > 0 && (
                 <Alert severity="warning" sx={{ mb: 1.5 }}>
@@ -440,6 +462,16 @@ const SeedQuestionBankDialog: React.FC<SeedQuestionBankDialogProps> = ({
               <strong>~{writesEstimate} Firestore writes</strong> ({resolved.rows.length} questions ×{' '}
               {DOCS_PER_QUESTION} documents).
             </Alert>
+
+            {writesEstimate > SPARK_DAILY_WRITE_QUOTA && (
+              <Alert severity="warning" icon={<WarningIcon />}>
+                This dataset needs about <strong>{writesEstimate} writes</strong>, which is over the{' '}
+                {SPARK_DAILY_WRITE_QUOTA}-writes-per-day limit of Firestore&apos;s free (Spark) plan.
+                On a free-tier project seed <strong>one programme at a time</strong> using the chips
+                above, on separate days — or move the project to the Blaze plan first. Seeding is
+                idempotent, so a run that stops part-way can simply be resumed.
+              </Alert>
+            )}
           </Stack>
         )}
 
@@ -659,6 +691,7 @@ const SeedPreviewTable: React.FC<{ rows: SeedRow[] }> = ({ rows }) => {
             <TableCell>Question</TableCell>
             <TableCell>Subject</TableCell>
             <TableCell>Topic</TableCell>
+            <TableCell>Sub-topic</TableCell>
             <TableCell align="center">Type</TableCell>
             <TableCell align="center">Diff.</TableCell>
             <TableCell align="center">Marks</TableCell>
@@ -678,6 +711,11 @@ const SeedPreviewTable: React.FC<{ rows: SeedRow[] }> = ({ rows }) => {
               </TableCell>
               <TableCell>
                 <Typography variant="caption">{row.unit}</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="caption" color={row.subtopic ? 'text.primary' : 'text.disabled'}>
+                  {row.subtopic || '—'}
+                </Typography>
               </TableCell>
               <TableCell align="center">
                 <Chip
@@ -721,6 +759,7 @@ function payloadToRow(payload: {
     type: String(meta.questionType || 'mcq'),
     difficulty: String(meta.difficulty || 'medium'),
     unit: String(meta.topicId || ''),
+    subtopic: String(meta.subTopicId || content.subTopicId || ''),
     marks: Number(meta.marks ?? 1),
     optionsRaw: '',
     options: Array.isArray(content.options) ? content.options.map((o: any) => o.text) : [],

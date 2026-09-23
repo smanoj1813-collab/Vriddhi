@@ -11,8 +11,10 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import {
+  SEED_ALL_CSV,
   SEED_BRANCHES,
   SEED_FILES,
+  filterSeedCsvByBranch,
   buildSeedOptions,
   buildSeedPayload,
   buildSeedTags,
@@ -31,7 +33,7 @@ import {
 } from './questionBankSeed'
 
 const HEADERS =
-  'text,subject,type,difficulty,unit,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName'
+  'text,subject,type,difficulty,unit,subtopic,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName'
 
 const csv = (...lines: string[]) => [HEADERS, ...lines].join('\n')
 
@@ -46,7 +48,7 @@ function row(line: string): SeedRow {
 }
 
 const MCQ_LINE =
-  'The accounting equation is stated as:,Financial Accounting,mcq,easy,Journal and Accounting Equation,1,Assets = Liabilities + Capital|Assets + Capital = Liabilities|Capital = Assets + Liabilities|Assets = Capital - Liabilities,A,Assets equal liabilities plus capital.,financial,2026-27,B.Com,false,,'
+  'The accounting equation is stated as:,Financial Accounting,mcq,easy,Journal and Accounting Equation,Accounting Equation and Dual Aspect,1,Assets = Liabilities + Capital|Assets + Capital = Liabilities|Capital = Assets + Liabilities|Assets = Capital - Liabilities,A,Assets equal liabilities plus capital.,financial,2026-27,B.Com,false,,'
 
 describe('bundled seed datasets', () => {
   it('bundles all four CSVs with content', () => {
@@ -57,18 +59,18 @@ describe('bundled seed datasets', () => {
     }
   })
 
-  it('parses the combined dataset with zero invalid rows (240 = 3 × 80)', () => {
+  it('parses the combined dataset with zero invalid rows (759 = 262 + 238 + 259)', () => {
     const resolved = resolveSeedRows('all', [])
-    assert.equal(resolved.rows.length, 240)
+    assert.equal(resolved.rows.length, 759)
     assert.equal(resolved.invalid.length, 0, JSON.stringify(resolved.invalid.slice(0, 3)))
     assert.equal(resolved.filteredOut, 0)
     assert.deepEqual(resolved.branches, [
-      { name: 'B.Com', count: 80 },
-      { name: 'B.Sc', count: 80 },
-      { name: 'BA', count: 80 },
+      { name: 'B.Com', count: 262 },
+      { name: 'B.Sc', count: 259 },
+      { name: 'BA', count: 238 },
     ])
     assert.equal(resolved.subjects.length, 12)
-    assert.ok(resolved.totalMarks > 240, 'marks should accumulate across rows')
+    assert.ok(resolved.totalMarks > 759, 'marks should accumulate across rows')
   })
 
   it('every per-branch file matches the combined count for that branch', () => {
@@ -76,10 +78,11 @@ describe('bundled seed datasets', () => {
       const key = branch === 'B.Com' ? 'bcom' : branch === 'BA' ? 'ba' : 'bsc'
       const single = resolveSeedRows(key, [])
       const filtered = resolveSeedRows('all', [branch])
-      assert.equal(single.rows.length, 80, `${branch} file`)
+      const expected = branch === 'B.Com' ? 262 : branch === 'BA' ? 238 : 259
+      assert.equal(single.rows.length, expected, `${branch} file`)
       assert.equal(single.invalid.length, 0)
-      assert.equal(filtered.rows.length, 80, `${branch} filtered out of All`)
-      assert.equal(filtered.filteredOut, 160)
+      assert.equal(filtered.rows.length, expected, `${branch} filtered out of All`)
+      assert.equal(filtered.filteredOut, 759 - expected)
       assert.deepEqual(
         single.rows.map((r) => fingerprintSeedRow(r)).sort(),
         filtered.rows.map((r) => fingerprintSeedRow(r)).sort(),
@@ -126,6 +129,7 @@ describe('parseSeedCsv', () => {
     assert.equal(r.type, 'mcq')
     assert.equal(r.difficulty, 'easy')
     assert.equal(r.unit, 'Journal and Accounting Equation')
+    assert.equal(r.subtopic, 'Accounting Equation and Dual Aspect')
     assert.equal(r.marks, 1)
     assert.equal(r.options.length, 4)
     assert.equal(r.options[0], 'Assets = Liabilities + Capital')
@@ -139,8 +143,8 @@ describe('parseSeedCsv', () => {
 
   it('tolerates CRLF, blank lines, surrounding quotes and a reordered header', () => {
     const reordered = [
-      'subject,text,type,difficulty,unit,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName',
-      'Economics,"Demand falls when price rises (ceteris paribus)",true_false,medium,Demand and Supply,1,,True,Because of the law of demand.,economics,2026-27,BA,false,,',
+      'subject,text,type,difficulty,unit,subtopic,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName',
+      'Economics,"Demand falls when price rises (ceteris paribus)",true_false,medium,Demand and Supply,Law of Demand,1,,True,Because of the law of demand.,economics,2026-27,BA,false,,',
       '',
     ].join('\r\n')
     const rows = parseSeedCsv(reordered)
@@ -148,7 +152,22 @@ describe('parseSeedCsv', () => {
     assert.equal(rows[0].subject, 'Economics', 'columns are matched by header name not position')
     assert.equal(rows[0].text, 'Demand falls when price rises (ceteris paribus)')
     assert.equal(rows[0].correctAnswer, 'True')
+    assert.equal(rows[0].subtopic, 'Law of Demand', 'subtopic is matched by header name too')
     assert.equal(rows[0].isPYQ, false)
+  })
+
+  it('reads a blank or absent subtopic cell as an empty string', () => {
+    // A CSV generated before the column existed must still parse — the row is
+    // seeded with subTopicId '' rather than rejected.
+    const legacy = [
+      'text,subject,type,difficulty,unit,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName',
+      'Old question:,Economics,short_answer,medium,Demand,2,,Answer text,,econ,2026-27,BA,false,,',
+    ].join('\n')
+    const rows = parseSeedCsv(legacy)
+    assert.equal(rows.length, 1)
+    assert.equal(rows[0].subtopic, '')
+    assert.equal(rows[0].marks, 2, 'later columns must not shift when the header lacks subtopic')
+    assert.deepEqual(validateSeedRow(rows[0]), [])
   })
 
   it('does NOT support quoted commas — such a row shifts columns and fails validation', () => {
@@ -157,7 +176,7 @@ describe('parseSeedCsv', () => {
     // Pinning the behaviour keeps a future "let's add real CSV quoting" change
     // from silently diverging from the college-side importer.
     const rows = parseSeedCsv(
-      csv('"Demand falls when price rises, ceteris paribus",Economics,true_false,medium,Demand,1,,True,,econ,2026-27,BA,false,,')
+      csv('"Demand falls when price rises, ceteris paribus",Economics,true_false,medium,Demand,Law of Demand,1,,True,,econ,2026-27,BA,false,,')
     )
     assert.equal(rows.length, 1)
     // The embedded comma splits the quoted field in two, so every later column
@@ -179,7 +198,7 @@ describe('parseSeedCsv', () => {
   })
 
   it('defaults a missing marks cell to 1 — never to the 10 the legacy importer uses', () => {
-    const r = row('What is 2 plus 2?,Business Mathematics,mcq,easy,Arithmetic,,2|3|4|5,C,Basic addition.,maths,2026-27,B.Com,false,,')
+    const r = row('What is 2 plus 2?,Business Mathematics,mcq,easy,Arithmetic,Basic Arithmetic,,2|3|4|5,C,Basic addition.,maths,2026-27,B.Com,false,,')
     assert.equal(r.marks, 1)
   })
 
@@ -196,7 +215,7 @@ describe('validateSeedRow', () => {
 
   it('requires text, subject and topic', () => {
     const errors = validateSeedRow(
-      row(',Financial Accounting,mcq,easy,,1,A|B|C|D,A,,financial,2026-27,B.Com,false,,')
+      row(',Financial Accounting,mcq,easy,,,1,A|B|C|D,A,,financial,2026-27,B.Com,false,,')
     )
     assert.ok(errors.some((e) => /text is required/i.test(e)))
     assert.ok(errors.some((e) => /Topic/i.test(e)))
@@ -204,14 +223,14 @@ describe('validateSeedRow', () => {
 
   it('rejects an MCQ key that points past the last option', () => {
     const errors = validateSeedRow(
-      row('Pick one:,Economics,mcq,easy,Demand,1,Only two|Options here,D,,econ,2026-27,BA,false,,')
+      row('Pick one:,Economics,mcq,easy,Demand,Law of Demand,1,Only two|Options here,D,,econ,2026-27,BA,false,,')
     )
     assert.ok(errors.some((e) => /points past the last option/i.test(e)), errors.join('; '))
   })
 
   it('rejects a non-letter MCQ key', () => {
     const errors = validateSeedRow(
-      row('Pick one:,Economics,mcq,easy,Demand,1,A|B|C|D,Assets = Liabilities,,econ,2026-27,BA,false,,')
+      row('Pick one:,Economics,mcq,easy,Demand,Law of Demand,1,A|B|C|D,Assets = Liabilities,,econ,2026-27,BA,false,,')
     )
     assert.ok(errors.some((e) => /single letter A–D/i.test(e)), errors.join('; '))
   })
@@ -219,7 +238,7 @@ describe('validateSeedRow', () => {
   it('rejects a free-text true_false key (the shipped-data regression)', () => {
     const errors = validateSeedRow(
       row(
-        'Under the straight line method the depreciation charge each year:,Financial Accounting,true_false,easy,Depreciation,1,,Is the same on the original cost,Explanation.,financial,2026-27,B.Com,false,,'
+        'Under the straight line method the depreciation charge each year:,Financial Accounting,true_false,easy,Depreciation,Methods of Depreciation,1,,Is the same on the original cost,Explanation.,financial,2026-27,B.Com,false,,'
       )
     )
     assert.ok(errors.some((e) => /True" or "False/i.test(e)), errors.join('; '))
@@ -228,7 +247,7 @@ describe('validateSeedRow', () => {
   it('accepts True/False keys in any case', () => {
     for (const key of ['True', 'true', 'FALSE', 'False']) {
       const errors = validateSeedRow(
-        row(`Statement:,Economics,true_false,easy,Demand,1,,${key},,econ,2026-27,BA,false,,`)
+        row(`Statement:,Economics,true_false,easy,Demand,Law of Demand,1,,${key},,econ,2026-27,BA,false,,`)
       )
       assert.deepEqual(errors, [], `key "${key}" should validate`)
     }
@@ -236,16 +255,16 @@ describe('validateSeedRow', () => {
 
   it('requires an expected answer for short_answer and a number for numerical', () => {
     assert.ok(
-      validateSeedRow(row('Explain demand:,Economics,short_answer,medium,Demand,2,,,,econ,2026-27,BA,false,,')).length > 0
+      validateSeedRow(row('Explain demand:,Economics,short_answer,medium,Demand,Law of Demand,2,,,,econ,2026-27,BA,false,,')).length > 0
     )
     assert.ok(
       validateSeedRow(
-        row('Integral of 3x squared from 0 to 1:,Mathematics,numerical,medium,Integration,1,,one,Because calculus.,maths,2026-27,B.Sc,false,,')
+        row('Integral of 3x squared from 0 to 1:,Mathematics,numerical,medium,Integration,Definite Integrals and Fundamental Theorem,1,,one,Because calculus.,maths,2026-27,B.Sc,false,,')
       ).some((e) => /must be a number/i.test(e))
     )
     assert.deepEqual(
       validateSeedRow(
-        row('Integral of 3x squared from 0 to 1:,Mathematics,numerical,medium,Integration,1,,1,Because calculus.,maths,2026-27,B.Sc,false,,')
+        row('Integral of 3x squared from 0 to 1:,Mathematics,numerical,medium,Integration,Definite Integrals and Fundamental Theorem,1,,1,Because calculus.,maths,2026-27,B.Sc,false,,')
       ),
       []
     )
@@ -253,7 +272,7 @@ describe('validateSeedRow', () => {
 
   it('enforces examYear + examName on PYQ rows', () => {
     const errors = validateSeedRow(
-      row('Past paper question:,History,short_answer,medium,Freedom Struggle,2,,Answer text,,history,2026-27,BA,true,,')
+      row('Past paper question:,History,short_answer,medium,Freedom Struggle,Gandhian Mass Movements,2,,Answer text,,history,2026-27,BA,true,,')
     )
     assert.ok(errors.some((e) => /examYear/i.test(e)))
     assert.ok(errors.some((e) => /examName/i.test(e)))
@@ -264,7 +283,7 @@ describe('validateSeedRow', () => {
       parseSeedCsv(
         csv(
           MCQ_LINE,
-          ',Economics,mcq,easy,Demand,1,A|B|C|D,A,,econ,2026-27,BA,false,,'
+          ',Economics,mcq,easy,Demand,Law of Demand,1,A|B|C|D,A,,econ,2026-27,BA,false,,'
         )
       )
     )
@@ -438,7 +457,7 @@ describe('buildSeedOptions', () => {
   })
 
   it('builds an explicit True/False pair for true_false rows', () => {
-    const trueRow = row('A journal is a book of original entry:,Financial Accounting,true_false,easy,Journal,1,,True,,financial,2026-27,B.Com,false,,')
+    const trueRow = row('A journal is a book of original entry:,Financial Accounting,true_false,easy,Journal,Journalising Transactions,1,,True,,financial,2026-27,B.Com,false,,')
     const trueBuilt = buildSeedOptions(trueRow, 'true_false', 'fp1', true)
     assert.deepEqual(trueBuilt.options, [
       { id: 'A', text: 'True', isCorrect: true },
@@ -446,7 +465,7 @@ describe('buildSeedOptions', () => {
     ])
     assert.equal(trueBuilt.correctAnswer, 'A')
 
-    const falseRow = row('Ledger is the book of original entry:,Financial Accounting,true_false,easy,Journal,1,,False,,financial,2026-27,B.Com,false,,')
+    const falseRow = row('Ledger is the book of original entry:,Financial Accounting,true_false,easy,Journal,Ledger Posting and Balancing,1,,False,,financial,2026-27,B.Com,false,,')
     const falseBuilt = buildSeedOptions(falseRow, 'true_false', 'fp2', true)
     assert.equal(falseBuilt.correctAnswer, 'B')
     assert.equal(falseBuilt.options[1].isCorrect, true)
@@ -454,7 +473,7 @@ describe('buildSeedOptions', () => {
   })
 
   it('leaves free-text types without options and keeps the answer verbatim', () => {
-    const short = row('State any three methods of providing depreciation.,Financial Accounting,short_answer,medium,Depreciation,2,,Straight line method; diminishing balance method; and units of production method.,,financial,2026-27,B.Com,false,,')
+    const short = row('State any three methods of providing depreciation.,Financial Accounting,short_answer,medium,Depreciation,Methods of Depreciation,2,,Straight line method; diminishing balance method; and units of production method.,,financial,2026-27,B.Com,false,,')
     const built = buildSeedOptions(short, 'short_answer', 'fp', true)
     assert.deepEqual(built.options, [])
     assert.match(built.correctAnswer, /Straight line method/)
@@ -541,7 +560,7 @@ describe('buildSeedPayload', () => {
 
   it('marks PYQ rows with the pyq tag and keeps the exam metadata', () => {
     const r = row(
-      'Explain the causes of the 1857 revolt:,History,long_answer,hard,Freedom Struggle,5,,Military; political; and economic causes.,explanation omitted,history,2026-27,BA,true,2019,Karnataka University'
+      'Explain the causes of the 1857 revolt:,History,long_answer,hard,Freedom Struggle,Rise of the Indian National Congress,5,,Military; political; and economic causes.,explanation omitted,history,2026-27,BA,true,2019,Karnataka University'
     )
     assert.deepEqual(validateSeedRow(r), [])
     const payload = buildSeedPayload(r, { author: AUTHOR })
@@ -559,24 +578,147 @@ describe('buildSeedPayload', () => {
 describe('resolveSeedRows', () => {
   it('filters by programme and reports what the filter hid', () => {
     const bcomOnly = resolveSeedRows('all', ['B.Com'])
-    assert.equal(bcomOnly.rows.length, 80)
-    assert.equal(bcomOnly.filteredOut, 160)
+    assert.equal(bcomOnly.rows.length, 262)
+    assert.equal(bcomOnly.filteredOut, 497)
     assert.ok(bcomOnly.rows.every((r) => r.branch === 'B.Com'))
-    assert.deepEqual(bcomOnly.branches, [{ name: 'B.Com', count: 80 }])
+    assert.deepEqual(bcomOnly.branches, [{ name: 'B.Com', count: 262 }])
   })
 
   it('treats several selected programmes as a union', () => {
     const two = resolveSeedRows('all', ['BA', 'B.Sc'])
-    assert.equal(two.rows.length, 160)
-    assert.equal(two.filteredOut, 80)
+    assert.equal(two.rows.length, 497)
+    assert.equal(two.filteredOut, 262)
   })
 
   it('is case-insensitive about the branch filter', () => {
-    assert.equal(resolveSeedRows('all', ['b.com']).rows.length, 80)
+    assert.equal(resolveSeedRows('all', ['b.com']).rows.length, 262)
   })
 
   it('keeps invalid rows out of the seed set but reports them', () => {
     const resolved = resolveSeedRows('all', [])
-    assert.equal(resolved.rows.length + resolved.invalid.length, 240)
+    assert.equal(resolved.rows.length + resolved.invalid.length, 759)
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────
+// Sub-topic tier (Phase 2: subject → topic → sub-topic)
+// ───────────────────────────────────────────────────────────────────────
+
+describe('sub-topic tier', () => {
+  it('every shipped row carries a sub-topic', () => {
+    const resolved = resolveSeedRows('all', [])
+    assert.equal(resolved.rowsWithoutSubTopic, 0)
+    const blank = resolved.rows.filter((r) => !r.subtopic.trim())
+    assert.equal(blank.length, 0, `rows without a subtopic: ${blank.slice(0, 3).map((r) => r.text).join(' | ')}`)
+  })
+
+  it('covers the whole declared hierarchy: 16 topics and 48 sub-topics per branch', () => {
+    for (const key of ['bcom', 'ba', 'bsc'] as const) {
+      const resolved = resolveSeedRows(key, [])
+      assert.equal(resolved.topicCount, 16, `${key} topics`)
+      assert.equal(resolved.subTopicCount, 48, `${key} sub-topics`)
+      assert.equal(resolved.rowsWithoutSubTopic, 0, key)
+    }
+    const all = resolveSeedRows('all', [])
+    assert.equal(all.topicCount, 48, 'topicCount is distinct subject+topic pairs across branches')
+    assert.equal(all.subTopicCount, 144)
+  })
+
+  it('keeps every question inside a sub-topic of its own topic', () => {
+    // Guards against a sub-topic name drifting under the wrong topic, which
+    // would make the bank's drill-down show it in two places.
+    const resolved = resolveSeedRows('all', [])
+    const byBranch = new Map<string, Map<string, Set<string>>>()
+    for (const r of resolved.rows) {
+      const topics = byBranch.get(r.branch) ?? new Map<string, Set<string>>()
+      byBranch.set(r.branch, topics)
+      const subs = topics.get(r.unit) ?? new Set<string>()
+      topics.set(r.unit, subs)
+      subs.add(r.subtopic)
+    }
+    for (const [branch, topics] of byBranch) {
+      assert.equal(topics.size, 16, `${branch} should hold 16 topics`)
+      for (const [topic, subs] of topics) {
+        assert.equal(subs.size, 3, `${branch} / ${topic} should hold exactly 3 sub-topics`)
+      }
+    }
+  })
+
+  it('writes the sub-topic into both the meta and the content document', () => {
+    const r = row(MCQ_LINE)
+    const payload = buildSeedPayload(r, { author: AUTHOR })
+    assert.equal((payload.meta as any).subTopicId, 'Accounting Equation and Dual Aspect')
+    assert.equal((payload.content as any).subTopicId, 'Accounting Equation and Dual Aspect')
+    assert.equal((payload.content as any).subTopic, 'Accounting Equation and Dual Aspect')
+    assert.equal((payload.meta as any).subTopicName, 'Accounting Equation and Dual Aspect')
+    // The tier must not leak into the dedupe fingerprint: re-seeding a row after
+    // a sub-topic rename has to be recognised as the same question.
+    assert.equal(
+      fingerprintSeedRow({ ...r, subtopic: 'Something Else' }),
+      fingerprintSeedRow(r)
+    )
+  })
+
+  it('leaves subTopicId empty for a row that has none', () => {
+    const r = row(MCQ_LINE)
+    const payload = buildSeedPayload({ ...r, subtopic: '' }, { author: AUTHOR })
+    assert.equal((payload.meta as any).subTopicId, '')
+    assert.equal((payload.content as any).subTopicId, '')
+  })
+
+  it('spreads MCQ answer keys across A–D instead of stacking them on one letter', () => {
+    const resolved = resolveSeedRows('all', [])
+    const keys = new Map<string, number>()
+    for (const r of resolved.rows) {
+      if (r.type !== 'mcq') continue
+      keys.set(r.correctAnswer, (keys.get(r.correctAnswer) || 0) + 1)
+    }
+    for (const letter of ['A', 'B', 'C', 'D']) {
+      const n = keys.get(letter) || 0
+      assert.ok(n > 50, `answer key ${letter} only appears ${n} times — the bank would be guessable`)
+    }
+  })
+})
+
+describe('per-programme datasets are derived from the combined CSV', () => {
+  it('bundles only the combined CSV and filters the others out of it', () => {
+    assert.ok(SEED_ALL_CSV.length > 100000, 'the combined CSV should be the bundled one')
+    for (const file of SEED_FILES) {
+      if (file.key === 'all') {
+        assert.equal(file.csv, SEED_ALL_CSV)
+        continue
+      }
+      const branch = file.branch as string
+      assert.ok(branch, `${file.key} must name its branch`)
+      assert.equal(file.csv, filterSeedCsvByBranch(SEED_ALL_CSV, branch))
+      assert.equal(file.csv.split('\n')[0], SEED_ALL_CSV.split('\n')[0], 'same header')
+      const rows = parseSeedCsv(file.csv)
+      assert.equal(rows.length, file.expectedRows, `${file.key} row count`)
+      assert.ok(rows.every((r) => r.branch === branch), `${file.key} holds only its own branch`)
+    }
+    const derived = SEED_FILES.filter((f) => f.key !== 'all')
+      .reduce((sum, f) => sum + parseSeedCsv(f.csv).length, 0)
+    assert.equal(derived, parseSeedCsv(SEED_ALL_CSV).length, 'the three datasets must add up to the combined one')
+  })
+
+  it('matches the branch by header position, not by a hardcoded column index', () => {
+    const header = 'text,branch,subject,type,difficulty,unit,subtopic,marks,options,correctAnswer,explanation,tags,batch,isPYQ,examYear,examName'
+    const csvText = [
+      header,
+      'Q1:,B.Com,Financial Accounting,short_answer,easy,Topic A,Sub A,2,,Answer,,financial,2026-27,false,,',
+      'Q2:,BA,History,short_answer,easy,Topic B,Sub B,2,,Answer,,history,2026-27,false,,',
+    ].join('\n')
+    const bcom = filterSeedCsvByBranch(csvText, 'B.Com')
+    assert.equal(parseSeedCsv(bcom).length, 1)
+    assert.equal(parseSeedCsv(bcom)[0].text, 'Q1:')
+    assert.equal(parseSeedCsv(filterSeedCsvByBranch(csvText, 'ba'))[0].text, 'Q2:', 'case-insensitive')
+  })
+
+  it('falls back to the whole CSV when there is nothing to filter on', () => {
+    assert.equal(filterSeedCsvByBranch('', 'B.Com'), '')
+    assert.equal(filterSeedCsvByBranch('text,subject\nQ:,Economics', 'B.Com'), 'text,subject\nQ:,Economics',
+      'a header with no branch column must not produce an empty dataset')
+    assert.equal(filterSeedCsvByBranch(SEED_ALL_CSV, 'BBA'), SEED_ALL_CSV.split('\n')[0],
+      'an unknown programme filters down to just the header')
   })
 })

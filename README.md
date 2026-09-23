@@ -36,8 +36,8 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Assessments & tests** with a full test-taking flow (instructions → active test → results),
   MCQ rendering, and step-by-step solutions.
 - **Question bank** with manual, bulk-imported, and **AI-generated** aptitude questions,
-  plus a one-click **curated platform seed** (240 B.Com / BA / B.Sc questions) loaded from
-  Superadmin → Question Bank.
+  plus a one-click **curated platform seed** (759 B.Com / BA / B.Sc questions organised
+  subject → topic → sub-topic) loaded from Superadmin → Question Bank.
 - **AI paper generator** producing question papers from the question bank via Gemini / OpenAI / DeepSeek.
 - **Curriculum management** — standardized curriculum upload, syllabus parsing, and mapping.
 - **Fees** management and a student fee portal.
@@ -113,7 +113,8 @@ Vriddhi/
 │       ├── validation/         # Zod request schemas
 │       └── studentAuth.ts      # Student auth sync / bulk account creation
 ├── data/
-│   └── question-bank/          # Curated seed CSVs + the Python generator that validates them
+│   └── question-bank/          # Curated seed CSVs, the topic/sub-topic hierarchy and the
+│                               # Python generator that validates them
 ├── scripts/                    # Seed / migration / fixture scripts + the unit & render test harnesses
 ├── firebase.json               # Firebase Hosting, Firestore, RTDB, Functions config
 ├── current-firestore.rules     # Firestore security rules
@@ -375,7 +376,8 @@ and the renderer will use it first. Without a resolvable binary, PDF routes answ
     Admin → Question Bank, scheduled tests and the college paper generator).
   - `questionBank_meta/{id}` + `questionBank_content/{id}` (+ `questionReviews/{id}`) — the
     **universal pool** shared across colleges. `meta` is what lists/filters read
-    (`subjectId`, `topicId`, `previewText`, `searchKeywords`, `visibility`, `status`);
+    (`subjectId`, `topicId`, `subTopicId`, `previewText`, `searchKeywords`, `visibility`,
+    `status`);
     `content` holds the full payload (options, answer, explanation) and is read on
     preview/use only. A `public` row with `createdBy.collegeId == null` is
     platform-curated content visible to every college — that is what the

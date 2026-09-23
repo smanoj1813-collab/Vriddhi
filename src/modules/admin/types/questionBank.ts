@@ -36,6 +36,8 @@ export interface Question {
   chapter?: string;
   topic?: string;
   unit?: string;
+  /** Third tier of the hierarchy (subject → topic → sub-topic). */
+  subTopic?: string;
   marks: number;
   negativeMarks?: number;
   options?: QuestionOption[];

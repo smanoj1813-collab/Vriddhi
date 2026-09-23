@@ -1446,11 +1446,15 @@ const SEED_INVALID = seedAll.invalid.length;
 const SEED_WRITES = SEED_TOTAL * 3;          // meta + content + review per question
 const SEED_MCQ = seedAll.types.find((t) => t.name === 'mcq')?.count ?? 0;
 const SEED_SUBJECTS = seedAll.subjects.length;
+const SEED_SUBTOPICS = seedAll.subTopicCount;
 
 check('seeder: the shipped CSVs still parse clean', SEED_INVALID === 0,
   `${SEED_INVALID} invalid row(s): ${JSON.stringify(seedAll.invalid.slice(0, 2))}`);
-check('seeder: the bundled dataset is the full 3 × 80 bank', SEED_TOTAL === 240,
+check('seeder: the bundled dataset is the full three-programme bank', SEED_TOTAL === 759,
   `parsed ${SEED_TOTAL} rows`);
+check('seeder: every row carries a sub-topic (subject → topic → sub-topic)',
+  SEED_SUBTOPICS === 144 && seedAll.rowsWithoutSubTopic === 0,
+  `${SEED_SUBTOPICS} sub-topics, ${seedAll.rowsWithoutSubTopic} row(s) without one`);
 
 await section('question bank seeder', SEED_DIALOG, { open: true, onClose: () => {} }, async (t, view) => {
   check('seeder: mounts without throwing', true);
@@ -1460,6 +1464,14 @@ await section('question bank seeder', SEED_DIALOG, { open: true, onClose: () => 
     dialog.includes(`${SEED_TOTAL} valid questions`), dialog.slice(0, 400));
   check('seeder: breaks the dataset down by programme, subject and type',
     dialog.includes(`${SEED_SUBJECTS} subjects`) && dialog.includes(`mcq: ${SEED_MCQ}`), dialog.slice(0, 500));
+  check('seeder: reports how deep the hierarchy goes',
+    dialog.includes(`${SEED_SUBTOPICS} sub-topics`) && dialog.includes(`${seedAll.topicCount} topics`),
+    dialog.slice(0, 500));
+  check('seeder: previews the sub-topic column for the rows it will write',
+    /Accounting Equation and Dual Aspect/.test(dialog), dialog.slice(0, 900));
+  check('seeder: warns that the full bank exceeds the free-tier write quota',
+    /over the 500-writes-per-day limit/.test(dialog) && /one programme at a time/.test(dialog),
+    dialog.slice(-700));
   check('seeder: quotes the write cost before anything is committed',
     dialog.includes(`~${SEED_WRITES} Firestore writes`), dialog.slice(-400));
 
@@ -1581,6 +1593,14 @@ await section('seeder (written shape)', SEED_DIALOG, { open: true, onClose: () =
   check('seeder writes: explains the answer and keeps the marks',
     /Assets equal/.test(content.explanation ?? '') && content.marks === 1,
     JSON.stringify({ explanation: content.explanation, marks: content.marks }));
+  check('seeder writes: maps CSV subtopic → subTopicId on both documents',
+    meta.subTopicId === 'Accounting Equation and Dual Aspect'
+      && content.subTopicId === 'Accounting Equation and Dual Aspect',
+    JSON.stringify({ meta: meta.subTopicId, content: content.subTopicId }));
+  check('seeder writes: every written row has a sub-topic, not just the first',
+    metaWrites.every((w) => typeof w.data?.subTopicId === 'string' && w.data.subTopicId.trim().length > 0)
+      && contentWrites.every((w) => typeof w.data?.subTopicId === 'string' && w.data.subTopicId.trim().length > 0),
+    `meta blank: ${metaWrites.filter((w) => !w.data?.subTopicId).length}, content blank: ${contentWrites.filter((w) => !w.data?.subTopicId).length}`);
 });
 
 // A non-superadmin must be told the writes will be refused rather than being let
