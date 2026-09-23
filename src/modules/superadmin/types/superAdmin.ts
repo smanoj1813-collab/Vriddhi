@@ -313,6 +313,19 @@ export interface ImportResult {
 // ═══════════════════════════════════════════════════════════════════════
 export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'ADJUNCT' | 'VISITING';
 
+/**
+ * G5: guest/P&T faculty contract window + per-period pay. Only meaningful
+ * when employmentType is not FULL_TIME — the auto-mapper reads the date
+ * window (expired guests are not offered for new mappings) and the billing
+ * report multiplies scheduled periods by periodRate.
+ */
+export interface GuestContract {
+  startDate?: string;
+  endDate?: string | null;
+  periodRate?: number;
+  notes?: string;
+}
+
 export interface FacultyImportEntry {
   facultyId?: string;
   firstName: string;
@@ -334,6 +347,7 @@ export interface FacultyImportEntry {
   subjectsUG?: string[];
   subjectsPG?: string[];
   experienceYears?: number;
+  guestContract?: GuestContract;
   isHOD?: boolean;
 }
 
@@ -368,6 +382,8 @@ export interface CreateFacultyInput {
   experienceYears?: number;
   isHOD?: boolean;
   deliveryMode?: 'temp-password' | 'reset-email';
+  /** G5: guest contract window + per-period rate (non-full-time only). */
+  guestContract?: GuestContract;
 }
 
 export interface CreateFacultyResult {
@@ -404,6 +420,8 @@ export interface Faculty {
   joiningDate: string;
   qualification: string;
   specialization: string;
+  /** G5: guest contract window + per-period rate (non-full-time only). */
+  guestContract?: GuestContract;
   subjectsUG: string[];
   subjectsPG: string[];
   experienceYears: number;
@@ -443,6 +461,7 @@ export interface UpdateFacultyInput {
   subjectsUG?: string[];
   subjectsPG?: string[];
   experienceYears?: number;
+  guestContract?: GuestContract;
   isHOD?: boolean;
   status?: 'active' | 'inactive';
 }

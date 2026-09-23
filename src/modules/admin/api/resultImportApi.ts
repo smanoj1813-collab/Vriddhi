@@ -4,7 +4,34 @@
 import * as XLSX from '@e965/xlsx';
 import { collection, getDocs, query, where, limit, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
-import { calculateBCUAttendanceMarks, checkBCUPassCriteria, getGradeFromMarks, calculateSGPA } from '@/shared/utils/bcuCompliance';
+import { calculateSGPA } from '@/shared/utils/bcuCompliance';
+import {
+  checkSchemePassCriteria,
+  getSchemeGradeFromMarks,
+  DEFAULT_SCHEME_PACK,
+  type UniversitySchemePack,
+} from '@/shared/utils/schemeEngine';
+import { getCollegeSchemePack } from './schemePackApi';
+
+/**
+ * G1: the college's assigned university pack, resolved once and reused for
+ * the whole import session. parseResultFile awaits the first call; callers
+ * that go straight to groupResultsByStudent pass `preview.schemePack` so no
+ * import ever mixes two universities' rules.
+ */
+let packMemo: { collegeId: string; promise: Promise<UniversitySchemePack> } | null = null;
+async function resolveSchemePack(): Promise<UniversitySchemePack> {
+  let collegeId = '';
+  try { collegeId = getCollegeId(); } catch { /* fall through to default */ }
+  if (!collegeId) return DEFAULT_SCHEME_PACK;
+  if (!packMemo || packMemo.collegeId !== collegeId) {
+    packMemo = {
+      collegeId,
+      promise: getCollegeSchemePack(collegeId).then((r) => r.pack).catch(() => DEFAULT_SCHEME_PACK),
+    };
+  }
+  return packMemo.promise;
+}
 import type { ResultImportRow, ResultImportPreview, ParsedResult } from '../types/resultImport';
 
 function getCollegeId(): string {
@@ -24,6 +51,7 @@ function toString(value: unknown): string {
 
 // Parse Excel/CSV file for result import
 export async function parseResultFile(file: File): Promise<ResultImportPreview> {
+  const pack = await resolveSchemePack();
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetName = workbook.SheetNames[0];
@@ -113,16 +141,19 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
       rowErrors.push(`Total ${total} out of 0-${maxMarks} range`);
     }
 
-    // Check pass criteria if we have marks
+    // Check pass criteria against the college's active scheme pack
     if (external !== undefined && total !== undefined) {
-      const passCheck = checkBCUPassCriteria({
-        universityMarks: external,
-        internalMarks: internal || 0,
-        maxUniversityMarks: 80,
-        maxInternalMarks: 20,
-      });
+      const passCheck = checkSchemePassCriteria(
+        {
+          semesterEndMarks: external,
+          internalMarks: internal || 0,
+          maxSemesterEndMarks: pack.semesterEndExam.defaultMaxMarks,
+          maxInternalMarks: pack.internalAssessment.totalMarks,
+        },
+        pack,
+      );
       if (!passCheck.isPass) {
-        rowWarnings.push(`Fail per BCU: ${passCheck.remarks}`);
+        rowWarnings.push(`Fail per ${pack.code}: ${passCheck.remarks}`);
       }
     }
 
@@ -189,6 +220,7 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
 
   return {
     rows,
+    schemePack: pack,
     summary: {
       totalStudents: uniqueStudents,
       totalSubjects,
@@ -205,7 +237,10 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
 }
 
 // Group rows by student for SGPA calculation
-export function groupResultsByStudent(rows: ResultImportRow[]): ParsedResult[] {
+export function groupResultsByStudent(
+  rows: ResultImportRow[],
+  pack: UniversitySchemePack = DEFAULT_SCHEME_PACK,
+): ParsedResult[] {
   const byStudent = new Map<string, ResultImportRow[]>();
 
   rows.forEach(row => {
@@ -232,17 +267,24 @@ export function groupResultsByStudent(rows: ResultImportRow[]): ParsedResult[] {
       let isPass = r.result === 'P' || r.result === 'PASS';
 
       if (!grade || gradePoint === undefined) {
-        const gradeInfo = getGradeFromMarks(total, maxMarks);
+        const gradeInfo = getSchemeGradeFromMarks(total, maxMarks, pack);
         grade = grade || gradeInfo.grade;
         gradePoint = gradePoint ?? gradeInfo.gradePoint;
         isPass = gradeInfo.grade !== 'F';
       }
 
-      // Check BCU pass
-      const passCheck = checkBCUPassCriteria({
-        universityMarks: external,
-        internalMarks: internal,
-      });
+      // Check pass per the college's scheme pack (max marks scale per course:
+      // maxMarks * SEE-share / (SEE + IA-split share)).
+      const maxTotal = pack.semesterEndExam.defaultMaxMarks + pack.internalAssessment.totalMarks;
+      const passCheck = checkSchemePassCriteria(
+        {
+          semesterEndMarks: external,
+          internalMarks: internal,
+          maxSemesterEndMarks: Math.round((pack.semesterEndExam.defaultMaxMarks * maxMarks) / maxTotal),
+          maxInternalMarks: Math.round((pack.internalAssessment.totalMarks * maxMarks) / maxTotal),
+        },
+        pack,
+      );
       if (!passCheck.isPass) isPass = false;
 
       return {

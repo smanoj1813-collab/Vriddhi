@@ -230,6 +230,7 @@ function docToFaculty(docSnap: QueryDocumentSnapshot<DocumentData>): Faculty {
     branches,
     designation: data.designation || "Assistant Professor",
     employmentType: data.employmentType || "FULL_TIME",
+    ...(data.guestContract && typeof data.guestContract === 'object' ? { guestContract: data.guestContract as import('../types/superAdmin').GuestContract } : {}),
     joiningDate: data.joiningDate || "",
     qualification: data.qualification || "",
     specialization: data.specialization || "",
@@ -1142,6 +1143,7 @@ export async function importFaculty(payload: FacultyImportPayload): Promise<Impo
     subjectsUG: f.subjectsUG,
     subjectsPG: f.subjectsPG,
     experienceYears: f.experienceYears,
+    guestContract: f.guestContract || undefined,
     isHOD: f.isHOD,
   }));
 
@@ -1324,6 +1326,9 @@ export async function createFaculty(input: CreateFacultyInput): Promise<CreateFa
       specialization: input.specialization?.trim(),
       experienceYears: input.experienceYears || 0,
       isHOD: !!input.isHOD,
+      ...(input.employmentType && input.employmentType !== 'FULL_TIME' && input.guestContract
+        ? { guestContract: input.guestContract }
+        : {}),
     }],
   });
 

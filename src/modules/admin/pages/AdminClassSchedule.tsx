@@ -1,6 +1,9 @@
 // src/pages/AdminClassSchedule.tsx
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import AutoScheduleDialog from './AutoScheduleDialog'
+
 import {
   Box,
   Typography,
@@ -43,6 +46,7 @@ import {
   UploadFile as UploadIcon,
   Download as DownloadIcon,
   CalendarToday as CalendarIcon,
+  AutoFixHigh as AutoIcon,
   EventBusy as EventBusyIcon,
   AutoAwesomeMotion as MaterialiseIcon,
   Assignment as AssignmentIcon,
@@ -60,6 +64,11 @@ import {
 } from '../api/classSessionApi'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
 import type { SubjectInfo } from '../api/scheduleApi'
+import {
+  previewScheduleImport,
+  applyScheduleImport,
+  type ScheduleImportResult,
+} from '../api/scheduleImportApi'
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 const CLASS_TYPES: ClassType[] = ['lecture', 'lab', 'tutorial', 'seminar', 'workshop']
@@ -135,10 +144,8 @@ const AdminClassSchedule: React.FC = () => {
     createSchedule,
     updateSchedule,
     deleteSchedule,
-    bulkCreate,
     isCreating,
     isUpdating,
-    isBulkCreating,
   } = useAdminSchedule(collegeId)
 
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('monday')
@@ -162,7 +169,14 @@ const AdminClassSchedule: React.FC = () => {
     severity: 'success',
   })
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
+  const [autoScheduleOpen, setAutoScheduleOpen] = useState(false)
+  const queryClient = useQueryClient()
   const [csvText, setCsvText] = useState('')
+  // Server-side import review: preview (dryRun) → apply. Nothing is written
+  // until the admin sees the per-row report and confirms.
+  const [importPreview, setImportPreview] = useState<ScheduleImportResult | null>(null)
+  const [previewing, setPreviewing] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   // ─── Slice 2: materialise weekly slots into real class sessions ────────
   // The grid above is the *plan*; classSessions are the *actual*. Until Slice 2
@@ -476,59 +490,57 @@ const AdminClassSchedule: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  const handleParseCSV = () => {
-    try {
-      const lines = csvText.trim().split('\n')
-      if (lines.length < 2) {
-        setSnackbar({ open: true, message: 'CSV is empty or invalid', severity: 'error' })
-        return
-      }
-
-      const headers = lines[0].split(',').map(h => h.trim())
-      const items: WeeklyScheduleFormData[] = []
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim())
-        if (values.length < 12) continue
-
-        const row: Record<string, string> = {}
-        headers.forEach((h, idx) => { row[h] = values[idx] || '' })
-
-        items.push({
-          subject: row.subject,
-          subjectCode: row.subjectCode,
-          facultyId: row.facultyId,
-          branch: row.branch,
-          batch: row.batch,
-          semester: Number(row.semester) || 1,
-          division: row.division,
-          section: row.section,
-          room: row.room,
-          dayOfWeek: (row.dayOfWeek as DayOfWeek) || 'monday',
-          startTime: row.startTime || '09:00',
-          endTime: row.endTime || '10:00',
-          type: (row.type as ClassType) || 'lecture',
-        })
-      }
-
-      if (items.length === 0) {
-        setSnackbar({ open: true, message: 'No valid rows found in CSV', severity: 'error' })
-        return
-      }
-
-      bulkCreate(items, {
-        onSuccess: () => {
-          setSnackbar({ open: true, message: `${items.length} schedules created successfully`, severity: 'success' })
-          setBulkDialogOpen(false)
-          setCsvText('')
-        },
-        onError: () => {
-          setSnackbar({ open: true, message: 'Failed to bulk create schedules', severity: 'error' })
-        },
-      })
-    } catch (err) {
-      setSnackbar({ open: true, message: 'Failed to parse CSV', severity: 'error' })
+  // ── Bulk import, step 1: server-side preview (writes nothing) ──────────────
+  // The old client-side split(',') + writeBatch had no validation or clash
+  // check. Now the callable parses, normalises, de-duplicates, runs the same
+  // clash maths as generateClassSessions, and cross-references the curriculum
+  // mappings — then we only apply what the admin approves.
+  const handlePreviewImport = async () => {
+    if (!csvText.trim()) {
+      setImportError('Paste the CSV content first')
+      return
     }
+    setPreviewing(true)
+    setImportError(null)
+    setImportPreview(null)
+    try {
+      const res = await previewScheduleImport({ csv: csvText })
+      setImportPreview(res)
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to preview the import')
+    } finally {
+      setPreviewing(false)
+    }
+  }
+
+  // ── Bulk import, step 2: apply the valid rows ─────────────────────────────
+  const handleApplyImport = async () => {
+    if (!importPreview || importPreview.plan.totals.valid === 0) return
+    setPreviewing(true)
+    setImportError(null)
+    try {
+      const res = await applyScheduleImport({ csv: csvText })
+      const skipped = res.plan.totals.total - res.plan.totals.valid
+      setSnackbar({
+        open: true,
+        message: `${res.created ?? res.plan.totals.valid} schedule(s) imported${skipped > 0 ? `, ${skipped} skipped` : ''}`,
+        severity: 'success',
+      })
+      setBulkDialogOpen(false)
+      setCsvText('')
+      setImportPreview(null)
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to apply the import')
+    } finally {
+      setPreviewing(false)
+    }
+  }
+
+  const closeBulkDialog = () => {
+    setBulkDialogOpen(false)
+    setCsvText('')
+    setImportPreview(null)
+    setImportError(null)
   }
 
   if (!collegeId) {
@@ -573,6 +585,13 @@ const AdminClassSchedule: React.FC = () => {
           </Button>
           <Button
             variant="outlined"
+            startIcon={<AutoIcon />}
+            onClick={() => setAutoScheduleOpen(true)}
+          >
+            Auto Generate
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<UploadIcon />}
             onClick={() => setBulkDialogOpen(true)}
           >
@@ -588,6 +607,13 @@ const AdminClassSchedule: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      <AutoScheduleDialog
+        collegeId={collegeId}
+        open={autoScheduleOpen}
+        onClose={() => setAutoScheduleOpen(false)}
+        onApplied={() => queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] })}
+      />
 
       {/* Empty-data banners */}
       {facultyList.length === 0 && (
@@ -1121,13 +1147,14 @@ const AdminClassSchedule: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Bulk Upload Dialog */}
-      <Dialog open={bulkDialogOpen} onClose={() => setBulkDialogOpen(false)} maxWidth="md" fullWidth>
+      {/* Bulk Upload Dialog — preview → approve (server-side validation & clashes) */}
+      <Dialog open={bulkDialogOpen} onClose={closeBulkDialog} maxWidth="lg" fullWidth>
         <DialogTitle>Bulk Upload Schedules</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Alert severity="info">
-              Upload a CSV file with the following columns: subject, subjectCode, facultyId, facultyName, branch, batch, semester, division, section, room, dayOfWeek, startTime, endTime, type
+              Columns: subject, subjectCode, facultyId, facultyName, branch, batch, semester, division, section, room, dayOfWeek, startTime, endTime, type.
+              Every row is validated, de-duplicated and clash-checked before anything is written — review the report, then apply.
             </Alert>
             <Button
               variant="outlined"
@@ -1139,25 +1166,97 @@ const AdminClassSchedule: React.FC = () => {
             </Button>
             <TextField
               multiline
-              rows={10}
+              rows={8}
               fullWidth
               label="Paste CSV content here"
               value={csvText}
-              onChange={e => setCsvText(e.target.value)}
+              onChange={e => { setCsvText(e.target.value); setImportPreview(null); setImportError(null) }}
               placeholder={CSV_TEMPLATE}
               sx={{ fontFamily: 'monospace' }}
             />
+
+            {importError && <Alert severity="error">{importError}</Alert>}
+
+            {importPreview && (
+              <Box>
+                <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap', gap: 1 }}>
+                  <Chip label={`${importPreview.plan.totals.valid} valid`} color="success" size="small" />
+                  {importPreview.plan.totals.clash > 0 && (
+                    <Chip label={`${importPreview.plan.totals.clash} clash`} color="error" size="small" />
+                  )}
+                  {importPreview.plan.totals.duplicate > 0 && (
+                    <Chip label={`${importPreview.plan.totals.duplicate} duplicate`} color="warning" size="small" />
+                  )}
+                  {importPreview.plan.totals.invalid > 0 && (
+                    <Chip label={`${importPreview.plan.totals.invalid} invalid`} color="error" variant="outlined" size="small" />
+                  )}
+                </Stack>
+                <Box sx={{ maxHeight: 320, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: 'action.hover' }}>
+                        <TableCell sx={{ fontWeight: 600, width: 56 }}>Line</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>When</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Details</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {importPreview.plan.rows.map(row => {
+                        const color = row.status === 'valid' ? 'success' : row.status === 'duplicate' ? 'warning' : 'error'
+                        return (
+                          <TableRow key={row.line} hover sx={{ opacity: row.status === 'valid' && row.warnings.length === 0 ? 0.75 : 1 }}>
+                            <TableCell>{row.line}</TableCell>
+                            <TableCell>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>{row.subject}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">{row.dayOfWeek} {row.startTime}–{row.endTime}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={row.status} size="small" color={color} variant={row.status === 'valid' ? 'outlined' : 'filled'} />
+                            </TableCell>
+                            <TableCell sx={{ maxWidth: 380 }}>
+                              <Typography variant="caption" color={row.status === 'valid' ? 'text.secondary' : 'error.main'}>
+                                {row.reasons.join('; ')}
+                              </Typography>
+                              {row.warnings.length > 0 && (
+                                <Typography variant="caption" color="warning.main" sx={{ display: 'block' }}>
+                                  ⚠ {row.warnings.join('; ')}
+                                </Typography>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </Box>
+              </Box>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleParseCSV}
-            disabled={isBulkCreating || !csvText.trim()}
-          >
-            {isBulkCreating ? 'Uploading...' : 'Upload'}
-          </Button>
+          <Button onClick={closeBulkDialog}>Close</Button>
+          {!importPreview && (
+            <Button
+              variant="contained"
+              onClick={handlePreviewImport}
+              disabled={previewing || !csvText.trim()}
+            >
+              {previewing ? 'Checking…' : 'Check import'}
+            </Button>
+          )}
+          {importPreview && (
+            <Button
+              variant="contained"
+              onClick={handleApplyImport}
+              disabled={previewing || importPreview.plan.totals.valid === 0}
+            >
+              {previewing ? 'Importing…' : `Apply ${importPreview.plan.totals.valid} valid row${importPreview.plan.totals.valid === 1 ? '' : 's'}`}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

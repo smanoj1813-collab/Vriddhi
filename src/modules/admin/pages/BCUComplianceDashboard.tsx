@@ -2,12 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
 import {
-  calculateBCUAttendanceMarks,
-  calculateBCUIAMarks,
-  checkBCUPassCriteria,
-  isEligibleForExam,
-  getGradeFromMarks,
-} from '@/shared/utils/bcuCompliance';
+  calculateSchemeInternalMarks,
+  checkSchemePassCriteria,
+  DEFAULT_SCHEME_PACK,
+} from '@/shared/utils/schemeEngine';
+import { getCollegeSchemePack } from '../api/schemePackApi';
+import type { UniversitySchemePack } from '@/shared/types/schemePack';
 import {
   AlertTriangle, CheckCircle, BookOpen, Award, TrendingUp,
   Users, Calculator, FileText, GraduationCap, Clock
@@ -20,8 +20,24 @@ function getCollegeId(): string {
 }
 
 export default function BCUComplianceDashboard() {
+  // G1: everything on this page evaluates against the college's assigned
+  // university scheme pack (BCU default when unassigned).
+  const { data: packInfo } = useQuery({
+    queryKey: ['bcuCompliancePack'],
+    queryFn: () => getCollegeSchemePack(),
+  });
+  const pack: UniversitySchemePack = packInfo?.pack ?? DEFAULT_SCHEME_PACK;
+  const minAtt = pack.attendance.minimumPercentage;
+  const atRiskUpper = pack.attendance.marksSlabs[0]?.max ?? 80;
+  const topSlab = pack.attendance.marksSlabs[pack.attendance.marksSlabs.length - 1];
+  const seeMax = pack.semesterEndExam.defaultMaxMarks;
+  const iaMax = pack.internalAssessment.totalMarks;
+  const maxTotal = seeMax + iaMax;
+
   const { data: stats } = useQuery({
     queryKey: ['bcuComplianceStats'],
+    // pack identity in the closure key so switching packs recomputes bands
+
     queryFn: async () => {
       const collegeId = getCollegeId();
       
@@ -61,10 +77,10 @@ export default function BCUComplianceDashboard() {
 
       attendanceByStudent.forEach(({ present, total }) => {
         const perc = total > 0 ? (present / total) * 100 : 100;
-        if (perc >= 91) eligibilityStats.excellent++;
-        if (perc >= 75) eligibilityStats.eligible++;
+        if (perc >= (topSlab?.min ?? 91)) eligibilityStats.excellent++;
+        if (perc >= minAtt) eligibilityStats.eligible++;
         else eligibilityStats.notEligible++;
-        if (perc >= 75 && perc < 80) eligibilityStats.atRisk++;
+        if (perc >= minAtt && perc <= atRiskUpper) eligibilityStats.atRisk++;
       });
 
       // If no attendance data, assume all eligible
@@ -81,17 +97,24 @@ export default function BCUComplianceDashboard() {
     },
   });
 
-  const sampleIAMarks = calculateBCUIAMarks({
-    test1Marks: 16,
-    test2Marks: 18,
-    assignmentMarks: 4,
-    attendancePercentage: 85,
-  });
+  // Sample: solid-marks student, scaled to whatever the pack's maxima are.
+  const sampleIAMarks = calculateSchemeInternalMarks(
+    {
+      testMarks: [0.8, 0.9, 0.8].slice(0, pack.internalAssessment.test.count)
+        .map((f) => +(pack.internalAssessment.test.maxMarksEach * f).toFixed(1)),
+      assignmentMarks: +(pack.internalAssessment.assignmentMaxMarks * 0.8).toFixed(1),
+      attendancePercentage: 85,
+    },
+    pack,
+  );
 
-  const samplePass = checkBCUPassCriteria({
-    universityMarks: 45,
-    internalMarks: 15,
-  });
+  const samplePass = checkSchemePassCriteria(
+    {
+      semesterEndMarks: +(seeMax * 0.5625).toFixed(1),
+      internalMarks: +(iaMax * 0.75).toFixed(1),
+    },
+    pack,
+  );
 
   return (
     <div className="space-y-6">
@@ -99,10 +122,11 @@ export default function BCUComplianceDashboard() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <GraduationCap className="text-teal-600" />
-          BCU / SEP 2024 Compliance
+          {pack.name} Compliance
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Bengaluru City University - State Education Policy 2024 - Attendance, IA Marks, Pass Criteria
+          {pack.universityName} — {pack.schemeName} · {seeMax}+{iaMax} marks split · Attendance, IA Marks, Pass Criteria
+          {packInfo?.schemePackId ? '' : ' (default pack — assign one under Scheme Packs)'}
         </p>
       </div>
 
@@ -116,7 +140,7 @@ export default function BCUComplianceDashboard() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Eligible</span>
           </div>
           <p className="text-2xl font-black text-slate-900 dark:text-white">{stats?.eligible || 0}</p>
-          <p className="text-xs text-slate-500 mt-1">≥75% attendance - Can write exam</p>
+          <p className="text-xs text-slate-500 mt-1">≥{minAtt}% attendance - Can write exam</p>
           <div className="mt-3 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stats?.totalStudents ? (stats.eligible / stats.totalStudents) * 100 : 0}%` }} />
           </div>
@@ -130,7 +154,7 @@ export default function BCUComplianceDashboard() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Not Eligible</span>
           </div>
           <p className="text-2xl font-black text-rose-600">{stats?.notEligible || 0}</p>
-          <p className="text-xs text-slate-500 mt-1">&lt;75% - Blocked per BCU Ordinance</p>
+          <p className="text-xs text-slate-500 mt-1">&lt;{minAtt}% - {pack.attendance.blocksExamEligibility ? `Blocked per ${pack.code}` : 'pack does not block'}</p>
           <div className="mt-3 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div className="h-full bg-rose-500 rounded-full" style={{ width: `${stats?.totalStudents ? (stats.notEligible / stats.totalStudents) * 100 : 0}%` }} />
           </div>
@@ -144,7 +168,7 @@ export default function BCUComplianceDashboard() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">At Risk</span>
           </div>
           <p className="text-2xl font-black text-amber-600">{stats?.atRisk || 0}</p>
-          <p className="text-xs text-slate-500 mt-1">75-80% - Only 2 marks in IA</p>
+          <p className="text-xs text-slate-500 mt-1">{minAtt}-{atRiskUpper}% - Lowest IA slab</p>
         </div>
 
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
@@ -155,7 +179,7 @@ export default function BCUComplianceDashboard() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Excellent</span>
           </div>
           <p className="text-2xl font-black text-teal-600">{stats?.excellent || 0}</p>
-          <p className="text-xs text-slate-500 mt-1">91%+ - 5 marks in IA</p>
+          <p className="text-xs text-slate-500 mt-1">{topSlab?.min ?? 91}%+ - {topSlab?.marks ?? 5} marks in IA</p>
         </div>
       </div>
 
@@ -165,15 +189,18 @@ export default function BCUComplianceDashboard() {
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <h3 className="font-bold flex items-center gap-2 mb-4">
             <Calculator size={18} className="text-teal-600" />
-            BCU Attendance Marks (SEP 2024)
+            Attendance Marks ({pack.code})
           </h3>
           <div className="space-y-2">
             {[
-              { range: '91% - 100%', marks: 5, color: 'emerald', label: 'Excellent - 5 marks', eligible: true },
-              { range: '86% - 90%', marks: 4, color: 'teal', label: 'Good - 4 marks', eligible: true },
-              { range: '81% - 85%', marks: 3, color: 'blue', label: 'Satisfactory - 3 marks', eligible: true },
-              { range: '76% - 80%', marks: 2, color: 'amber', label: 'Minimum - 2 marks', eligible: true },
-              { range: 'Below 75%', marks: 0, color: 'rose', label: 'Not Eligible - Blocked', eligible: false },
+              ...([...pack.attendance.marksSlabs].reverse().map((s, i) => ({
+                range: `${s.min}% - ${s.max}%`,
+                marks: s.marks,
+                color: ['emerald', 'teal', 'blue', 'amber'][Math.min(i, 3)],
+                label: `${s.label} - ${s.marks} marks`,
+                eligible: true,
+              }))),
+              { range: `Below ${minAtt}%`, marks: 0, color: 'rose', label: pack.attendance.blocksExamEligibility ? 'Not Eligible - Blocked' : 'Below floor - EB discretion', eligible: false },
             ].map(row => (
               <div key={row.range} className={`flex items-center justify-between p-3 rounded-xl border ${
                 row.eligible ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800'
@@ -195,8 +222,8 @@ export default function BCUComplianceDashboard() {
           </div>
           <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              <strong>Source:</strong> BCU BBA Syllabus SEP 2024 - Scheme of Examination. 
-              "A student shall be considered to have satisfied attendance if he/she has attended not less than 75% in aggregate"
+              <strong>Source:</strong> {pack.sourceNote || pack.name}. 
+              {`A student shall be considered to have satisfied attendance if he/she has attended not less than ${minAtt}% in aggregate`}
             </p>
           </div>
         </div>
@@ -205,17 +232,17 @@ export default function BCUComplianceDashboard() {
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <h3 className="font-bold flex items-center gap-2 mb-4">
             <BookOpen size={18} className="text-teal-600" />
-            Internal Assessment (20 Marks) - BCU
+            Internal Assessment ({iaMax} Marks) — {pack.code}
           </h3>
           <div className="space-y-4">
             <div className="p-4 bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 rounded-xl">
               <h4 className="font-bold text-sm text-teal-900 dark:text-teal-100">Sample Calculation</h4>
               <div className="mt-2 space-y-1 text-xs text-teal-800 dark:text-teal-200">
-                <p>Test 1: 16/20, Test 2: 18/20 → Best 2 Avg: 17/20 → <strong>8.5/10</strong></p>
-                <p>Attendance: 85% → <strong>3/5</strong> marks (81-85% slab)</p>
-                <p>Assignment: 4/5 → <strong>4/5</strong></p>
+                <p>Tests: <strong>{sampleIAMarks.testAverage}/{pack.internalAssessment.test.weightInTotal}</strong> (best {pack.internalAssessment.test.bestOf} of {pack.internalAssessment.test.count})</p>
+                <p>Attendance: 85% → <strong>{sampleIAMarks.attendanceMarks}/{pack.internalAssessment.attendanceMaxMarks}</strong> marks (per {pack.code} slabs)</p>
+                <p>Assignment: → <strong>{sampleIAMarks.assignmentMarks}/{pack.internalAssessment.assignmentMaxMarks}</strong></p>
                 <p className="font-black text-sm pt-1 border-t border-teal-200 dark:border-teal-800 mt-2">
-                  Total IA: {sampleIAMarks.totalIA}/20 - {sampleIAMarks.breakdown}
+                  Total IA: {sampleIAMarks.totalIA}/{iaMax} — {sampleIAMarks.breakdown}
                 </p>
               </div>
             </div>
@@ -223,17 +250,17 @@ export default function BCUComplianceDashboard() {
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
                 <p className="text-lg font-black text-teal-600">{sampleIAMarks.testAverage}</p>
-                <p className="text-[10px] font-bold uppercase text-slate-500">Tests (10)</p>
-                <p className="text-xs text-slate-500 mt-1">Best 2 of 3</p>
+                <p className="text-[10px] font-bold uppercase text-slate-500">Tests ({pack.internalAssessment.test.weightInTotal})</p>
+                <p className="text-xs text-slate-500 mt-1">Best {pack.internalAssessment.test.bestOf} of {pack.internalAssessment.test.count}</p>
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
                 <p className="text-lg font-black text-blue-600">{sampleIAMarks.attendanceMarks}</p>
-                <p className="text-[10px] font-bold uppercase text-slate-500">Attendance (5)</p>
+                <p className="text-[10px] font-bold uppercase text-slate-500">Attendance ({pack.internalAssessment.attendanceMaxMarks})</p>
                 <p className="text-xs text-slate-500 mt-1">Per slab</p>
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
                 <p className="text-lg font-black text-amber-600">{sampleIAMarks.assignmentMarks}</p>
-                <p className="text-[10px] font-bold uppercase text-slate-500">Assignment (5)</p>
+                <p className="text-[10px] font-bold uppercase text-slate-500">Assignment ({pack.internalAssessment.assignmentMaxMarks})</p>
                 <p className="text-xs text-slate-500 mt-1">Record book</p>
               </div>
             </div>
@@ -252,7 +279,7 @@ export default function BCUComplianceDashboard() {
       <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
         <h3 className="font-bold flex items-center gap-2 mb-4">
           <Award size={18} className="text-teal-600" />
-          BCU Pass Criteria
+          Pass Criteria — {pack.code}
         </h3>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
@@ -260,15 +287,15 @@ export default function BCUComplianceDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
                 <span className="text-sm">University Exam (Theory)</span>
-                <span className="font-bold text-sm">35% (28/80)</span>
+                <span className="font-bold text-sm">{pack.semesterEndExam.passPercentage}% ({Math.round(pack.semesterEndExam.passPercentage * seeMax / 100)}/{seeMax})</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
                 <span className="text-sm">Aggregate (University + IA)</span>
-                <span className="font-bold text-sm">40% (40/100)</span>
+                <span className="font-bold text-sm">{pack.passCriteria.aggregatePassPercentage}% ({Math.round(pack.passCriteria.aggregatePassPercentage * maxTotal / 100)}/{maxTotal})</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
                 <span className="text-sm">Internal Assessment</span>
-                <span className="font-bold text-sm text-emerald-600">No minimum</span>
+                <span className="font-bold text-sm text-emerald-600">{pack.passCriteria.minimumInternalPercentage > 0 ? `${pack.passCriteria.minimumInternalPercentage}% minimum` : 'No minimum'}</span>
               </div>
             </div>
           </div>
@@ -282,14 +309,14 @@ export default function BCUComplianceDashboard() {
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs mt-3">
-                <div>University: 45/80 ({samplePass.universityPercentage}%)</div>
-                <div>IA: 15/20</div>
+                <div>University: {samplePass.aggregatePercentage !== undefined ? +(seeMax * 0.5625).toFixed(1) : ''}/{seeMax} ({samplePass.semesterEndPercentage}%)</div>
+                <div>IA: {+(iaMax * 0.75).toFixed(1)}/{iaMax}</div>
                 <div>Total: {samplePass.totalMarks}/{samplePass.maxTotal}</div>
                 <div>Aggregate: {samplePass.aggregatePercentage}%</div>
               </div>
             </div>
             <p className="text-xs text-slate-500 mt-3">
-              Source: BCU Syllabus - "Candidates who have obtained minimum 35% marks in university examination (28/80) and 40% in aggregate in each subject shall be eligible for pass"
+              Source: {pack.sourceNote || pack.name} — {`minimum ${pack.semesterEndExam.passPercentage}% in university examination and ${pack.passCriteria.aggregatePassPercentage}% in aggregate in each subject for pass`}
             </p>
           </div>
         </div>
@@ -299,19 +326,17 @@ export default function BCUComplianceDashboard() {
       <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
         <h3 className="font-bold flex items-center gap-2 mb-4">
           <TrendingUp size={18} className="text-teal-600" />
-          NEP 2020 Grade System (SGPA/CGPA)
+          Grade System (SGPA/CGPA) — {pack.code}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {[
-            { range: '90-100%', grade: 'O', gp: 10, label: 'Outstanding' },
-            { range: '80-89%', grade: 'A+', gp: 9, label: 'Excellent' },
-            { range: '70-79%', grade: 'A', gp: 8, label: 'Very Good' },
-            { range: '60-69%', grade: 'B+', gp: 7, label: 'Good' },
-            { range: '50-59%', grade: 'B', gp: 6, label: 'Above Avg' },
-            { range: '40-49%', grade: 'C', gp: 5, label: 'Average' },
-            { range: '35-39%', grade: 'P', gp: 4, label: 'Pass' },
-            { range: '0-34%', grade: 'F', gp: 0, label: 'Fail' },
-          ].map(g => (
+          {pack.gradeTable.map((row, i, arr) => ({
+            grade: row.grade,
+            gp: row.gradePoint,
+            label: row.description,
+            range: row.minPercentage <= 0 && row.gradePoint === 0
+              ? `< ${arr[i - 1]?.minPercentage ?? 35}%`
+              : `${row.minPercentage}-${i === 0 ? 100 : (arr[i - 1]?.minPercentage ?? 100) - 1}%`,
+          })).map(g => (
             <div key={g.grade} className="text-center p-3 border border-slate-200 dark:border-slate-800 rounded-xl">
               <p className="text-lg font-black">{g.grade}</p>
               <p className="text-xs font-bold text-teal-600">{g.gp} GP</p>

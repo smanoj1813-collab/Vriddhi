@@ -60,6 +60,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
+import AutoMapDialog from '../components/AutoMapDialog'
 import type { CurriculumDoc, ParsedCourse, FacultyOption } from '../../../shared/types/curriculum'
 
 // ─── Tabs ──────────────────────────────────────────────────────────────
@@ -123,8 +124,10 @@ const AdminCurriculum: React.FC = () => {
   const [openMappingDialog, setOpenMappingDialog] = useState(false)
   const [editingMapping, setEditingMapping] = useState<string | null>(null)
   const [formData, setFormData] = useState<MappingFormData>({ ...EMPTY_FORM })
+  // Curriculum whose courses are being auto-mapped (preview → approve flow).
+  const [autoMapFor, setAutoMapFor] = useState<CurriculumDoc | null>(null)
   const [expandedCurriculum, setExpandedCurriculum] = useState<string | null>(null)
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' | 'warning' }>({
     open: false, message: '', severity: 'success',
   })
 
@@ -470,6 +473,17 @@ const AdminCurriculum: React.FC = () => {
                         <Chip icon={<ScheduleIcon />} label={`${curriculum.totalHours} hours`} size="small" />
                         <Chip icon={<SchoolIcon />} label={`${curriculum.totalMarks} marks`} size="small" />
                         <Chip label={`Assigned: ${new Date(curriculum.assignedAt).toLocaleDateString()}`} size="small" variant="outlined" />
+                        {totalCourses > 0 && mappedCount < totalCourses && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            startIcon={<AIIcon />}
+                            onClick={() => setAutoMapFor(curriculum)}
+                            title="Suggest faculty for every unmapped course — review scores, then approve"
+                          >
+                            Auto-Map {totalCourses - mappedCount} unmapped
+                          </Button>
+                        )}
                       </Box>
 
                       {/* Courses Table */}
@@ -874,6 +888,25 @@ const AdminCurriculum: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Auto-map: preview → approve → written server-side */}
+      {autoMapFor && (
+        <AutoMapDialog
+          curriculum={autoMapFor}
+          knownBatches={batches}
+          onClose={() => setAutoMapFor(null)}
+          onApplied={(created) => {
+            refresh()
+            setSnackbar({
+              open: true,
+              message: created > 0
+                ? `${created} course${created === 1 ? '' : 's'} auto-mapped — review them in Faculty Mappings`
+                : 'No new mappings were applied',
+              severity: created > 0 ? 'success' : 'info',
+            })
+          }}
+        />
+      )}
 
       {/* Snackbar */}
       <Snackbar

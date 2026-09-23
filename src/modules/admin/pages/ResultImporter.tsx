@@ -34,7 +34,9 @@ export default function ResultImporter() {
     try {
       const result = await parseResultFile(selectedFile);
       setPreview(result);
-      const grouped = groupResultsByStudent(result.rows);
+      // G1: grade/pass outcomes use the same scheme pack parseResultFile
+      // validated against (the college's assigned university pack).
+      const grouped = groupResultsByStudent(result.rows, result.schemePack);
       setParsedResults(grouped);
       setActiveTab('preview');
     } catch (err) {
@@ -68,7 +70,8 @@ export default function ResultImporter() {
           University Result Importer
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Import BCU, BNU, Davangere, Rani Channamma results - Auto SGPA/CGPA, BCU Pass Criteria, Grade Records
+          Import BCU, BNU, Davangere, Rani Channamma results — graded against the college's scheme pack
+          {preview?.schemePack ? ` (${preview.schemePack.code}: ${preview.schemePack.semesterEndExam.defaultMaxMarks}+${preview.schemePack.internalAssessment.totalMarks}, ${preview.schemePack.passCriteria.aggregatePassPercentage}% agg)` : ''}
         </p>
       </div>
 

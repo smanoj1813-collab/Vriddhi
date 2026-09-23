@@ -135,6 +135,17 @@ const FacultyImport: React.FC = () => {
           experienceYears: row.experienceYears ? parseFloat(row.experienceYears) : 0,
           isHOD: parseBoolean(row.isHOD || ''),
           profilePhotoUrl: row.profilePhotoUrl || '',
+          // Guest/P&T contract columns (G5): rate + contract window, only
+          // meaningful for non-full-time rows.
+          ...(row.guestPeriodRate || row.guestContractStart || row.guestContractEnd
+            ? {
+                guestContract: {
+                  ...(row.guestContractStart ? { startDate: row.guestContractStart } : {}),
+                  ...(row.guestContractEnd ? { endDate: row.guestContractEnd } : { endDate: null }),
+                  periodRate: row.guestPeriodRate ? Number(row.guestPeriodRate) || 0 : 0,
+                },
+              }
+            : {}),
         }
       })
 

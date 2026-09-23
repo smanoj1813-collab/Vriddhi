@@ -39,6 +39,8 @@ const View360 = lazy(() => import('./pages/View360'));
 const ExamManagement = lazy(() => import('./pages/ExamManagement'));
 const UUCMSIntegration = lazy(() => import('./pages/UUCMSIntegration'));
 const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard'));
+const SchemePacks = lazy(() => import('./pages/SchemePacks'));
+const GuestFacultyBilling = lazy(() => import('./pages/GuestFacultyBilling'));
 const ResultImporter = lazy(() => import('./pages/ResultImporter'));
 const ChallanManagement = lazy(() => import('./pages/ChallanManagement'));
 const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
@@ -151,6 +153,8 @@ export const adminRoutes: RouteObject[] = [
       { path: 'exam-management', element: <LazyPage><ExamManagement /></LazyPage> },
       { path: 'uucms-integration', element: <LazyPage><UUCMSIntegration /></LazyPage> },
       { path: 'bcu-compliance', element: <LazyPage><BCUComplianceDashboard /></LazyPage> },
+      { path: 'scheme-packs', element: <LazyPage><SchemePacks /></LazyPage> },
+      { path: 'guest-faculty-billing', element: <LazyPage><GuestFacultyBilling /></LazyPage> },
       { path: 'result-importer', element: <LazyPage><ResultImporter /></LazyPage> },
       { path: 'challans', element: <LazyPage><ChallanManagement /></LazyPage> },
       { path: 'install-app', element: <LazyPage><PWAInstallPage /></LazyPage> },

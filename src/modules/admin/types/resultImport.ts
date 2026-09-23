@@ -85,6 +85,12 @@ export interface ResultImportBatch {
 
 export interface ResultImportPreview {
   rows: ResultImportRow[];
+  /**
+   * G1: the scheme pack this file was validated against (college's assigned
+   * university pack; BCU default when unassigned). Pass it to
+   * groupResultsByStudent so grades/pass outcomes use the same rules.
+   */
+  schemePack?: import('@/shared/types/schemePack').UniversitySchemePack;
   summary: {
     totalStudents: number;
     totalSubjects: number;

@@ -225,6 +225,40 @@ export default function CreateFacultyDialog({ colleges, onClose, onCreated }: Cr
               </div>
             </div>
 
+            {form.employmentType && form.employmentType !== 'FULL_TIME' && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                <p className="mb-3 text-sm font-semibold text-amber-900 dark:text-amber-100">
+                  Guest contract (used by auto-mapping & billing)
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm text-slate-700 dark:text-slate-300">Contract start</label>
+                    <input type="date" value={form.guestContract?.startDate || ''}
+                      onChange={(event) => setField('guestContract', { ...(form.guestContract || {}), startDate: event.target.value })}
+                      className="input-field" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm text-slate-700 dark:text-slate-300">Contract end (blank = ongoing)</label>
+                    <input type="date" value={form.guestContract?.endDate || ''}
+                      onChange={(event) => setField('guestContract', { ...(form.guestContract || {}), endDate: event.target.value || null })}
+                      className="input-field" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm text-slate-700 dark:text-slate-300">Per-period rate (₹)</label>
+                    <input type="number" min="0" value={form.guestContract?.periodRate ?? 0}
+                      onChange={(event) => setField('guestContract', { ...(form.guestContract || {}), periodRate: Number(event.target.value) || 0 })}
+                      className="input-field" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm text-slate-700 dark:text-slate-300">Notes</label>
+                    <input value={form.guestContract?.notes || ''}
+                      onChange={(event) => setField('guestContract', { ...(form.guestContract || {}), notes: event.target.value })}
+                      className="input-field" placeholder="e.g. KGC guest order 2026-27" />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
               <input type="checkbox" checked={!!form.isHOD} onChange={(event) => setField('isHOD', event.target.checked)} className="mt-1 rounded" />
               <span>

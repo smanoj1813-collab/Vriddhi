@@ -1,11 +1,30 @@
 // src/shared/utils/bcuCompliance.ts
 // BCU / Karnataka University Compliance Utilities
 // Based on BCU SEP 2024 Syllabus & NEP 2020 Model Regulations
+//
+// ─── G1 refactor ────────────────────────────────────────────────────────────
+// All evaluation logic moved to the scheme-pack engine
+// (src/shared/utils/schemeEngine.ts + types/schemePack.ts). Every export here
+// is a thin wrapper that binds the BCU_SEP_2024 pack, and every function
+// returns the same values (and the same prose) it did before G1 — this module
+// stays the BCU-specific facade while SchemePacks.tsx / schemePackApi.ts /
+// the result importer work with the college's actual university pack.
+
+import {
+  calculateSchemeAttendanceMarks,
+  calculateSchemeInternalMarks,
+  checkSchemePassCriteria,
+  getSchemeGradeFromMarks,
+  calculateSchemeSGPA,
+} from './schemeEngine';
+import { BCU_SEP_2024, type UniversitySchemePack } from '../types/schemePack';
+
+const PACK = BCU_SEP_2024;
 
 /**
  * BCU Attendance Marks Calculation
  * Source: BCU BBA Syllabus SEP 2024 - Scheme of Examination
- * 
+ *
  * 76% to 80% = 02 marks
  * 81% to 85% = 03 marks
  * 86% to 90% = 04 marks
@@ -21,64 +40,35 @@ export interface AttendanceMarksResult {
 }
 
 export function calculateBCUAttendanceMarks(percentage: number): AttendanceMarksResult {
-  if (percentage < 0) percentage = 0;
-  if (percentage > 100) percentage = 100;
-
-  if (percentage < 75) {
+  const r = calculateSchemeAttendanceMarks(percentage, PACK);
+  const pct = Math.min(100, Math.max(0, percentage));
+  if (!r.isEligible) {
     return {
-      percentage,
+      percentage: pct,
       marks: 0,
       isEligible: false,
       remarks: 'Not eligible - Attendance below 75% (BCU Ordinance)',
       color: 'rose',
     };
   }
-  if (percentage >= 91) {
-    return {
-      percentage,
-      marks: 5,
-      isEligible: true,
-      remarks: 'Excellent attendance - 5 marks',
-      color: 'emerald',
-    };
-  }
-  if (percentage >= 86) {
-    return {
-      percentage,
-      marks: 4,
-      isEligible: true,
-      remarks: 'Good attendance - 4 marks',
-      color: 'teal',
-    };
-  }
-  if (percentage >= 81) {
-    return {
-      percentage,
-      marks: 3,
-      isEligible: true,
-      remarks: 'Satisfactory - 3 marks',
-      color: 'blue',
-    };
-  }
-  // 76-80%
   return {
-    percentage,
-    marks: 2,
+    percentage: pct,
+    marks: r.marks,
     isEligible: true,
-    remarks: 'Minimum eligible - 2 marks',
-    color: 'amber',
+    remarks: `${r.slabLabel === 'Minimum eligible' ? 'Minimum eligible' : r.slabLabel} attendance - ${r.marks} marks`,
+    color: r.color,
   };
 }
 
 /**
  * BCU IA (Internal Assessment) Calculation
  * Source: BCU SEP 2024
- * 
+ *
  * Total IA = 20 marks
  * - 10 marks: Average of best 2 tests (20 marks each, 1 hour duration)
  * - 05 marks: Attendance (as per slab above)
  * - 05 marks: Assignment / Skill development / Record
- * 
+ *
  * For NEP 2020: C1=20% + C2=20% + Semester End=60%
  */
 export interface IAMarksInput {
@@ -99,31 +89,21 @@ export interface IAMarksResult {
 }
 
 export function calculateBCUIAMarks(input: IAMarksInput): IAMarksResult {
-  const { test1Marks, test2Marks, test3Marks, assignmentMarks, attendancePercentage } = input;
-
-  // Best 2 tests average -> out of 10
-  const tests = [test1Marks, test2Marks, ...(test3Marks !== undefined ? [test3Marks] : [])];
+  const tests = [input.test1Marks, input.test2Marks, ...(input.test3Marks !== undefined ? [input.test3Marks] : [])];
+  const r = calculateSchemeInternalMarks(
+    { testMarks: tests, assignmentMarks: input.assignmentMarks, attendancePercentage: input.attendancePercentage },
+    PACK,
+  );
   const sorted = [...tests].sort((a, b) => b - a);
   const bestTwo = sorted.slice(0, 2);
   const bestTwoAvg = bestTwo.reduce((a, b) => a + b, 0) / bestTwo.length;
-  const testAverage = (bestTwoAvg / 20) * 10; // Convert 20 -> 10
-
-  // Attendance marks
-  const attendanceResult = calculateBCUAttendanceMarks(attendancePercentage);
-  const attMarks = attendanceResult.isEligible ? attendanceResult.marks : 0;
-
-  // Assignment marks - capped at 5
-  const assignMarks = Math.min(5, Math.max(0, assignmentMarks));
-
-  const totalIA = testAverage + attMarks + assignMarks;
-
   return {
-    testAverage: Math.round(testAverage * 100) / 100,
-    attendanceMarks: attMarks,
-    assignmentMarks: assignMarks,
-    totalIA: Math.round(totalIA * 100) / 100,
-    isEligible: attendanceResult.isEligible,
-    breakdown: `Tests: ${testAverage.toFixed(1)}/10 (Best 2 avg: ${bestTwoAvg.toFixed(1)}/20) + Attendance: ${attMarks}/5 (${attendancePercentage}%) + Assignment: ${assignMarks}/5 = ${totalIA.toFixed(1)}/20`,
+    testAverage: r.testAverage,
+    attendanceMarks: r.attendanceMarks,
+    assignmentMarks: r.assignmentMarks,
+    totalIA: r.totalIA,
+    isEligible: r.isEligible,
+    breakdown: `Tests: ${r.testAverage.toFixed(1)}/10 (Best 2 avg: ${bestTwoAvg.toFixed(1)}/20) + Attendance: ${r.attendanceMarks}/5 (${input.attendancePercentage}%) + Assignment: ${r.assignmentMarks}/5 = ${r.totalIA.toFixed(1)}/20`,
   };
 }
 
@@ -133,6 +113,9 @@ export function calculateBCUIAMarks(input: IAMarksInput): IAMarksResult {
  * C1 = 20% (after 50% syllabus, within 45 working days)
  * C2 = 20% (remaining)
  * Semester End = 60%
+ *
+ * NOTE: C1/C2 seminar-style decomposition is a BCU-specific structure and
+ * stays hardcoded here — packs model the totals, not this sub-structure.
  */
 export interface NEPAssessmentInput {
   c1Test?: number; // 10%
@@ -153,7 +136,7 @@ export interface NEPAssessmentResult {
 export function calculateNEPInternal(input: NEPAssessmentInput): NEPAssessmentResult {
   const c1 = (input.c1Test || 0) + (input.c1Seminar || 0);
   const c2 = (input.c2Test || 0) + (input.c2Assignment || 0);
-  
+
   // Cap at 20 each
   const c1Total = Math.min(20, c1);
   const c2Total = Math.min(20, c2);
@@ -194,36 +177,37 @@ export interface PassCriteriaResult {
 export function checkBCUPassCriteria(input: PassCriteriaInput): PassCriteriaResult {
   const maxUni = input.maxUniversityMarks || 80;
   const maxInt = input.maxInternalMarks || 20;
-  const maxTotal = maxUni + maxInt;
-  const total = input.universityMarks + input.internalMarks;
-
-  const uniPerc = (input.universityMarks / maxUni) * 100;
-  const aggPerc = (total / maxTotal) * 100;
-
-  const isPassInUniversity = uniPerc >= 35; // 28/80
-  const isPassInAggregate = aggPerc >= 40;
-
-  const isPass = isPassInUniversity && isPassInAggregate;
+  const r = checkSchemePassCriteria(
+    {
+      semesterEndMarks: input.universityMarks,
+      internalMarks: input.internalMarks,
+      maxSemesterEndMarks: maxUni,
+      maxInternalMarks: maxInt,
+    },
+    PACK,
+  );
+  const uniPerc = r.semesterEndPercentage;
+  const aggPerc = r.aggregatePercentage;
 
   let remarks = '';
-  if (!isPassInUniversity && !isPassInAggregate) {
+  if (!r.isPassInSemesterEnd && !r.isPassInAggregate) {
     remarks = `Fail - Need 35% in university exam (28/80) and 40% aggregate. Got ${uniPerc.toFixed(1)}% in university, ${aggPerc.toFixed(1)}% aggregate`;
-  } else if (!isPassInUniversity) {
+  } else if (!r.isPassInSemesterEnd) {
     remarks = `Fail - Need 35% in university exam (28/80). Got ${uniPerc.toFixed(1)}% (${input.universityMarks}/${maxUni})`;
-  } else if (!isPassInAggregate) {
-    remarks = `Fail - Need 40% aggregate. Got ${aggPerc.toFixed(1)}% (${total}/${maxTotal})`;
+  } else if (!r.isPassInAggregate) {
+    remarks = `Fail - Need 40% aggregate. Got ${aggPerc.toFixed(1)}% (${r.totalMarks}/${r.maxTotal})`;
   } else {
     remarks = `Pass - ${uniPerc.toFixed(1)}% in university, ${aggPerc.toFixed(1)}% aggregate`;
   }
 
   return {
-    universityPercentage: Math.round(uniPerc * 100) / 100,
-    aggregatePercentage: Math.round(aggPerc * 100) / 100,
-    totalMarks: total,
-    maxTotal,
-    isPassInUniversity,
-    isPassInAggregate,
-    isPass,
+    universityPercentage: uniPerc,
+    aggregatePercentage: aggPerc,
+    totalMarks: r.totalMarks,
+    maxTotal: r.maxTotal,
+    isPassInUniversity: r.isPassInSemesterEnd,
+    isPassInAggregate: r.isPassInAggregate,
+    isPass: r.isPass,
     remarks,
   };
 }
@@ -237,35 +221,31 @@ export interface SubjectGrade {
 }
 
 export function calculateSGPA(subjects: SubjectGrade[]): number {
-  if (subjects.length === 0) return 0;
-  const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0);
-  const totalPoints = subjects.reduce((sum, s) => sum + s.credits * s.gradePoint, 0);
-  return totalCredits > 0 ? totalPoints / totalCredits : 0;
+  return calculateSchemeSGPA(subjects);
 }
 
 export function getGradeFromMarks(marks: number, maxMarks: number = 100): { grade: string; gradePoint: number; description: string } {
-  const perc = (marks / maxMarks) * 100;
-  if (perc >= 90) return { grade: 'O', gradePoint: 10, description: 'Outstanding' };
-  if (perc >= 80) return { grade: 'A+', gradePoint: 9, description: 'Excellent' };
-  if (perc >= 70) return { grade: 'A', gradePoint: 8, description: 'Very Good' };
-  if (perc >= 60) return { grade: 'B+', gradePoint: 7, description: 'Good' };
-  if (perc >= 50) return { grade: 'B', gradePoint: 6, description: 'Above Average' };
-  if (perc >= 40) return { grade: 'C', gradePoint: 5, description: 'Average' };
-  if (perc >= 35) return { grade: 'P', gradePoint: 4, description: 'Pass' };
-  return { grade: 'F', gradePoint: 0, description: 'Fail' };
+  return getSchemeGradeFromMarks(marks, maxMarks, PACK);
 }
 
 // Attendance eligibility for exam - core BCU rule
 export function isEligibleForExam(attendancePercentage: number): boolean {
-  return attendancePercentage >= 75;
+  return attendancePercentage >= PACK.attendance.minimumPercentage;
 }
 
 export function getAttendanceEligibilityMessage(percentage: number): string {
-  if (percentage < 75) {
-    return `Not eligible for university exam - Attendance ${percentage.toFixed(1)}% is below 75% minimum (BCU Ordinance)`;
+  const min = PACK.attendance.minimumPercentage;
+  if (percentage < min) {
+    return `Not eligible for university exam - Attendance ${percentage.toFixed(1)}% is below ${min}% minimum (BCU Ordinance)`;
   }
   if (percentage < 80) {
-    return `Eligible but low attendance - ${percentage.toFixed(1)}% - 2 marks in IA`;
+    const r = calculateSchemeAttendanceMarks(percentage, PACK);
+    // 75–75.99 falls between the eligibility floor and the first slab — the
+    // historical message always cited the lowest slab's marks.
+    return `Eligible but low attendance - ${percentage.toFixed(1)}% - ${r.marks || 2} marks in IA`;
   }
   return `Eligible - ${percentage.toFixed(1)}% attendance`;
 }
+
+/** Re-exported so pack-aware callers can share one import site. */
+export type { UniversitySchemePack };

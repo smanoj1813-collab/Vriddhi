@@ -343,6 +343,7 @@ const principalNav: SidebarEntry[] = [
     children: [
       { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
 
@@ -354,6 +355,7 @@ const principalNav: SidebarEntry[] = [
       { label: "Exam Management", path: "/admin/exam-management", icon: <Description fontSize="small" /> },
       { label: "UUCMS Integration", path: "/admin/uucms-integration", icon: <Business fontSize="small" /> },
       { label: "BCU Compliance", path: "/admin/bcu-compliance", icon: <CheckCircle fontSize="small" /> },
+      { label: "Scheme Packs", path: "/admin/scheme-packs", icon: <AccountBalance fontSize="small" /> },
       { label: "Result Importer", path: "/admin/result-importer", icon: <Assessment fontSize="small" /> },
     ],
   },
@@ -435,6 +437,7 @@ const hodNav: SidebarEntry[] = [
     children: [
       { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
 
