@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-"""B.Com seed questions — 4 subjects x 4 topics x 5 questions = 80 questions.
+"""B.Com seed questions — the original topic level: 4 subjects x 4 topics x 5.
+
+This is generation one of the bank. Generation two lives in
+`subtopic_questions.py` (4 questions per sub-topic) and the hierarchy both are
+checked against lives in `structure.py`. `generate_seed.py` merges the two:
+
+  * every question here gets a **sub-topic backfilled** by matching its text
+    against the keywords declared for that subject/topic in `structure.py` — so
+    adding a question here needs no extra bookkeeping, but a question whose text
+    matches no keyword fails the build until the keywords are extended;
+  * a question here whose wording `subtopic_questions.py` repeats is **dropped**,
+    because both rows would share one dedupe fingerprint and the sub-topic
+    version is the more specific of the two.
 
 Field rules (matched to the app's naive CSV parser in BulkImportModal.tsx):
   * NO commas and NO double quotes inside any field
@@ -82,8 +94,8 @@ B_COM += [
     Q("Depreciation is charged because of:", SUB, "mcq", "easy", "Bank Reconciliation and Depreciation", 1,
       ["Physical wear and tear only", "Obsolescence only", "The passage of time; wear and tear; and obsolescence", "Capital loss only"],
       "C", "The service potential of a fixed asset falls for all three reasons."),
-    Q("Under the straight line method the depreciation charge each year:", SUB, "true_false", "easy", "Bank Reconciliation and Depreciation", 1,
-      [], "Is the same on the original cost", "A fixed percentage of the original cost is charged until the asset is fully depreciated."),
+    Q("Under the straight line method the depreciation charge each year is the same on the original cost.", SUB, "true_false", "easy", "Bank Reconciliation and Depreciation", 1,
+      [], "True", "A fixed percentage of the original cost is charged until the asset is fully depreciated."),
     Q("State any three methods of providing depreciation.", SUB, "short_answer", "medium", "Bank Reconciliation and Depreciation", 2,
       [], "Straight line method; diminishing balance method; and units of production method.", ""),
 ]

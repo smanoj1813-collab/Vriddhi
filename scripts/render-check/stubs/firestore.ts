@@ -1,7 +1,23 @@
 // Records the calls components make, and returns empty docs so no network I/O.
 export const calls: string[] = [];
 export function collection(_db: any, ...p: string[]) { calls.push('collection:' + p.join('/')); return {}; }
-export function doc(_db: any, ...p: string[]) { calls.push('doc:' + p.join('/')); return { __path: p.join('/') }; }
+export function doc(_db: any, ...p: string[]) {
+  calls.push('doc:' + p.join('/'));
+  // collectionPath/id mirror the real DocumentReference so a check can tell which
+  // collection a batched write targeted (the path alone loses the collection of
+  // an auto-id ref like doc(collection(db, 'questionBank_meta'))).
+  const path = p.join('/');
+  const lastSlash = path.lastIndexOf('/');
+  // The real SDK hands out a fresh random id for an auto-id ref; a constant here
+  // would collapse every doc in a batch onto one key.
+  const autoId = lastSlash < 0 ? `stub-auto-${++autoIdSeq}` : '';
+  return {
+    __path: autoId ? `${path}/${autoId}` : path,
+    id: lastSlash >= 0 ? path.slice(lastSlash + 1) : autoId,
+    collectionPath: lastSlash >= 0 ? path.slice(0, lastSlash) : path,
+  };
+}
+let autoIdSeq = 0;
 export function query(..._a: any[]) { return {}; }
 export function where(f: string, op: string, v: any) { calls.push(`where:${f}${op}${v}`); return {}; }
 export function orderBy(..._a: any[]) { return {}; }
@@ -53,7 +69,24 @@ export async function runTransaction(_db: any, fn: (t: any) => Promise<any>) {
 }
 export function onSnapshot(..._a: any[]) { calls.push('onSnapshot'); return () => {}; }
 export function writeBatch(..._a: any[]) {
-  return { set: async () => calls.push('batch.set'), update: async () => calls.push('batch.update'), delete: async () => calls.push('batch.delete'), commit: async () => calls.push('batch.commit') };
+  return {
+    set: async (...a: any[]) => {
+      calls.push('batch.set');
+      // Same idea as updateDoc/addDoc: a check can assert what a bulk write
+      // actually committed (the question-bank seeder writes meta + content +
+      // review per question through a batch, which is otherwise unverifiable).
+      const writes = ((globalThis as any).__RC_WRITES ??= [] as any[]);
+      writes.push({
+        path: (a[0] as any)?.__path ?? 'batch.set',
+        collectionPath: (a[0] as any)?.collectionPath ?? '',
+        id: (a[0] as any)?.id ?? '',
+        data: a[1],
+      });
+    },
+    update: async () => calls.push('batch.update'),
+    delete: async () => calls.push('batch.delete'),
+    commit: async () => calls.push('batch.commit'),
+  };
 }
 export function arrayUnion(...v: any[]) { return { __stub: 'arrayUnion', v }; }
 export function arrayRemove(...v: any[]) { return { __stub: 'arrayRemove', v }; }

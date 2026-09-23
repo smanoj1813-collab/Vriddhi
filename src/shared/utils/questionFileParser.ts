@@ -12,6 +12,12 @@ export interface DraftQuestion {
   subject: string;
   topic: string;
   unit: string;
+  /**
+   * Third tier of the hierarchy (subject → topic → sub-topic). Kept as its own
+   * field so an upload of the platform question-bank CSVs does not silently
+   * drop the column — the universal bank stores it as `subTopicId`.
+   */
+  subtopic: string;
   marks: number;
   options: string[];
   correctAnswer: string;
@@ -51,6 +57,7 @@ export function emptyDraftQuestion(defaults: Partial<DraftQuestion> = {}): Draft
     subject: '',
     topic: '',
     unit: '',
+    subtopic: '',
     marks: 2,
     options: [],
     correctAnswer: '',
@@ -132,6 +139,12 @@ const HEADER_ALIASES: Record<string, keyof DraftQuestion> = {
   chapter: 'topic',
   unit: 'unit',
   module: 'unit',
+  subtopic: 'subtopic',
+  'sub-topic': 'subtopic',
+  'sub topic': 'subtopic',
+  subtopics: 'subtopic',
+  subtopicid: 'subtopic',
+  'sub topic id': 'subtopic',
   marks: 'marks',
   mark: 'marks',
   options: 'options',
@@ -286,6 +299,7 @@ export function parseJsonQuestions(raw: string, defaults: Partial<DraftQuestion>
         subject: item.subject || defaults.subject || '',
         topic: item.topic || item.chapter || '',
         unit: String(item.unit ?? item.module ?? ''),
+        subtopic: String(item.subtopic ?? item.subTopic ?? item.subTopicId ?? ''),
         marks: Number(item.marks) || 1,
         options: Array.isArray(item.options)
           ? item.options.map((o: any) => (typeof o === 'string' ? o : o?.text || ''))
@@ -334,7 +348,7 @@ export function validateDraftQuestion(q: DraftQuestion): string[] {
   return errors;
 }
 
-export const SAMPLE_QUESTION_CSV = `text,subject,type,difficulty,unit,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName
-"State the accounting equation.","Financial Accounting","short_answer","easy","1",2,"","Assets = Liabilities + Capital","Basic identity","accounting","2026-27","B.Com",false,,
-"Which of these is a current asset?","Financial Accounting","mcq","easy","1",1,"Building|Inventory|Goodwill|Land","Inventory","Inventory is converted within a year","assets","2026-27","B.Com",false,,
-"Explain the functions of management with examples.","Business Management","long_answer","medium","2",10,"","","POSDCORB","management","2026-27","BBA",true,"2026","Semester End"`;
+export const SAMPLE_QUESTION_CSV = `text,subject,type,difficulty,unit,subtopic,marks,options,correctAnswer,explanation,tags,batch,branch,isPYQ,examYear,examName
+"State the accounting equation.","Financial Accounting","short_answer","easy","Journal and Accounting Equation","Accounting Equation and Dual Aspect",2,"","Assets = Liabilities + Capital","Basic identity","accounting","2026-27","B.Com",false,,
+"Which of these is a current asset?","Financial Accounting","mcq","easy","Financial Statements","Balance Sheet Classification",1,"Building|Inventory|Goodwill|Land","Inventory","Inventory is converted within a year","assets","2026-27","B.Com",false,,
+"Explain the functions of management with examples.","Business Management","long_answer","medium","Planning","Types of Plans",10,"","","POSDCORB","management","2026-27","BBA",true,"2026","Semester End"`;

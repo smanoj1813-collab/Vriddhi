@@ -182,6 +182,7 @@ export default function QuestionUploadEditor({
           subject: r.subject.trim(),
           topic: r.topic.trim(),
           unit: r.unit.trim(),
+          subTopic: r.subtopic.trim(),
           marks: Number(r.marks) || 1,
           options: r.options
             .filter((o) => o.trim())

@@ -432,6 +432,7 @@ export const bulkImportQuestions = async (
           questionData.text?.toLowerCase(),
           questionData.subject?.toLowerCase(),
           questionData.topic?.toLowerCase(),
+          questionData.subTopic?.toLowerCase(),
           questionData.chapter?.toLowerCase(),
           ...(questionData.tags?.map((t: string) => t.toLowerCase()) || [])
         ].filter(Boolean);
