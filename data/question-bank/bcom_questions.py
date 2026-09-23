@@ -82,8 +82,8 @@ B_COM += [
     Q("Depreciation is charged because of:", SUB, "mcq", "easy", "Bank Reconciliation and Depreciation", 1,
       ["Physical wear and tear only", "Obsolescence only", "The passage of time; wear and tear; and obsolescence", "Capital loss only"],
       "C", "The service potential of a fixed asset falls for all three reasons."),
-    Q("Under the straight line method the depreciation charge each year:", SUB, "true_false", "easy", "Bank Reconciliation and Depreciation", 1,
-      [], "Is the same on the original cost", "A fixed percentage of the original cost is charged until the asset is fully depreciated."),
+    Q("Under the straight line method the depreciation charge each year is the same on the original cost.", SUB, "true_false", "easy", "Bank Reconciliation and Depreciation", 1,
+      [], "True", "A fixed percentage of the original cost is charged until the asset is fully depreciated."),
     Q("State any three methods of providing depreciation.", SUB, "short_answer", "medium", "Bank Reconciliation and Depreciation", 2,
       [], "Straight line method; diminishing balance method; and units of production method.", ""),
 ]

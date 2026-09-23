@@ -35,7 +35,9 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Attendance** marking and viewing for both faculty and students.
 - **Assessments & tests** with a full test-taking flow (instructions → active test → results),
   MCQ rendering, and step-by-step solutions.
-- **Question bank** with manual, bulk-imported, and **AI-generated** aptitude questions.
+- **Question bank** with manual, bulk-imported, and **AI-generated** aptitude questions,
+  plus a one-click **curated platform seed** (240 B.Com / BA / B.Sc questions) loaded from
+  Superadmin → Question Bank.
 - **AI paper generator** producing question papers from the question bank via Gemini / OpenAI / DeepSeek.
 - **Curriculum management** — standardized curriculum upload, syllabus parsing, and mapping.
 - **Fees** management and a student fee portal.
@@ -110,6 +112,9 @@ Vriddhi/
 │       ├── services/           # Question generation, prompt building
 │       ├── validation/         # Zod request schemas
 │       └── studentAuth.ts      # Student auth sync / bulk account creation
+├── data/
+│   └── question-bank/          # Curated seed CSVs + the Python generator that validates them
+├── scripts/                    # Seed / migration / fixture scripts + the unit & render test harnesses
 ├── firebase.json               # Firebase Hosting, Firestore, RTDB, Functions config
 ├── current-firestore.rules     # Firestore security rules
 ├── database.rules.json         # Realtime Database security rules
@@ -365,6 +370,16 @@ and the renderer will use it first. Without a resolvable binary, PDF routes answ
 - **Colleges** — `colleges/{collegeId}` with per-college subcollections such as
   `questionBank/{questionId}` (see `src/Docs/firbase/agent/Vriddhi_Agent_Rules.md` for the
   question-bank schema and ID format).
+- **Questions** — two pools that coexist:
+  - `questions/{questionId}` — a college's own bank (`collegeId`-scoped; feeds
+    Admin → Question Bank, scheduled tests and the college paper generator).
+  - `questionBank_meta/{id}` + `questionBank_content/{id}` (+ `questionReviews/{id}`) — the
+    **universal pool** shared across colleges. `meta` is what lists/filters read
+    (`subjectId`, `topicId`, `previewText`, `searchKeywords`, `visibility`, `status`);
+    `content` holds the full payload (options, answer, explanation) and is read on
+    preview/use only. A `public` row with `createdBy.collegeId == null` is
+    platform-curated content visible to every college — that is what the
+    superadmin seeder writes (see `data/question-bank/README.md`).
 - The Firestore schema doc lives at `src/Docs/firbase/Vriddhi_Firebase_Schema.md`.
 
 ## Notes

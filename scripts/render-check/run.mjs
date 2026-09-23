@@ -1425,6 +1425,177 @@ await section('schedule dialog (prefilled)', '/src/modules/admin/pages/AdminClas
     /Schedule created successfully/.test(view.bodyText()), view.bodyText().slice(-220));
 });
 
+// ── Superadmin question-bank seeder ──────────────────────────────────────────
+// The universal pool page is read-only, so this dialog is the only way the
+// curated CSV seed (data/question-bank) reaches it. Three things have to hold:
+// the bundled CSV parses in the browser bundle, the run is idempotent (rows
+// already in the pool are skipped, not duplicated), and the writes land with the
+// platform-owned shape the visibility gate expects.
+globalThis.__RC_ROLE = 'superadmin';
+globalThis.__RC_FIRESTORE_DOCS = [];
+
+const SEED_DIALOG = '/src/modules/superadmin/components/SeedQuestionBankDialog.tsx';
+
+// Loaded through Vite, so the `?raw` CSV imports resolve exactly as they do in
+// the app: the assertions below compare the UI against the shipped data module
+// instead of a hardcoded 240 that would silently go stale.
+const seedData = await server.ssrLoadModule('/src/modules/superadmin/data/questionBankSeed.ts');
+const seedAll = seedData.resolveSeedRows('all', []);
+const SEED_TOTAL = seedAll.rows.length;
+const SEED_INVALID = seedAll.invalid.length;
+const SEED_WRITES = SEED_TOTAL * 3;          // meta + content + review per question
+const SEED_MCQ = seedAll.types.find((t) => t.name === 'mcq')?.count ?? 0;
+const SEED_SUBJECTS = seedAll.subjects.length;
+
+check('seeder: the shipped CSVs still parse clean', SEED_INVALID === 0,
+  `${SEED_INVALID} invalid row(s): ${JSON.stringify(seedAll.invalid.slice(0, 2))}`);
+check('seeder: the bundled dataset is the full 3 × 80 bank', SEED_TOTAL === 240,
+  `parsed ${SEED_TOTAL} rows`);
+
+await section('question bank seeder', SEED_DIALOG, { open: true, onClose: () => {} }, async (t, view) => {
+  check('seeder: mounts without throwing', true);
+  const dialog = view.dialogText();
+  check('seeder: opens on the dataset step', /Seed Platform Question Bank/.test(dialog), dialog.slice(0, 200));
+  check('seeder: parses the bundled CSV and reports every valid question',
+    dialog.includes(`${SEED_TOTAL} valid questions`), dialog.slice(0, 400));
+  check('seeder: breaks the dataset down by programme, subject and type',
+    dialog.includes(`${SEED_SUBJECTS} subjects`) && dialog.includes(`mcq: ${SEED_MCQ}`), dialog.slice(0, 500));
+  check('seeder: quotes the write cost before anything is committed',
+    dialog.includes(`~${SEED_WRITES} Firestore writes`), dialog.slice(-400));
+
+  const preview = view.dialogButtons().find((b) => /Preview & Validate/.test(b.textContent ?? ''));
+  if (!preview) {
+    check('seeder: offers Preview & Validate', false, dialog.slice(0, 200));
+    return;
+  }
+  await view.click(preview);
+  const planned = view.dialogText();
+  check('seeder: an empty pool means every question is new',
+    /currently holds 0 question/.test(planned) && planned.includes(`${SEED_TOTAL} new question`), planned.slice(0, 320));
+  check('seeder: the seed button names the exact row count',
+    view.dialogButtons().some((b) => (b.textContent ?? '').includes(`Seed ${SEED_TOTAL} question`)),
+    view.dialogButtons().map((b) => b.textContent).join(' | '));
+
+  const seed = view.dialogButtons().find((b) => (b.textContent ?? '').includes(`Seed ${SEED_TOTAL} question`));
+  if (!seed) return;
+  await view.click(seed);
+  const done = view.dialogText();
+  check('seeder: reports the seeded total', done.includes(`Seeded ${SEED_TOTAL} questions into the platform pool`), done.slice(0, 320));
+  check('seeder: reports no failures', /Failed: 0/.test(done), done.slice(0, 320));
+  check('seeder: tells the superadmin the list below reloaded',
+    /reloads automatically/.test(done) && /seed-import/.test(done), done.slice(-320));
+});
+
+// Second run against a pool that already holds one of the seed questions: it must
+// be skipped, not written again.
+globalThis.__RC_FIRESTORE_DOCS = [{
+  id: 'existing-seed-1',
+  data: () => ({
+    previewText: 'The accounting equation is stated as:',
+    questionText: 'The accounting equation is stated as:',
+    subjectId: 'Financial Accounting',
+    topicId: 'Journal and Accounting Equation',
+    tags: ['financial', 'B.Com', 'batch-2026-27', 'vriddhi-curated', 'free', 'seed-import'],
+    status: 'approved',
+    visibility: 'public',
+    source: 'platform',
+  }),
+}];
+
+await section('seeder (idempotent)', SEED_DIALOG, { open: true, onClose: () => {} }, async (t, view) => {
+  check('seeder re-run: mounts without throwing', true);
+  const preview = view.dialogButtons().find((b) => /Preview & Validate/.test(b.textContent ?? ''));
+  if (!preview) {
+    check('seeder re-run: offers Preview & Validate', false, view.dialogText().slice(0, 200));
+    return;
+  }
+  await view.click(preview);
+  const planned = view.dialogText();
+  check('seeder re-run: sees the question already in the pool', /currently holds 1 question/.test(planned), planned.slice(0, 320));
+  check('seeder re-run: skips the duplicate instead of writing it again',
+    /1 skipped as already present/.test(planned) && planned.includes(`${SEED_TOTAL - 1} new question`), planned.slice(0, 400));
+  check('seeder re-run: lists what it is skipping',
+    /Already in the pool/.test(planned) && /accounting equation is stated as/.test(planned), planned.slice(0, 600));
+  check('seeder re-run: the seed button only offers the new rows',
+    view.dialogButtons().some((b) => (b.textContent ?? '').includes(`Seed ${SEED_TOTAL - 1} question`)),
+    view.dialogButtons().map((b) => b.textContent).join(' | '));
+});
+
+// Inspect one written document: it has to be platform-owned public content keyed
+// A–D, or the visibility gate hides it from every college.
+globalThis.__RC_FIRESTORE_DOCS = [];
+globalThis.__RC_WRITES = [];
+await section('seeder (written shape)', SEED_DIALOG, { open: true, onClose: () => {} }, async (t, view) => {
+  const preview = view.dialogButtons().find((b) => /Preview & Validate/.test(b.textContent ?? ''));
+  if (!preview) {
+    check('seeder writes: offers Preview & Validate', false, view.dialogText().slice(0, 200));
+    return;
+  }
+  await view.click(preview);
+  const seed = view.dialogButtons().find((b) => (b.textContent ?? '').includes(`Seed ${SEED_TOTAL} question`));
+  if (!seed) {
+    check('seeder writes: offers the seed action', false, view.dialogText().slice(0, 300));
+    return;
+  }
+  await view.click(seed);
+  check('seeder writes: reports success', view.dialogText().includes(`Seeded ${SEED_TOTAL} questions`), view.dialogText().slice(0, 240));
+
+  // Inspect what actually got committed. A seeded row has to be platform-owned
+  // public content with A–D option ids, or the visibility gate hides it from
+  // every college and the test engine cannot grade it.
+  const writes = globalThis.__RC_WRITES ?? [];
+  const metaWrites = writes.filter((w) => w.collectionPath === 'questionBank_meta');
+  const contentWrites = writes.filter((w) => w.collectionPath === 'questionBank_content');
+  const reviewWrites = writes.filter((w) => w.collectionPath === 'questionReviews');
+  check('seeder writes: three documents per question (meta + content + review)',
+    metaWrites.length === SEED_TOTAL && contentWrites.length === SEED_TOTAL && reviewWrites.length === SEED_TOTAL,
+    `meta=${metaWrites.length} content=${contentWrites.length} review=${reviewWrites.length}`);
+
+  const meta = metaWrites[0]?.data ?? {};
+  check('seeder writes: lands approved, public and platform-owned',
+    meta.status === 'approved' && meta.visibility === 'public' && meta.source === 'platform',
+    JSON.stringify({ status: meta.status, visibility: meta.visibility, source: meta.source }));
+  check('seeder writes: createdBy is the superadmin with no college (so it is not college-private)',
+    meta.createdBy?.role === 'superadmin' && meta.createdBy?.collegeId === null && !!meta.createdBy?.userId,
+    JSON.stringify(meta.createdBy ?? {}));
+  check('seeder writes: maps CSV subject → subjectId and unit → topicId',
+    meta.subjectId === 'Financial Accounting' && meta.topicId === 'Journal and Accounting Equation',
+    JSON.stringify({ subjectId: meta.subjectId, topicId: meta.topicId }));
+  check('seeder writes: carries the search + preview fields the list view reads',
+    Array.isArray(meta.searchKeywords) && meta.searchKeywords.length > 0 && /accounting equation/.test(meta.previewText ?? ''),
+    JSON.stringify({ previewText: meta.previewText, keywords: (meta.searchKeywords ?? []).slice(0, 4) }));
+  check('seeder writes: tags the programme, batch and platform ownership',
+    ['B.Com', 'batch-2026-27', 'vriddhi-curated', 'free', 'seed-import'].every((tag) => (meta.tags ?? []).includes(tag)),
+    JSON.stringify(meta.tags ?? []));
+
+  const content = contentWrites[0]?.data ?? {};
+  check('seeder writes: content holds the full question text',
+    /The accounting equation is stated as:/.test(content.questionText ?? ''), JSON.stringify(content.questionText ?? ''));
+  check('seeder writes: MCQ options are keyed A–D with exactly one correct',
+    (content.options ?? []).map((o) => o.id).join(',') === 'A,B,C,D'
+      && (content.options ?? []).filter((o) => o.isCorrect).length === 1,
+    JSON.stringify(content.options ?? []));
+  check('seeder writes: correctAnswer is the letter of the flagged option',
+    content.correctAnswer === (content.options ?? []).find((o) => o.isCorrect)?.id,
+    JSON.stringify({ correctAnswer: content.correctAnswer, options: content.options ?? [] }));
+  check('seeder writes: explains the answer and keeps the marks',
+    /Assets equal/.test(content.explanation ?? '') && content.marks === 1,
+    JSON.stringify({ explanation: content.explanation, marks: content.marks }));
+});
+
+// A non-superadmin must be told the writes will be refused rather than being let
+// halfway through the flow.
+globalThis.__RC_ROLE = 'admin';
+await section('seeder (wrong role)', SEED_DIALOG, { open: true, onClose: () => {} }, async (t, view) => {
+  check('seeder as admin: mounts without throwing', true);
+  check('seeder as admin: warns that Firestore rules will reject the writes',
+    /You are signed in as/.test(view.dialogText()) && /superadmin action/.test(view.dialogText()),
+    view.dialogText().slice(0, 300));
+});
+
+globalThis.__RC_ROLE = undefined;
+globalThis.__RC_FIRESTORE_DOCS = [];
+
 globalThis.__RC_LOCATION_STATE = null;
 globalThis.__RC_WRITES = [];
 

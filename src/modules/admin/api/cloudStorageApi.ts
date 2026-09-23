@@ -140,6 +140,121 @@ export function isVisibleToCollege(
   return false;
 }
 
+/**
+ * Single derivation of the meta / content / review documents that make up one
+ * question in the universal pool. Shared by `createQuestion` (the one-at-a-time
+ * UI path) and `createQuestions` (bulk seeding) so both write identical shapes —
+ * a seeded row must be indistinguishable from a submitted one.
+ */
+function buildQuestionDocs(
+  input: {
+    meta: Omit<QuestionMetadata, 'id' | 'createdAt' | 'updatedAt'>;
+    content: Partial<QuestionContent> & { questionText: string };
+  },
+  withReview = true
+): {
+  id: string;
+  meta: QuestionMetadata;
+  content: QuestionContent;
+  review: QuestionReview | null;
+} {
+  const now = new Date().toISOString();
+  const id = doc(collection(db, META_COLLECTION)).id;
+
+  const status: ReviewStatus = input.meta.status || 'pending';
+  const createdBy = input.meta.createdBy || {
+    userId: '',
+    userName: 'Unknown',
+    collegeId: null,
+    collegeName: '',
+    role: 'faculty',
+  };
+  const visibility: Visibility = input.meta.visibility || 'college_only';
+  const source = input.meta.source || 'college';
+  const tags = [...new Set([...(input.meta.tags || [])])];
+  const subjectId = input.meta.subjectId || 'General';
+  const topicId = input.meta.topicId || 'General';
+  const questionType = input.meta.questionType || 'mcq';
+  const difficulty = input.meta.difficulty || 'medium';
+  const marks = input.meta.marks ?? 1;
+  const language = input.meta.language || 'en';
+  const questionText = input.content.questionText || '';
+  const previewText = buildPreviewText(questionText);
+  const searchKeywords = buildSearchKeywords(questionText, subjectId, topicId, tags);
+
+  const meta = {
+    ...input.meta,
+    id,
+    subjectId,
+    topicId,
+    questionType,
+    difficulty,
+    marks,
+    language,
+    tags,
+    status,
+    visibility,
+    sharedWith: input.meta.sharedWith || [],
+    source,
+    createdBy,
+    previewText,
+    searchKeywords,
+    createdAt: now,
+    updatedAt: now,
+  } as unknown as QuestionMetadata;
+
+  const content: QuestionContent = {
+    ...(input.content as Partial<QuestionContent>),
+    id,
+    version: input.content.version || 1,
+    questionText: input.content.questionText,
+    options: input.content.options || [],
+    correctAnswer: input.content.correctAnswer || '',
+    explanation: input.content.explanation || '',
+    hint: input.content.hint || '',
+    subjectId,
+    topicId,
+    subTopicId: input.content.subTopicId || input.meta.subTopicId || '',
+    difficulty,
+    questionType,
+    marks,
+    language,
+    tags,
+    images: input.content.images || [],
+    hasImage: !!input.content.hasImage,
+    createdBy,
+    source,
+    status,
+    visibility,
+    sharedWith: meta.sharedWith,
+    quality: input.content.quality || { rating: 0, reviewCount: 0, flagged: false },
+    usageStats: input.content.usageStats || { usedInPapers: 0, usedInAssessments: 0, collegesUsing: [] },
+    versions: input.content.versions || [],
+    storagePath: input.content.storagePath || `${CONTENT_COLLECTION}/${id}.json`,
+    metadataDocId: id,
+    createdAt: input.content.createdAt || now,
+    updatedAt: now,
+  };
+
+  const review: QuestionReview | null = withReview
+    ? {
+        id: doc(collection(db, 'questionReviews')).id,
+        questionId: id,
+        submittedBy: createdBy,
+        submittedAt: now,
+        status,
+        reviewedAt: status === 'approved' ? now : undefined,
+        reviewerId: status === 'approved' ? createdBy.userId : undefined,
+        reviewerName: status === 'approved' ? createdBy.userName : undefined,
+        reviewComment: status === 'approved' ? 'Trusted platform submission (auto-approved).' : '',
+        createdAt: now,
+        updatedAt: now,
+      }
+    : null;
+
+  return { id, meta, content, review };
+}
+
 export const questionStorageApi = {
   async downloadQuestion(storagePath: string): Promise<ApiResponse<QuestionContent>> {
     try {
@@ -211,107 +326,99 @@ export const questionStorageApi = {
     content: Partial<QuestionContent> & { questionText: string };
   }): Promise<ApiResponse<{ id: string }>> {
     try {
-      const now = new Date().toISOString();
-      const id = doc(collection(db, META_COLLECTION)).id;
-
-      const status: ReviewStatus = input.meta.status || 'pending';
-      const createdBy = input.meta.createdBy || {
-        userId: '',
-        userName: 'Unknown',
-        collegeId: null,
-        collegeName: '',
-        role: 'faculty',
-      };
-      const visibility: Visibility = input.meta.visibility || 'college_only';
-      const source = input.meta.source || 'college';
-      const tags = [...new Set([...(input.meta.tags || [])])];
-      const subjectId = input.meta.subjectId || 'General';
-      const topicId = input.meta.topicId || 'General';
-      const questionType = input.meta.questionType || 'mcq';
-      const difficulty = input.meta.difficulty || 'medium';
-      const marks = input.meta.marks ?? 1;
-      const language = input.meta.language || 'en';
-      const questionText = input.content.questionText || '';
-      const previewText = buildPreviewText(questionText);
-      const searchKeywords = buildSearchKeywords(questionText, subjectId, topicId, tags);
-
-      const meta: QuestionMetadata = {
-        ...input.meta,
-        id,
-        subjectId,
-        topicId,
-        questionType,
-        difficulty,
-        marks,
-        language,
-        tags,
-        status,
-        visibility,
-        sharedWith: input.meta.sharedWith || [],
-        source,
-        createdBy,
-        previewText,
-        searchKeywords,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      const content: QuestionContent = {
-        ...(input.content as Partial<QuestionContent>),
-        id,
-        version: input.content.version || 1,
-        questionText: input.content.questionText,
-        options: input.content.options || [],
-        correctAnswer: input.content.correctAnswer || '',
-        explanation: input.content.explanation || '',
-        hint: input.content.hint || '',
-        subjectId,
-        topicId,
-        subTopicId: input.content.subTopicId || input.meta.subTopicId || '',
-        difficulty,
-        questionType,
-        marks,
-        language,
-        tags,
-        images: input.content.images || [],
-        hasImage: !!input.content.hasImage,
-        createdBy,
-        source,
-        status,
-        visibility,
-        sharedWith: meta.sharedWith,
-        quality: input.content.quality || { rating: 0, reviewCount: 0, flagged: false },
-        usageStats: input.content.usageStats || { usedInPapers: 0, usedInAssessments: 0, collegesUsing: [] },
-        versions: input.content.versions || [],
-        storagePath: input.content.storagePath || `${CONTENT_COLLECTION}/${id}.json`,
-        metadataDocId: id,
-        createdAt: input.content.createdAt || now,
-        updatedAt: now,
-      };
-
-      const review: QuestionReview = {
-        id: doc(collection(db, 'questionReviews')).id,
-        questionId: id,
-        submittedBy: createdBy,
-        submittedAt: now,
-        status,
-        reviewedAt: status === 'approved' ? now : undefined,
-        reviewerId: status === 'approved' ? createdBy.userId : undefined,
-        reviewerName: status === 'approved' ? createdBy.userName : undefined,
-        reviewComment: status === 'approved' ? 'Trusted platform submission (auto-approved).' : '',
-        createdAt: now,
-        updatedAt: now,
-      };
+      const { id, meta, content, review } = buildQuestionDocs(input, true);
 
       const batch = writeBatch(db);
       batch.set(doc(db, META_COLLECTION, id), meta);
       batch.set(doc(db, CONTENT_COLLECTION, id), content);
-      batch.set(doc(db, 'questionReviews', review.id), review);
+      if (review) batch.set(doc(db, 'questionReviews', review.id), review);
       await batch.commit();
 
       return { success: true, data: { id } };
     } catch (error) {
       return { success: false, error: (error as Error).message };
+    }
+  },
+
+  /**
+   * Batched sibling of `createQuestion` for seeding/importing many questions at
+   * once (see `src/modules/superadmin/data/questionBankSeed.ts`).
+   *
+   * It builds each document with the exact same derivation as `createQuestion`
+   * (previewText, searchKeywords, storagePath, review doc) so a seeded row is
+   * indistinguishable from one submitted through the UI, then commits them in
+   * chunks — a single Firestore batch is capped at 500 operations, and 3 writes
+   * per question means the safe ceiling is ~166 questions. Chunking also lets a
+   * partial failure report how much did land instead of losing everything.
+   */
+  async createQuestions(
+    inputs: {
+      meta: Omit<QuestionMetadata, 'id' | 'createdAt' | 'updatedAt'>;
+      content: Partial<QuestionContent> & { questionText: string };
+    }[],
+    options?: {
+      /** Write the paired questionReviews doc (default true, matching createQuestion). */
+      writeReview?: boolean;
+      /** Max questions per committed batch (default 150 → ≤450 writes). */
+      chunkSize?: number;
+      /** Invoked after each committed chunk with the running totals. */
+      onProgress?: (done: number, total: number) => void;
+    }
+  ): Promise<ApiResponse<{ createdIds: string[]; created: number; failed: number; errors: string[] }>> {
+    const createdIds: string[] = [];
+    const errors: string[] = [];
+    const total = inputs.length;
+    if (!total) {
+      return { success: true, data: { createdIds, created: 0, failed: 0, errors } };
+    }
+
+    const writeReview = options?.writeReview !== false;
+    const chunkSize = Math.max(1, Math.min(options?.chunkSize || 150, writeReview ? 166 : 250));
+
+    try {
+      for (let start = 0; start < total; start += chunkSize) {
+        const chunk = inputs.slice(start, start + chunkSize);
+        const batch = writeBatch(db);
+        const chunkIds: string[] = [];
+
+        for (const input of chunk) {
+          const built = buildQuestionDocs(input, writeReview);
+          batch.set(doc(db, META_COLLECTION, built.id), built.meta);
+          batch.set(doc(db, CONTENT_COLLECTION, built.id), built.content);
+          if (built.review) batch.set(doc(db, 'questionReviews', built.review.id), built.review);
+          chunkIds.push(built.id);
+        }
+
+        try {
+          await batch.commit();
+          createdIds.push(...chunkIds);
+        } catch (chunkErr) {
+          const message = (chunkErr as Error).message;
+          errors.push(
+            `Batch ${Math.floor(start / chunkSize) + 1} (${chunk.length} questions) failed: ${message}`
+          );
+        }
+
+        options?.onProgress?.(Math.min(start + chunkSize, total), total);
+      }
+
+      return {
+        // Success as long as the run completed; a partial failure is reported via
+        // `failed` + `errors` so the caller can show exactly what landed.
+        success: true,
+        data: {
+          createdIds,
+          created: createdIds.length,
+          failed: total - createdIds.length,
+          errors,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: (error as Error).message,
+        data: { createdIds, created: createdIds.length, failed: total - createdIds.length, errors },
+      };
     }
   },
 };

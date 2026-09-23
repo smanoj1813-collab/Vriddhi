@@ -106,6 +106,19 @@ def validate(rows, label):
                 problems.append(f"{label} row {i}: MCQ missing correctAnswer")
         if row["type"] in ("short_answer", "long_answer") and not row["correctAnswer"].strip():
             problems.append(f"{label} row {i}: answer text required for {row['type']}")
+        # true_false keys must be literal True/False — the app renders them as a
+        # two-option choice and auto-grades on that key. A free-text key (e.g. a
+        # sentence copied out of the options) can never be graded.
+        if row["type"] == "true_false" and row["correctAnswer"].strip().lower() not in ("true", "false"):
+            problems.append(
+                f"{label} row {i}: true_false correctAnswer must be True or False, "
+                f"got {row['correctAnswer'][:40]!r}"
+            )
+        if row["type"] == "numerical":
+            try:
+                float(str(row["correctAnswer"]).strip())
+            except ValueError:
+                problems.append(f"{label} row {i}: numerical correctAnswer must be a number")
     return problems
 
 
