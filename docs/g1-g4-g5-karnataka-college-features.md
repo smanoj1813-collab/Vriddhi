@@ -112,3 +112,112 @@ expired engagements silently carried into next term.
   BCU parity), render **274/274**.
 - BCU parity is pinned byte-for-byte: unassigned colleges behave exactly as
   before G1.
+
+---
+
+# Auto-Scheduler v2 — date ranges, topic selection, placement strategies, academic calendar
+
+Operator-driven follow-up to G4 (design record: the v2 handoff brief). Four
+asks shipped; contracts below. All defaults preserve pre-v2 behaviour.
+
+## P1 — Slot applicability window (`effectiveFrom` / `effectiveTo`)
+
+- `WeeklySlot` gains optional `effectiveFrom`/`effectiveTo` (`yyyy-mm-dd`,
+  inclusive). **Legacy docs without the fields stay perpetual** (no migration).
+- `generateClassSessions` skips occurrences outside a slot's window (additive
+  `skippedOutsideWindow` count in the response); `cancelWeeklySchedule`
+  semantics unchanged.
+- `autoGenerateWeeklySchedule` payload gains
+  `dateRange?: { from: string; to?: string }` — validated (`validateAutoSchedulePayload`), written through to every created doc. Ranges wider
+  than `MAX_GENERATE_RANGE_DAYS` (92) are **warned, not rejected** (the
+  expansion callable caps at 92 per run; generate the term in chunks).
+
+## P2 — Course selection & weekly-load overrides (+ topic seeding)
+
+- Payload: `courseOverrides?: Array<{ mappingId, weeklyPeriods?: number|null,
+  include?: boolean }>`. `include:false` (or `weeklyPeriods: 0`) excludes the
+  course; `weeklyPeriods` overrides the `hoursPerWeek()` derivation.
+- A **zero-hour mapping with no override** no longer demands `credits×4`
+  periods — it lands in `unplaced` with the explicit reason
+  `course has 0 contact hours — set weeklyPeriods`.
+- The plan now carries `demand[]` (mappingId, code, name, faculty,
+  periodsRequested, included, source: derived|override|excluded|zero-hours) —
+  the dialog's per-course table is prefilled from it.
+- Topic seeding (v2 scope): when `dateRange` is set, the curriculum course's
+  ordered module ids are copied to each created slot as `moduleQueue?: string[]`
+  so the session-topics UI can auto-suggest "next module". Full auto-advancing
+  topic assignment = v3.
+
+## P3 — Placement strategies (`uniform` · `spread` · `random`)
+
+- Payload: `strategy?: 'uniform'|'spread'|'random'` (default `'uniform'` =
+  pre-v2, regression-pinned), `randomSeed?: string`, `roomStrategy?:
+  'leastLoaded'|'random'` (default `'leastLoaded'`).
+- **Deterministic RNG** (mulberry32 over the seed string): same seed + same
+  inputs = same grid, so preview == apply and a run is auditable weeks later.
+  The dialog shows the seed (🎲 = new seed); a seedless random call arrives at
+  the default seed and echoes `plan.randomSeed`.
+- `spread`: day-tiebreak rotates by course rank (`days[n % len]` first) +
+  early/late period pendulum (rank parity picks the first end).
+- `random`: seeded shuffle of the day order and same-span candidates.
+- **Hard constraints are sacred in every mode** (cohort/faculty/room busy,
+  faculty daily cap, ≤1 span per course per day, lab span contiguity). The
+  24-period UGC ceiling stays flag-only (pre-v2 semantics), always truthful.
+  Unplaced reason text is mode-independent.
+
+## P4 — Academic calendar (holidays, fests, exam windows)
+
+**Model** `academicCalendar/{id}`:
+`{ collegeId, title, type: 'public-holiday'|'college-holiday'|'study-holiday'|
+'fest'|'exam', startDate, endDate (yyyy-mm-dd, inclusive), suspendsClasses,
+notes?, createdBy, createdAt, updatedAt }`.
+`DEFAULT_SUSPENDS_CLASSES`: true for holidays/study-holiday/exam, **false for
+fests** (spec default; every event's stored flag wins).
+
+**Rules:** staff of the college (+ superadmin) read; **writes are client-denied**
+— mirror of `schemePacks`.
+
+**Callables** (registered in `functions/src/index.ts`, region `asia-south1`):
+
+```
+saveCalendarEvent { event: { id?, title, type, startDate, endDate,
+  suspendsClasses?, notes? }, collegeId? }
+  → { id, updated, warnings[] }     // type enum + date order validated;
+                                    // overlaps allowed but warned
+
+deleteCalendarEvent { id, collegeId? } → { id }
+```
+
+**Scheduler wiring:**
+- `autoGenerateWeeklySchedule` reads the college's calendar (≤200 docs) and
+  returns `plan.calendar` = events + blocked weekdays (with titles) + blocked
+  dates; with a `dateRange`, `summary.teachingDays` / `blockedDays` /
+  `blockedBreakdown` split teaching vs suspended grid-days. A calendar-exhausted
+  window (0 teaching days) warns explicitly. Weekly patterns still place Mon
+  slots on a Mon holiday — sessions, not the grid, are date-skippable.
+- `generateClassSessions` suppresses occurrences on `suspendsClasses` dates and
+  reports `skippedHolidays: [{ date, reason: 'Holiday: Diwali' }]` +
+  `skippedHolidayCount` (additive); fests with `suspendsClasses:false` run
+  normally.
+
+**UI:**
+- `/admin/academic-calendar` (nav: Academics → Academic Calendar in **both**
+  principal and HOD sidebars; Scheme Packs also added to the HOD sidebar):
+  month grid + colour-coded type chips + list view + create/edit/delete
+  dialog + **"Import Karnataka public holidays (year)"** from the bundled
+  static list (`src/shared/data/karnatakaPublicHolidays.ts`, DPAR 2026 + fixed
+  2027 dates — verify tentative lunar dates after import).
+- `AutoScheduleDialog`: applicability date-range pickers, per-course override
+  table, Pattern/Room-pick toggles with one-line explainers, seed field + 🎲,
+  calendar summary row, server `warnings[]` surfaced.
+- "⛔ Holiday — no classes" banners on AdminClassSchedule (next occurrence of
+  the selected weekday), StudentTimetable (today) and FacultySchedule (today)
+  via shared `HolidayBanner` + `useAcademicCalendar`.
+
+**Tests:** `functions/test/autoSchedule.test.ts` (batchListMatches ×5 (multi-
+batch fix), RNG determinism, strategy/roomStrategy constraint preservation over
+a synthetic 6-course input, courseOverrides + 0h reasons, v2 payload
+validation), `functions/test/calendar.test.ts` (validation rejects bad type /
+inverted dates / missing title; view builders; suppression), `functions/test/
+classSchedule.test.ts` (slot windows incl. legacy back-compat),
+`firestore.rules.test.ts` (staff-read ok, client write denied).

@@ -1,19 +1,32 @@
 // src/modules/admin/pages/AutoScheduleDialog.tsx
-// G4 auto-scheduler dialog: config → dry-run preview (grid + hours/day +
-// faculty load + unplaced) → apply. The server is the only writer; this is a
-// pure remote-plan renderer (same preview→approve discipline as AutoMap).
+// G4 auto-scheduler dialog (Auto-Scheduler v2): config → dry-run preview (grid
+// + hours/day + faculty load + unplaced + calendar) → apply. The server is the
+// only writer; this is a pure remote-plan renderer (same preview→approve
+// discipline as AutoMap).
+//
+// v2 operator controls:
+//   P1  Date range (from/to) — the applicability window written to every doc.
+//   P2  Per-course table — include checkbox + weekly-periods override,
+//       prefilled from the preview's demand list.
+//   P3  Pattern (Uniform · Spread · Random) + Room pick (Least-loaded ·
+//       Random) + a visible seed with 🎲 regenerate. Same seed = same grid,
+//       so preview == apply and a run is reproducible weeks later.
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import {
   Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton, MenuItem, Stack, TextField, Typography,
+  DialogTitle, Divider, IconButton, MenuItem, Stack, Switch,
+  TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
+  Table, TableBody, TableCell, TableHead, TableRow, Checkbox,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import {
   AutoFixHigh as AutoIcon,
+  Casino as SeedIcon,
   Close as CloseIcon,
+  EventBusy as BlockIcon,
   PlayArrow as PreviewIcon,
   PublishRounded as ApplyIcon,
 } from '@mui/icons-material';
@@ -21,7 +34,10 @@ import { db } from '@/Firebase/config';
 import {
   autoGenerateWeeklySchedule,
   type AutoSchedulePlan,
+  type AutoScheduleRequest,
   type AutoScheduleResponse,
+  type PlacementStrategy,
+  type RoomStrategy,
 } from '../api/autoScheduleApi';
 import type { DayOfWeek } from '../types/schedule';
 
@@ -33,6 +49,22 @@ interface CurriculumOption {
 }
 
 const ALL_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+const STRATEGY_INFO: Record<PlacementStrategy, string> = {
+  uniform: 'Machine-stamped: every day identical, earliest periods first (pre-v2 behaviour).',
+  spread: 'Rotated days + early/late period dispersion — a varied grid, still deterministic.',
+  random: 'Seeded shuffle of days and periods — different look per seed, constraints unchanged.',
+};
+
+const ROOM_INFO: Record<RoomStrategy, string> = {
+  leastLoaded: 'Fill the emptiest room first (spreads utilisation).',
+  random: 'Seeded pick among the rooms free for that span.',
+};
+
+/** Fresh run seed — shown in the dialog; 🎲 rolls another. */
+function newSeed(): string {
+  return `run-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+}
 
 interface Props {
   collegeId: string;
@@ -55,6 +87,11 @@ interface FormState {
   labSpan: number;
   rooms: string;
   maxPerDay: number;
+  dateFrom: string;
+  dateTo: string;
+  strategy: PlacementStrategy;
+  roomStrategy: RoomStrategy;
+  seed: string;
 }
 
 const initialForm: FormState = {
@@ -70,7 +107,17 @@ const initialForm: FormState = {
   labSpan: 2,
   rooms: 'Room 1, Room 2, Room 3',
   maxPerDay: 4,
+  dateFrom: '',
+  dateTo: '',
+  strategy: 'uniform',
+  roomStrategy: 'leastLoaded',
+  seed: '',
 };
+
+interface OverrideEdit {
+  include?: boolean;
+  periods?: number | null;
+}
 
 export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied }: Props) {
   const [form, setForm] = useState<FormState>(initialForm);
@@ -78,6 +125,11 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
   const [busy, setBusy] = useState<'preview' | 'apply' | null>(null);
   const [error, setError] = useState('');
   const [appliedInfo, setAppliedInfo] = useState('');
+  // P2 — user edits only. Untouched rows send NO override, so the server's
+  // derivation (and its truthful "0 contact hours" unplaced reason) survives.
+  const [overrides, setOverrides] = useState<Record<string, OverrideEdit>>({});
+  // Last known demand list (survives config edits that invalidate the preview).
+  const [demand, setDemand] = useState<AutoSchedulePlan['demand']>([]);
 
   const curriculaQuery = useQuery({
     queryKey: ['autoScheduleCurricula', collegeId],
@@ -109,31 +161,62 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
     setAppliedInfo('');
   };
 
+  /** Cohort identity changed — the override table no longer describes these courses. */
+  const setCohort = (key: 'curriculumId' | 'batch' | 'division' | 'section', value: string) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    setPreview(null);
+    setAppliedInfo('');
+    setOverrides({});
+    setDemand([]);
+  };
+
+  const buildRequest = (dryRun: boolean): AutoScheduleRequest => {
+    const overrideRows = Object.entries(overrides).map(([mappingId, edit]) => ({
+      mappingId,
+      ...(edit.include === undefined ? {} : { include: edit.include }),
+      ...(edit.periods === undefined || edit.periods === null ? {} : { weeklyPeriods: edit.periods }),
+    }));
+    return {
+      curriculumId: form.curriculumId,
+      batch: form.batch.trim(),
+      division: form.division.trim() || undefined,
+      section: form.section.trim() || undefined,
+      grid: {
+        days: ALL_DAYS,
+        periodsPerDay: form.periodsPerDay,
+        startTime: form.startTime,
+        periodMinutes: form.periodMinutes,
+        breakAfterPeriod: form.breakAfterPeriod,
+        breakMinutes: form.breakMinutes,
+        labSpan: form.labSpan,
+      },
+      rooms: form.rooms.split(',').map((r) => r.trim()).filter(Boolean),
+      maxPeriodsPerDayPerFaculty: form.maxPerDay,
+      dryRun,
+      ...(form.dateFrom
+        ? { dateRange: { from: form.dateFrom, ...(form.dateTo ? { to: form.dateTo } : {}) } }
+        : {}),
+      strategy: form.strategy,
+      ...(form.strategy === 'random' || form.roomStrategy === 'random'
+        ? { randomSeed: form.seed || undefined }
+        : {}),
+      roomStrategy: form.roomStrategy,
+      ...(overrideRows.length > 0 ? { courseOverrides: overrideRows } : {}),
+    };
+  };
+
   const run = async (dryRun: boolean) => {
     setError('');
     setBusy(dryRun ? 'preview' : 'apply');
     try {
-      const res = await autoGenerateWeeklySchedule({
-        curriculumId: form.curriculumId,
-        batch: form.batch.trim(),
-        division: form.division.trim() || undefined,
-        section: form.section.trim() || undefined,
-        grid: {
-          days: ALL_DAYS,
-          periodsPerDay: form.periodsPerDay,
-          startTime: form.startTime,
-          periodMinutes: form.periodMinutes,
-          breakAfterPeriod: form.breakAfterPeriod,
-          breakMinutes: form.breakMinutes,
-          labSpan: form.labSpan,
-        },
-        rooms: form.rooms.split(',').map((r) => r.trim()).filter(Boolean),
-        maxPeriodsPerDayPerFaculty: form.maxPerDay,
-        dryRun,
-      });
+      const res = await autoGenerateWeeklySchedule(buildRequest(dryRun));
       setPreview(res);
+      if (Array.isArray(res.plan.demand) && res.plan.demand.length > 0) setDemand(res.plan.demand);
+      // Server generated a seed for a seedless random run — pin it locally so
+      // apply replays exactly the previewed grid.
+      if (res.randomSeed && !form.seed) setForm((f) => ({ ...f, seed: res.randomSeed as string }));
       if (!dryRun) {
-        setAppliedInfo(`Applied: ${res.created ?? res.plan.placements.length} slots written to the timetable`);
+        setAppliedInfo(`Applied: ${res.created ?? res.plan.placements.length} slots written to the timetable${form.dateFrom ? ` (valid ${form.dateFrom}${form.dateTo ? ` → ${form.dateTo}` : ''})` : ''}`);
         onApplied();
       }
     } catch (e) {
@@ -160,6 +243,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
   }, [plan]);
 
   const canRun = !!form.curriculumId && form.batch.trim().length > 0 && busy === null;
+  const dateRangeInvalid = !!form.dateTo && !!form.dateFrom && form.dateTo < form.dateFrom;
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} maxWidth="lg" fullWidth>
@@ -180,13 +264,16 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
       <DialogContent dividers>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {appliedInfo && <Alert severity="success" sx={{ mb: 2 }}>{appliedInfo}</Alert>}
+        {preview?.warnings?.map((w, i) => (
+          <Alert key={i} severity="info" sx={{ mb: 1 }}>{w}</Alert>
+        ))}
 
         {/* ─── Config ─── */}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               select fullWidth size="small" label="Curriculum" value={form.curriculumId}
-              onChange={(e) => set('curriculumId', e.target.value)}
+              onChange={(e) => setCohort('curriculumId', e.target.value)}
             >
               {curriculaQuery.data?.map((c) => (
                 <MenuItem key={c.id} value={c.id}>{c.title} ({c.branch} · Sem {c.semester})</MenuItem>
@@ -194,16 +281,35 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
             </TextField>
           </Grid>
           <Grid size={{ xs: 4, md: 2 }}>
-            <TextField fullWidth size="small" label="Batch" value={form.batch} onChange={(e) => set('batch', e.target.value)} placeholder="2026" />
+            <TextField fullWidth size="small" label="Batch" value={form.batch} onChange={(e) => setCohort('batch', e.target.value)} placeholder="2026" helperText="Multi-intake: 2027, 2028" />
           </Grid>
           <Grid size={{ xs: 4, md: 2 }}>
-            <TextField fullWidth size="small" label="Division (opt.)" value={form.division} onChange={(e) => set('division', e.target.value)} />
+            <TextField fullWidth size="small" label="Division (opt.)" value={form.division} onChange={(e) => setCohort('division', e.target.value)} />
           </Grid>
           <Grid size={{ xs: 4, md: 2 }}>
-            <TextField fullWidth size="small" label="Section (opt.)" value={form.section} onChange={(e) => set('section', e.target.value)} placeholder="A" />
+            <TextField fullWidth size="small" label="Section (opt.)" value={form.section} onChange={(e) => setCohort('section', e.target.value)} placeholder="A" />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField fullWidth size="small" label="Rooms (comma-separated)" value={form.rooms} onChange={(e) => set('rooms', e.target.value)} />
+          </Grid>
+
+          {/* P1 — applicability window */}
+          <Grid size={{ xs: 6, md: 2 }}>
+            <TextField
+              fullWidth size="small" type="date" label="Applies from" value={form.dateFrom}
+              onChange={(e) => set('dateFrom', e.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+              error={dateRangeInvalid}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <TextField
+              fullWidth size="small" type="date" label="…to (optional)" value={form.dateTo}
+              onChange={(e) => set('dateTo', e.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+              error={dateRangeInvalid}
+              helperText={dateRangeInvalid ? 'to < from' : 'Empty = open-ended'}
+            />
           </Grid>
 
           <Grid size={{ xs: 3, md: 1.5 }}>
@@ -234,10 +340,139 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
             <TextField fullWidth size="small" type="number" label="Faculty max/day" value={form.maxPerDay}
               onChange={(e) => set('maxPerDay', Number(e.target.value) || 4)} />
           </Grid>
-          <Grid size={{ xs: 3, md: 1.5 }} sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="caption" color="text.secondary">Mon–Sat grid · labs auto-spanned · least-loaded room first</Typography>
+
+          {/* P3 — pattern + room pick + seed */}
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Typography variant="caption" color="text.secondary">Pattern</Typography>
+            <ToggleButtonGroup
+              exclusive size="small" fullWidth value={form.strategy}
+              onChange={(_, v: PlacementStrategy | null) => v && set('strategy', v)}
+            >
+              <ToggleButton value="uniform">Uniform</ToggleButton>
+              <ToggleButton value="spread">Spread</ToggleButton>
+              <ToggleButton value="random">Random</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              {STRATEGY_INFO[form.strategy]}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Typography variant="caption" color="text.secondary">Room pick</Typography>
+            <ToggleButtonGroup
+              exclusive size="small" fullWidth value={form.roomStrategy}
+              onChange={(_, v: RoomStrategy | null) => v && set('roomStrategy', v)}
+            >
+              <ToggleButton value="leastLoaded">Least-loaded</ToggleButton>
+              <ToggleButton value="random">Random</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              {ROOM_INFO[form.roomStrategy]}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant="caption" color="text.secondary">Seed (same seed = same grid)</Typography>
+            <Stack direction="row" spacing={0.5}>
+              <TextField
+                fullWidth size="small" value={form.seed} placeholder="auto"
+                onChange={(e) => set('seed', e.target.value)}
+              />
+              <Tooltip title="Roll a new seed">
+                <IconButton onClick={() => set('seed', newSeed())}><SeedIcon /></IconButton>
+              </Tooltip>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              Preview and Apply replay this seed — regenerate for a different layout.
+            </Typography>
           </Grid>
         </Grid>
+
+        {/* ─── P4 — calendar summary ─── */}
+        {plan?.calendar && (
+          <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1, alignItems: 'center' }}>
+            <Chip
+              size="small"
+              icon={<BlockIcon />}
+              color={(plan.summary.blockedDays ?? 0) > 0 ? 'warning' : 'default'}
+              label={
+                plan.summary.teachingDays !== undefined
+                  ? `Teaching days: ${plan.summary.teachingDays} · Blocked: ${plan.summary.blockedDays ?? 0}`
+                  : `${(plan.calendar?.events ?? []).length} calendar events`
+              }
+            />
+            {Object.entries(plan.summary.blockedBreakdown ?? {}).map(([type, n]) => (
+              <Chip key={type} size="small" variant="outlined" label={`${type}: ${n} day${n === 1 ? '' : 's'}`} />
+            ))}
+            {plan.calendar?.blockedWeekdays.map((bw) => (
+              <Chip key={bw.day} size="small" color="warning" variant="outlined" label={`${dayHeader(bw.day)} ⛔ ${bw.titles.join(' · ')}`} />
+            ))}
+          </Stack>
+        )}
+
+        {/* ─── P2 — course overrides ─── */}
+        {demand.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+              Courses this run {Object.keys(overrides).length > 0 ? `(${Object.keys(overrides).length} edited — clear edits by closing the dialog)` : ''}
+            </Typography>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">In</TableCell>
+                  <TableCell>Course</TableCell>
+                  <TableCell>Faculty</TableCell>
+                  <TableCell sx={{ width: 130 }}>Periods/week</TableCell>
+                  <TableCell>Note</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {demand.map((row) => {
+                  const edit = overrides[row.mappingId] ?? {};
+                  const included = edit.include ?? row.included;
+                  const periods = edit.periods !== undefined ? edit.periods : row.periodsRequested;
+                  return (
+                    <TableRow key={row.mappingId} hover>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          size="small"
+                          checked={included}
+                          onChange={(e) =>
+                            setOverrides((o) => ({ ...o, [row.mappingId]: { ...o[row.mappingId], include: e.target.checked } }))
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <b>{row.courseCode}</b> {row.courseName}
+                      </TableCell>
+                      <TableCell>{row.facultyName}</TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small" type="number" value={periods} disabled={!included}
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? null : Number(e.target.value);
+                            setOverrides((o) => ({ ...o, [row.mappingId]: { ...o[row.mappingId], periods: v } }));
+                          }}
+                          sx={{ width: 100 }}
+                          slotProps={{ htmlInput: { min: 0, max: 40 } }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {row.source === 'zero-hours' ? (
+                          <Typography variant="caption" color="warning.main">{row.reason ?? 'course has 0 contact hours — set weeklyPeriods'}</Typography>
+                        ) : row.source === 'override' ? (
+                          <Chip size="small" variant="outlined" label="overridden" />
+                        ) : row.source === 'excluded' ? (
+                          <Typography variant="caption" color="text.secondary">{row.reason ?? 'excluded'}</Typography>
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">from curriculum hours</Typography>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Box>
+        )}
 
         {/* ─── Preview ─── */}
         {plan && (
@@ -327,19 +562,25 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
             </Grid>
           </Box>
         )}
+
+        <Divider sx={{ mt: 2 }} />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+          Hard constraints (cohort/faculty/room busy, daily cap, one span/day, lab contiguity) hold in every
+          pattern — only the preference order changes. Weekly 24-period UGC ceiling is flagged, never hidden.
+        </Typography>
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} disabled={!!busy}>Close</Button>
         <Button
           variant="outlined" startIcon={<PreviewIcon />}
-          disabled={!canRun} onClick={() => run(true)}
+          disabled={!canRun || dateRangeInvalid} onClick={() => run(true)}
         >
           {busy === 'preview' ? 'Planning…' : 'Preview (no writes)'}
         </Button>
         <Button
           variant="contained" startIcon={<ApplyIcon />}
-          disabled={!canRun || !plan || plan.placements.length === 0}
+          disabled={!canRun || dateRangeInvalid || !plan || plan.placements.length === 0}
           onClick={() => run(false)}
         >
           {busy === 'apply' ? 'Writing…' : `Apply ${plan ? `${plan.placements.length} slots` : ''}`}

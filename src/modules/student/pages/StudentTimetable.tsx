@@ -27,6 +27,7 @@ import { useStudentProfile } from '../hooks/useStudentProfile'
 import { useAuth } from '../../auth/context/AuthContext'
 import { fetchTodaySchedule, type StudentClassSession } from '../api/studentDataApi'
 import { useMyCurriculum, type StudentSessionSummary } from '../hooks/useMyCurriculum'
+import HolidayBanner from '@/shared/components/HolidayBanner'
 
 function localDateKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -228,6 +229,9 @@ const StudentTimetable: React.FC = () => {
           See what each subject covers → My Curriculum
         </Typography>
       </Box>
+
+      {/* P4: academic-calendar banner — today */}
+      <HolidayBanner date={localDateKey()} collegeId={studentProfile.collegeId} />
 
       {/* Today's Classes */}
       <Box sx={{ mb: 4 }}>

@@ -102,6 +102,8 @@ import { bulkImportWeeklySchedules } from './scheduleImport'
 import { saveSchemePack, assignCollegeSchemePack } from './schemePacks'
 // ─── Auto slot scheduler: day×period grid placement + coverage (G4) ───
 import { autoGenerateWeeklySchedule } from './autoSchedule'
+// ─── Academic calendar: holidays, fests, exam windows (Auto-Scheduler v2) ────
+import { saveCalendarEvent, deleteCalendarEvent } from './calendar'
 // ─── Assignment completion analytics (course/module/batch/division) ───
 import { getAssignmentAnalytics } from './assignmentAnalytics'
 // ─── Announcements: server-authoritative targeting + per-recipient reads ───
@@ -286,6 +288,8 @@ export {
   saveSchemePack,
   assignCollegeSchemePack,
   autoGenerateWeeklySchedule,
+  saveCalendarEvent,
+  deleteCalendarEvent,
   getAssignmentAnalytics,
   sendAnnouncement,
   listCollegeAnnouncements,
