@@ -68,3 +68,7 @@ assessment_files_dump.txt
 content/pre-assessment/previews/*-key.html
 # marketing build byproducts
 marketing/__pycache__/
+
+# python bytecode
+__pycache__/
+*.pyc
