@@ -400,3 +400,73 @@ describe('validateAutoMapPayload', () => {
     assert.equal(p.semesterWeeks, 14)
   })
 })
+
+
+// ─── G5: Guest faculty lifecycle ─────────────────────────────────────────────
+
+function guest(over: Partial<AutoMapFaculty> = {}, contract?: AutoMapFaculty['guestContract']): AutoMapFaculty {
+  return { ...fac(over), employmentType: 'PART_TIME', guestContract: contract ?? { periodRate: 500 } }
+}
+
+describe('runAutoMapping — guest faculty (G5)', () => {
+  it('prefers a credible full-time teacher over a better-scoring guest', () => {
+    const result = runAutoMapping(opts({
+      courses: [course({ code: 'FA01', name: 'Financial Accounting', totalHours: 60 })],
+      faculty: [
+        fac({ uid: 'ft', subjectsUG: ['Financial Accounting'], experienceYears: 2 }),
+        // Guest has perfect match AND far more experience — still loses,
+        // because a full-time candidate clears the subject-fit bar (≥15).
+        guest({ uid: 'g1', subjectsUG: ['Financial Accounting'], experienceYears: 20 }),
+      ],
+    }))
+    assert.equal(result.proposals[0].faculty?.uid, 'ft')
+    assert.equal(result.summary.guestAssigned, 0)
+  })
+
+  it('reaches for a guest when no full-time candidate has a subject fit, and flags it', () => {
+    const result = runAutoMapping(opts({
+      courses: [course({ code: 'FA01', name: 'Financial Accounting', totalHours: 60 })],
+      faculty: [
+        fac({ uid: 'ft', subjectsUG: ['Sociology'] }),
+        guest({ uid: 'g1', subjectsUG: ['Financial Accounting'], experienceYears: 12 }, { periodRate: 600 }),
+      ],
+    }))
+    assert.equal(result.proposals[0].faculty?.uid, 'g1')
+    assert.ok(result.proposals[0].flags.includes('guest-assigned'))
+    assert.equal(result.summary.guestAssigned, 1)
+    const guestLoad = result.facultyLoad.find((f) => f.uid === 'g1')
+    assert.equal(guestLoad?.capacity, 12)
+    assert.equal(guestLoad?.isGuest, true)
+  })
+
+  it('excludes guests whose contract has ended, but keeps them in load', () => {
+    const result = runAutoMapping(opts({
+      courses: [course({ code: 'CA01', name: 'Corporate Accounting', totalHours: 60 })],
+      faculty: [
+        guest({ uid: 'g-exp', subjectsUG: ['Corporate Accounting'] }, { endDate: '2020-06-30', periodRate: 500 }),
+        fac({ uid: 'ft', subjectsUG: ['Corporate Accounting'] }),
+      ],
+      existing: [mapping({ courseId: 'ca-old', courseCode: 'CA01', facultyId: 'g-exp', totalHours: 60 })],
+    }))
+    assert.equal(result.proposals[0].faculty?.uid, 'ft') // expired guest never proposed
+    assert.equal(result.summary.contractExpiredGuests, 1)
+    const row = result.facultyLoad.find((f) => f.uid === 'g-exp')
+    assert.ok(row && row.currentWeeklyHours > 0) // current teaching still counts
+  })
+
+  it('respects the smaller guest capacity before flagging overload', () => {
+    const result = runAutoMapping(opts({
+      courses: [
+        course({ id: 'A1', code: 'A1', name: 'Advanced Accounting', totalHours: 90 }),
+        course({ id: 'A2', code: 'A2', name: 'Auditing Practices', totalHours: 90 }),
+        course({ id: 'A3', code: 'A3', name: 'Taxation Practices', totalHours: 90 }),
+      ],
+      faculty: [guest({ uid: 'g1', subjectsUG: ['Accounting', 'Auditing', 'Taxation'] })],
+    }))
+    const assigned = result.proposals.filter((p) => p.faculty?.uid === 'g1')
+    // 6+6=12 guest periods fit; the third 90h course (6/wk) exceeds the cap.
+    assert.ok(assigned.some((p) => p.flags.includes('overload-risk')))
+    const guestLoad = result.facultyLoad.find((f) => f.uid === 'g1')
+    assert.ok((guestLoad?.totalWeeklyHours ?? 0) >= 12)
+  })
+})

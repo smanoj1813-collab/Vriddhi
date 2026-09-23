@@ -43,6 +43,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
         department: faculty.department,
         designation: faculty.designation,
         employmentType: faculty.employmentType,
+        guestContract: faculty.guestContract || undefined,
         joiningDate: faculty.joiningDate,
         qualification: faculty.qualification,
         specialization: faculty.specialization,
@@ -283,6 +284,16 @@ const SuperAdminFacultyDetail: React.FC = () => {
                 />
                 <InfoRow label="Designation" value={faculty.designation} icon={Award} />
                 <InfoRow label="Employment Type" value={faculty.employmentType?.replace('_', ' ')} icon={Calendar} />
+                {faculty.guestContract && (
+                  <InfoRow
+                    label="Guest Contract"
+                    icon={Calendar}
+                    value={`₹${faculty.guestContract.periodRate || 0}/period · ${faculty.guestContract.startDate || '—'} → ${faculty.guestContract.endDate || 'ongoing'}${(() => {
+                      const end = faculty.guestContract?.endDate;
+                      return end && end < new Date().toISOString().slice(0, 10) ? ' (expired — excluded from new auto-mapping)' : '';
+                    })()}`}
+                  />
+                )}
                 <InfoRow label="Joining Date" value={faculty.joiningDate} icon={Calendar} />
                 <InfoRow label="Qualification" value={faculty.qualification} icon={Award} />
                 <InfoRow label="Specialization" value={faculty.specialization} icon={BookOpen} />
@@ -305,6 +316,29 @@ const SuperAdminFacultyDetail: React.FC = () => {
                 <EditField label="Specialization" name="specialization" />
                 <EditField label="Experience (Years)" name="experienceYears" type="number" />
                 <EditField label="HOD" name="isHOD" options={['true', 'false']} />
+                {formData.employmentType && formData.employmentType !== 'FULL_TIME' && (
+                  <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+                    <p className="mb-2 text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Guest contract (auto-mapping window + billing rate)</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <label className="text-xs text-slate-600 dark:text-slate-300">Contract start
+                        <input type="date" className="input-field mt-1" value={formData.guestContract?.startDate || ''}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, guestContract: { ...(prev.guestContract || {}), startDate: e.target.value } }))} />
+                      </label>
+                      <label className="text-xs text-slate-600 dark:text-slate-300">Contract end (blank = ongoing)
+                        <input type="date" className="input-field mt-1" value={formData.guestContract?.endDate || ''}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, guestContract: { ...(prev.guestContract || {}), endDate: e.target.value || null } }))} />
+                      </label>
+                      <label className="text-xs text-slate-600 dark:text-slate-300">Per-period rate (₹)
+                        <input type="number" min="0" className="input-field mt-1" value={formData.guestContract?.periodRate ?? 0}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, guestContract: { ...(prev.guestContract || {}), periodRate: Number(e.target.value) || 0 } }))} />
+                      </label>
+                      <label className="text-xs text-slate-600 dark:text-slate-300">Notes
+                        <input className="input-field mt-1" value={formData.guestContract?.notes || ''}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, guestContract: { ...(prev.guestContract || {}), notes: e.target.value } }))} />
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

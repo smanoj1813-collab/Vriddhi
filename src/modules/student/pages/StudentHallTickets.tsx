@@ -8,7 +8,8 @@ import {
   CheckCircle, Eye, Building2, QrCode, GraduationCap, FileText,
   Bell, Loader2
 } from 'lucide-react';
-import { calculateBCUAttendanceMarks } from '@/shared/utils/bcuCompliance';
+import { getCollegeSchemePack } from '@/modules/admin/api/schemePackApi';
+import { DEFAULT_SCHEME_PACK } from '@/shared/types/schemePack';
 import PWAInstallCard from '@/shared/components/PWAInstallCard';
 
 interface HallTicketDoc {
@@ -41,6 +42,16 @@ export default function StudentHallTickets() {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useStudentProfile(user?.uid);
   const [hallTickets, setHallTickets] = useState<HallTicketDoc[]>([]);
+  // G1: eligibility copy follows the college's assigned university pack.
+  const [schemePack, setSchemePack] = useState(DEFAULT_SCHEME_PACK);
+  useEffect(() => {
+    getCollegeSchemePack().then((r) => setSchemePack(r.pack)).catch(() => undefined);
+  }, []);
+  const attMin = schemePack.attendance.minimumPercentage;
+  const slabText = [...schemePack.attendance.marksSlabs]
+    .sort((a, b) => a.min - b.min)
+    .map((sl) => `${sl.min}-${sl.max}% = ${sl.marks}`)
+    .join(', ');
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<HallTicketDoc | null>(null);
 
@@ -155,17 +166,17 @@ export default function StudentHallTickets() {
           <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
             Your college will generate hall tickets for upcoming university exams. 
             You'll get a notification when your hall ticket is ready for download.
-            Make sure your attendance is ≥75% to be eligible per BCU ordinance.
+            Make sure your attendance is ≥{attMin}% to be eligible per your university's ordinance.
           </p>
           <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl max-w-md mx-auto text-left">
             <h4 className="font-bold text-amber-900 dark:text-amber-100 text-sm flex items-center gap-2">
               <AlertTriangle size={14} />
-              BCU Eligibility Check
+              {schemePack.universityName.includes('Any') ? 'University' : schemePack.code} Eligibility Check
             </h4>
             <p className="text-xs text-amber-800 dark:text-amber-200 mt-1">
-              • Minimum 75% attendance required to be eligible<br />
-              • 76-80% = 2 marks, 81-85% = 3 marks, 86-90% = 4 marks, 91%+ = 5 marks in IA<br />
-              • Hall ticket will be blocked if attendance below 75%
+              • Minimum {attMin}% attendance required to be eligible<br />
+              • {slabText} marks in IA<br />
+              • Hall ticket will be blocked if attendance below {attMin}%
             </p>
           </div>
         </div>

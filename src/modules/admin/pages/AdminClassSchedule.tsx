@@ -1,6 +1,9 @@
 // src/pages/AdminClassSchedule.tsx
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import AutoScheduleDialog from './AutoScheduleDialog'
+
 import {
   Box,
   Typography,
@@ -43,6 +46,7 @@ import {
   UploadFile as UploadIcon,
   Download as DownloadIcon,
   CalendarToday as CalendarIcon,
+  AutoFixHigh as AutoIcon,
   EventBusy as EventBusyIcon,
   AutoAwesomeMotion as MaterialiseIcon,
   Assignment as AssignmentIcon,
@@ -165,6 +169,8 @@ const AdminClassSchedule: React.FC = () => {
     severity: 'success',
   })
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
+  const [autoScheduleOpen, setAutoScheduleOpen] = useState(false)
+  const queryClient = useQueryClient()
   const [csvText, setCsvText] = useState('')
   // Server-side import review: preview (dryRun) → apply. Nothing is written
   // until the admin sees the per-row report and confirms.
@@ -579,6 +585,13 @@ const AdminClassSchedule: React.FC = () => {
           </Button>
           <Button
             variant="outlined"
+            startIcon={<AutoIcon />}
+            onClick={() => setAutoScheduleOpen(true)}
+          >
+            Auto Generate
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<UploadIcon />}
             onClick={() => setBulkDialogOpen(true)}
           >
@@ -594,6 +607,13 @@ const AdminClassSchedule: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      <AutoScheduleDialog
+        collegeId={collegeId}
+        open={autoScheduleOpen}
+        onClose={() => setAutoScheduleOpen(false)}
+        onApplied={() => queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] })}
+      />
 
       {/* Empty-data banners */}
       {facultyList.length === 0 && (

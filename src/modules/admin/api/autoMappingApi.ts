@@ -48,7 +48,7 @@ export interface AutoMapProposal {
   score: number
   breakdown: { subject: number; branch: number; experience: number; balance: number }
   reasons: string[]
-  flags: Array<'overload-risk' | 'no-subject-match'>
+  flags: Array<'overload-risk' | 'no-subject-match' | 'guest-assigned'>
   status: 'proposed' | 'unassigned'
 }
 

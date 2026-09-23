@@ -59,6 +59,8 @@ export const AUTO_MAP_WEIGHTS = {
 
 /** UGC regular-faculty teaching load, periods per week. */
 export const DEFAULT_CAPACITY_WEEKLY_HOURS = 24
+/** Typical guest/P&T engagement ceiling, periods per week (G5). */
+export const DEFAULT_GUEST_CAPACITY = 12
 /** Assumed instructional weeks per semester when converting course hours. */
 export const DEFAULT_SEMESTER_WEEKS = 15
 
@@ -73,6 +75,20 @@ export interface AutoMapFaculty {
   subjectsUG: string[]
   subjectsPG: string[]
   experienceYears: number
+  /**
+   * G5: employment taxonomy. 'FULL_TIME' (the default when absent) carries
+   * the UGC 24-period capacity; anything else (PART_TIME / ADJUNCT /
+   * VISITING — Karnataka's "guest faculty") is capacity-capped lower and is
+   * only picked when no suitable full-time candidate exists.
+   */
+  employmentType?: string
+  /** Guest contract window + per-period pay (billing/reporting surface). */
+  guestContract?: { startDate?: string; endDate?: string | null; periodRate?: number; notes?: string } | null
+}
+
+/** Karnataka guest/P&T faculty: anything that is not a regular appointment. */
+export function isGuestFaculty(f: Pick<AutoMapFaculty, 'employmentType'>): boolean {
+  return !!f.employmentType && f.employmentType !== 'FULL_TIME'
 }
 
 export interface AutoMapCourse {
@@ -110,6 +126,8 @@ export interface AutoMapOptions {
   section?: string | null
   /** Faculty weekly capacity in periods/week. Default DEFAULT_CAPACITY_WEEKLY_HOURS. */
   capacity?: number
+  /** Guest faculty weekly capacity (G5). Default DEFAULT_GUEST_CAPACITY. */
+  guestCapacity?: number
   /** Weeks per semester for the totalHours → weekly conversion. Default 15. */
   semesterWeeks?: number
   courses: AutoMapCourse[]
@@ -118,7 +136,7 @@ export interface AutoMapOptions {
   existing: AutoMapExistingMapping[]
 }
 
-export type AutoMapFlag = 'overload-risk' | 'no-subject-match'
+export type AutoMapFlag = 'overload-risk' | 'no-subject-match' | 'guest-assigned'
 
 export interface AutoMapScoreBreakdown {
   subject: number
@@ -149,6 +167,7 @@ export interface AutoMapFacultyLoad {
   proposedWeeklyHours: number
   totalWeeklyHours: number
   capacity: number
+  isGuest?: boolean
 }
 
 export interface AutoMapResult {
@@ -167,6 +186,10 @@ export interface AutoMapResult {
     unassigned: number
     overloadFlags: number
     facultyInvolved: number
+    /** G5 visibility: guest faculty used despite a thinner employment basis. */
+    guestAssigned: number
+    /** Guests skipped for new proposals because their contract has ended. */
+    contractExpiredGuests: number
   }
   facultyLoad: AutoMapFacultyLoad[]
 }
@@ -354,6 +377,10 @@ function mappingKey(
 export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
   const capacity =
     options.capacity && options.capacity > 0 ? options.capacity : DEFAULT_CAPACITY_WEEKLY_HOURS
+  const guestCapacity =
+    options.guestCapacity && options.guestCapacity > 0 ? options.guestCapacity : DEFAULT_GUEST_CAPACITY
+  /** Effective weekly ceiling per faculty member (G5). */
+  const capacityOf = (f: AutoMapFaculty): number => (isGuestFaculty(f) ? guestCapacity : capacity)
   const semesterWeeks =
     options.semesterWeeks && options.semesterWeeks > 0 ? options.semesterWeeks : DEFAULT_SEMESTER_WEEKS
   const batch = (options.batch || '').trim().toLowerCase()
@@ -405,9 +432,22 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
   const courseKey = (c: AutoMapCourse): string =>
     mappingKey(c.code, c.branch || options.branch, c.semester, batch, division, section)
 
+  // G5: a guest whose contract has already ended is not offered for new
+  // proposals. Their existing mappings still count as load — they may be
+  // finishing out courses this term — but the HOD must not build NEXT term
+  // on an expired engagement.
+  const today = new Date().toISOString().slice(0, 10)
+  const contractActive = (f: AutoMapFaculty): boolean => {
+    if (!isGuestFaculty(f)) return true
+    const end = f.guestContract?.endDate
+    return !end || end >= today
+  }
+  const contractActiveFaculty = options.faculty.filter(contractActive)
+  const contractExpiredGuests = options.faculty.length - contractActiveFaculty.length
+
   const candidatesFor = (c: AutoMapCourse): AutoMapFaculty[] => {
     const blocked = taken.get(courseKey(c)) ?? new Set<string>()
-    return options.faculty.filter((f) => !blocked.has(f.uid))
+    return contractActiveFaculty.filter((f) => !blocked.has(f.uid))
   }
 
   // Most-constrained-first: fewest candidates, then heavier courses, then a
@@ -446,7 +486,9 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
         reasons:
           options.faculty.length === 0
             ? ['No active faculty found in the college']
-            : ['Every faculty is already mapped to this course in this batch'],
+            : contractExpiredGuests > 0
+              ? ['Already mapped to others this batch, or guest contracts expired']
+              : ['Every faculty is already mapped to this course in this batch'],
         flags: [],
         status: 'unassigned',
       })
@@ -454,10 +496,18 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
     }
 
     const scored = candidates.map((f) =>
-      scoreFacultyForCourse(f, course, options.branch, load.get(f.uid) ?? 0, capacity),
+      scoreFacultyForCourse(f, course, options.branch, load.get(f.uid) ?? 0, capacityOf(f)),
     )
-    const fits = scored.filter((s) => (load.get(s.faculty.uid) ?? 0) + hpp <= capacity)
-    const pool = fits.length > 0 ? fits : scored
+    const fits = scored.filter(
+      (s) => (load.get(s.faculty.uid) ?? 0) + hpp <= capacityOf(s.faculty),
+    )
+    let pool = fits.length > 0 ? fits : scored
+    // G5: full-time preference tier. A full-time teacher with a credible
+    // subject fit (≥15 — the same bar as the 'no-subject-match' flag)
+    // always beats a guest, no matter the guest's score; a guest is only
+    // reached for when no full-time candidate clears that bar.
+    const fullTimeCredible = pool.filter((s) => !isGuestFaculty(s.faculty) && s.breakdown.subject >= 15)
+    if (fullTimeCredible.length > 0) pool = fullTimeCredible
     pool.sort(
       (a, b) =>
         b.score - a.score ||
@@ -466,8 +516,9 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
     )
     const best = pool[0]
     const flags: AutoMapFlag[] = []
-    if ((load.get(best.faculty.uid) ?? 0) + hpp > capacity) flags.push('overload-risk')
+    if ((load.get(best.faculty.uid) ?? 0) + hpp > capacityOf(best.faculty)) flags.push('overload-risk')
     if (best.breakdown.subject < 15) flags.push('no-subject-match')
+    if (isGuestFaculty(best.faculty)) flags.push('guest-assigned')
     load.set(best.faculty.uid, (load.get(best.faculty.uid) ?? 0) + hpp)
 
     byCourse.set(course.id, {
@@ -504,7 +555,8 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
         currentWeeklyHours: current,
         proposedWeeklyHours: round1(Math.max(0, total - current)),
         totalWeeklyHours: total,
-        capacity,
+        capacity: capacityOf(f),
+        isGuest: isGuestFaculty(f),
       }
     })
     .filter((f) => f.currentWeeklyHours > 0 || f.proposedWeeklyHours > 0)
@@ -528,6 +580,8 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
       facultyInvolved: new Set(
         proposals.filter((p) => p && p.faculty).map((p) => p.faculty!.uid),
       ).size,
+      guestAssigned: proposals.filter((p) => p && p.flags.includes('guest-assigned')).length,
+      contractExpiredGuests,
     },
     facultyLoad,
   }
@@ -543,6 +597,7 @@ export interface AutoMapPayload {
   division: string
   section: string
   capacity: number
+  guestCapacity: number
   semesterWeeks: number
   collegeId: string
   /** apply only: restrict writes to these course ids (empty = all proposed). */
@@ -600,6 +655,7 @@ export function validateAutoMapPayload(
     division: optBoundedString(raw.division, 'division', 50),
     section: optBoundedString(raw.section, 'section', 50),
     capacity: optBoundedNumber(raw.capacity, 'capacity', DEFAULT_CAPACITY_WEEKLY_HOURS, 1, 60),
+    guestCapacity: optBoundedNumber(raw.guestCapacity, 'guestCapacity', DEFAULT_GUEST_CAPACITY, 1, 60),
     semesterWeeks: optBoundedNumber(raw.semesterWeeks, 'semesterWeeks', DEFAULT_SEMESTER_WEEKS, 4, 30),
     collegeId,
     courseIds,
@@ -651,6 +707,22 @@ function toAutoMapFaculty(snap: admin.firestore.QueryDocumentSnapshot): AutoMapF
     subjectsUG: normalizeSubjectList(d.subjectsUG),
     subjectsPG: normalizeSubjectList(d.subjectsPG),
     experienceYears: Number(d.experienceYears ?? 0) || 0,
+    employmentType: String(d.employmentType ?? 'FULL_TIME').trim() || 'FULL_TIME',
+    guestContract:
+      d.guestContract && typeof d.guestContract === 'object'
+        ? {
+            startDate: String((d.guestContract as Record<string, unknown>).startDate ?? '') || undefined,
+            endDate:
+              (d.guestContract as Record<string, unknown>).endDate == null
+                ? null
+                : String((d.guestContract as Record<string, unknown>).endDate),
+            periodRate: Number((d.guestContract as Record<string, unknown>).periodRate ?? 0) || 0,
+            notes:
+              typeof (d.guestContract as Record<string, unknown>).notes === 'string'
+                ? String((d.guestContract as Record<string, unknown>).notes)
+                : undefined,
+          }
+        : null,
   }
 }
 
@@ -767,6 +839,7 @@ export const autoMapCurriculum = onCall(AUTO_MAP_REGION, async (request) => {
     division: payload.division || null,
     section: payload.section || null,
     capacity: payload.capacity,
+    guestCapacity: payload.guestCapacity,
     semesterWeeks: payload.semesterWeeks,
     courses,
     faculty,
@@ -798,6 +871,7 @@ export const applyAutoMapping = onCall(
       division: payload.division || null,
       section: payload.section || null,
       capacity: payload.capacity,
+      guestCapacity: payload.guestCapacity,
       semesterWeeks: payload.semesterWeeks,
       courses,
       faculty,

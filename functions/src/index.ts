@@ -98,6 +98,10 @@ import {
 import { autoMapCurriculum, applyAutoMapping } from './autoCurriculumMapping'
 // ─── Bulk schedule import: validate → clash-check → (optional) write ───
 import { bulkImportWeeklySchedules } from './scheduleImport'
+// ─── University scheme packs: custom packs + college assignment (G1) ───
+import { saveSchemePack, assignCollegeSchemePack } from './schemePacks'
+// ─── Auto slot scheduler: day×period grid placement + coverage (G4) ───
+import { autoGenerateWeeklySchedule } from './autoSchedule'
 // ─── Assignment completion analytics (course/module/batch/division) ───
 import { getAssignmentAnalytics } from './assignmentAnalytics'
 // ─── Announcements: server-authoritative targeting + per-recipient reads ───
@@ -279,6 +283,9 @@ export {
   autoMapCurriculum,
   applyAutoMapping,
   bulkImportWeeklySchedules,
+  saveSchemePack,
+  assignCollegeSchemePack,
+  autoGenerateWeeklySchedule,
   getAssignmentAnalytics,
   sendAnnouncement,
   listCollegeAnnouncements,

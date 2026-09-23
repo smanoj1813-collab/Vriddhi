@@ -40,6 +40,9 @@ fees, timetables, and more — powered by Firebase and modern React.
   subject → topic → sub-topic) loaded from Superadmin → Question Bank.
 - **AI paper generator** producing question papers from the question bank via Gemini / OpenAI / DeepSeek.
 - **Curriculum management** — standardized curriculum upload, syllabus parsing, and mapping, including **auto-mapping** that suggests a scored faculty for every unmapped course (subject/branch/experience/load scoring, preview → approve — see `docs/auto-curriculum-mapping.md`).
+- **University scheme packs (G1)** — per-university exam rules (marks split, IA composition, attendance slabs, pass criteria, grade table) drive compliance dashboards, hall-ticket blocking and result import. BCU preset by default; KUD-NEP + generic NEP presets; custom packs per college (`/admin/scheme-packs`).
+- **Auto timetable generator (G4)** — mappings → grid: day×period auto-placement with faculty/room/cohort clash safety, lab spanning, faculty daily caps, unplaced-reason reporting and per-day hours coverage; preview → approve (Class Schedule → "Auto Generate").
+- **Guest faculty lifecycle (G5)** — contract windows + per-period rates; guest-aware auto-mapping (12-period cap, full-time preference tier, expired-contract exclusion); timetable-derived monthly billing with CSV export (`/admin/guest-faculty-billing`). See `docs/g1-g4-g5-karnataka-college-features.md`.
 - **Bulk timetable import** — CSV upload with server-side validation, de-duplication, clash detection (same engine as session generation) and curriculum-mapping cross-reference; preview a per-row report, then apply.
 - **Fees** management and a student fee portal.
 - **Timetable / scheduling** for classes and tests, with rescheduling for faculty.

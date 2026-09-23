@@ -30,7 +30,8 @@ import type {
   GenerateHallTicketsInput,
   AllotRoomsInput,
 } from '../types/examManagement';
-import { calculateBCUAttendanceMarks } from '@/shared/utils/bcuCompliance';
+import { calculateSchemeAttendanceMarks, DEFAULT_SCHEME_PACK } from '@/shared/utils/schemeEngine';
+import { getCollegeSchemePack } from './schemePackApi';
 
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id');
@@ -156,6 +157,9 @@ export async function listExamSubjects(sessionId: string): Promise<ExamSubject[]
 
 export async function generateHallTickets(input: GenerateHallTicketsInput): Promise<{ generated: number; blocked: number; errors: string[] }> {
   const collegeId = getCollegeId();
+  // G1: attendance blocking + IA attendance marks come from the college's
+  // assigned university scheme pack (BCU default when unassigned).
+  const pack = await getCollegeSchemePack(collegeId).then((r) => r.pack).catch(() => DEFAULT_SCHEME_PACK);
   const session = await getExamSession(input.examSessionId);
   if (!session) throw new Error('Exam session not found');
 
@@ -206,16 +210,21 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
         });
         
         const percentage = total > 0 ? (present / total) * 100 : 100;
-        const minPercentage = input.minAttendancePercentage || 75;
-        const isEligible = percentage >= minPercentage;
-        
-        const bcuResult = calculateBCUAttendanceMarks(percentage);
-        
+        // The admin override wins; otherwise the pack's ordinance floor rules.
+        const minPercentage = input.minAttendancePercentage || pack.attendance.minimumPercentage;
+        const isEligible = pack.attendance.blocksExamEligibility
+          ? percentage >= minPercentage
+          : true;
+
+        const attResult = calculateSchemeAttendanceMarks(percentage, pack);
+
         attendanceEligibility = {
           isEligible,
           overallPercentage: percentage,
           subjectWise: [], // TODO: subject-wise breakdown
-          remarks: isEligible ? bcuResult.remarks : `Blocked - ${percentage.toFixed(1)}% below ${minPercentage}%`,
+          remarks: isEligible
+            ? `${attResult.remarks} (${pack.code})`
+            : `Blocked - ${percentage.toFixed(1)}% below ${minPercentage}% (${pack.code})`,
         };
 
         if (!isEligible) {

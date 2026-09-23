@@ -814,6 +814,15 @@ service cloud.firestore {
         || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
     }
 
+    // Scheme packs (G1): universities' examination schemes. Clients only read
+    // their own college's custom packs; writes go through saveSchemePack
+    // (Admin SDK), which is the single door that validates slab/IA/grade
+    // structure before a pack can poison result imports or hall tickets.
+    match /schemePacks/{packId} {
+      allow get, list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow create, update, delete: if false;
+    }
+
     match /weeklySchedules/{scheduleId} {
       // `allow get` may use resource.data (single document). `allow list` is
       // role based because a list/query request has no `resource`; the client

@@ -303,6 +303,9 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
                           {p.flags.includes('overload-risk') && (
                             <Chip label="overload risk" size="small" color="warning" icon={<WarningIcon />} />
                           )}
+                          {p.flags.includes('guest-assigned') && (
+                            <Chip size="small" color="info" variant="outlined" label="guest faculty" sx={{ height: 20, fontSize: 11 }} />
+                          )}
                           {p.flags.includes('no-subject-match') && (
                             <Chip label="no subject match" size="small" color="error" variant="outlined" />
                           )}

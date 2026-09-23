@@ -58,6 +58,8 @@ interface StaffImportRow {
   branches?: string[]
   designation?: string
   employmentType?: string
+  /** G5: guest/P&T contract window + per-period pay (non-full-time rows). */
+  guestContract?: { startDate?: string; endDate?: string | null; periodRate?: number; notes?: string } | null
   joiningDate?: string
   qualification?: string
   specialization?: string
@@ -479,6 +481,20 @@ export const bulkProvisionStaff = onCall(
           branches,
           designation: String(row.designation || (role === 'principal' ? 'Principal' : 'Assistant Professor')),
           employmentType: String(row.employmentType || 'FULL_TIME'),
+          // G5: guest contract survives provisioning so the auto-mapper can
+          // see expired engagements and billing can cost scheduled periods.
+          ...(row.guestContract
+            ? {
+                guestContract: {
+                  ...(row.guestContract.startDate ? { startDate: String(row.guestContract.startDate) } : {}),
+                  ...(row.guestContract.endDate == null
+                    ? { endDate: null }
+                    : { endDate: String(row.guestContract.endDate) }),
+                  periodRate: Number(row.guestContract.periodRate || 0),
+                  ...(row.guestContract.notes ? { notes: String(row.guestContract.notes).slice(0, 500) } : {}),
+                },
+              }
+            : {}),
           joiningDate: String(row.joiningDate || ''),
           qualification: String(row.qualification || ''),
           specialization: String(row.specialization || ''),
