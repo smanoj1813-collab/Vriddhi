@@ -130,9 +130,41 @@ function RosterDiagnosticPanel({ diagnostics }: { diagnostics: RosterDiagnostics
 
       {diagnostics.truncated && (
         <p className="text-xs text-amber-900/70 dark:text-amber-200/70 mt-2">
-          Note: this college has more than 450 students; only the first 450 were checked.
+          Note: the roster scan stopped at its safety cap of {diagnostics.collegeTotal} students —
+          if this college has more, some were not checked.
         </p>
       )}
+    </div>
+  )
+}
+
+/**
+ * Shown ALONGSIDE the roster when some students matched but others were left
+ * out (the panel above only covered the all-or-nothing empty case). Partial
+ * exclusion used to be invisible: a faculty saw "the class is missing half its
+ * students" with no way to tell why. This names the fields to fix.
+ */
+function RosterExclusionNotice({ diagnostics }: { diagnostics: RosterDiagnostics }) {
+  const excluded = Object.entries(diagnostics.nearMisses)
+    .filter(([, detail]) => detail.count > 0)
+    .sort((a, b) => b[1].count - a[1].count)
+  if (diagnostics.nearMissTotal === 0 || excluded.length === 0) return null
+  return (
+    <div className="mb-4 p-3 rounded-xl border border-amber-300/70 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+      <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+      <span>
+        {diagnostics.nearMissTotal}{' '}
+        {diagnostics.nearMissTotal === 1 ? 'student is' : 'students are'} in this college and
+        program but not in this roster — their records differ from this class's cohort:{' '}
+        {excluded
+          .slice(0, 3)
+          .map(([field, detail]) => `${MISMATCH_LABELS[field] ?? field} — ${detail.count}`)
+          .join(' · ')}
+        {excluded.length > 3 ? ` · +${excluded.length - 3} more` : ''}. Fix the semester / division /
+        section on those students (Superadmin → Students → Bulk change), or align the class
+        schedule, and they will appear here.
+        {diagnostics.truncated && ' (The roster scan also hit its student cap — see the notice below.)'}
+      </span>
     </div>
   )
 }
@@ -426,7 +458,7 @@ export default function FacultyAttendance() {
 
         {/* ─── Slice 2 S2.3: tag what this class actually covered ───────── */}
         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             <BookOpen className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
               Topics covered in this class
@@ -435,6 +467,10 @@ export default function FacultyAttendance() {
               — marking complete updates your topic ledger
             </span>
           </div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2">
+            A class is one 50-minute period — tick only the topics THIS class covered (usually 1–2).
+            Unticked topics stay pending and carry over to later classes.
+          </p>
 
           {topicOptions.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 mb-2">
@@ -628,6 +664,10 @@ export default function FacultyAttendance() {
             {rosterSemesterSpread.join(', ')} — set a semester on the schedule to narrow it to one cohort.
           </span>
         </div>
+      )}
+
+      {students.length > 0 && rosterDiagnostics && (
+        <RosterExclusionNotice diagnostics={rosterDiagnostics} />
       )}
 
       {students.length === 0 && rosterDiagnostics && rosterDiagnostics.collegeTotal > 0 ? (

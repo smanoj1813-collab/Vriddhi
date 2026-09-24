@@ -253,6 +253,33 @@ describe('cohort matching — subject filtering', () => {
     // A bare shortening of the course name is the same course in fewer words.
     assert.equal(matches(student({ subjects: ['Language'] })), true)
   })
+
+  it('matches a long student subject against a shortened schedule subject (both directions)', () => {
+    // The reverse abbreviation direction used to be missing: the schedule
+    // names the course short while the import enrolled the student under the
+    // long form — the roster silently dropped that student.
+    assert.equal(
+      matches(
+        student({ subjects: ['Financial Accounting-I'] }),
+        criteria({ subject: 'Financial Accounting', subjectCode: '' }),
+      ),
+      true,
+    )
+    assert.equal(
+      matches(
+        student({ subjects: ['Language-I (Lang3.1)'] }),
+        criteria({ subject: 'Language', subjectCode: '' }),
+      ),
+      true,
+    )
+  })
+
+  it('still excludes unrelated subjects when the schedule name is short', () => {
+    assert.equal(
+      matches(student({ subjects: ['Latin-I (Lat3.1)'] }), criteria({ subject: 'Lang', subjectCode: '' })),
+      false,
+    )
+  })
 })
 
 describe('cohort matching — tenant guard', () => {
@@ -352,5 +379,35 @@ describe('matchCohortRows — diagnostics', () => {
     )
     assert.equal(diagnostics.mismatches.semester?.count, 1)
     assert.deepEqual(diagnostics.mismatches.semester?.values, ['(none)'])
+  })
+})
+
+describe('matchCohortRows — near misses ("almost this class")', () => {
+  it('counts same-branch/batch students left out on one identity field', () => {
+    const rows = [
+      student({ semester: 1 }), // right cohort, wrong semester (import default)
+      student({ division: 'C' }), // right cohort, wrong letter
+      student({ department: 'MCA' }), // a different program — other class, NOT near-miss
+      student({ collegeId: 'college-b', semester: 1 }), // cross-tenant — NOT
+      student({ semester: 3 }), // matches
+    ]
+    const { diagnostics } = matchCohortRows(rows, criteria(), 450)
+    assert.equal(diagnostics.matched, 1)
+    assert.equal(diagnostics.nearMissTotal, 2)
+    assert.equal(diagnostics.nearMisses.semester?.count, 1)
+    assert.deepEqual(diagnostics.nearMisses.semester?.values, ['1'])
+    assert.equal(diagnostics.nearMisses.division?.count, 1)
+    // Identity failures never leak into the near-miss view…
+    assert.equal(diagnostics.nearMisses.branch, undefined)
+    assert.equal(diagnostics.nearMisses.collegeId, undefined)
+    // …but the full mismatch view still counts them.
+    assert.equal(diagnostics.mismatches.branch?.count, 1)
+    assert.equal(diagnostics.mismatches.collegeId?.count, 1)
+  })
+
+  it('is empty when everybody matches', () => {
+    const { diagnostics } = matchCohortRows([student()], criteria(), 450)
+    assert.equal(diagnostics.nearMissTotal, 0)
+    assert.deepEqual(diagnostics.nearMisses, {})
   })
 })

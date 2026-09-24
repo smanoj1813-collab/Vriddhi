@@ -178,6 +178,12 @@ export interface Student {
   collegeName?: string;
   batch: string;
   division: string;
+  /**
+   * Section letter when the college records division AND section separately.
+   * Legacy rows may carry only one of the two — the attendance cohort matcher
+   * treats the pair as interchangeable letters (see cohortMatching.ts).
+   */
+  section?: string;
   mentor?: string;
   /** Canonical academic program. Legacy rows may only have `department`. */
   branch?: string;
@@ -195,6 +201,9 @@ export interface ListStudentsOptions {
   collegeId?: string;
   batch?: string;
   division?: string;
+  /** Section letter (matches `division` or `section`, see StudentListFilters). */
+  section?: string;
+  branch?: string;
   status?: StudentStatus | "all";
   search?: string;
   limit?: number;
@@ -208,6 +217,8 @@ export interface UpdateStudentInput {
   regNo?: string;
   batch?: string;
   division?: string;
+  /** Section letter — part of the attendance cohort match, like `division`. */
+  section?: string;
   mentor?: string;
   /** Updating this field also keeps the legacy `department` alias in sync. */
   branch?: string;

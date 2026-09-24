@@ -247,7 +247,7 @@ export default function CurriculumProgress() {
             <StatCard
               label="Hours delivered"
               value={`${totals.hoursDelivered} / ${totals.hoursPlanned}`}
-              hint={`${totals.hoursPct}% of planned contact hours`}
+              hint={`${totals.hoursPct}% of planned contact hours · ~${totals.classesNeeded} classes of 50 min`}
             />
             <StatCard
               label="Classes delivered"
@@ -270,15 +270,22 @@ export default function CurriculumProgress() {
           {totals.modules.length > 0 && (
             <Card variant="outlined" sx={{ mb: 3 }}>
               <CardContent>
-                <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
+                <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600 }}>
                   Coverage by module
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  Each class is one 50-minute period. Topics are ticked off across classes as they are
+                  taught — one class never covers a whole module. “≈ classes” is the module’s planned
+                  hours converted into periods (hours × 60 ÷ 50, rounded up).
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   {totals.modules.map((module) => (
                     <Bar
                       key={module.moduleNo || module.moduleName}
                       value={module.pct}
-                      label={`${module.moduleName} (${module.covered}/${module.total})`}
+                      label={`${module.moduleName} (${module.covered}/${module.total}${
+                        module.classesNeeded > 0 ? ` · ${module.hours}h ≈ ${module.classesNeeded} classes` : ''
+                      })`}
                     />
                   ))}
                 </Box>

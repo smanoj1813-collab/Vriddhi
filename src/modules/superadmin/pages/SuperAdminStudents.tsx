@@ -2,8 +2,9 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudents, useColleges, useUpdateStudent, useResetStudentPassword } from '../hooks/useSuperAdmin';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
-import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2, KeyRound, Info } from "lucide-react";
+import { Users, Search, Filter, ArrowLeft, Edit3, Eye, GraduationCap, Building2, KeyRound, Info, Calendar, Layers, Hash, X } from "lucide-react";
 import type { Student, College } from '../types/superAdmin';
+import { filterStudentRows, studentFilterOptions } from '../../../shared/utils/studentFilters';
 import BulkCredentialReset from '../components/BulkCredentialReset';
 import BulkStudentAcademicUpdate from '../components/BulkStudentAcademicUpdate';
 
@@ -13,6 +14,9 @@ const SuperAdminStudents: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [collegeFilter, setCollegeFilter] = useState<string>("all");
+  const [batchFilter, setBatchFilter] = useState<string>("all");
+  const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [editForm, setEditForm] = useState<Partial<Student>>({});
   const [showEditModal, setShowEditModal] = useState(false)
@@ -28,9 +32,13 @@ const SuperAdminStudents: React.FC = () => {
   const [showBulkReset, setShowBulkReset] = useState(false);
   const [showBulkAcademicUpdate, setShowBulkAcademicUpdate] = useState(false);
 
+  // College + status narrow the SERVER query; batch / branch / section / search
+  // are applied over the loaded rows (the same normalised matching the
+  // attendance roster uses — "BBA" = "B.B.A", "2027" = 2027, "A" = "Div A"),
+  // which is also what makes the search box actually work: listStudents used
+  // to accept `search` and silently ignore it.
   const { data, isLoading } = useStudents({
     status: statusFilter === "all" ? undefined : statusFilter,
-    search: searchQuery || undefined,
     collegeId: collegeFilter !== "all" ? collegeFilter : undefined,
   });
   const { data: collegesData } = useColleges({ status: "active" });
@@ -40,14 +48,35 @@ const SuperAdminStudents: React.FC = () => {
   const students = data?.items || [];
   const colleges = collegesData?.items || [];
 
-  const filteredForBulk = useMemo(() => {
-    // Use current displayed students (already filtered by college/status/search via query)
-    return students;
-  }, [students]);
-  const selectedStudents = useMemo(
-    () => students.filter((student) => selectedIds.has(student.id)),
-    [students, selectedIds]
+  // Dropdown options come from the full college-scoped list so choices do not
+  // disappear while narrowing; duplicates like "BBA" / "B.B.A" are collapsed.
+  const filterOptions = useMemo(() => studentFilterOptions(students), [students]);
+
+  const filteredForBulk = useMemo(
+    () =>
+      filterStudentRows(students, {
+        search: searchQuery,
+        batch: batchFilter !== "all" ? batchFilter : undefined,
+        branch: branchFilter !== "all" ? branchFilter : undefined,
+        section: sectionFilter !== "all" ? sectionFilter : undefined,
+      }),
+    [students, searchQuery, batchFilter, branchFilter, sectionFilter]
   );
+  const selectedStudents = useMemo(
+    () => filteredForBulk.filter((student) => selectedIds.has(student.id)),
+    [filteredForBulk, selectedIds]
+  );
+
+  const hasActiveFilters =
+    Boolean(searchQuery.trim()) || batchFilter !== "all" || branchFilter !== "all" || sectionFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setBatchFilter("all");
+    setBranchFilter("all");
+    setSectionFilter("all");
+    setSelectedIds(new Set());
+  };
 
   const allSelected = filteredForBulk.length > 0 && filteredForBulk.every((s) => selectedIds.has(s.id));
   const toggleAll = () => {
@@ -71,6 +100,7 @@ const SuperAdminStudents: React.FC = () => {
       regNo: student.regNo,
       batch: student.batch,
       division: student.division,
+      section: student.section || "",
       mentor: student.mentor,
       department: student.department || "",
       status: student.status,
@@ -90,6 +120,7 @@ const SuperAdminStudents: React.FC = () => {
           regNo: editForm.regNo,
           batch: editForm.batch,
           division: editForm.division,
+          section: editForm.section,
           mentor: editForm.mentor,
           department: editForm.department || undefined,
           status: editForm.status,
@@ -168,16 +199,16 @@ const SuperAdminStudents: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="glass-card p-4">
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Students</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{students.length}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{hasActiveFilters ? "Matching Students" : "Total Students"}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{filteredForBulk.length}</p>
         </div>
         <div className="glass-card p-4">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Active</p>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{students.filter((s: Student) => s.status === "active").length}</p>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{filteredForBulk.filter((s: Student) => s.status === "active").length}</p>
         </div>
         <div className="glass-card p-4">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Inactive</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{students.filter((s: Student) => s.status === "inactive").length}</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{filteredForBulk.filter((s: Student) => s.status === "inactive").length}</p>
         </div>
         <div className="glass-card p-4">
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Colleges</p>
@@ -233,10 +264,68 @@ const SuperAdminStudents: React.FC = () => {
             ))}
           </select>
         </div>
-        {students.length > 0 && (
+        <div className="relative">
+          <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <select
+            value={batchFilter}
+            onChange={e => {
+              setBatchFilter(e.target.value);
+              setSelectedIds(new Set());
+            }}
+            className="input-field pl-10 pr-8 appearance-none"
+          >
+            <option value="all">All Batches</option>
+            {filterOptions.batches.map(batch => (
+              <option key={batch} value={batch}>{batch}</option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <Layers className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <select
+            value={branchFilter}
+            onChange={e => {
+              setBranchFilter(e.target.value);
+              setSelectedIds(new Set());
+            }}
+            className="input-field pl-10 pr-8 appearance-none"
+          >
+            <option value="all">All Branches</option>
+            {filterOptions.branches.map(branch => (
+              <option key={branch} value={branch}>{branch}</option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <Hash className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <select
+            value={sectionFilter}
+            onChange={e => {
+              setSectionFilter(e.target.value);
+              setSelectedIds(new Set());
+            }}
+            className="input-field pl-10 pr-8 appearance-none"
+            title="Section / division letter"
+          >
+            <option value="all">All Sections</option>
+            {filterOptions.sections.map(section => (
+              <option key={section} value={section}>{section}</option>
+            ))}
+          </select>
+        </div>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="btn-secondary flex items-center gap-1 text-xs"
+            title="Clear batch, branch, section and search filters"
+          >
+            <X className="w-3.5 h-3.5" /> Clear filters
+          </button>
+        )}
+        {filteredForBulk.length > 0 && (
           <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 ml-2">
             <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded" />
-            Select all {students.length}
+            Select all {filteredForBulk.length}
           </label>
         )}
       </div>
@@ -255,13 +344,14 @@ const SuperAdminStudents: React.FC = () => {
               <th className="table-header">College</th>
               <th className="table-header text-center">Batch</th>
               <th className="table-header text-center">Division</th>
+              <th className="table-header text-center">Section</th>
               <th className="table-header text-center">Branch</th>
               <th className="table-header text-center">Status</th>
               <th className="table-header text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {students.map((student: Student) => (
+            {filteredForBulk.map((student: Student) => (
               <tr key={student.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <td className="table-cell">
                   <input type="checkbox" checked={selectedIds.has(student.id)} onChange={() => toggleOne(student.id)} className="rounded" />
@@ -278,7 +368,10 @@ const SuperAdminStudents: React.FC = () => {
                 <td className="table-cell">{student.email}</td>
                 <td className="table-cell">{student.collegeName || "—"}</td>
                 <td className="table-cell text-center">{student.batch}</td>
-                <td className="table-cell text-center">{student.division}</td>
+                <td className="table-cell text-center">{student.division || student.section || "—"}</td>
+                <td className="table-cell text-center">
+                  <span className="text-slate-600 dark:text-slate-400">{student.section || "—"}</span>
+                </td>
                 <td className="table-cell text-center">
                   <span className="text-slate-600 dark:text-slate-400">{student.department || "-"}</span>
                 </td>
@@ -313,10 +406,15 @@ const SuperAdminStudents: React.FC = () => {
             ))}
           </tbody>
         </table>
-        {students.length === 0 && (
+        {filteredForBulk.length === 0 && (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400">
             <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No students found</p>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="btn-secondary mt-3 text-xs">
+                Clear filters and show everyone
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -339,7 +437,7 @@ const SuperAdminStudents: React.FC = () => {
                 <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Reg No</label>
                 <input type="text" value={editForm.regNo || ""} onChange={e => setEditForm({ ...editForm, regNo: e.target.value })} className="input-field" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Batch</label>
                   <input type="text" value={editForm.batch || ""} onChange={e => setEditForm({ ...editForm, batch: e.target.value })} className="input-field" />
@@ -348,7 +446,14 @@ const SuperAdminStudents: React.FC = () => {
                   <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Division</label>
                   <input type="text" value={editForm.division || ""} onChange={e => setEditForm({ ...editForm, division: e.target.value })} className="input-field" />
                 </div>
+                <div>
+                  <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Section</label>
+                  <input type="text" value={editForm.section || ""} onChange={e => setEditForm({ ...editForm, section: e.target.value })} className="input-field" />
+                </div>
               </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">
+                Batch, division and section must match how the class is scheduled — attendance rosters are matched on these letters.
+              </p>
               <div>
                 <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">Mentor</label>
                 <input type="text" value={editForm.mentor || ""} onChange={e => setEditForm({ ...editForm, mentor: e.target.value })} className="input-field" />
@@ -401,7 +506,11 @@ const SuperAdminStudents: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Division</span>
-                <span className="text-slate-900 dark:text-white font-medium">{selectedStudent.division}</span>
+                <span className="text-slate-900 dark:text-white font-medium">{selectedStudent.division || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600 dark:text-slate-400">Section</span>
+                <span className="text-slate-900 dark:text-white font-medium">{selectedStudent.section || "—"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Branch / program</span>

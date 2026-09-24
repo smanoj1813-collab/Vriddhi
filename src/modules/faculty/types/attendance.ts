@@ -133,7 +133,10 @@ export interface FacultyStudent {
   regNo: string;
   branch: string;
   batch: string;
+  /** Division letter. Legacy rows may carry the letter in `section` instead. */
   division: string;
+  /** Section letter, kept separate from `division` (never conflated). */
+  section?: string;
   semester: number;
   attendancePercentage: number;
   status: 'good' | 'average' | 'weak' | 'excellent';

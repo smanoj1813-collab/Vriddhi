@@ -8,6 +8,7 @@ import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 
 import { dashboardPathFor, portalForRole } from '../roleRoutes';
+import { IDLE_SIGNOUT_FLAG } from '../../../shared/utils/idleTimeout';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,7 +16,18 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [idleSignOut, setIdleSignOut] = useState(false);
   const { login, isAuthenticated, user } = useAuth();
+
+  // Auto-logout leaves a flag instead of a mystery: explain why the session
+  // ended (see IdleSessionTimeout). Read-and-clear so a manual refresh of the
+  // login page does not repeat the banner.
+  React.useEffect(() => {
+    if (sessionStorage.getItem(IDLE_SIGNOUT_FLAG) === '1') {
+      sessionStorage.removeItem(IDLE_SIGNOUT_FLAG);
+      setIdleSignOut(true);
+    }
+  }, []);
   const { resolvedMode } = useThemeMode();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -173,6 +185,13 @@ export default function Login() {
                 </button>
               </div>
             </div>
+
+            {idleSignOut && !error && (
+              <div className="flex items-start gap-2 rounded-xl border border-amber-300/70 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3.5 py-2.5 text-xs text-amber-800 dark:text-amber-200">
+                <span className="font-semibold">Signed out for inactivity.</span>
+                <span>Your session ended automatically after a period without activity. Please sign in again.</span>
+              </div>
+            )}
 
             {error && (
               <motion.div

@@ -342,6 +342,10 @@ export interface CurriculumProgressInput {
 export interface ModuleProgress {
   moduleNo: string
   moduleName: string
+  /** Planned teaching hours for the module (0 when the syllabus did not say). */
+  hours: number
+  /** Whole 50-minute classes the module's hours translate to (ceiling). */
+  classesNeeded: number
   total: number
   covered: number
   pct: number
@@ -364,6 +368,8 @@ export interface FacultyProgress {
   hoursPlanned: number
   hoursDelivered: number
   hoursPct: number
+  /** Whole classes (50 minutes) the planned hours translate to (ceiling). */
+  classesNeeded: number
   topics: { total: number; covered: number; pending: number; pct: number }
   modules: ModuleProgress[]
   sessions: { total: number; completed: number; scheduled: number; cancelled: number }

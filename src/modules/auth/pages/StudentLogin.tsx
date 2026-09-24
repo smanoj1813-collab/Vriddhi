@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { School, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,12 +6,23 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
+import { IDLE_SIGNOUT_FLAG } from '../../../shared/utils/idleTimeout';
 
 export default function StudentLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [idleSignOut, setIdleSignOut] = useState(false);
+
+  // Auto-logout leaves a flag so the student is told WHY the session ended
+  // (see IdleSessionTimeout). Read-and-clear — a refresh must not repeat it.
+  useEffect(() => {
+    if (sessionStorage.getItem(IDLE_SIGNOUT_FLAG) === '1') {
+      sessionStorage.removeItem(IDLE_SIGNOUT_FLAG);
+      setIdleSignOut(true);
+    }
+  }, []);
 
   const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -152,6 +163,13 @@ export default function StudentLogin() {
                 </button>
               </div>
             </div>
+
+            {idleSignOut && !localError && (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-medium text-amber-800 dark:text-amber-200">
+                Signed out for inactivity — your session ended automatically after a period without
+                activity. Please sign in again.
+              </div>
+            )}
 
             {localError && (
               <motion.div
