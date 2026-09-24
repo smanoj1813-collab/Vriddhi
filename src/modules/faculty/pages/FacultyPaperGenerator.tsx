@@ -21,6 +21,7 @@ import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import PaperAcademicInsights from '../components/PaperAcademicInsights'
 import { isSameSubject } from '@/shared/utils/curriculumMatcher'
 import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims'
+import { escapeHtml } from '@/shared/utils/pdfGenerator'
 
 interface FacultyQuestion {
   id: string
@@ -374,7 +375,7 @@ export default function FacultyPaperGenerator() {
 
   const generatePreviewHTML = () => {
     const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
-    const sections = assessmentType === 'C3' 
+    const sections = assessmentType === 'C3'
       ? [
           { name: 'Section A (1 Mark each)', questions: selected.filter(q => q.marks <= 2) },
           { name: 'Section B (5 Marks each)', questions: selected.filter(q => q.marks > 2 && q.marks <= 6) },
@@ -382,25 +383,30 @@ export default function FacultyPaperGenerator() {
         ]
       : [{ name: 'Questions', questions: selected }]
 
+    // All user/AI-authored values are HTML-escaped before interpolation: this
+    // string is injected via dangerouslySetInnerHTML AND written to a print
+    // window (same origin), so unescaped question text / instructions would be
+    // a stored-XSS vector. Escaping also makes the on-screen preview match the
+    // official PDF (generatePaperHTML escapes the same fields).
     let html = `
       <div style="font-family: 'Times New Roman', serif; padding: 25px; color: #111;">
         <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px;">
-          <h1 style="font-size: 20px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">${(user as any)?.collegeName || 'College Examination'}</h1>
-          <h2 style="font-size: 16px; margin-bottom: 4px; font-weight: 600;">${paperTitle || 'Examination Paper'}</h2>
-          <p style="font-size: 12px; margin-bottom: 4px;"><strong>Course / Subject:</strong> ${activeSubjectName} ${assignedCourse?.courseCode ? `(${assignedCourse.courseCode})` : ''} | <strong>Assessment:</strong> ${assessmentType}</p>
-          <p style="font-size: 12px; margin: 0;"><strong>Time Allowed:</strong> ${duration} Minutes &nbsp;|&nbsp; <strong>Maximum Marks:</strong> ${totalSelectedMarks || expectedMarks}</p>
-          ${customInstructions ? `<p style="font-size: 11px; margin-top: 8px; font-style: italic;"><strong>General Instructions:</strong> ${customInstructions}</p>` : ''}
+          <h1 style="font-size: 20px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">${escapeHtml((user as any)?.collegeName || 'College Examination')}</h1>
+          <h2 style="font-size: 16px; margin-bottom: 4px; font-weight: 600;">${escapeHtml(paperTitle || 'Examination Paper')}</h2>
+          <p style="font-size: 12px; margin-bottom: 4px;"><strong>Course / Subject:</strong> ${escapeHtml(activeSubjectName)} ${assignedCourse?.courseCode ? `(${escapeHtml(assignedCourse.courseCode)})` : ''} | <strong>Assessment:</strong> ${escapeHtml(assessmentType)}</p>
+          <p style="font-size: 12px; margin: 0;"><strong>Time Allowed:</strong> ${escapeHtml(duration)} Minutes &nbsp;|&nbsp; <strong>Maximum Marks:</strong> ${escapeHtml(totalSelectedMarks || expectedMarks)}</p>
+          ${customInstructions ? `<p style="font-size: 11px; margin-top: 8px; font-style: italic;"><strong>General Instructions:</strong> ${escapeHtml(customInstructions)}</p>` : ''}
         </div>
     `
 
     sections.forEach((section, si) => {
       if (section.questions.length > 0) {
-        html += `<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">${section.name}</h3>`
+        html += `<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">${escapeHtml(section.name)}</h3>`
         section.questions.forEach((q, i) => {
           html += `
             <div style="margin-bottom: 12px; font-size: 12px;">
-              <p style="margin: 0;"><strong>Q${si * 10 + i + 1}.</strong> ${q.questionText} <span style="float: right; font-weight: bold;">[${q.marks} Mark${q.marks > 1 ? 's' : ''}]</span></p>
-              <p style="font-size: 10px; color: #777; margin: 2px 0 0 20px;">Topic: ${q.topic} • Difficulty: ${q.difficulty}</p>
+              <p style="margin: 0;"><strong>Q${si * 10 + i + 1}.</strong> ${escapeHtml(q.questionText)} <span style="float: right; font-weight: bold;">[${escapeHtml(q.marks)} Mark${q.marks > 1 ? 's' : ''}]</span></p>
+              <p style="font-size: 10px; color: #777; margin: 2px 0 0 20px;">Topic: ${escapeHtml(q.topic)} • Difficulty: ${escapeHtml(q.difficulty)}</p>
             </div>
           `
         })

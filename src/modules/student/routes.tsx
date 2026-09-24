@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { RoleRoute } from '@/routes/components/RoleRoute';
+import ErrorBoundary from '@/shared/components/ErrorBoundary';
 import StudentLayout from './components/StudentLayout';
 import { StudentDataProvider } from './hooks/useStudentData';
 
@@ -38,7 +39,9 @@ export const studentRoutes: RouteObject[] = [
       // Firestore rules, not this guard, decide what is visible.
       <RoleRoute allowedRoles={['student', 'parent']}>
         <StudentDataProvider>
-          <StudentLayout />
+          <ErrorBoundary>
+            <StudentLayout />
+          </ErrorBoundary>
         </StudentDataProvider>
       </RoleRoute>
     ),

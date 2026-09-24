@@ -1,6 +1,8 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { RoleRoute } from '@/routes/components/RoleRoute';
+import ErrorBoundary from '@/shared/components/ErrorBoundary';
 import Layout from '@/shared/components/Layout';
 
 const CreateCollege = lazy(() => import('./pages/CreateCollege'));
@@ -26,12 +28,22 @@ const BulkCredentialResetPage = lazy(() => import('./pages/BulkCredentialResetPa
 const SuperAdminQuestionBank = lazy(() => import('./pages/SuperAdminQuestionBank'));
 const SuperAdminPrepStudio = lazy(() => import('./pages/SuperAdminPrepStudio'));
 
+// Edit mode for an existing college reuses the CreateCollege form via an
+// optional `collegeId` prop (see CreateCollege.tsx). Kept as its own route so
+// the "Edit College" button on the detail page resolves instead of 404ing.
+function EditCollegeRoute() {
+  const { id } = useParams<{ id: string }>();
+  return <CreateCollege collegeId={id} />;
+}
+
 export const superadminRoutes: RouteObject[] = [
   {
     path: '/superadmin',
     element: (
       <RoleRoute allowedRoles={['superadmin']}>
-        <Layout />
+        <ErrorBoundary>
+          <Layout />
+        </ErrorBoundary>
       </RoleRoute>
     ),
     children: [
@@ -40,6 +52,7 @@ export const superadminRoutes: RouteObject[] = [
       { path: 'access', element: <AccessControl /> },
       { path: 'colleges', element: <SuperAdminColleges /> },
       { path: 'colleges/new', element: <CreateCollege /> },
+      { path: 'colleges/:id/edit', element: <EditCollegeRoute /> },
       { path: 'colleges/:id', element: <SuperAdminCollegeDetail /> },
       { path: 'universities', element: <SuperAdminUniversities /> },
       { path: 'universities/:id', element: <SuperAdminUniversityDetail /> },

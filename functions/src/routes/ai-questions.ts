@@ -20,7 +20,14 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
   const userId = req.user!.uid
   const collegeId = resolveCollegeId(req)
 
-  console.log('[AI Generate] Request:', JSON.stringify({
+  // Verbose generation logging is opt-in (AI_GENERATE_DEBUG=true) so request
+  // metadata is not written to Cloud Logging in production by default.
+  const debugLog =
+    process.env.AI_GENERATE_DEBUG === 'true'
+      ? (...args: unknown[]) => { console.log('[AI Generate]', ...args) }
+      : () => {}
+
+  debugLog('Request:', JSON.stringify({
     userId,
     collegeId: collegeId || 'null',
     topic: config.topic,
@@ -111,7 +118,7 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
       return
     }
 
-    console.log('[AI Generate] Raw response length:', rawResponse.length)
+    debugLog('Raw response length:', rawResponse.length)
 
     // ─── Strip markdown code blocks ───
     let cleanedResponse = rawResponse.trim()
@@ -145,7 +152,7 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
       return
     }
 
-    console.log('[AI Generate] Parsed', questions.length, 'questions')
+    debugLog('Parsed', questions.length, 'questions')
 
     // ─── Build generationConfig with no undefined values ───
     const generationConfig = {

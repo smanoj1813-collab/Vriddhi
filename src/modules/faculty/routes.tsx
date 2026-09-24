@@ -102,12 +102,10 @@ class LazyErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
   }
 }
 
-function LazyPage({ label, children }: { label: string; children: ReactNode }) {
+function LazyPage({ children }: { label: string; children: ReactNode }) {
   return (
     <LazyErrorBoundary>
-      <Suspense fallback={<PageLoader />}>
-        <RouteTracer label={label}>{children}</RouteTracer>
-      </Suspense>
+      <Suspense fallback={<PageLoader />}>{children}</Suspense>
     </LazyErrorBoundary>
   );
 }

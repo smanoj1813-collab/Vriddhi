@@ -14,6 +14,7 @@ const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AssignmentAnalytics = lazy(() => import('./pages/AssignmentAnalytics'));
 const Assessments = lazy(() => import('./pages/Assessments'));
+const AssessmentDetailPage = lazy(() => import('./pages/AssessmentDetailPage'));
 const OnlineAssessmentScheduler = lazy(() => import('../faculty/pages/FacultyAssessments'));
 const AssessmentTestReportsPage = lazy(() => import('./pages/AssessmentTestReports'));
 const Attendance = lazy(() => import('./pages/Attendance'));
@@ -126,6 +127,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'attendance', element: <LazyPage><Attendance /></LazyPage> },
       { path: 'faculty-attendance', element: <LazyPage><FacultyAttendanceAdmin /></LazyPage> },
       { path: 'assessments', element: <LazyPage><Assessments /></LazyPage> },
+      { path: 'assessments/:id', element: <LazyPage><AssessmentDetailPage /></LazyPage> },
       { path: 'schedule-tests', element: <LazyPage><OnlineAssessmentScheduler /></LazyPage> },
       { path: 'test-reports', element: <LazyPage><AssessmentTestReportsPage /></LazyPage> },
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },

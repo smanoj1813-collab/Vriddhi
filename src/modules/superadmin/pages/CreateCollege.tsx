@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCreateCollege, useSystemConfig } from '../hooks/useSuperAdmin'
+import { useCreateCollege, useSystemConfig, useCollege, useUpdateCollege } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Building2, ArrowLeft, Save, Loader2, Globe, MapPin, Phone, Mail } from 'lucide-react'
 import type { PlanType } from '../types/superAdmin'
@@ -23,6 +23,11 @@ interface FormData {
   courses: number
 }
 
+interface CreateCollegeProps {
+  /** When provided, the form loads and edits this college instead of creating one. */
+  collegeId?: string
+}
+
 const initialFormData: FormData = {
   name: '',
   code: '',
@@ -41,13 +46,42 @@ const initialFormData: FormData = {
   courses: 0,
 }
 
-const CreateCollege: React.FC = () => {
+const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
   const navigate = useNavigate()
   const { showSuccess, showError } = useNotification()
   const createCollege = useCreateCollege()
+  const updateCollege = useUpdateCollege()
   const systemConfig = useSystemConfig()
+  const isEdit = Boolean(collegeId)
+  const collegeQuery = useCollege(isEdit ? collegeId : null)
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
+  const [prefilled, setPrefilled] = useState(false)
+
+  // Prefill the form once the existing college loads (edit mode only).
+  useEffect(() => {
+    if (!isEdit || prefilled) return
+    const c = collegeQuery.data
+    if (!c) return
+    setFormData({
+      name: c.name || '',
+      code: c.code || '',
+      shortName: c.shortName || '',
+      address: c.address || '',
+      city: c.city || '',
+      state: c.state || '',
+      country: c.country || 'India',
+      location: c.location || '',
+      phone: c.phone || '',
+      email: c.email || '',
+      website: c.website || '',
+      plan: (c.plan as PlanType) || 'standard',
+      currentStudents: c.currentStudents ?? 0,
+      currentFaculty: c.currentFaculty ?? 0,
+      courses: c.courses ?? 0,
+    })
+    setPrefilled(true)
+  }, [isEdit, prefilled, collegeQuery.data])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {}
@@ -76,36 +110,66 @@ const CreateCollege: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (systemConfig.data && !systemConfig.data.allowCollegeOnboarding) {
+    // Onboarding toggle only gates CREATION, not editing an existing college.
+    if (!isEdit && systemConfig.data && !systemConfig.data.allowCollegeOnboarding) {
       showError('College onboarding is disabled in System Management.')
       return
     }
     if (!validateForm()) return
 
+    const payload = {
+      name: formData.name.trim(),
+      code: formData.code.trim(),
+      shortName: formData.shortName.trim(),
+      address: formData.address.trim(),
+      city: formData.city.trim(),
+      state: formData.state.trim(),
+      country: formData.country.trim(),
+      location: formData.location.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      website: formData.website.trim(),
+      plan: formData.plan,
+      currentStudents: formData.currentStudents,
+      currentFaculty: formData.currentFaculty,
+      courses: formData.courses,
+    }
+
     try {
-      await createCollege.mutateAsync({
-        name: formData.name.trim(),
-        code: formData.code.trim(),
-        shortName: formData.shortName.trim(),
-        address: formData.address.trim(),
-        city: formData.city.trim(),
-        state: formData.state.trim(),
-        country: formData.country.trim(),
-        location: formData.location.trim(),
-        phone: formData.phone.trim(),
-        email: formData.email.trim(),
-        website: formData.website.trim(),
-        plan: formData.plan,
-        currentStudents: formData.currentStudents,
-        currentFaculty: formData.currentFaculty,
-        courses: formData.courses,
-      })
-      showSuccess(`College "${formData.name}" created successfully!`)
-      navigate('/superadmin/colleges')
+      if (isEdit && collegeId) {
+        await updateCollege.mutateAsync({ collegeId, updates: payload })
+        showSuccess(`College "${payload.name}" updated successfully!`)
+        navigate(`/superadmin/colleges/${collegeId}`)
+      } else {
+        await createCollege.mutateAsync(payload)
+        showSuccess(`College "${payload.name}" created successfully!`)
+        navigate('/superadmin/colleges')
+      }
     } catch (err: any) {
-      showError(err?.message || 'Failed to create college')
+      showError(err?.message || (isEdit ? 'Failed to update college' : 'Failed to create college'))
     }
   }
+
+  // Edit-mode guards: loading, then not-found.
+  if (isEdit && collegeQuery.isLoading) {
+    return (
+      <div className="page-container flex items-center justify-center py-24">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+      </div>
+    )
+  }
+  if (isEdit && !collegeQuery.isLoading && !collegeQuery.data) {
+    return (
+      <div className="page-container">
+        <p className="text-slate-600 dark:text-slate-400">College not found.</p>
+        <button onClick={() => navigate('/superadmin/colleges')} className="mt-3 text-teal-600 hover:underline text-sm">
+          Back to colleges
+        </button>
+      </div>
+    )
+  }
+
+  const submitting = isEdit ? updateCollege.isPending : createCollege.isPending
 
   const inputClasses = (fieldName: keyof FormData) =>
     `w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-lg text-sm text-slate-900 dark:text-white transition-colors
@@ -129,13 +193,13 @@ const CreateCollege: React.FC = () => {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Create College</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{isEdit ? 'Edit College' : 'Create College'}</h1>
           </div>
-          <p className="text-slate-600 dark:text-slate-400 text-sm">Register a new college in the system</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">{isEdit ? 'Update this institution\u2019s details' : 'Register a new college in the system'}</p>
         </div>
       </div>
 
-      {systemConfig.data && !systemConfig.data.allowCollegeOnboarding && (
+      {!isEdit && systemConfig.data && !systemConfig.data.allowCollegeOnboarding && (
         <div className="mb-6 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
           College onboarding is currently disabled from System Management. Re-enable it there before creating an institution.
         </div>
@@ -380,18 +444,18 @@ const CreateCollege: React.FC = () => {
           </button>
           <button
             type="submit"
-            disabled={createCollege.isPending || systemConfig.isLoading || systemConfig.data?.allowCollegeOnboarding === false}
+            disabled={submitting || systemConfig.isLoading || (!isEdit && systemConfig.data?.allowCollegeOnboarding === false)}
             className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-slate-900 dark:text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {createCollege.isPending ? (
+            {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Creating...
+                {isEdit ? 'Saving...' : 'Creating...'}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Create College
+                {isEdit ? 'Save Changes' : 'Create College'}
               </>
             )}
           </button>
