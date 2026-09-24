@@ -11,9 +11,11 @@ const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'));
 const AdmissionCenter = lazy(() => import('./pages/AdmissionCenter'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
+const FinanceSettings = lazy(() => import('./pages/FinanceSettings'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AssignmentAnalytics = lazy(() => import('./pages/AssignmentAnalytics'));
 const Assessments = lazy(() => import('./pages/Assessments'));
+const AssessmentDetailPage = lazy(() => import('./pages/AssessmentDetailPage'));
 const OnlineAssessmentScheduler = lazy(() => import('../faculty/pages/FacultyAssessments'));
 const AssessmentTestReportsPage = lazy(() => import('./pages/AssessmentTestReports'));
 const Attendance = lazy(() => import('./pages/Attendance'));
@@ -126,10 +128,12 @@ export const adminRoutes: RouteObject[] = [
       { path: 'attendance', element: <LazyPage><Attendance /></LazyPage> },
       { path: 'faculty-attendance', element: <LazyPage><FacultyAttendanceAdmin /></LazyPage> },
       { path: 'assessments', element: <LazyPage><Assessments /></LazyPage> },
+      { path: 'assessments/:id', element: <LazyPage><AssessmentDetailPage /></LazyPage> },
       { path: 'schedule-tests', element: <LazyPage><OnlineAssessmentScheduler /></LazyPage> },
       { path: 'test-reports', element: <LazyPage><AssessmentTestReportsPage /></LazyPage> },
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
+      { path: 'finance-settings', element: <LazyPage><FinanceSettings /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },

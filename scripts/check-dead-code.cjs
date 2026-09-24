@@ -160,9 +160,9 @@ function main() {
     for (const f of unlisted) console.error(`    ${f}`);
     console.error(
       '\n  These are dead code: nothing imports them, so they are neither bundled nor\n' +
-        '  rendered. Either wire them into the route tree, move them to attic/, or\n' +
-        '  delete them. If one is intentionally kept unrouted, add it to\n' +
-        '  scripts/dead-code-allowlist.txt with a reason.'
+        '  rendered. Either wire them into the route tree, move them out of src/ (e.g.\n' +
+          '  scripts/legacy/), or delete them. If one is intentionally kept unrouted,\n' +
+          '  add it to scripts/dead-code-allowlist.txt with a reason.'
     );
   }
 

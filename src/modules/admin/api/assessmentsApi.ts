@@ -20,6 +20,7 @@ import type {
   ScheduledTest, ScheduleTestInput, ReviewQueueItem,
   TestAnalytics,
 } from '../types/assessment';
+import { computeAssessmentStats } from '../utils/assessmentStats';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Assessments
@@ -238,33 +239,16 @@ export async function bulkGradeAssessments(inputs: BulkGradeInput[]): Promise<vo
 }
 
 export async function recalculateAssessmentStats(_assessmentId: string): Promise<void> {
-  // TODO: Implement stats recalculation
+  // Stats are now derived on demand from the assessment list via
+  // computeAssessmentStats() (see getAssessmentStats below), so there is no
+  // persisted aggregate to recompute. Kept as a resolved no-op for API
+  // compatibility with existing callers.
 }
 
-export async function getAssessmentStats(_collegeId: string): Promise<AssessmentStats> {
-  // TODO: Implement real stats aggregation
-  const stats = {
-    totalAssessments: 0,
-    draftCount: 0,
-    publishedCount: 0,
-    activeCount: 0,
-    completedCount: 0,
-    archivedCount: 0,
-    activeAssessments: 0,
-    completedAssessments: 0,
-    byType: {} as Record<string, number>,
-    byStatus: {} as Record<string, number>,
-    upcomingCount: 0,
-    ongoingCount: 0,
-    totalSubmissions: 0,
-    totalGraded: 0,
-    averageScore: 0,
-    byBranch: {} as Record<string, number>,
-    bySemester: {} as Record<string, number>,
-    byBatch: {} as Record<string, number>,
-  };
-
-  return stats as unknown as AssessmentStats;
+export async function getAssessmentStats(collegeId: string): Promise<AssessmentStats> {
+  // Aggregate from the SAME list the table renders — no second source of truth.
+  const assessments = await listAssessments(collegeId ? { collegeId } : {});
+  return computeAssessmentStats(assessments);
 }
 
 export async function getAssessmentAverageScore(assessmentId: string): Promise<number> {

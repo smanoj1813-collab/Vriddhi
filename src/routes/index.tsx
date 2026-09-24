@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 import { dashboardPathFor } from '@/modules/auth/roleRoutes';
 import { authRoutes } from '@/modules/auth/routes';
+import Unauthorized from '@/modules/auth/pages/Unauthorized';
 import { studentRoutes } from '@/modules/student/routes';
 import { facultyRoutes } from '@/modules/faculty/routes';
 import { adminRoutes } from '@/modules/admin/routes';

@@ -447,7 +447,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
               {college.plan}
             </span>
             <button
-              onClick={() => navigate(`/superadmin/colleges/edit/${id}`)}
+              onClick={() => navigate(`/superadmin/colleges/${id}/edit`)}
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-white"
               title="Edit College"
             >

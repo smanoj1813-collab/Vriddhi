@@ -1,15 +1,22 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   DollarSign, Users, TrendingUp, AlertTriangle, CheckCircle,
   XCircle, Clock, Search, Filter, RefreshCw, Download, ChevronDown,
   ChevronUp, CreditCard, Wallet, Receipt, ArrowUpRight, ArrowDownRight,
-  Loader2, GraduationCap, Calendar, BookOpen, Activity, Eye, Check, X
+  Loader2, GraduationCap, Calendar, BookOpen, Activity, Eye, Check, X,
+  Upload, ShieldCheck, FileText, Image as ImageIcon,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
+import { fetchFeeTransactions, type FeeTransaction } from '../api/feeApi'
+import { uploadPaymentProof } from '../api/feeProofStorage'
+import { suggestTransactionId } from '../utils/feeReference'
+import { feeNetPayable } from '../utils/financeRules'
+import { buildReceiptModel } from '../utils/financeReceipt'
+import { downloadReceiptPdf } from '../../../shared/utils/receiptPdf'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import FeeAssignmentModal from '../components/FeeAssignmentModal'
@@ -93,36 +100,101 @@ function StatCard({ label, value, subtext, icon: Icon, color, trend, trendUp, lo
 }
 
 // ─── Collect Payment Modal ─────────────────────────────
+interface CollectDetails {
+  transactionId: string
+  bankReference: string
+  paidOn: string
+  remarks: string
+  screenshotUrl?: string
+}
+
 function CollectPaymentModal({
-  payment, onClose, onCollect
+  payment, onClose, onCollect, onApplyDiscount
 }: {
   payment: FeePayment
   onClose: () => void
-  onCollect: (amount: number, mode: PaymentMode) => Promise<boolean>
+  onCollect: (amount: number, mode: PaymentMode, details: CollectDetails) => Promise<boolean>
+  onApplyDiscount?: (amount: number, label: string) => Promise<boolean>
 }) {
-  const [amount, setAmount] = useState(payment.amount - payment.paidAmount)
+  const [amount, setAmount] = useState(() => feeNetPayable(payment))
   const [mode, setMode] = useState<PaymentMode>('cash')
+  const [transactionId, setTransactionId] = useState(() => suggestTransactionId())
+  const [paidOn, setPaidOn] = useState(() => new Date().toISOString().slice(0, 10))
+  const [bankReference, setBankReference] = useState('')
+  const [remarks, setRemarks] = useState('')
+  const [screenshot, setScreenshot] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [discountAmount, setDiscountAmount] = useState('')
+  const [discountLabel, setDiscountLabel] = useState('')
+  const [applyingDiscount, setApplyingDiscount] = useState(false)
+
+  const remaining = feeNetPayable(payment)
+
+  const applyDiscountNow = async () => {
+    const value = Number(discountAmount)
+    if (!onApplyDiscount || !Number.isFinite(value) || value <= 0) {
+      setError('Enter a discount amount greater than zero.')
+      return
+    }
+    setApplyingDiscount(true)
+    setError(null)
+    try {
+      const ok = await onApplyDiscount(value, discountLabel.trim() || 'Discount')
+      if (ok) { setDiscountAmount(''); setDiscountLabel('') }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not apply the discount.')
+    } finally {
+      setApplyingDiscount(false)
+    }
+  }
+
+  const pickScreenshot = (file: File | null) => {
+    setError(null)
+    if (preview) URL.revokeObjectURL(preview)
+    setScreenshot(file)
+    setPreview(file ? URL.createObjectURL(file) : null)
+  }
 
   const handleSubmit = async () => {
+    setError(null)
+    if (amount <= 0 || amount > remaining) {
+      setError('Enter an amount between ₹1 and the remaining balance.')
+      return
+    }
     setProcessing(true)
     try {
-      const success = await onCollect(amount, mode)
+      let screenshotUrl: string | undefined
+      if (screenshot) {
+        screenshotUrl = await uploadPaymentProof(
+          localStorage.getItem('vriddhi_college_id') || '',
+          payment.id,
+          screenshot,
+        )
+      }
+      const success = await onCollect(amount, mode, {
+        transactionId: transactionId.trim(),
+        bankReference: bankReference.trim(),
+        paidOn,
+        remarks: remarks.trim(),
+        screenshotUrl,
+      })
       if (success) onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment could not be recorded. Please try again.')
     } finally {
       setProcessing(false)
     }
   }
 
-  const remaining = payment.amount - payment.paidAmount
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="glass-card w-full max-w-md animate-in fade-in zoom-in duration-200">
+      <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between p-6 border-b border-vriddhi-border">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-vriddhi-accent" />
-            Collect Payment
+            Record Payment
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5 text-vriddhi-muted" />
@@ -150,8 +222,20 @@ function CollectPaymentModal({
               <span className="text-sm text-vriddhi-muted">Paid So Far</span>
               <span className="text-sm font-medium text-green-600 dark:text-green-400">₹{payment.paidAmount.toLocaleString('en-IN')}</span>
             </div>
+            {(payment.discountTotal ?? 0) > 0 && (
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-vriddhi-muted">Discount</span>
+                <span className="text-sm font-medium text-purple-600 dark:text-purple-400">− ₹{(payment.discountTotal ?? 0).toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            {(payment.lateFine ?? 0) > 0 && (
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-vriddhi-muted">Late fine</span>
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">+ ₹{(payment.lateFine ?? 0).toLocaleString('en-IN')}</span>
+              </div>
+            )}
             <div className="flex justify-between pt-2 border-t border-vriddhi-border">
-              <span className="text-sm text-vriddhi-muted">Remaining</span>
+              <span className="text-sm text-vriddhi-muted">Net Payable</span>
               <span className="text-sm font-bold text-amber-600 dark:text-amber-400">₹{remaining.toLocaleString('en-IN')}</span>
             </div>
           </div>
@@ -194,6 +278,125 @@ function CollectPaymentModal({
               ))}
             </div>
           </div>
+
+          {onApplyDiscount && (
+            <div className="p-3 rounded-xl border border-vriddhi-border bg-vriddhi-dark/30 space-y-2">
+              <label className="text-sm text-vriddhi-muted block">Apply discount (category / merit / management)</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={discountAmount}
+                  onChange={(e) => setDiscountAmount(e.target.value)}
+                  placeholder="Amount ₹"
+                  min={1}
+                  className="input-field"
+                />
+                <input
+                  type="text"
+                  value={discountLabel}
+                  onChange={(e) => setDiscountLabel(e.target.value)}
+                  placeholder="Reason (e.g. SC concession)"
+                  className="input-field flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={applyDiscountNow}
+                  disabled={applyingDiscount}
+                  className="px-3 py-2 rounded-xl text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {applyingDiscount ? 'Applying…' : 'Apply'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="text-sm text-vriddhi-muted mb-2 block">Transaction / Reference ID</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                placeholder="Bank / UPI reference"
+                className="input-field font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setTransactionId(suggestTransactionId())}
+                title="Generate a new reference"
+                className="px-3 rounded-xl border border-vriddhi-border text-vriddhi-muted hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-[11px] text-vriddhi-muted/70 mt-1">Auto-filled — overwrite with the real reference from the bank/UPI receipt.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm text-vriddhi-muted mb-2 block">Bank Reference (optional)</label>
+              <input
+                type="text"
+                value={bankReference}
+                onChange={(e) => setBankReference(e.target.value)}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-vriddhi-muted mb-2 block">Paid On</label>
+              <input
+                type="date"
+                value={paidOn}
+                onChange={(e) => setPaidOn(e.target.value)}
+                className="input-field"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-vriddhi-muted mb-2 block">Payment Screenshot (optional)</label>
+            {preview ? (
+              <div className="relative rounded-xl overflow-hidden border border-vriddhi-border">
+                <img src={preview} alt="Payment proof preview" className="w-full max-h-48 object-contain bg-black/20" />
+                <button
+                  type="button"
+                  onClick={() => pickScreenshot(null)}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-dashed border-vriddhi-border cursor-pointer hover:border-vriddhi-accent/50 transition-colors">
+                <Upload className="w-6 h-6 text-vriddhi-muted" />
+                <span className="text-sm text-vriddhi-muted">Click to upload a payment screenshot</span>
+                <span className="text-[11px] text-vriddhi-muted/60">PNG, JPG, WEBP or GIF · up to 5 MB</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => pickScreenshot(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            )}
+          </div>
+
+          <div>
+            <label className="text-sm text-vriddhi-muted mb-2 block">Remarks (optional)</label>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              rows={2}
+              className="input-field"
+              placeholder="Note for the receipt / audit trail"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
         </div>
         <div className="p-6 border-t border-vriddhi-border flex gap-3">
           <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-vriddhi-muted bg-vriddhi-dark border border-vriddhi-border hover:bg-vriddhi-border/50 transition-colors">
@@ -205,7 +408,7 @@ function CollectPaymentModal({
             className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-vriddhi-accent hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            {processing ? 'Processing...' : 'Collect Payment'}
+            {processing ? 'Recording…' : 'Record Payment'}
           </button>
         </div>
       </div>
@@ -283,9 +486,56 @@ function WaiveFeeModal({
 }
 
 // ─── Payment Detail Modal ────────────────────────────────
-function PaymentDetailModal({ payment, onClose }: { payment: FeePayment; onClose: () => void }) {
+const SUBMISSION_BADGES: Record<string, { label: string; className: string }> = {
+  recorded: { label: 'Recorded', className: 'bg-green-500/15 text-green-600 dark:text-green-400' },
+  pending_verification: { label: 'Awaiting verification', className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+  verified: { label: 'Verified', className: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
+  rejected: { label: 'Rejected', className: 'bg-red-500/15 text-red-600 dark:text-red-400' },
+}
+
+function PaymentDetailModal({
+  payment, onClose, onVerifyProof,
+}: {
+  payment: FeePayment
+  onClose: () => void
+  onVerifyProof?: (transactionId: string, decision: 'approve' | 'reject') => Promise<void>
+}) {
   const status = STATUS_CONFIG[payment.status]
   const StatusIcon = status.icon
+  const [transactions, setTransactions] = useState<FeeTransaction[]>([])
+  const [loadingTxns, setLoadingTxns] = useState(true)
+  const [reviewing, setReviewing] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    setLoadingTxns(true)
+    fetchFeeTransactions(payment.id)
+      .then(rows => { if (active) setTransactions(rows) })
+      .catch(() => { if (active) setTransactions([]) })
+      .finally(() => { if (active) setLoadingTxns(false) })
+    return () => { active = false }
+  }, [payment.id])
+
+  const review = async (transactionId: string, decision: 'approve' | 'reject') => {
+    if (!onVerifyProof) return
+    setReviewing(transactionId)
+    try {
+      await onVerifyProof(transactionId, decision)
+      setTransactions(await fetchFeeTransactions(payment.id))
+    } catch {
+      /* parent surfaces the toast */
+    } finally {
+      setReviewing(null)
+    }
+  }
+
+  const downloadReceipt = async (txn: FeeTransaction) => {
+    try {
+      await downloadReceiptPdf(buildReceiptModel({ payment, transaction: txn }))
+    } catch {
+      /* rendering is best-effort */
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -373,6 +623,95 @@ function PaymentDetailModal({ payment, onClose }: { payment: FeePayment; onClose
               </div>
             )}
           </div>
+
+          {payment.screenshotUrl && (
+            <div>
+              <p className="text-xs text-vriddhi-muted mb-2">Latest payment screenshot</p>
+              <a href={payment.screenshotUrl} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden border border-vriddhi-border">
+                <img src={payment.screenshotUrl} alt="Payment proof" className="w-full max-h-56 object-contain bg-black/20" />
+              </a>
+            </div>
+          )}
+
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-vriddhi-accent" /> Payment history
+            </p>
+            {loadingTxns ? (
+              <div className="flex items-center gap-2 text-sm text-vriddhi-muted py-3">
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+              </div>
+            ) : transactions.length === 0 ? (
+              <p className="text-sm text-vriddhi-muted py-2">No payments recorded yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {transactions.map(txn => {
+                  const badge = txn.submissionStatus ? SUBMISSION_BADGES[txn.submissionStatus] : undefined
+                  return (
+                    <div key={txn.id} className="p-3 rounded-xl border border-vriddhi-border bg-vriddhi-dark/30 flex gap-3">
+                      {txn.screenshotUrl ? (
+                        <a href={txn.screenshotUrl} target="_blank" rel="noreferrer" className="shrink-0">
+                          <img src={txn.screenshotUrl} alt="Proof" className="w-14 h-14 rounded-lg object-cover border border-vriddhi-border" />
+                        </a>
+                      ) : (
+                        <div className="w-14 h-14 rounded-lg bg-vriddhi-dark border border-vriddhi-border flex items-center justify-center shrink-0">
+                          <ImageIcon className="w-5 h-5 text-vriddhi-muted/50" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-sm font-bold ${txn.type === 'discount' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-900 dark:text-white'}`}>
+                            {txn.type === 'discount' ? '− ' : ''}₹{txn.amount.toLocaleString('en-IN')}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {badge && <span className={`text-[10px] px-2 py-0.5 rounded-full ${badge.className}`}>{badge.label}</span>}
+                            {txn.receiptNo && (
+                              <button
+                                onClick={() => downloadReceipt(txn)}
+                                title="Download receipt"
+                                className="p-1 rounded-lg text-vriddhi-muted hover:text-vriddhi-accent hover:bg-white/10 transition-colors"
+                              >
+                                <Download className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-vriddhi-muted capitalize">
+                          {txn.type === 'waiver' ? 'Waiver' : txn.type === 'discount' ? 'Discount' : (txn.paymentMode || 'payment')} · {txn.paidOn || (txn.createdAt ? txn.createdAt.slice(0, 10) : '—')}
+                        </p>
+                        {(txn.transactionId || txn.receiptNo) && (
+                          <p className="text-[11px] text-vriddhi-muted/80 font-mono truncate">
+                            {txn.transactionId}{txn.receiptNo ? ` · ${txn.receiptNo}` : ''}
+                          </p>
+                        )}
+                        {txn.rejectionReason && (
+                          <p className="text-[11px] text-red-500 mt-0.5">{txn.rejectionReason}</p>
+                        )}
+                        {txn.submissionStatus === 'pending_verification' && onVerifyProof && (
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => review(txn.id, 'approve')}
+                              disabled={reviewing === txn.id}
+                              className="text-xs px-2.5 py-1 rounded-lg bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 transition-colors flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" /> Approve
+                            </button>
+                            <button
+                              onClick={() => review(txn.id, 'reject')}
+                              disabled={reviewing === txn.id}
+                              className="text-xs px-2.5 py-1 rounded-lg bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition-colors flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <X className="w-3.5 h-3.5" /> Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -399,6 +738,8 @@ export default function AdminFeeManagement() {
     updateFilters,
     refreshData,
     collectPayment,
+    verifyPaymentProof,
+    applyDiscount,
     waiveFee,
     createFeePayment,
     createFeeStructure,
@@ -411,12 +752,42 @@ export default function AdminFeeManagement() {
   const [showAssignment, setShowAssignment] = useState(false)
   const [showStructure, setShowStructure] = useState(false)
 
-  const handleCollect = async (amount: number, mode: PaymentMode) => {
+  const handleCollect = async (
+    amount: number,
+    mode: PaymentMode,
+    details: { transactionId: string; bankReference: string; paidOn: string; remarks: string; screenshotUrl?: string },
+  ) => {
     if (!selectedPayment) return false
-    const success = await collectPayment(selectedPayment.id, amount, mode)
+    const success = await collectPayment(selectedPayment.id, amount, mode, details.remarks, {
+      transactionId: details.transactionId,
+      bankReference: details.bankReference,
+      paidOn: details.paidOn,
+      screenshotUrl: details.screenshotUrl,
+    })
     if (success) showSuccess('Payment recorded and receipt generated.')
-    else showError('Payment could not be recorded. Refresh the ledger and try again.')
     return success
+  }
+
+  const handleVerifyProof = async (transactionId: string, decision: 'approve' | 'reject') => {
+    if (!selectedPayment) return
+    try {
+      await verifyPaymentProof(selectedPayment.id, transactionId, decision)
+      showSuccess(decision === 'approve' ? 'Payment verified and credited to the ledger.' : 'Submission rejected.')
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Could not update the submission.')
+    }
+  }
+
+  const handleApplyDiscount = async (amount: number, label: string) => {
+    if (!selectedPayment) return false
+    try {
+      const ok = await applyDiscount(selectedPayment.id, { amount, label })
+      if (ok) showSuccess(`Discount of ₹${amount.toLocaleString('en-IN')} applied.`)
+      return ok
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Could not apply the discount.')
+      return false
+    }
   }
 
   const handleWaive = async (remarks: string) => {
@@ -1129,6 +1500,7 @@ export default function AdminFeeManagement() {
           payment={selectedPayment}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
           onCollect={handleCollect}
+          onApplyDiscount={handleApplyDiscount}
         />
       )}
       {modalMode === 'waive' && selectedPayment && (
@@ -1142,6 +1514,7 @@ export default function AdminFeeManagement() {
         <PaymentDetailModal
           payment={selectedPayment}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
+          onVerifyProof={handleVerifyProof}
         />
       )}
       {showAssignment && (

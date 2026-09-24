@@ -16,10 +16,20 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from 'firebase/firestore'
 import { auth, db } from '@/Firebase/config'
+import {
+  creditLedger,
+  normalizeReference,
+  suggestTransactionId,
+  type PaymentSubmissionStatus,
+} from '../utils/feeReference'
+import { feeNetPayable } from '../utils/financeRules'
+
+export { feeNetPayable } from '../utils/financeRules'
 
 const MAX_READS = 500
 
@@ -66,6 +76,31 @@ export type FeeStatus = 'paid' | 'pending' | 'overdue' | 'partial' | 'waived'
 export type FeeCategory = 'tuition' | 'exam' | 'university_exam' | 'eligibility' | 'library' | 'lab' | 'hostel' | 'transport' | 'misc'
 export type PaymentMode = 'cash' | 'card' | 'upi' | 'netbanking' | 'cheque' | 'dd'
 
+/** Re-exported so the admin UI and student portal share one submission lifecycle. */
+export type { PaymentSubmissionStatus } from '../utils/feeReference'
+
+/** Extra proof/details an operator (or a verifying admin) attaches to a payment. */
+export interface CollectPaymentOptions {
+  /** Operator-entered bank/UPI reference. Blank → an id is auto-generated. */
+  transactionId?: string
+  bankReference?: string
+  /** Storage download URL of the payment screenshot (see feeProofStorage). */
+  screenshotUrl?: string
+  /** Actual date money changed hands (YYYY-MM-DD). Defaults to today. */
+  paidOn?: string
+}
+
+/** A student's self-declared payment awaiting finance-office verification. */
+export interface SubmitProofInput {
+  amount: number
+  paymentMode: PaymentMode
+  transactionId?: string
+  bankReference?: string
+  screenshotUrl?: string
+  paidOn?: string
+  remarks?: string
+}
+
 export interface FeeStructure {
   id: string
   category: FeeCategory
@@ -99,6 +134,14 @@ export interface FeePayment {
   paymentMode?: PaymentMode
   transactionId?: string
   receiptNo?: string
+  bankReference?: string
+  screenshotUrl?: string
+  /** Total discount applied (category / merit / management), reduces the amount owed. */
+  discountTotal?: number
+  /** Late-payment fine assessed, added to the amount owed. */
+  lateFine?: number
+  /** Materialised payable = max(0, amount − discountTotal) + lateFine. */
+  netAmount?: number
   remarks?: string
   collectedBy?: string
   createdAt: string
@@ -129,11 +172,24 @@ export interface CreateFeePaymentInput {
 
 export interface FeeTransaction {
   id: string
-  type: 'payment' | 'waiver'
+  type: 'payment' | 'waiver' | 'discount'
   amount: number
   paymentMode?: PaymentMode
   transactionId?: string
   receiptNo?: string
+  /** Bank/UPI reference the operator or student supplied (distinct from the generated id). */
+  bankReference?: string
+  /** Storage download URL of the payment screenshot, when one was attached. */
+  screenshotUrl?: string
+  /** Actual date money changed hands (YYYY-MM-DD). */
+  paidOn?: string
+  /** recorded → pending_verification → verified | rejected (see feeReference). */
+  submissionStatus?: PaymentSubmissionStatus
+  /** Who filed a student-submitted proof. */
+  submittedBy?: string
+  verifiedBy?: string
+  verifiedAt?: string
+  rejectionReason?: string
   remarks?: string
   performedBy?: string
   createdAt: string
@@ -195,6 +251,10 @@ function mapPayment(id: string, raw: Record<string, unknown>): FeePayment {
     paymentMode: raw.paymentMode as PaymentMode | undefined,
     transactionId: raw.transactionId ? String(raw.transactionId) : undefined,
     receiptNo: raw.receiptNo ? String(raw.receiptNo) : undefined,
+    bankReference: raw.bankReference ? String(raw.bankReference) : undefined,
+    screenshotUrl: raw.screenshotUrl ? String(raw.screenshotUrl) : undefined,
+    discountTotal: raw.discountTotal == null ? undefined : numeric(raw.discountTotal),
+    lateFine: raw.lateFine == null ? undefined : numeric(raw.lateFine),
     remarks: raw.remarks ? String(raw.remarks) : undefined,
     collectedBy: raw.collectedBy ? String(raw.collectedBy) : undefined,
     createdAt: asString(raw.createdAt),
@@ -280,6 +340,14 @@ export async function fetchFeeTransactions(paymentId: string): Promise<FeeTransa
         paymentMode: raw.paymentMode as PaymentMode | undefined,
         transactionId: raw.transactionId ? String(raw.transactionId) : undefined,
         receiptNo: raw.receiptNo ? String(raw.receiptNo) : undefined,
+        bankReference: raw.bankReference ? String(raw.bankReference) : undefined,
+        screenshotUrl: raw.screenshotUrl ? String(raw.screenshotUrl) : undefined,
+        paidOn: raw.paidOn ? asString(raw.paidOn).slice(0, 10) : undefined,
+        submissionStatus: raw.submissionStatus as PaymentSubmissionStatus | undefined,
+        submittedBy: raw.submittedBy ? String(raw.submittedBy) : undefined,
+        verifiedBy: raw.verifiedBy ? String(raw.verifiedBy) : undefined,
+        verifiedAt: raw.verifiedAt ? asString(raw.verifiedAt) : undefined,
+        rejectionReason: raw.rejectionReason ? String(raw.rejectionReason) : undefined,
         remarks: raw.remarks ? String(raw.remarks) : undefined,
         performedBy: raw.performedBy ? String(raw.performedBy) : undefined,
         createdAt: asString(raw.createdAt),
@@ -328,39 +396,50 @@ export async function createFeePayment(input: CreateFeePaymentInput): Promise<Fe
   }
 }
 
-export async function collectPayment(paymentId: string, amount: number, mode: PaymentMode, remarks?: string): Promise<boolean> {
+export async function collectPayment(
+  paymentId: string,
+  amount: number,
+  mode: PaymentMode,
+  remarks?: string,
+  options?: CollectPaymentOptions,
+): Promise<boolean> {
   const paymentRef = collegeDocRef(`feePayments/${paymentId}`)
   const requestedAmount = numeric(amount)
   if (requestedAmount <= 0) throw new Error('Payment amount must be greater than zero.')
 
-  const transactionId = `TXN-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+  const transactionId = normalizeReference(options?.transactionId) || suggestTransactionId()
   const receiptNo = `RCP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
   const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'College finance office'
+  const paidOn = (options?.paidOn || today()).slice(0, 10)
+  const bankReference = normalizeReference(options?.bankReference) || undefined
+  const screenshotUrl = options?.screenshotUrl || undefined
 
   await runTransaction(db, async transaction => {
     const snapshot = await transaction.get(paymentRef)
     if (!snapshot.exists()) throw new Error('This fee record no longer exists.')
     const payment = snapshot.data() as Record<string, unknown>
-    const total = numeric(payment.amount)
-    const paid = numeric(payment.paidAmount)
-    const remaining = Math.max(0, total - paid)
+    const netOwed = Math.max(0, numeric(payment.amount) - numeric(payment.discountTotal))
+    const remaining = Math.max(0, netOwed - numeric(payment.paidAmount))
     if (payment.status === 'waived') throw new Error('A waived fee cannot receive a payment.')
     if (requestedAmount > remaining) throw new Error(`Payment exceeds the remaining balance of ₹${remaining.toLocaleString('en-IN')}.`)
 
-    const newPaidAmount = paid + requestedAmount
-    const newStatus: FeeStatus = newPaidAmount >= total
-      ? 'paid'
-      : String(payment.dueDate || '').slice(0, 10) < today() ? 'overdue' : 'partial'
+    const { paidAmount: newPaidAmount, status: newStatus } = creditLedger(
+      { amount: netOwed, paidAmount: payment.paidAmount, dueDate: payment.dueDate },
+      requestedAmount,
+      today(),
+    )
     const transactionRef = doc(collection(paymentRef, 'transactions'))
 
     transaction.update(paymentRef, {
       paidAmount: newPaidAmount,
       status: newStatus,
-      paidDate: today(),
+      paidDate: paidOn,
       paymentMode: mode,
       transactionId,
       receiptNo,
       collectedBy: actor,
+      ...(bankReference ? { bankReference } : {}),
+      ...(screenshotUrl ? { screenshotUrl } : {}),
       ...(remarks ? { remarks } : {}),
       updatedAt: serverTimestamp(),
     })
@@ -370,12 +449,131 @@ export async function collectPayment(paymentId: string, amount: number, mode: Pa
       paymentMode: mode,
       transactionId,
       receiptNo,
+      bankReference: bankReference || '',
+      ...(screenshotUrl ? { screenshotUrl } : {}),
+      paidOn,
+      submissionStatus: 'recorded',
       remarks: remarks || '',
       performedBy: actor,
       createdAt: serverTimestamp(),
     })
   })
 
+  return true
+}
+
+/**
+ * A student files their own payment proof (transaction id + screenshot). This
+ * records a `pending_verification` transaction but does NOT credit the ledger —
+ * the balance only moves when an admin approves it via verifyPaymentProof.
+ */
+export async function submitPaymentProof(paymentId: string, input: SubmitProofInput): Promise<boolean> {
+  const paymentRef = collegeDocRef(`feePayments/${paymentId}`)
+  const requestedAmount = numeric(input.amount)
+  if (requestedAmount <= 0) throw new Error('Payment amount must be greater than zero.')
+
+  const snapshot = await getDoc(paymentRef)
+  if (!snapshot.exists()) throw new Error('This fee record no longer exists.')
+  const payment = snapshot.data() as Record<string, unknown>
+  if (payment.status === 'waived') throw new Error('A waived fee cannot receive a payment.')
+  const remaining = Math.max(0, numeric(payment.amount) - numeric(payment.paidAmount))
+  if (requestedAmount > remaining) {
+    throw new Error(`Amount exceeds the remaining balance of ₹${remaining.toLocaleString('en-IN')}.`)
+  }
+
+  const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'Student'
+  const paidOn = (input.paidOn || today()).slice(0, 10)
+  const bankReference = normalizeReference(input.bankReference) || undefined
+  const screenshotUrl = input.screenshotUrl || undefined
+  const transactionRef = doc(collection(paymentRef, 'transactions'))
+
+  await setDoc(transactionRef, {
+    type: 'payment',
+    amount: requestedAmount,
+    paymentMode: input.paymentMode,
+    transactionId: normalizeReference(input.transactionId) || suggestTransactionId(),
+    bankReference: bankReference || '',
+    ...(screenshotUrl ? { screenshotUrl } : {}),
+    paidOn,
+    submissionStatus: 'pending_verification',
+    submittedBy: actor,
+    remarks: input.remarks || '',
+    performedBy: actor,
+    createdAt: serverTimestamp(),
+  })
+  return true
+}
+
+/**
+ * Finance-office review of a student-submitted proof. `approve` credits the
+ * ledger (same math as collectPayment) and stamps a receipt; `reject` leaves the
+ * balance untouched. Guarded against double-reviewing the same submission.
+ */
+export async function verifyPaymentProof(
+  paymentId: string,
+  transactionId: string,
+  decision: 'approve' | 'reject',
+  reason?: string,
+): Promise<boolean> {
+  const collegeId = getCollegeId()
+  const paymentRef = collegeDocRef(`feePayments/${paymentId}`, collegeId)
+  const transactionRef = doc(db, 'colleges', collegeId, 'feePayments', paymentId, 'transactions', transactionId)
+  const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'College finance office'
+
+  await runTransaction(db, async transaction => {
+    const paymentSnap = await transaction.get(paymentRef)
+    if (!paymentSnap.exists()) throw new Error('This fee record no longer exists.')
+    const txnSnap = await transaction.get(transactionRef)
+    if (!txnSnap.exists()) throw new Error('This payment submission no longer exists.')
+    const txn = txnSnap.data() as Record<string, unknown>
+    if (txn.submissionStatus && txn.submissionStatus !== 'pending_verification') {
+      throw new Error('This submission has already been reviewed.')
+    }
+
+    if (decision === 'reject') {
+      transaction.update(transactionRef, {
+        submissionStatus: 'rejected',
+        verifiedBy: actor,
+        verifiedAt: serverTimestamp(),
+        rejectionReason: (reason || '').trim() || 'Rejected by the finance office',
+      })
+      return
+    }
+
+    const payment = paymentSnap.data() as Record<string, unknown>
+    if (payment.status === 'waived') throw new Error('A waived fee cannot receive a payment.')
+    const amount = numeric(txn.amount)
+    const netOwed = Math.max(0, numeric(payment.amount) - numeric(payment.discountTotal))
+    const remaining = Math.max(0, netOwed - numeric(payment.paidAmount))
+    if (amount > remaining) {
+      throw new Error(`Amount exceeds the remaining balance of ₹${remaining.toLocaleString('en-IN')}.`)
+    }
+    const { paidAmount, status } = creditLedger(
+      { amount: netOwed, paidAmount: payment.paidAmount, dueDate: payment.dueDate },
+      amount,
+      today(),
+    )
+    const receiptNo = `RCP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
+
+    transaction.update(paymentRef, {
+      paidAmount,
+      status,
+      paidDate: String(txn.paidOn || today()).slice(0, 10),
+      paymentMode: txn.paymentMode as PaymentMode | undefined,
+      transactionId: txn.transactionId ? String(txn.transactionId) : '',
+      ...(txn.bankReference ? { bankReference: String(txn.bankReference) } : {}),
+      ...(txn.screenshotUrl ? { screenshotUrl: String(txn.screenshotUrl) } : {}),
+      receiptNo,
+      collectedBy: actor,
+      updatedAt: serverTimestamp(),
+    })
+    transaction.update(transactionRef, {
+      submissionStatus: 'verified',
+      verifiedBy: actor,
+      verifiedAt: serverTimestamp(),
+      receiptNo,
+    })
+  })
   return true
 }
 
@@ -402,6 +600,52 @@ export async function waiveFee(paymentId: string, remarks: string): Promise<bool
       type: 'waiver',
       amount: remaining,
       remarks: remarks.trim() || 'Fee waived by administration',
+      performedBy: actor,
+      createdAt: serverTimestamp(),
+    })
+  })
+  return true
+}
+
+export interface ApplyDiscountInput {
+  amount: number
+  /** Human label of the rule, e.g. "SC concession" or "Merit 90%+". */
+  label?: string
+  remarks?: string
+}
+
+/**
+ * Apply a discount to a fee (category / merit / management / custom). Records an
+ * auditable `discount` transaction and increases `discountTotal` (capped at the
+ * gross amount). Never touches paidAmount.
+ */
+export async function applyDiscount(paymentId: string, input: ApplyDiscountInput): Promise<boolean> {
+  const paymentRef = collegeDocRef(`feePayments/${paymentId}`)
+  const amount = numeric(input.amount)
+  if (amount <= 0) throw new Error('Discount amount must be greater than zero.')
+  const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'College finance office'
+
+  await runTransaction(db, async transaction => {
+    const snapshot = await transaction.get(paymentRef)
+    if (!snapshot.exists()) throw new Error('This fee record no longer exists.')
+    const payment = snapshot.data() as Record<string, unknown>
+    const gross = numeric(payment.amount)
+    const existing = numeric(payment.discountTotal)
+    const newDiscount = Math.min(existing + amount, gross)
+    const applied = Math.round((newDiscount - existing) * 100) / 100
+    if (applied <= 0) throw new Error('This fee is already fully discounted.')
+    const transactionRef = doc(collection(paymentRef, 'transactions'))
+    transaction.update(paymentRef, {
+      discountTotal: newDiscount,
+      netAmount: Math.max(0, gross - newDiscount) + numeric(payment.lateFine),
+      updatedAt: serverTimestamp(),
+    })
+    transaction.set(transactionRef, {
+      type: 'discount',
+      amount: applied,
+      remarks: input.label
+        ? `${input.label}${input.remarks ? ` — ${input.remarks}` : ''}`
+        : (input.remarks || 'Discount applied'),
       performedBy: actor,
       createdAt: serverTimestamp(),
     })

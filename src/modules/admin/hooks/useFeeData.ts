@@ -12,11 +12,15 @@ export type {
   FeeStudent,
   FeeTransaction,
   CreateFeePaymentInput,
+  CollectPaymentOptions,
+  SubmitProofInput,
+  PaymentSubmissionStatus,
 } from '../api/feeApi'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   calculateSummary,
+  applyDiscount,
   collectPayment,
   createFeePayment,
   createFeeStructure,
@@ -27,7 +31,11 @@ import {
   getCourseWiseSummary,
   getMonthlyCollection,
   getOverduePayments,
+  submitPaymentProof,
+  verifyPaymentProof,
   waiveFee,
+  type ApplyDiscountInput,
+  type CollectPaymentOptions,
   type CreateFeePaymentInput,
   type FeeFilters,
   type FeePayment,
@@ -35,6 +43,7 @@ import {
   type FeeStructure,
   type FeeSummary,
   type PaymentMode,
+  type SubmitProofInput,
 } from '../api/feeApi'
 
 export function useFeeData(studentId?: string) {
@@ -107,14 +116,47 @@ export function useFeeData(studentId?: string) {
     void fetchData()
   }, [fetchData])
 
-  const handleCollectPayment = useCallback(async (paymentId: string, amount: number, mode: PaymentMode, remarks?: string) => {
+  const handleCollectPayment = useCallback(async (paymentId: string, amount: number, mode: PaymentMode, remarks?: string, options?: CollectPaymentOptions) => {
     try {
-      const success = await collectPayment(paymentId, amount, mode, remarks)
+      const success = await collectPayment(paymentId, amount, mode, remarks, options)
       if (success) refreshData()
       return success
     } catch (error) {
       console.error('[useFeeData] Payment collection failed:', error)
-      return false
+      throw error
+    }
+  }, [refreshData])
+
+  const handleSubmitProof = useCallback(async (paymentId: string, input: SubmitProofInput) => {
+    try {
+      const success = await submitPaymentProof(paymentId, input)
+      if (success) refreshData()
+      return success
+    } catch (error) {
+      console.error('[useFeeData] Proof submission failed:', error)
+      throw error
+    }
+  }, [refreshData])
+
+  const handleVerifyProof = useCallback(async (paymentId: string, transactionId: string, decision: 'approve' | 'reject', reason?: string) => {
+    try {
+      const success = await verifyPaymentProof(paymentId, transactionId, decision, reason)
+      if (success) refreshData()
+      return success
+    } catch (error) {
+      console.error('[useFeeData] Proof verification failed:', error)
+      throw error
+    }
+  }, [refreshData])
+
+  const handleApplyDiscount = useCallback(async (paymentId: string, input: ApplyDiscountInput) => {
+    try {
+      const success = await applyDiscount(paymentId, input)
+      if (success) refreshData()
+      return success
+    } catch (error) {
+      console.error('[useFeeData] Discount application failed:', error)
+      throw error
     }
   }, [refreshData])
 
@@ -167,6 +209,9 @@ export function useFeeData(studentId?: string) {
     updateFilters,
     refreshData,
     collectPayment: handleCollectPayment,
+    submitPaymentProof: handleSubmitProof,
+    verifyPaymentProof: handleVerifyProof,
+    applyDiscount: handleApplyDiscount,
     waiveFee: handleWaiveFee,
     createFeePayment: handleCreateFeePayment,
     createFeeStructure: handleCreateFeeStructure,

@@ -204,11 +204,23 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
         
         let present = 0;
         let total = attendanceSnap.docs.length;
+        // Per-subject rollup so hall tickets can show a subject-wise breakdown.
+        // Groups by whichever subject identifier the attendance record carries;
+        // records with none are skipped (they still count toward the overall %).
+        const bySubject = new Map<string, { present: number; total: number }>();
         attendanceSnap.docs.forEach(doc => {
-          const status = doc.data().status;
+          const d = doc.data();
+          const status = d.status;
           if (status === 'present' || status === 'onDuty') present++;
+          const key = String(d.subjectId || d.courseId || d.subjectCode || d.courseCode || '');
+          if (key) {
+            const cur = bySubject.get(key) || { present: 0, total: 0 };
+            cur.total += 1;
+            if (status === 'present' || status === 'onDuty') cur.present += 1;
+            bySubject.set(key, cur);
+          }
         });
-        
+
         const percentage = total > 0 ? (present / total) * 100 : 100;
         // The admin override wins; otherwise the pack's ordinance floor rules.
         const minPercentage = input.minAttendancePercentage || pack.attendance.minimumPercentage;
@@ -216,12 +228,22 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
           ? percentage >= minPercentage
           : true;
 
+        // Subject-wise eligibility is computed after minPercentage is known.
+        const subjectWise = Array.from(bySubject.entries()).map(([subject, v]) => {
+          const pct = v.total > 0 ? (v.present / v.total) * 100 : 100;
+          return {
+            subject,
+            percentage: Math.round(pct * 10) / 10,
+            isEligible: pack.attendance.blocksExamEligibility ? pct >= minPercentage : true,
+          };
+        });
+
         const attResult = calculateSchemeAttendanceMarks(percentage, pack);
 
         attendanceEligibility = {
           isEligible,
           overallPercentage: percentage,
-          subjectWise: [], // TODO: subject-wise breakdown
+          subjectWise,
           remarks: isEligible
             ? `${attResult.remarks} (${pack.code})`
             : `Blocked - ${percentage.toFixed(1)}% below ${minPercentage}% (${pack.code})`,

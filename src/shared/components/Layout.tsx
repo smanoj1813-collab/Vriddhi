@@ -179,6 +179,7 @@ const navItems: NavItem[] = [
   { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
   { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" />, roles: ["admin", "principal"], section: "Students" },
   { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
+  { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
   { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
@@ -380,6 +381,7 @@ const principalNav: SidebarEntry[] = [
     icon: <AttachMoney fontSize="small" />,
     children: [
       { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
       { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
     ],
   },
@@ -464,6 +466,7 @@ const hodNav: SidebarEntry[] = [
     icon: <AttachMoney fontSize="small" />,
     children: [
       { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
       { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
     ],
   },
