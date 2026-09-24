@@ -544,6 +544,14 @@ service cloud.firestore {
         }
       }
 
+      // Online-payment gateway orders are created and credited entirely by the
+      // Cloud Function via the Admin SDK, which bypasses these rules — clients
+      // never write here. Read is observability only for finance staff.
+      match /paymentOrders/{docId} {
+        allow get, list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow write: if false;
+      }
+
       // University exam-fee challans (Karnataka-pattern 3-copy bank slips:
       // src/modules/admin/pages/ChallanManagement.tsx,
       // src/modules/student/pages/StudentChallans.tsx).

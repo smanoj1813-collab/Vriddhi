@@ -41,6 +41,7 @@ import { syncMyIdentity } from './selfIdentity'
 import { saveMyStaffAttendance } from './staffAttendanceWrites'
 import { resetCollegeData } from './collegeCleanup'
 import { relinkFacultyToCollege } from './collegeLinks'
+import { createFeePaymentOrder, verifyFeePayment, razorpayWebhook } from './payments'
 import {
   beginMyAssignmentSubmission,
   cancelMyAssignmentSubmission,
@@ -232,6 +233,9 @@ export {
   saveMyStaffAttendance,
   resetCollegeData,
   relinkFacultyToCollege,
+  createFeePaymentOrder,
+  verifyFeePayment,
+  razorpayWebhook,
   updateMyStudentProfile,
   listMentorDirectory,
   getMyAssignments,
