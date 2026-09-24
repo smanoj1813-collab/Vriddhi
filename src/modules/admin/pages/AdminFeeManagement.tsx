@@ -14,6 +14,7 @@ import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeD
 import { fetchFeeTransactions, type FeeTransaction } from '../api/feeApi'
 import { uploadPaymentProof } from '../api/feeProofStorage'
 import { suggestTransactionId } from '../utils/feeReference'
+import { feeNetPayable } from '../utils/financeRules'
 import { buildReceiptModel } from '../utils/financeReceipt'
 import { downloadReceiptPdf } from '../../../shared/utils/receiptPdf'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
@@ -108,13 +109,14 @@ interface CollectDetails {
 }
 
 function CollectPaymentModal({
-  payment, onClose, onCollect
+  payment, onClose, onCollect, onApplyDiscount
 }: {
   payment: FeePayment
   onClose: () => void
   onCollect: (amount: number, mode: PaymentMode, details: CollectDetails) => Promise<boolean>
+  onApplyDiscount?: (amount: number, label: string) => Promise<boolean>
 }) {
-  const [amount, setAmount] = useState(payment.amount - payment.paidAmount)
+  const [amount, setAmount] = useState(() => feeNetPayable(payment))
   const [mode, setMode] = useState<PaymentMode>('cash')
   const [transactionId, setTransactionId] = useState(() => suggestTransactionId())
   const [paidOn, setPaidOn] = useState(() => new Date().toISOString().slice(0, 10))
@@ -124,8 +126,29 @@ function CollectPaymentModal({
   const [preview, setPreview] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [discountAmount, setDiscountAmount] = useState('')
+  const [discountLabel, setDiscountLabel] = useState('')
+  const [applyingDiscount, setApplyingDiscount] = useState(false)
 
-  const remaining = payment.amount - payment.paidAmount
+  const remaining = feeNetPayable(payment)
+
+  const applyDiscountNow = async () => {
+    const value = Number(discountAmount)
+    if (!onApplyDiscount || !Number.isFinite(value) || value <= 0) {
+      setError('Enter a discount amount greater than zero.')
+      return
+    }
+    setApplyingDiscount(true)
+    setError(null)
+    try {
+      const ok = await onApplyDiscount(value, discountLabel.trim() || 'Discount')
+      if (ok) { setDiscountAmount(''); setDiscountLabel('') }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not apply the discount.')
+    } finally {
+      setApplyingDiscount(false)
+    }
+  }
 
   const pickScreenshot = (file: File | null) => {
     setError(null)
@@ -199,8 +222,20 @@ function CollectPaymentModal({
               <span className="text-sm text-vriddhi-muted">Paid So Far</span>
               <span className="text-sm font-medium text-green-600 dark:text-green-400">₹{payment.paidAmount.toLocaleString('en-IN')}</span>
             </div>
+            {(payment.discountTotal ?? 0) > 0 && (
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-vriddhi-muted">Discount</span>
+                <span className="text-sm font-medium text-purple-600 dark:text-purple-400">− ₹{(payment.discountTotal ?? 0).toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            {(payment.lateFine ?? 0) > 0 && (
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-vriddhi-muted">Late fine</span>
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">+ ₹{(payment.lateFine ?? 0).toLocaleString('en-IN')}</span>
+              </div>
+            )}
             <div className="flex justify-between pt-2 border-t border-vriddhi-border">
-              <span className="text-sm text-vriddhi-muted">Remaining</span>
+              <span className="text-sm text-vriddhi-muted">Net Payable</span>
               <span className="text-sm font-bold text-amber-600 dark:text-amber-400">₹{remaining.toLocaleString('en-IN')}</span>
             </div>
           </div>
@@ -243,6 +278,37 @@ function CollectPaymentModal({
               ))}
             </div>
           </div>
+
+          {onApplyDiscount && (
+            <div className="p-3 rounded-xl border border-vriddhi-border bg-vriddhi-dark/30 space-y-2">
+              <label className="text-sm text-vriddhi-muted block">Apply discount (category / merit / management)</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={discountAmount}
+                  onChange={(e) => setDiscountAmount(e.target.value)}
+                  placeholder="Amount ₹"
+                  min={1}
+                  className="input-field"
+                />
+                <input
+                  type="text"
+                  value={discountLabel}
+                  onChange={(e) => setDiscountLabel(e.target.value)}
+                  placeholder="Reason (e.g. SC concession)"
+                  className="input-field flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={applyDiscountNow}
+                  disabled={applyingDiscount}
+                  className="px-3 py-2 rounded-xl text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {applyingDiscount ? 'Applying…' : 'Apply'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="text-sm text-vriddhi-muted mb-2 block">Transaction / Reference ID</label>
@@ -594,7 +660,9 @@ function PaymentDetailModal({
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-bold text-slate-900 dark:text-white">₹{txn.amount.toLocaleString('en-IN')}</span>
+                          <span className={`text-sm font-bold ${txn.type === 'discount' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-900 dark:text-white'}`}>
+                            {txn.type === 'discount' ? '− ' : ''}₹{txn.amount.toLocaleString('en-IN')}
+                          </span>
                           <div className="flex items-center gap-1.5">
                             {badge && <span className={`text-[10px] px-2 py-0.5 rounded-full ${badge.className}`}>{badge.label}</span>}
                             {txn.receiptNo && (
@@ -609,7 +677,7 @@ function PaymentDetailModal({
                           </div>
                         </div>
                         <p className="text-xs text-vriddhi-muted capitalize">
-                          {txn.type === 'waiver' ? 'Waiver' : (txn.paymentMode || 'payment')} · {txn.paidOn || (txn.createdAt ? txn.createdAt.slice(0, 10) : '—')}
+                          {txn.type === 'waiver' ? 'Waiver' : txn.type === 'discount' ? 'Discount' : (txn.paymentMode || 'payment')} · {txn.paidOn || (txn.createdAt ? txn.createdAt.slice(0, 10) : '—')}
                         </p>
                         {(txn.transactionId || txn.receiptNo) && (
                           <p className="text-[11px] text-vriddhi-muted/80 font-mono truncate">
@@ -671,6 +739,7 @@ export default function AdminFeeManagement() {
     refreshData,
     collectPayment,
     verifyPaymentProof,
+    applyDiscount,
     waiveFee,
     createFeePayment,
     createFeeStructure,
@@ -706,6 +775,18 @@ export default function AdminFeeManagement() {
       showSuccess(decision === 'approve' ? 'Payment verified and credited to the ledger.' : 'Submission rejected.')
     } catch (err) {
       showError(err instanceof Error ? err.message : 'Could not update the submission.')
+    }
+  }
+
+  const handleApplyDiscount = async (amount: number, label: string) => {
+    if (!selectedPayment) return false
+    try {
+      const ok = await applyDiscount(selectedPayment.id, { amount, label })
+      if (ok) showSuccess(`Discount of ₹${amount.toLocaleString('en-IN')} applied.`)
+      return ok
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Could not apply the discount.')
+      return false
     }
   }
 
@@ -1419,6 +1500,7 @@ export default function AdminFeeManagement() {
           payment={selectedPayment}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
           onCollect={handleCollect}
+          onApplyDiscount={handleApplyDiscount}
         />
       )}
       {modalMode === 'waive' && selectedPayment && (

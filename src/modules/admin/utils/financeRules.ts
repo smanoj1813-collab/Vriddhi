@@ -57,6 +57,8 @@ export interface DiscountRule {
   categories?: string[]
   /** courses this applies to (empty = all). */
   courses?: string[]
+  /** academic_score only: where the caller should read the score from. */
+  scoreSource?: 'profile' | 'assessment' | 'manual'
 }
 
 export interface DiscountPolicy {
@@ -306,4 +308,22 @@ export function computeFinance(ctx: FinanceContext): FinanceBreakdown {
     daysOverdue: lf.daysOverdue,
     payable: round2(d.netBase + lf.fine),
   }
+}
+
+/**
+ * Pure: the amount still owed on a fee after discounts and late fines —
+ * max(0, amount − discount) + lateFine − already paid. Mirrors the discount-
+ * aware balance used by collectPayment / verifyPaymentProof in feeApi.
+ */
+export function feeNetPayable(fee: {
+  amount: unknown
+  paidAmount: unknown
+  discountTotal?: unknown
+  lateFine?: unknown
+}): number {
+  const amount = Math.max(0, Number(fee.amount) || 0)
+  const discount = Math.max(0, Number(fee.discountTotal) || 0)
+  const lateFine = Math.max(0, Number(fee.lateFine) || 0)
+  const paid = Math.max(0, Number(fee.paidAmount) || 0)
+  return round2(Math.max(0, amount - discount) + lateFine - paid)
 }

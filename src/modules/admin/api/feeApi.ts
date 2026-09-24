@@ -27,6 +27,9 @@ import {
   suggestTransactionId,
   type PaymentSubmissionStatus,
 } from '../utils/feeReference'
+import { feeNetPayable } from '../utils/financeRules'
+
+export { feeNetPayable } from '../utils/financeRules'
 
 const MAX_READS = 500
 
@@ -133,6 +136,12 @@ export interface FeePayment {
   receiptNo?: string
   bankReference?: string
   screenshotUrl?: string
+  /** Total discount applied (category / merit / management), reduces the amount owed. */
+  discountTotal?: number
+  /** Late-payment fine assessed, added to the amount owed. */
+  lateFine?: number
+  /** Materialised payable = max(0, amount − discountTotal) + lateFine. */
+  netAmount?: number
   remarks?: string
   collectedBy?: string
   createdAt: string
@@ -163,7 +172,7 @@ export interface CreateFeePaymentInput {
 
 export interface FeeTransaction {
   id: string
-  type: 'payment' | 'waiver'
+  type: 'payment' | 'waiver' | 'discount'
   amount: number
   paymentMode?: PaymentMode
   transactionId?: string
@@ -244,6 +253,8 @@ function mapPayment(id: string, raw: Record<string, unknown>): FeePayment {
     receiptNo: raw.receiptNo ? String(raw.receiptNo) : undefined,
     bankReference: raw.bankReference ? String(raw.bankReference) : undefined,
     screenshotUrl: raw.screenshotUrl ? String(raw.screenshotUrl) : undefined,
+    discountTotal: raw.discountTotal == null ? undefined : numeric(raw.discountTotal),
+    lateFine: raw.lateFine == null ? undefined : numeric(raw.lateFine),
     remarks: raw.remarks ? String(raw.remarks) : undefined,
     collectedBy: raw.collectedBy ? String(raw.collectedBy) : undefined,
     createdAt: asString(raw.createdAt),
@@ -407,12 +418,16 @@ export async function collectPayment(
     const snapshot = await transaction.get(paymentRef)
     if (!snapshot.exists()) throw new Error('This fee record no longer exists.')
     const payment = snapshot.data() as Record<string, unknown>
-    const total = numeric(payment.amount)
-    const remaining = Math.max(0, total - numeric(payment.paidAmount))
+    const netOwed = Math.max(0, numeric(payment.amount) - numeric(payment.discountTotal))
+    const remaining = Math.max(0, netOwed - numeric(payment.paidAmount))
     if (payment.status === 'waived') throw new Error('A waived fee cannot receive a payment.')
     if (requestedAmount > remaining) throw new Error(`Payment exceeds the remaining balance of ₹${remaining.toLocaleString('en-IN')}.`)
 
-    const { paidAmount: newPaidAmount, status: newStatus } = creditLedger(payment, requestedAmount, today())
+    const { paidAmount: newPaidAmount, status: newStatus } = creditLedger(
+      { amount: netOwed, paidAmount: payment.paidAmount, dueDate: payment.dueDate },
+      requestedAmount,
+      today(),
+    )
     const transactionRef = doc(collection(paymentRef, 'transactions'))
 
     transaction.update(paymentRef, {
@@ -528,11 +543,16 @@ export async function verifyPaymentProof(
     const payment = paymentSnap.data() as Record<string, unknown>
     if (payment.status === 'waived') throw new Error('A waived fee cannot receive a payment.')
     const amount = numeric(txn.amount)
-    const remaining = Math.max(0, numeric(payment.amount) - numeric(payment.paidAmount))
+    const netOwed = Math.max(0, numeric(payment.amount) - numeric(payment.discountTotal))
+    const remaining = Math.max(0, netOwed - numeric(payment.paidAmount))
     if (amount > remaining) {
       throw new Error(`Amount exceeds the remaining balance of ₹${remaining.toLocaleString('en-IN')}.`)
     }
-    const { paidAmount, status } = creditLedger(payment, amount, today())
+    const { paidAmount, status } = creditLedger(
+      { amount: netOwed, paidAmount: payment.paidAmount, dueDate: payment.dueDate },
+      amount,
+      today(),
+    )
     const receiptNo = `RCP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
 
     transaction.update(paymentRef, {
@@ -580,6 +600,52 @@ export async function waiveFee(paymentId: string, remarks: string): Promise<bool
       type: 'waiver',
       amount: remaining,
       remarks: remarks.trim() || 'Fee waived by administration',
+      performedBy: actor,
+      createdAt: serverTimestamp(),
+    })
+  })
+  return true
+}
+
+export interface ApplyDiscountInput {
+  amount: number
+  /** Human label of the rule, e.g. "SC concession" or "Merit 90%+". */
+  label?: string
+  remarks?: string
+}
+
+/**
+ * Apply a discount to a fee (category / merit / management / custom). Records an
+ * auditable `discount` transaction and increases `discountTotal` (capped at the
+ * gross amount). Never touches paidAmount.
+ */
+export async function applyDiscount(paymentId: string, input: ApplyDiscountInput): Promise<boolean> {
+  const paymentRef = collegeDocRef(`feePayments/${paymentId}`)
+  const amount = numeric(input.amount)
+  if (amount <= 0) throw new Error('Discount amount must be greater than zero.')
+  const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'College finance office'
+
+  await runTransaction(db, async transaction => {
+    const snapshot = await transaction.get(paymentRef)
+    if (!snapshot.exists()) throw new Error('This fee record no longer exists.')
+    const payment = snapshot.data() as Record<string, unknown>
+    const gross = numeric(payment.amount)
+    const existing = numeric(payment.discountTotal)
+    const newDiscount = Math.min(existing + amount, gross)
+    const applied = Math.round((newDiscount - existing) * 100) / 100
+    if (applied <= 0) throw new Error('This fee is already fully discounted.')
+    const transactionRef = doc(collection(paymentRef, 'transactions'))
+    transaction.update(paymentRef, {
+      discountTotal: newDiscount,
+      netAmount: Math.max(0, gross - newDiscount) + numeric(payment.lateFine),
+      updatedAt: serverTimestamp(),
+    })
+    transaction.set(transactionRef, {
+      type: 'discount',
+      amount: applied,
+      remarks: input.label
+        ? `${input.label}${input.remarks ? ` — ${input.remarks}` : ''}`
+        : (input.remarks || 'Discount applied'),
       performedBy: actor,
       createdAt: serverTimestamp(),
     })

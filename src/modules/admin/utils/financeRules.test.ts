@@ -13,6 +13,7 @@ import {
   computeLateFine,
   daysOverdue,
   discountForRule,
+  feeNetPayable,
   resolveBracket,
   type DiscountPolicy,
   type DiscountRule,
@@ -167,4 +168,13 @@ test('computeFinance: base − discount + late-fine = payable, with audit trail'
   assert.equal(breakdown.lateFine, 250)
   assert.equal(breakdown.payable, 5250)
   assert.equal(breakdown.discounts[0].ruleId, 'sc')
+})
+
+// ── Net payable ─────────────────────────────────────────
+test('feeNetPayable: amount − discount + late fine − paid', () => {
+  assert.equal(feeNetPayable({ amount: 10000, paidAmount: 0 }), 10000)
+  assert.equal(feeNetPayable({ amount: 10000, paidAmount: 0, discountTotal: 2000 }), 8000)
+  assert.equal(feeNetPayable({ amount: 10000, paidAmount: 3000, discountTotal: 2000, lateFine: 500 }), 5500)
+  // discount cannot push below zero
+  assert.equal(feeNetPayable({ amount: 5000, paidAmount: 0, discountTotal: 9999 }), 0)
 })

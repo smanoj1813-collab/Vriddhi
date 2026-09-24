@@ -20,6 +20,7 @@ export type {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   calculateSummary,
+  applyDiscount,
   collectPayment,
   createFeePayment,
   createFeeStructure,
@@ -33,6 +34,7 @@ import {
   submitPaymentProof,
   verifyPaymentProof,
   waiveFee,
+  type ApplyDiscountInput,
   type CollectPaymentOptions,
   type CreateFeePaymentInput,
   type FeeFilters,
@@ -147,6 +149,17 @@ export function useFeeData(studentId?: string) {
     }
   }, [refreshData])
 
+  const handleApplyDiscount = useCallback(async (paymentId: string, input: ApplyDiscountInput) => {
+    try {
+      const success = await applyDiscount(paymentId, input)
+      if (success) refreshData()
+      return success
+    } catch (error) {
+      console.error('[useFeeData] Discount application failed:', error)
+      throw error
+    }
+  }, [refreshData])
+
   const handleWaiveFee = useCallback(async (paymentId: string, remarks: string) => {
     try {
       const success = await waiveFee(paymentId, remarks)
@@ -198,6 +211,7 @@ export function useFeeData(studentId?: string) {
     collectPayment: handleCollectPayment,
     submitPaymentProof: handleSubmitProof,
     verifyPaymentProof: handleVerifyProof,
+    applyDiscount: handleApplyDiscount,
     waiveFee: handleWaiveFee,
     createFeePayment: handleCreateFeePayment,
     createFeeStructure: handleCreateFeeStructure,
