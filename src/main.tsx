@@ -9,6 +9,7 @@ import { AppThemeProvider } from './shared/contexts/ThemeProvider'
 import { LanguageProvider } from './shared/contexts/LanguageProvider'
 import { NotificationProvider } from './shared/providers/NotificationProvider'
 import { PwaPrompts } from './shared/pwa/PwaPrompts'
+import IdleSessionTimeout from './modules/auth/components/IdleSessionTimeout'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <NotificationProvider>
                 <App />
                 <PwaPrompts />
+                <IdleSessionTimeout />
               </NotificationProvider>
             </LanguageProvider>
           </AppThemeProvider>

@@ -945,6 +945,7 @@ describe('plannedTopicsFromCurriculum', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 import {
+  classesNeededForHours,
   earlierDateKey,
   expectedSessions,
   hoursFromMinutes,
@@ -988,6 +989,28 @@ describe('hoursFromMinutes', () => {
   })
 })
 
+describe('classesNeededForHours', () => {
+  it('converts planned syllabus hours into 50-minute periods, rounding up', () => {
+    // 8 × 60 = 480 minutes at 50 per class = 9.6 → 10 diary slots.
+    assert.equal(classesNeededForHours(8), 10)
+    assert.equal(classesNeededForHours(4), 5) // 240/50 = 4.8 → 5
+    assert.equal(classesNeededForHours(25 / 6), 5) // exactly 5 classes
+    assert.equal(classesNeededForHours(1), 2) // 60/50 = 1.2 → 2
+  })
+
+  it('respects a non-default period length', () => {
+    assert.equal(classesNeededForHours(1, 60), 1)
+    assert.equal(classesNeededForHours(8, 55), 9) // 480/55 = 8.7 → 9
+  })
+
+  it('is 0 for nothing planned', () => {
+    assert.equal(classesNeededForHours(0), 0)
+    assert.equal(classesNeededForHours(-3), 0)
+    assert.equal(classesNeededForHours(Number.NaN), 0)
+    assert.equal(classesNeededForHours(8, 0), 0)
+  })
+})
+
 describe('weeksBetween', () => {
   it('counts whole teaching weeks across an inclusive range', () => {
     assert.equal(weeksBetween('2026-09-07', '2026-09-13'), 1)
@@ -1026,9 +1049,20 @@ describe('moduleRollup', () => {
       { title: 'Trees', moduleNo: '2', moduleName: 'Non-linear', covered: true },
     ]
     assert.deepEqual(moduleRollup(rows), [
-      { moduleNo: '1', moduleName: 'Linear', total: 2, covered: 1, pct: 50 },
-      { moduleNo: '2', moduleName: 'Non-linear', total: 2 - 1, covered: 1, pct: 100 },
+      { moduleNo: '1', moduleName: 'Linear', hours: 0, classesNeeded: 0, total: 2, covered: 1, pct: 50 },
+      { moduleNo: '2', moduleName: 'Non-linear', hours: 0, classesNeeded: 0, total: 2 - 1, covered: 1, pct: 100 },
     ])
+  })
+
+  it('carries module hours into the class-count estimate (50-min periods)', () => {
+    const rows: ProgressTopicRow[] = [
+      // The hours figure repeats per topic of the module — the rollup keeps one.
+      { title: 'Stacks', moduleNo: '1', moduleName: 'Linear', covered: true, hours: 8 },
+      { title: 'Queues', moduleNo: '1', moduleName: 'Linear', covered: false, hours: 8 },
+    ]
+    const [moduleOne] = moduleRollup(rows)
+    assert.equal(moduleOne.hours, 8)
+    assert.equal(moduleOne.classesNeeded, 10) // 8h × 60 / 50 = 9.6 → 10 classes
   })
 
   it('keeps unnumbered rows in one bucket so totals still add up', () => {
@@ -1110,8 +1144,9 @@ describe('sumProgress', () => {
     hoursPlanned: 40,
     hoursDelivered: 10,
     hoursPct: 25,
+    classesNeeded: 48,
     topics: { total: 20, covered: 5, pending: 15, pct: 25 },
-    modules: [{ moduleNo: '1', moduleName: 'Linear', total: 4, covered: 2, pct: 50 }],
+    modules: [{ moduleNo: '1', moduleName: 'Linear', hours: 8, classesNeeded: 10, total: 4, covered: 2, pct: 50 }],
     sessions: { total: 30, completed: 10, scheduled: 18, cancelled: 2 },
     pace: { slotsPerWeek: 5, weeksElapsed: 6, expected: 30, completed: 10, pct: 33.3 },
     attendance: { present: 80, marked: 100, pct: 80 },

@@ -4,6 +4,7 @@
 
 import { auth, db, functions } from '@/Firebase/config';
 import { httpsCallable } from 'firebase/functions';
+import { filterStudentRows } from '@/shared/utils/studentFilters';
 import {
   DEPLOY_COMMAND,
   describeIdentityError,
@@ -193,6 +194,7 @@ function docToStudent(docSnap: QueryDocumentSnapshot<DocumentData>): Student {
     collegeName: data.collegeName,
     batch: data.batch || "",
     division: data.division || "",
+    section: data.section || undefined,
     mentor: data.mentor,
     branch,
     department: branch,
@@ -657,9 +659,9 @@ export async function listStudents(options: ListStudentsOptions = {}): Promise<P
       q = query(collection(db, "students"), orderBy("createdAt", "desc"));
     }
 
-    if (options.batch) {
-      q = query(q, where("batch", "==", options.batch));
-    }
+    // `batch` is NOT a server-side where() below: the same batch is recorded as
+    // "2027", 2027 and " 2027 " by different importers, and exact-match would
+    // hide the variants before the normalised filter could reconcile them.
     if (options.status && options.status !== "all") {
       q = query(q, where("status", "==", options.status));
     }
@@ -684,6 +686,19 @@ export async function listStudents(options: ListStudentsOptions = {}): Promise<P
       ...s,
       collegeName: s.collegeName || collegeMap[s.collegeId]?.name || s.collegeId || "—",
     }));
+
+    // The string-shaped cohort fields (`search`, `batch`, `branch`, `section`,
+    // legacy `division`) cannot be matched with Firestore `where()` — importers
+    // disagree on "BBA" vs "B.B.A", "2027" vs 2027, "A" vs "Div A" — so they
+    // are applied here over the loaded rows with the same normalisers the
+    // attendance roster uses. Previously `search` and `division` were accepted
+    // by this API and silently ignored (the search box did nothing).
+    items = filterStudentRows(items, {
+      search: options.search,
+      batch: options.batch,
+      branch: options.branch,
+      section: options.section ?? options.division,
+    });
 
     const total = items.length;
     const hasMore = false;

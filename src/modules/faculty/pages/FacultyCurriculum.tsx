@@ -15,6 +15,20 @@ import { useAuth } from '../../auth/context/AuthContext'
 import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import type { ParsedModule, FacultyCurriculumView, FacultyScheduleItem, FacultyCurriculumStats } from '../types/curriculum'
 
+// ─── Module → classes estimate ────────────────────────────────────────────
+
+/**
+ * A class is one 50-minute period; the syllabus plans in 60-minute hours —
+ * so 8 module hours = 480 minutes = 10 diary slots, not 8. Shown next to
+ * module hours so it is obvious that the module's topics spread over several
+ * classes (each class ticks off only the topics it actually covered).
+ */
+export function classesForHours(hours: number | undefined): number {
+  const value = Number(hours) || 0
+  if (value <= 0) return 0
+  return Math.ceil((value * 60) / 50 - 1e-9)
+}
+
 // ─── Component ───────────────────────────────────────────────────────────
 
 export default function FacultyCurriculum() {
@@ -345,8 +359,8 @@ export default function FacultyCurriculum() {
                                     <span className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
                                       Module {mod.moduleNo}
                                     </span>
-                                    <span className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
-                                      {mod.hours}h
+                                    <span className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400" title="Planned hours · classes at 50 min each">
+                                      {mod.hours}h{classesForHours(mod.hours) > 0 ? ` ≈ ${classesForHours(mod.hours)} classes` : ''}
                                     </span>
                                   </div>
                                   <p className="text-sm text-slate-700 dark:text-slate-300">{(mod.title || mod.moduleName || '')}</p>
@@ -508,6 +522,9 @@ export default function FacultyCurriculum() {
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
                         {mod.hours} hours · {mod.marks ?? 0} marks
+                        {classesForHours(mod.hours) > 0 && (
+                          <> · ≈ {classesForHours(mod.hours)} classes (50 min each)</>
+                        )}
                       </p>
                     </div>
                   </div>

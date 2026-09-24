@@ -1,7 +1,8 @@
 import { db } from '@/Firebase/config';
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
-  getDoc, Timestamp, orderBy, limit, writeBatch
+  getDoc, Timestamp, orderBy, limit, startAfter, writeBatch,
+  Query, QuerySnapshot, QueryDocumentSnapshot, DocumentData,
 } from 'firebase/firestore';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import { ensureClassSession } from '../../admin/api/classSessionApi';
@@ -30,7 +31,11 @@ export type {
 
 // ─── Read Cap ──────────────────────────────────────────────────────────────
 
-const MAX_READS_PER_SESSION = 500;
+// Budget for one attendance-marking page session: a full roster read (up to
+// MAX_ROSTER_STUDENTS student docs, in pages) plus sessions and attendance
+// lookups. This is a cost guard with a console warning and pre-emptive
+// early-returns — NOT a Firestore rule.
+const MAX_READS_PER_SESSION = 4000;
 let sessionReadCount = 0;
 
 function trackRead(docCount: number) {
@@ -60,7 +65,12 @@ function buildFacultyStudent(d: any, id: string): FacultyStudent {
     rollNo: regNo,
     branch: d.branch || d.department || '',
     batch: d.batch || '',
-    division: d.division || d.section || '',
+    // Division and section are SEPARATE fields (a student recorded under only
+    // `section: "A"` must not be re-labelled "division A" — the cohort matcher
+    // already treats the two letters as interchangeable, and display code that
+    // needs "the letter" falls back across the pair).
+    division: String(d.division || ''),
+    section: String(d.section || ''),
     semester: d.semester || 0,
     attendancePercentage: attendance,
     status: computeStudentStatus(attendance, score),
@@ -199,6 +209,16 @@ export async function fetchFacultyClassSessions(
 
 // ─── Fetch Students for a Class Session ────────────────────────────────────
 
+/** Firestore read page size (the cap this fetch used to apply in one shot). */
+const ROSTER_PAGE_SIZE = 450;
+/**
+ * Hard ceiling on how many students of a college the roster scan will page
+ * through. Generous enough for any real college (the save path chunks at 450
+ * per batch, so size is no longer a constraint), bounded so one page cannot
+ * read a runaway collection.
+ */
+const MAX_ROSTER_STUDENTS = 1800;
+
 /**
  * The cohort a class session is taught to. `section` is part of the cohort —
  * it used to be dropped here, which is how a class for "A B" could never
@@ -235,6 +255,11 @@ export interface SessionRoster {
  * across colleges. The cohort itself is filtered client-side over the loaded
  * documents (five-field composite indexes would be the alternative, and the
  * normalisation this matching needs makes those indexes useless anyway).
+ *
+ * The collection is read in PAGES of 450 (the single-shot cap this function
+ * used to impose — a hard ceiling that silently left every student past the
+ * first page out of the roster of a large college). Pagination continues up
+ * to MAX_ROSTER_STUDENTS; `diagnostics.truncated` says when even that was hit.
  */
 export async function fetchStudentsForSession(
   cohort: SessionCohort,
@@ -244,26 +269,42 @@ export async function fetchStudentsForSession(
   if (!collegeId) return { students: [], diagnostics: null };
 
   try {
-    const q = query(
-      collection(db, 'students'),
-      where('collegeId', '==', collegeId),
-      // Keep enough headroom for aggregate documents in the 500-write save batch.
-      limit(450)
-    );
+    const rows: Array<Record<string, unknown>> = [];
+    const ids: string[] = [];
+    let cursor: QueryDocumentSnapshot<DocumentData> | null = null;
 
-    const snap = await getDocs(q);
-    trackRead(snap.size);
+    while (rows.length < MAX_ROSTER_STUDENTS) {
+      const pageQuery: Query<DocumentData> = cursor
+        ? query(
+            collection(db, 'students'),
+            where('collegeId', '==', collegeId),
+            startAfter(cursor),
+            limit(ROSTER_PAGE_SIZE)
+          )
+        : query(
+            collection(db, 'students'),
+            where('collegeId', '==', collegeId),
+            limit(ROSTER_PAGE_SIZE)
+          );
+      const snap: QuerySnapshot<DocumentData> = await getDocs(pageQuery);
+      trackRead(snap.size);
+      if (snap.empty) break;
+      snap.docs.forEach((d: QueryDocumentSnapshot<DocumentData>) => {
+        rows.push(d.data() as Record<string, unknown>);
+        ids.push(d.id);
+      });
+      cursor = snap.docs[snap.docs.length - 1] ?? null;
+      if (snap.size < ROSTER_PAGE_SIZE) break;
+    }
 
-    const docs = snap.docs;
-    const rows = docs.map((d) => d.data() as Record<string, unknown>);
     const { matchedIndices, diagnostics } = matchCohortRows(
       rows,
       { ...cohort, collegeId },
-      450
+      MAX_ROSTER_STUDENTS
     );
 
     const students: FacultyStudent[] = matchedIndices.map((i) =>
-      buildFacultyStudent(rows[i], docs[i].id)
+      buildFacultyStudent(rows[i], ids[i])
     ).sort((a, b) => a.name.localeCompare(b.name));
 
     return { students, diagnostics };
@@ -445,37 +486,49 @@ export async function saveAttendance(
   };
 
   // Keep the detailed faculty document, per-student reporting records and
-  // session summary in sync in one atomic write.
-  const batch = writeBatch(db);
-  batch.set(doc(db, 'attendance', documentId), attendanceData, { merge: true });
+  // session summary in sync.
+  //
+  // Firestore caps a WriteBatch at 500 operations, and one operation per
+  // student is written below — so the writes are CHUNKED. The authoritative
+  // documents (the `attendance` row with its embedded records, the summary and
+  // the session update) commit FIRST together with the first record chunk;
+  // remaining `attendanceRecords` follow in later chunks. Deterministic ids +
+  // `merge` make a retry after a partial failure idempotent.
+  const RECORDS_PER_BATCH = 450;
+  const attendanceRef = doc(db, 'attendance', documentId);
+  const summaryRef = doc(db, 'attendanceSummary', documentId);
+  const sessionRef = doc(db, 'classSessions', sessionId);
 
-  records.forEach(record => {
+  const recordWrites = records.map(record => {
     const recordId = `${documentId}_${record.studentId}`.replace(/\//g, '_');
-    batch.set(doc(db, 'attendanceRecords', recordId), {
-      collegeId,
-      sessionId,
-      classSessionId: sessionId,
-      studentId: record.studentId,
-      studentName: record.name,
-      usn: record.usn,
-      regNo: record.regNo,
-      status: statusMap[record.status],
-      date: session.date,
-      subject: session.subject,
-      subjectCode: session.subjectCode,
-      branch: session.branch,
-      batch: session.batch,
-      division: session.division,
-      semester: session.semester,
-      markedBy: facultyId,
-      markedAt: timestamp,
-      note: record.notes || '',
-      notes: record.notes || '',
-      updatedAt: timestamp,
-    }, { merge: true });
+    return {
+      ref: doc(db, 'attendanceRecords', recordId),
+      data: {
+        collegeId,
+        sessionId,
+        classSessionId: sessionId,
+        studentId: record.studentId,
+        studentName: record.name,
+        usn: record.usn,
+        regNo: record.regNo,
+        status: statusMap[record.status],
+        date: session.date,
+        subject: session.subject,
+        subjectCode: session.subjectCode,
+        branch: session.branch,
+        batch: session.batch,
+        division: session.division,
+        semester: session.semester,
+        markedBy: facultyId,
+        markedAt: timestamp,
+        note: record.notes || '',
+        notes: record.notes || '',
+        updatedAt: timestamp,
+      },
+    };
   });
 
-  batch.set(doc(db, 'attendanceSummary', documentId), {
+  const summaryWrite = {
     collegeId,
     sessionId,
     facultyId,
@@ -498,7 +551,7 @@ export async function saveAttendance(
     sessions: 1,
     markedAt: timestamp,
     updatedAt: timestamp,
-  }, { merge: true });
+  };
 
   // S2.2: update the session for *every* source, not just ad-hoc ones. Before
   // this, marking attendance on a recurring class never touched classSessions
@@ -532,7 +585,12 @@ export async function saveAttendance(
         source: session.source === 'weekly' ? 'weekly-schedule' : 'adhoc',
       };
 
-  batch.set(doc(db, 'classSessions', sessionId), {
+  // First batch: the authoritative trio (attendance + summary + session update)
+  // plus as many per-student records as fit under the 500-write cap.
+  const firstBatch = writeBatch(db);
+  firstBatch.set(attendanceRef, attendanceData, { merge: true });
+  firstBatch.set(summaryRef, summaryWrite, { merge: true });
+  firstBatch.set(sessionRef, {
     ...sessionWrite,
     collegeId,
     attendanceMarked: true,
@@ -542,8 +600,20 @@ export async function saveAttendance(
     markedBy: facultyId,
     updatedAt: timestamp,
   }, { merge: true });
+  recordWrites.slice(0, RECORDS_PER_BATCH).forEach(({ ref, data }) => {
+    firstBatch.set(ref, data, { merge: true });
+  });
+  await firstBatch.commit();
 
-  await batch.commit();
+  // Remaining per-student reporting records in chunks of ≤450.
+  for (let start = RECORDS_PER_BATCH; start < recordWrites.length; start += RECORDS_PER_BATCH) {
+    const chunkBatch = writeBatch(db);
+    recordWrites.slice(start, start + RECORDS_PER_BATCH).forEach(({ ref, data }) => {
+      chunkBatch.set(ref, data, { merge: true });
+    });
+    await chunkBatch.commit();
+  }
+
   return documentId;
 }
 

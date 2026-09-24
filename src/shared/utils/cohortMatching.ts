@@ -226,6 +226,10 @@ function subjectMatches(fields: StudentCohortFields, criteria: CohortCriteria): 
       // course as "Language-I (Lang3.1)"; the abbreviation "Math" stands for
       // "Mathematics-I (Math3.1)".
       if (token.length >= SUBJECT_SUBSTRING_MIN && name.includes(token)) return true
+      // …and the reverse direction, which used to be missing: a schedule that
+      // names the course short ("Financial Accounting") must still find
+      // students enrolled under the long form ("Financial Accounting-I").
+      if (name.length >= SUBJECT_SUBSTRING_MIN && token.includes(name)) return true
     }
     if (code) {
       if (token === code) return true
@@ -339,12 +343,26 @@ export interface RosterDiagnostics {
   }
   mismatches: Partial<Record<CohortField, RosterMismatchDetail>>
   /**
+   * "Almost this class" exclusions: students who fail ONLY on cohort-identity
+   * fields (semester / division / section / subject) while matching college,
+   * branch and batch. Students of other branches or batches failing to match
+   * is NORMAL (they belong to other classes) and is deliberately excluded —
+   * this is the difference between "7 BCA students were left out" (a bug to
+   * fix) and "the B.Com students were left out" (working as intended).
+   */
+  nearMisses: Partial<Record<CohortField, RosterMismatchDetail>>
+  /** Total students counted in `nearMisses` (a student may fail several fields). */
+  nearMissTotal: number
+  /**
    * The distinct semesters among MATCHED students when the schedule does not
    * specify one; null when the schedule does (or nobody matched). A length > 1
    * here means the class is silently wider than intended.
    */
   matchedSemesters: string[] | null
 }
+
+/** Identity fields — failing these means "a different cohort", not "almost". */
+const IDENTITY_FIELDS: readonly CohortField[] = ['collegeId', 'branch', 'batch']
 
 /**
  * Run the cohort match over every loaded student document and build the
@@ -359,6 +377,9 @@ export function matchCohortRows(
   const matchedIndices: number[] = []
   const valueSinks: Partial<Record<CohortField, Map<string, number>>> = {}
   const countSink: Partial<Record<CohortField, number>> = {}
+  const nearValueSinks: Partial<Record<CohortField, Map<string, number>>> = {}
+  const nearCountSink: Partial<Record<CohortField, number>> = {}
+  let nearMissTotal = 0
   const matchedSemesterSet = new Map<number, number>()
 
   const rawValueOf = (row: Record<string, unknown>, field: CohortField): string => {
@@ -402,6 +423,18 @@ export function matchCohortRows(
       sink.set(value, (sink.get(value) ?? 0) + 1)
       valueSinks[field] = sink
     }
+    // Near-miss: same college/branch/batch, one identity field off. These are
+    // the students a data fix would bring INTO this roster.
+    if (!result.mismatches.some((field) => IDENTITY_FIELDS.includes(field))) {
+      nearMissTotal += 1
+      for (const field of result.mismatches) {
+        nearCountSink[field] = (nearCountSink[field] ?? 0) + 1
+        const sink = nearValueSinks[field] ?? new Map<string, number>()
+        const value = rawValueOf(row, field).trim() || '(none)'
+        sink.set(value, (sink.get(value) ?? 0) + 1)
+        nearValueSinks[field] = sink
+      }
+    }
   }
 
   const mismatches: RosterDiagnostics['mismatches'] = {}
@@ -409,6 +442,20 @@ export function matchCohortRows(
     const sink = valueSinks[field]
     mismatches[field] = {
       count: countSink[field] ?? 0,
+      values: sink
+        ? [...sink.entries()]
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+            .slice(0, 6)
+            .map(([value]) => value)
+        : [],
+    }
+  }
+
+  const nearMisses: RosterDiagnostics['nearMisses'] = {}
+  for (const field of Object.keys(nearCountSink) as CohortField[]) {
+    const sink = nearValueSinks[field]
+    nearMisses[field] = {
+      count: nearCountSink[field] ?? 0,
       values: sink
         ? [...sink.entries()]
             .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -440,6 +487,8 @@ export function matchCohortRows(
         subject: String(criteria.subject ?? '').trim(),
       },
       mismatches,
+      nearMisses,
+      nearMissTotal,
       matchedSemesters: criterionSemesterKnown ? null : matchedSemesters,
     },
   }

@@ -1894,9 +1894,9 @@ export const MAX_PROGRESS_CURRICULUM_DOCS = 10
 export function plannedTopicsFromCurriculum(
   mappings: Array<Record<string, unknown>>,
   curriculumDocs: Array<{ id: string; data: admin.firestore.DocumentData }>
-): Array<{ title: string; moduleNo: string; moduleName: string }> {
+): Array<{ title: string; moduleNo: string; moduleName: string; hours: number }> {
   const docById = new Map(curriculumDocs.map((entry) => [entry.id, entry.data]))
-  const out: Array<{ title: string; moduleNo: string; moduleName: string }> = []
+  const out: Array<{ title: string; moduleNo: string; moduleName: string; hours: number }> = []
   const seen = new Set<string>()
   for (const mapping of mappings) {
     const curriculum = docById.get(String(mapping.curriculumId || ''))
@@ -1920,6 +1920,7 @@ export function plannedTopicsFromCurriculum(
           title,
           moduleNo: String(mod?.moduleNo ?? ''),
           moduleName: String(mod?.moduleName || mod?.title || ''),
+          hours: Number(mod?.hours) || 0,
         })
       }
     }
@@ -1930,6 +1931,14 @@ export function plannedTopicsFromCurriculum(
 export interface ModuleProgress {
   moduleNo: string
   moduleName: string
+  /** Planned teaching hours for the module (0 when the syllabus did not say). */
+  hours: number
+  /**
+   * Whole 50-minute classes the module's hours translate to (ceiling). The
+   * answer to "there are more topics than fit in one class": each module is
+   * planned as this many periods, and topics are ticked off across them.
+   */
+  classesNeeded: number
   total: number
   covered: number
   pct: number
@@ -1952,6 +1961,8 @@ export interface FacultyProgress {
   hoursPlanned: number
   hoursDelivered: number
   hoursPct: number
+  /** Whole classes (periodMinutes long) the planned hours translate to. */
+  classesNeeded: number
   topics: { total: number; covered: number; pending: number; pct: number }
   modules: ModuleProgress[]
   sessions: { total: number; completed: number; scheduled: number; cancelled: number }
@@ -1960,6 +1971,31 @@ export interface FacultyProgress {
 }
 
 // ─── Pure maths (unit-tested) ──────────────────────────────────────────────
+
+/**
+ * One teaching period is 50 minutes (the auto-schedule grid default — see
+ * DEFAULT_GRID.periodMinutes in autoSchedule.ts). Syllabi plan in 60-minute
+ * "hours", so planned hours translate to MORE periods than hours:
+ * 8 module hours = 480 minutes = 9.6 → 10 classes of 50 minutes. This is the
+ * number behind "not every topic fits in one class".
+ */
+export const DEFAULT_PERIOD_MINUTES = 50
+
+/**
+ * How many whole classes a planned-hours figure needs at the college's period
+ * length. Rounds UP — a module needing 9.6 periods occupies 10 diary slots.
+ * The epsilon keeps exact boundaries exact in binary floating point (e.g.
+ * 25/6 hours = 5.0 classes, not 6, even though (25/6)*60/50 lands a hair
+ * above 5).
+ */
+export function classesNeededForHours(
+  hours: number,
+  periodMinutes: number = DEFAULT_PERIOD_MINUTES
+): number {
+  if (!Number.isFinite(hours) || hours <= 0) return 0
+  if (!Number.isFinite(periodMinutes) || periodMinutes <= 0) return 0
+  return Math.ceil((hours * 60) / periodMinutes - 1e-9)
+}
 
 /** Percentage that answers 0 instead of NaN/Infinity when nothing is planned. */
 export function percent(part: number, whole: number): number {
@@ -2004,9 +2040,12 @@ export function pacePercent(completed: number, expected: number): number {
 /**
  * Per-module rollup. Rows with no module number are grouped under a single
  * "Unassigned" bucket rather than dropped, so the totals still add up.
+ * `hours` is the module's planned teaching time (rows of one module repeat the
+ * figure, so the MAX is kept), and `classesNeeded` converts it to 50-minute
+ * periods — the planning answer to "how many classes does this module need".
  */
 export function moduleRollup(
-  entries: Array<{ moduleNo?: unknown; moduleName?: unknown; covered: boolean }>
+  entries: Array<{ moduleNo?: unknown; moduleName?: unknown; covered: boolean; hours?: unknown }>
 ): ModuleProgress[] {
   const buckets = new Map<string, ModuleProgress>()
   entries.forEach((entry) => {
@@ -2017,16 +2056,23 @@ export function moduleRollup(
       ({
         moduleNo,
         moduleName: String(entry.moduleName ?? '').trim() || (moduleNo ? `Module ${moduleNo}` : 'Unassigned'),
+        hours: 0,
+        classesNeeded: 0,
         total: 0,
         covered: 0,
         pct: 0,
       } as ModuleProgress)
     bucket.total += 1
     if (entry.covered) bucket.covered += 1
+    bucket.hours = Math.max(bucket.hours, Number(entry.hours) || 0)
     buckets.set(key, bucket)
   })
   return [...buckets.values()]
-    .map((bucket) => ({ ...bucket, pct: percent(bucket.covered, bucket.total) }))
+    .map((bucket) => ({
+      ...bucket,
+      classesNeeded: classesNeededForHours(bucket.hours),
+      pct: percent(bucket.covered, bucket.total),
+    }))
     .sort((a, b) => a.moduleNo.localeCompare(b.moduleNo, 'en', { numeric: true }))
 }
 
@@ -2039,6 +2085,7 @@ export function sumProgress(list: FacultyProgress[]): FacultyProgress {
     hoursPlanned: 0,
     hoursDelivered: 0,
     hoursPct: 0,
+    classesNeeded: 0,
     topics: { total: 0, covered: 0, pending: 0, pct: 0 },
     modules: [],
     sessions: { total: 0, completed: 0, scheduled: 0, cancelled: 0 },
@@ -2082,6 +2129,8 @@ export function sumProgress(list: FacultyProgress[]): FacultyProgress {
   return {
     ...totals,
     hoursPct: percent(totals.hoursDelivered, totals.hoursPlanned),
+    // Recomputed from the summed hours rather than summed per-faculty ceilings.
+    classesNeeded: classesNeededForHours(totals.hoursPlanned),
     topics: { ...totals.topics, pct: percent(totals.topics.covered, totals.topics.total) },
     pace: { ...totals.pace, pct: percent(totals.pace.completed, totals.pace.expected) },
     attendance: { ...totals.attendance, pct: percent(totals.attendance.present, totals.attendance.marked) },
@@ -2109,6 +2158,8 @@ interface ProgressTopicRow {
   moduleNo: string
   moduleName: string
   covered: boolean
+  /** Planned hours of the owning module (0 for legacy/ledger-only rows). */
+  hours?: number
 }
 
 /**
@@ -2137,6 +2188,7 @@ export function mergeTopicCoverage(
       ...existing,
       moduleNo: existing.moduleNo || row.moduleNo,
       moduleName: existing.moduleName || row.moduleName,
+      hours: Math.max(Number(existing.hours) || 0, Number(row.hours) || 0),
       covered: existing.covered || row.covered || coveredTitles.has(key),
     })
   }
@@ -2376,6 +2428,7 @@ export const getCurriculumProgress = onCall(
         hoursPlanned,
         hoursDelivered: hoursFromMinutes(deliveredMinutes),
         hoursPct: percent(hoursFromMinutes(deliveredMinutes), hoursPlanned),
+        classesNeeded: classesNeededForHours(hoursPlanned),
         topics: {
           total: topics.length,
           covered: topicsCovered,
