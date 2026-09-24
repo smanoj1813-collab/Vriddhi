@@ -3,6 +3,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import AutoScheduleDialog from './AutoScheduleDialog'
+import HolidayBanner from '@/shared/components/HolidayBanner'
 
 import {
   Box,
@@ -113,6 +114,20 @@ function getNextOccurrence(dayOfWeek: DayOfWeek): string {
   const targetDate = new Date(today)
   targetDate.setDate(today.getDate() + diff)
   return targetDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+}
+
+// ─── Helper: next occurrence as a yyyy-mm-dd key (holiday banner, v2 P4) ─────
+function dateKeyForNextOccurrence(dayOfWeek: DayOfWeek): string {
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const targetDay = days.indexOf(dayOfWeek)
+  const today = new Date()
+  const currentDay = today.getDay()
+  let diff = targetDay - currentDay
+  if (diff < 0) diff += 7
+  if (diff === 0) diff = 7 // mirror getNextOccurrence: today → next week
+  const targetDate = new Date(today)
+  targetDate.setDate(today.getDate() + diff)
+  return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`
 }
 
 // ─── CSV Template ─────────────────────────────────────
@@ -660,6 +675,9 @@ const AdminClassSchedule: React.FC = () => {
           {' '}&middot; Next occurrence: <strong>{getNextOccurrence(selectedDay)}</strong>
         </Typography>
       </Box>
+
+      {/* P4: academic-calendar banner — the next occurrence of this weekday */}
+      <HolidayBanner date={dateKeyForNextOccurrence(selectedDay)} collegeId={collegeId} />
 
       {/* Schedule Table */}
       <Card variant="outlined">

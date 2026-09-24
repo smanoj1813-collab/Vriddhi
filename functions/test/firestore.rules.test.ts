@@ -1509,3 +1509,64 @@ describe('department scoping for admin and hod claims', () => {
     await assertSucceeds(getDoc(doc(db, 'papers', 'paper-eee')))
   })
 })
+
+describe('academic calendar (Auto-Scheduler v2)', () => {
+  // The holiday/fest/exam model `generateClassSessions` consults before
+  // materialising a session. Staff read it (timetable screens banner
+  // "Holiday — no classes"); writes are callable-only (saveCalendarEvent /
+  // deleteCalendarEvent), so a client — even a college admin — can never
+  // silently void or resurrect a class day.
+  function seedEvent(id: string, collegeId = COLLEGE_A) {
+    return testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'academicCalendar', id), {
+        collegeId,
+        title: 'Diwali',
+        type: 'public-holiday',
+        startDate: '2026-11-09',
+        endDate: '2026-11-09',
+        suspendsClasses: true,
+      })
+    })
+  }
+
+  it('staff can read; students cannot', async () => {
+    await seedEvent('ev-a')
+    const faculty = facultyContext().firestore()
+    await assertSucceeds(getDoc(doc(faculty, 'academicCalendar', 'ev-a')))
+    await assertSucceeds(
+      getDocs(query(collection(faculty, 'academicCalendar'), where('collegeId', '==', COLLEGE_A), limit(5))),
+    )
+    const principal = principalContext().firestore()
+    await assertSucceeds(getDoc(doc(principal, 'academicCalendar', 'ev-a')))
+
+    const student = studentContext().firestore()
+    await assertFails(getDoc(doc(student, 'academicCalendar', 'ev-a')))
+  })
+
+  it('no client write — create, update and delete all fail (callable-only)', async () => {
+    await seedEvent('ev-a')
+    const db = adminContext().firestore()
+    await assertFails(
+      setDoc(doc(db, 'academicCalendar', 'ev-new'), {
+        collegeId: COLLEGE_A,
+        title: 'Forged holiday',
+        type: 'public-holiday',
+        startDate: '2026-12-01',
+        endDate: '2026-12-01',
+        suspendsClasses: true,
+      }),
+    )
+    await assertFails(updateDoc(doc(db, 'academicCalendar', 'ev-a'), { suspendsClasses: false }))
+    await assertFails(deleteDoc(doc(db, 'academicCalendar', 'ev-a')))
+
+    const superadmin = superadminContext().firestore()
+    await assertFails(setDoc(doc(superadmin, 'academicCalendar', 'ev-sa'), {
+      collegeId: COLLEGE_A,
+      title: 'Also forged',
+      type: 'fest',
+      startDate: '2026-12-02',
+      endDate: '2026-12-02',
+      suspendsClasses: false,
+    }))
+  })
+})

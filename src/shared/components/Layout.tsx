@@ -343,6 +343,7 @@ const principalNav: SidebarEntry[] = [
     children: [
       { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
       { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
@@ -437,6 +438,8 @@ const hodNav: SidebarEntry[] = [
     children: [
       { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
+      { label: "Scheme Packs", path: "/admin/scheme-packs", icon: <AccountBalance fontSize="small" /> },
       { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },

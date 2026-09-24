@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material';
 import { useFacultySchedule } from '../hooks/useFacultySchedule';
 import type { DayOfWeek } from '../../../types/schedule';
+import HolidayBanner from '@/shared/components/HolidayBanner';
 
 const DAYS: DayOfWeek[] = [
   'Monday',
@@ -66,6 +67,11 @@ export default function FacultySchedule() {
       <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
         Weekly Schedule
       </Typography>
+
+      {/* P4: academic-calendar banner — today */}
+      <HolidayBanner
+        date={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
+      />
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <Chip

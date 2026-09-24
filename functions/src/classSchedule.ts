@@ -66,6 +66,9 @@ export const MAX_CANCEL_DOCS_PER_TXN = 180
 /** Hard ceiling on weekly slots read for one college, to bound the callable. */
 export const MAX_WEEKLY_SLOTS_READ = 2000
 
+/** Hard ceiling on academic-calendar events read for holiday suppression (P4). */
+export const MAX_CALENDAR_EVENTS_READ = 200
+
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 /** Roles allowed to materialise / cancel sessions for their college. */
@@ -276,6 +279,17 @@ export interface WeeklySlot {
   endTime?: unknown
   type?: unknown
   isActive?: unknown
+  // P1 (Auto-Scheduler v2): applicability window. `yyyy-mm-dd` keys — the
+  // timetable this slot belongs to is live from effectiveFrom through
+  // effectiveTo. LEGACY DOCS WITHOUT THESE FIELDS ARE ALWAYS ACTIVE
+  // (byte-identical back-compat; no migration). Typed `unknown` like every
+  // untrusted Firestore field here — `slotDateWindow` validates on read.
+  effectiveFrom?: unknown
+  effectiveTo?: unknown
+  // P2 (Auto-Scheduler v2): ordered module ids copied from the curriculum
+  // course at auto-schedule time, so the session-topics UI can auto-suggest
+  // "next module" per session (full auto-advancing topic assignment = v3).
+  moduleQueue?: unknown
   // Optional "Attach an assignment" config written by the admin's weekly
   // form: { title, maxScore, deadline }. `generateClassSessions` materialises
   // exactly one draft assignment per configured slot (see below).
@@ -737,6 +751,33 @@ export function isSlotActive(slot: WeeklySlot): boolean {
   return slot.isActive !== false
 }
 
+/**
+ * A weekly slot's validity window (P1). Legacy docs without the fields are
+ * always active — byte-identical back-compat, no migration. Returned keys are
+ * validated yyyy-mm-dd strings or null when absent/malformed.
+ */
+export function slotDateWindow(
+  slot: Pick<WeeklySlot, 'effectiveFrom' | 'effectiveTo'>,
+): { from: string | null; to: string | null } {
+  const from = String(slot.effectiveFrom ?? '').trim()
+  const to = String(slot.effectiveTo ?? '').trim()
+  return {
+    from: isValidDateKey(from) ? from : null,
+    to: isValidDateKey(to) ? to : null,
+  }
+}
+
+/** True when the slot's applicability window covers `dateKey` (or has none). */
+export function slotAppliesOn(
+  slot: Pick<WeeklySlot, 'effectiveFrom' | 'effectiveTo'>,
+  dateKey: string,
+): boolean {
+  const window = slotDateWindow(slot)
+  if (window.from && dateKey < window.from) return false
+  if (window.to && dateKey > window.to) return false
+  return true
+}
+
 export function matchesFilters(slot: WeeklySlot, filters: GeneratePayload): boolean {
   if (filters.weeklyScheduleId && slot.id !== filters.weeklyScheduleId) return false
   if (filters.facultyId && text(slot.facultyId) !== filters.facultyId) return false
@@ -827,12 +868,62 @@ export const generateClassSessions = onCall(
       .map((doc) => ({ id: doc.id, ...(doc.data() as Record<string, unknown>) }))
       .filter((slot) => isSlotActive(slot) && matchesFilters(slot, payload))
 
-    // (slotId, date) pairs this run should cover.
+    // (slotId, date) pairs this run should cover. P1: occurrences outside a
+    // slot's effectiveFrom/effectiveTo window are not occurrences at all —
+    // legacy slots (no window) expand exactly as before.
     const planned: Array<{ slot: WeeklySlot; date: string }> = []
+    let skippedOutsideWindow = 0
     for (const slot of slots) {
       for (const date of expandWeeklyRange(payload.from, payload.to, slot.dayOfWeek)) {
+        if (!slotAppliesOn(slot, date)) {
+          skippedOutsideWindow += 1
+          continue
+        }
         planned.push({ slot, date })
       }
+    }
+
+    // ─── P4: academic-calendar suppression ──────────────────────────────────
+    // A `suspendsClasses` event (public/college/study holiday, exam window)
+    // voids the dates it covers; a fest with suspendsClasses:false runs
+    // normally. Blocker shape mirrors calendar.ts `CalendarEventLite`, parsed
+    // defensively here so this module stays independent of it.
+    const skippedHolidays: Array<{ date: string; reason: string }> = []
+    let skippedHolidayCount = 0
+    {
+      const blockers: Array<{ title: string; startDate: string; endDate: string }> = []
+      const calSnap = await db
+        .collection('academicCalendar')
+        .where('collegeId', '==', payload.collegeId)
+        .limit(MAX_CALENDAR_EVENTS_READ)
+        .get()
+      for (const doc of calSnap.docs) {
+        const e = doc.data() as Record<string, unknown>
+        // Missing field = suspends (safe default), matching calendar.ts
+        // `toCalendarEventLite`; only an explicit `false` (fest) runs normally.
+        if (e.suspendsClasses === false) continue
+        const title = String(e.title ?? '').trim()
+        const start = String(e.startDate ?? '').trim()
+        const end = String(e.endDate ?? '').trim()
+        if (!title || !isValidDateKey(start) || !isValidDateKey(end)) continue
+        blockers.push({ title, startDate: start, endDate: end })
+      }
+      const kept: typeof planned = []
+      const seenDates = new Set<string>()
+      for (const item of planned) {
+        const blocker = blockers.find((b) => item.date >= b.startDate && item.date <= b.endDate)
+        if (blocker) {
+          skippedHolidayCount += 1
+          if (!seenDates.has(item.date)) {
+            seenDates.add(item.date)
+            skippedHolidays.push({ date: item.date, reason: `Holiday: ${blocker.title}` })
+          }
+          continue
+        }
+        kept.push(item)
+      }
+      planned.length = 0
+      planned.push(...kept)
     }
 
     // ─── S2.5: refuse to materialise a timetable that double-books ─────────
@@ -987,6 +1078,8 @@ export const generateClassSessions = onCall(
       created,
       skippedExisting,
       skippedConflicts: conflictedIds.size,
+      skippedHolidayCount,
+      skippedOutsideWindow,
       assignmentsLinked: slotAssignmentIds.size,
       batches,
       actorUid: uid,
@@ -1006,6 +1099,12 @@ export const generateClassSessions = onCall(
       // Slots whose attached assignment was linked (created or remembered)
       // by this run — the admin UI surfaces the drafts for faculty publish.
       assignmentsLinked: slotAssignmentIds.size,
+      // P4/P1: additive skip accounting — holiday rows are `{date, reason}`
+      // (one per date); counts are occurrences (a holiday voids every slot
+      // occurrence on its dates).
+      skippedHolidays,
+      skippedHolidayCount,
+      skippedOutsideWindow,
     }
   }
 )

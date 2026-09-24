@@ -105,6 +105,18 @@ export interface WeeklyClassSchedule {
   createdAt: string
   updatedAt: string
   /**
+   * P1 (Auto-Scheduler v2): applicability window (yyyy-mm-dd, inclusive).
+   * LEGACY DOCS WITHOUT THESE FIELDS ARE ALWAYS ACTIVE — mirrors
+   * `WeeklySlot.effectiveFrom/To` in functions/src/classSchedule.ts.
+   */
+  effectiveFrom?: string
+  effectiveTo?: string
+  /**
+   * P2: ordered module ids copied from the curriculum course at
+   * auto-schedule time (session-topics "next module" hint). v3 auto-advances.
+   */
+  moduleQueue?: string[]
+  /**
    * Optional "Attach an assignment" config. When present, `generateClassSessions`
    * materialises one draft assignment for this slot (targeting the slot's
    * cohort) for the faculty to review and publish.

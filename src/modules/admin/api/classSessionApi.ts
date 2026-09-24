@@ -59,6 +59,12 @@ export interface GenerateSessionsResult {
    * their draft assignment created (or re-linked) by this run.
    */
   assignmentsLinked?: number
+  /** P4: one row per blocked date (`Holiday: Diwali`), additive. */
+  skippedHolidays?: { date: string; reason: string }[]
+  /** P4: occurrences suppressed by suspendsClasses calendar events. */
+  skippedHolidayCount?: number
+  /** P1: occurrences outside a slot's effectiveFrom/effectiveTo window. */
+  skippedOutsideWindow?: number
 }
 
 /** Errors that carry conflict details attached by the callable. */

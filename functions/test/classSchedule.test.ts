@@ -23,6 +23,8 @@ import {
   isValidDateKey,
   isSlotActive,
   matchesFilters,
+  slotDateWindow,
+  slotAppliesOn,
   minutesOfDay,
   slotDateKey,
   toDateKey,
@@ -1249,5 +1251,37 @@ describe('generate payload conflict switches', () => {
         .skipConflicting,
       false
     )
+  })
+})
+
+// ─── P1 (Auto-Scheduler v2): slot validity window ────────────────────────────
+
+describe('slot validity window (P1)', () => {
+  it('legacy slots (no window fields) are always active — byte-identical back-compat', () => {
+    assert.deepEqual(slotDateWindow(SLOT), { from: null, to: null })
+    for (const date of ['2020-01-01', '2026-09-22', '2099-12-31']) {
+      assert.equal(slotAppliesOn(SLOT, date), true)
+    }
+    // malformed window fields degrade to "no window" rather than dropping the slot
+    assert.equal(slotAppliesOn({ ...SLOT, effectiveFrom: 'someday', effectiveTo: '31/12/2026' }, '2026-10-05'), true)
+  })
+
+  it('honours effectiveFrom / effectiveTo inclusively', () => {
+    const windowed = { ...SLOT, effectiveFrom: '2026-09-22', effectiveTo: '2026-12-20' }
+    assert.deepEqual(slotDateWindow(windowed), { from: '2026-09-22', to: '2026-12-20' })
+    assert.equal(slotAppliesOn(windowed, '2026-09-21'), false)
+    assert.equal(slotAppliesOn(windowed, '2026-09-22'), true) // inclusive start
+    assert.equal(slotAppliesOn(windowed, '2026-10-05'), true)
+    assert.equal(slotAppliesOn(windowed, '2026-12-20'), true) // inclusive end
+    assert.equal(slotAppliesOn(windowed, '2026-12-21'), false)
+  })
+
+  it('supports open-ended windows (from-only and to-only)', () => {
+    const fromOnly = { ...SLOT, effectiveFrom: '2026-09-22' }
+    assert.equal(slotAppliesOn(fromOnly, '2026-09-21'), false)
+    assert.equal(slotAppliesOn(fromOnly, '2099-01-01'), true)
+    const toOnly = { ...SLOT, effectiveTo: '2026-12-20' }
+    assert.equal(slotAppliesOn(toOnly, '2020-01-01'), true)
+    assert.equal(slotAppliesOn(toOnly, '2026-12-21'), false)
   })
 })
