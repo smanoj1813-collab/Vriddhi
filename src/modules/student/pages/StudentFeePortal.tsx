@@ -13,6 +13,11 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
+import { feeNetPayable } from '../../admin/utils/financeRules'
+import { buildReceiptModel } from '../../admin/utils/financeReceipt'
+import { downloadReceiptPdf } from '../../../shared/utils/receiptPdf'
+import { startOnlinePayment, type OnlinePaymentResult } from '../../../shared/utils/paymentGateway'
+import type { SubmitProofInput } from '../../admin/api/feeApi'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 // ─── Status Config ─────────────────────────────────────
@@ -86,58 +91,70 @@ function StatCard({ label, value, subtext, icon: Icon, color, loading }: any) {
 
 // ─── Pay Fee Modal ─────────────────────────────────────
 function PayFeeModal({
-  payment, onClose, onPay
+  payment, onClose, onPaid, onOnlinePay, onSubmitProof
 }: {
   payment: FeePayment
   onClose: () => void
-  onPay: (amount: number, mode: PaymentMode) => void
+  onPaid: () => void
+  onOnlinePay: (paymentId: string) => Promise<OnlinePaymentResult>
+  onSubmitProof: (paymentId: string, input: SubmitProofInput) => Promise<boolean>
 }) {
-  const [amount, setAmount] = useState(payment.amount - payment.paidAmount)
-  const [mode, setMode] = useState<PaymentMode>('upi')
-  const [processing, setProcessing] = useState(false)
-  const [step, setStep] = useState<'amount' | 'confirm' | 'success'>('amount')
+  const { showError } = useNotification()
+  const [proofAmount, setProofAmount] = useState('')
+  const [proofMode, setProofMode] = useState<PaymentMode>('upi')
+  const [proofRef, setProofRef] = useState('')
+  const [paidOn, setPaidOn] = useState(() => new Date().toISOString().slice(0, 10))
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<OnlinePaymentResult | null>(null)
+  const [proofSent, setProofSent] = useState(false)
 
-  const remaining = payment.amount - payment.paidAmount
+  const discount = Number(payment.discountTotal ?? 0) || 0
+  const lateFine = Number(payment.lateFine ?? 0) || 0
+  const netPayable = feeNetPayable(payment)
+  const amount = proofAmount === '' ? netPayable : Number(proofAmount)
 
-  const handlePay = () => {
-    setProcessing(true)
-    setTimeout(() => {
-      onPay(amount, mode)
-      setProcessing(false)
-      setStep('success')
-    }, 1200)
+  const payOnline = async () => {
+    setBusy(true)
+    const r = await onOnlinePay(payment.id)
+    setBusy(false)
+    setResult(r)
+    if (r.status === 'paid') setTimeout(() => { onPaid(); onClose() }, 1200)
   }
+
+  const sendProof = async () => {
+    if (amount <= 0) { showError('Enter the amount you paid.'); return }
+    setBusy(true)
+    const ok = await onSubmitProof(payment.id, {
+      amount,
+      paymentMode: proofMode,
+      transactionId: proofRef || undefined,
+      bankReference: proofRef || undefined,
+      paidOn,
+    })
+    setBusy(false)
+    if (ok) { setProofSent(true); setTimeout(onClose, 1800) }
+    else showError('Could not submit your proof. Please try again.')
+  }
+
+  const done = result?.status === 'paid' || proofSent
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in duration-150">
-        {step === 'success' ? (
+        {done ? (
           <div className="p-8 text-center">
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-200">
               <CheckCircle className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white mb-2">Payment Successful!</h2>
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white mb-2">
+              {proofSent ? 'Proof submitted!' : 'Payment successful!'}
+            </h2>
             <p className="text-xs text-slate-500 mb-6">
-              Your payment of ₹{amount.toLocaleString('en-IN')} has been acknowledged.
+              {proofSent
+                ? 'Your payment is awaiting verification by the finance office; it will appear once approved.'
+                : 'Your payment has been recorded and your receipt is now available.'}
             </p>
-            <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 mb-6 text-left space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Transaction ID</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-900 dark:text-white">TXN{Date.now()}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Receipt No</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-900 dark:text-white">RCP{100000 + Math.floor(Math.random() * 90000)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Date</span>
-                <span className="font-medium text-slate-900 dark:text-slate-900 dark:text-white">{new Date().toLocaleDateString('en-IN')}</span>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-full py-3 rounded-xl text-xs font-bold text-slate-900 dark:text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm"
-            >
+            <button onClick={onClose} className="w-full py-3 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm">
               Done
             </button>
           </div>
@@ -146,9 +163,9 @@ function PayFeeModal({
             <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-teal-600" />
-                Fee Payment
+                Pay Fee
               </h2>
-              <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
                 <X className="w-4 h-4 text-slate-500" />
               </button>
             </div>
@@ -156,69 +173,81 @@ function PayFeeModal({
             <div className="p-6 space-y-4">
               <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Category</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-900 dark:text-white capitalize">{payment.category} Fee</span>
+                  <span className="text-slate-500 dark:text-slate-400 capitalize">{payment.category} fee</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₹{payment.amount.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Total Invoice</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-900 dark:text-white">₹{payment.amount.toLocaleString('en-IN')}</span>
-                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-violet-600 dark:text-violet-400">Discount</span>
+                    <span className="font-bold text-violet-600 dark:text-violet-400">− ₹{discount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                {lateFine > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-rose-600 dark:text-rose-400">Late payment fine</span>
+                    <span className="font-bold text-rose-600 dark:text-rose-400">+ ₹{lateFine.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500 dark:text-slate-400">Paid so far</span>
                   <span className="font-bold text-emerald-600">₹{payment.paidAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-xs pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <span className="font-bold text-slate-700 dark:text-slate-700 dark:text-slate-300">Remaining Balance</span>
-                  <span className="font-extrabold text-amber-600 dark:text-amber-600 dark:text-amber-400">₹{remaining.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Net payable</span>
+                  <span className="font-extrabold text-amber-600 dark:text-amber-400">₹{netPayable.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
-                  Amount to Pay (₹)
-                </label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  max={remaining}
-                  min={1}
-                  className="input-field text-sm font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-2 block">
-                  Payment Mode
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['upi', 'card', 'netbanking'] as PaymentMode[]).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMode(m)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold capitalize transition-all border ${
-                        mode === m
-                          ? 'bg-teal-600 text-slate-900 dark:text-white border-teal-600 shadow-sm'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      {m === 'upi' ? 'UPI / QR' : m === 'netbanking' ? 'NetBanking' : 'Debit/Credit'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800">
               <button
-                onClick={handlePay}
-                disabled={processing || amount <= 0 || amount > remaining}
-                className="w-full py-3 rounded-xl text-xs font-bold text-slate-900 dark:text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                onClick={payOnline}
+                disabled={busy || netPayable <= 0}
+                className="w-full py-3 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                {processing ? 'Processing Securely...' : `Pay ₹${amount.toLocaleString('en-IN')}`}
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                {busy ? 'Opening secure checkout…' : `Pay ₹${netPayable.toLocaleString('en-IN')} online`}
               </button>
+              {result?.status === 'unavailable' && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center">
+                  Online payment isn’t available yet — submit your proof below or pay at the finance office.
+                </p>
+              )}
+              {result?.status === 'failed' && (
+                <p className="text-[11px] text-rose-600 dark:text-rose-400 text-center">{result.message}</p>
+              )}
+              {result?.status === 'cancelled' && (
+                <p className="text-[11px] text-slate-500 text-center">Checkout cancelled.</p>
+              )}
+
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Already paid? Submit proof</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-slate-500">Amount (₹)</label>
+                    <input type="number" value={proofAmount === '' ? netPayable : proofAmount} onChange={e => setProofAmount(e.target.value)} min={1} max={netPayable} className="input-field text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500">Paid on</label>
+                    <input type="date" value={paidOn} onChange={e => setPaidOn(e.target.value)} className="input-field text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500">Mode</label>
+                  <div className="grid grid-cols-3 gap-1.5 mt-1">
+                    {(['upi', 'card', 'netbanking', 'cheque', 'dd', 'cash'] as PaymentMode[]).map(m => (
+                      <button key={m} type="button" onClick={() => setProofMode(m)} className={`px-2 py-1.5 rounded-lg text-[11px] font-bold capitalize border ${proofMode === m ? 'bg-teal-600 text-white border-teal-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        {m === 'netbanking' ? 'Bank' : m === 'dd' ? 'DD' : m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500">Reference / transaction ID (optional)</label>
+                  <input value={proofRef} onChange={e => setProofRef(e.target.value)} className="input-field text-sm" placeholder="UPI ref, cheque no…" />
+                </div>
+                <button onClick={sendProof} disabled={busy || amount <= 0} className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors disabled:opacity-50">
+                  Submit proof for verification
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -229,7 +258,29 @@ function PayFeeModal({
 
 // ─── Receipt Modal ─────────────────────────────────────
 function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () => void }) {
+  const { showError } = useNotification()
   const status = STATUS_CONFIG[payment.status]
+
+  const downloadPdf = async () => {
+    try {
+      await downloadReceiptPdf(buildReceiptModel({
+        payment,
+        transaction: {
+          amount: payment.paidAmount,
+          paymentMode: payment.paymentMode,
+          transactionId: payment.transactionId,
+          bankReference: payment.bankReference,
+          receiptNo: payment.receiptNo,
+          paidOn: payment.paidDate,
+        },
+        collegeName: 'Vriddhi Educational Institute',
+        discountTotal: payment.discountTotal,
+        lateFine: payment.lateFine,
+      }))
+    } catch {
+      showError('Could not generate the PDF receipt.')
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
@@ -240,7 +291,10 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
             Official Fee Receipt
           </h2>
           <div className="flex items-center gap-1.5">
-            <button onClick={() => window.print()} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" title="Print Receipt">
+            <button onClick={downloadPdf} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" title="Download PDF Receipt">
+              <Download className="w-4 h-4 text-slate-500" />
+            </button>
+            <button onClick={() => window.print()} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" title="Print Receipt">
               <Printer className="w-4 h-4 text-slate-500" />
             </button>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
@@ -308,7 +362,6 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
 // ─── Main Component ──────────────────────────────────────
 export default function StudentFeePortal({ studentId: studentIdProp }: { studentId?: string }) {
   const { user } = useAuth();
-  const { showInfo } = useNotification();
   const { profile } = useStudentProfile(user?.uid);
   const studentId = studentIdProp || profile?.id || user?.uid || '';
   const {
@@ -316,18 +369,26 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
     studentPayments,
     studentSummary,
     refreshData,
-    collectPayment,
+    submitPaymentProof,
   } = useFeeData(studentId)
 
   const [selectedPayment, setSelectedPayment] = useState<FeePayment | null>(null)
   const [modalMode, setModalMode] = useState<'pay' | 'receipt' | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'paid'>('all')
 
-  const handlePay = (amount: number, mode: PaymentMode) => {
-    if (selectedPayment) {
-      collectPayment(selectedPayment.id, amount, mode)
-    }
-  }
+  const handleOnlinePay = async (paymentId: string): Promise<OnlinePaymentResult> =>
+    startOnlinePayment({
+      paymentId,
+      payerName: profile?.name || user?.displayName || 'Student',
+      payerEmail: user?.email || undefined,
+      payerPhone: (profile as { phone?: string } | undefined)?.phone,
+    })
+
+  const handleSubmitProof = (paymentId: string, input: SubmitProofInput): Promise<boolean> =>
+    submitPaymentProof(paymentId, input)
+
+  const handlePaid = () => refreshData()
+
 
   const filteredPayments = studentPayments.filter(p => {
     if (activeTab === 'pending') return p.status === 'pending' || p.status === 'overdue' || p.status === 'partial'
@@ -531,7 +592,9 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                 {filteredPayments.map((payment) => {
                   const status = STATUS_CONFIG[payment.status]
                   const StatusIcon = status.icon
-                  const remaining = payment.amount - payment.paidAmount
+                  const remaining = feeNetPayable(payment)
+                  const discount = Number(payment.discountTotal ?? 0) || 0
+                  const lateFine = Number(payment.lateFine ?? 0) || 0
                   const isPayable = payment.status === 'pending' || payment.status === 'overdue' || payment.status === 'partial'
                   const catConfig = CATEGORY_CONFIG[payment.category] || CATEGORY_CONFIG.misc
                   const CatIcon = catConfig.icon
@@ -546,6 +609,12 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                           <div>
                             <p className="font-bold text-slate-900 dark:text-slate-900 dark:text-white capitalize">{payment.category} Fee</p>
                             <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">{payment.dueDate}</p>
+                            {(discount > 0 || lateFine > 0) && (
+                              <p className="text-[10px] font-semibold mt-0.5 flex items-center gap-1.5">
+                                {discount > 0 && <span className="text-violet-600 dark:text-violet-400">− ₹{discount.toLocaleString('en-IN')} discount</span>}
+                                {lateFine > 0 && <span className="text-rose-600 dark:text-rose-400">+ ₹{lateFine.toLocaleString('en-IN')} late fine</span>}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -571,10 +640,10 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                         <div className="flex items-center justify-center gap-1.5">
                           {isPayable && (
                             <button
-                              onClick={() => showInfo('Online payment is not configured yet. Please pay through the college finance office; the admin will record the payment and issue your official receipt.')}
-                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-xs transition-colors"
+                              onClick={() => { setSelectedPayment(payment); setModalMode('pay') }}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-xs transition-colors"
                             >
-                              Contact finance
+                              Pay now
                             </button>
                           )}
                           {(payment.status === 'paid' || payment.status === 'partial' || payment.status === 'waived') && (
@@ -608,7 +677,9 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
         <PayFeeModal
           payment={selectedPayment}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
-          onPay={handlePay}
+          onPaid={handlePaid}
+          onOnlinePay={handleOnlinePay}
+          onSubmitProof={handleSubmitProof}
         />
       )}
 
