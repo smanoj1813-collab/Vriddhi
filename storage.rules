@@ -250,6 +250,33 @@ service firebase.storage {
         || (isStaff() && tenantCollege() == collegeId);
     }
 
+    // Fee payment-proof screenshots (Record Payment / student-submitted proof).
+    // Tenant-scoped like every other college path: staff of the college record
+    // proofs, and the owning student may attach their own; images only, 5 MB cap
+    // (mirrors src/modules/admin/utils/feeProof.ts).
+    match /colleges/{collegeId}/fee-proofs/{paymentId}/{fileName} {
+      function proofStudentId() {
+        return firestore.exists(/databases/(default)/documents/colleges/$(collegeId)/feePayments/$(paymentId))
+          ? firestore.get(/databases/(default)/documents/colleges/$(collegeId)/feePayments/$(paymentId)).data.studentId
+          : null;
+      }
+      function canAccessProof() {
+        return isSignedIn()
+          && (
+            isSuperadmin()
+            || (tenantCollege() == collegeId && isStaff())
+            || ownsStudentId(proofStudentId())
+          );
+      }
+      allow read: if canAccessProof();
+      allow create, update: if canAccessProof()
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isSuperadmin()
+        || (isStaff() && tenantCollege() == collegeId);
+    }
+
     // No implicit authenticated-user access. Additional product workflows
     // receive explicit path contracts as they are implemented.
     match /{allPaths=**} {

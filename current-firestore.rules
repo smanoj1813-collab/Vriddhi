@@ -517,9 +517,30 @@ service cloud.firestore {
             || (role() == 'student'
               && 'studentId' in get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data
               && ownsStudentId(get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data.studentId)));
+          // Finance staff record a collected payment directly; a student may only
+          // FILE their own proof — an append-only, unverified submission that
+          // credits nothing until an admin approves it via verifyPaymentProof.
           allow create: if isSuperadmin()
+            || (role() in ['admin', 'hod'] && collegeId() == collegeId)
+            || (isSignedIn() && role() == 'student' && collegeId() == collegeId
+              && 'studentId' in get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data
+              && ownsStudentId(get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data.studentId)
+              && request.resource.data.type == 'payment'
+              && request.resource.data.submissionStatus == 'pending_verification'
+              && request.resource.data.amount is number
+              && request.resource.data.amount > 0);
+          // Verification only ever stamps review metadata onto an existing
+          // submission; it cannot rewrite the amount or the submission type.
+          allow update: if (isSuperadmin()
+              || (role() in ['admin', 'hod'] && collegeId() == collegeId))
+            && resource.data.submissionStatus == 'pending_verification'
+            && request.resource.data.submissionStatus in ['verified', 'rejected']
+            && request.resource.data.amount == resource.data.amount
+            && request.resource.data.type == resource.data.type
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['submissionStatus', 'verifiedBy', 'verifiedAt', 'receiptNo', 'rejectionReason', 'updatedAt']);
+          allow delete: if isSuperadmin()
             || (role() in ['admin', 'hod'] && collegeId() == collegeId);
-          allow update, delete: if false;
         }
       }
 
