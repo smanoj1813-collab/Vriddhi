@@ -14,6 +14,8 @@ import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeD
 import { fetchFeeTransactions, type FeeTransaction } from '../api/feeApi'
 import { uploadPaymentProof } from '../api/feeProofStorage'
 import { suggestTransactionId } from '../utils/feeReference'
+import { buildReceiptModel } from '../utils/financeReceipt'
+import { downloadReceiptPdf } from '../../../shared/utils/receiptPdf'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import FeeAssignmentModal from '../components/FeeAssignmentModal'
@@ -461,6 +463,14 @@ function PaymentDetailModal({
     }
   }
 
+  const downloadReceipt = async (txn: FeeTransaction) => {
+    try {
+      await downloadReceiptPdf(buildReceiptModel({ payment, transaction: txn }))
+    } catch {
+      /* rendering is best-effort */
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="glass-card w-full max-w-lg">
@@ -585,7 +595,18 @@ function PaymentDetailModal({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm font-bold text-slate-900 dark:text-white">₹{txn.amount.toLocaleString('en-IN')}</span>
-                          {badge && <span className={`text-[10px] px-2 py-0.5 rounded-full ${badge.className}`}>{badge.label}</span>}
+                          <div className="flex items-center gap-1.5">
+                            {badge && <span className={`text-[10px] px-2 py-0.5 rounded-full ${badge.className}`}>{badge.label}</span>}
+                            {txn.receiptNo && (
+                              <button
+                                onClick={() => downloadReceipt(txn)}
+                                title="Download receipt"
+                                className="p-1 rounded-lg text-vriddhi-muted hover:text-vriddhi-accent hover:bg-white/10 transition-colors"
+                              >
+                                <Download className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-xs text-vriddhi-muted capitalize">
                           {txn.type === 'waiver' ? 'Waiver' : (txn.paymentMode || 'payment')} · {txn.paidOn || (txn.createdAt ? txn.createdAt.slice(0, 10) : '—')}
