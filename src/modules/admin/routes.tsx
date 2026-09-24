@@ -11,6 +11,7 @@ const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'));
 const AdmissionCenter = lazy(() => import('./pages/AdmissionCenter'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
+const FinanceSettings = lazy(() => import('./pages/FinanceSettings'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AssignmentAnalytics = lazy(() => import('./pages/AssignmentAnalytics'));
 const Assessments = lazy(() => import('./pages/Assessments'));
@@ -132,6 +133,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'test-reports', element: <LazyPage><AssessmentTestReportsPage /></LazyPage> },
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
+      { path: 'finance-settings', element: <LazyPage><FinanceSettings /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },
