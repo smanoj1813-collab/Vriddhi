@@ -41,6 +41,10 @@ export const PREP_PAPER_UNIVERSITIES: PrepPaperUniversity[] = [
   { code: 'rcub', name: 'Rani Channamma University', shortName: 'RCUB', city: 'Belagavi' },
   { code: 'vsku', name: 'Vijayanagara Sri Krishnadevaraya University', shortName: 'VSKU', city: 'Ballari' },
   { code: 'gug', name: 'Gulbarga University', shortName: 'GUG', city: 'Kalaburagi' },
+  // Autonomous colleges set their own end-semester papers under the parent
+  // university's degree. They are listed separately so a student can tell a
+  // college-set paper from a university-set one at a glance.
+  { code: 'stagnes-mu', name: 'St Agnes College (Autonomous), Mangaluru — Mangalore University', shortName: 'St Agnes (Auto.)', city: 'Mangaluru' },
 ]
 
 export const PREP_PAPER_UNIVERSITY_CODES: string[] = PREP_PAPER_UNIVERSITIES.map((u) => u.code)
