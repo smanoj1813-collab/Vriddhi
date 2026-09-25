@@ -30,6 +30,8 @@ const ROLE_LABELS: Record<AdminRole, string> = {
   admin: "Principal",
   hod: "HOD",
   mentor: "Mentor",
+  accounts: "Accounts Team",
+  operations: "Operations Team",
 };
 
 const ROLE_COLORS: Record<AdminRole, string> = {
@@ -37,6 +39,8 @@ const ROLE_COLORS: Record<AdminRole, string> = {
   admin: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   hod: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
   mentor: "bg-green-500/10 text-emerald-600 dark:text-emerald-400",
+  accounts: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  operations: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
 };
 
 const SuperAdminAdmins: React.FC = () => {
@@ -166,6 +170,7 @@ const SuperAdminAdmins: React.FC = () => {
       await updateAdminStatus.mutateAsync({
         adminId: admin.id,
         status: newStatus,
+        role: admin.role,
       });
       showSuccess(`Admin ${admin.name} is now ${newStatus}`);
     } catch {
@@ -276,6 +281,8 @@ const SuperAdminAdmins: React.FC = () => {
             <option value="admin">Principal</option>
             <option value="hod">HOD</option>
             <option value="mentor">Mentor</option>
+            <option value="accounts">Accounts Team</option>
+            <option value="operations">Operations Team</option>
           </select>
         </div>
         <div className="relative">
@@ -450,6 +457,10 @@ const SuperAdminAdmins: React.FC = () => {
                     <option value="admin">Principal</option>
                     <option value="hod">HOD</option>
                     <option value="mentor">Mentor</option>
+                    <optgroup label="College office teams">
+                      <option value="accounts">Accounts Team (fees, payments, bills)</option>
+                      <option value="operations">Operations Team (library, inventory)</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>

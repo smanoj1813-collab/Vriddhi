@@ -13,6 +13,7 @@ export type {
   FeeTransaction,
   CreateFeePaymentInput,
   CollectPaymentOptions,
+  CollectPaymentResult,
   SubmitProofInput,
   PaymentSubmissionStatus,
 } from '../api/feeApi'
@@ -118,9 +119,9 @@ export function useFeeData(studentId?: string) {
 
   const handleCollectPayment = useCallback(async (paymentId: string, amount: number, mode: PaymentMode, remarks?: string, options?: CollectPaymentOptions) => {
     try {
-      const success = await collectPayment(paymentId, amount, mode, remarks, options)
-      if (success) refreshData()
-      return success
+      const result = await collectPayment(paymentId, amount, mode, remarks, options)
+      refreshData()
+      return result
     } catch (error) {
       console.error('[useFeeData] Payment collection failed:', error)
       throw error

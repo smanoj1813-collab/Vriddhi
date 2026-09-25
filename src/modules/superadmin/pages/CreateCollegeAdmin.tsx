@@ -34,6 +34,12 @@ const initialFormData: AdminFormData = {
   isActive: true,
 };
 
+// What each office team can do — shown under the role picker.
+const ROLE_HINTS: Record<string, string> = {
+  accounts: 'Fees, receipts, challans, vendor bills, library fines, finance reports & Tally export. Payroll only if the principal allows it in Finance Settings.',
+  operations: 'Library, inventory & assets, stores, purchase orders, vendors and no-dues clearance.',
+};
+
 const CreateCollegeAdmin: React.FC = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
@@ -352,9 +358,14 @@ const CreateCollegeAdmin: React.FC = () => {
                   <option value="principal">Principal</option>
                   <option value="hod">Head of Department</option>
                   <option value="mentor">Mentor</option>
+                  <optgroup label="College office teams">
+                    <option value="accounts">Accounts Team</option>
+                    <option value="operations">Operations Team</option>
+                  </optgroup>
                 </select>
                 <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
               </div>
+              {ROLE_HINTS[formData.role] && <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{ROLE_HINTS[formData.role]}</p>}
             </div>
           </div>
         </div>

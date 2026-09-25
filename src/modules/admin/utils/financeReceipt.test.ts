@@ -58,3 +58,34 @@ test('buildReceiptModel falls back for missing receipt no and date', () => {
   assert.equal(r.date, '2026-08-01')
   assert.equal(r.status, 'partial') // falls back to the payment status
 })
+
+test('buildReceiptModel applies college branding (letterhead, title, footer, balance toggle)', () => {
+  const m = buildReceiptModel({
+    payment,
+    transaction: txn,
+    collegeName: 'Ignored fallback',
+    branding: {
+      collegeName: 'Sri Test College',
+      address: 'MG Road, Bengaluru',
+      phone: '080-1234',
+      email: 'office@test.edu',
+      receiptTitle: 'OFFICIAL RECEIPT',
+      receiptFooter: 'Fees once paid are not refundable.',
+      signatoryName: 'R. Rao',
+      showBalanceOnReceipt: false,
+    },
+  })
+  assert.equal(m.collegeName, 'Sri Test College')
+  assert.equal(m.collegeAddress, 'MG Road, Bengaluru')
+  assert.equal(m.collegeContact, 'Ph: 080-1234 · office@test.edu')
+  assert.equal(m.title, 'OFFICIAL RECEIPT')
+  assert.equal(m.footer, 'Fees once paid are not refundable.')
+  assert.equal(m.signatoryName, 'R. Rao')
+  assert.equal(m.showBalance, false)
+})
+
+test('buildReceiptModel keeps sensible defaults without branding', () => {
+  const m = buildReceiptModel({ payment, transaction: txn })
+  assert.equal(m.title, 'FEE PAYMENT RECEIPT')
+  assert.equal(m.showBalance, true)
+})

@@ -32,6 +32,7 @@ import {
 } from './studentAuth'
 import { provisionUser } from './userProvisioning'
 import { grantUserRole, diagnoseIdentity } from './roleManagement'
+import { manageOfficeStaff } from './officeStaff'
 import { bulkProvisionStaff } from './staffAuth'
 import { updateFacultyBranches } from './facultyManagement'
 import { bulkUpdateStudentAcademicFields } from './studentManagement'
@@ -227,6 +228,7 @@ export {
   resetUserPassword,
   syncIdentityClaims,
   grantUserRole,
+  manageOfficeStaff,
   diagnoseIdentity,
   auditAndRepairIdentities,
   syncMyIdentity,

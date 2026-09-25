@@ -1,7 +1,7 @@
 // Journey Milestones API - Auto-generates milestones from real college data
 // Connects College, Faculty, Student journeys into one unified timeline
 
-import { collection, getDocs, query, orderBy, limit, where, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, limit, where, Timestamp, type DocumentData, type Query, type QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
 import type { Milestone } from './journeyApi'
 
@@ -27,6 +27,20 @@ function toISO(ts: any): string {
 }
 
 // Auto-generate college milestones from real data
+/**
+ * Fee and challan collections are finance-office data (principal / accounts).
+ * Department heads open the same journey pages, so a permission-denied read
+ * there must drop that section instead of aborting the whole timeline.
+ */
+async function getDocsOrEmpty(q: Query<DocumentData>): Promise<{ docs: QueryDocumentSnapshot<DocumentData>[]; size: number }> {
+  try {
+    const snap = await getDocs(q)
+    return { docs: snap.docs, size: snap.size }
+  } catch {
+    return { docs: [], size: 0 }
+  }
+}
+
 export async function fetchCollegeMilestonesFromRealData(): Promise<Milestone[]> {
   const collegeId = getCollegeId()
   const milestones: Milestone[] = []
@@ -72,7 +86,7 @@ export async function fetchCollegeMilestonesFromRealData(): Promise<Milestone[]>
     })
 
     // 3. Fee Payments -> Milestones (Collection milestones)
-    const feeSnap = await getDocs(query(collection(db, 'colleges', collegeId, 'feePayments'), orderBy('createdAt', 'desc'), limit(10)))
+    const feeSnap = await getDocsOrEmpty(query(collection(db, 'colleges', collegeId, 'feePayments'), orderBy('createdAt', 'desc'), limit(10)))
     if (feeSnap.docs.length > 0) {
       const totalDue = feeSnap.docs.reduce((sum, doc) => sum + (Number(doc.data().amount) || 0), 0)
       const totalPaid = feeSnap.docs.reduce((sum, doc) => sum + (Number(doc.data().paidAmount) || 0), 0)
@@ -89,7 +103,7 @@ export async function fetchCollegeMilestonesFromRealData(): Promise<Milestone[]>
     }
 
     // 4. Challans -> Milestones
-    const challanSnap = await getDocs(query(collection(db, 'colleges', collegeId, 'challans'), orderBy('createdAt', 'desc'), limit(10)))
+    const challanSnap = await getDocsOrEmpty(query(collection(db, 'colleges', collegeId, 'challans'), orderBy('createdAt', 'desc'), limit(10)))
     if (challanSnap.docs.length > 0) {
       const verified = challanSnap.docs.filter(d => d.data().status === 'verified').length
       const pending = challanSnap.docs.length - verified
@@ -285,7 +299,7 @@ export async function fetchStudentTimelineFromRealData(studentId: string): Promi
 
   try {
     // Fee payments
-    const feeSnap = await getDocs(query(collection(db, 'colleges', collegeId, 'feePayments'), where('studentId', '==', studentId), limit(10)))
+    const feeSnap = await getDocsOrEmpty(query(collection(db, 'colleges', collegeId, 'feePayments'), where('studentId', '==', studentId), limit(10)))
     feeSnap.docs.forEach(d => {
       const data = d.data()
       const status = data.status || 'pending'
@@ -305,7 +319,7 @@ export async function fetchStudentTimelineFromRealData(studentId: string): Promi
     })
 
     // Challans
-    const challanSnap = await getDocs(query(collection(db, 'colleges', collegeId, 'challans'), where('studentId', '==', studentId), limit(10)))
+    const challanSnap = await getDocsOrEmpty(query(collection(db, 'colleges', collegeId, 'challans'), where('studentId', '==', studentId), limit(10)))
     challanSnap.docs.forEach(d => {
       const data = d.data()
       const status = data.status || 'generated'

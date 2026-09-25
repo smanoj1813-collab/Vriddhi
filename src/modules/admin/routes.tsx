@@ -4,6 +4,18 @@ import { RoleRoute } from '@/routes/components/RoleRoute';
 import type { UserRole } from '@/modules/auth/context/AuthContext';
 import Layout from '@/shared/components/Layout';
 
+import { AdminPathGate } from './components/AdminPathGate';
+const LibraryManagement = lazy(() => import('@/modules/office/pages/LibraryManagement'));
+const LibraryFinesPage = lazy(() => import('@/modules/office/pages/LibraryFinesPage'));
+const InventoryManagement = lazy(() => import('@/modules/office/pages/InventoryManagement'));
+const VendorsPage = lazy(() => import('@/modules/office/pages/VendorsPage'));
+const PurchaseRequestsPage = lazy(() => import('@/modules/office/pages/PurchaseRequestsPage'));
+const PurchaseOrdersPage = lazy(() => import('@/modules/office/pages/PurchaseOrdersPage'));
+const VendorBillsPage = lazy(() => import('@/modules/office/pages/VendorBillsPage'));
+const FinanceReportsPage = lazy(() => import('@/modules/office/pages/FinanceReportsPage'));
+const NoDuesPage = lazy(() => import('@/modules/office/pages/NoDuesPage'));
+const AccountsDesk = lazy(() => import('@/modules/office/pages/AccountsDesk'));
+const OperationsDesk = lazy(() => import('@/modules/office/pages/OperationsDesk'));
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
@@ -44,6 +56,7 @@ const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard
 const SchemePacks = lazy(() => import('./pages/SchemePacks'));
 const AcademicCalendar = lazy(() => import('./pages/AcademicCalendar'));
 const GuestFacultyBilling = lazy(() => import('./pages/GuestFacultyBilling'));
+const FacultyPayroll = lazy(() => import('./pages/FacultyPayroll'));
 const ResultImporter = lazy(() => import('./pages/ResultImporter'));
 const ChallanManagement = lazy(() => import('./pages/ChallanManagement'));
 const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
@@ -116,8 +129,12 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <RoleRoute allowedRoles={['admin', 'principal', 'hod', 'superadmin']}>
-        <Layout />
+      // Every role that uses the /admin shell; AdminPathGate then decides page
+      // by page (office roles reach only their modules, HODs no finance).
+      <RoleRoute allowedRoles={['admin', 'principal', 'hod', 'superadmin', 'accounts', 'operations']}>
+        <AdminPathGate>
+          <Layout />
+        </AdminPathGate>
       </RoleRoute>
     ),
     children: [
@@ -134,6 +151,21 @@ export const adminRoutes: RouteObject[] = [
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
       { path: 'finance-settings', element: <LazyPage><FinanceSettings /></LazyPage> },
+      // ── College office: library ──
+      { path: 'library', element: <LazyPage><LibraryManagement /></LazyPage> },
+      { path: 'library/:tab', element: <LazyPage><LibraryManagement /></LazyPage> },
+      { path: 'library-fines', element: <LazyPage><LibraryFinesPage /></LazyPage> },
+      { path: 'inventory', element: <LazyPage><InventoryManagement /></LazyPage> },
+      { path: 'inventory/:tab', element: <LazyPage><InventoryManagement /></LazyPage> },
+      { path: 'vendors', element: <LazyPage><VendorsPage /></LazyPage> },
+      { path: 'purchase-requests', element: <LazyPage><PurchaseRequestsPage /></LazyPage> },
+      { path: 'purchase-orders', element: <LazyPage><PurchaseOrdersPage /></LazyPage> },
+      { path: 'purchase-orders/:tab', element: <LazyPage><PurchaseOrdersPage /></LazyPage> },
+      { path: 'vendor-bills', element: <LazyPage><VendorBillsPage /></LazyPage> },
+      { path: 'finance-reports', element: <LazyPage><FinanceReportsPage /></LazyPage> },
+      { path: 'no-dues', element: <LazyPage><NoDuesPage /></LazyPage> },
+      { path: 'accounts', element: <LazyPage><AccountsDesk /></LazyPage> },
+      { path: 'operations', element: <LazyPage><OperationsDesk /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },
@@ -161,6 +193,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'scheme-packs', element: <LazyPage><SchemePacks /></LazyPage> },
       { path: 'academic-calendar', element: <LazyPage><AcademicCalendar /></LazyPage> },
       { path: 'guest-faculty-billing', element: <LazyPage><GuestFacultyBilling /></LazyPage> },
+      { path: 'payroll', element: <LazyPage><FacultyPayroll /></LazyPage> },
       { path: 'result-importer', element: <LazyPage><ResultImporter /></LazyPage> },
       { path: 'challans', element: <LazyPage><ChallanManagement /></LazyPage> },
       { path: 'install-app', element: <LazyPage><PWAInstallPage /></LazyPage> },

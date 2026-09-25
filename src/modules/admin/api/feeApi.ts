@@ -33,6 +33,30 @@ export { feeNetPayable } from '../utils/financeRules'
 
 const MAX_READS = 500
 
+// Receipt numbering prefix — configurable per college (Finance Settings →
+// Receipts & letterhead). Pages that record payments call setReceiptPrefix()
+// once the branding doc loads; the default keeps historic RCP-YYYY-NNNNNN.
+let receiptPrefix = 'RCP'
+
+export function setReceiptPrefix(prefix: string | undefined | null): void {
+  const clean = String(prefix || '').trim().toUpperCase().replace(/[^A-Z0-9/-]/g, '')
+  receiptPrefix = clean || 'RCP'
+}
+
+export function nextReceiptNo(): string {
+  return `${receiptPrefix}-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
+}
+
+/** What collectPayment hands back so the UI can offer the receipt immediately. */
+export interface CollectPaymentResult {
+  receiptNo: string
+  transactionId: string
+  paidOn: string
+  amount: number
+  paymentMode: PaymentMode
+  bankReference?: string
+}
+
 function getCollegeId(explicit?: string | null): string {
   // Callers that already know their tenant (a student page resolving the
   // college from its own profile) pass it in; everyone else falls back to the
@@ -402,13 +426,13 @@ export async function collectPayment(
   mode: PaymentMode,
   remarks?: string,
   options?: CollectPaymentOptions,
-): Promise<boolean> {
+): Promise<CollectPaymentResult> {
   const paymentRef = collegeDocRef(`feePayments/${paymentId}`)
   const requestedAmount = numeric(amount)
   if (requestedAmount <= 0) throw new Error('Payment amount must be greater than zero.')
 
   const transactionId = normalizeReference(options?.transactionId) || suggestTransactionId()
-  const receiptNo = `RCP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
+  const receiptNo = nextReceiptNo()
   const actor = auth.currentUser?.displayName || auth.currentUser?.email || 'College finance office'
   const paidOn = (options?.paidOn || today()).slice(0, 10)
   const bankReference = normalizeReference(options?.bankReference) || undefined
@@ -459,7 +483,7 @@ export async function collectPayment(
     })
   })
 
-  return true
+  return { receiptNo, transactionId, paidOn, amount: requestedAmount, paymentMode: mode, bankReference }
 }
 
 /**
@@ -553,7 +577,7 @@ export async function verifyPaymentProof(
       amount,
       today(),
     )
-    const receiptNo = `RCP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
+    const receiptNo = nextReceiptNo()
 
     transaction.update(paymentRef, {
       paidAmount,

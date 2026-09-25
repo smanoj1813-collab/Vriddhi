@@ -61,9 +61,14 @@ const ROLE_ALIASES: Record<string, string> = {
   learner: 'student',
   pupil: 'student',
   guardian: 'parent',
+  accountant: 'accounts',
+  account: 'accounts',
+  finance: 'accounts',
+  librarian: 'operations',
+  operation: 'operations',
 }
 
-const CANONICAL_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent']
+const CANONICAL_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations']
 
 /** trim + case-fold + canonical aliases → '' when nothing recognised. */
 export function canonicalizeRole(value: unknown): string {

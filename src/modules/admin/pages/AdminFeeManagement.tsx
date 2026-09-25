@@ -4,14 +4,26 @@ import {
   XCircle, Clock, Search, Filter, RefreshCw, Download, ChevronDown,
   ChevronUp, CreditCard, Wallet, Receipt, ArrowUpRight, ArrowDownRight,
   Loader2, GraduationCap, Calendar, BookOpen, Activity, Eye, Check, X,
-  Upload, ShieldCheck, FileText, Image as ImageIcon,
+  Upload, ShieldCheck, FileText, Image as ImageIcon, PlusCircle, Settings as SettingsIcon,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
-import { fetchFeeTransactions, type FeeTransaction } from '../api/feeApi'
+import {
+  fetchFeePayments,
+  fetchFeeTransactions,
+  setReceiptPrefix,
+  type CollectPaymentResult,
+  type FeeCategory,
+  type FeeStructure,
+  type FeeStudent,
+  type FeeTransaction,
+} from '../api/feeApi'
+import { ALL_PAYMENT_MODES, type BrandingSettings } from '../api/financeApi'
+import { useFinanceRules } from '../hooks/useFinanceRules'
 import { uploadPaymentProof } from '../api/feeProofStorage'
 import { suggestTransactionId } from '../utils/feeReference'
 import { feeNetPayable } from '../utils/financeRules'
@@ -109,15 +121,16 @@ interface CollectDetails {
 }
 
 function CollectPaymentModal({
-  payment, onClose, onCollect, onApplyDiscount
+  payment, onClose, onCollect, onApplyDiscount, paymentModes = ALL_PAYMENT_MODES,
 }: {
   payment: FeePayment
   onClose: () => void
-  onCollect: (amount: number, mode: PaymentMode, details: CollectDetails) => Promise<boolean>
+  onCollect: (amount: number, mode: PaymentMode, details: CollectDetails) => Promise<CollectPaymentResult | null>
   onApplyDiscount?: (amount: number, label: string) => Promise<boolean>
+  paymentModes?: PaymentMode[]
 }) {
   const [amount, setAmount] = useState(() => feeNetPayable(payment))
-  const [mode, setMode] = useState<PaymentMode>('cash')
+  const [mode, setMode] = useState<PaymentMode>(() => paymentModes[0] || 'cash')
   const [transactionId, setTransactionId] = useState(() => suggestTransactionId())
   const [paidOn, setPaidOn] = useState(() => new Date().toISOString().slice(0, 10))
   const [bankReference, setBankReference] = useState('')
@@ -263,7 +276,7 @@ function CollectPaymentModal({
           <div>
             <label className="text-sm text-vriddhi-muted mb-2 block">Payment Mode</label>
             <div className="grid grid-cols-3 gap-2">
-              {(['cash', 'upi', 'card', 'netbanking', 'cheque', 'dd'] as PaymentMode[]).map((m) => (
+              {(paymentModes.length ? paymentModes : ALL_PAYMENT_MODES).map((m) => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
@@ -486,6 +499,14 @@ function WaiveFeeModal({
 }
 
 // ─── Payment Detail Modal ────────────────────────────────
+/** A transaction that represents money actually credited and so deserves a receipt. */
+function isReceiptable(txn: FeeTransaction): boolean {
+  return txn.type === 'payment'
+    && Boolean(txn.receiptNo)
+    && txn.submissionStatus !== 'pending_verification'
+    && txn.submissionStatus !== 'rejected'
+}
+
 const SUBMISSION_BADGES: Record<string, { label: string; className: string }> = {
   recorded: { label: 'Recorded', className: 'bg-green-500/15 text-green-600 dark:text-green-400' },
   pending_verification: { label: 'Awaiting verification', className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
@@ -494,11 +515,13 @@ const SUBMISSION_BADGES: Record<string, { label: string; className: string }> = 
 }
 
 function PaymentDetailModal({
-  payment, onClose, onVerifyProof,
+  payment, onClose, onVerifyProof, branding, onCollect,
 }: {
   payment: FeePayment
   onClose: () => void
   onVerifyProof?: (transactionId: string, decision: 'approve' | 'reject') => Promise<void>
+  branding?: BrandingSettings
+  onCollect?: () => void
 }) {
   const status = STATUS_CONFIG[payment.status]
   const StatusIcon = status.icon
@@ -531,16 +554,26 @@ function PaymentDetailModal({
 
   const downloadReceipt = async (txn: FeeTransaction) => {
     try {
-      await downloadReceiptPdf(buildReceiptModel({ payment, transaction: txn }))
+      await downloadReceiptPdf(buildReceiptModel({
+        payment,
+        transaction: txn,
+        branding,
+        discountTotal: payment.discountTotal,
+        lateFine: payment.lateFine,
+        remarks: txn.remarks || undefined,
+      }))
     } catch {
       /* rendering is best-effort */
     }
   }
 
+  const receiptTxns = transactions.filter(isReceiptable)
+  const canCollect = payment.status === 'pending' || payment.status === 'overdue' || payment.status === 'partial'
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="glass-card w-full max-w-lg">
-        <div className="flex items-center justify-between p-6 border-b border-vriddhi-border">
+      <div className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-vriddhi-card flex items-center justify-between p-6 border-b border-vriddhi-border">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Receipt className="w-5 h-5 text-vriddhi-accent" />
             Payment Details
@@ -550,6 +583,26 @@ function PaymentDetailModal({
           </button>
         </div>
         <div className="p-6 space-y-4">
+          {(receiptTxns.length > 0 || (onCollect && canCollect)) && (
+            <div className="flex flex-wrap gap-2">
+              {receiptTxns.length > 0 && (
+                <button
+                  onClick={() => downloadReceipt(receiptTxns[0])}
+                  className="flex-1 min-w-[160px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-vriddhi-accent hover:bg-teal-600 transition-colors"
+                >
+                  <Download className="w-4 h-4" /> Download latest receipt
+                </button>
+              )}
+              {onCollect && canCollect && (
+                <button
+                  onClick={onCollect}
+                  className="flex-1 min-w-[160px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors"
+                >
+                  <CreditCard className="w-4 h-4" /> Record payment
+                </button>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between p-4 bg-vriddhi-dark/50 rounded-xl border border-vriddhi-border">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full ${status.bg} flex items-center justify-center`}>
@@ -665,13 +718,13 @@ function PaymentDetailModal({
                           </span>
                           <div className="flex items-center gap-1.5">
                             {badge && <span className={`text-[10px] px-2 py-0.5 rounded-full ${badge.className}`}>{badge.label}</span>}
-                            {txn.receiptNo && (
+                            {isReceiptable(txn) && (
                               <button
                                 onClick={() => downloadReceipt(txn)}
-                                title="Download receipt"
-                                className="p-1 rounded-lg text-vriddhi-muted hover:text-vriddhi-accent hover:bg-white/10 transition-colors"
+                                title="Download receipt PDF"
+                                className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-vriddhi-accent/15 text-vriddhi-accent hover:bg-vriddhi-accent/25 transition-colors"
                               >
-                                <Download className="w-4 h-4" />
+                                <Download className="w-3.5 h-3.5" /> Receipt
                               </button>
                             )}
                           </div>
@@ -718,6 +771,306 @@ function PaymentDetailModal({
   )
 }
 
+// ─── Record Payment (student picker) ───────────────────
+// The finance counter usually starts from a STUDENT, not from an invoice row.
+// Pick the student → pick one of their open fees (or raise a new one on the
+// spot) → the regular Collect Payment form opens pre-filled.
+const FEE_CATEGORY_OPTIONS: { id: FeeCategory; label: string }[] = [
+  { id: 'tuition', label: 'Tuition' },
+  { id: 'exam', label: 'Exam' },
+  { id: 'university_exam', label: 'University Exam' },
+  { id: 'eligibility', label: 'Eligibility' },
+  { id: 'library', label: 'Library' },
+  { id: 'lab', label: 'Lab' },
+  { id: 'hostel', label: 'Hostel' },
+  { id: 'transport', label: 'Transport' },
+  { id: 'misc', label: 'Miscellaneous' },
+]
+
+function RecordPaymentModal({
+  students, structures, onClose, onPick, onCreateInvoice,
+}: {
+  students: FeeStudent[]
+  structures: FeeStructure[]
+  onClose: () => void
+  onPick: (payment: FeePayment) => void
+  onCreateInvoice: (input: import('../api/feeApi').CreateFeePaymentInput) => Promise<FeePayment | null>
+}) {
+  const [search, setSearch] = useState('')
+  const [student, setStudent] = useState<FeeStudent | null>(null)
+  const [fees, setFees] = useState<FeePayment[]>([])
+  const [loadingFees, setLoadingFees] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [category, setCategory] = useState<FeeCategory>('tuition')
+  const [amount, setAmount] = useState('')
+  const [remarks, setRemarks] = useState('')
+  const [structureId, setStructureId] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const matches = React.useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const list = q
+      ? students.filter(st => `${st.name} ${st.regNo} ${st.course} ${st.batch}`.toLowerCase().includes(q))
+      : students
+    return list.slice(0, 50)
+  }, [search, students])
+
+  useEffect(() => {
+    if (!student) return
+    let active = true
+    setLoadingFees(true)
+    setError(null)
+    fetchFeePayments({ studentId: student.id })
+      .then(rows => { if (active) setFees(rows) })
+      .catch(() => { if (active) setError('Could not load this student\u2019s fees.') })
+      .finally(() => { if (active) setLoadingFees(false) })
+    return () => { active = false }
+  }, [student])
+
+  const open = fees.filter(f => f.status === 'pending' || f.status === 'overdue' || f.status === 'partial')
+  const closed = fees.filter(f => !open.includes(f))
+
+  const applyStructure = (id: string) => {
+    setStructureId(id)
+    const st = structures.find(x => x.id === id)
+    if (st) { setCategory(st.category); setAmount(String(st.amount)); setRemarks(st.name) }
+  }
+
+  const createAndCollect = async () => {
+    if (!student) return
+    const value = Number(amount)
+    if (!Number.isFinite(value) || value <= 0) { setError('Enter the fee amount.'); return }
+    setSaving(true)
+    setError(null)
+    try {
+      const created = await onCreateInvoice({
+        studentId: student.id,
+        studentName: student.name,
+        regNo: student.regNo,
+        course: student.course,
+        batch: student.batch,
+        structureId: structureId || undefined,
+        category,
+        amount: value,
+        dueDate: new Date().toISOString().slice(0, 10),
+        remarks: remarks.trim() || undefined,
+      })
+      if (created) onPick(created)
+      else setError('Could not create the fee entry.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const relevantStructures = student
+    ? structures.filter(st => !st.course || !student.course || st.course === student.course)
+    : structures
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-vriddhi-card flex items-center justify-between p-6 border-b border-vriddhi-border">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-vriddhi-accent" /> Record Payment
+            </h2>
+            <p className="text-xs text-vriddhi-muted mt-0.5">
+              {student ? 'Choose the fee this payment is for.' : 'Search the student who is paying.'}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-vriddhi-muted" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {!student ? (
+            <>
+              <div className="flex items-center gap-2 bg-vriddhi-dark/50 border border-vriddhi-border rounded-xl px-3 py-2.5">
+                <Search className="w-4 h-4 text-vriddhi-muted" />
+                <input
+                  autoFocus
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Name, registration number, course…"
+                  className="bg-transparent text-sm text-vriddhi-text focus:outline-none w-full placeholder:text-vriddhi-muted/50"
+                />
+              </div>
+              {students.length === 0 ? (
+                <p className="text-sm text-vriddhi-muted py-6 text-center">No students found for this college.</p>
+              ) : (
+                <div className="divide-y divide-vriddhi-border rounded-xl border border-vriddhi-border overflow-hidden">
+                  {matches.map(st => (
+                    <button
+                      key={st.id}
+                      onClick={() => setStudent(st)}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-vriddhi-accent/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-vriddhi-accent/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold text-vriddhi-accent">{st.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{st.name}</p>
+                          <p className="text-xs text-vriddhi-muted truncate">{st.regNo || '—'} · {st.course || '—'} {st.batch ? `· ${st.batch}` : ''}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-vriddhi-accent font-medium whitespace-nowrap">Select →</span>
+                    </button>
+                  ))}
+                  {matches.length === 0 && <p className="text-sm text-vriddhi-muted p-4">No match for “{search}”.</p>}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between p-4 rounded-xl bg-vriddhi-dark/40 border border-vriddhi-border">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{student.name}</p>
+                  <p className="text-xs text-vriddhi-muted">{student.regNo || '—'} · {student.course || '—'} {student.batch ? `· ${student.batch}` : ''}</p>
+                </div>
+                <button onClick={() => { setStudent(null); setFees([]); setShowNew(false) }} className="text-xs text-vriddhi-accent hover:underline">
+                  Change student
+                </button>
+              </div>
+
+              {loadingFees ? (
+                <div className="flex items-center gap-2 text-sm text-vriddhi-muted py-4"><Loader2 className="w-4 h-4 animate-spin" /> Loading fees…</div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Outstanding fees</p>
+                  {open.length === 0 && <p className="text-sm text-vriddhi-muted">No outstanding fees. Raise a new fee below to record a payment.</p>}
+                  {open.map(f => {
+                    const st = STATUS_CONFIG[f.status]
+                    return (
+                      <div key={f.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-vriddhi-border bg-vriddhi-dark/20">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">{f.category.replace(/_/g, ' ')} fee</p>
+                          <p className="text-xs text-vriddhi-muted">Due {f.dueDate || '—'} · Paid ₹{f.paidAmount.toLocaleString('en-IN')} of ₹{f.amount.toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${st.bg} ${st.color}`}>{st.label}</span>
+                          <span className="text-sm font-bold text-amber-600 dark:text-amber-400">₹{feeNetPayable(f).toLocaleString('en-IN')}</span>
+                          <button onClick={() => onPick(f)} className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-vriddhi-accent hover:bg-teal-600 transition-colors">
+                            Collect
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {closed.length > 0 && (
+                    <p className="text-[11px] text-vriddhi-muted">{closed.length} settled / waived fee{closed.length === 1 ? '' : 's'} hidden.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="rounded-xl border border-dashed border-vriddhi-border p-4 space-y-3">
+                <button onClick={() => setShowNew(v => !v)} className="flex items-center gap-2 text-sm font-medium text-vriddhi-accent">
+                  <PlusCircle className="w-4 h-4" /> {showNew ? 'Hide new fee' : 'Record a payment for a new / ad-hoc fee'}
+                </button>
+                {showNew && (
+                  <div className="space-y-3">
+                    {relevantStructures.length > 0 && (
+                      <div>
+                        <label className="text-sm text-vriddhi-muted mb-1 block">Start from a fee template (optional)</label>
+                        <select value={structureId} onChange={e => applyStructure(e.target.value)} className="input-field">
+                          <option value="">— None —</option>
+                          {relevantStructures.map(st => (
+                            <option key={st.id} value={st.id}>{st.name} · ₹{st.amount.toLocaleString('en-IN')}{st.course ? ` · ${st.course}` : ''}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm text-vriddhi-muted mb-1 block">Fee type</label>
+                        <select value={category} onChange={e => setCategory(e.target.value as FeeCategory)} className="input-field">
+                          {FEE_CATEGORY_OPTIONS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm text-vriddhi-muted mb-1 block">Fee amount (₹)</label>
+                        <input type="number" min={1} value={amount} onChange={e => setAmount(e.target.value)} className="input-field" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm text-vriddhi-muted mb-1 block">Description (printed on the receipt)</label>
+                      <input value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="e.g. ID card replacement" className="input-field" />
+                    </div>
+                    <button
+                      onClick={createAndCollect}
+                      disabled={saving}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-vriddhi-accent hover:bg-teal-600 transition-colors disabled:opacity-50"
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      Create fee &amp; continue to payment
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">{error}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Receipt ready (after a payment is recorded) ───────
+function ReceiptReadyModal({
+  payment, result, onDownload, onClose,
+}: {
+  payment: FeePayment
+  result: CollectPaymentResult
+  onDownload: () => Promise<void>
+  onClose: () => void
+}) {
+  const [busy, setBusy] = useState(false)
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="glass-card w-full max-w-md p-6 text-center space-y-4">
+        <div className="w-14 h-14 mx-auto rounded-full bg-green-500/15 flex items-center justify-center">
+          <CheckCircle className="w-7 h-7 text-green-600 dark:text-green-400" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Payment recorded</h2>
+          <p className="text-sm text-vriddhi-muted mt-1">
+            ₹{result.amount.toLocaleString('en-IN')} from {payment.studentName} · {result.paymentMode.toUpperCase()}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-left">
+          <div className="p-3 rounded-xl bg-vriddhi-dark/30">
+            <p className="text-[10px] uppercase tracking-wider text-vriddhi-muted">Receipt No</p>
+            <p className="text-sm font-mono text-slate-900 dark:text-white">{result.receiptNo}</p>
+          </div>
+          <div className="p-3 rounded-xl bg-vriddhi-dark/30">
+            <p className="text-[10px] uppercase tracking-wider text-vriddhi-muted">Transaction ID</p>
+            <p className="text-sm font-mono text-slate-900 dark:text-white truncate">{result.transactionId}</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-vriddhi-muted bg-vriddhi-dark border border-vriddhi-border hover:bg-vriddhi-border/50 transition-colors">
+            Done
+          </button>
+          <button
+            onClick={async () => { setBusy(true); try { await onDownload() } finally { setBusy(false) } }}
+            disabled={busy}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-vriddhi-accent hover:bg-teal-600 transition-colors disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Download receipt
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ──────────────────────────────────────
 export default function AdminFeeManagement() {
   const { resolvedMode } = useThemeMode()
@@ -745,8 +1098,18 @@ export default function AdminFeeManagement() {
     createFeeStructure,
   } = useFeeData()
 
+  const { rules: financeRules, branding } = useFinanceRules()
+  const paymentModes = financeRules.enabledPaymentModes?.length ? financeRules.enabledPaymentModes : ALL_PAYMENT_MODES
+
+  useEffect(() => {
+    setReceiptPrefix(branding.receiptPrefix)
+  }, [branding.receiptPrefix])
+
   const [selectedPayment, setSelectedPayment] = useState<FeePayment | null>(null)
   const [modalMode, setModalMode] = useState<'collect' | 'waive' | 'detail' | null>(null)
+  const [showRecordPayment, setShowRecordPayment] = useState(false)
+  const [receiptReady, setReceiptReady] = useState<{ payment: FeePayment; result: CollectPaymentResult } | null>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'overdue'>('overview')
   const [showAssignment, setShowAssignment] = useState(false)
@@ -757,15 +1120,66 @@ export default function AdminFeeManagement() {
     mode: PaymentMode,
     details: { transactionId: string; bankReference: string; paidOn: string; remarks: string; screenshotUrl?: string },
   ) => {
-    if (!selectedPayment) return false
-    const success = await collectPayment(selectedPayment.id, amount, mode, details.remarks, {
+    if (!selectedPayment) return null
+    const result = await collectPayment(selectedPayment.id, amount, mode, details.remarks, {
       transactionId: details.transactionId,
       bankReference: details.bankReference,
       paidOn: details.paidOn,
       screenshotUrl: details.screenshotUrl,
     })
-    if (success) showSuccess('Payment recorded and receipt generated.')
-    return success
+    if (result) {
+      showSuccess(`Payment recorded — receipt ${result.receiptNo}.`)
+      // Snapshot the ledger as it will read after this credit, for the receipt.
+      const paidAfter = Math.min(selectedPayment.amount, selectedPayment.paidAmount + result.amount)
+      setReceiptReady({
+        payment: { ...selectedPayment, paidAmount: paidAfter, status: paidAfter >= feeNetPayable({ ...selectedPayment, paidAmount: 0 }) ? 'paid' : 'partial' },
+        result,
+      })
+    }
+    return result
+  }
+
+  /** Build + download the receipt for one credited transaction. */
+  const downloadTxnReceipt = async (payment: FeePayment, txn: {
+    receiptNo?: string; transactionId?: string; bankReference?: string; paymentMode?: PaymentMode;
+    amount: number; paidOn?: string; createdAt?: string; submissionStatus?: string; remarks?: string
+  }) => {
+    await downloadReceiptPdf(buildReceiptModel({
+      payment,
+      transaction: txn,
+      branding,
+      discountTotal: payment.discountTotal,
+      lateFine: payment.lateFine,
+      remarks: txn.remarks || undefined,
+    }))
+  }
+
+  /** Row action: download the most recent receipt of a fee. */
+  const downloadLatestReceipt = async (payment: FeePayment) => {
+    setDownloadingId(payment.id)
+    try {
+      const txns = await fetchFeeTransactions(payment.id)
+      const latest = txns.find(isReceiptable)
+      if (latest) {
+        await downloadTxnReceipt(payment, latest)
+      } else if (payment.receiptNo) {
+        // Legacy rows credited before the transactions trail existed.
+        await downloadTxnReceipt(payment, {
+          receiptNo: payment.receiptNo,
+          transactionId: payment.transactionId,
+          bankReference: payment.bankReference,
+          paymentMode: payment.paymentMode,
+          amount: payment.paidAmount,
+          paidOn: payment.paidDate,
+        })
+      } else {
+        showError('No receipt yet — record a payment for this fee first.')
+      }
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Could not generate the receipt.')
+    } finally {
+      setDownloadingId(null)
+    }
   }
 
   const handleVerifyProof = async (transactionId: string, decision: 'approve' | 'reject') => {
@@ -820,14 +1234,31 @@ export default function AdminFeeManagement() {
       payment.amount, payment.paidAmount, Math.max(0, payment.amount - payment.paidAmount),
       payment.status, payment.dueDate, payment.receiptNo || '',
     ])
-    const csv = [header, ...rows].map(row => row.map(escape).join(',')).join('\\n')
-    const url = URL.createObjectURL(new Blob([`\\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }))
+    const csv = [header, ...rows].map(row => row.map(escape).join(',')).join('\r\n')
+    const url = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }))
     const link = document.createElement('a')
     link.href = url
     link.download = `fee-ledger-${new Date().toISOString().slice(0, 10)}.csv`
     link.click()
     URL.revokeObjectURL(url)
   }
+
+  // Filter options come from the college's own data, not a hard-coded list.
+  const courseOptions = React.useMemo(() => {
+    const set = new Set<string>()
+    for (const st of students) if (st.course) set.add(st.course)
+    for (const p of allPayments) if (p.course) set.add(p.course)
+    for (const f of feeStructures) if (f.course) set.add(f.course)
+    if (filters.course !== 'all') set.add(filters.course)
+    return [...set].sort()
+  }, [students, allPayments, feeStructures, filters.course])
+  const batchOptions = React.useMemo(() => {
+    const set = new Set<string>()
+    for (const st of students) if (st.batch) set.add(st.batch)
+    for (const p of allPayments) if (p.batch) set.add(p.batch)
+    if (filters.batch !== 'all') set.add(filters.batch)
+    return [...set].sort()
+  }, [students, allPayments, filters.batch])
 
   const statusData = [
     { name: 'Paid', value: summary.countPaid, color: COLORS.paid },
@@ -860,6 +1291,13 @@ export default function AdminFeeManagement() {
             Refresh
           </button>
           <button
+            onClick={() => setShowRecordPayment(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
+          >
+            <Wallet size={16} />
+            Record payment
+          </button>
+          <button
             onClick={() => setShowStructure(true)}
             className="flex items-center gap-2 px-4 py-2 bg-vriddhi-card border border-vriddhi-border text-vriddhi-text rounded-xl text-sm hover:bg-vriddhi-border/50 transition-colors"
           >
@@ -881,6 +1319,13 @@ export default function AdminFeeManagement() {
             <Download size={16} />
             Export CSV
           </button>
+          <Link
+            to="/admin/finance-settings"
+            title="Finance settings"
+            className="flex items-center gap-2 px-3 py-2 bg-vriddhi-card border border-vriddhi-border text-vriddhi-text rounded-xl text-sm hover:bg-vriddhi-border/50 transition-colors"
+          >
+            <SettingsIcon size={16} />
+          </Link>
         </div>
       </div>
 
@@ -1155,9 +1600,7 @@ export default function AdminFeeManagement() {
                   className="bg-transparent text-sm text-vriddhi-text focus:outline-none cursor-pointer"
                 >
                   <option value="all">All Courses</option>
-                  <option value="BCom">BCom</option>
-                  <option value="BA">BA</option>
-                  <option value="BSc">BSc</option>
+                  {courseOptions.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="flex items-center gap-2 bg-vriddhi-dark/50 border border-vriddhi-border rounded-xl px-3 py-2">
@@ -1168,7 +1611,7 @@ export default function AdminFeeManagement() {
                   className="bg-transparent text-sm text-vriddhi-text focus:outline-none cursor-pointer"
                 >
                   <option value="all">All Batches</option>
-                  {['2026', '2027', '2028', '2029'].map(b => (
+                  {batchOptions.map(b => (
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
@@ -1293,10 +1736,20 @@ export default function AdminFeeManagement() {
                                 {(payment.status === 'pending' || payment.status === 'overdue' || payment.status === 'partial') && (
                                   <button
                                     onClick={() => { setSelectedPayment(payment); setModalMode('collect') }}
-                                    className="p-1.5 hover:bg-green-500/20 rounded-lg transition-colors"
-                                    title="Collect Payment"
+                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors"
+                                    title="Record a payment against this fee"
                                   >
-                                    <CreditCard className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                    <CreditCard className="w-3.5 h-3.5" /> Collect
+                                  </button>
+                                )}
+                                {payment.paidAmount > 0 && (
+                                  <button
+                                    onClick={() => downloadLatestReceipt(payment)}
+                                    disabled={downloadingId === payment.id}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-vriddhi-accent/15 text-vriddhi-accent hover:bg-vriddhi-accent/25 transition-colors disabled:opacity-50"
+                                    title="Download the latest receipt (PDF)"
+                                  >
+                                    {downloadingId === payment.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Receipt
                                   </button>
                                 )}
                                 {(payment.status === 'pending' || payment.status === 'overdue') && (
@@ -1501,6 +1954,7 @@ export default function AdminFeeManagement() {
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
           onCollect={handleCollect}
           onApplyDiscount={handleApplyDiscount}
+          paymentModes={paymentModes}
         />
       )}
       {modalMode === 'waive' && selectedPayment && (
@@ -1515,6 +1969,35 @@ export default function AdminFeeManagement() {
           payment={selectedPayment}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
           onVerifyProof={handleVerifyProof}
+          branding={branding}
+          onCollect={() => setModalMode('collect')}
+        />
+      )}
+      {showRecordPayment && (
+        <RecordPaymentModal
+          students={students}
+          structures={feeStructures}
+          onClose={() => setShowRecordPayment(false)}
+          onPick={(payment) => { setShowRecordPayment(false); setSelectedPayment(payment); setModalMode('collect') }}
+          onCreateInvoice={async (input) => {
+            const created = await createFeePayment(input)
+            if (!created) showError('Could not create the fee entry.')
+            return created
+          }}
+        />
+      )}
+      {receiptReady && (
+        <ReceiptReadyModal
+          payment={receiptReady.payment}
+          result={receiptReady.result}
+          onClose={() => setReceiptReady(null)}
+          onDownload={async () => {
+            try {
+              await downloadTxnReceipt(receiptReady.payment, { ...receiptReady.result, submissionStatus: 'recorded' })
+            } catch {
+              showError('Could not generate the receipt PDF.')
+            }
+          }}
         />
       )}
       {showAssignment && (

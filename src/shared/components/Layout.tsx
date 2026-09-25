@@ -68,10 +68,19 @@ import {
   InstallMobile,
   Apps,
   Close as CloseIcon,
+  LocalLibrary,
+  Inventory2,
+  ShoppingCart,
+  Storefront,
+  ReceiptLong,
+  AssignmentTurnedIn,
+  AccountBalanceWallet,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
 import { isPwaStandalone, requestPwaInstall } from '../pwa/install';
+import { canAccessAdminPath, type AccessSettings } from '@/modules/auth/permissions';
+import { useAccessSettings } from '@/modules/admin/hooks/useAccessSettings';
 
 const DRAWER_EXPANDED_WIDTH = 260;
 const DRAWER_COLLAPSED_WIDTH = 76;
@@ -178,8 +187,10 @@ const navItems: NavItem[] = [
   { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
   { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
   { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" />, roles: ["admin", "principal"], section: "Students" },
-  { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
-  { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
+  { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" />, roles: ["principal"], section: "Finance" },
+  { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" />, roles: ["principal"], section: "Finance" },
+  { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" />, roles: ["principal"], section: "Finance" },
+  { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" />, roles: ["principal"], section: "Finance" },
   { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
@@ -298,6 +309,8 @@ const facultyNav: SidebarEntry[] = [
       { label: "Journey", path: "/faculty/journey", icon: <TrendingUp fontSize="small" /> },
     ],
   },
+
+  { kind: "link", label: "My Salary", path: "/faculty/my-salary", icon: <AttachMoney fontSize="small" /> },
   { kind: "link", label: "Install App", path: "/faculty/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
   { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
@@ -345,7 +358,6 @@ const principalNav: SidebarEntry[] = [
       { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
-      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
 
@@ -380,9 +392,30 @@ const principalNav: SidebarEntry[] = [
     label: "Finance",
     icon: <AttachMoney fontSize="small" />,
     children: [
+      { label: "Accounts Desk", path: "/admin/accounts", icon: <AccountBalanceWallet fontSize="small" /> },
       { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
-      { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
+      { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" /> },
+      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
+      { label: "Vendor Bills", path: "/admin/vendor-bills", icon: <ReceiptLong fontSize="small" /> },
+      { label: "Library Fines", path: "/admin/library-fines", icon: <LocalLibrary fontSize="small" /> },
       { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
+      { label: "Finance Reports", path: "/admin/finance-reports", icon: <BarChartIcon fontSize="small" /> },
+      { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Library & Inventory",
+    icon: <LocalLibrary fontSize="small" />,
+    children: [
+      { label: "Operations Desk", path: "/admin/operations", icon: <Dashboard fontSize="small" /> },
+      { label: "Library", path: "/admin/library", icon: <LocalLibrary fontSize="small" /> },
+      { label: "Inventory & Assets", path: "/admin/inventory", icon: <Inventory2 fontSize="small" /> },
+      { label: "Purchase Requests", path: "/admin/purchase-requests", icon: <ShoppingCart fontSize="small" /> },
+      { label: "Purchase Orders", path: "/admin/purchase-orders", icon: <ReceiptLong fontSize="small" /> },
+      { label: "Vendors", path: "/admin/vendors", icon: <Storefront fontSize="small" /> },
+      { label: "No-Dues", path: "/admin/no-dues", icon: <AssignmentTurnedIn fontSize="small" /> },
     ],
   },
 
@@ -442,7 +475,6 @@ const hodNav: SidebarEntry[] = [
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
       { label: "Scheme Packs", path: "/admin/scheme-packs", icon: <AccountBalance fontSize="small" /> },
-      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
 
@@ -462,12 +494,12 @@ const hodNav: SidebarEntry[] = [
 
   {
     kind: "group",
-    label: "Finance",
-    icon: <AttachMoney fontSize="small" />,
+    label: "Requests",
+    icon: <ShoppingCart fontSize="small" />,
     children: [
-      { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
-      { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
-      { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
+      // HODs hold no finance access; departments raise purchase requests
+      // that follow the college's approval chain.
+      { label: "Purchase Requests", path: "/admin/purchase-requests", icon: <ShoppingCart fontSize="small" /> },
     ],
   },
 
@@ -486,6 +518,106 @@ const hodNav: SidebarEntry[] = [
   { kind: "link", label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" /> },
 ];
 
+/**
+ * Accounts team — the college finance office. Payroll appears only when the
+ * college grants it (principal → Finance Settings → Payroll visibility); the filter below hides it.
+ */
+const accountsNav: SidebarEntry[] = [
+  { kind: "link", label: "Accounts Desk", path: "/admin/accounts", icon: <Dashboard fontSize="small" /> },
+  {
+    kind: "group",
+    label: "Collections",
+    icon: <AttachMoney fontSize="small" />,
+    children: [
+      { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
+      { label: "Library Fines", path: "/admin/library-fines", icon: <LocalLibrary fontSize="small" /> },
+    ],
+  },
+  {
+    kind: "group",
+    label: "Payments",
+    icon: <AccountBalance fontSize="small" />,
+    children: [
+      { label: "Vendor Bills", path: "/admin/vendor-bills", icon: <ReceiptLong fontSize="small" /> },
+      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
+      { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" /> },
+      { label: "Vendors", path: "/admin/vendors", icon: <Storefront fontSize="small" /> },
+      { label: "Purchase Approvals", path: "/admin/purchase-requests", icon: <ShoppingCart fontSize="small" /> },
+    ],
+  },
+  {
+    kind: "group",
+    label: "Reports",
+    icon: <BarChartIcon fontSize="small" />,
+    children: [
+      { label: "Finance Reports", path: "/admin/finance-reports", icon: <BarChartIcon fontSize="small" /> },
+      { label: "No-Dues", path: "/admin/no-dues", icon: <AssignmentTurnedIn fontSize="small" /> },
+    ],
+  },
+  { kind: "link", label: "Finance Settings", path: "/admin/finance-settings", icon: <Settings fontSize="small" /> },
+  { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
+];
+
+/** Operations team — library, inventory, stores and purchasing. */
+const operationsNav: SidebarEntry[] = [
+  { kind: "link", label: "Operations Desk", path: "/admin/operations", icon: <Dashboard fontSize="small" /> },
+  {
+    kind: "group",
+    label: "Library",
+    icon: <LocalLibrary fontSize="small" />,
+    children: [
+      { label: "Issue & Return", path: "/admin/library/desk", icon: <SwapHoriz fontSize="small" /> },
+      { label: "Catalogue", path: "/admin/library/catalogue", icon: <LocalLibrary fontSize="small" /> },
+      { label: "Loans & Renewals", path: "/admin/library/loans", icon: <Assignment fontSize="small" /> },
+      { label: "Reservations", path: "/admin/library/reservations", icon: <CalendarToday fontSize="small" /> },
+      { label: "Gate Register", path: "/admin/library/gate", icon: <People fontSize="small" /> },
+      { label: "Stock Verification", path: "/admin/library/stock", icon: <CheckCircle fontSize="small" /> },
+      { label: "Library Reports", path: "/admin/library/reports", icon: <BarChartIcon fontSize="small" /> },
+      { label: "Library Settings", path: "/admin/library/settings", icon: <Settings fontSize="small" /> },
+      { label: "Library Fines", path: "/admin/library-fines", icon: <AttachMoney fontSize="small" /> },
+    ],
+  },
+  {
+    kind: "group",
+    label: "Inventory",
+    icon: <Inventory2 fontSize="small" />,
+    children: [
+      { label: "Assets", path: "/admin/inventory/assets", icon: <Inventory2 fontSize="small" /> },
+      { label: "Consumables & Stock", path: "/admin/inventory/stock", icon: <Inventory2 fontSize="small" /> },
+      { label: "Inventory Settings", path: "/admin/inventory/settings", icon: <Settings fontSize="small" /> },
+    ],
+  },
+  {
+    kind: "group",
+    label: "Purchasing",
+    icon: <ShoppingCart fontSize="small" />,
+    children: [
+      { label: "Purchase Requests", path: "/admin/purchase-requests", icon: <ShoppingCart fontSize="small" /> },
+      { label: "Purchase Orders & GRN", path: "/admin/purchase-orders", icon: <ReceiptLong fontSize="small" /> },
+      { label: "Vendors", path: "/admin/vendors", icon: <Storefront fontSize="small" /> },
+    ],
+  },
+  { kind: "link", label: "No-Dues", path: "/admin/no-dues", icon: <AssignmentTurnedIn fontSize="small" /> },
+  { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
+];
+
+/** Drop /admin entries the role may not open (payroll follows the college setting). */
+function filterNavForRole(entries: SidebarEntry[] | undefined, role: UserRole, access: AccessSettings): SidebarEntry[] | null {
+  if (!entries) return null;
+  const ok = (path: string) => !path.startsWith('/admin') || canAccessAdminPath(role, path, access);
+  const out: SidebarEntry[] = [];
+  for (const entry of entries) {
+    if (entry.kind === 'link') {
+      if (ok(entry.path)) out.push(entry);
+    } else {
+      const children = entry.children.filter(c => ok(c.path));
+      if (children.length) out.push({ ...entry, children });
+    }
+  }
+  return out;
+}
+
 /** Roles whose sidebar renders as collapsible master groups. */
 const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
   faculty: facultyNav,
@@ -494,6 +626,8 @@ const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
   admin: hodNav,
   hod: hodNav,
   principal: principalNav,
+  accounts: accountsNav,
+  operations: operationsNav,
 };
 
 // ─── Phone chrome (parity with the student portal) ───────────────────────────
@@ -573,6 +707,18 @@ const mobileTabsByRole: Record<string, MobileTab[]> = {
     { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
     { label: "Attendance", path: "/admin/attendance", icon: <CalendarToday fontSize="small" /> },
     { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
+  ],
+  accounts: [
+    { label: "Desk", path: "/admin/accounts", icon: <Dashboard fontSize="small" /> },
+    { label: "Fees", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+    { label: "Bills", path: "/admin/vendor-bills", icon: <ReceiptLong fontSize="small" /> },
+    { label: "Reports", path: "/admin/finance-reports", icon: <BarChartIcon fontSize="small" /> },
+  ],
+  operations: [
+    { label: "Desk", path: "/admin/operations", icon: <Dashboard fontSize="small" /> },
+    { label: "Issue/Return", path: "/admin/library/desk", icon: <SwapHoriz fontSize="small" />, aliases: ["/admin/library"] },
+    { label: "Inventory", path: "/admin/inventory/assets", icon: <Inventory2 fontSize="small" />, aliases: ["/admin/inventory"] },
+    { label: "Purchasing", path: "/admin/purchase-orders", icon: <ShoppingCart fontSize="small" />, aliases: ["/admin/purchase-requests", "/admin/vendors"] },
   ],
   superadmin: [
     { label: "Dashboard", path: "/superadmin/dashboard", icon: <Dashboard fontSize="small" /> },
@@ -663,7 +809,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navLabel = (label: string) =>
     NAV_LABEL_KEYS[label] ? t(NAV_LABEL_KEYS[label]) : label;
 
-  const collapsibleNav = collapsibleNavByRole[effectiveRole] ?? null;
+  const { access } = useAccessSettings();
+  const collapsibleNav = React.useMemo(
+    () => filterNavForRole(collapsibleNavByRole[effectiveRole], effectiveRole as UserRole, access),
+    [effectiveRole, access]
+  );
 
   const activeGroup = React.useMemo(() => {
     if (!collapsibleNav) return null;
@@ -812,6 +962,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       case "principal": return { bg: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", label: t("role.principal") };
       case "mentor": return { bg: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", label: t("role.mentor") };
       case "faculty": return { bg: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", label: t("role.faculty") };
+      case "accounts": return { bg: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300", label: "Accounts" };
+      case "operations": return { bg: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300", label: "Operations" };
       default: return { bg: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200", label: role };
     }
   };

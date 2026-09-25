@@ -253,8 +253,8 @@ export const useCreateAdmin = () => {
 
 export const useUpdateAdminStatus = () => {
   const queryClient = useQueryClient();
-  return useMutation<void, SuperAdminApiError, { adminId: string; status: "active" | "inactive" }>({
-    mutationFn: ({ adminId, status }) => updateAdminStatus(adminId, status),
+  return useMutation<void, SuperAdminApiError, { adminId: string; status: "active" | "inactive"; role?: string }>({
+    mutationFn: ({ adminId, status, role }) => updateAdminStatus(adminId, status, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.admins() });
     },
