@@ -1018,4 +1018,121 @@ export const BCOM_PAPERS: PrepPaperSeed[] = [
     prepSubjectId: 'bba-karnataka-entrepreneurship',
     source: { title: 'III Semester B.Com question papers, January/February 2025 (bundle)', url: 'https://www.cicms.in/uploads/quastion-papers/bcom/3rd-semester/2025-3rd-Sem-Bcom.pdf', publisher: 'CIMS B-School, Bengaluru (BCU-affiliated college)', retrievedOn: '2026-09-25', note: 'Bilingual paper; only the English text is reproduced.' },
   },
+  // ── St Agnes College (Autonomous), Mangaluru · V Semester B.Com · October 2025 ─
+  {
+    id: 'stagnes-mu-bcom-5-financial-management-2025-10',
+    program: 'bcom',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 5,
+    subject: 'Financial Management',
+    subjectArea: 'Finance',
+    examMonth: 'October',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any TWO questions. Each question carries 15 marks.', answer: 2, marksEach: 15,
+        questions: [
+          'Explain the objectives of Financial Management.',
+          {
+            text: 'The capital structure of Work Well Ltd. comprises the following: Equity shares of Rs. 10 each Rs. 4,00,000; 10% Debentures of Rs. 100 each Rs. 5,00,000; 15% Preference shares of Rs. 100 each Rs. 1,00,000. It sells 1,00,000 units at Rs. 10 per unit with a variable cost of Rs. 4 each and a fixed cost of Rs. 1,00,000. The applicable corporate tax rate is 30%.',
+            parts: [
+              '(1) Calculate EPS, Financial Leverage, Operating Leverage and Combined Leverage.',
+              '(2) Also calculate EPS and the leverages for a 50% increase in sales as well as for a 25% decline in sales.',
+            ],
+          },
+          {
+            text: 'A company is considering an investment proposal to install new milling controls at a cost of Rs. 50,000. The facility has a life expectancy of 5 years and no salvage value. The tax rate is 35%. Assume the firm uses straight-line depreciation and the same is allowed for tax purposes. The estimated cash flows before depreciation and tax (CFBDT) are: Year 1 Rs. 10,000; Year 2 Rs. 10,692; Year 3 Rs. 12,769; Year 4 Rs. 13,462; Year 5 Rs. 20,385. Compute the following:',
+            parts: ['(1) Payback period', '(2) Average rate of return', '(3) Net present value at 10% discount rate', '(4) Profitability index at 10% discount rate'],
+          },
+          {
+            text: 'Prepare an estimate of working capital from the following data of a manufacturing concern:',
+            parts: [
+              'Sales (credit period 3 months) Rs. 40,00,000; Raw materials Rs. 12,00,000; Wages paid (15 days in arrears) Rs. 9,60,000; Manufacturing expenses (1 month in arrears) Rs. 6,00,000; Administration expenses (1 month in arrears) Rs. 1,20,000; Sales promotion expenses (payable in advance for 3 months) Rs. 1,00,000; Income tax payable Rs. 25,000.',
+              "The company enjoys 1 month's credit from suppliers of raw material. It maintains 2 months' stock of raw material and 2 months' stock of finished goods. A cash balance of Rs. 50,000 is maintained as precautionary balance. Assume 10% for contingencies.",
+            ],
+          },
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any FOUR questions. Each question carries 5 marks.', answer: 4, marksEach: 5,
+        questions: [
+          'Explain the important functions of a Finance Manager.',
+          'A second-hand car is purchased on hire-purchase basis by paying Rs. 20,000 down and five more annual instalments of Rs. 8,000. The instalments include interest at 16% compound interest p.a. Calculate the cash value of the car.',
+          'Calculate Operating Leverage, Financial Leverage and Combined Leverage from the following information of Firm A: Sales Rs. 8,00,000; Variable cost 30% of sales; Fixed cost Rs. 2,00,000; Interest Rs. 40,000; Tax rate 30%.',
+          {
+            text: 'National Electronics Ltd., an electronic goods manufacturing company producing a large range of electronic goods, has under consideration two projects X and Y, each costing Rs. 120 lakhs. The projects are mutually exclusive and the company is considering which one to select. The cost of capital of the company is 15%. Net cash flows at the end of each year (Project X / Project Y, Rs. in lakhs):',
+            parts: ['Year 1 — 25 / 40', 'Year 2 — 35 / 60', 'Year 3 — 45 / 80', 'Year 4 — 65 / 50', 'Year 5 — 65 / 30', 'Year 6 — 55 / 20'],
+          },
+          'Given below is the data of a company for 2022 (Rs. in thousands): Stock of raw materials 200; Work in progress 140; Stock of finished goods 210; Purchases 960; Cost of goods sold 1,400; Sales 1,600; Debtors 320; Creditors 160. From the above, compute the net operating cycle.',
+          'Write a note on Trade Credit.',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any FIVE questions. Each question carries 2 marks.', answer: 5, marksEach: 2,
+        questions: [
+          'Explain any two needs for Financial Planning.',
+          'An endowment fund is proposed to give a gold medal to the first rank holder in B.Com of the Mangalore University examination. The value of the gold medal is estimated to be Rs. 15,000 each. Reckoning the interest rate at 10% p.a., calculate the size of the fund.',
+          'Shekhar deposited Rs. 18,000 in a cash certificate of the Teachers Co-operative Bank for a period of 3 years at a compound interest of 8% p.a. Calculate how much Shekhar would receive after 3 years.',
+          'The EBIT of A Ltd. was Rs. 2,00,000 and the interest burden was Rs. 50,000, with an applicable tax rate of 40%. Calculate the financial leverage.',
+          'A project involves a total initial expenditure of Rs. 2,00,000 and is estimated to generate future cash inflows of Rs. 30,000, Rs. 38,000, Rs. 25,000, Rs. 22,000, Rs. 36,000, Rs. 40,000, Rs. 40,000, Rs. 28,000, Rs. 24,000 and Rs. 24,000 in its last year. Calculate the Payback Period.',
+          'Explain any two factors influencing the working capital requirements of a firm.',
+          'What is negative working capital?',
+        ],
+      },
+    ],
+    prepSubjectId: 'bba-karnataka-fin-mgmt',
+    source: { title: 'B.Com V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-bcom-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University. Q2, Q4 and Q13 re-flowed from a two-column scan.' },
+  },
+  {
+    id: 'stagnes-mu-bcom-5-human-resource-development-2025-10',
+    program: 'bcom',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 5,
+    subject: 'Human Resource Development',
+    subjectArea: 'Human Resources',
+    examMonth: 'October',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any TWO questions. Each question carries 15 marks.', answer: 2, marksEach: 15,
+        questions: [
+          '"Employee empowerment brings both opportunities and challenges" — analyse this statement.',
+          { text: 'Answer both parts:', parts: ['(a) What is diversity of workforce? Explain the key dimensions and benefits of a diverse workforce.', '(b) List the HRD programmes for diverse employees.'] },
+          'What is an HRD process? Explain the key steps involved in the HRD process.',
+          { text: 'Answer both parts:', parts: ['(a) Explain the major issues in employee counselling with examples.', '(b) What are the different types of counselling programmes in HRD?'] },
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any FOUR questions. Each question carries 5 marks.', answer: 4, marksEach: 5,
+        questions: [
+          'How does HRD contribute to organisational effectiveness?',
+          'What is HR performance? List any four functions of HR performance.',
+          'Explain the Kirkpatrick model of HRD.',
+          'Explain the fundamental concept of socialisation in HRD.',
+          'Explain the reasons for workforce reduction.',
+          'Explain any four training methods with merits and demerits.',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any FIVE questions. Each question carries 2 marks.', answer: 5, marksEach: 2,
+        questions: [
+          'Explain the role of trade unions in shaping HRD practices.',
+          'What is meant by skill enhancement? Give examples.',
+          'List any four components of an HRD model.',
+          'What is a Realistic Job Preview and why is it important?',
+          'List four challenges experienced by expatriates and repatriates.',
+          'How is ROI calculated in HRD programmes? Explain with an example.',
+          'List the strategies for employee retention.',
+        ],
+      },
+    ],
+    prepSubjectId: 'bba-karnataka-hrm',
+    source: { title: 'B.Com V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-bcom-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University.' },
+  },
 ]
