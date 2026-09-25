@@ -1305,6 +1305,44 @@ describe('platform documents are server-only', () => {
   })
 })
 
+describe('ai content cache is server-only (item 4.1)', () => {
+  // `aiContentCache/{sha256}` is written by the content engine and read by the
+  // engine alone. The cache key addresses syllabus content platform-wide, so a
+  // readable collection would let any signed-in user enumerate the draft
+  // library; a writable one would let them poison what every college is served.
+  const cacheDoc = {
+    content: '{"title":"Demand and Supply"}',
+    model: 'gemini-2.5-flash-lite',
+    promptVersion: 'study-pack-v1',
+    createdAt: '2026-09-26T00:00:00.000Z',
+  }
+  const docId = 'a'.repeat(64)
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'aiContentCache', docId), cacheDoc)
+    })
+  })
+
+  it('denies reads to students, staff and superadmins', async () => {
+    await assertFails(getDoc(doc(studentContext().firestore(), 'aiContentCache', docId)))
+    await assertFails(getDoc(doc(facultyContext().firestore(), 'aiContentCache', docId)))
+    await assertFails(getDoc(doc(superadminContext().firestore(), 'aiContentCache', docId)))
+  })
+
+  it('denies writes and deletes from every client', async () => {
+    const db = superadminContext().firestore()
+    await assertFails(setDoc(doc(db, 'aiContentCache', docId), { content: 'forged' }))
+    await assertFails(updateDoc(doc(db, 'aiContentCache', docId), { content: 'forged' }))
+    await assertFails(deleteDoc(doc(db, 'aiContentCache', docId)))
+  })
+
+  it('denies listing the collection', async () => {
+    const db = studentContext().firestore()
+    await assertFails(getDocs(query(collection(db, 'aiContentCache'), limit(5))))
+  })
+})
+
 describe('ai chat quota counters are server-only', () => {
   // `ai_chat_quota/{uid}_{YYYY-MM-DD}` (D2) is read and written only by the
   // /ai/chat route through the Admin SDK. If a student could write it, the

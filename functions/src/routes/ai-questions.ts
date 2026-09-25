@@ -6,7 +6,8 @@ import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/t
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
-import { generateWithGeminiFallback } from '../config/aiModels'
+import { generateWithGeminiFallback, readGeminiUsage } from '../config/aiModels'
+import { generateContentWithCache } from '../ai/contentEngine'
 import { buildLanguagePromptBlock, getLanguageDefinition, normalizeLanguage } from '../services/languages'
 
 const WRITE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
@@ -84,11 +85,57 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
         res.status(500).json({ error: 'Gemini client not initialized. Check GEMINI_API_KEY.' })
         return
       }
-      // Question generation is a QUALITY-tier job (mis-generated syllabus content
-      // is reviewed by humans, so cheaping out costs more than it saves).
-      const generated = await generateWithGeminiFallback('quality', (modelId) =>
-        client.getGenerativeModel({ model: modelId }).generateContent(buildPrompt(normalizedConfig)))
-      rawResponse = generated.result.response.text()
+      const prompt = buildPrompt(normalizedConfig)
+      // Item 4.1: the same syllabus slot (course, module, unit, chapter, type,
+      // difficulty, language, count, marks) is generated ONCE no matter how many
+      // teachers press Generate. Only content-addressing fields are in the key —
+      // no college, no user — so nothing personal can be served from the cache.
+      const generated = await generateContentWithCache(
+        {
+          kind: 'questionSet',
+          key: [
+            normalizedConfig.courseCode || normalizedConfig.courseName || normalizedConfig.course,
+            normalizedConfig.moduleNo || '',
+            normalizedConfig.moduleName || '',
+            normalizedConfig.chapter || '',
+            normalizedConfig.unit || '',
+            (normalizedConfig.topics || []).join(','),
+            normalizedConfig.questionType,
+            config.difficulty || '',
+            normalizedConfig.language || '',
+            normalizedConfig.numQuestions,
+            normalizedConfig.marks,
+            // The human-set extra instruction changes the output, so it must
+            // change the key — otherwise two teachers asking for different
+            // things would share one entry.
+            String(config.additionalInstructions || '').slice(0, 200),
+          ].join('|'),
+          tier: 'quality',
+          prompt,
+          responseMimeType: 'application/json',
+          parse: (raw) => raw,
+        },
+        {
+          generate: async () =>
+            // Question generation is a QUALITY-tier job (mis-generated syllabus
+            // content is reviewed by humans, so cheaping out costs more than it
+            // saves). The fallback ladder stays inside the generator.
+            (async () => {
+              const result = await generateWithGeminiFallback('quality', (modelId) =>
+                client.getGenerativeModel({ model: modelId }).generateContent(prompt))
+              const usage = readGeminiUsage((result.result.response as any).usageMetadata)
+              return {
+                raw: result.result.response.text(),
+                model: result.model,
+                tokensIn: usage.tokensIn,
+                tokensOut: usage.tokensOut,
+                thinkingTokens: usage.thinkingTokens,
+                cachedTokens: usage.cachedTokens,
+              }
+            })(),
+        },
+      )
+      rawResponse = generated.content
     }
     else if (provider === 'openai') {
       const client = openaiClient()

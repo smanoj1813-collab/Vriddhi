@@ -37,6 +37,7 @@ import { getAuth } from 'firebase-admin/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
 import { generateWithGeminiFallback, primaryGeminiModel, readGeminiUsage } from '../config/aiModels'
+import { generateContentWithCache } from '../ai/contentEngine'
 import {
   parsePrepDraft,
   validatePublishTransition,
@@ -177,52 +178,93 @@ async function generateDraftWithProviders(opts: {
   let thinkingTokens = 0
   let cachedTokens = 0
 
-  const gemini = geminiClient()
-  if (gemini) {
-    try {
-      // Tiered list — a retired model id falls through instead of killing drafts.
-      const generated = await generateWithGeminiFallback('fast', (modelId) =>
-        gemini.getGenerativeModel({ model: modelId }).generateContent(prompt),
-        {
-          onFallback: ({ failedModel, nextModel, error }) =>
-            console.warn('[Prep] Gemini model unavailable, trying next tier entry', {
-              failedModel,
-              nextModel,
-              error: (error as Error)?.message,
-            }),
-        },
-      )
-      model = generated.model
-      rawText = generated.result.response.text()
-      const usage = readGeminiUsage((generated.result.response as any).usageMetadata)
-      tokensIn = usage.tokensIn
-      tokensOut = usage.tokensOut
-      thinkingTokens = usage.thinkingTokens
-      cachedTokens = usage.cachedTokens
-    } catch (err) {
-      console.warn('[Prep] Gemini provider failed:', err)
-    }
-  }
+  // Item 4.1: identical (programme, subject, topic, stream, difficulty) drafts
+  // are generated once. The key is content-addressing only — no college and no
+  // teacher — so a draft created for one programme is reused by every operator
+  // generating the same topic, and the prompt version in the key means a prompt
+  // rewrite retires the old entries by itself.
+  //
+  // The provider cascade below stays INSIDE the generator: caching must not
+  // change what happens when Gemini is unavailable.
+  try {
+    const cached = await generateContentWithCache(
+      {
+        kind: 'prepDraft',
+        key: [opts.program, opts.subjectName, opts.topicTitle, opts.stream, opts.difficulty].join('|'),
+        tier: 'fast',
+        prompt,
+        responseMimeType: 'application/json',
+        temperature: 0.5,
+        // The draft is edited by a human before publishing, so a day-old copy is
+        // still the right starting point; a stale one is not worth a token bill.
+        maxAgeMs: 30 * 24 * 60 * 60 * 1000,
+        parse: (raw) => raw,
+      },
+      {
+        generate: async () => {
+          const gemini = geminiClient()
+          if (gemini) {
+            try {
+              // Tiered list — a retired model id falls through instead of killing drafts.
+              const generated = await generateWithGeminiFallback('fast', (modelId) =>
+                gemini.getGenerativeModel({ model: modelId }).generateContent(prompt),
+                {
+                  onFallback: ({ failedModel, nextModel, error }) =>
+                    console.warn('[Prep] Gemini model unavailable, trying next tier entry', {
+                      failedModel,
+                      nextModel,
+                      error: (error as Error)?.message,
+                    }),
+                },
+              )
+              const usage = readGeminiUsage((generated.result.response as any).usageMetadata)
+              if (!generated.result.response.text()) throw new Error('empty Gemini response')
+              return {
+                raw: generated.result.response.text(),
+                model: generated.model,
+                tokensIn: usage.tokensIn,
+                tokensOut: usage.tokensOut,
+                thinkingTokens: usage.thinkingTokens,
+                cachedTokens: usage.cachedTokens,
+              }
+            } catch (err) {
+              console.warn('[Prep] Gemini provider failed:', err)
+            }
+          }
 
-  if (!rawText) {
-    const client = deepseekClient() || openaiClient()
-    if (client) {
-      try {
-        const isDeepseek = !!deepseekClient()
-        const completion = await client.chat.completions.create({
-          model: isDeepseek ? 'deepseek-chat' : 'gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          response_format: { type: 'json_object' },
-          temperature: 0.5,
-        })
-        rawText = completion.choices[0]?.message?.content || ''
-        tokensIn = Number(completion.usage?.prompt_tokens) || 0
-        tokensOut = Number(completion.usage?.completion_tokens) || 0
-        provider = isDeepseek ? 'deepseek' : 'openai'
-      } catch (err) {
-        console.warn('[Prep] OpenAI/DeepSeek provider failed:', err)
-      }
-    }
+          const client = deepseekClient() || openaiClient()
+          if (!client) throw new Error('no provider produced a prep draft')
+          const isDeepseek = !!deepseekClient()
+          const completion = await client.chat.completions.create({
+            model: isDeepseek ? 'deepseek-chat' : 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' },
+            temperature: 0.5,
+          })
+          const text = completion.choices[0]?.message?.content || ''
+          if (!text) throw new Error('no provider produced a prep draft')
+          provider = isDeepseek ? 'deepseek' : 'openai'
+          return {
+            raw: text,
+            model: isDeepseek ? 'deepseek-chat' : 'gpt-4o-mini',
+            tokensIn: Number(completion.usage?.prompt_tokens) || 0,
+            tokensOut: Number(completion.usage?.completion_tokens) || 0,
+            thinkingTokens: 0,
+            cachedTokens: 0,
+          }
+        },
+      },
+    )
+    rawText = cached.content
+    model = cached.model
+    tokensIn = cached.tokensIn
+    tokensOut = cached.tokensOut
+    thinkingTokens = cached.thinkingTokens
+    cachedTokens = cached.cachedTokens
+    // A cache hit costs nothing, so report it as such rather than as new spend.
+    if (cached.source === 'cache') provider = 'cache'
+  } catch (err) {
+    console.warn('[Prep] Draft generation failed, using the offline composer:', err)
   }
 
   // Parse candidate output

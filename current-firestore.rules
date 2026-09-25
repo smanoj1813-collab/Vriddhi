@@ -1494,6 +1494,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Generated-content cache (item 4.1). `aiContentCache/{sha256(kind|key|
+    // model|promptVersion)}` holds study/prep/question output that came from a
+    // model. Only Cloud Functions touch it: the key can address content for any
+    // syllabus, so a client that could read the collection could enumerate the
+    // platform's whole draft library, and a client that could write it could
+    // poison what other colleges are served.
+    match /aiContentCache/{docId} {
+      allow read, write: if false;
+    }
+
     // Daily AI-chat turn counters (item D2 of the optimisation hand-off).
     // `ai_chat_quota/{uid}_{YYYY-MM-DD}` is written ONLY by the /ai/chat route
     // with the Admin SDK, which checks the counter before doing any work and

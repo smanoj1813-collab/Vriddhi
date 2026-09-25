@@ -1416,6 +1416,8 @@ export async function getDashboardStats(): Promise<{
   topColleges: TopCollege[];
   updatedAt?: string;
   source?: "snapshot" | "live";
+  /** Item 4.1: AI content-cache hit/miss counters, from the same snapshot doc. */
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null;
 }> {
   try {
     const snapshot = await readPlatformStats();
@@ -1447,6 +1449,7 @@ export async function getDashboardStats(): Promise<{
         })),
         updatedAt: snapshot.updatedAt,
         source: "snapshot",
+        aiCache: snapshot.aiCache ?? null,
       };
     }
     return await computeDashboardStatsLive();
@@ -1472,6 +1475,7 @@ interface PlatformStatsDoc {
     status: string;
   }>;
   updatedAt: string;
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null;
 }
 
 /** Reads `platform/stats`; returns null when it is missing or stale. */
@@ -1490,6 +1494,13 @@ async function readPlatformStats(): Promise<PlatformStatsDoc | null> {
     suspendedColleges: Number(data.suspendedColleges) || 0,
     topColleges: Array.isArray(data.topColleges) ? data.topColleges : [],
     updatedAt: String(data.updatedAt),
+    aiCache: data.aiCache
+      ? {
+          hits: Number(data.aiCache.hits) || 0,
+          misses: Number(data.aiCache.misses) || 0,
+          tokensServedFromCache: Number(data.aiCache.tokensServedFromCache) || 0,
+        }
+      : null,
   };
 }
 

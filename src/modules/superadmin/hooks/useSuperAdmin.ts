@@ -372,6 +372,8 @@ export interface DashboardPayload {
   topColleges: TopCollege[];
   updatedAt?: string;
   source?: "snapshot" | "live";
+  /** Item 4.1: AI content-cache counters carried by the same snapshot doc. */
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null;
 }
 export const useDashboardStats = (queryOptions?: Omit<UseQueryOptions<DashboardPayload, SuperAdminApiError>, "queryKey" | "queryFn">) => {
   return useQuery<DashboardPayload, SuperAdminApiError>({

@@ -24,6 +24,8 @@ import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { logger } from 'firebase-functions'
 import * as admin from 'firebase-admin'
 
+import { AI_CACHE_STATS_DOC_PATH } from './ai/contentEngine'
+
 export const PLATFORM_STATS_COLLECTION = 'platform'
 export const PLATFORM_STATS_DOC = 'stats'
 /** Client-side freshness window: older than this and the fallback path is used. */
@@ -50,6 +52,12 @@ export interface PlatformStats {
   topColleges: PlatformTopCollege[]
   updatedAt: string
   source: 'scheduled'
+  /**
+   * AI content-cache counters (item 4.1), copied from platform/aiCacheStats.
+   * `hits` are generations that never happened — the number that justifies the
+   * cache — and `tokensServedFromCache` is the output tokens not billed.
+   */
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null
 }
 
 /** Pure mapping of a colleges-collection row into the dashboard's top-college strip. */
@@ -120,6 +128,22 @@ async function collectPlatformStats(): Promise<PlatformStats> {
     topColleges = rankTopColleges(all.docs.map((doc) => toTopCollege({ id: doc.id, ...doc.data() })))
   }
 
+  // Best-effort: a missing/failed counter read must not stop the dashboard.
+  let aiCache: PlatformStats['aiCache'] = null
+  try {
+    const cacheSnap = await db.doc(AI_CACHE_STATS_DOC_PATH).get()
+    if (cacheSnap.exists) {
+      const data = cacheSnap.data() || {}
+      aiCache = {
+        hits: Number(data.hits) || 0,
+        misses: Number(data.misses) || 0,
+        tokensServedFromCache: Number(data.tokensServedFromCache) || 0,
+      }
+    }
+  } catch (err) {
+    console.warn('[PlatformStats] AI cache counters unavailable:', (err as Error)?.message)
+  }
+
   return {
     totalColleges,
     activeColleges,
@@ -128,6 +152,7 @@ async function collectPlatformStats(): Promise<PlatformStats> {
     totalFaculty,
     totalAdmins,
     topColleges,
+    aiCache,
     updatedAt: new Date().toISOString(),
     source: 'scheduled',
   }

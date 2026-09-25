@@ -121,6 +121,23 @@ const SuperAdminDashboard: React.FC = () => {
           >
             {freshness.label}
           </span>
+          {/* Item 4.1: the cache is the mitigation for the 3.x price change, so
+              its effectiveness sits next to the data freshness — a row of hits
+              that stops growing is the signal that a key changed. */}
+          {data?.aiCache ? (
+            <span
+              className="text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+              data-testid="ai-cache-summary"
+              title={`${data.aiCache.tokensServedFromCache.toLocaleString('en-IN')} output tokens served from cache instead of being generated`}
+            >
+              {(() => {
+                const { hits, misses } = data.aiCache;
+                const total = hits + misses;
+                const pct = total > 0 ? Math.round((hits / total) * 100) : 0;
+                return `AI cache ${pct}% (${hits}/${total} reused)`;
+              })()}
+            </span>
+          ) : null}
           <button
             onClick={() => void refetch()}
             disabled={isFetching}
