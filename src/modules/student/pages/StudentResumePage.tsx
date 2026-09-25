@@ -55,7 +55,7 @@ function readDraft(key: string): { data: ResumeData; templateId: ResumeTemplateI
 }
 
 export default function StudentResumePage() {
-  const { profile, collegeId, studentId } = useStudentData()
+  const { profile, collegeId, studentId, loading: studentLoading } = useStudentData()
   const { showSuccess, showError, showInfo } = useNotification()
 
   const [me, setMe] = useState<ResumeMeResponse | null>(null)
@@ -103,9 +103,12 @@ export default function StudentResumePage() {
     }
   }, [collegeId, studentId, profile?.name, profile?.email, profile?.phone, profile?.course, profile?.branch, profile?.batch])
 
+  // Wait for the student record: the first visit is prefilled from it, and the
+  // layout does not block on the data provider (only on auth).
   useEffect(() => {
+    if (studentLoading) return
     void load()
-  }, [load])
+  }, [load, studentLoading])
 
   const enabled = !!me?.enabled
   const templates = me?.settings.templates ?? []
