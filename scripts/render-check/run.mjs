@@ -1614,6 +1614,65 @@ await section('seeder (wrong role)', SEED_DIALOG, { open: true, onClose: () => {
 });
 
 globalThis.__RC_ROLE = undefined;
+
+// ── Superadmin Access Control: the College box accepts the college code ──────
+// The reported bug: granting a role while typing the college's *code* (the
+// identifier the operator chose on Create College and sees on the Colleges
+// page) was refused as "college does not exist", because the box only
+// accepted the Firestore document id — a string that appears nowhere in the
+// product but the URL. The box now resolves code / name / id against the
+// loaded colleges and sends the id; functions/src/collegeResolve.ts applies
+// the same rules server-side for anything typed that is not in the list.
+const ACCESS_CONTROL = '/src/modules/superadmin/pages/AccessControl.tsx';
+const DEMO_COLLEGE_ID = 'k3Jd9sLp2QwErTyUiOp1';
+globalThis.__RC_FIRESTORE_DOCS = [
+  { id: DEMO_COLLEGE_ID, data: () => ({ name: 'Vriddhi Demo College', code: 'VDC-001', status: 'active' }) },
+  { id: 'aZ8bN2mQ7xC4vB1nM6kL', data: () => ({ name: 'Seshadripuram College', code: 'SPM', status: 'active' }) },
+];
+globalThis.__RC_CALLABLE_DATA = {
+  grantUserRole: {
+    success: true, authVerified: true, uid: 'uid-admin-1', email: 'admin@vdc.edu', role: 'admin',
+    collegeId: DEMO_COLLEGE_ID, collegeName: 'Vriddhi Demo College', collegeCode: 'VDC-001', created: false,
+  },
+};
+globalThis.__RC_CALLABLE_PAYLOADS = [];
+await section('access control (college code)', ACCESS_CONTROL, {}, async (t, view) => {
+  check('access control: mounts without throwing', true);
+  const collegeBox = view.el('input[role="combobox"]');
+  check('access control: the College box is a searchable picker', !!collegeBox, t.slice(0, 300));
+  if (!collegeBox) return;
+
+  await view.type(collegeBox, 'vdc-001');
+  check('access control: a typed college code (any case) resolves to the college and shows its id',
+    new RegExp(`Vriddhi Demo College \\(VDC-001\\) · id ${DEMO_COLLEGE_ID}`).test(view.text()), view.text().slice(0, 600));
+
+  await view.type(view.el('input[type="email"]'), 'admin@vdc.edu');
+  await view.click('button[type="submit"]');
+  const sent = (globalThis.__RC_CALLABLE_PAYLOADS ?? []).find((p) => p.name === 'grantUserRole')?.payload;
+  check('access control: the grant is sent with the resolved document id, not the code',
+    sent?.collegeId === DEMO_COLLEGE_ID && sent?.email === 'admin@vdc.edu', JSON.stringify(sent));
+  check('access control: the success message names the college the grant landed on',
+    /College: Vriddhi Demo College \(VDC-001\)/.test(view.text()), view.text().slice(0, 600));
+
+  // Something not in the loaded list is passed through (the server resolves
+  // or explains), and the helper says so instead of pretending it is invalid.
+  await view.type(collegeBox, 'SOME-OTHER');
+  check('access control: an unknown value is handed to the server rather than blocked',
+    /server will still match it by code, name or document id/.test(view.text()), view.text().slice(0, 600));
+});
+
+// The identifier the operator pastes may also be the document id itself.
+globalThis.__RC_CALLABLE_PAYLOADS = [];
+await section('access control (document id)', ACCESS_CONTROL, {}, async (t, view) => {
+  const collegeBox = view.el('input[role="combobox"]');
+  if (!collegeBox) { check('access control (id): College picker present', false, t.slice(0, 300)); return; }
+  await view.type(collegeBox, DEMO_COLLEGE_ID);
+  check('access control (id): a pasted document id resolves too',
+    /Vriddhi Demo College \(VDC-001\)/.test(view.text()), view.text().slice(0, 600));
+});
+
+globalThis.__RC_CALLABLE_DATA = undefined;
+globalThis.__RC_CALLABLE_PAYLOADS = [];
 globalThis.__RC_FIRESTORE_DOCS = [];
 
 globalThis.__RC_LOCATION_STATE = null;
