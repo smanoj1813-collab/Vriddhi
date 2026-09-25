@@ -1176,6 +1176,51 @@ await section('student challans (empty)', '/src/modules/student/pages/StudentCha
 });
 
 
+// ── Install page: one shared implementation behind three routes (item 4.5) ──
+// The three per-role copies were identical in layout and had already drifted in
+// copy and padding. These checks pin the shared page plus the fact that each
+// route still renders its own role's text — which is the whole point of the
+// consolidation: one file, three correct pages.
+const PWA_INSTALL = '/src/shared/pages/PWAInstallPage.tsx';
+await section('pwa install (student)', PWA_INSTALL, { role: 'student' }, (t) => {
+  check('pwa install (student): mounts without throwing', true);
+  check('pwa install (student): heading and student subtitle',
+    /Install Vriddhi App/.test(t) && /hall ticket, room allotment, fee last date, results alerts/.test(t), t);
+  check('pwa install (student): the student highlight list, not the faculty one',
+    /Why install over Uniclare/.test(t) && !/Offline attendance marking/.test(t), t);
+  check('pwa install (student): no admin comparison matrix', !/Uniclare Had/.test(t), t);
+  check('pwa install (student): the offline matrix is shared', /What Works Offline/.test(t) && /Faculty Offline/.test(t), t);
+  check('pwa install (student): notification guidance is present for every role',
+    /Turn on notifications/.test(t), t);
+});
+
+await section('pwa install (faculty)', PWA_INSTALL, { role: 'faculty' }, (t) => {
+  check('pwa install (faculty): mounts without throwing', true);
+  check('pwa install (faculty): heading and faculty subtitle',
+    /Install Vriddhi App/.test(t) && /mark attendance offline, question bank, auto-grading/.test(t), t);
+  check('pwa install (faculty): the faculty highlight list', /Faculty Benefits/.test(t) && /Question bank & paper generator/.test(t), t);
+  check('pwa install (faculty): no admin comparison matrix', !/Uniclare Had/.test(t), t);
+});
+
+await section('pwa install (admin)', PWA_INSTALL, { role: 'admin' }, (t) => {
+  check('pwa install (admin): mounts without throwing', true);
+  check('pwa install (admin): keeps the Uniclare comparison it always showed',
+    /Uniclare Had/.test(t) && /Vriddhi PWA Has \+ More/.test(t), t);
+  check('pwa install (admin): keeps the admin offline column', /Admin Offline/.test(t) && /BCU compliance dashboard/.test(t), t);
+});
+
+// The three route wrappers must still render their own role.
+for (const [label, file, expect] of [
+  ['admin', '/src/modules/admin/pages/PWAInstallPage.tsx', /Uniclare Had/],
+  ['faculty', '/src/modules/faculty/pages/PWAInstallPage.tsx', /Faculty Benefits/],
+  ['student', '/src/modules/student/pages/PWAInstallPage.tsx', /Why install over Uniclare/],
+]) {
+  await section(`pwa install route (${label})`, file, {}, (t) => {
+    check(`pwa install route (${label}): mounts without throwing`, true);
+    check(`pwa install route (${label}): renders the ${label} copy`, expect.test(t), t);
+  });
+}
+
 // ── Phone shell (installed PWA) ────────────────────────────────────────────
 // The bottom bar and the "More" sheet are what replaced the desktop drawer on
 // a phone, so they have to render on their own — and the two of them together
