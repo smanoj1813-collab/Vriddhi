@@ -153,6 +153,8 @@ export type PrepPaperSeedQuestion = string | { label?: string; text: string; mar
 
 export interface PrepPaperSeedSection {
   id: string
+  /** Heading as printed ('Part A', 'Section I'); defaults to 'Section <id>'. */
+  title?: string
   instruction: string
   /** Questions to attempt; 0 = all compulsory. */
   answer: number
@@ -240,7 +242,9 @@ export function expandPrepPaperSeed(seed: PrepPaperSeed): PrepPaper {
     const attempted = answerCount > 0 ? answerCount : questions.length
     return {
       id: String(s.id).trim(),
-      title: /^[A-Za-z]$/.test(String(s.id).trim()) ? `Section ${String(s.id).trim().toUpperCase()}` : `Section ${String(s.id).trim()}`,
+      title:
+        (s.title && s.title.trim()) ||
+        (/^[A-Za-z]$/.test(String(s.id).trim()) ? `Section ${String(s.id).trim().toUpperCase()}` : `Section ${String(s.id).trim()}`),
       instruction: s.instruction,
       answerCount,
       marksEach,
