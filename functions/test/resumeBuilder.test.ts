@@ -285,7 +285,8 @@ test('preview mode is watermarked, links Google Fonts and draws A4 page guides; 
 test('fonts: only the faces a template needs are shipped', () => {
   const sansOnly = inlineFontCss(['inter'])
   assert.ok(sansOnly.includes("font-family:'Inter'") && !sansOnly.includes('Source Serif'))
-  assert.equal((sansOnly.match(/@font-face/g) || []).length, 3, '400/600/700')
+  assert.equal((sansOnly.match(/@font-face/g) || []).length, 6, '400/600/700 × latin + latin-ext')
+  assert.ok(sansOnly.includes('U+20AD-20C0'), 'latin-ext range covers the rupee sign')
   assert.equal(linkedFontHtml([]), '')
   assert.ok(linkedFontHtml(['source-serif-4']).includes('Source+Serif+4') && !linkedFontHtml(['source-serif-4']).includes('Inter'))
 })

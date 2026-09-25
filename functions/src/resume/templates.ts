@@ -254,6 +254,19 @@ function fontFaces(template: ResumeTemplateMeta): ResumeFontFace[] {
   return ['inter', 'source-serif-4']
 }
 
+// The preview iframe is rarely 210 mm wide (≈794 px). Rather than reflowing
+// the text (which would hide the real line breaks) the whole page is zoomed
+// in steps so it always fits the frame it is in — phone, tablet or the
+// desktop split view — while staying WYSIWYG.
+const PREVIEW_ZOOM_CSS =
+  '@media (max-width:820px){.page{zoom:.9}}' +
+  '@media (max-width:720px){.page{zoom:.8}}' +
+  '@media (max-width:640px){.page{zoom:.7}}' +
+  '@media (max-width:560px){.page{zoom:.6}}' +
+  '@media (max-width:480px){.page{zoom:.52}}' +
+  '@media (max-width:420px){.page{zoom:.46}}' +
+  '@media (max-width:370px){.page{zoom:.41}}'
+
 function baseCss(template: ResumeTemplateMeta, mode: ResumeRenderMode): string {
   const family = template.family === 'serif' ? SERIF : SANS
   const pagePadding = mode === 'preview' ? `${template.marginMm}mm` : '0'
@@ -289,14 +302,14 @@ li{margin:1.5pt 0}
 .skills p{margin:1.5pt 0}
 .skills b{font-weight:600}
 .inline-list{margin:0}
-${mode === 'preview' ? '@media (max-width:820px){.page{zoom:.62}}@media (max-width:480px){.page{zoom:.46}}' : ''}
+${mode === 'preview' ? PREVIEW_ZOOM_CSS : ''}
 `
 }
 
 const TEMPLATE_CSS: Record<ResumeTemplateId, string> = {
   classic: `
 .hd{text-align:center;padding-bottom:6pt;border-bottom:1.5px solid #111827}
-h1{font-size:22pt;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+h1{font-size:22pt;letter-spacing:.04em;font-weight:600}
 .headline{font-weight:600}
 h2{border-bottom:1px solid #111827;padding-bottom:2pt;letter-spacing:.12em;font-weight:600}
 .row .title{font-weight:700}
@@ -339,6 +352,7 @@ h2{font-family:${SERIF};font-size:12pt;font-weight:600;letter-spacing:.14em;colo
 const WATERMARK_CSS = `
 .wm{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
 .wm span{position:absolute;font-family:${SANS};font-size:40pt;font-weight:800;letter-spacing:.2em;color:rgba(15,118,110,.09);transform:rotate(-30deg);white-space:nowrap;user-select:none}
+@media (max-width:600px){.wm span{font-size:22pt;letter-spacing:.12em}}
 `
 
 function watermarkHtml(): string {
