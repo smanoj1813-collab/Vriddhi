@@ -90,7 +90,12 @@ indexes are needed (queries use equality filters only and sort in memory).
   on hang). Budget per PDF ≈ 3–6 s cold, ~1.5 s warm. If volume grows beyond ~10 concurrent
   renders, move the router to its own `onRequest` with `concurrency: 1`, `maxInstances: 20`
   (see costing §6).
+* **Rate limits:** `/resume/me` and `/resume/preview` are exempt from the per-IP general limiter
+  (a lab shares one IP) and instead get a per-user budget of 90 requests/min
+  (`resumeEditorLimiter`); `/resume/pdf` allows 6 renders/min per user (`resumePdfLimiter`) on
+  top of the yearly credits.
 * **Fonts:** `@fontsource/inter` and `@fontsource/source-serif-4` are functions dependencies;
+  latin + latin-ext subsets are embedded (latin-ext carries ₹ and accented letters);
   the print HTML embeds the woff2 files as base64 so output is identical on any machine. The
   preview links the same families from Google Fonts. Missing font files degrade to
   Arial/Georgia — text is still text.

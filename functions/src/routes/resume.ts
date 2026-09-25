@@ -33,6 +33,7 @@ import * as admin from 'firebase-admin'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
+import { resumeEditorLimiter, resumePdfLimiter } from '../middleware/rateLimit'
 import { renderPdfToBuffer, pdfErrorResponse } from '../utils/pdfRenderer'
 import { geminiClient } from '../config/aiProviders'
 import {
@@ -197,7 +198,7 @@ async function listOwnDownloads(uid: string) {
 
 // ─── Student: state ─────────────────────────────────────────────────────────
 
-router.get('/me', requireRole(...STUDENT_ROLES), async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const ctx = studentContext(req, res)
   if (!ctx) return
   try {
@@ -229,7 +230,7 @@ router.get('/me', requireRole(...STUDENT_ROLES), async (req: AuthenticatedReques
   }
 })
 
-router.put('/me', requireRole(...STUDENT_ROLES), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/me', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const ctx = studentContext(req, res)
   if (!ctx) return
   const templateId = parseTemplateId(req.body?.templateId, res)
@@ -265,7 +266,7 @@ router.put('/me', requireRole(...STUDENT_ROLES), async (req: AuthenticatedReques
 
 // ─── Student: preview (free) ────────────────────────────────────────────────
 
-router.post('/preview', requireRole(...STUDENT_ROLES), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/preview', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const ctx = studentContext(req, res)
   if (!ctx) return
   const templateId = parseTemplateId(req.body?.templateId, res)
@@ -296,7 +297,7 @@ class CreditsExhaustedError extends Error {
   }
 }
 
-router.post('/pdf', requireRole(...STUDENT_ROLES), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const ctx = studentContext(req, res)
   if (!ctx) return
   const templateId = parseTemplateId(req.body?.templateId, res)

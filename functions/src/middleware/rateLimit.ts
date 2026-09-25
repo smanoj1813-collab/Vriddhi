@@ -18,12 +18,46 @@ export const aiGenerationLimiter = rateLimit({
   },
 });
 
+// Paths that carry their own per-USER budget (below). The general limiter is
+// per IP, and a computer lab or hostel shares one public IP: thirty students
+// editing resumes at once (autosave + live preview on every pause) would trip
+// a 100/min IP budget within a minute for the whole room.
+const PER_USER_BUDGET_PATHS = /^\/(?:api\/)?resume\/(?:me|preview)\/?$/;
+
 export const generalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 100,
   message: {
     error: 'Too many requests. Please slow down.',
   },
+  skip: (req: any) => PER_USER_BUDGET_PATHS.test(req.path || ''),
+});
+
+/**
+ * Resume Builder editor traffic (autosave + preview): per signed-in user, so a
+ * shared IP never starves anyone. Mounted after verifyAuth so req.user exists.
+ */
+export const resumeEditorLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 90,
+  message: { error: 'You are editing faster than we can save. Pause a moment and continue.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: any) => req.user?.uid || req.ip || 'unknown',
+});
+
+/**
+ * Resume PDF renders launch Chrome (≈1 vCPU-second each). Credits already cap
+ * the yearly volume; this only stops a stuck client from hammering the
+ * renderer in a tight loop.
+ */
+export const resumePdfLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 6,
+  message: { error: 'Too many PDF requests in a minute. Wait a moment and try again — no credit was used.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: any) => req.user?.uid || req.ip || 'unknown',
 });
 /**
  * Public Google Form intake. Unauthenticated by design, so it gets a far
