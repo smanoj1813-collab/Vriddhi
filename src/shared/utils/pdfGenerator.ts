@@ -6,8 +6,7 @@
 // is not selectable and pagination is approximate — good enough to never leave
 // a teacher without a printable paper.
 
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
+import { loadPdfLibs } from './pdfRuntime'
 
 // Self-contained interface — decoupled from question bank Paper type
 export interface PaperPDF {
@@ -68,6 +67,10 @@ export async function downloadElementAsPDF(
     console.error(`[PDF] Element #${elementId} not found`)
     return
   }
+
+  // Loaded here — inside the click — so the ~580 kB PDF chunk never sits in the
+  // first page load of a user who only browses.
+  const { jsPDF, html2canvas } = await loadPdfLibs()
 
   const canvas = await html2canvas(element, {
     scale: options.scale || 2,

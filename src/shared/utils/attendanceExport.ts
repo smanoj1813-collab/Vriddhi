@@ -12,7 +12,7 @@
 // the DOM.
 
 import * as XLSX from '@e965/xlsx';
-import { jsPDF } from 'jspdf';
+import { loadPdfLibs } from './pdfRuntime';
 
 import {
   STAFF_STATUS_LABEL,
@@ -103,8 +103,12 @@ const PAGE_MARGIN = 28;
  * jsPDF has no autotable plugin in this project, so the table is laid out by
  * hand: fixed-weight columns, text clipped to the column, header repeated on
  * every page. It is plain but it prints, which is the point of a register.
+ *
+ * Async because jspdf is ~580 kB and is only fetched when someone actually
+ * exports a PDF (see `src/shared/utils/pdfRuntime.ts`) — never on page load.
  */
-export function toPdfBlob(options: PdfReportOptions): Blob {
+export async function toPdfBlob(options: PdfReportOptions): Promise<Blob> {
+  const { jsPDF } = await loadPdfLibs();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -215,19 +219,19 @@ export function exportFilename(prefix: string, range: AttendanceRange, format: E
   return `${safePrefix}_${stamp}.${ext}`;
 }
 
-export function downloadAttendanceReport(
+export async function downloadAttendanceReport(
   format: ExportFormat,
   filenamePrefix: string,
   range: AttendanceRange,
   report: { title: string; subtitle?: string; collegeName?: string; sheets: ExportSheet[]; columnWeights?: number[][] },
-): string {
+): Promise<string> {
   const filename = exportFilename(filenamePrefix, range, format);
   const blob =
     format === 'csv'
       ? toCsvBlob(report.sheets[0] ?? { name: 'Report', headers: [], rows: [] })
       : format === 'excel'
         ? toXlsxBlob(report.sheets)
-        : toPdfBlob(report);
+        : await toPdfBlob(report);
   triggerDownload(blob, filename);
   return filename;
 }

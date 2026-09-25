@@ -444,3 +444,140 @@ Only functions changed — no rules, no indexes, no hosting.
 6. Next morning: Firestore → `platform` → `aiModelCanary` exists with `degradedTiers: []`.
 
 **Rollback:** set the env var (or none — the code falls back inside the tier) and redeploy functions. No data migration, no schema change.
+
+---
+
+# 11. What shipped after §10 (session of 26 Sep 2026)
+
+Six more plan items are implemented on the branch `arena/01a0d9ad-vriddhi`. §10 still
+stands as written; nothing below changes it. Numbers in the push-preview "before/after"
+tables are unchanged — these items make the operating cost land closer to the lower line
+by removing work, not by moving it.
+
+| Item | What it does | Where |
+| --- | --- | --- |
+| 2.4 | 15-minute `refreshPlatformStats` job writes one `platform/stats` doc (reads, storage, AI, and the AI-cache hit rate folded in from 4.1). One doc read instead of aggregate queries. | `functions/src/platformStats.ts` |
+| 4.1 | Content cache in front of the generative routes (prep drafts, question sets, study packs, resume AI). Key = sha256 of kind + content key + model + prompt version; hit rate visible; cache failures never fail a request; **AI content is never readable by a browser** (rules deny the collection). | `functions/src/ai/contentEngine.ts` |
+| 3.4 / 3.5 | Model answers for past papers behind an explicit review step, and MCQ sets generated from them. A published answer is the only one students see, and the review screen is the only way to publish. | `functions/src/prepModelAnswers.ts`, `routes/prep.ts` |
+| 4.4 | PDF rendering moved off the main API function onto its own (`pdf`, 2 GiB, asia-south1). Papers, question banks and resumes all render there through one client helper. | `functions/src/routes/pdf.ts`, `src/shared/api/apiBase.ts` |
+| 4.5 | One install page implementation behind the three role routes. | `src/shared/pages/PWAInstallPage.tsx` |
+| 4.2 | Placement Pack: cover letter, LinkedIn About and interview prep for a real posting, plus a readiness column for the placement cell. | `docs/RESUME_BUILDER.md` §6b |
+
+**Gates at hand-off:** functions 995/995, root 479/479, render check 382/382, `tsc` clean
+(root and `functions/`), production build clean.
+
+## 11.1 Your action list (all six, in order)
+
+1. **D1 is still the only decision blocking the biggest saving** — pick the fast tier:
+   `gemini-2.5-flash-lite` (₹ cheaper today, retired by ~20 Oct 2026) or
+   `gemini-3.1-flash-lite` (available now, ₹0.25/₹1.50 per M). Until you pick one, the
+   code ships with both in the list and 2.5 first. One env var, no code change:
+   `GEMINI_MODEL_FAST` on the functions (`docs/HANDOFF_OPTIMISATION_2026-09-25.md` §D1).
+2. **Deploy order matters for 4.4.** The `pdf` function is new, so it must exist before
+   the web app points at it:
+   ```powershell
+   firebase deploy --only functions,pdf --project vriddhi-academic   # or --only functions
+   ```
+   `--only functions` deploys every function in the codebase including `pdf`. Confirm the
+   `pdf` function's URL appears, then deploy hosting. If the URL is not live, the client
+   falls back to the `api` host for downloads (old path stays alive one release).
+3. **Rules must ship with 4.1 / 3.4 / 3.5** — `aiContentCache`, `prep_paper_answers` and
+   `prep_mcq_sets` are in `current-firestore.rules` already; deploy
+   `firestore:rules` in the same release as the functions. Students must never read the
+   cache or an unpublished answer.
+4. **Announce the attendance % definition (D4)** before the next publish: it is now
+   present + on-duty + late over total. One line to students and one to faculty.
+5. **D5 orphan cleanup** — 14 unused collections, zero references. Export them, wait the
+   30 days with no traffic, then delete.
+6. **D6 is not a task, it is the contract** — the ₹36,853 read figure must be verified
+   against the spreadsheet before anyone calls the read saving real.
+7. **Smoke test for the new surfaces (10 minutes):**
+   - Student → Resume Builder → *Placement Pack* → paste a posting → the letter lands in
+     the editable box (nothing is written into the resume), the AI counter drops by one,
+     Copy works.
+   - Admin → Placement cell (or `GET /resume/admin/placement-stats?format=csv`) → rows
+     with readiness bands and a working CSV download.
+   - Student/faculty → Study material → generate the SAME topic twice: the second call
+     returns `source: "cache"` in the response and reaches no model.
+   - Prep Studio → review one model answer → publish → the student's paper view shows it
+     with the "AI-generated, reviewed" label.
+   - Download a paper PDF and a resume PDF: both must be served by the `pdf` function
+     host, not `api`.
+   - Student → PWA install page → copy says "student"; admin → admin copy.
+
+## 11.2 What is deliberately left
+
+* **2.3 (dead-path removal)** stays an operator job: the 14 names are listed in
+  `docs/HANDOFF_OPTIMISATION_2026-09-25.md` and none of them is referenced by code. Deleting
+  them is a console action after the D5 waiting period, not a code change.
+* **4.3 (one lazy PDF entry point)** — the remaining work is listed in §12 below.
+* Nothing in this release auto-publishes anything a student reads. Drafts stay drafts until
+  a human reviews them; the review screen is the only publish path.
+
+---
+
+# 12. Item 4.3 — the PDF stack, and what is left of it
+
+The plan's 4.3 wanted one PDF stack, server-rendered text PDFs, and the removal of
+`jspdf` + `html2canvas` from the client. Here is exactly where that stands, because part of
+it is finished and part of it is a decision for you.
+
+## 12.1 Done — the libraries are no longer on the first-page path
+
+`jspdf` + `html2canvas` are 584 kB. They used to be preloaded by `index.html` for **every**
+visitor, including the ones who never download anything: one stray `import jsPDF from 'jspdf'`
+was enough to put the chunk in the entry graph, and Vite helpfully added a
+`<link rel="modulepreload">` for it.
+
+* `src/shared/utils/pdfRuntime.ts` is now the **only** module that loads them
+  (`loadPdfLibs()`), and it does so with a dynamic `import()` inside the click that needs a
+  PDF. A failed load is deliberately not cached, so a flaky connection retries instead of
+  failing for the rest of the session; `preloadPdfLibs()` exists for hover-warming a page
+  whose primary action is an export.
+* Every consumer goes through it: `pdfGenerator` (paper/question previews),
+  `attendanceExport`, `financePdf` (payslips, receipts, guest bills, salary certificates),
+  `labelsPdf` (library/asset barcode sheets), `reportPdf` (library, inventory, finance
+  reports) and `noDuesApi` (no-dues certificate). `downloadAttendanceReport` became async
+  because of it — its three call sites await inside their existing try/catch.
+* `vite.config.ts` filters the chunk out of `modulePreload` (`resolveDependencies`) — without
+  it Vite still emitted a preload link for it and the saving would have been zero.
+* `src/shared/utils/pdfRuntime.test.ts` (6 tests, in `test:unit`) covers the caching and
+  retry contract **and** greps the source tree so no future file can reintroduce a static
+  import — a bundle mistake is invisible in review, so it is a test instead.
+
+Verified by the build, not by reasoning: before, `dist/index.html` contained
+`<link rel="modulepreload" href="/assets/pdf-….js">` and the entry chunk imported it; after,
+the reference count is 0 and the chunk is reached only by `import("./pdf-….js")` at the
+moment of use. The service worker still precaches the chunk in the background
+(`globPatterns: **/*.js`) so offline exports keep working — that download is off the
+critical path and does not block first paint. If you would rather never fetch it at all,
+exclude `pdf-*.js` from the precache and accept that the first export needs the network.
+
+## 12.2 Not done — moving each document to a server-rendered text PDF
+
+The plan named `functions/src/utils/pdfRenderer.ts` as the template for the remaining
+documents. Two facts decide how this should be finished, and they are yours to weigh:
+
+1. **The renderer launches Chrome** (that is why 4.4 gave the `pdf` function 2 GiB and a
+   120-second timeout). A payslip or a barcode label sheet that today renders in ~200 ms in
+   the browser would come back in seconds, and every export would hold a Chrome instance.
+   Cheap in money, visible in latency, and it needs the network.
+2. **Each document is a hand-laid-out drawing** (`labelsPdf` draws Code 39 bars, `reportPdf`
+   lays out letterhead tables, `financePdf` draws payslip columns). Re-drawing them in
+   server HTML is a rewrite per document with a parity risk that only your eyes can settle —
+   the plan's own condition is "keep the client path as fallback until parity is verified per
+   document".
+
+Recommendation, in this order:
+
+| Order | Document | Why first |
+| --- | --- | --- |
+| 1 | Attendance register export (`attendanceExport`) | Widest use, plain table, and the sheet is already a plain data model — the HTML template is mechanical |
+| 2 | Finance reports + payslips (`reportPdf`, `financePdf`) | Needed for archives that must be reproducible years later; low volume |
+| 3 | Barcode label sheets (`labelsPdf`) | Highest drawing risk; client rendering is genuinely better here |
+| 4 | No-dues certificate (`noDuesApi`) | Signable document; server side is where signatures should live |
+
+Getting to 4.3's "delete `jspdf` from the client" finish line means doing 1–4 with a
+side-by-side comparison each time. Say the word and I will start with the attendance
+register: server route on the `pdf` function, client falls back to today's path until you
+have compared both outputs on one real sheet.

@@ -163,6 +163,13 @@ export default defineConfig(({ mode }) => {
       sourcemap: mode === 'development',
       chunkSizeWarningLimit: 500,
       minify: 'esbuild',
+      // Never preload the PDF chunk (jspdf + html2canvas, ~590 kB). It is reached
+      // only through `src/shared/utils/pdfRuntime.ts` at the moment a user asks
+      // for a PDF; without this filter Vite still emits a <link rel=modulepreload>
+      // for it and every visitor downloads the libraries for nothing.
+      modulePreload: {
+        resolveDependencies: (_filename, deps) => deps.filter((dep) => !/(^|\/)pdf-[\w-]+\.js$/.test(dep)),
+      },
       rollupOptions: {
         output: {
           manualChunks: {

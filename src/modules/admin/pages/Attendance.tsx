@@ -170,7 +170,7 @@ export default function Attendance() {
 
       const branchPart = branch !== 'all' ? `_${branch}` : '';
       const batchPart = batch !== 'all' ? `_${batch}` : '';
-      downloadAttendanceReport(format, `student_attendance${branchPart}${batchPart}`, downloadRange, report);
+      await downloadAttendanceReport(format, `student_attendance${branchPart}${batchPart}`, downloadRange, report);
     } catch (err) {
       console.error('[Attendance] download failed', err);
       setExportError(err instanceof Error ? err.message : 'Download failed.');
