@@ -5,7 +5,7 @@
 // student may do (add-on enabled? template on? credits left?). Nothing about
 // credits is computed here — the page only displays what the server reports.
 
-import { apiUrl, ApiResponseError, assertJsonResponse, HOSTING_REWRITE_HINT, isHtmlContentType } from '../api/apiBase'
+import { apiUrl, pdfUrl, ApiResponseError, assertJsonResponse, HOSTING_REWRITE_HINT, isHtmlContentType } from '../api/apiBase'
 import type {
   ResumeAdminSettingsResponse,
   ResumeData,
@@ -27,12 +27,20 @@ async function getBearerToken(): Promise<string | null> {
   return stored || null
 }
 
-async function authedRequest(endpoint: string, init: RequestInit = {}): Promise<Response> {
+/**
+ * `service` selects which function the request goes to: `api` (default) or
+ * `pdf` (item 4.4 — the Chrome-launching routes).
+ */
+async function authedRequest(
+  endpoint: string,
+  init: RequestInit = {},
+  service: 'api' | 'pdf' = 'api',
+): Promise<Response> {
   const token = await getBearerToken()
   const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) }
   if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
   if (token) headers.Authorization = `Bearer ${token}`
-  return fetch(apiUrl(endpoint), { ...init, headers })
+  return fetch(service === 'pdf' ? pdfUrl(endpoint) : apiUrl(endpoint), { ...init, headers })
 }
 
 async function authedJson<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
@@ -127,9 +135,12 @@ export async function generateResumePdf(
   data: ResumeData,
   collegeId?: string,
 ): Promise<ResumePdfResult> {
+  // Item 4.4: the resume renderer launches Chrome too, so it lives in the `pdf`
+  // function. The route is still mounted on `api` for one release, so a client
+  // that has not picked up this build keeps working.
   const endpoint = '/resume/pdf'
-  const response = await authedRequest(endpoint, { method: 'POST', body: JSON.stringify({ templateId, data, collegeId }) })
-  return readPdfOrThrow(response, apiUrl(endpoint), 'Resume.pdf')
+  const response = await authedRequest(endpoint, { method: 'POST', body: JSON.stringify({ templateId, data, collegeId }) }, 'pdf')
+  return readPdfOrThrow(response, pdfUrl(endpoint), 'Resume.pdf')
 }
 
 /** Free: streams an already generated PDF. */

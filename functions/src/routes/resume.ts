@@ -298,7 +298,8 @@ class CreditsExhaustedError extends Error {
   }
 }
 
-router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, async (req: AuthenticatedRequest, res: Response) => {
+// Item 4.4: exported so the `pdf` function mounts the same handler (routes/pdf.ts).
+export const resumePdfHandler = async (req: AuthenticatedRequest, res: Response) => {
   const ctx = studentContext(req, res)
   if (!ctx) return
   const templateId = parseTemplateId(req.body?.templateId, res)
@@ -445,20 +446,9 @@ router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, async (req:
           : `${body.message} Your download credit has NOT been used.`,
     })
   }
-})
+}
 
-// ─── Student: history + free re-download ────────────────────────────────────
-
-router.get('/downloads', requireRole(...STUDENT_ROLES), async (req: AuthenticatedRequest, res: Response) => {
-  const ctx = studentContext(req, res)
-  if (!ctx) return
-  try {
-    res.json({ downloads: await listOwnDownloads(ctx.uid) })
-  } catch (err) {
-    console.error('[resume/downloads]', err)
-    res.status(500).json({ error: 'resume_downloads_failed' })
-  }
-})
+router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, resumePdfHandler)
 
 router.get('/downloads/:id/file', requireRole(...STUDENT_ROLES, ...STAFF_VIEW_ROLES), async (req: AuthenticatedRequest, res: Response) => {
   const uid = req.user?.uid

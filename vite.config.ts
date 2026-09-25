@@ -122,6 +122,11 @@ export default defineConfig(({ mode }) => {
   const projectId = env.VITE_FIREBASE_PROJECT_ID || 'vriddhi-academic'
   const apiProxyTarget =
     env.VITE_DEV_API_PROXY_TARGET || `http://localhost:5001/${projectId}/asia-south1/api`
+  // Item 4.4: the Chrome-launching PDF routes now live in their own function.
+  // Same idea as the /api proxy above — the browser calls same-origin `/pdf/*`
+  // and the dev server forwards to the emulator's `pdf` function.
+  const pdfProxyTarget =
+    env.VITE_DEV_PDF_PROXY_TARGET || `http://localhost:5001/${projectId}/asia-south1/pdf`
 
   return {
     plugins,
@@ -140,6 +145,11 @@ export default defineConfig(({ mode }) => {
           // `/api` prefix: `/api/ai/chat` → `<target>/ai/chat`, which is exactly
           // what the deployed function receives in production.
           rewrite: (p) => p.replace(/^\/api/, ''),
+        },
+        '/pdf': {
+          target: pdfProxyTarget,
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/pdf/, ''),
         },
       },
     },

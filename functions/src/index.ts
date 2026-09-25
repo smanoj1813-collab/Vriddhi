@@ -220,18 +220,26 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // FIX: Removed secrets array to avoid overlap error "Secret env var overlaps non-secret env var"
 // GEMINI_API_KEY etc should be set via regular env vars (.env file) or Firebase env config
 // If you want to use Secret Manager, set them ONLY as secrets and remove from .env
-// Memory: the PDF routes launch headless Chrome (utils/pdfRenderer.ts); 512MiB
-// was routinely OOM-killed mid-render, so this function gets 2GiB.
+// Item 4.4: back to 512MiB. The three routes that launch headless Chrome now
+// live in their own `pdf` function (routes/pdf.ts, re-exported below), so
+// ordinary API traffic no longer pays for a Chrome-sized instance. The PDF
+// routes stay mounted HERE for one release as well: an older deployed bundle
+// still calls <api>/papers/:id/pdf, and that must keep working until the next
+// release removes the old mounts.
 export const api = onRequest(
   {
     region: 'asia-south1',
-    memory: '2GiB',
+    memory: '512MiB',
     timeoutSeconds: 60,
     minInstances: 0,
     maxInstances: 10,
   },
   app
 )
+
+// The Chrome-sized half of the API (item 4.4). See routes/pdf.ts for the mount
+// contract and the one-release overlap with `api`.
+export { pdf } from './routes/pdf'
 
 // ═══════ Callable functions exports ═══════
 export {

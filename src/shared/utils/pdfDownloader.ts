@@ -14,7 +14,7 @@
 // All six export buttons in the app go through `downloadPaperPDF` /
 // `downloadQuestionsPDF`, so the fallback lives in exactly one place.
 
-import { apiUrl, ApiResponseError, HOSTING_REWRITE_HINT, isHtmlContentType } from '../api/apiBase'
+import { pdfUrl, ApiResponseError, HOSTING_REWRITE_HINT, isHtmlContentType } from '../api/apiBase'
 import type { PaperPDF, QuestionPDF } from './pdfGenerator'
 
 export type { PaperPDF, QuestionPDF } from './pdfGenerator'
@@ -122,7 +122,7 @@ export async function downloadPaperPDF(
   options: { paper?: PaperPDF; collegeName?: string } = {},
 ): Promise<PdfDownloadResult> {
   const token = await getToken()
-  const url = apiUrl(`/papers/${encodeURIComponent(paperId)}/pdf`)
+  const url = pdfUrl(`/papers/${encodeURIComponent(paperId)}/pdf`)
   const safeName = filename || 'question_paper'
 
   const outcome = await fetchServerPdf(url, {
@@ -164,7 +164,7 @@ export async function downloadQuestionsPDF(
   options: { questions?: QuestionPDF[] } = {},
 ): Promise<PdfDownloadResult> {
   const token = await getToken()
-  const url = apiUrl('/questions/export/pdf')
+  const url = pdfUrl('/questions/export/pdf')
   const safeName = filename || 'questions'
 
   const outcome = await fetchServerPdf(url, {
