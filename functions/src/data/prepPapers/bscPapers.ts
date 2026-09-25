@@ -240,4 +240,113 @@ export const BSC_PAPERS: PrepPaperSeed[] = [
     prepSubjectId: 'bsc-karnataka-probability',
     source: { title: 'B.Sc II Semester — all papers, May 2024 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2024/08/agnes-bsc-II-semester-all-paper-may-2024-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University.' },
   },
+  // ── St Agnes College (Autonomous), Mangaluru · V Semester B.Sc. · October 2025 ─
+  {
+    id: 'stagnes-mu-bsc-5-physics-classical-and-quantum-mechanics-2025-10',
+    program: 'bsc',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 5,
+    subject: 'Physics: Classical Mechanics and Quantum Mechanics',
+    subjectArea: 'Physics',
+    paperCode: '21PHYC501',
+    examMonth: 'October',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', title: 'Part A', instruction: 'Answer any five questions, selecting a minimum of one question from every unit. Each question carries 9 marks (2 + 7).', answer: 5, marksEach: 9,
+        questions: [
+          { text: 'Unit I — answer both parts.', parts: ['(a) State the principle of virtual work.', "(b) Derive the equation of motion for a simple pendulum using Lagrange's equation of motion."] },
+          { text: 'Unit I — answer both parts.', parts: ["(a) Define Newton's second law of motion.", '(b) What is a constraint? Explain the types of constraints in detail.'] },
+          { text: 'Unit II — answer both parts.', parts: ['(a) Define variational principle.', "(b) Derive Lagrange's equation from Hamilton's principle."] },
+          { text: 'Unit II — answer both parts.', parts: ["(a) Write the mathematical form of Hamilton's principle.", "(b) Prove that Poisson's bracket obeys the commutative and distributive laws."] },
+          { text: 'Unit III — answer both parts.', parts: ['(a) Derive the relation between uncertainties in angular displacement and angular momentum.', "(b) State Heisenberg's uncertainty principle and explain in detail the gamma-ray microscope."] },
+          { text: 'Unit III — answer both parts.', parts: ['(a) Distinguish between matter waves and electromagnetic waves.', '(b) Describe, with the necessary theory, the Davisson and Germer experiment for establishing the wave nature of the electron.'] },
+          { text: 'Unit IV — answer both parts.', parts: ['(a) Show that the de Broglie wavelength of a particle in a one-dimensional box in the first excited state is equal to the length of the box.', '(b) What is a wave function? Why should it be in complex form?'] },
+          { text: 'Unit IV — answer both parts.', parts: ['(a) Show that the probability curves for a linear harmonic oscillator for higher quantum numbers approximate the classical values.', '(b) What are expectation value, eigenvalue and eigenfunction? Explain their significance.'] },
+        ],
+      },
+      {
+        id: 'B', title: 'Part B', instruction: 'Answer any three questions. Each question carries 5 marks.', answer: 3, marksEach: 5,
+        questions: [
+          'A block is pulled 5 m along a horizontal surface by a 10 N force acting at 30° to the horizontal. Calculate the work done by the force.',
+          'F = x²p, G = x, where x and p are canonical coordinates and momenta. Find the Poisson bracket [F, G].',
+          'A marble of mass 1 × 10⁻³ kg is constrained to roll inside a tube of length L = 10⁻² m. The tube is capped at both ends. Modelling this as a one-dimensional infinite square well, determine the value of the quantum number n if the marble is initially given an energy of 1 × 10⁻³ J. Calculate the excitation energy required to promote the marble to the next available energy state.',
+          'Think of the nucleus as a box with a size of 10⁻¹⁴ m across. Compute the energy of a neutron confined to the nucleus for the ground state and the first, second and third excited states. Comment on the results. Mass of the neutron is 1.67 × 10⁻²⁷ kg.',
+        ],
+      },
+    ],
+    prepSubjectId: 'bsc-karnataka-mechanics',
+    source: { title: 'B.Sc V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-bsc-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University.' },
+  },
+  // ── St Agnes College (Autonomous), Mangaluru · IV Semester B.Sc. · May 2025 ─
+  {
+    id: 'stagnes-mu-bsc-4-mathematics-pde-and-integral-transforms-2025-05',
+    program: 'bsc',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 4,
+    subject: 'Mathematics: Partial Differential Equations and Integral Transforms',
+    subjectArea: 'Mathematics',
+    paperCode: '21MATC401',
+    examMonth: 'May',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', title: 'Part A', instruction: 'Answer any 6 questions. Each question carries 2 marks.', answer: 6, marksEach: 2, subLabels: true,
+        questions: [
+          'Eliminate a and b from the following relation to form a partial differential equation: z = ax + by + a.',
+          'Solve: z = px + qy + p² + q².',
+          'Solve: ∂²z/∂x² − ∂²z/∂y² = 0.',
+          "Solve: (4D² + 12DD' + 9D'²) z = 0.",
+          'Find L{e⁻⁴ᵗ + 3e⁻²ᵗ}.',
+          'Find L{sin kt cos kt}.',
+          'Find L⁻¹{4/s²}.',
+          'Find L⁻¹{(3s + 1)/(s + 1)²}.',
+        ],
+      },
+      {
+        id: 'B', title: 'Part B', instruction: 'Answer any 2 questions. Each question carries 6 marks.', answer: 2, marksEach: 6, subLabels: true,
+        questions: [
+          'Find the complete integral of q = (z + px)².',
+          'Solve: √p + √q = x.',
+          'Solve: py + qx = pq.',
+          'Solve: px(y² + z) − qy(x² + z) = z(x² − y²).',
+        ],
+      },
+      {
+        id: 'C', title: 'Part C', instruction: 'Answer any 2 questions. Each question carries 6 marks.', answer: 2, marksEach: 6, subLabels: true,
+        questions: [
+          'Reduce ∂²z/∂x² = (1 + y²) ∂²z/∂y² to canonical form. (The right-hand side is faint in the scanned copy and is reproduced as best read.)',
+          'Reduce ∂²z/∂x² + 2 ∂²z/∂x∂y + ∂²z/∂y² = 0 to canonical form.',
+          'Reduce ∂²z/∂x² + y² ∂²z/∂y² = y to canonical form.',
+          'Solve: u_xx − u = 0.',
+        ],
+      },
+      {
+        id: 'D', title: 'Part D', instruction: 'Answer any 2 questions. Each question carries 6 marks.', answer: 2, marksEach: 6, subLabels: true,
+        questions: [
+          'Derive the formula for L{cos kt}.',
+          'Find L{F(t)} where F(t) = t for 0 < t < 4, and F(t) = 5 for t > 4.',
+          '(a) Define the Gamma function and find L{t^(5/2)}. (b) Write the value of Γ(6).',
+          'Find the Laplace transform of the function Ψ(t, c) = 1 for 0 < t < c, Ψ(t, c) = 0 for c < t < 2c, with Ψ(t + 2c, c) = Ψ(t, c).',
+        ],
+      },
+      {
+        id: 'E', title: 'Part E', instruction: 'Answer any 2 questions. Each question carries 6 marks.', answer: 2, marksEach: 6, subLabels: true,
+        questions: [
+          '(i) Find L⁻¹{k / (s(s² + k²))} using the convolution theorem. (ii) Find L{(t − 4)² α(t − 4)}.',
+          'Find and sketch F(t) = L⁻¹{(1 − e⁻²ˢ)(1 − 3e⁻²ˢ) / s²}. Also find F(1), F(3), F(5). (Exponents reproduced as best read from the scan.)',
+          "Solve: y''(x) + y(x) = 4eˣ with y(0) = 0, y'(0) = 0 using Laplace transforms.",
+          'Find the Fourier series of the function f(t) = 0 for −2 < t < −1, f(t) = k for −1 < t < 1, f(t) = 0 for 1 < t < 2, with period T = 4.',
+        ],
+      },
+    ],
+    prepSubjectId: 'bsc-karnataka-numerical-methods',
+    source: { title: 'B.Sc IV Semester — all papers, May 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2025/07/agnes-bsc-iv-sem-all-papers-may-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University.' },
+  },
 ]
