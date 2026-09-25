@@ -7,6 +7,7 @@
     "academic:emulator": "node scripts/academic-emulator-fixture.mjs",
     "assessment:baseline": "node scripts/assessment-cost-baseline.mjs",
     "cost:model": "node scripts/cost-model.mjs",
+    "cost:plan": "node scripts/firebase-yearly-cost-plan.mjs",
     "assessment:emulator": "node scripts/assessment-emulator-run.mjs",
     "assessment:legacy-fixture": "node scripts/assessment-legacy-submit-fixture.mjs",
     "assessment:load-fixture": "node scripts/assessment-cost-load-fixture.mjs",
