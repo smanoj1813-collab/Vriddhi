@@ -463,16 +463,19 @@ service cloud.firestore {
         // config/library (loan rules) is likewise shown to borrowers.
         allow get: if isSignedIn() && (isSuperadmin() || isStaff()
           || (isOffice() && collegeId() == collegeId)
-          || (docId in ['branding', 'library'] && collegeId() == collegeId));
+          || (docId in ['branding', 'library', 'nodues'] && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin() || isStaff()
           || (isOffice() && collegeId() == collegeId));
         // Each settings doc belongs to the office that runs it. config/access
         // (who may see payroll) is the principal's alone.
         allow write: if docId == 'access'
           ? (isSuperadmin() || (role() == 'principal' && collegeId() == collegeId))
-          : docId in ['finance', 'branding']
+          : docId in ['finance', 'branding', 'tally']
             ? isFinance(collegeId)
-            : docId in ['library', 'inventory', 'procurement', 'nodues']
+            : docId == 'procurement'
+              // purchase workflow (ops) + TDS sections (accounts)
+              ? (isOps(collegeId) || isFinance(collegeId))
+            : docId in ['library', 'inventory', 'nodues']
               ? isOps(collegeId)
               : (isSuperadmin() || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId));
       }

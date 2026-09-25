@@ -545,6 +545,7 @@ const accountsNav: SidebarEntry[] = [
       { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
       { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" /> },
       { label: "Vendors", path: "/admin/vendors", icon: <Storefront fontSize="small" /> },
+      { label: "Purchase Approvals", path: "/admin/purchase-requests", icon: <ShoppingCart fontSize="small" /> },
     ],
   },
   {

@@ -64,7 +64,7 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
   'inventory.manage': ['operations', 'principal'],
   'procurement.order': ['operations', 'principal'],
   // Departments raise purchase requests; approval follows the college chain.
-  'procurement.request': ['operations', 'principal', 'hod', 'admin'],
+  'procurement.request': ['operations', 'principal', 'hod', 'admin', 'accounts'],
   'procurement.approve': ['principal', 'hod', 'admin', 'accounts'],
 
   // ── Shared office surfaces ────────────────────────────────────

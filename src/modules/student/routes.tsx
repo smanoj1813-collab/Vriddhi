@@ -12,6 +12,7 @@ const StudentSettings = lazy(() => import('./pages/StudentSettings'));
 const StudentMaterials = lazy(() => import('./pages/StudentMaterials'));
 const StudentTimetable = lazy(() => import('./pages/StudentTimetable'));
 const MemberLibrary = lazy(() => import('@/modules/office/pages/MemberLibrary'));
+const StudentNoDues = lazy(() => import('@/modules/office/pages/StudentNoDues'));
 const StudentEvents = lazy(() => import('./pages/StudentEvents'));
 const StudentNotificationsPage = lazy(() => import('./pages/StudentNotificationsPage'));
 const StudentFeePortal = lazy(() => import('./pages/StudentFeePortal'));
@@ -79,6 +80,7 @@ export const studentRoutes: RouteObject[] = [
       { path: 'challans', element: <StudentChallans /> },
       { path: 'hall-tickets', element: <StudentHallTickets /> },
       { path: 'library', element: <MemberLibrary memberType="student" /> },
+      { path: 'no-dues', element: <StudentNoDues /> },
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },
       { path: 'settings', element: <StudentSettings /> },

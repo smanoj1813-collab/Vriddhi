@@ -214,6 +214,7 @@ const QUICK_ACTIONS: Array<{
   { to: '/student/fees', icon: CreditCard, label: 'Fees', labelKey: 'student.feePortal', color: 'teal' },
   { to: '/student/challans', icon: Receipt, label: 'Challans', color: 'emerald' },
   { to: '/student/library', icon: BookOpen, label: 'Library', labelKey: 'student.eLibrary', color: 'blue' },
+  { to: '/student/no-dues', icon: FileText, label: 'No-Dues', color: 'emerald' },
   { to: '/student/events', icon: CalendarDays, label: 'Events', labelKey: 'student.campusEvents', color: 'amber' },
   { to: '/student/notifications', icon: Bell, label: 'Notifications', labelKey: 'student.alerts', color: 'violet' },
 ];
