@@ -74,7 +74,6 @@ import {
   Storefront,
   ReceiptLong,
   AssignmentTurnedIn,
-  Groups,
   AccountBalanceWallet,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
@@ -431,7 +430,6 @@ const principalNav: SidebarEntry[] = [
     ],
   },
 
-  { kind: "link", label: "Office Staff & Access", path: "/admin/office-staff", icon: <Groups fontSize="small" /> },
   { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Settings", path: "/admin/settings", icon: <Settings fontSize="small" /> },
 ];
@@ -522,7 +520,7 @@ const hodNav: SidebarEntry[] = [
 
 /**
  * Accounts team — the college finance office. Payroll appears only when the
- * college grants it (Office Staff & Access); the filter below hides it.
+ * college grants it (principal → Finance Settings → Payroll visibility); the filter below hides it.
  */
 const accountsNav: SidebarEntry[] = [
   { kind: "link", label: "Accounts Desk", path: "/admin/accounts", icon: <Dashboard fontSize="small" /> },

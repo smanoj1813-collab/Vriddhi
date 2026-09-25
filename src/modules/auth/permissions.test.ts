@@ -25,7 +25,6 @@ test('accounts: finance only, never academic or library management', () => {
   assert.equal(canAccessAdminPath('accounts', '/admin/library/catalogue'), false)
   assert.equal(canAccessAdminPath('accounts', '/admin/attendance'), false)
   assert.equal(canAccessAdminPath('accounts', '/admin/dashboard'), false)
-  assert.equal(canAccessAdminPath('accounts', '/admin/office-staff'), false)
 })
 
 test('operations: library/inventory, shared fines, no finance', () => {
@@ -50,7 +49,7 @@ test('payroll: principal always; accounts only when the college allows it', () =
 })
 
 test('principal oversees everything; superadmin bypasses', () => {
-  for (const p of ['/admin/fee-management', '/admin/library', '/admin/inventory', '/admin/office-staff', '/admin/dashboard'])
+  for (const p of ['/admin/fee-management', '/admin/library', '/admin/inventory', '/admin/dashboard'])
     assert.equal(canAccessAdminPath('principal', p), true, p)
   assert.equal(canAccessAdminPath('superadmin', '/admin/anything'), true)
   assert.equal(canAccessAdminPath(null, '/admin/dashboard'), false)

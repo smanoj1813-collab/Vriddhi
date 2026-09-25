@@ -73,7 +73,6 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
   'noDues.manage': ['accounts', 'operations', 'principal'],
 
   // ── Principal-only governance ─────────────────────────────────
-  'officeStaff.manage': ['principal'],
   'access.settings': ['principal'],
 };
 
@@ -145,7 +144,6 @@ export const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{ path: string; permission: 
   { path: '/admin/vendors', permission: 'vendors.manage' },
   { path: '/admin/no-dues', permission: 'noDues.manage' },
   // Principal
-  { path: '/admin/office-staff', permission: 'officeStaff.manage' },
   // Everyone in the shell
   { path: '/admin/install-app', permission: null },
   { path: '/admin/pwa-install', permission: null },

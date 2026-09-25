@@ -16,7 +16,6 @@ const FinanceReportsPage = lazy(() => import('@/modules/office/pages/FinanceRepo
 const NoDuesPage = lazy(() => import('@/modules/office/pages/NoDuesPage'));
 const AccountsDesk = lazy(() => import('@/modules/office/pages/AccountsDesk'));
 const OperationsDesk = lazy(() => import('@/modules/office/pages/OperationsDesk'));
-const OfficeStaffPage = lazy(() => import('@/modules/office/pages/OfficeStaffPage'));
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
@@ -167,7 +166,6 @@ export const adminRoutes: RouteObject[] = [
       { path: 'no-dues', element: <LazyPage><NoDuesPage /></LazyPage> },
       { path: 'accounts', element: <LazyPage><AccountsDesk /></LazyPage> },
       { path: 'operations', element: <LazyPage><OperationsDesk /></LazyPage> },
-      { path: 'office-staff', element: <LazyPage><OfficeStaffPage /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },

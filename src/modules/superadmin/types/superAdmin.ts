@@ -126,7 +126,9 @@ export interface ListCollegesOptions {
 // ═══════════════════════════════════════════════════════════════════════
 // ADMIN TYPES
 // ═══════════════════════════════════════════════════════════════════════
-export type AdminRole = "superadmin" | "admin" | "hod" | "mentor";
+export type AdminRole = "superadmin" | "admin" | "hod" | "mentor" | "accounts" | "operations";
+/** College office teams — created by the superadmin; no profile collection of their own. */
+export const OFFICE_ADMIN_ROLES: readonly AdminRole[] = ["accounts", "operations"];
 export type AdminStatus = "active" | "inactive";
 
 export interface Admin {

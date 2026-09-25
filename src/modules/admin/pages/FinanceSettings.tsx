@@ -42,6 +42,7 @@ import {
 } from '../utils/payrollEngine'
 import { computeGuestBill } from '../utils/guestBilling'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
+import PayrollAccessCard from '../components/PayrollAccessCard'
 
 const uid = () => Math.random().toString(36).slice(2, 9)
 
@@ -228,6 +229,8 @@ export default function FinanceSettings() {
         </div>
         <SaveControls dirty={dirty} saving={saving} onReset={onReset} onSave={onSave} />
       </div>
+
+      <PayrollAccessCard />
 
       {/* Floating save bar so changes deep in a long tab are never lost */}
       {dirty && (

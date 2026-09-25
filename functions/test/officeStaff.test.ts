@@ -11,14 +11,11 @@ describe('office staff roles', () => {
     assert.equal(normalizeRole(' operations '), 'operations')
   })
 
-  it('only a principal (own college) or superadmin may manage office staff', () => {
-    assert.deepEqual(decideOfficeStaffAccess({ callerRole: 'principal', callerCollegeId: 'c1', targetCollegeId: null, targetRole: 'accounts' }), { ok: true, collegeId: 'c1' })
-    assert.equal(decideOfficeStaffAccess({ callerRole: 'hod', callerCollegeId: 'c1', targetCollegeId: null, targetRole: 'accounts' }).ok, false)
-    assert.equal(decideOfficeStaffAccess({ callerRole: 'admin', callerCollegeId: 'c1', targetCollegeId: null, targetRole: 'operations' }).ok, false)
-    assert.equal(decideOfficeStaffAccess({ callerRole: 'accounts', callerCollegeId: 'c1', targetCollegeId: null, targetRole: 'accounts' }).ok, false)
-    assert.equal(decideOfficeStaffAccess({ callerRole: 'principal', callerCollegeId: 'c1', targetCollegeId: 'c2', targetRole: 'accounts' }).ok, false)
-    assert.equal(decideOfficeStaffAccess({ callerRole: 'principal', callerCollegeId: 'c1', targetCollegeId: null, targetRole: 'hod' }).ok, false)
-    assert.deepEqual(decideOfficeStaffAccess({ callerRole: 'superadmin', callerCollegeId: null, targetCollegeId: 'c9', targetRole: 'operations' }), { ok: true, collegeId: 'c9' })
-    assert.equal(decideOfficeStaffAccess({ callerRole: 'principal', callerCollegeId: null, targetCollegeId: null, targetRole: 'accounts' }).ok, false)
+  it('only a superadmin may manage office staff', () => {
+    assert.deepEqual(decideOfficeStaffAccess({ callerRole: 'superadmin', targetCollegeId: 'c9' }), { ok: true, collegeId: 'c9' })
+    assert.deepEqual(decideOfficeStaffAccess({ callerRole: 'SuperAdmin', targetCollegeId: 'c1' }), { ok: true, collegeId: 'c1' })
+    for (const role of ['principal', 'admin', 'hod', 'accounts', 'operations', 'faculty', ''])
+      assert.equal(decideOfficeStaffAccess({ callerRole: role, targetCollegeId: 'c1' }).ok, false, role)
+    assert.equal(decideOfficeStaffAccess({ callerRole: 'superadmin', targetCollegeId: null }).ok, false)
   })
 })

@@ -620,6 +620,31 @@ export async function listAdmins(options: ListAdminsOptions = {}): Promise<Pagin
       items = items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
+    // College office teams (accounts / operations) have no profile collection;
+    // their identity lives in users/{uid} (written by grantUserRole).
+    try {
+      const officeSnap = await getDocs(query(collection(db, "users"), where("role", "in", ["accounts", "operations"])));
+      const office = officeSnap.docs
+        .map(d => {
+          const r = d.data();
+          const ts = r.createdAt as { toDate?: () => Date } | string | undefined;
+          return {
+            id: d.id,
+            name: r.name || r.email || "",
+            email: r.email || "",
+            role: r.role as Admin["role"],
+            collegeId: r.collegeId || "",
+            status: r.status === "inactive" ? "inactive" : "active",
+            createdAt: typeof ts === "string" ? ts : ts?.toDate ? ts.toDate().toISOString() : "",
+          } as Admin;
+        })
+        .filter(a => (!options.collegeId || a.collegeId === options.collegeId) && (!options.status || options.status === "all" || a.status === options.status));
+      items = [...items, ...office].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    } catch (officeErr) {
+      console.warn("Office staff could not be listed:", officeErr);
+    }
+    if (options.role) items = items.filter(a => a.role === options.role);
+
     const collegesSnap = await getDocs(collection(db, "colleges"));
     const collegeMap: Record<string, string> = {};
     collegesSnap.docs.forEach(d => {
@@ -642,7 +667,13 @@ export async function listAdmins(options: ListAdminsOptions = {}): Promise<Pagin
   }
 }
 
-export async function updateAdminStatus(adminId: string, status: "active" | "inactive"): Promise<void> {
+export async function updateAdminStatus(adminId: string, status: "active" | "inactive", role?: string): Promise<void> {
+  if (role === "accounts" || role === "operations") {
+    // Office staff: disable / re-enable sign-in in Firebase Auth (and the roster).
+    const call = httpsCallable<{ action: string; uid: string }, { ok: boolean }>(functions, "manageOfficeStaff");
+    await call({ action: status === "inactive" ? "deactivate" : "reactivate", uid: adminId });
+    return;
+  }
   await updateDoc(doc(db, "admins", adminId), { status, updatedAt: Timestamp.now() });
 }
 

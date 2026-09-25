@@ -812,9 +812,10 @@ service cloud.firestore {
         allow read, write: if isBackOffice(collegeId);
       }
       // Roster of office staff — written only by the manageOfficeStaff callable.
+      // Accounts / operations roster — managed by the superadmin only
+      // (grantUserRole + manageOfficeStaff); each member may read their row.
       match /officeStaff/{docId} {
-        allow read: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId)
-          || (isSignedIn() && docId == request.auth.uid);
+        allow read: if isSuperadmin() || (isSignedIn() && docId == request.auth.uid);
         allow write: if false;
       }
 
