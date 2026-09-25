@@ -306,6 +306,24 @@ export const diagnoseIdentity = onCall(
           "The collegeId claim and the users document agree only after trimming — the security rules compare strictly, so this account's tenant writes are refused. Run Identity repair, then the user signs out and back in."
         )
       }
+      // A claim that is not a live college document id. Before grantUserRole
+      // resolved the College box, an operator could stamp the college *code*
+      // (or a typo) into the claim; every college-scoped list then shows the
+      // account nowhere and every tenant rule treats it as belonging to no
+      // college. Name the likely college so the fix is one re-grant away.
+      if (rawClaimCollege && rawClaimCollege.trim()) {
+        const claimed = rawClaimCollege.trim()
+        const live = await db.doc(`colleges/${claimed}`).get()
+        if (!live.exists) {
+          const guess = await resolveCollegeReference(db, claimed)
+          issues.push(
+            `The collegeId claim "${claimed}" is not a college document id, so college pages cannot list this account and tenant-scoped rules refuse its reads and writes.` +
+              (guess.kind === 'resolved'
+                ? ` It matches the ${guess.matchedBy} of "${guess.college.name}" (id ${guess.college.id}) — re-grant the role from Access Control with that college selected, then the user signs out and back in.`
+                : ' Re-grant the role from Access Control with the correct college selected, then the user signs out and back in.')
+          )
+        }
+      }
       // Probe the attendance rows this account tries to write. With a
       // provably-correct token the ONE remaining refusal path in the rules
       // is a legacy document already sitting at the deterministic id
