@@ -171,3 +171,44 @@ export async function fetchFrequentQuestions(params: any): Promise<any> {
   record('frequent', params);
   return data().frequent ?? { subject: null, subjects: [], questions: [] };
 }
+
+// Model answers (3.4) and quick-revision MCQ sets (3.5). Fixtures:
+//   __RC_PREP.answers = { answers: [], drafts?: [] }   (published vs reviewer)
+//   __RC_PREP.mcqSets = []
+export const MODEL_ANSWER_LABEL = 'Model answer · AI-generated, reviewed';
+
+export async function fetchPrepPaperAnswers(paperId: string): Promise<any> {
+  record('answers', paperId);
+  const fixture = data().answers ?? { answers: [], drafts: [] };
+  const answers = fixture.answers ?? [];
+  return {
+    answers,
+    drafts: fixture.drafts,
+    byQid: Object.fromEntries(answers.map((a: any) => [a.qid, a])),
+  };
+}
+
+export async function fetchPrepMcqSets(paperId?: string): Promise<any[]> {
+  record('mcqSets', paperId);
+  return data().mcqSets ?? [];
+}
+
+export async function generatePrepPaperAnswers(paperId: string, qids?: string[]): Promise<any> {
+  record('generateAnswers', { paperId, qids });
+  return { requested: 1, attempted: 1, remaining: 0, results: [{ qid: 's-B__1', status: 'drafted' }] };
+}
+
+export async function reviewPrepPaperAnswers(ids: string[], action: string): Promise<any> {
+  record('reviewAnswers', { ids, action });
+  return { updated: ids.length, status: action === 'publish' ? 'published' : 'rejected' };
+}
+
+export async function generatePrepMcqSet(paperId: string): Promise<any> {
+  record('generateMcqSet', paperId);
+  return { data: { id: 'set-1' }, count: 5, issues: [] };
+}
+
+export async function reviewPrepMcqSets(ids: string[], action: string): Promise<any> {
+  record('reviewMcqSets', { ids, action });
+  return { updated: ids.length, status: action === 'publish' ? 'published' : 'rejected' };
+}

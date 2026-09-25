@@ -1585,6 +1585,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Model answers for those papers (item 3.4) and the quick-revision MCQ sets
+    // built from them (item 3.5). Same published/subject boundary as the papers
+    // they belong to, with one addition: a REJECTED answer is not readable even
+    // by a superadmin from a client, because the reviewer's queue goes through
+    // GET /prep/papers/answers (Admin SDK). Writes are server-only — publishing
+    // is the human gate the "AI-generated, reviewed" label promises, so a client
+    // must never be able to flip the status field itself.
+    match /prep_paper_answers/{answerId} {
+      allow read: if isSignedIn() && ((resource.data.status == 'published' && resource.data.rejected != true) || isSuperadmin());
+      allow write: if false;
+    }
+
+    match /prep_mcq_sets/{setId} {
+      allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
+      allow write: if false;
+    }
+
     // Individual learner topic and quiz completion progress.
     // Owner-only read and write.
     match /prep_progress/{uid} {

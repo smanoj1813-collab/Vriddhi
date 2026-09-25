@@ -26,11 +26,21 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ChevronRight, Description, OpenInNew, Print, Search } from '@mui/icons-material';
+import { AutoAwesome, ChevronRight, Description, OpenInNew, Print, Search } from '@mui/icons-material';
+import { useAuth } from '@/modules/auth/context/AuthContext';
 import {
+  MODEL_ANSWER_LABEL,
   fetchFrequentQuestions,
   fetchPrepPaper,
+  fetchPrepPaperAnswers,
   fetchPrepPapers,
+  fetchPrepMcqSets,
+  generatePrepPaperAnswers,
+  generatePrepMcqSet,
+  reviewPrepPaperAnswers,
+  reviewPrepMcqSets,
+  type PrepMcqSet,
+  type PrepPaperAnswer,
   PREP_PAPER_LEGACY_LABELS,
   type FrequentQuestion,
   type PrepPaper,
@@ -476,12 +486,211 @@ function MarksTag({ marks }: { marks: number }) {
   );
 }
 
+/**
+ * The same id the server builds for one question (functions/src/prepModelAnswers
+ * `answerDocId`). Kept in sync deliberately: a mismatch would silently hide
+ * every published answer, so both sides derive it from (sectionId, label).
+ */
+function paperQid(sectionId: string | undefined, label: string | number | undefined): string {
+  const safe = (value: unknown) =>
+    String(value ?? '')
+      .normalize('NFKC')
+      .replace(/[/\u0000-\u001f\u007f]/g, '-')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 100);
+  return `${safe(sectionId || 's')}__${safe(label)}`;
+}
+
+/** A published model answer, rendered under the question it answers. */
+function ModelAnswerBlock({ answer }: { answer?: PrepPaperAnswer }) {
+  const [open, setOpen] = useState(false);
+  if (!answer) return null;
+  return (
+    <Box sx={{ mt: 1.25, pl: 1.5, borderLeft: '3px solid', borderColor: 'primary.main' }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+        <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main' }}>
+          {MODEL_ANSWER_LABEL}
+        </Typography>
+        <Button size="small" variant="text" sx={{ textTransform: 'none', minWidth: 0 }} onClick={() => setOpen((v) => !v)}>
+          {open ? 'Hide answer' : 'Show answer'}
+        </Button>
+      </Stack>
+      {open ? (
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6, mt: 0.5 }}>
+          {answer.answerMd}
+        </Typography>
+      ) : null}
+    </Box>
+  );
+}
+
+/** Superadmin-only: generate, review and publish the paper's model answers. */
+function PaperAnswerReviewStrip({
+  paperId,
+  drafts,
+  mcqSets,
+  busy,
+  notice,
+  onGenerate,
+  onReview,
+  onGenerateMcqs,
+  onReviewMcqs,
+}: {
+  paperId: string;
+  drafts: PrepPaperAnswer[];
+  mcqSets: PrepMcqSet[];
+  busy: string | null;
+  notice: string | null;
+  onGenerate: () => void;
+  onReview: (ids: string[], action: 'publish' | 'reject' | 'reopen') => void;
+  onGenerateMcqs: () => void;
+  onReviewMcqs: (ids: string[], action: 'publish' | 'reject' | 'reopen') => void;
+}) {
+  const draftSetIds = mcqSets.filter((set) => set.status !== 'published').map((set) => set.id);
+  const publishedSets = mcqSets.filter((set) => set.status === 'published');
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 3, borderStyle: 'dashed' }} data-testid="answer-review-strip">
+      <Stack spacing={1.5} sx={{ p: { xs: 2, md: 2.5 } }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <AutoAwesome fontSize="small" sx={{ color: 'warning.main' }} />
+          <Typography sx={{ fontWeight: 800 }}>Content team · model answers</Typography>
+          <Chip size="small" label={`${drafts.length} awaiting review`} color={drafts.length ? 'warning' : 'default'} variant="outlined" />
+        </Stack>
+        <Typography variant="caption" color="text.secondary">
+          Generated answers stay invisible to students until they are published here. Nothing is published automatically.
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Button size="small" variant="contained" disableElevation disabled={busy !== null} onClick={onGenerate}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            {busy === 'generate' ? 'Generating…' : 'Generate next 25 answers'}
+          </Button>
+          <Button size="small" variant="outlined" disabled={busy !== null || drafts.length === 0}
+            onClick={() => onReview(drafts.map((d) => d.id || '').filter(Boolean), 'publish')}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            Publish all drafts ({drafts.length})
+          </Button>
+          <Button size="small" variant="outlined" color="error" disabled={busy !== null || drafts.length === 0}
+            onClick={() => onReview(drafts.map((d) => d.id || '').filter(Boolean), 'reject')}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            Reject all drafts
+          </Button>
+          <Button size="small" variant="outlined" disabled={busy !== null} onClick={onGenerateMcqs}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            {busy === 'mcq' ? 'Generating…' : 'Generate quick-revision MCQs'}
+          </Button>
+          {draftSetIds.length > 0 ? (
+            <Button size="small" variant="outlined" color="success" disabled={busy !== null}
+              onClick={() => onReviewMcqs(draftSetIds, 'publish')}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+              Publish MCQ set{draftSetIds.length === 1 ? '' : 's'} ({draftSetIds.length})
+            </Button>
+          ) : null}
+        </Stack>
+        {notice ? (
+          <Typography variant="body2" color="text.secondary" data-testid="answer-review-notice">{notice}</Typography>
+        ) : null}
+        {drafts.slice(0, 6).map((draft) => (
+          <Box key={draft.qid} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+              Q{draft.label} · {draft.marks} marks · {draft.status}
+              {draft.issues && draft.issues.length > 0 ? ` · ${draft.issues.join('; ')}` : ''}
+            </Typography>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mt: 0.5, maxHeight: 140, overflow: 'auto' }}>
+              {draft.answerMd.slice(0, 600)}{draft.answerMd.length > 600 ? '…' : ''}
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mt: 0.75 }}>
+              <Button size="small" onClick={() => onReview([draft.id || ''], 'publish')}>Publish this</Button>
+              <Button size="small" color="error" onClick={() => onReview([draft.id || ''], 'reject')}>Reject this</Button>
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Card>
+  );
+}
+
+/**
+ * Item 3.5: published quick-revision sets, answered inline. The correct option
+ * is only revealed after the student answers, so the set works as practice.
+ */
+export function QuickRevisionSet({ set }: { set: PrepMcqSet }) {
+  const [picked, setPicked] = useState<Record<number, number>>({});
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 3 }} data-testid="quick-revision-set">
+      <Stack spacing={1.5} sx={{ p: { xs: 2, md: 2.5 } }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Typography sx={{ fontWeight: 800 }}>Quick revision · {set.subjectName}</Typography>
+          <Chip size="small" variant="outlined" label={`${set.items.length} MCQs`} />
+          <Typography variant="caption" color="text.secondary">{MODEL_ANSWER_LABEL}</Typography>
+        </Stack>
+        {set.items.map((item, index) => {
+          const chosen = picked[index];
+          return (
+            <Box key={index} sx={{ borderTop: index === 0 ? 'none' : '1px solid', borderColor: 'divider', pt: index === 0 ? 0 : 1.25 }}>
+              <Typography sx={{ fontWeight: 600, lineHeight: 1.5 }}>
+                {index + 1}. {item.question}
+              </Typography>
+              <Stack spacing={0.5} sx={{ mt: 1 }}>
+                {item.options.map((option, optionIndex) => {
+                  const isCorrect = optionIndex === item.correctIndex;
+                  const isChosen = chosen === optionIndex;
+                  return (
+                    <Button
+                      key={optionIndex}
+                      size="small"
+                      variant={isChosen ? 'contained' : 'outlined'}
+                      color={chosen === undefined ? 'primary' : isCorrect ? 'success' : isChosen ? 'error' : 'inherit'}
+                      disableElevation
+                      onClick={() => setPicked((prev) => ({ ...prev, [index]: optionIndex }))}
+                      sx={{ justifyContent: 'flex-start', textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+                    >
+                      {option}
+                    </Button>
+                  );
+                })}
+              </Stack>
+              {chosen !== undefined ? (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+                  {chosen === item.correctIndex ? 'Correct. ' : 'Not quite. '}
+                  {item.explanation}
+                </Typography>
+              ) : null}
+            </Box>
+          );
+        })}
+      </Stack>
+    </Card>
+  );
+}
+
 export function PaperView({ paperId }: { paperId: string }) {
   const [searchParams] = useSearchParams();
   const urlProgram = String(searchParams.get('program') || '').toLowerCase();
   const [paper, setPaper] = useState<PrepPaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Items 3.4 / 3.5. `answersByQid` holds PUBLISHED answers only unless the
+  // caller is the reviewer — the server decides, so a student's browser cannot
+  // ask for a draft.
+  const { user } = useAuth();
+  const isSuperadmin = String((user as { role?: string } | null)?.role || '').toLowerCase() === 'superadmin';
+  const [answersByQid, setAnswersByQid] = useState<Record<string, PrepPaperAnswer>>({});
+  const [drafts, setDrafts] = useState<PrepPaperAnswer[]>([]);
+  const [mcqSets, setMcqSets] = useState<PrepMcqSet[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const reloadAnswers = React.useCallback(async () => {
+    const [answerResult, sets] = await Promise.all([
+      fetchPrepPaperAnswers(paperId),
+      fetchPrepMcqSets(paperId).catch(() => [] as PrepMcqSet[]),
+    ]);
+    setAnswersByQid(answerResult.byQid);
+    setDrafts(answerResult.drafts || []);
+    setMcqSets(sets);
+  }, [paperId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -491,10 +700,13 @@ export function PaperView({ paperId }: { paperId: string }) {
       .then((p) => !cancelled && setPaper(p))
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : 'This paper does not exist or is not published.'))
       .finally(() => !cancelled && setLoading(false));
+    // Answers load on their own: a paper must still render if the answer
+    // endpoints are unavailable (they are an addition, not a dependency).
+    reloadAnswers().catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [paperId]);
+  }, [paperId, reloadAnswers]);
 
   if (loading) return <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
   if (error || !paper) {
@@ -507,6 +719,70 @@ export function PaperView({ paperId }: { paperId: string }) {
 
   const program = PROGRAM_LABELS[urlProgram] ? urlProgram : paper.program;
   const hubPath = `/prep?program=${program}`;
+
+  const runReview = async (ids: string[], action: 'publish' | 'reject' | 'reopen') => {
+    const clean = ids.filter(Boolean);
+    if (clean.length === 0) return;
+    setBusy(action);
+    setNotice(null);
+    try {
+      const result = await reviewPrepPaperAnswers(clean, action);
+      setNotice(`${result.updated} answer${result.updated === 1 ? '' : 's'} ${action === 'publish' ? 'published' : action === 'reject' ? 'rejected' : 'reopened'}.`);
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not update the answers.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runGenerate = async () => {
+    setBusy('generate');
+    setNotice(null);
+    try {
+      const result = await generatePrepPaperAnswers(paper.id);
+      const drafted = result.results.filter((r) => r.status === 'drafted').length;
+      setNotice(
+        drafted === 0
+          ? 'No new answers were generated. Nothing is published automatically — review the drafts above.'
+          : `${drafted} draft${drafted === 1 ? '' : 's'} generated${result.remaining > 0 ? `, ${result.remaining} question${result.remaining === 1 ? '' : 's'} left — run it again` : ''}. Nothing is published automatically.`,
+      );
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not generate answers.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runGenerateMcqs = async () => {
+    setBusy('mcq');
+    setNotice(null);
+    try {
+      const result = await generatePrepMcqSet(paper.id);
+      setNotice(`${result.count} quick-revision question${result.count === 1 ? '' : 's'} drafted. Publish them when you have read them.`);
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not generate quick-revision questions.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runReviewMcqs = async (ids: string[], action: 'publish' | 'reject' | 'reopen') => {
+    setBusy(action);
+    setNotice(null);
+    try {
+      const result = await reviewPrepMcqSets(ids, action);
+      setNotice(`${result.updated} MCQ set${result.updated === 1 ? '' : 's'} ${action === 'publish' ? 'published' : 'rejected'}.`);
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not update the quick-revision sets.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const crumbs = [
     { label: 'Prep', to: '/prep' },
     { label: PROGRAM_LABELS[program] || program, to: hubPath },
@@ -585,6 +861,20 @@ export function PaperView({ paperId }: { paperId: string }) {
           </Box>
         </Card>
 
+        {isSuperadmin ? (
+          <PaperAnswerReviewStrip
+            paperId={paper.id}
+            drafts={drafts}
+            mcqSets={mcqSets}
+            busy={busy}
+            notice={notice}
+            onGenerate={() => void runGenerate()}
+            onReview={(ids, action) => void runReview(ids, action)}
+            onGenerateMcqs={() => void runGenerateMcqs()}
+            onReviewMcqs={(ids, action) => void runReviewMcqs(ids, action)}
+          />
+        ) : null}
+
         {/* Sections */}
         {paper.sections.map((section) => (
           <Card key={section.id} variant="outlined" sx={{ borderRadius: 3 }}>
@@ -618,6 +908,9 @@ export function PaperView({ paperId }: { paperId: string }) {
                           ))}
                         </Stack>
                       ) : null}
+                      {/* Item 3.4: the reviewed model answer, or nothing. A draft
+                          never reaches a student — the server does not send it. */}
+                      <ModelAnswerBlock answer={answersByQid[paperQid(section.id, q.label)]} />
                     </Box>
                     {q.marks && q.marks !== section.marksEach ? <MarksTag marks={q.marks} /> : null}
                   </Box>
@@ -626,6 +919,14 @@ export function PaperView({ paperId }: { paperId: string }) {
             </Box>
           </Card>
         ))}
+
+        {/* Item 3.5: quick revision from this paper's own questions. Only
+            published sets exist in this list for a student. */}
+        {mcqSets
+          .filter((set) => set.status === 'published')
+          .map((set) => (
+            <QuickRevisionSet key={set.id} set={set} />
+          ))}
 
         {/* Source attribution */}
         <Box sx={{ px: 1 }}>

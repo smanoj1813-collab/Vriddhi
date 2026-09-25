@@ -670,6 +670,129 @@ export async function fetchPrepPaper(paperId: string): Promise<PrepPaper> {
   return json.data
 }
 
+// ── Model answers (item 3.4) and quick-revision MCQs (item 3.5) ─────────────
+
+export type PrepAnswerStatus = 'draft' | 'published' | 'rejected'
+
+export interface PrepPaperAnswer {
+  id?: string
+  paperId: string
+  qid: string
+  sectionId: string
+  label: string
+  question: string
+  marks: number
+  status: PrepAnswerStatus
+  answerMd: string
+  model?: string
+  generatedAt?: string
+  reviewedAt?: string
+  issues?: string[]
+}
+
+export interface PrepPaperAnswersResult {
+  answers: PrepPaperAnswer[]
+  /** Reviewer-only: drafts and rejects, present only for a superadmin caller. */
+  drafts?: PrepPaperAnswer[]
+  /** Keyed by qid, so the paper view does not scan a list per question. */
+  byQid: Record<string, PrepPaperAnswer>
+}
+
+/** Published model answers for a paper (plus drafts when the caller reviews). */
+export async function fetchPrepPaperAnswers(paperId: string): Promise<PrepPaperAnswersResult> {
+  const res = await authedFetch(`/prep/papers/answers?paperId=${encodeURIComponent(paperId)}`, { method: 'GET' })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to load model answers')
+  const answers: PrepPaperAnswer[] = json.data || []
+  return {
+    answers,
+    drafts: json.drafts,
+    byQid: Object.fromEntries(answers.map((answer) => [answer.qid, answer])),
+  }
+}
+
+/** Superadmin: generate up to 25 model answers for one paper per call. */
+export async function generatePrepPaperAnswers(
+  paperId: string,
+  qids?: string[],
+  regenerate = false,
+): Promise<{ requested: number; attempted: number; remaining: number; results: Array<{ qid: string; status: string; issues?: string[] }> }> {
+  const res = await authedFetch('/prep/papers/answers/generate', {
+    method: 'POST',
+    body: JSON.stringify({ paperId, qids, regenerate }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to generate model answers')
+  return json
+}
+
+/** Superadmin: publish, reject or reopen generated answers. */
+export async function reviewPrepPaperAnswers(
+  ids: string[],
+  action: 'publish' | 'reject' | 'reopen',
+): Promise<{ updated: number; status: PrepAnswerStatus }> {
+  const res = await authedFetch('/prep/papers/answers/review', {
+    method: 'POST',
+    body: JSON.stringify({ ids, action }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to update model answers')
+  return json
+}
+
+export interface PrepMcqItem {
+  question: string
+  options: string[]
+  correctIndex: number
+  explanation: string
+}
+
+export interface PrepMcqSet {
+  id: string
+  paperId: string
+  subjectName: string
+  status: PrepAnswerStatus
+  items: PrepMcqItem[]
+  issues?: string[]
+}
+
+/** Published quick-revision sets (all of them for a superadmin). */
+export async function fetchPrepMcqSets(paperId?: string): Promise<PrepMcqSet[]> {
+  const qs = paperId ? `?paperId=${encodeURIComponent(paperId)}` : ''
+  const res = await authedFetch(`/prep/papers/mcq-sets${qs}`, { method: 'GET' })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to load quick-revision questions')
+  return json.data || []
+}
+
+/** Superadmin: generate a quick-revision set from a paper's questions. */
+export async function generatePrepMcqSet(paperId: string, qids?: string[]): Promise<{ data: PrepMcqSet; count: number; issues: string[] }> {
+  const res = await authedFetch('/prep/papers/mcq-sets/generate', {
+    method: 'POST',
+    body: JSON.stringify({ paperId, qids }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to generate quick-revision questions')
+  return json
+}
+
+/** Superadmin: publish or reject generated quick-revision sets. */
+export async function reviewPrepMcqSets(
+  ids: string[],
+  action: 'publish' | 'reject' | 'reopen',
+): Promise<{ updated: number; status: PrepAnswerStatus }> {
+  const res = await authedFetch('/prep/papers/mcq-sets/review', {
+    method: 'POST',
+    body: JSON.stringify({ ids, action }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to update quick-revision sets')
+  return json
+}
+
+/** The public label for a reviewed answer. Kept in one place, like the server's. */
+export const MODEL_ANSWER_LABEL = 'Model answer · AI-generated, reviewed'
+
 /** Superadmin: create or update one paper (compact seed shape or full paper). */
 export async function savePrepPaper(payload: Record<string, unknown>): Promise<{ data: PrepPaper; warnings: Array<{ level: string; code: string; message: string }> }> {
   const res = await authedFetch('/prep/papers', { method: 'POST', body: JSON.stringify(payload) })

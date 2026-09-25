@@ -926,6 +926,140 @@ await section('prep repeated questions (empty)', PREP_VIEWER, { view: 'repeats' 
 
 resetPrep();
 
+// ── Model answers and quick-revision MCQs on a paper (items 3.4 / 3.5) ──────
+// What a STUDENT sees: published answers only, and the "AI-generated, reviewed"
+// label has to be there — that label is the promise the review flow keeps.
+const answerFixture = {
+  paper: {
+    id: 'bcu-bcom-5-2024',
+    program: 'bcom',
+    programLabel: 'B.Com',
+    degreeLevel: 'undergraduate',
+    universityCode: 'bcu',
+    universityName: 'Bengaluru City University',
+    scheme: 'NEP 2021-22 onwards (F+R)',
+    semester: 5,
+    subjectName: 'Financial Accounting',
+    paperCode: 'DCBB503',
+    examMonth: 'February/March',
+    examYear: 2024,
+    examLabel: 'February/March 2024',
+    durationMinutes: 180,
+    maxMarks: 70,
+    instructions: [],
+    questionCount: 2,
+    tags: [],
+    language: 'en',
+    status: 'published',
+    source: { title: 'BCU question paper', url: 'https://example.edu/p.pdf', publisher: 'BCU', retrievedOn: '2026-09-01' },
+    sections: [
+      {
+        id: 's-B',
+        title: 'Answer any two',
+        instruction: 'Answer any two of the following. Each question carries 10 marks.',
+        answerCount: 2,
+        marksEach: 10,
+        totalMarks: 20,
+        questions: [
+          { label: '1', text: 'Explain the objectives of financial accounting.' },
+          { label: '2', text: 'Prepare a trading account from the given balances.' },
+        ],
+      },
+    ],
+  },
+  answers: {
+    answers: [
+      {
+        id: 'bcu-bcom-5-2024__s-B__1',
+        paperId: 'bcu-bcom-5-2024',
+        qid: 's-B__1',
+        sectionId: 's-B',
+        label: '1',
+        question: 'Explain the objectives of financial accounting.',
+        marks: 10,
+        status: 'published',
+        answerMd: 'Financial accounting records, classifies and summarises transactions.\n- Objective one: to ascertain profit or loss.',
+      },
+    ],
+    // A draft is in the fixture on purpose: a student must not see it even when
+    // the API is asked for the paper. The stub only returns it in `drafts`,
+    // which the view ignores for non-reviewers — the same contract as the server.
+    drafts: [
+      {
+        id: 'bcu-bcom-5-2024__s-B__2',
+        paperId: 'bcu-bcom-5-2024',
+        qid: 's-B__2',
+        sectionId: 's-B',
+        label: '2',
+        question: 'Prepare a trading account from the given balances.',
+        marks: 10,
+        status: 'draft',
+        answerMd: 'DRAFT THAT MUST NOT BE SHOWN TO A STUDENT.',
+      },
+    ],
+  },
+  mcqSets: [
+    {
+      id: 'bcu-bcom-5-2024__s-B__1_2',
+      paperId: 'bcu-bcom-5-2024',
+      subjectName: 'Financial Accounting',
+      status: 'published',
+      items: [
+        {
+          question: 'Which statement shows the gross profit of a trading business?',
+          options: ['Trading account', 'Cash book', 'Ledger', 'Journal'],
+          correctIndex: 0,
+          explanation: 'The trading account brings together sales and cost of goods sold.',
+        },
+      ],
+    },
+  ],
+};
+
+globalThis.__RC_ROLE = 'student';
+resetPrep(answerFixture, { search: '?program=bcom', params: { paperId: 'bcu-bcom-5-2024' } });
+await section('prep paper with a published model answer', PREP_VIEWER, { view: 'paper' }, (t, view) => {
+  check('prep paper answers: mounts without throwing', true);
+  check('prep paper answers: the reviewed label is shown', /Model answer · AI-generated, reviewed/.test(t), t);
+  check('prep paper answers: the answer text is not visible until asked for',
+    !/Objective one: to ascertain profit or loss/.test(t), t);
+  check('prep paper answers: a draft answer is NEVER rendered for a student',
+    !/DRAFT THAT MUST NOT BE SHOWN TO A STUDENT/.test(t), t);
+  check('prep paper answers: a student sees no review strip',
+    view.all('[data-testid="answer-review-strip"]').length === 0, t);
+  check('prep paper answers: the published quick-revision set renders',
+    view.all('[data-testid="quick-revision-set"]').length === 1, t);
+  check('prep paper answers: the MCQ correction is explained after an answer',
+    /Trading account/.test(t) && /gross profit/.test(t), t);
+});
+
+// The reviewer sees the strip, the draft and the controls.
+globalThis.__RC_ROLE = 'superadmin';
+resetPrep(answerFixture, { search: '?program=bcom', params: { paperId: 'bcu-bcom-5-2024' } });
+await section('prep paper review strip (superadmin)', PREP_VIEWER, { view: 'paper' }, async (t, view) => {
+  check('prep paper review: mounts without throwing', true);
+  check('prep paper review: the strip is present for a superadmin',
+    view.all('[data-testid="answer-review-strip"]').length === 1, t);
+  check('prep paper review: drafts are listed for review',
+    /DRAFT THAT MUST NOT BE SHOWN TO A STUDENT/.test(t), t);
+  check('prep paper review: says nothing publishes automatically',
+    /Nothing is published automatically/.test(t), t);
+  check('prep paper review: offers generate, publish and reject',
+    /Generate next 25 answers/.test(t) && /Publish all drafts/.test(t) && /Reject all drafts/.test(t), t);
+
+  // Publishing from the strip must call the review endpoint with the draft id.
+  const publishButton = view.all('button').find((b) => /^Publish all drafts/.test(b.textContent || ''));
+  await view.click(publishButton);
+  const calls = callsTo('reviewAnswers');
+  check('prep paper review: publishing calls the review endpoint with the draft id',
+    calls.length === 1 && calls[0].params.action === 'publish'
+      && calls[0].params.ids.includes('bcu-bcom-5-2024__s-B__2'),
+    JSON.stringify(calls));
+});
+
+globalThis.__RC_ROLE = 'student';
+resetPrep();
+
 
 // ── Student "My Challans" ──────────────────────────────────────────────────
 // The challan data path end to end on the student side: the college-scoped

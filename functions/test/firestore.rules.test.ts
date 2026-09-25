@@ -1305,6 +1305,64 @@ describe('platform documents are server-only', () => {
   })
 })
 
+describe('prep model answers and MCQ sets (items 3.4 / 3.5)', () => {
+  // The label a student sees is "Model answer · AI-generated, reviewed". That is
+  // only true if a draft cannot be read and the status cannot be flipped from a
+  // browser, which is what these assertions pin down.
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await setDoc(doc(db, 'prep_paper_answers', 'paper-1__A__1'), {
+        paperId: 'paper-1',
+        qid: 'A__1',
+        status: 'published',
+        answerMd: 'Cost audit is the verification of cost records.',
+      })
+      await setDoc(doc(db, 'prep_paper_answers', 'paper-1__A__2'), {
+        paperId: 'paper-1',
+        qid: 'A__2',
+        status: 'draft',
+        answerMd: 'Draft that no student may see.',
+      })
+      await setDoc(doc(db, 'prep_mcq_sets', 'paper-1__A__1'), {
+        paperId: 'paper-1',
+        status: 'published',
+        items: [{ question: 'Which document records cost?', options: ['Cost sheet', 'Ledger', 'Cash book', 'None'], correctIndex: 0 }],
+      })
+      await setDoc(doc(db, 'prep_mcq_sets', 'paper-1__A__2'), {
+        paperId: 'paper-1',
+        status: 'draft',
+        items: [],
+      })
+    })
+  })
+
+  it('lets a signed-in learner read a published answer but never a draft', async () => {
+    const db = studentContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'prep_paper_answers', 'paper-1__A__1')))
+    await assertFails(getDoc(doc(db, 'prep_paper_answers', 'paper-1__A__2')))
+  })
+
+  it('lets a superadmin read the draft so the review queue can be shown', async () => {
+    const db = superadminContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'prep_paper_answers', 'paper-1__A__2')))
+  })
+
+  it('denies writes to every client, including a superadmin', async () => {
+    const db = superadminContext().firestore()
+    await assertFails(updateDoc(doc(db, 'prep_paper_answers', 'paper-1__A__2'), { status: 'published' }))
+    await assertFails(setDoc(doc(db, 'prep_paper_answers', 'paper-1__A__3'), { status: 'published' }))
+    await assertFails(deleteDoc(doc(db, 'prep_paper_answers', 'paper-1__A__1')))
+  })
+
+  it('applies the same boundary to the quick-revision MCQ sets', async () => {
+    const student = studentContext().firestore()
+    await assertSucceeds(getDoc(doc(student, 'prep_mcq_sets', 'paper-1__A__1')))
+    await assertFails(getDoc(doc(student, 'prep_mcq_sets', 'paper-1__A__2')))
+    await assertFails(updateDoc(doc(student, 'prep_mcq_sets', 'paper-1__A__2'), { status: 'published' }))
+  })
+})
+
 describe('ai content cache is server-only (item 4.1)', () => {
   // `aiContentCache/{sha256}` is written by the content engine and read by the
   // engine alone. The cache key addresses syllabus content platform-wide, so a

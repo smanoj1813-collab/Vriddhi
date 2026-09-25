@@ -37,7 +37,6 @@ import { getAuth } from 'firebase-admin/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
 import { generateWithGeminiFallback, primaryGeminiModel, readGeminiUsage } from '../config/aiModels'
-import { generateContentWithCache } from '../ai/contentEngine'
 import {
   parsePrepDraft,
   validatePublishTransition,
@@ -104,6 +103,19 @@ import {
   frequentQuestionsForSubject,
   subjectsWithRepeats,
 } from '../prepFrequentQuestions'
+import {
+  ANSWER_GENERATE_BATCH_LIMIT,
+  PREP_MCQ_SETS_COLLECTION,
+  PREP_PAPER_ANSWERS_COLLECTION,
+  answerDocId,
+  buildMcqSetPrompt,
+  buildModelAnswerPrompt,
+  collectPaperQuestions,
+  mcqSetDocId,
+  sanitiseMcqSet,
+  sanitiseModelAnswer,
+} from '../prepModelAnswers'
+import { generateContentWithCache } from '../ai/contentEngine'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
@@ -1061,9 +1073,328 @@ router.get('/papers/:paperId', async (req, res) => {
       res.status(404).json({ error: 'Question paper not found' })
       return
     }
-    res.json({ success: true, data: paper })
+    // Model answers ride along with the paper: published ones for everybody,
+    // drafts/rejects only for the reviewer who has to deal with them.
+    const answers = await loadPaperAnswers(doc.id, isSuperadmin)
+    res.json({
+      success: true,
+      data: paper,
+      answers: answers.answers,
+      answersByQid: Object.fromEntries(answers.answers.map((answer) => [answer.qid, answer])),
+      answerDrafts: isSuperadmin ? answers.drafts : undefined,
+    })
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch question paper', detail: err.message })
+  }
+})
+
+// ── Model answers (item 3.4) and quick-revision MCQs (item 3.5) ─────────────
+// Generated once per question by the platform content team, reviewed by a
+// human, and only then visible. Drafts are never served to a student: the
+// status filter is applied here, in the Admin-SDK read, not in the client.
+
+interface PrepPaperAnswer {
+  paperId: string
+  qid: string
+  sectionId: string
+  label: string
+  question: string
+  marks: number
+  status: 'draft' | 'published' | 'rejected'
+  answerMd: string
+  model?: string
+  promptVersion?: string
+  generatedAt?: string
+  generatedBy?: string | null
+  reviewedAt?: string
+  reviewedBy?: string | null
+  issues?: string[]
+}
+
+/** Published answers, plus the drafts when the caller is the reviewer. */
+async function loadPaperAnswers(
+  paperId: string,
+  includeDrafts: boolean,
+): Promise<{ answers: PrepPaperAnswer[]; drafts: PrepPaperAnswer[] }> {
+  const snap = await db.collection(PREP_PAPER_ANSWERS_COLLECTION).where('paperId', '==', paperId).get()
+  const all = snap.docs.map((doc) => ({ ...(doc.data() as PrepPaperAnswer), id: doc.id }))
+  const published = all
+    .filter((answer) => answer.status === 'published')
+    .sort((a, b) => a.qid.localeCompare(b.qid))
+  const drafts = includeDrafts ? all.filter((answer) => answer.status !== 'published') : []
+  return { answers: published, drafts }
+}
+
+// POST /papers/answers/generate (Superadmin) — { paperId, qids?: string[] }
+// Generates at most ANSWER_GENERATE_BATCH_LIMIT answers per call so one request
+// can never turn into an unbounded token bill; call again for the next batch.
+router.post('/papers/answers/generate', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const { paperId, qids, regenerate } = req.body as { paperId?: string; qids?: string[]; regenerate?: boolean }
+    if (!paperId) {
+      res.status(400).json({ error: 'paperId is required' })
+      return
+    }
+    const doc = await db.collection('prep_papers').doc(paperId).get()
+    if (!doc.exists) {
+      res.status(404).json({ error: 'Question paper not found' })
+      return
+    }
+    const paper = { ...(doc.data() as PrepPaper), id: doc.id }
+    const all = collectPaperQuestions(paper)
+    const wanted = Array.isArray(qids) && qids.length > 0 ? all.filter((q) => qids.includes(q.qid)) : all
+    if (wanted.length === 0) {
+      res.status(400).json({ error: 'No matching questions on this paper.' })
+      return
+    }
+    const batch = wanted.slice(0, ANSWER_GENERATE_BATCH_LIMIT)
+
+    // Already-answered questions are skipped unless the operator asks for a
+    // regeneration, so a second call continues the paper instead of re-paying
+    // for the first 25 questions.
+    const existing = await db.collection(PREP_PAPER_ANSWERS_COLLECTION).where('paperId', '==', paperId).get()
+    const done = new Set(existing.docs.map((d) => (d.data() as PrepPaperAnswer).qid))
+
+    const results: Array<{ qid: string; status: string; issues?: string[]; words?: number }> = []
+    for (const question of batch) {
+      if (done.has(question.qid) && !regenerate) {
+        results.push({ qid: question.qid, status: 'already_answered' })
+        continue
+      }
+      const prompt = buildModelAnswerPrompt({
+        question: question.text,
+        parts: question.parts,
+        marks: question.marks,
+        subjectName: paper.subjectName,
+        programLabel: paper.programLabel,
+        universityName: paper.universityName,
+        examYear: paper.examYear,
+      })
+      try {
+        const generated = await generateContentWithCache(
+          {
+            kind: 'paperAnswer',
+            // Content-addressing only: the same question of the same paper with
+            // the same marks is the same work, whoever asks for it.
+            key: [paper.program, paper.subjectName, paper.examYear, question.sectionId, question.label, question.marks].join('|'),
+            tier: 'fast',
+            prompt,
+            parse: (raw) => sanitiseModelAnswer(raw, question.marks),
+          },
+        )
+        const sanitised = generated.content
+        if (!sanitised.ok) {
+          results.push({ qid: question.qid, status: 'rejected_by_sanitiser', issues: sanitised.issues })
+          continue
+        }
+        const docId = answerDocId(paperId, question.qid)
+        const payload: PrepPaperAnswer = {
+          paperId,
+          qid: question.qid,
+          sectionId: question.sectionId,
+          label: question.label,
+          question: question.text,
+          marks: question.marks,
+          status: 'draft',
+          answerMd: sanitised.answerMd,
+          model: generated.model,
+          promptVersion: generated.promptVersion,
+          generatedAt: new Date().toISOString(),
+          generatedBy: req.user?.uid || null,
+          reviewedAt: '',
+          reviewedBy: null,
+          issues: sanitised.issues,
+        }
+        await db.collection(PREP_PAPER_ANSWERS_COLLECTION).doc(docId).set(payload, { merge: true })
+        results.push({
+          qid: question.qid,
+          status: 'drafted',
+          issues: sanitised.issues,
+          words: sanitised.answerMd.split(/\s+/).filter(Boolean).length,
+        })
+      } catch (err: any) {
+        console.error('[Prep] answer generation failed for', question.qid, err)
+        results.push({ qid: question.qid, status: 'failed', issues: [String(err?.message || err)] })
+      }
+    }
+
+    res.json({
+      success: true,
+      paperId,
+      requested: wanted.length,
+      attempted: batch.length,
+      remaining: Math.max(0, wanted.length - batch.length),
+      results,
+    })
+  } catch (err: any) {
+    console.error('[Prep] POST /papers/answers/generate error:', err)
+    res.status(500).json({ error: 'Failed to generate model answers', detail: err.message })
+  }
+})
+
+// GET /papers/answers?paperId= — published for everyone, drafts for the reviewer.
+router.get('/papers/answers', async (req, res) => {
+  try {
+    const paperId = String(req.query.paperId || '').trim()
+    if (!paperId) {
+      res.status(400).json({ error: 'paperId is required' })
+      return
+    }
+    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    const { answers, drafts } = await loadPaperAnswers(paperId, isSuperadmin)
+    res.json({ success: true, count: answers.length, data: answers, drafts: isSuperadmin ? drafts : undefined })
+  } catch (err: any) {
+    console.error('[Prep] GET /papers/answers error:', err)
+    res.status(500).json({ error: 'Failed to fetch model answers', detail: err.message })
+  }
+})
+
+// POST /papers/answers/review (Superadmin) — { ids: string[], action }
+// Publish or reject. Publishing is the ONLY way an answer becomes visible to a
+// student, so this endpoint is the human gate the label promises.
+router.post('/papers/answers/review', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const { ids, action } = req.body as { ids?: string[]; action?: string }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'ids is required' })
+      return
+    }
+    if (action !== 'publish' && action !== 'reject' && action !== 'reopen') {
+      res.status(400).json({ error: "action must be 'publish', 'reject' or 'reopen'" })
+      return
+    }
+    const nextStatus: PrepPaperAnswer['status'] =
+      action === 'publish' ? 'published' : action === 'reject' ? 'rejected' : 'draft'
+    const now = new Date().toISOString()
+    const batch = db.batch()
+    for (const id of ids.slice(0, 500)) {
+      batch.set(
+        db.collection(PREP_PAPER_ANSWERS_COLLECTION).doc(id),
+        { status: nextStatus, reviewedAt: now, reviewedBy: req.user?.uid || null },
+        { merge: true },
+      )
+    }
+    await batch.commit()
+    res.json({ success: true, updated: ids.slice(0, 500).length, status: nextStatus })
+  } catch (err: any) {
+    console.error('[Prep] POST /papers/answers/review error:', err)
+    res.status(500).json({ error: 'Failed to update model answers', detail: err.message })
+  }
+})
+
+// POST /papers/mcq-sets/generate (Superadmin) — { paperId, qids?: string[] }
+// Quick-revision MCQs for a paper, from the same questions (and, when it has
+// been published, the reviewed answer as the source of truth).
+router.post('/papers/mcq-sets/generate', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const { paperId, qids } = req.body as { paperId?: string; qids?: string[] }
+    if (!paperId) {
+      res.status(400).json({ error: 'paperId is required' })
+      return
+    }
+    const doc = await db.collection('prep_papers').doc(paperId).get()
+    if (!doc.exists) {
+      res.status(404).json({ error: 'Question paper not found' })
+      return
+    }
+    const paper = { ...(doc.data() as PrepPaper), id: doc.id }
+    const all = collectPaperQuestions(paper)
+    const wanted = Array.isArray(qids) && qids.length > 0 ? all.filter((q) => qids.includes(q.qid)) : all
+    if (wanted.length === 0) {
+      res.status(400).json({ error: 'No matching questions on this paper.' })
+      return
+    }
+    const prompt = buildMcqSetPrompt({
+      subjectName: paper.subjectName,
+      programLabel: paper.programLabel,
+      questions: wanted.map((question) => question.text),
+      perTopic: 5,
+    })
+    const generated = await generateContentWithCache({
+      kind: 'mcqSet',
+      key: [paper.program, paper.subjectName, paper.examYear, wanted.map((q) => q.qid).join(',')].join('|'),
+      tier: 'fast',
+      prompt,
+      responseMimeType: 'application/json',
+      parse: (raw) => sanitiseMcqSet(raw),
+    })
+    const sanitised = generated.content
+    if (!sanitised.ok) {
+      res.status(502).json({ error: 'The model did not return usable questions. Try again.', issues: sanitised.issues })
+      return
+    }
+    const docId = mcqSetDocId(paperId, wanted.map((q) => q.qid).join('_'))
+    const payload = {
+      paperId,
+      subjectName: paper.subjectName,
+      program: paper.program,
+      examYear: paper.examYear,
+      qids: wanted.map((q) => q.qid),
+      status: 'draft' as const,
+      items: sanitised.items,
+      issues: sanitised.issues,
+      model: generated.model,
+      promptVersion: generated.promptVersion,
+      generatedAt: new Date().toISOString(),
+      generatedBy: req.user?.uid || null,
+    }
+    await db.collection(PREP_MCQ_SETS_COLLECTION).doc(docId).set(payload, { merge: true })
+    res.json({ success: true, data: payload, count: sanitised.items.length, issues: sanitised.issues })
+  } catch (err: any) {
+    console.error('[Prep] POST /papers/mcq-sets/generate error:', err)
+    res.status(500).json({ error: 'Failed to generate quick-revision questions', detail: err.message })
+  }
+})
+
+// GET /papers/mcq-sets?paperId= — published sets only, unless superadmin.
+router.get('/papers/mcq-sets', async (req, res) => {
+  try {
+    const paperId = String(req.query.paperId || '').trim()
+    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    let queryRef: FirebaseFirestore.Query = db.collection(PREP_MCQ_SETS_COLLECTION)
+    if (paperId) queryRef = queryRef.where('paperId', '==', paperId)
+    const snap = await queryRef.get()
+    const rows = snap.docs
+      .map((d) => ({ ...(d.data() as Record<string, unknown>), id: d.id } as Record<string, unknown> & { id: string; status?: string }))
+      .filter((row) => isSuperadmin || row.status === 'published')
+    res.json({ success: true, count: rows.length, data: rows })
+  } catch (err: any) {
+    console.error('[Prep] GET /papers/mcq-sets error:', err)
+    res.status(500).json({ error: 'Failed to fetch quick-revision sets', detail: err.message })
+  }
+})
+
+// POST /papers/mcq-sets/review (Superadmin) — same gate as model answers.
+router.post('/papers/mcq-sets/review', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const { ids, action } = req.body as { ids?: string[]; action?: string }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'ids is required' })
+      return
+    }
+    if (action !== 'publish' && action !== 'reject' && action !== 'reopen') {
+      res.status(400).json({ error: "action must be 'publish', 'reject' or 'reopen'" })
+      return
+    }
+    const nextStatus = action === 'publish' ? 'published' : action === 'reject' ? 'rejected' : 'draft'
+    const now = new Date().toISOString()
+    const batch = db.batch()
+    for (const id of ids.slice(0, 200)) {
+      batch.set(
+        db.collection(PREP_MCQ_SETS_COLLECTION).doc(id),
+        { status: nextStatus, reviewedAt: now, reviewedBy: req.user?.uid || null },
+        { merge: true },
+      )
+    }
+    await batch.commit()
+    res.json({ success: true, updated: ids.slice(0, 200).length, status: nextStatus })
+  } catch (err: any) {
+    console.error('[Prep] POST /papers/mcq-sets/review error:', err)
+    res.status(500).json({ error: 'Failed to update quick-revision sets', detail: err.message })
   }
 })
 
