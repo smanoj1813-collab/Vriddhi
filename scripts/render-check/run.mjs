@@ -1614,6 +1614,165 @@ await section('seeder (wrong role)', SEED_DIALOG, { open: true, onClose: () => {
 });
 
 globalThis.__RC_ROLE = undefined;
+
+// ── Superadmin Access Control: the College box accepts the college code ──────
+// The reported bug: granting a role while typing the college's *code* (the
+// identifier the operator chose on Create College and sees on the Colleges
+// page) was refused as "college does not exist", because the box only
+// accepted the Firestore document id — a string that appears nowhere in the
+// product but the URL. The box now resolves code / name / id against the
+// loaded colleges and sends the id; functions/src/collegeResolve.ts applies
+// the same rules server-side for anything typed that is not in the list.
+const ACCESS_CONTROL = '/src/modules/superadmin/pages/AccessControl.tsx';
+const DEMO_COLLEGE_ID = 'k3Jd9sLp2QwErTyUiOp1';
+globalThis.__RC_FIRESTORE_DOCS = [
+  { id: DEMO_COLLEGE_ID, data: () => ({ name: 'Vriddhi Demo College', code: 'VDC-001', status: 'active' }) },
+  { id: 'aZ8bN2mQ7xC4vB1nM6kL', data: () => ({ name: 'Seshadripuram College', code: 'SPM', status: 'active' }) },
+];
+globalThis.__RC_CALLABLE_DATA = {
+  grantUserRole: {
+    success: true, authVerified: true, uid: 'uid-admin-1', email: 'admin@vdc.edu', role: 'admin',
+    collegeId: DEMO_COLLEGE_ID, collegeName: 'Vriddhi Demo College', collegeCode: 'VDC-001', created: false,
+  },
+};
+globalThis.__RC_CALLABLE_PAYLOADS = [];
+await section('access control (college code)', ACCESS_CONTROL, {}, async (t, view) => {
+  check('access control: mounts without throwing', true);
+  const collegeBox = view.el('input[role="combobox"]');
+  check('access control: the College box is a searchable picker', !!collegeBox, t.slice(0, 300));
+  if (!collegeBox) return;
+
+  await view.type(collegeBox, 'vdc-001');
+  check('access control: a typed college code (any case) resolves to the college and shows its id',
+    new RegExp(`Vriddhi Demo College \\(VDC-001\\) · id ${DEMO_COLLEGE_ID}`).test(view.text()), view.text().slice(0, 600));
+
+  await view.type(view.el('input[type="email"]'), 'admin@vdc.edu');
+  await view.click('button[type="submit"]');
+  const sent = (globalThis.__RC_CALLABLE_PAYLOADS ?? []).find((p) => p.name === 'grantUserRole')?.payload;
+  check('access control: the grant is sent with the resolved document id, not the code',
+    sent?.collegeId === DEMO_COLLEGE_ID && sent?.email === 'admin@vdc.edu', JSON.stringify(sent));
+  check('access control: the success message names the college the grant landed on',
+    /College: Vriddhi Demo College \(VDC-001\)/.test(view.text()), view.text().slice(0, 600));
+
+  // Something not in the loaded list is passed through (the server resolves
+  // or explains), and the helper says so instead of pretending it is invalid.
+  await view.type(collegeBox, 'SOME-OTHER');
+  check('access control: an unknown value is handed to the server rather than blocked',
+    /server will still match it by code, name or document id/.test(view.text()), view.text().slice(0, 600));
+});
+
+// The identifier the operator pastes may also be the document id itself.
+globalThis.__RC_CALLABLE_PAYLOADS = [];
+await section('access control (document id)', ACCESS_CONTROL, {}, async (t, view) => {
+  const collegeBox = view.el('input[role="combobox"]');
+  if (!collegeBox) { check('access control (id): College picker present', false, t.slice(0, 300)); return; }
+  await view.type(collegeBox, DEMO_COLLEGE_ID);
+  check('access control (id): a pasted document id resolves too',
+    /Vriddhi Demo College \(VDC-001\)/.test(view.text()), view.text().slice(0, 600));
+});
+
+// ── Resume Builder (student page + superadmin add-on panel) ──────────────────
+// The page talks to the api function through resumeService (stubbed above):
+// the check proves the editor, template picker, credit line, ATS panel and the
+// download history all mount from ONE /resume/me response, that typing drives
+// autosave + a server-rendered preview (never a client-side rasteriser), and
+// that the add-on's "off" state renders the explanation instead of the editor.
+const RESUME_PAGE = '/src/modules/student/pages/StudentResumePage.tsx';
+const resumeCalls = (fn) => (globalThis.__RC_RESUME_CALLS ?? []).filter((c) => c.fn === fn);
+const waitMs = async (ms) => { await act(async () => { await new Promise((r) => setTimeout(r, ms)); }); };
+
+globalThis.__RC_RESUME = {};
+globalThis.__RC_RESUME_CALLS = [];
+await section('resume builder', RESUME_PAGE, {}, async (t, view) => {
+  check('resume: mounts the editor from one /resume/me call', resumeCalls('fetchMyResume').length === 1 && /Resume Builder/.test(t), t.slice(0, 300));
+  check('resume: five templates offered, the disabled one is locked',
+    view.all('[role="radio"]').length === 5 && view.all('[role="radio"][disabled]').length === 1 && /Off for your college/.test(t), t.slice(0, 600));
+  check('resume: credit line comes from the server (Classic 1 of 3 left)', /1 of 3 downloads left/.test(t), t.slice(0, 600));
+  check('resume: prefilled from the student record', view.value('resume-fullName') === 'Bala Kumar', String(view.value('resume-fullName')));
+  check('resume: ATS panel and download history render', /ATS readiness/.test(t) && /Classic · v1/.test(t) && /Classic · v2/.test(t), t.slice(0, 900));
+  check('resume: contact section exposes email/phone inputs', Boolean(view.el('#resume-email')) && Boolean(view.el('#resume-phone')), '');
+
+  await view.type('#resume-email', 'bala@example.com');
+  await waitMs(2200);
+  check('resume: typing triggers a server preview and an autosave (debounced, one each)',
+    resumeCalls('fetchResumePreview').length >= 1 && resumeCalls('saveMyResume').length >= 1
+    && resumeCalls('saveMyResume').at(-1).params.fullName === 'Bala Kumar',
+    JSON.stringify(globalThis.__RC_RESUME_CALLS.map((c) => c.fn)));
+  check('resume: the preview is the server HTML in a sandboxed iframe',
+    Boolean(view.el('iframe[data-testid="resume-preview"]')) && view.el('iframe[data-testid="resume-preview"]').getAttribute('sandbox') === '', '');
+
+  const dl = view.byText('Download PDF');
+  check('resume: Download PDF is enabled while credits remain', Boolean(dl) && !dl.disabled, '');
+  await view.click(dl);
+  await waitMs(50);
+  check('resume: download asks the server for the PDF (one credit) and saves the blob',
+    resumeCalls('generateResumePdf').length === 1 && resumeCalls('generateResumePdf')[0].params.templateId === 'classic'
+    && resumeCalls('saveBlobAs').length === 1, JSON.stringify(globalThis.__RC_RESUME_CALLS.map((c) => c.fn)));
+  check('resume: after a download the page re-reads credits from the server', resumeCalls('fetchMyResume').length === 2, String(resumeCalls('fetchMyResume').length));
+
+  const redl = view.all('[data-testid="resume-downloads"] button').find((b) => /PDF/.test(b.textContent));
+  await view.click(redl);
+  check('resume: re-downloading an old version is a free file fetch, not a new render',
+    resumeCalls('redownloadResumePdf').length === 1 && resumeCalls('generateResumePdf').length === 1, JSON.stringify(globalThis.__RC_RESUME_CALLS.map((c) => c.fn)));
+});
+
+// Out of credits: the server refuses (409) and the page explains rather than rendering locally.
+globalThis.__RC_RESUME = { exhausted: true, me: (await server.ssrLoadModule('/scripts/render-check/stubs/resumeService.ts')).__defaultResumeMe({
+  credits: [
+    { templateId: 'classic', used: 3, allowed: 3, remaining: 0, enabled: true },
+    { templateId: 'modern', used: 0, allowed: 3, remaining: 3, enabled: true },
+    { templateId: 'compact', used: 0, allowed: 3, remaining: 3, enabled: true },
+    { templateId: 'fresher', used: 0, allowed: 3, remaining: 3, enabled: true },
+    { templateId: 'executive', used: 0, allowed: 3, remaining: 3, enabled: true },
+  ],
+  resume: { data: { contact: { fullName: 'Bala Kumar', headline: '', email: '', phone: '', location: '', linkedin: '', github: '', website: '' }, summary: '', education: [], experience: [], projects: [], skills: [], certifications: [], achievements: [], languages: [], sectionOrder: ['summary', 'education', 'experience', 'projects', 'skills', 'certifications', 'achievements', 'languages'], targetJobDescription: '' }, templateId: 'classic', updatedAt: '2026-09-22T10:00:00.000Z' },
+}) };
+globalThis.__RC_RESUME_CALLS = [];
+await section('resume builder (no credits left)', RESUME_PAGE, {}, async (t, view) => {
+  const dl = view.byText('Download PDF');
+  check('resume (exhausted): the button is disabled at 0 of 3', Boolean(dl) && dl.disabled && /0 of 3 downloads left/.test(t), t.slice(0, 600));
+  check('resume (exhausted): earlier versions stay re-downloadable', view.all('[data-testid="resume-downloads"] button').length === 2, '');
+  const modern = view.all('[role="radio"]').find((b) => /Modern/.test(b.textContent));
+  await view.click(modern);
+  const dl2 = view.byText('Download PDF');
+  check('resume (exhausted): switching to a template with credits re-enables the download', Boolean(dl2) && !dl2.disabled && /3 of 3 downloads left · Modern/.test(view.text()), view.text().slice(0, 600));
+});
+
+// Add-on off for the college: no editor, an explanation instead.
+globalThis.__RC_RESUME = { me: { enabled: false, cycle: '2026-27', settings: { downloadsPerTemplate: 3, aiAssist: false, aiCallsPerStudent: 0, templates: [] }, resume: null, credits: [], aiCredits: null, downloads: [] } };
+globalThis.__RC_RESUME_CALLS = [];
+await section('resume builder (add-on off)', RESUME_PAGE, {}, async (t, view) => {
+  check('resume (off): explains the add-on instead of showing the editor', /Not enabled for your college yet/.test(t) && !view.el('#resume-fullName'), t.slice(0, 400));
+  check('resume (off): nothing is rendered or saved', resumeCalls('fetchResumePreview').length === 0 && resumeCalls('saveMyResume').length === 0, '');
+});
+
+// Superadmin panel: switches editable, usage shown, save sends the settings.
+globalThis.__RC_RESUME = {};
+globalThis.__RC_RESUME_CALLS = [];
+await section('resume add-on panel (superadmin)', '/src/shared/components/resume/ResumeAddonPanel.tsx', { collegeId: 'college-a', collegeName: 'Vriddhi Demo College', canEdit: true }, async (t, view) => {
+  check('addon panel: loads settings + usage for the college', resumeCalls('fetchResumeAdminSettings').length === 1 && /12 resumes started/.test(t) && /7 PDFs/.test(t), t.slice(0, 500));
+  check('addon panel: add-on is Off by default', /Off/.test(t) && view.el('[role="switch"][aria-label="Enable Resume Builder"]')?.getAttribute('aria-checked') === 'false', '');
+  const save = view.byText('Save add-on settings');
+  check('addon panel: save is disabled until something changes', Boolean(save) && save.disabled, '');
+  await view.click('[role="switch"][aria-label="Enable Resume Builder"]');
+  const save2 = view.byText('Save add-on settings');
+  check('addon panel: flipping the master switch enables save', Boolean(save2) && !save2.disabled, '');
+  await view.click(save2);
+  const sent = resumeCalls('saveResumeAdminSettings')[0]?.params;
+  check('addon panel: save sends enabled=true with the cap and template list', sent?.settings?.enabled === true && sent?.settings?.downloadsPerTemplate === 3 && sent?.collegeId === 'college-a', JSON.stringify(sent));
+  check('addon panel: credit reset form is present for superadmins', Boolean(view.el('input[aria-label="Student email"]')) && Boolean(view.byText('Reset credits')), '');
+});
+
+await section('resume add-on panel (college admin, read-only)', '/src/shared/components/resume/ResumeAddonPanel.tsx', { collegeName: 'Vriddhi Demo College', canEdit: false, embedded: true }, async (t, view) => {
+  check('addon panel (read-only): switches are disabled and there is no save or reset', view.all('[role="switch"]').every((s) => s.disabled) && !view.byText('Save add-on settings') && !view.byText('Reset credits'), '');
+  check('addon panel (read-only): usage is still visible to the placement cell', /5 students downloaded/.test(t), t.slice(0, 400));
+});
+
+globalThis.__RC_RESUME = undefined;
+globalThis.__RC_RESUME_CALLS = [];
+
+globalThis.__RC_CALLABLE_DATA = undefined;
+globalThis.__RC_CALLABLE_PAYLOADS = [];
 globalThis.__RC_FIRESTORE_DOCS = [];
 
 globalThis.__RC_LOCATION_STATE = null;

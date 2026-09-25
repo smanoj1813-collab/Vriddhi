@@ -21,6 +21,7 @@ import {
   Receipt,
   School,
   Sparkles,
+  Briefcase,
   type LucideIcon,
 } from 'lucide-react'
 import type { TranslationKey } from '../../shared/i18n'
@@ -65,6 +66,7 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library, group: 'practice', translationKey: 'nav.materials', hint: 'Notes, slides and study material shared by faculty' },
   { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap, group: 'practice', translationKey: 'nav.library', hint: 'Books, journals and e-resources' },
   { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone, group: 'practice', translationKey: 'nav.journey', hint: 'Your progress across the programme' },
+  { id: 'resume', label: 'Resume Builder', path: '/student/resume', icon: Briefcase, group: 'practice', hint: 'ATS-friendly resume templates, live preview and PDF download (Placement Pack)' },
   { id: 'faculty-connect', label: 'Faculty Connect', path: '/student/faculty-connect', icon: UserCheck, group: 'practice', aliases: ['/student/mentorship'], hint: 'Ask a mentor or a faculty member' },
   { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard, group: 'money', translationKey: 'nav.fees', aliases: ['/student/fee-portal'], hint: 'Dues, payments and receipts' },
   { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt, group: 'money', hint: 'Fee challans issued to you' },

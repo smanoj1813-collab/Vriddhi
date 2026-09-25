@@ -25,8 +25,11 @@ import {
   savePrepSubject,
   seedPrepCatalog,
   fetchPracticeQuestions,
+  fetchPrepPapers,
+  savePrepPaper,
   topicSubtopics,
   effectivePrepTrack,
+  type PrepPaperSummary,
   type PrepTrack,
   type PrepSubject,
   type PrepSubtopic,
@@ -60,7 +63,231 @@ const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
   // Company placement guides (TCS, Infosys, Wipro, Accenture, Capgemini,
   // Cognizant) — pattern + section→topic map over the aptitude catalogue.
   { code: 'companies', label: 'Company Prep' },
+  // Previous-year university question papers (prep_papers) — structured
+  // text transcribed from openly published Karnataka university papers.
+  { code: 'papers', label: 'Previous Year Papers' },
 ];
+
+const PAPER_SEED_TEMPLATE = `{
+  "id": "bcu-bcom-3-corporate-accounting-2024-11",
+  "program": "bcom",
+  "university": "bcu",
+  "scheme": "NEP 2021-22 onwards (F+R)",
+  "semester": 3,
+  "subject": "Corporate Accounting",
+  "paperCode": "DCCM301",
+  "examMonth": "November/December",
+  "examYear": 2024,
+  "durationMinutes": 150,
+  "maxMarks": 60,
+  "instructions": ["Answers should be written in English only."],
+  "sections": [
+    { "id": "A", "instruction": "Answer any FIVE of the following questions. Each question carries 2 marks.", "answer": 5, "marksEach": 2, "subLabels": true,
+      "questions": ["Define share.", "What is goodwill?", "…"] },
+    { "id": "B", "instruction": "Answer any FOUR of the following questions. Each question carries 5 marks.", "answer": 4, "marksEach": 5,
+      "questions": ["Explain …", "…"] },
+    { "id": "C", "instruction": "Answer any TWO of the following questions. Each question carries 12 marks.", "answer": 2, "marksEach": 12,
+      "questions": ["…"] },
+    { "id": "D", "instruction": "Answer any ONE of the following questions. Each question carries 6 marks.", "answer": 1, "marksEach": 6,
+      "questions": ["…"] }
+  ],
+  "prepSubjectId": null,
+  "source": { "title": "BCU III Sem B.Com Nov/Dec 2024 question paper", "url": "https://…pdf", "publisher": "College website", "retrievedOn": "2026-09-25" }
+}`;
+
+/**
+ * Collapsible "Previous Year Papers" block: what is in prep_papers right now
+ * (per program / university), a link to the public library, and a JSON box
+ * to add or correct one paper without a redeploy. Bulk content still ships
+ * through the seed bundle (functions/src/data/prepPapers) and the seed button.
+ */
+function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
+  const [open, setOpen] = useState(false);
+  const [papers, setPapers] = useState<PrepPaperSummary[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [json, setJson] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const [filter, setFilter] = useState('');
+
+  const load = async () => {
+    setError(null);
+    try {
+      const res = await fetchPrepPapers();
+      setPapers(res.papers);
+    } catch (err: any) {
+      setError(err.message || 'Could not load papers');
+      setPapers([]);
+    }
+  };
+
+  useEffect(() => {
+    if (open) void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, refreshKey]);
+
+  const byProgram = new Map<string, number>();
+  const byUniversity = new Map<string, number>();
+  for (const p of papers || []) {
+    const label = p.legacyProgram ? `${p.programLabel}` : p.programLabel;
+    byProgram.set(label, (byProgram.get(label) || 0) + 1);
+    byUniversity.set(p.universityName, (byUniversity.get(p.universityName) || 0) + 1);
+  }
+  const q = filter.trim().toLowerCase();
+  const visible = (papers || []).filter(
+    (p) =>
+      !q ||
+      p.subjectName.toLowerCase().includes(q) ||
+      p.programLabel.toLowerCase().includes(q) ||
+      p.universityName.toLowerCase().includes(q) ||
+      String(p.examYear).includes(q) ||
+      String(p.paperCode || '').toLowerCase().includes(q),
+  );
+
+  const handleSave = async () => {
+    setSaveMsg(null);
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(json);
+    } catch {
+      setSaveMsg({ kind: 'err', text: 'That is not valid JSON.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await savePrepPaper(payload);
+      const warn = res.warnings.filter((w) => w.level === 'warning').map((w) => w.message).join(' ');
+      setSaveMsg({ kind: 'ok', text: `Saved "${res.data.subjectName}" (${res.data.examLabel}).${warn ? ` Note: ${warn}` : ''}` });
+      await load();
+    } catch (err: any) {
+      setSaveMsg({ kind: 'err', text: err.message || 'Save failed' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        aria-expanded={open}
+      >
+        <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <FileText className="w-4 h-4 text-amber-600" />
+          Previous year question papers
+          <span className="text-[11px] font-medium text-slate-400">
+            — {papers ? `${papers.length} in prep_papers` : 'BBA · B.Com · B.Sc · BA · BBM, Karnataka universities'}
+          </span>
+        </span>
+        <ChevronRight className={'w-4 h-4 text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+          {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+          {papers === null ? (
+            <p className="text-xs text-slate-500 flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading papers…</p>
+          ) : papers.length === 0 ? (
+            <p className="text-xs text-slate-500">
+              Nothing seeded yet. Tick <span className="font-semibold">Previous Year Papers</span> above and press Seed — the bundle ships
+              with the transcribed papers and writes them to <code>prep_papers</code>.
+            </p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from(byProgram.entries()).map(([label, n]) => (
+                  <span key={label} className="px-2 py-1 rounded-md bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 text-[11px] font-bold">
+                    {label} · {n}
+                  </span>
+                ))}
+                {Array.from(byUniversity.entries()).map(([label, n]) => (
+                  <span key={label} className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    {label} · {n}
+                  </span>
+                ))}
+                <a
+                  href="/prep/papers"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 dark:text-teal-300 hover:underline"
+                >
+                  Open public library <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Search className="w-3.5 h-3.5 text-slate-400" />
+                <input
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Filter by subject, program, university, year or code"
+                  className="flex-1 max-w-md text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5"
+                />
+                <span className="text-[11px] text-slate-400">{visible.length} shown</span>
+              </div>
+              <div className="max-h-72 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+                {visible.map((p) => (
+                  <a
+                    key={p.id}
+                    href={`/prep/papers/${encodeURIComponent(p.id)}?program=${p.program}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between gap-3 px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                  >
+                    <span className="min-w-0">
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{p.subjectName}</span>
+                      <span className="text-slate-500"> — {p.programLabel} Sem {p.semester} · {p.universityName} · {p.examLabel}{p.paperCode ? ` · ${p.paperCode}` : ''}</span>
+                    </span>
+                    <span className="shrink-0 text-slate-400">
+                      {p.questionCount} Q · {p.maxMarks} marks{p.status !== 'published' ? ' · DRAFT' : ''}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+
+          <details className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-3">
+            <summary className="text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer">Add or correct one paper (JSON)</summary>
+            <p className="text-[11px] text-slate-500 mt-2">
+              Paste a compact paper record. Sections list their rubric, how many to answer, marks each and the questions; totals
+              must add up to <code>maxMarks</code>. Saving with an existing <code>id</code> updates that paper.
+            </p>
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setJson(PAPER_SEED_TEMPLATE)}
+                className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300"
+              >
+                Load template
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || !json.trim()}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-600 text-white text-[11px] font-bold disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                Save paper
+              </button>
+            </div>
+            <textarea
+              value={json}
+              onChange={(e) => setJson(e.target.value)}
+              rows={12}
+              spellCheck={false}
+              className="mt-2 w-full font-mono text-[11px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-2"
+              placeholder="{ … }"
+            />
+            {saveMsg ? (
+              <p className={'text-[11px] mt-1 ' + (saveMsg.kind === 'ok' ? 'text-emerald-600' : 'text-rose-600')}>{saveMsg.text}</p>
+            ) : null}
+          </details>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * Collapsible "who sees company prep" block for the Studio: superadmin picks
@@ -129,6 +356,8 @@ export default function PrepContentStudioTab() {
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [loadingTopic, setLoadingTopic] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  // Bumped after every seed pass so the papers panel reloads its counts.
+  const [seedPass, setSeedPass] = useState(0);
   // Which programs the operator has ticked for the next seed pass. Defaults
   // to every seedable program so "Seed All" is one click, and ticking a
   // single program (e.g. just B.Com) narrows the pass to that catalogue.
@@ -281,6 +510,7 @@ export default function PrepContentStudioTab() {
         .join('; ');
       showToast('ok', res.message + (integrity ? ` Review: ${integrity}.` : ''));
       await loadSubjects();
+      setSeedPass((n) => n + 1);
     } catch (err: any) {
       showToast('err', `Seeding failed: ${err.message}`);
     } finally {
@@ -525,6 +755,9 @@ export default function PrepContentStudioTab() {
 
       {/* Company prep visibility per college */}
       <CompanyPrepVisibilitySection />
+
+      {/* Previous-year university question papers */}
+      <PreviousYearPapersSection refreshKey={seedPass} />
 
       {/* Studio Workspace Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

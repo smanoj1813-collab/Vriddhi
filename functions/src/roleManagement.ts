@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { IDENTITY_API_VERSION, generateRandomPassword, verifyAuthAccount } from './identityShared'
+import { describeCollegeResolutionFailure, resolveCollegeReference } from './collegeResolve'
 
 const db = admin.firestore()
 const ALLOWED_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations'] as const
@@ -36,7 +37,10 @@ export const grantUserRole = onCall(
     const email = clean(input.email, 254).toLowerCase()
     const name = clean(input.name, 120)
     const role = clean(input.role, 30).toLowerCase() as Role
-    const collegeId = clean(input.collegeId, 120) || null
+    // What the operator typed — resolved to a live document id below. Kept
+    // separately so the error message can quote the original value.
+    const collegeInput = clean(input.collegeId, 160) || null
+    let collegeId: string | null = collegeInput
     // Optional department tag for admin/hod identities — stamped into the
     // custom claim so Firestore rules can scope their reads (empty ⇒ wide).
     const department = clean(input.department, 120) || null
@@ -56,17 +60,29 @@ export const grantUserRole = onCall(
     // list (they all query by collegeId). Resolve it up front so the profile
     // is written with a live id plus the denormalised name/code the list
     // pages display.
+    //
+    // The value is resolved, not merely checked: operators know their college
+    // by the *code* they chose on the Create College form (the list page shows
+    // it, the CSVs key on it), while claims and rules key on the opaque
+    // document id that appears nowhere but the URL. Insisting on the id here
+    // produced "College … does not exist" for an operator who had typed the
+    // code exactly right. See collegeResolve.ts.
     let college: { name: string; code: string } | null = null
-    if (collegeId) {
-      const collegeSnap = await db.doc(`colleges/${collegeId}`).get()
-      if (!collegeSnap.exists) {
+    if (collegeInput) {
+      const resolution = await resolveCollegeReference(db, collegeInput)
+      if (resolution.kind !== 'resolved') {
         throw new HttpsError(
-          'not-found',
-          `College "${collegeId}" does not exist. Use the college's document id (Colleges → View Details → the id in the URL), not its name or code.`
+          resolution.kind === 'ambiguous' ? 'failed-precondition' : 'not-found',
+          describeCollegeResolutionFailure(collegeInput, resolution)
         )
       }
-      const c = collegeSnap.data() || {}
-      college = { name: String(c.name || ''), code: String(c.code || '') }
+      collegeId = resolution.college.id
+      college = { name: resolution.college.name, code: resolution.college.code }
+      if (resolution.matchedBy !== 'id') {
+        logger.info('[grantUserRole] college resolved by ' + resolution.matchedBy, {
+          input: collegeInput, collegeId, actorUid: request.auth.uid,
+        })
+      }
     }
 
     let authUser: admin.auth.UserRecord
@@ -209,6 +225,10 @@ export const grantUserRole = onCall(
       apiVersion: IDENTITY_API_VERSION,
       authVerified: verification.ok,
       success: true, uid: authUser.uid, email, role, collegeId, created,
+      // Echo the resolved college so the form can confirm which tenant the
+      // typed code/name landed on.
+      collegeName: college?.name ?? null,
+      collegeCode: college?.code ?? null,
       // The target must sign in again before the new claims and rules apply.
       reauthenticateRequired: roleChanged,
       temporaryPassword: created ? generatedPassword : undefined,
@@ -285,6 +305,24 @@ export const diagnoseIdentity = onCall(
         issues.push(
           "The collegeId claim and the users document agree only after trimming — the security rules compare strictly, so this account's tenant writes are refused. Run Identity repair, then the user signs out and back in."
         )
+      }
+      // A claim that is not a live college document id. Before grantUserRole
+      // resolved the College box, an operator could stamp the college *code*
+      // (or a typo) into the claim; every college-scoped list then shows the
+      // account nowhere and every tenant rule treats it as belonging to no
+      // college. Name the likely college so the fix is one re-grant away.
+      if (rawClaimCollege && rawClaimCollege.trim()) {
+        const claimed = rawClaimCollege.trim()
+        const live = await db.doc(`colleges/${claimed}`).get()
+        if (!live.exists) {
+          const guess = await resolveCollegeReference(db, claimed)
+          issues.push(
+            `The collegeId claim "${claimed}" is not a college document id, so college pages cannot list this account and tenant-scoped rules refuse its reads and writes.` +
+              (guess.kind === 'resolved'
+                ? ` It matches the ${guess.matchedBy} of "${guess.college.name}" (id ${guess.college.id}) — re-grant the role from Access Control with that college selected, then the user signs out and back in.`
+                : ' Re-grant the role from Access Control with the correct college selected, then the user signs out and back in.')
+          )
+        }
       }
       // Probe the attendance rows this account tries to write. With a
       // provably-correct token the ONE remaining refusal path in the rules

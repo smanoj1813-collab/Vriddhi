@@ -33,11 +33,14 @@ import {
   KeyRound,
   Download,
   FileSpreadsheet,
+  Copy,
+  Check,
 } from "lucide-react";
 import { resetCollegeData } from '../api/superAdminApi';
 import BulkCredentialReset from '../components/BulkCredentialReset';
 import FacultyLinkRepair from '../components/FacultyLinkRepair';
 import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel';
+import ResumeAddonPanel from '@/shared/components/resume/ResumeAddonPanel';
 import { downloadCsv } from '@/shared/utils/parseCSV';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -106,6 +109,18 @@ const SuperAdminCollegeDetail: React.FC = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
+  const copyCollegeId = async () => {
+    if (!id) return;
+    try {
+      await navigator.clipboard?.writeText(id);
+      setIdCopied(true);
+      window.setTimeout(() => setIdCopied(false), 1500);
+    } catch {
+      // Clipboard access can be refused (insecure context, permissions); the
+      // id stays visible and selectable on screen either way.
+    }
+  };
 
   // ── Bulk credential reset ──────────────────────────────────────────
   const [bulkReset, setBulkReset] = useState<null | { collection: 'students' | 'faculty'; items: Array<{ id: string; name: string; email: string; regNo?: string; department?: string }> }>(null);
@@ -412,6 +427,19 @@ const SuperAdminCollegeDetail: React.FC = () => {
               <p className="text-slate-600 dark:text-slate-400 text-sm">
                 {college.code} &bull; {college.city || college.location || "—"}
               </p>
+              {/* The Firestore document id is what claims, rules and scripts
+                  key on, yet it used to appear nowhere but the URL — so
+                  operators pasted the code where an id was wanted. Show it,
+                  copyable, next to the code it is so easily confused with. */}
+              <button
+                type="button"
+                onClick={copyCollegeId}
+                title="Copy the college's document id (used by claims, rules and scripts)"
+                className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-slate-500 dark:text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+              >
+                id&nbsp;{college.id}
+                {idCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+              </button>
             </div>
           </div>
           <div className="ml-auto flex items-center gap-3">
@@ -640,6 +668,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
             </div>
           </div>
           <CompanyPrepVisibilityPanel collegeId={college.id} collegeName={college.name} />
+          <ResumeAddonPanel collegeId={college.id} collegeName={college.name} canEdit />
           </div>
         )}
 

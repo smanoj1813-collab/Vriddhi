@@ -22,6 +22,12 @@
 //   POST /auth/init                     → (Signed in) Set student role claim for B2C learner
 //   POST /seed-bba                      → (Superadmin) Seed BBA subjects & topics across 3 years
 //   POST /seed-all                      → (Superadmin) Seed every program (or a chosen subset / degree level)
+//   GET  /papers                        → Previous-year question papers (published; filters + facets)
+//   GET  /papers/:paperId               → One paper with every section and question
+//   POST /papers                        → (Superadmin) Create or update a paper (accepts seed or full shape)
+//
+//   prep_papers/{paperId} holds the previous-year university question papers
+//   (structured text, English). They seed through /seed-all with code 'papers'.
 
 import { Router, Response } from 'express'
 import { db, auth } from '../config/firebase'
@@ -80,6 +86,18 @@ import {
 } from '../data/bcomSeedData'
 import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../data/aptitudeSeedData'
 import { SEEDED_COMPANIES } from '../data/companySeedData'
+import { SEEDED_PREP_PAPERS } from '../data/prepPapers'
+import {
+  PREP_PAPER_SEED_CODE,
+  PREP_PAPER_UNIVERSITIES,
+  filterPrepPapers,
+  normalisePrepPaperInput,
+  prepPaperFacets,
+  sortPrepPapers,
+  toPrepPaperSummary,
+  validatePrepPapers,
+  type PrepPaper,
+} from '../prepPapers'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
@@ -865,6 +883,87 @@ router.post('/companies', verifyAuth, async (req: AuthenticatedRequest, res: Res
   }
 })
 
+// ── Previous-year question papers ───────────────────────────────────────────
+// prep_papers/{paperId}. Anonymous callers see published papers only (the
+// public /prep pages), so this can never leak a draft even from a shared URL.
+
+async function loadVisiblePapers(req: AuthenticatedRequest | any): Promise<PrepPaper[]> {
+  const snap = await db.collection('prep_papers').get()
+  let papers: PrepPaper[] = snap.docs.map((d) => ({ ...(d.data() as PrepPaper), id: d.id }))
+  const isSuperadmin = (req as any).user?.role === 'superadmin'
+  if (!isSuperadmin) papers = papers.filter((p) => p.status === 'published')
+  return papers
+}
+
+// GET /papers?program=bcom&semester=3&university=bcu&year=2024&subjectId=&scheme=nep&q=tax
+router.get('/papers', async (req, res) => {
+  try {
+    const papers = await loadVisiblePapers(req)
+    const { program, semester, university, year, subjectId, scheme, q } = req.query
+    const matched = filterPrepPapers(papers, {
+      program: typeof program === 'string' ? program : undefined,
+      semester: typeof semester === 'string' ? semester : undefined,
+      university: typeof university === 'string' ? university : undefined,
+      year: typeof year === 'string' ? year : undefined,
+      subjectId: typeof subjectId === 'string' ? subjectId : undefined,
+      scheme: typeof scheme === 'string' ? scheme : undefined,
+      q: typeof q === 'string' ? q : undefined,
+    })
+    const data = sortPrepPapers(matched).map(toPrepPaperSummary)
+    // Facets describe everything the caller may see for the chosen program,
+    // so the filter chips never offer a university/year with zero papers.
+    const facetBase = typeof program === 'string' && program.trim() ? filterPrepPapers(papers, { program }) : papers
+    res.json({
+      success: true,
+      count: data.length,
+      data,
+      facets: prepPaperFacets(facetBase),
+      universities: PREP_PAPER_UNIVERSITIES,
+    })
+  } catch (err: any) {
+    console.error('[Prep] GET /papers error:', err)
+    res.status(500).json({ error: 'Failed to fetch question papers', detail: err.message })
+  }
+})
+
+router.get('/papers/:paperId', async (req, res) => {
+  try {
+    const { paperId } = req.params
+    const doc = await db.collection('prep_papers').doc(paperId).get()
+    if (!doc.exists) {
+      res.status(404).json({ error: 'Question paper not found' })
+      return
+    }
+    const paper = { ...(doc.data() as PrepPaper), id: doc.id }
+    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    if (paper.status !== 'published' && !isSuperadmin) {
+      res.status(404).json({ error: 'Question paper not found' })
+      return
+    }
+    res.json({ success: true, data: paper })
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch question paper', detail: err.message })
+  }
+})
+
+// POST /papers (Superadmin) — body is either a compact seed record or a full paper.
+router.post('/papers', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!requireSuperadmin(req, res)) return
+  try {
+    const { paper, report } = normalisePrepPaperInput(req.body)
+    if (!paper) {
+      res.status(400).json({ error: 'Question paper failed validation.', issues: report.issues })
+      return
+    }
+    const data = { ...paper, updatedAt: new Date().toISOString(), updatedBy: req.user?.uid || null }
+    await db.collection('prep_papers').doc(paper.id).set(data, { merge: true })
+    res.json({ success: true, data, warnings: report.issues })
+  } catch (err: any) {
+    console.error('[Prep] POST /papers error:', err)
+    res.status(500).json({ error: 'Failed to save question paper', detail: err.message })
+  }
+})
+
 // ── GET /practice (Randomly sample questions from approved pool) ────────────
 router.get('/practice', async (req, res) => {
   try {
@@ -1137,12 +1236,14 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       .filter((b): b is (typeof PREP_SEED_BUNDLES)[number] => Boolean(b))
     // Company-prep bundle: not a subject/topic bundle, so handled separately.
     const seedCompanies = selection.programs.includes(COMPANY_SEED_CODE)
+    // Previous-year question papers: prep_papers, also handled separately.
+    const seedPapers = selection.programs.includes(PREP_PAPER_SEED_CODE)
     // Valid program codes that simply have no seed bundle yet.
     const unseedable = selection.programs.filter(
-      (code) => !seedableCodes.includes(code) && code !== COMPANY_SEED_CODE
+      (code) => !seedableCodes.includes(code) && code !== COMPANY_SEED_CODE && code !== PREP_PAPER_SEED_CODE
     )
 
-    if (selection.errors.length > 0 && bundles.length === 0 && !seedCompanies) {
+    if (selection.errors.length > 0 && bundles.length === 0 && !seedCompanies && !seedPapers) {
       res.status(400).json({
         error: 'No seedable programs matched the request.',
         errors: selection.errors,
@@ -1151,7 +1252,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       return
     }
 
-    if (bundles.length === 0 && !seedCompanies) {
+    if (bundles.length === 0 && !seedCompanies && !seedPapers) {
       res.status(400).json({
         error: 'The requested programs have no seed data yet.',
         errors: selection.errors,
@@ -1170,6 +1271,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       subjectCount: number
       topicCount: number
       questionCount: number
+      paperCount?: number
       valid: boolean
       errorCount: number
       warningCount: number
@@ -1239,6 +1341,25 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       })
     }
 
+    if (seedPapers) {
+      const knownSubjectIds = new Set(PREP_SEED_BUNDLES.flatMap((b) => b.subjects.map((s) => s.id)))
+      const report = validatePrepPapers(SEEDED_PREP_PAPERS, { knownSubjectIds })
+      for (const paper of SEEDED_PREP_PAPERS) {
+        writes.push({ ref: db.collection('prep_papers').doc(paper.id), data: paper as any })
+      }
+      perProgram.push({
+        code: PREP_PAPER_SEED_CODE,
+        label: 'Previous Year Papers',
+        subjectCount: 0,
+        topicCount: 0,
+        questionCount: 0,
+        paperCount: SEEDED_PREP_PAPERS.length,
+        valid: report.valid,
+        errorCount: report.errorCount,
+        warningCount: report.warningCount,
+      })
+    }
+
     // Commit in chunks; Firestore rejects batches larger than 500 writes.
     const chunks = chunkArray(writes, FIRESTORE_BATCH_LIMIT)
     for (const chunk of chunks) {
@@ -1258,7 +1379,8 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
 
     res.json({
       success: true,
-      message: `Seeded ${perProgram.length} bundle(s): ${totals.subjectCount - (seedCompanies ? SEEDED_COMPANIES.length : 0)} subjects, ${totals.topicCount} topics, ${totals.questionCount} universal practice questions${seedCompanies ? ` and ${SEEDED_COMPANIES.length} company prep guides` : ''} across ${chunks.length} commit(s).`,
+      message: `Seeded ${perProgram.length} bundle(s): ${totals.subjectCount - (seedCompanies ? SEEDED_COMPANIES.length : 0)} subjects, ${totals.topicCount} topics, ${totals.questionCount} universal practice questions${seedCompanies ? `, ${SEEDED_COMPANIES.length} company prep guides` : ''}${seedPapers ? `, ${SEEDED_PREP_PAPERS.length} previous-year question papers` : ''} across ${chunks.length} commit(s).`,
+      paperCount: seedPapers ? SEEDED_PREP_PAPERS.length : 0,
       programs: selection.programs,
       errors: selection.errors,
       unseedable,

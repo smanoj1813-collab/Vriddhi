@@ -9,14 +9,18 @@
 const store = (globalThis as unknown) as {
   __RC_CALLABLE_DATA?: Record<string, unknown>;
   __RC_CALLABLE_CALLS?: string[];
+  // What each call was sent, so a check can assert on the payload a form built
+  // (e.g. that Access Control sends the resolved college id, not the code).
+  __RC_CALLABLE_PAYLOADS?: Array<{ name: string; payload: unknown }>;
   __RC_CALLABLE_ERRORS?: Record<string, { code: string; message: string }>;
 };
 
 export function getFunctions(..._a: any[]) { return { __stub: 'functions' }; }
 
 export function httpsCallable(_functions: unknown, name: string) {
-  return async (_payload?: unknown) => {
+  return async (payload?: unknown) => {
     store.__RC_CALLABLE_CALLS = [...(store.__RC_CALLABLE_CALLS ?? []), name];
+    store.__RC_CALLABLE_PAYLOADS = [...(store.__RC_CALLABLE_PAYLOADS ?? []), { name, payload }];
     const failure = store.__RC_CALLABLE_ERRORS?.[name];
     if (failure) {
       throw Object.assign(new Error(failure.message), { code: failure.code });

@@ -598,9 +598,10 @@ export const PREP_PROGRAM_CODES: string[] = PREP_PROGRAM_CATALOG.map((p) => p.co
 /**
  * Non-program catalogues that can also be seeded. 'aptitude' is the shared
  * placement bundle (Quantitative Aptitude, Logical Reasoning, Verbal Ability)
- * that every program lists.
+ * that every program lists; 'companies' the company placement guides;
+ * 'papers' the previous-year university question papers (prep_papers).
  */
-export const PREP_TRACK_SEED_CODES: string[] = ['aptitude', 'companies']
+export const PREP_TRACK_SEED_CODES: string[] = ['aptitude', 'companies', 'papers']
 
 /** Everything `/prep/seed-all` understands: program codes + track bundles. */
 export const PREP_SEED_CODES: string[] = [...PREP_PROGRAM_CODES, ...PREP_TRACK_SEED_CODES]

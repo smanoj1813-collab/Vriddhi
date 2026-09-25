@@ -1161,6 +1161,38 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // -- Resume Builder add-on -------------------------------------------------
+    // resumes/{uid} holds a student's editable resume plus the PDF credit
+    // ledger; resumeDownloads/{id} is one row per generated PDF (the Storage
+    // object it points at is streamed by the api function, never read from the
+    // browser). ALL writes go through functions/src/routes/resume.ts so the
+    // credit cap (N renders per template per year) is enforced inside a
+    // Firestore transaction the client cannot influence. Reads: the owner and
+    // the college's academic staff (placement cell reviews).
+    match /resumes/{uid} {
+      allow get: if isSignedIn()
+        && (request.auth.uid == uid
+          || isSuperadmin()
+          || (isStaff() && sameCollege(resource.data)));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if false;
+    }
+
+    match /resumeDownloads/{downloadId} {
+      allow get: if isSignedIn()
+        && (('uid' in resource.data && resource.data.uid == request.auth.uid)
+          || isSuperadmin()
+          || (isStaff() && sameCollege(resource.data)));
+      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow write: if false;
+    }
+
+    // Settings changes and credit resets by superadmins. Admin SDK only.
+    match /resumeAudit/{entryId} {
+      allow read: if isSuperadmin();
+      allow write: if false;
+    }
+
     match /studentSubmissions/{submissionId} {
       allow read: if isSignedIn()
         && (isSuperadmin()
@@ -1487,6 +1519,15 @@ service cloud.firestore {
         allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
         allow write: if false;
       }
+    }
+
+    // Previous-year university question papers (structured text, English).
+    // Same boundary as prep_subjects: signed-in readers see published papers,
+    // superadmins also see drafts, and every write goes through the Admin SDK
+    // (POST /prep/papers, /prep/seed-all).
+    match /prep_papers/{paperId} {
+      allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
+      allow write: if false;
     }
 
     // Individual learner topic and quiz completion progress.

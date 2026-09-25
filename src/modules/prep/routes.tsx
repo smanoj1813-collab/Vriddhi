@@ -17,4 +17,7 @@ export const prepRoutes: RouteObject[] = [
   { path: '/prep/subject/:subjectId', element: <PrepPublicViewer view="subject" /> },
   { path: '/prep/subject/:subjectId/topic/:topicId', element: <PrepPublicViewer view="topic" /> },
   { path: '/prep/company/:companyCode', element: <PrepPublicViewer view="company" /> },
+  // Previous-year university question papers (published only, like the rest).
+  { path: '/prep/papers', element: <PrepPublicViewer view="papers" /> },
+  { path: '/prep/papers/:paperId', element: <PrepPublicViewer view="paper" /> },
 ];

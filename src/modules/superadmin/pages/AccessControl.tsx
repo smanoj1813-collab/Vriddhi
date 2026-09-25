@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { httpsCallable } from 'firebase/functions'
-import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Autocomplete, Box, Button, Card, CardContent, Chip, CircularProgress, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import { AdminPanelSettings, Build, Search, VerifiedUser } from '@mui/icons-material'
 import CredentialsTable from '../components/CredentialsTable'
 import { runIdentityRepair, type RepairInput, type RepairResult } from '../api/identityApi'
 import { useColleges } from '../hooks/useSuperAdmin'
 import { functions } from '@/Firebase/config'
+import { collegeLabel, collegeMatchesQuery, resolveCollegeInput, type CollegeOption } from '@/shared/utils/collegeReference'
 
 /**
  * Sentinel for "no college filter". MUI's Select treats an empty string as *no
@@ -13,6 +14,7 @@ import { functions } from '@/Firebase/config'
  * dropdown — which is exactly what the operator saw.
  */
 const ALL_COLLEGES = '*'
+
 
 /** Which Firestore profile collections one pass should walk. */
 const REPAIR_SCOPES: Record<'all' | 'students' | 'faculty' | 'staff', RepairInput['collections']> = {
@@ -43,8 +45,15 @@ export default function AccessControl() {
   const [repairCollections, setRepairCollections] = useState<'all' | 'students' | 'faculty' | 'staff'>('all')
   const [repairLimit, setRepairLimit] = useState('500')
   const [repairBudget, setRepairBudget] = useState('420')
-  const { data: collegesData } = useColleges()
+  const { data: collegesData, isLoading: collegesLoading } = useColleges()
   const collegeOptions = collegesData?.items || []
+  const grantColleges: CollegeOption[] = collegeOptions.map(c => ({ id: c.id, name: c.name || '', code: c.code || '' }))
+  // The option the operator explicitly picked from the list (drives the
+  // Autocomplete's `value`); typed text lives in form.collegeId and is
+  // resolved on the fly so a pasted code or id is confirmed before submit.
+  const [pickedCollege, setPickedCollege] = useState<CollegeOption | null>(null)
+  const resolvedCollege = pickedCollege ?? resolveCollegeInput(form.collegeId, grantColleges)
+  const collegeRequired = form.role !== 'superadmin'
   const [repairResult, setRepairResult] = useState<RepairResult | null>(null)
   const [repairBusy, setRepairBusy] = useState(false)
 
@@ -52,9 +61,15 @@ export default function AccessControl() {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); setBusy(true); setMessage(null)
     try {
-      const result = await grant(form)
+      // Send the document id when the typed value resolves locally; otherwise
+      // pass it through and let the backend resolver (id → code → name)
+      // explain what it could and could not match.
+      const result = await grant({ ...form, collegeId: resolvedCollege ? resolvedCollege.id : form.collegeId.trim() })
       const data = result.data
-      setMessage({ type: 'success', text: data.created ? `Account created. Temporary password: ${data.temporaryPassword || 'the supplied password'}` : 'Identity granted and wired to all profile systems. The user must sign out and sign in again to refresh claims.' })
+      const where = data.collegeId
+        ? ` College: ${data.collegeName || resolvedCollege?.name || data.collegeId}${data.collegeCode || resolvedCollege?.code ? ` (${data.collegeCode || resolvedCollege?.code})` : ''}.`
+        : ''
+      setMessage({ type: 'success', text: (data.created ? `Account created. Temporary password: ${data.temporaryPassword || 'the supplied password'}.` : 'Identity granted and wired to all profile systems. The user must sign out and sign in again to refresh claims.') + where })
       setForm(prev => ({ ...prev, email: '', name: '', password: '' }))
     } catch (error: any) { setMessage({ type: 'error', text: error?.message || 'Unable to grant identity' }) }
     finally { setBusy(false) }
@@ -104,7 +119,50 @@ export default function AccessControl() {
         <TextField label="Email" type="email" required value={form.email} onChange={change('email')} />
         <TextField label="Display name" value={form.name} onChange={change('name')} helperText="Required when creating a new Auth account" />
         <TextField select label="Role" value={form.role} onChange={change('role')}>{roles.map(role => <MenuItem key={role} value={role}>{role}</MenuItem>)}</TextField>
-        <TextField label="College ID" value={form.collegeId} onChange={change('collegeId')} helperText={form.role === 'superadmin' ? 'Optional for superadmins' : 'Required for this role'} />
+        <Autocomplete<CollegeOption, false, false, true>
+          freeSolo
+          options={grantColleges}
+          loading={collegesLoading}
+          getOptionLabel={o => (typeof o === 'string' ? o : collegeLabel(o))}
+          isOptionEqualToValue={(o, v) => o.id === (typeof v === 'string' ? v : v.id)}
+          // `value` is only the explicit pick. Typed text is deliberately NOT
+          // promoted to `value` even when it resolves — MUI would replace what
+          // the operator is typing with the option label mid-keystroke.
+          value={pickedCollege}
+          onChange={(_e, picked) => {
+            if (picked && typeof picked === 'object') {
+              setPickedCollege(picked)
+              setForm(prev => ({ ...prev, collegeId: picked.id }))
+            } else {
+              setPickedCollege(null)
+              setForm(prev => ({ ...prev, collegeId: typeof picked === 'string' ? picked : '' }))
+            }
+          }}
+          onInputChange={(_e, text, reason) => {
+            // 'reset' is MUI echoing the picked option's label into the box;
+            // the form already holds that option's id.
+            if (reason === 'reset') return
+            setPickedCollege(null)
+            setForm(prev => ({ ...prev, collegeId: text }))
+          }}
+          filterOptions={(opts, state) => opts.filter(c => collegeMatchesQuery(c, state.inputValue))}
+          renderInput={params => (
+            <TextField
+              {...params}
+              label="College"
+              required={collegeRequired}
+              helperText={
+                resolvedCollege
+                  ? `✓ ${collegeLabel(resolvedCollege)} · id ${resolvedCollege.id}`
+                  : form.collegeId.trim() && grantColleges.length > 0 && !collegesLoading
+                    ? 'Not in the loaded college list — the server will still match it by code, name or document id'
+                    : collegeRequired
+                      ? 'Pick the college, or type its code (as shown on the Colleges page) or document id'
+                      : 'Optional for superadmins'
+              }
+            />
+          )}
+        />
         <TextField label="Password for a new account" type="password" value={form.password} onChange={change('password')} helperText="Optional; minimum 10 characters" />
         <Button type="submit" variant="contained" size="large" disabled={busy} startIcon={busy ? <CircularProgress size={18} /> : <VerifiedUser />} sx={{ alignSelf: 'center' }}>Grant identity</Button>
       </Box>
