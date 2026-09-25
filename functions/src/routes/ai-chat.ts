@@ -6,6 +6,12 @@ import { verifyAuth, AuthenticatedRequest, resolveCollegeId } from '../middlewar
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
 import { generateWithGeminiFallback, primaryGeminiModel, readGeminiUsage } from '../config/aiModels'
+import {
+  AI_CHAT_QUOTA_COLLECTION,
+  chatQuotaDocId,
+  chatQuotaExceededBody,
+  chatQuotaState,
+} from '../aiChatQuota'
 
 const router = express.Router()
 
@@ -1337,6 +1343,22 @@ router.post('/chat', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedR
 
   const lastUserMessage = messages[messages.length - 1]?.content || ''
 
+  // Decision D2: a per-student daily turn budget. Staff roles are exempt, and
+  // AI_CHAT_DAILY_TURNS=0 switches the cap off entirely (see aiChatQuota.ts).
+  const quotaDay = new Date().toISOString().slice(0, 10)
+  const quotaRef = db.collection(AI_CHAT_QUOTA_COLLECTION).doc(chatQuotaDocId(user.uid, quotaDay))
+  try {
+    const quotaSnap = await quotaRef.get()
+    const quota = chatQuotaState(quotaSnap.data(), user.role)
+    if (quota.exceeded) {
+      res.status(429).json(chatQuotaExceededBody(quota))
+      return
+    }
+  } catch (quotaErr) {
+    // Fail open: a quota-read failure must never take the assistant down.
+    console.warn('[AI Chat] quota check failed, allowing the turn', quotaErr)
+  }
+
   try {
     // 1. Gather live contextual summary based on role & collegeId
     const role = user.role || 'student'
@@ -1505,6 +1527,19 @@ Guidelines:
     if (!replyText) {
       replyText = generateGroundedFallbackResponse(role, lastUserMessage, contextSummary)
     }
+
+    // Count the turn only when the user actually got an answer.
+    void quotaRef
+      .set(
+        {
+          uid: user.uid,
+          day: quotaDay,
+          turns: FieldValue.increment(1),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true },
+      )
+      .catch(() => undefined)
 
     res.json({
       success: true,

@@ -77,6 +77,18 @@ export async function sendAIChatMessage({ messages, context }: SendChatMessagePa
       body: JSON.stringify({ messages, context }),
     });
 
+    // Decision D2: a student who has used their daily turns gets the server's
+    // own explanation, not a canned "here is how attendance works" local reply.
+    // The cap is a wall they should understand, not a bug they should report.
+    if (response.status === 429) {
+      const body = await response.json().catch(() => null);
+      if (body?.error === 'chat_quota_exceeded' && typeof body.message === 'string') {
+        return { content: body.message, actions: deriveChatActions(lastUserMessage, role), source: 'server' };
+      }
+      const message = typeof body?.message === 'string' ? body.message : 'Too many AI messages right now — try again shortly.';
+      return { content: message, actions: deriveChatActions(lastUserMessage, role), source: 'server' };
+    }
+
     // Throws on non-2xx AND on 2xx-but-not-JSON (e.g. the SPA shell), so a
     // hosting-rewrite mishit can never masquerade as an answer.
     await assertJsonResponse(response, AI_CHAT_ENDPOINT);

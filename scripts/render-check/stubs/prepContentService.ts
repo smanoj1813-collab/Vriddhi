@@ -145,3 +145,29 @@ export default {
   topicSubtopics,
   rememberLearnerCollege,
 };
+
+// ── Previous-year papers + repeated questions (items 2.1/3.3 of the hand-off) ──
+// Fixtures: __RC_PREP.papers (list), __RC_PREP.paper (single), __RC_PREP.frequent.
+export const PREP_PAPER_LEGACY_LABELS: Record<string, string> = { bbm: 'BBM' };
+
+export async function fetchPrepPapers(params?: any): Promise<any> {
+  record('papers', params);
+  const papers = data().papers ?? [];
+  return {
+    papers,
+    facets: data().paperFacets ?? { universities: [], years: [], semesters: [], programs: [] },
+    universities: data().paperUniversities ?? [],
+  };
+}
+
+export async function fetchPrepPaper(paperId: string): Promise<any> {
+  record('paper', paperId);
+  const paper = data().paper;
+  if (!paper) throw new Error('Question paper not found');
+  return paper;
+}
+
+export async function fetchFrequentQuestions(params: any): Promise<any> {
+  record('frequent', params);
+  return data().frequent ?? { subject: null, subjects: [], questions: [] };
+}

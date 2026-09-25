@@ -28,9 +28,11 @@ import {
 } from '@mui/material';
 import { ChevronRight, Description, OpenInNew, Print, Search } from '@mui/icons-material';
 import {
+  fetchFrequentQuestions,
   fetchPrepPaper,
   fetchPrepPapers,
   PREP_PAPER_LEGACY_LABELS,
+  type FrequentQuestion,
   type PrepPaper,
   type PrepPaperFacets,
   type PrepPaperSummary,
@@ -646,5 +648,193 @@ export function PaperView({ paperId }: { paperId: string }) {
         </Box>
       </Stack>
     </Container>
+  );
+}
+
+
+// ─── Most repeated questions (item 3.3) ──────────────────────────────────────
+//
+// /prep/papers/repeats?program=bcom&subject=Financial%20Accounting
+//
+// The grouping itself happens on the server (functions/src/prepFrequentQuestions.ts)
+// so the rule that decides what counts as "the same question" exists once and is
+// unit-tested there. This view is presentation only: pick a subject, see what
+// keeps coming back, and open the papers it came from.
+
+export function FrequentQuestionsView() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const fromUrl = String(searchParams.get('program') || '').toLowerCase();
+  const program = PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
+  const subject = String(searchParams.get('subject') || '');
+
+  const [subjects, setSubjects] = useState<Array<{ subjectName: string; repeated: number }>>([]);
+  const [questions, setQuestions] = useState<FrequentQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchFrequentQuestions({ program, subject: subject || undefined })
+      .then((res) => {
+        if (cancelled) return;
+        setSubjects(res.subjects);
+        setQuestions(res.questions);
+      })
+      .catch((err) => !cancelled && setError(err instanceof Error ? err.message : 'Could not load repeated questions.'))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [program, subject, attempt]);
+
+  const pickProgram = (code: string) => {
+    rememberProgram(code);
+    // The subject list is per-program, so the chosen subject cannot carry over.
+    setSearchParams({ program: code }, { replace: true });
+  };
+
+  const pickSubject = (name: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (name) next.set('subject', name);
+    else next.delete('subject');
+    setSearchParams(next, { replace: true });
+  };
+
+  const hubPath = `/prep?program=${program}`;
+  const crumbs = [
+    { label: 'Prep', to: '/prep' },
+    { label: PROGRAM_LABELS[program] || program, to: hubPath },
+    { label: 'Most repeated questions' },
+  ];
+
+  return (
+    <>
+      <ProgramControl active={program} onPick={pickProgram} action={<ShareLinkButton path={`/prep/papers/repeats?program=${program}`} compact />} />
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
+        <Stack spacing={2}>
+          <PrepPageNav crumbs={crumbs} sharePath={`/prep/papers/repeats?program=${program}`} backTo={hubPath} />
+          <SectionHeader
+            kicker="Exam practice"
+            title={`${PROGRAM_LABELS[program] || program} — questions that keep coming back`}
+            meta={
+              loading
+                ? 'Loading…'
+                : subject
+                  ? `${questions.length} repeated question${questions.length === 1 ? '' : 's'} in ${subject}`
+                  : `Pick a subject — ${subjects.length} subject${subjects.length === 1 ? '' : 's'} in this program have questions that appear in more than one paper`
+            }
+          />
+
+          {error ? (
+            <Card variant="outlined">
+              <Stack spacing={1.5} sx={{ p: 3, alignItems: 'flex-start' }}>
+                <Typography sx={{ fontWeight: 700 }}>Could not load repeated questions</Typography>
+                <Typography variant="body2" color="error.main">{error}</Typography>
+                <Button size="small" variant="outlined" onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
+              </Stack>
+            </Card>
+          ) : loading ? (
+            <Stack spacing={1}>
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: 2.5 }} />
+              ))}
+            </Stack>
+          ) : subjects.length === 0 ? (
+            <Card variant="outlined">
+              <Box sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
+                <Typography sx={{ fontWeight: 700, mb: 0.5 }}>No repeats found yet</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  This program has papers, but no question appears in more than one of them yet. Open{' '}
+                  <Box component={Link} to={libraryPath(program)} sx={{ color: 'primary.main', fontWeight: 700 }}>
+                    previous year papers
+                  </Box>{' '}
+                  to practise the full sets.
+                </Typography>
+              </Box>
+            </Card>
+          ) : (
+            <>
+              <Stack spacing={1}>
+                <Typography variant="overline" color="text.secondary">Subject</Typography>
+                <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                  {subjects.map((entry) => (
+                    <Chip
+                      key={entry.subjectName}
+                      size="small"
+                      label={`${entry.subjectName} (${entry.repeated})`}
+                      color={subject === entry.subjectName ? 'primary' : 'default'}
+                      variant={subject === entry.subjectName ? 'filled' : 'outlined'}
+                      onClick={() => pickSubject(subject === entry.subjectName ? '' : entry.subjectName)}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+
+              {subject && questions.length === 0 ? (
+                <Card variant="outlined">
+                  <Box sx={{ p: 3 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No repeats found for {subject} in this program.
+                    </Typography>
+                  </Box>
+                </Card>
+              ) : null}
+
+              {questions.map((entry, index) => (
+                <Card key={entry.key} variant="outlined" data-testid="frequent-question">
+                  <Stack spacing={1.25} sx={{ p: { xs: 2, md: 2.5 } }}>
+                    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                      <Chip size="small" color="primary" label={`Asked ${entry.count} times`} />
+                      {entry.marks ? <Chip size="small" variant="outlined" label={`${entry.marks} marks`} /> : null}
+                      {entry.years.map((year) => (
+                        <Chip key={year} size="small" variant="outlined" label={year} />
+                      ))}
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                        #{index + 1}
+                      </Typography>
+                    </Stack>
+                    <Typography sx={{ fontWeight: 600, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{entry.question}</Typography>
+                    {entry.variants.length > 0 ? (
+                      <Box sx={{ pl: 1.5, borderLeft: '2px solid', borderColor: 'divider' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                          Also asked as
+                        </Typography>
+                        {entry.variants.map((variant, i) => (
+                          <Typography key={i} variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line', lineHeight: 1.5 }}>
+                            {variant}
+                          </Typography>
+                        ))}
+                      </Box>
+                    ) : null}
+                    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                      {entry.paperIds.slice(0, 6).map((paperId) => (
+                        <Button
+                          key={paperId}
+                          size="small"
+                          variant="text"
+                          endIcon={<ChevronRight />}
+                          component={Link}
+                          to={paperPath(paperId, program)}
+                        >
+                          {paperId}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Stack>
+                </Card>
+              ))}
+            </>
+          )}
+
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+            Grouped from the transcribed texts of published papers: two questions are treated as the same when their wording
+            overlaps closely and the marks agree. Nothing here is generated by AI — it is counting.
+          </Typography>
+        </Stack>
+      </Container>
+    </>
   );
 }

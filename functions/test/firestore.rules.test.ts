@@ -1305,6 +1305,41 @@ describe('platform documents are server-only', () => {
   })
 })
 
+describe('ai chat quota counters are server-only', () => {
+  // `ai_chat_quota/{uid}_{YYYY-MM-DD}` (D2) is read and written only by the
+  // /ai/chat route through the Admin SDK. If a student could write it, the
+  // daily cap would be decorative; if anyone could read it, one student's usage
+  // would be another's business.
+  const quotaDoc = { uid: 'quota-student', day: '2026-09-26', turns: 4 }
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'ai_chat_quota', 'quota-student_2026-09-26'), quotaDoc)
+    })
+  })
+
+  it('denies reads to the student it belongs to', async () => {
+    await assertFails(getDoc(doc(studentContext().firestore(), 'ai_chat_quota', 'quota-student_2026-09-26')))
+  })
+
+  it('denies reads to staff and superadmins', async () => {
+    await assertFails(getDoc(doc(facultyContext().firestore(), 'ai_chat_quota', 'quota-student_2026-09-26')))
+    await assertFails(getDoc(doc(superadminContext().firestore(), 'ai_chat_quota', 'quota-student_2026-09-26')))
+  })
+
+  it('denies writes, so a cap can never be reset from a client', async () => {
+    const db = studentContext().firestore()
+    await assertFails(setDoc(doc(db, 'ai_chat_quota', 'quota-student_2026-09-26'), { ...quotaDoc, turns: 0 }))
+    await assertFails(updateDoc(doc(db, 'ai_chat_quota', 'quota-student_2026-09-26'), { turns: 0 }))
+    await assertFails(deleteDoc(doc(db, 'ai_chat_quota', 'quota-student_2026-09-26')))
+  })
+
+  it('denies listing the collection', async () => {
+    const db = studentContext().firestore()
+    await assertFails(getDocs(query(collection(db, 'ai_chat_quota'), limit(5))))
+  })
+})
+
 describe('teaching materials storage', () => {
   it('allows staff uploads only in their own tenant', async () => {
     const contents = new Uint8Array([37, 80, 68, 70])

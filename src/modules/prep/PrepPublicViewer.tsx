@@ -60,7 +60,7 @@ import {
 } from '@/shared/services/prepContentService';
 import { formatStreamLabel } from '@/shared/utils/prepHelpers';
 import { CompanyStrip, CompanyView } from './PrepCompanyViews';
-import { PapersBlock, PapersLibraryView, PaperView } from './PrepPapersViews';
+import { FrequentQuestionsView, PapersBlock, PapersLibraryView, PaperView } from './PrepPapersViews';
 import {
   AUDIENCE_LABELS,
   DifficultyChip,
@@ -1097,7 +1097,11 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
 
 // ─── Page shell ─────────────────────────────────────────────────────────────
 
-export default function PrepPublicViewer({ view }: { view: 'hub' | 'subject' | 'topic' | 'company' | 'papers' | 'paper' }) {
+export default function PrepPublicViewer({
+  view,
+}: {
+  view: 'hub' | 'subject' | 'topic' | 'company' | 'papers' | 'paper' | 'repeats'
+}) {
   const params = useParams<{ subjectId: string; topicId: string; companyCode: string; paperId: string }>();
   // The prep pages are public, but a signed-in learner's college decides
   // which company guides they may see. Remember it so anonymous follow-up
@@ -1111,6 +1115,7 @@ export default function PrepPublicViewer({ view }: { view: 'hub' | 'subject' | '
     if (view === 'subject') return <SubjectView subjectId={params.subjectId || ''} />;
     if (view === 'company') return <CompanyView code={params.companyCode || ''} />;
     if (view === 'papers') return <PapersLibraryView />;
+    if (view === 'repeats') return <FrequentQuestionsView />;
     if (view === 'paper') return <PaperView paperId={params.paperId || ''} />;
     return <TopicView subjectId={params.subjectId || ''} topicId={params.topicId || ''} />;
   }, [view, params.subjectId, params.topicId, params.companyCode, params.paperId]);

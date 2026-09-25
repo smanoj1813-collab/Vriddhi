@@ -1494,6 +1494,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Daily AI-chat turn counters (item D2 of the optimisation hand-off).
+    // `ai_chat_quota/{uid}_{YYYY-MM-DD}` is written ONLY by the /ai/chat route
+    // with the Admin SDK, which checks the counter before doing any work and
+    // increments it after a reply is produced. Clients are denied outright:
+    // a student must not be able to reset their own cap, and nobody may read
+    // another student's usage.
+    match /ai_chat_quota/{docId} {
+      allow read, write: if false;
+    }
+
     // Import job bookkeeping for the Superadmin "Import papers (ZIP)" flow.
     // Every read and write goes through the api function's
     // /question-import/jobs routes, which run with the Admin SDK and enforce

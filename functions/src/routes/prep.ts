@@ -99,6 +99,10 @@ import {
   validatePrepPapers,
   type PrepPaper,
 } from '../prepPapers'
+import {
+  frequentQuestionsForSubject,
+  subjectsWithRepeats,
+} from '../prepFrequentQuestions'
 
 /**
  * Registry of every program that ships with seed data. Order is the order the
@@ -952,6 +956,52 @@ router.get('/papers', async (req, res) => {
   } catch (err: any) {
     console.error('[Prep] GET /papers error:', err)
     res.status(500).json({ error: 'Failed to fetch question papers', detail: err.message })
+  }
+})
+
+// GET /papers/frequent?program=bcom&subject=Financial%20Accounting&limit=25
+// Item 3.3: the questions that keep coming back, computed from the papers the
+// caller may already see. Pure CPU over data already in the catalogue — no AI,
+// no extra collection, no per-student storage. Cached publicly for an hour
+// because the answer only changes when a paper is added.
+router.get('/papers/frequent', async (req, res) => {
+  try {
+    const papers = await loadVisiblePapers(req)
+    const { program, subject, limit, minCount } = req.query
+    const programFilter = typeof program === 'string' && program.trim() ? program.trim().toLowerCase() : ''
+    const visible = programFilter
+      ? papers.filter((paper) => paper.program.toLowerCase() === programFilter || paper.legacyProgram === programFilter)
+      : papers
+
+    const subjectFilter = typeof subject === 'string' ? subject.trim() : ''
+    if (!subjectFilter) {
+      // No subject chosen yet: tell the client which subjects actually repeat so
+      // the picker never offers an empty tab.
+      res.json({
+        success: true,
+        subject: null,
+        subjects: subjectsWithRepeats(visible, { minCount: Number(minCount) || undefined }),
+        count: 0,
+        data: [],
+      })
+      return
+    }
+
+    const data = frequentQuestionsForSubject(visible, subjectFilter, {
+      limit: Math.min(100, Math.max(1, Number(limit) || 25)),
+      minCount: Number(minCount) || undefined,
+    })
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.json({
+      success: true,
+      subject: subjectFilter,
+      subjects: subjectsWithRepeats(visible, { minCount: Number(minCount) || undefined }),
+      count: data.length,
+      data,
+    })
+  } catch (err: any) {
+    console.error('[Prep] GET /papers/frequent error:', err)
+    res.status(500).json({ error: 'Failed to group repeated questions', detail: err.message })
   }
 })
 

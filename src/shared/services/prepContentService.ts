@@ -588,6 +588,54 @@ export interface PrepPaperListResult {
   universities: PrepPaperUniversity[]
 }
 
+/**
+ * Item 3.3 — a question that has appeared in several papers, with the years and
+ * papers it came from. `count` is how many times it was asked.
+ */
+export interface FrequentQuestion {
+  question: string
+  key: string
+  subjectName: string
+  program: string
+  marks: number | null
+  count: number
+  years: number[]
+  examLabels: string[]
+  paperIds: string[]
+  variants: string[]
+}
+
+export interface FrequentQuestionListResult {
+  subject: string | null
+  subjects: Array<{ subjectName: string; repeated: number }>
+  questions: FrequentQuestion[]
+}
+
+/**
+ * Repeat groupings for one subject. With no subject, the response lists the
+ * subjects that DO repeat (so the picker cannot offer an empty tab).
+ */
+export async function fetchFrequentQuestions(params: {
+  program?: string
+  subject?: string
+  limit?: number
+  minCount?: number
+}): Promise<FrequentQuestionListResult> {
+  const qs = new URLSearchParams()
+  if (params.program) qs.set('program', params.program)
+  if (params.subject) qs.set('subject', params.subject)
+  if (params.limit) qs.set('limit', String(params.limit))
+  if (params.minCount) qs.set('minCount', String(params.minCount))
+  const res = await authedFetch(`/prep/papers/frequent${qs.toString() ? `?${qs.toString()}` : ''}`, { method: 'GET' })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to load repeated questions')
+  return {
+    subject: json.subject ?? null,
+    subjects: json.subjects || [],
+    questions: json.data || [],
+  }
+}
+
 export async function fetchPrepPapers(params?: {
   program?: string
   semester?: number | string
