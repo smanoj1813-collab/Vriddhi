@@ -1219,6 +1219,26 @@ describe('question bank import jobs are server-only', () => {
   })
 })
 
+describe('platform documents are server-only', () => {
+  // `platform/aiModelCanary` is written daily by the model canary function
+  // (functions/src/aiModelCanary.ts) and read by operators in the console.
+  // Item 2.4 later adds a superadmin read rule for `platform/stats`; until
+  // then the default deny below is the contract, so a client cannot read or
+  // forge the canary report.
+  it('denies client read and write to the canary report', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'platform', 'aiModelCanary'), {
+        checkedAt: '2026-09-25T01:00:00.000Z',
+        degradedTiers: [],
+      })
+    })
+
+    const db = superadminContext().firestore()
+    await assertFails(getDoc(doc(db, 'platform', 'aiModelCanary')))
+    await assertFails(setDoc(doc(db, 'platform', 'aiModelCanary'), { degradedTiers: [] }))
+  })
+})
+
 describe('teaching materials storage', () => {
   it('allows staff uploads only in their own tenant', async () => {
     const contents = new Uint8Array([37, 80, 68, 70])

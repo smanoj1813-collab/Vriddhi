@@ -35,6 +35,7 @@ import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
 import { resumeEditorLimiter, resumePdfLimiter } from '../middleware/rateLimit'
 import { renderPdfToBuffer, pdfErrorResponse } from '../utils/pdfRenderer'
+import { geminiModelsFor, isModelUnavailableError } from '../config/aiModels'
 import { geminiClient } from '../config/aiProviders'
 import {
   RESUME_TEMPLATES,
@@ -601,9 +602,22 @@ router.post('/ai/improve', requireRole(...STUDENT_ROLES), async (req: Authentica
     }
 
     try {
-      const model = gemini.getGenerativeModel({ model: process.env.RESUME_AI_MODEL || 'gemini-2.5-flash' })
-      const result = await model.generateContent(aiPrompt(kind, text, context))
-      const reply = cleanAiReply(result.response.text() || '')
+      // RESUME_AI_MODEL still wins if the operator set it; otherwise the
+      // quality tier (with its in-Gemini fallback) supplies the model.
+      const models = geminiModelsFor('quality', [process.env.RESUME_AI_MODEL])
+      let reply = ''
+      let lastErr: unknown = new Error('AI service did not answer')
+      for (const modelId of models) {
+        try {
+          const result = await gemini.getGenerativeModel({ model: modelId }).generateContent(aiPrompt(kind, text, context))
+          reply = cleanAiReply(result.response.text() || '')
+          if (reply) break
+        } catch (err) {
+          lastErr = err
+          if (!isModelUnavailableError(err)) throw err
+        }
+      }
+      if (!reply) throw lastErr
       if (!reply) throw new Error('empty AI reply')
       res.json({ text: reply.slice(0, kind === 'summary' ? 1200 : 400), remaining })
     } catch (aiErr) {

@@ -398,3 +398,49 @@ universal question bank as **pending drafts** — nothing publishes itself. It i
 the content items above (3.3–3.5) will eventually read from, and it already handles scanned and
 Kannada documents. It still needs a production run: rules deploy, a rules test run on a machine with
 the emulator tooling, and one real ZIP smoke test by the operator.
+
+---
+
+## 10. Item 2.1 — implemented (branch `arena/01a0d9ad-vriddhi`)
+
+**What changed**
+
+| Where | Before | After |
+|---|---|---|
+| Model ids | 7 call sites, 3 of them calling a model Google shut down in Sep 2025 | one registry: `functions/src/config/aiModels.ts`; a unit test greps the source and fails if any `gemini-<number>` literal appears outside it |
+| Tiers | no tiers; four different ways of choosing a model | **fast** (chat, study material, prep drafts) and **quality** (paper parsing, grading, question generation, paper import) |
+| Fallback | a dead model fell through to DeepSeek/OpenAI, or failed | a dead model moves to the *next model in the same tier* first; a transient error (quota/network) does **not** retry, so no call is spent twice |
+| Lifecycle | no dates anywhere | each tier entry carries its shutdown date + a daily **canary** (`aiModelCanary`, 06:30 IST) that asks the tier's first model for one word and writes `platform/aiModelCanary`; a retired id logs `TIER MODEL IS GONE` |
+| Telemetry | `promptTokenCount` + `candidatesTokenCount` only | thinking tokens counted into billable output, cached tokens tracked separately (`tokensThinking` / `tokensCached` on `ai_usage`), and the model that actually answered is recorded (chat, study packs, prep drafts, grading suggestions, paper-import audit rows) |
+
+**Operator knobs (no code change, no app redeploy)**
+
+| Variable | Default | Use it to |
+|---|---|---|
+| `GEMINI_MODEL_FAST` | `gemini-2.5-flash-lite` → `gemini-3.1-flash-lite` → `gemini-2.5-flash` | pick the cheap tier. Comma-separated list, first entry first. e.g. `gemini-3.1-flash-lite` |
+| `GEMINI_MODEL_QUALITY` | `gemini-2.5-flash` → `gemini-3.6-flash` | pick the strong tier (parsing/grading/questions) |
+| `RESUME_AI_MODEL`, `QUESTION_IMPORT_AI_MODEL` | unset | still win for their own route; they are tried before the tier list |
+
+**Deploy (operator, one command at a time)**
+
+```powershell
+cd C:\Projects\Vriddhi
+git checkout main
+git pull origin main
+npm ci
+npm ci --prefix functions
+firebase deploy --only functions --project vriddhi-academic
+```
+
+Only functions changed — no rules, no indexes, no hosting.
+
+**Smoke test after deploy (5 minutes)**
+
+1. Faculty → Study material → generate one topic → pack appears (this is one of the three broken features).
+2. Student/faculty → AI chat → ask one question → a reply appears.
+3. Superadmin → Prep Studio → draft one topic → draft appears.
+4. Cloud Logging, last 5 minutes, filter `severity>=WARNING`: no `gemini-1.5` 404s, no `[StudyMaterial] LLM fallback` / `[AI Chat] Gemini call failed` warnings.
+5. Firestore → `ai_usage/{today}` → `tokensIn` / `tokensOut` increment; `tokensThinking` appears once a 3.x model answers.
+6. Next morning: Firestore → `platform` → `aiModelCanary` exists with `degradedTiers: []`.
+
+**Rollback:** set the env var (or none — the code falls back inside the tier) and redeploy functions. No data migration, no schema change.

@@ -36,6 +36,7 @@ import { verifyAuth, AuthenticatedRequest } from '../middleware/auth'
 import { getAuth } from 'firebase-admin/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
+import { generateWithGeminiFallback, primaryGeminiModel, readGeminiUsage } from '../config/aiModels'
 import {
   parsePrepDraft,
   validatePublishTransition,
@@ -154,22 +155,46 @@ async function generateDraftWithProviders(opts: {
   stream?: string
   difficulty?: string
   program?: string
-}): Promise<{ content: any; provider: string; tokensIn: number; tokensOut: number }> {
+}): Promise<{
+  content: any
+  provider: string
+  model: string
+  tokensIn: number
+  tokensOut: number
+  thinkingTokens: number
+  cachedTokens: number
+}> {
   const prompt = buildPrepAiPrompt(opts)
   let rawText = ''
   let provider = 'gemini'
+  let model = primaryGeminiModel('fast')
   let tokensIn = 0
   let tokensOut = 0
+  let thinkingTokens = 0
+  let cachedTokens = 0
 
   const gemini = geminiClient()
   if (gemini) {
     try {
-      const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
-      const result = await model.generateContent(prompt)
-      rawText = result.response.text()
-      const usage = (result.response as any).usageMetadata
-      tokensIn = Number(usage?.promptTokenCount) || 0
-      tokensOut = Number(usage?.candidatesTokenCount) || 0
+      // Tiered list — a retired model id falls through instead of killing drafts.
+      const generated = await generateWithGeminiFallback('fast', (modelId) =>
+        gemini.getGenerativeModel({ model: modelId }).generateContent(prompt),
+        {
+          onFallback: ({ failedModel, nextModel, error }) =>
+            console.warn('[Prep] Gemini model unavailable, trying next tier entry', {
+              failedModel,
+              nextModel,
+              error: (error as Error)?.message,
+            }),
+        },
+      )
+      model = generated.model
+      rawText = generated.result.response.text()
+      const usage = readGeminiUsage((generated.result.response as any).usageMetadata)
+      tokensIn = usage.tokensIn
+      tokensOut = usage.tokensOut
+      thinkingTokens = usage.thinkingTokens
+      cachedTokens = usage.cachedTokens
     } catch (err) {
       console.warn('[Prep] Gemini provider failed:', err)
     }
@@ -272,7 +297,7 @@ When writing answers for 10-mark questions:
     })
   }
 
-  return { content: parsed.data, provider, tokensIn, tokensOut }
+  return { content: parsed.data, provider, model, tokensIn, tokensOut, thinkingTokens, cachedTokens }
 }
 
 // ── GET /subjects ────────────────────────────────────────────────────────────
@@ -410,7 +435,7 @@ router.post('/content/draft', verifyAuth, aiGenerationLimiter, async (req: Authe
     const subjectName = subjData?.name || subjectId
 
     // Generate through AI cascade
-    const { content, provider, tokensIn, tokensOut } = await generateDraftWithProviders({
+    const { content, provider, model, tokensIn, tokensOut, thinkingTokens, cachedTokens } = await generateDraftWithProviders({
       subjectName,
       topicTitle: title,
       stream: stream || subjData?.stream || 'management',
@@ -450,6 +475,10 @@ router.post('/content/draft', verifyAuth, aiGenerationLimiter, async (req: Authe
           generations: FieldValue.increment(1),
           tokensIn: FieldValue.increment(tokensIn),
           tokensOut: FieldValue.increment(tokensOut),
+          // Thinking bills as output on 3.x; cached input is billed at a discount. Both are tracked so the daily spend doc stays honest.
+          tokensThinking: FieldValue.increment(thinkingTokens),
+          tokensCached: FieldValue.increment(cachedTokens),
+          model,
           lastEventAt: now,
         },
         { merge: true }

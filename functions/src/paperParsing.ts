@@ -51,6 +51,11 @@ import type * as PdfJsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { SchemaType, type GenerateContentRequest, type ResponseSchema } from '@google/generative-ai'
 import { geminiClient } from './config/aiProviders'
 import {
+  type AiTier,
+  generateWithGeminiFallback,
+  primaryGeminiModel,
+} from './config/aiModels'
+import {
   EDITABLE_STATES,
   REVIEW_ROLES,
   paperReadiness,
@@ -72,7 +77,10 @@ const MAX_SECTIONS = 20
 const MAX_QUESTIONS = 400
 const MAX_QUESTION_TEXT = 20_000
 const MAX_OPTIONS = 8
-const GEMINI_PARSE_MODEL = 'gemini-2.5-flash'
+// Parsing is a QUALITY-tier job: a cheap model that mis-reads a paper costs more
+// in human review than it saves in tokens. The tier list (config/aiModels.ts)
+// supplies the model and its in-Gemini fallback.
+const PARSE_TIER: AiTier = 'quality'
 
 // Types the PARSER recognises (known labels are preserved; unknown ones fall
 // back to short/long answer). This is NOT the same as "schedulable online" —
@@ -954,10 +962,19 @@ export const parsePaperFile = onCall(
       },
     }
     let rawResponse: string
+    let usedModel = primaryGeminiModel(PARSE_TIER)
     try {
-      const model = client.getGenerativeModel({ model: GEMINI_PARSE_MODEL })
-      const response = await model.generateContent(parseRequest)
-      rawResponse = response.response.text()
+      const generated = await generateWithGeminiFallback(PARSE_TIER, (modelId) =>
+        client.getGenerativeModel({ model: modelId }).generateContent(parseRequest), {
+        onFallback: ({ failedModel, nextModel, error }) =>
+          logger.warn('[PaperParsing] Gemini model unavailable, trying next tier entry', {
+            failedModel,
+            nextModel,
+            error: (error as Error)?.message,
+          }),
+      })
+      usedModel = generated.model
+      rawResponse = generated.result.response.text()
     } catch (err) {
       logger.error('[PaperParsing] Gemini parse failed', err)
       throw new HttpsError('internal', 'Parsing failed right now. Try again in a moment, or add the questions manually.')
@@ -970,7 +987,7 @@ export const parsePaperFile = onCall(
       userId: uid,
       collegeId,
       provider: 'gemini',
-      model: GEMINI_PARSE_MODEL,
+      model: usedModel,
       method: 'gemini',
       kind: 'paper-parse',
       paperId,

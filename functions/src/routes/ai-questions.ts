@@ -6,6 +6,7 @@ import { checkTier, enforceQuestionLimit, incrementUsage } from '../middleware/t
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { FieldValue } from 'firebase-admin/firestore'
 import { geminiClient, openaiClient, deepseekClient, getAvailableProviders } from '../config/aiProviders'
+import { generateWithGeminiFallback } from '../config/aiModels'
 import { buildLanguagePromptBlock, getLanguageDefinition, normalizeLanguage } from '../services/languages'
 
 const WRITE_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
@@ -83,9 +84,11 @@ async function handleGenerateQuestions(req: AuthenticatedRequest, res: express.R
         res.status(500).json({ error: 'Gemini client not initialized. Check GEMINI_API_KEY.' })
         return
       }
-      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
-      const result = await model.generateContent(buildPrompt(normalizedConfig))
-      rawResponse = result.response.text()
+      // Question generation is a QUALITY-tier job (mis-generated syllabus content
+      // is reviewed by humans, so cheaping out costs more than it saves).
+      const generated = await generateWithGeminiFallback('quality', (modelId) =>
+        client.getGenerativeModel({ model: modelId }).generateContent(buildPrompt(normalizedConfig)))
+      rawResponse = generated.result.response.text()
     }
     else if (provider === 'openai') {
       const client = openaiClient()

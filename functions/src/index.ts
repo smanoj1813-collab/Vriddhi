@@ -82,6 +82,7 @@ import {
   listPendingAssessmentSubmissions,
   autoSubmitExpiredStudentTests,
 } from './studentAssessments'
+import { aiModelCanary } from './aiModelCanary'
 import {
   listManagedGradeRecords,
   saveDraftGradeRecords,
@@ -281,6 +282,7 @@ export {
   gradeStudentAssessmentSubmission,
   listPendingAssessmentSubmissions,
   autoSubmitExpiredStudentTests,
+  aiModelCanary,
   listManagedGradeRecords,
   saveDraftGradeRecords,
   publishGradeRecords,

@@ -28,6 +28,8 @@
 
 import { SchemaType, type ResponseSchema } from '@google/generative-ai'
 
+import { geminiModelsFor } from './config/aiModels'
+
 // ─── Limits ─────────────────────────────────────────────────────────────────
 
 /** Never trust an upload: these bounds are enforced before any work happens. */
@@ -53,7 +55,10 @@ export const IMPORT_QUESTIONS_PER_BATCH = 120
  * (`GEMINI_MODELS.quality`); when that lands, point this at it. Until then the
  * env var lets the operator move it without a redeploy of the call sites.
  */
-export const IMPORT_AI_MODEL = process.env.QUESTION_IMPORT_AI_MODEL || 'gemini-2.5-flash'
+// Resolved through config/aiModels.ts so no call site carries a model literal:
+// QUESTION_IMPORT_AI_MODEL (if set) wins, then the quality tier, then the tier's
+// own in-Gemini fallbacks. Parsing a paper is always a quality-tier job.
+export const IMPORT_AI_MODEL = geminiModelsFor('quality', [process.env.QUESTION_IMPORT_AI_MODEL])[0]
 
 export const IMPORT_JOBS_COLLECTION = 'questionBankImportJobs'
 export const QUESTION_META_COLLECTION = 'questionBank_meta'

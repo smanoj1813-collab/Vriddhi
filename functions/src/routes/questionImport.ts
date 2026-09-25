@@ -31,6 +31,7 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
 import { db } from '../config/firebase'
 import { geminiClient } from '../config/aiProviders'
+import { generateWithGeminiFallback, readGeminiUsage } from '../config/aiModels'
 import { verifyAuth, requireRole, AuthenticatedRequest } from '../middleware/auth'
 import { importWorkerLimiter } from '../middleware/rateLimit'
 import { extractPaperText } from '../paperParsing'
@@ -486,25 +487,40 @@ async function parseOneDocument(
   }
 
   let rawText = ''
+  let usedModel = IMPORT_AI_MODEL
   let tokensIn = 0
   let tokensOut = 0
   let thoughts = 0
   try {
-    const model = client.getGenerativeModel({
-      model: IMPORT_AI_MODEL,
-      generationConfig: {
-        temperature: 0.1,
-        responseMimeType: 'application/json',
-        responseSchema: IMPORT_RESPONSE_SCHEMA,
-      },
-    })
-    const response = await model.generateContent(parts as never)
-    rawText = response.response.text()
-    const usage = (response.response as any).usageMetadata
-    tokensIn = Number(usage?.promptTokenCount) || 0
-    tokensOut = Number(usage?.candidatesTokenCount) || 0
+    // Tier + in-Gemini fallback: a retired model id moves to the next entry
+    // instead of failing every document in the corpus.
+    const generated = await generateWithGeminiFallback('quality', (modelId) =>
+      client
+        .getGenerativeModel({
+          model: modelId,
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: 'application/json',
+            responseSchema: IMPORT_RESPONSE_SCHEMA,
+          },
+        })
+        .generateContent(parts as never),
+    {
+      onFallback: ({ failedModel, nextModel, error }) =>
+        logger.warn('[QuestionImport] Gemini model unavailable, trying next tier entry', {
+          failedModel,
+          nextModel,
+          error: (error as Error)?.message,
+        }),
+    },
+    )
+    rawText = generated.result.response.text()
+    usedModel = generated.model
+    const usage = readGeminiUsage((generated.result.response as any).usageMetadata)
+    tokensIn = usage.tokensIn
+    tokensOut = usage.tokensOut
     // 3.x models bill thinking tokens as output — count them so the log is honest.
-    thoughts = Number(usage?.thoughtsTokenCount) || 0
+    thoughts = usage.thinkingTokens
   } catch (err: any) {
     logger.error('[QuestionImport] transcription failed', { file: file.name, err: err?.message })
     return {
@@ -595,7 +611,7 @@ async function parseOneDocument(
     userId: job.createdBy.uid,
     collegeId: null,
     provider: 'gemini',
-    model: IMPORT_AI_MODEL,
+    model: usedModel,
     method,
     kind: 'question-paper-import',
     importJobId: job.id,
