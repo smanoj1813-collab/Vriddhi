@@ -196,4 +196,95 @@ export const BA_PAPERS: PrepPaperSeed[] = [
     ],
     source: { title: 'B.A. I Semester — all papers, November/December 2023 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2024/02/ba-I-sem-all-paper-nov-dec-2023.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University.' },
   },
+  // ── St Agnes College (Autonomous), Mangaluru · V Semester B.A./B.Sc. · October 2025 ─
+  {
+    id: 'stagnes-mu-ba-5-economics-public-economics-2025-10',
+    program: 'ba',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 5,
+    subject: 'Economics: Public Economics',
+    subjectArea: 'Economics',
+    paperCode: '21ECOC501',
+    examMonth: 'October',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any TWO of the following. Each question carries 5 marks.', answer: 2, marksEach: 5,
+        questions: [
+          'What are the causes of market failure?',
+          'Write a note on shifting of tax.',
+          'Write a note on debt redemption.',
+          'Give the meaning of fiscal policy.',
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any TWO of the following. Each question carries 10 marks.', answer: 2, marksEach: 10,
+        questions: [
+          'Explain the features of public goods.',
+          'Explain the concepts of progressive, regressive and proportional taxation.',
+          'Explain the burden of public debt in an economy.',
+          'Briefly explain the economic and functional classification of the budget.',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any TWO of the following. Each question carries 15 marks.', answer: 2, marksEach: 15,
+        questions: [
+          'Explain the similarities and differences between public finance and private finance.',
+          'What is taxable capacity? Explain the various factors determining taxable capacity.',
+          'Define public debt. Explain the types and purpose of public debt.',
+          'What is public expenditure? Mention the effects of public expenditure.',
+        ],
+      },
+    ],
+    prepSubjectId: 'ba-karnataka-public-finance',
+    source: { title: 'B.A. V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-ba-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Common paper for B.A./B.Sc. Economics; autonomous-college end-semester paper under Mangalore University.' },
+  },
+  {
+    id: 'stagnes-mu-ba-5-economics-development-economics-2025-10',
+    program: 'ba',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 5,
+    subject: 'Economics: Development Economics',
+    subjectArea: 'Economics',
+    paperCode: '21ECOC502',
+    examMonth: 'October',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any TWO of the following. Each question carries 5 marks.', answer: 2, marksEach: 5,
+        questions: [
+          'PQLI as a measure of economic development. Explain.',
+          'Why is innovation important for economic growth?',
+          'Write a note on Economic Development.',
+          'Explain the achievement of sustainable development with reference to India.',
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any TWO of the following. Each question carries 10 marks.', answer: 2, marksEach: 10,
+        questions: [
+          'Explain the Human Development Index (HDI) and the Happiness Index.',
+          'Describe indivisibility of demand and the production function.',
+          'Explain the theory of unlimited supply of labour.',
+          'Explain the Sustainable Development Goals.',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any TWO of the following. Each question carries 15 marks.', answer: 2, marksEach: 15,
+        questions: [
+          'Define economic development. Explain the indicators of growth and development.',
+          "Describe Schumpeter's theory of development.",
+          'Explain the role of technology in economic development.',
+          'Explain the meaning and features of the MDGs.',
+        ],
+      },
+    ],
+    prepSubjectId: 'ba-karnataka-development-econ',
+    source: { title: 'B.A. V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-ba-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Common paper for B.A./B.Sc. Economics; autonomous-college end-semester paper under Mangalore University.' },
+  },
 ]
