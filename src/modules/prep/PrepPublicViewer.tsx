@@ -11,6 +11,8 @@
 //   /prep                                            → hub, ?program=bcom
 //   /prep/subject/:subjectId                         → subject's topic list
 //   /prep/subject/:subjectId/topic/:topicId          → full topic payload
+//   /prep/papers                                     → previous-year question papers, ?program=bcom&sem=3
+//   /prep/papers/:paperId                            → one paper as printed (PrepPapersViews.tsx)
 //
 // The server already enforces the boundary: GET /prep/subjects and the topic
 // endpoints serve PUBLISHED content to anonymous callers and draft/review
@@ -58,6 +60,7 @@ import {
 } from '@/shared/services/prepContentService';
 import { formatStreamLabel } from '@/shared/utils/prepHelpers';
 import { CompanyStrip, CompanyView } from './PrepCompanyViews';
+import { PapersBlock, PapersLibraryView, PaperView } from './PrepPapersViews';
 import {
   AUDIENCE_LABELS,
   DifficultyChip,
@@ -404,7 +407,10 @@ function HubView() {
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 5 }} sx={{ order: { xs: 1, md: 2 }, minWidth: 0 }}>
-              <PlacementBlock program={program} subjects={aptitudeSubjects} loading={loading} />
+              <Stack spacing={{ xs: 2, md: 3 }}>
+                <PlacementBlock program={program} subjects={aptitudeSubjects} loading={loading} />
+                <PapersBlock program={program} />
+              </Stack>
             </Grid>
           </Grid>
         )}
@@ -1091,8 +1097,8 @@ function TopicView({ subjectId, topicId }: { subjectId: string; topicId: string 
 
 // ─── Page shell ─────────────────────────────────────────────────────────────
 
-export default function PrepPublicViewer({ view }: { view: 'hub' | 'subject' | 'topic' | 'company' }) {
-  const params = useParams<{ subjectId: string; topicId: string; companyCode: string }>();
+export default function PrepPublicViewer({ view }: { view: 'hub' | 'subject' | 'topic' | 'company' | 'papers' | 'paper' }) {
+  const params = useParams<{ subjectId: string; topicId: string; companyCode: string; paperId: string }>();
   // The prep pages are public, but a signed-in learner's college decides
   // which company guides they may see. Remember it so anonymous follow-up
   // visits (and the strip on this page) are filtered the same way.
@@ -1104,8 +1110,10 @@ export default function PrepPublicViewer({ view }: { view: 'hub' | 'subject' | '
     if (view === 'hub') return <HubView />;
     if (view === 'subject') return <SubjectView subjectId={params.subjectId || ''} />;
     if (view === 'company') return <CompanyView code={params.companyCode || ''} />;
+    if (view === 'papers') return <PapersLibraryView />;
+    if (view === 'paper') return <PaperView paperId={params.paperId || ''} />;
     return <TopicView subjectId={params.subjectId || ''} topicId={params.topicId || ''} />;
-  }, [view, params.subjectId, params.topicId, params.companyCode]);
+  }, [view, params.subjectId, params.topicId, params.companyCode, params.paperId]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>

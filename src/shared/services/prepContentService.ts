@@ -364,6 +364,8 @@ export interface PrepSeedProgramResult {
   subjectCount: number
   topicCount: number
   questionCount: number
+  /** Only on the 'papers' bundle (previous-year question papers). */
+  paperCount?: number
   valid: boolean
   errorCount: number
   warningCount: number
@@ -503,3 +505,133 @@ export async function saveCompanyPrepSettings(
   if (!res.ok) throw new Error(json.error || 'Failed to save company prep settings')
   return json.settings as CompanyPrepSettings
 }
+
+// ── Previous-year university question papers (mirrors functions/src/prepPapers.ts) ──
+
+export interface PrepPaperQuestion {
+  label: string
+  text: string
+  marks?: number
+  parts?: string[]
+}
+
+export interface PrepPaperSection {
+  id: string
+  title: string
+  instruction: string
+  answerCount: number
+  marksEach: number
+  totalMarks: number
+  questions: PrepPaperQuestion[]
+}
+
+export interface PrepPaperSource {
+  title: string
+  url: string
+  publisher: string
+  retrievedOn: string
+  note?: string
+}
+
+export interface PrepPaper {
+  id: string
+  program: string
+  programLabel: string
+  legacyProgram?: string | null
+  degreeLevel: 'undergraduate' | 'postgraduate'
+  universityCode: string
+  universityName: string
+  scheme: string
+  semester: number
+  subjectName: string
+  subjectArea?: string | null
+  paperCode?: string | null
+  paperNumber?: string | null
+  examMonth: string
+  examYear: number
+  examLabel: string
+  durationMinutes: number
+  maxMarks: number
+  instructions: string[]
+  sections: PrepPaperSection[]
+  questionCount: number
+  prepSubjectId?: string | null
+  tags: string[]
+  source: PrepPaperSource
+  language: 'en'
+  status: 'draft' | 'published'
+  tier: 'free' | 'premium'
+  contentVersion: number
+  updatedAt?: string
+}
+
+/** List rows: the paper without its sections. */
+export type PrepPaperSummary = Omit<PrepPaper, 'sections' | 'instructions'> & { sectionCount: number }
+
+export interface PrepPaperFacets {
+  universities: Array<{ code: string; name: string; count: number }>
+  years: number[]
+  semesters: number[]
+  programs: Array<{ code: string; count: number }>
+}
+
+export interface PrepPaperUniversity {
+  code: string
+  name: string
+  shortName: string
+  city: string
+}
+
+export interface PrepPaperListResult {
+  papers: PrepPaperSummary[]
+  facets: PrepPaperFacets
+  universities: PrepPaperUniversity[]
+}
+
+export async function fetchPrepPapers(params?: {
+  program?: string
+  semester?: number | string
+  university?: string
+  year?: number | string
+  subjectId?: string
+  scheme?: string
+  q?: string
+}): Promise<PrepPaperListResult> {
+  const qs = new URLSearchParams()
+  if (params?.program) qs.set('program', params.program)
+  if (params?.semester !== undefined && params.semester !== '') qs.set('semester', String(params.semester))
+  if (params?.university) qs.set('university', params.university)
+  if (params?.year !== undefined && params.year !== '') qs.set('year', String(params.year))
+  if (params?.subjectId) qs.set('subjectId', params.subjectId)
+  if (params?.scheme) qs.set('scheme', params.scheme)
+  if (params?.q) qs.set('q', params.q)
+  const res = await authedFetch(`/prep/papers${qs.toString() ? `?${qs.toString()}` : ''}`, { method: 'GET' })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to load question papers')
+  return {
+    papers: json.data || [],
+    facets: json.facets || { universities: [], years: [], semesters: [], programs: [] },
+    universities: json.universities || [],
+  }
+}
+
+export async function fetchPrepPaper(paperId: string): Promise<PrepPaper> {
+  const res = await authedFetch(`/prep/papers/${encodeURIComponent(paperId)}`, { method: 'GET' })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Question paper not found')
+  return json.data
+}
+
+/** Superadmin: create or update one paper (compact seed shape or full paper). */
+export async function savePrepPaper(payload: Record<string, unknown>): Promise<{ data: PrepPaper; warnings: Array<{ level: string; code: string; message: string }> }> {
+  const res = await authedFetch('/prep/papers', { method: 'POST', body: JSON.stringify(payload) })
+  const json = await res.json()
+  if (!res.ok) {
+    const detail = Array.isArray(json.issues) ? json.issues.map((i: { message: string }) => i.message).join(' ') : ''
+    throw new Error(`${json.error || 'Failed to save question paper'}${detail ? ` ${detail}` : ''}`)
+  }
+  return { data: json.data, warnings: json.warnings || [] }
+}
+
+/** BBM etc. — programs that were renamed; papers under the old name sit inside the new program. */
+export const PREP_PAPER_LEGACY_LABELS: Record<string, string> = { bbm: 'BBM' }
