@@ -21,6 +21,7 @@ import { router as prepRouter } from './routes/prep'
 import { router as questionsRouter } from './routes/questions'
 import { router as papersRouter } from './routes/papers'
 import { router as configRouter } from './routes/config'
+import { router as resumeRouter } from './routes/resume'
 import { generalLimiter } from './middleware/rateLimit'
 import { router as admissionIntakeRouter } from './routes/admissionIntake'
 
@@ -182,6 +183,9 @@ app.use('/papers', papersRouter)
 app.use('/api/prep', prepRouter)
 app.use('/prep', prepRouter)
 app.use('/api/config', configRouter)
+// Resume Builder add-on (student editor, PDF credits, college settings).
+app.use('/api/resume', resumeRouter)
+app.use('/resume', resumeRouter)
 
 // Public Google Form intake — token-gated, no Firebase auth.
 app.use('/api/admissions', admissionIntakeRouter)

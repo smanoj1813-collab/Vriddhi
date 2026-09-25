@@ -21,6 +21,7 @@ fees, timetables, and more — powered by Firebase and modern React.
 - [Firebase setup](#firebase-setup)
 - [Cloud Functions (backend API)](#cloud-functions-backend-api)
 - [AI / LLM providers](#ai--llm-providers)
+- [Resume Builder add-on (Placement Pack)](#resume-builder-add-on-placement-pack)
 - [Available scripts](#available-scripts)
 - [Deployment](#deployment)
 - [Data model](#data-model)
@@ -322,6 +323,27 @@ render faults stay on 500 (`pdf_render_timeout` / `pdf_render_failed`).
 `--ignore-scripts`) skips the ~150 MB Chrome download; the PDF routes then return the 503
 contract above and the browser fallback takes over. To test real server rendering locally,
 point `CHROME_PATH` at any Chrome/Chromium binary in `functions/.env`.
+
+## Resume Builder add-on (Placement Pack)
+
+Students → **Learning → Resume Builder** (`/student/resume`). Five ATS-friendly single-column
+templates (Classic, Modern, Compact, Fresher, Executive), a form editor with autosave, a live
+server-rendered preview, a rule-based ATS readiness score and **text PDFs** produced by the
+same Puppeteer helper as the paper export — never a browser screenshot, so recruiters'
+parsers read every word. Sold per college: a superadmin switches it on from
+**Colleges → {college} → Overview → Resume Builder add-on** (college admins see the same card
+read-only in Settings → General).
+
+Credits: each student gets `downloadsPerTemplate` (default **3**) PDF renders per template per
+academic year (June–May). The credit is reserved in the same Firestore transaction that
+authorises the render (`functions/src/routes/resume.ts`), so it cannot be bypassed from the
+client; a failed render returns the credit. Every generated PDF is kept in Cloud Storage
+(`resumes/{collegeId}/{uid}/{downloadId}.pdf`) and re-downloads are free. Preview is
+watermarked and unlimited. Optional Gemini rewrite suggestions are off by default and capped
+per student (`aiCallsPerStudent`, default 20; model via `RESUME_AI_MODEL`, default
+`gemini-2.5-flash`). Design, endpoints, data model and operations:
+[`docs/RESUME_BUILDER.md`](docs/RESUME_BUILDER.md); commercial reasoning:
+[`docs/RESUME_BUILDER_ADDON_COSTING_2026-09-25.md`](docs/RESUME_BUILDER_ADDON_COSTING_2026-09-25.md).
 
 ## Available scripts
 

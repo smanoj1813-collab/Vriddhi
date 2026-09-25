@@ -40,6 +40,7 @@ import { resetCollegeData } from '../api/superAdminApi';
 import BulkCredentialReset from '../components/BulkCredentialReset';
 import FacultyLinkRepair from '../components/FacultyLinkRepair';
 import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel';
+import ResumeAddonPanel from '@/shared/components/resume/ResumeAddonPanel';
 import { downloadCsv } from '@/shared/utils/parseCSV';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -667,6 +668,7 @@ const SuperAdminCollegeDetail: React.FC = () => {
             </div>
           </div>
           <CompanyPrepVisibilityPanel collegeId={college.id} collegeName={college.name} />
+          <ResumeAddonPanel collegeId={college.id} collegeName={college.name} canEdit />
           </div>
         )}
 

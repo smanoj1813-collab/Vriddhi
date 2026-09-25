@@ -226,6 +226,14 @@ service firebase.storage {
       allow delete: if isSuperadmin();
     }
 
+    // Resume Builder PDFs: resumes/{collegeId}/{uid}/{downloadId}.pdf
+    // Written by the api function after a credit is reserved and streamed back
+    // through GET /resume/downloads/:id/file (owner or college staff, checked
+    // against the resumeDownloads row). Nothing touches these from the browser.
+    match /resumes/{collegeId}/{uid}/{fileName} {
+      allow read, write: if false;
+    }
+
     // Faculty teaching materials: colleges/{collegeId}/materials/{fileName}
     // (filename may contain subfolders from the upload UI's sanitised names).
     //

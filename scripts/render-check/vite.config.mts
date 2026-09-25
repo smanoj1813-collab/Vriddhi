@@ -27,6 +27,7 @@ export default defineConfig({
       { find: /(?:\.\.\/)+auth\/context\/AuthContext$/, replacement: stub('AuthContext.ts') },
       { find: '@/shared/api/staffAttendanceApi', replacement: stub('staffAttendanceApi.ts') },
       { find: '@/shared/services/prepContentService', replacement: stub('prepContentService.ts') },
+      { find: '@/shared/services/resumeService', replacement: stub('resumeService.ts') },
       { find: '@/Firebase/config', replacement: stub('firebaseConfig.ts') },
       // Relative spellings of the same module ('../../../Firebase/config' from
       // the student API layer). Without this the real config initialises the
