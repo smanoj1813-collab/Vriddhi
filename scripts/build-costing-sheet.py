@@ -104,6 +104,7 @@ readme = [
     ("6", "'Monthly Plan' and 'Annual Summary' give the 12-month cash plan and per-student / per-user cost."),
     ("7", "Set your price on 'Pricing & P&L' to see revenue, gross profit, margin, break-even and a 3-year P&L. 'Sensitivity' shows margin by price × colleges."),
     ("8", "'Build Cost' estimates what it costs to build a product like this (for investor / 'why not build it ourselves' conversations)."),
+    ("9", "'Resume Add-on' costs the Resume Builder add-on (5 ATS-safe templates × 3 PDF versions per student per year): cloud cost per download, three usage scenarios, build effort, cap sensitivity and the add-on price for a target margin."),
     ("", ""),
     ("Colour legend", ""),
     ("Yellow", "Input — edit freely"),
@@ -118,9 +119,13 @@ readme = [
 for i, (a, b) in enumerate(readme, start=4):
     ws.cell(row=i, column=1, value=a).font = BOLD if b == "" or a in ("Yellow", "Grey", "Green") else Font()
     ws.cell(row=i, column=2, value=b).alignment = Alignment(wrap_text=True, vertical="top")
-ws["A15"].fill = INPUT_FILL
-ws["A16"].fill = CALC_FILL
-ws["A17"].fill = KEY_FILL
+for i, (a, _b) in enumerate(readme, start=4):
+    if a == "Yellow":
+        ws.cell(row=i, column=1).fill = INPUT_FILL
+    elif a == "Grey":
+        ws.cell(row=i, column=1).fill = CALC_FILL
+    elif a == "Green":
+        ws.cell(row=i, column=1).fill = KEY_FILL
 ws.column_dimensions["A"].width = 22
 ws.column_dimensions["B"].width = 120
 
@@ -989,6 +994,197 @@ for i, (lab, f) in enumerate(res):
     c = ws.cell(row=r, column=2, value=f); c.number_format = INR; c.fill = CALC_FILL; c.border = BOX
     c = ws.cell(row=r, column=3, value=f"=B{r}+$B${OT}"); c.number_format = INR; c.fill = KEY_FILL; c.border = BOX; c.font = BOLD
     c = ws.cell(row=r, column=4, value=f"=C{r}/10000000"); c.number_format = '0.00" Cr"'; c.fill = CALC_FILL; c.border = BOX
+
+# ═════════════════════════════════════════════════════════════════════════════
+# RESUME BUILDER ADD-ON
+# ═════════════════════════════════════════════════════════════════════════════
+ws = wb.create_sheet("Resume Add-on")
+RS = "Resume Add-on"
+title(ws, "Resume Builder add-on — 5 ATS-safe templates, 3 PDF versions per template per student per year",
+      "Yellow = edit. A 'download' = one server-rendered PDF version (headless Chrome on Cloud Functions, 2 GiB). Re-downloading an already generated PDF is free and does not consume a credit. Prices: Cloud Run Tier 2 (asia-south1) list prices; Firestore / Storage / Hosting prices come from the Inputs sheet.")
+ws.column_dimensions["A"].width = 2
+ws.column_dimensions["B"].width = 66
+for L in "CDE":
+    ws.column_dimensions[L].width = 19
+ws.column_dimensions["F"].width = 95
+X = {}
+rrow = 4
+
+
+def rin(key, label, value, fmt=NUM, unit="", note="", formula=False):
+    global rrow
+    ws.cell(row=rrow, column=2, value=label).border = BOX
+    c = ws.cell(row=rrow, column=3, value=value)
+    c.number_format = fmt
+    c.border = BOX
+    c.fill = CALC_FILL if formula else INPUT_FILL
+    ws.cell(row=rrow, column=4, value=unit).border = BOX
+    ws.cell(row=rrow, column=6, value=note).font = NOTE
+    X[key] = f"$C${rrow}"
+    rrow += 1
+
+
+def rsec(text):
+    global rrow
+    rrow += 1
+    section(ws, rrow, text, span=5)
+    rrow += 1
+
+
+rsec("1. Product rules")
+rin("templates", "ATS-safe templates offered", 5, unit="templates")
+rin("perTemplate", "PDF versions (downloads) allowed per template per student per year", 3, unit="per template")
+rin("maxPerStudent", "Maximum PDF renders per student per year", f"={X['templates']}*{X['perTemplate']}", unit="per student", formula=True)
+rin("addonPrice", "Add-on price charged to the college per student per year (₹)", 79, fmt=INR, unit="₹ / student / yr", note="what-if for the P&L rows below; the market-facing anchor is retail resume builders at ₹1,000–2,000 per MONTH per individual")
+
+rsec("2. Unit costs per PDF render (server-side, enforceable credit)")
+rin("secs", "Billable seconds per render (Chrome launch + render, incl. cold start share)", 8, unit="seconds", note="functions/src/utils/pdfRenderer.ts pattern: launch → setContent → pdf; warm ≈ 3–4 s, cold ≈ 8–10 s")
+rin("memGiB", "Function memory", 2, unit="GiB", note="the existing api function already runs at 2 GiB for Puppeteer; 512 MiB was OOM-killed")
+rin("vcpu", "vCPU per instance", 1, unit="vCPU")
+rin("vcpuPrice", "Cloud Run Tier 2 vCPU price (request-based billing)", 0.0000336, fmt='"$"0.0000000', unit="$ per vCPU-second", note="asia-south1 is a Tier 2 region; Tier 1 (us-central1) is $0.000024")
+rin("memPrice", "Cloud Run Tier 2 memory price", 0.0000035, fmt='"$"0.0000000', unit="$ per GiB-second", note="Tier 1 is $0.0000025")
+rin("reqPrice", "Requests beyond 2 M free per month", 0.40, fmt=USD, unit="$ per million")
+rin("freeShare", "Share of render compute absorbed by the Cloud Functions free tier", 0.5, fmt=PCT, note="free tier = 128,571 vCPU-s and 257,142 GiB-s per month in Tier 2; the base app uses ~33K vCPU-s a month, so most months the renders fit entirely. 0 = pay full list price (worst case)")
+rin("pdfMB", "Size of one generated PDF", 0.25, fmt=NUM2, unit="MB", note="text PDF with 1–2 embedded font subsets; a rasterised (image) PDF would be 5–10× larger AND unreadable by ATS — never ship that")
+rin("monthsStored", "Average months a generated PDF is kept in Cloud Storage during the year", 6, unit="months", note="keep every version for 12 months (or until 6 months after graduation); average age over the year ≈ 6 months")
+rin("redl", "Free re-downloads of an already generated PDF (per version)", 1, unit="per version", note="egress multiplier = 1 + this")
+rin("sessPerDl", "Editing sessions per PDF version", 1.2, fmt=NUM1, unit="sessions", note="students open the editor, tweak, preview — not every session ends in a download")
+rin("writesPerSess", "Firestore writes per editing session (debounced autosave)", 40, unit="writes", note="autosave every ~10 s of typing; one resume document per student per template")
+rin("readsPerSess", "Firestore reads per editing session", 8, unit="reads", note="resume doc + credit ledger + template meta + profile prefill")
+rin("writesPerDl", "Firestore writes per download (credit transaction + ledger row + audit log)", 3, unit="writes")
+rin("hostMB", "Hosting transfer per session (builder bundle + fonts, cached after the first visit)", 0.8, fmt=NUM2, unit="MB")
+
+rsec("3. Optional AI assist (bullet rewrite, summary, JD keyword suggestions)")
+rin("aiOn", "AI assist enabled? (1 = yes, 0 = no)", 1)
+rin("aiCap", "Hard cap on AI-assist calls per student per year", 20, unit="calls", note="cost guard — same pattern as the study-pack limiter in routes/ai-chat.ts")
+rin("aiIn", "Tokens in per call", 1500, unit="tokens")
+rin("aiOut", "Tokens out per call", 500, unit="tokens")
+rin("aiPIn", "Model price — input ($ per 1M tokens)", f"='{AS}'!$B$4", fmt=USD, formula=True, note="gemini-2.5-flash from the AI Costing sheet; switch to $B$5/$C$5 for flash-lite (≈ 4× cheaper)")
+rin("aiPOut", "Model price — output ($ per 1M tokens)", f"='{AS}'!$C$4", fmt=USD, formula=True)
+
+rsec("4. Build & run effort (in-house team — already salaried in 'Team & Overheads')")
+rin("dayCost", "Loaded cost per person-day (₹)", "=30000/22", fmt=INR, unit="₹ / person-day", formula=True, note="₹30,000 gross per month ÷ 22 working days. This time is ALREADY paid for in the base plan — it is an allocation, not new cash")
+rin("agencyDay", "Agency cost per person-day (₹) — if outsourced instead", f"='Build Cost'!{R['agencyRate']}*8", fmt=INR, unit="₹ / person-day", formula=True, note="from the Build Cost sheet's hourly rate × 8 h")
+rin("buildCont", "Build contingency", 0.2, fmt=PCT)
+rin("maintDays", "Maintenance & support per year (template tweaks, credit resets, parser regressions)", 12, unit="person-days")
+rin("amortYears", "Years over which to spread the build cost", 3, unit="years")
+
+# Build effort table
+rrow += 1
+section(ws, rrow, "5. Build effort — person-days (lean in-house, AI-assisted development)", span=5)
+rrow += 1
+header(ws, rrow, ["Work item", "Person-days"], col=2)
+rrow += 1
+tasks = [
+    ("Resume data model, per-student documents, security rules, autosave, profile prefill from the student record", 5),
+    ("Editor UI — sections (contact, summary, education, internships/experience, projects, skills, certifications, achievements, languages), reorder, live preview, mobile layout", 12),
+    ("5 ATS-safe templates — single column, standard headings, real text, A4 + Letter, page-break rules, open-licence fonts (2 days each)", 10),
+    ("Server-side PDF — dedicated 2 GiB function, credit transaction (render + decrement + ledger in one write), Cloud Storage, signed re-download URLs, watermarked unlimited preview", 6),
+    ("ATS checker — rule-based score: sections present, contact block, heading names, no tables/images/columns, length, keyword match against a pasted job description, fix-it hints", 4),
+    ("AI assist (optional) — bullet rewrite, summary draft, JD keyword suggestions, with the per-student cap and cost guard", 3),
+    ("Admin & superadmin — enable the add-on per college, template on/off, credits view/reset, usage & download dashboard, per-college export", 5),
+    ("QA — run every template through 2–3 open-source resume parsers, device matrix, print fidelity, load test at 20 renders/min", 5),
+]
+T0 = rrow
+for lab, d in tasks:
+    ws.cell(row=rrow, column=2, value=lab).border = BOX
+    ws.cell(row=rrow, column=2).alignment = Alignment(wrap_text=True, vertical="top")
+    c = ws.cell(row=rrow, column=3, value=d); c.fill = INPUT_FILL; c.border = BOX
+    rrow += 1
+T1 = rrow - 1
+ws.cell(row=rrow, column=2, value="Total person-days").font = BOLD
+c = ws.cell(row=rrow, column=3, value=f"=SUM(C{T0}:C{T1})"); c.font = BOLD; c.fill = CALC_FILL; c.border = BOX
+X["buildDays"] = f"$C${rrow}"
+rrow += 1
+ws.cell(row=rrow, column=2, value="With contingency — person-days")
+c = ws.cell(row=rrow, column=3, value=f"={X['buildDays']}*(1+{X['buildCont']})"); c.fill = CALC_FILL; c.border = BOX; c.number_format = NUM1
+X["buildDaysC"] = f"$C${rrow}"
+rrow += 1
+ws.cell(row=rrow, column=2, value="Person-months (÷ 22) — e.g. one developer for this many months, or two for half")
+c = ws.cell(row=rrow, column=3, value=f"={X['buildDaysC']}/22"); c.fill = CALC_FILL; c.border = BOX; c.number_format = NUM1
+rrow += 1
+ws.cell(row=rrow, column=2, value="Build cost — in-house team time (₹, allocation of salaries already in the plan)")
+c = ws.cell(row=rrow, column=3, value=f"={X['buildDaysC']}*{X['dayCost']}"); c.fill = KEY_FILL; c.border = BOX; c.number_format = INR; c.font = BOLD
+X["buildInhouse"] = f"$C${rrow}"
+rrow += 1
+ws.cell(row=rrow, column=2, value="Build cost — if given to an agency instead (₹)")
+c = ws.cell(row=rrow, column=3, value=f"={X['buildDaysC']}*{X['agencyDay']}"); c.fill = CALC_FILL; c.border = BOX; c.number_format = INR
+rrow += 1
+
+# Scenarios
+rrow += 1
+section(ws, rrow, "6. Yearly cost — three usage scenarios (edit the yellow adoption / usage rows)", span=5)
+rrow += 1
+header(ws, rrow, ["Line", "MAX — every student uses all credits", "EXPECTED", "LOW", "How it is computed"], col=2)
+rrow += 1
+SC0 = rrow
+COLS = ["C", "D", "E"]
+
+
+def srow(label, values, fmt=INR, fill=CALC_FILL, note="", bold=False):
+    global rrow
+    ws.cell(row=rrow, column=2, value=label).border = BOX
+    if bold:
+        ws.cell(row=rrow, column=2).font = BOLD
+    for L, v in zip(COLS, values):
+        c = ws[f"{L}{rrow}"]; c.value = v; c.number_format = fmt; c.fill = fill; c.border = BOX
+        if bold:
+            c.font = BOLD
+    ws.cell(row=rrow, column=6, value=note).font = NOTE
+    r = rrow
+    rrow += 1
+    return r
+
+
+r_adopt = srow("Share of students who use the builder at all", [1, 0.7, 0.4], fmt=PCT, fill=INPUT_FILL)
+r_dls = srow("PDF versions per active student per year", [f"={X['maxPerStudent']}", 6, 3], fmt=NUM1, fill=INPUT_FILL, note="MAX is locked to templates × credits; the other two are your estimate of real behaviour")
+r_ai = srow("AI-assist calls per active student per year", [f"={X['aiCap']}", 8, 4], fmt=NUM1, fill=INPUT_FILL, note="MAX = the hard cap")
+r_active = srow("Active students", [f"={R['students']}*{L}{r_adopt}" for L in COLS], fmt=NUM, note="Inputs!students × adoption")
+r_renders = srow("PDF renders per year", [f"={L}{r_active}*{L}{r_dls}" for L in COLS], fmt=NUM, bold=True)
+r_comp = srow("Render compute ($)", [f"={L}{r_renders}*{X['secs']}*({X['vcpu']}*{X['vcpuPrice']}+{X['memGiB']}*{X['memPrice']})*(1-{X['freeShare']})+{L}{r_renders}/1000000*{X['reqPrice']}" for L in COLS], fmt=USD, note="renders × seconds × (vCPU price + GiB × memory price) × (1 − free-tier share) + requests")
+r_stor = srow("Cloud Storage — PDFs kept ($)", [f"={L}{r_renders}*{X['pdfMB']}/1024*{X['monthsStored']}*{R['csStorPrice']}" for L in COLS], fmt=USD, note="renders × MB ÷ 1024 × months stored × $/GB-month")
+r_egr = srow("Cloud Storage — downloads / re-downloads ($)", [f"={L}{r_renders}*(1+{X['redl']})*{X['pdfMB']}/1024*{R['dlPrice']}" for L in COLS], fmt=USD, note="renders × (1 + free re-downloads) × MB ÷ 1024 × $/GB")
+r_fs = srow("Firestore reads + writes ($)", [f"=({L}{r_renders}*{X['sessPerDl']}*{X['writesPerSess']}+{L}{r_renders}*{X['writesPerDl']})/100000*{R['writePrice']}+{L}{r_renders}*{X['sessPerDl']}*{X['readsPerSess']}/100000*{R['readPrice']}" for L in COLS], fmt=USD, note="autosave writes + credit writes at $0.18/100K; reads at $0.06/100K (the daily free quota is ignored — conservative)")
+r_host = srow("Hosting transfer — builder bundle & fonts ($)", [f"={L}{r_renders}*{X['sessPerDl']}*{X['hostMB']}/1024*{R['hostPrice']}" for L in COLS], fmt=USD)
+r_cloudUsd = srow("Cloud total ($)", [f"=SUM({L}{r_comp}:{L}{r_host})" for L in COLS], fmt=USD, bold=True)
+r_cloud = srow("Cloud total (₹)", [f"={L}{r_cloudUsd}*{R['fx']}" for L in COLS], fmt=INR, fill=KEY_FILL, bold=True, note="× Inputs!fx. Ex-GST")
+r_perDl = srow("Cloud cost per PDF download (₹)", [f"=IF({L}{r_renders}=0,0,{L}{r_cloud}/{L}{r_renders})" for L in COLS], fmt=INR2, fill=KEY_FILL, note="the number that answers 'what does one download cost us'")
+r_perStuCloud = srow("Cloud cost per student (₹, all students)", [f"={L}{r_cloud}/{R['students']}" for L in COLS], fmt=INR2)
+r_aiCost = srow("AI assist (₹)", [f"={X['aiOn']}*{L}{r_active}*{L}{r_ai}*({X['aiIn']}/1000000*{X['aiPIn']}+{X['aiOut']}/1000000*{X['aiPOut']})*{R['fx']}" for L in COLS], fmt=INR, note="active × calls × ($ per call) × fx")
+r_maint = srow("Maintenance & support — team time (₹ per year)", [f"={X['maintDays']}*{X['dayCost']}" for _ in COLS], fmt=INR)
+r_build = srow("Build — team time (₹, one-time, year 1)", [f"={X['buildInhouse']}" for _ in COLS], fmt=INR)
+r_y1 = srow("YEAR-1 total (cloud + AI + maintenance + full build) (₹)", [f"={L}{r_cloud}+{L}{r_aiCost}+{L}{r_maint}+{L}{r_build}" for L in COLS], fmt=INR, fill=KEY_FILL, bold=True)
+r_y1ps = srow("Year-1 cost per student (₹)", [f"={L}{r_y1}/{R['students']}" for L in COLS], fmt=INR2, fill=KEY_FILL, bold=True)
+r_run = srow("Steady-state year (cloud + AI + maintenance, build spread over the amortisation years) (₹)", [f"={L}{r_cloud}+{L}{r_aiCost}+{L}{r_maint}+{L}{r_build}/{X['amortYears']}" for L in COLS], fmt=INR, bold=True)
+r_runps = srow("Steady-state cost per student (₹)", [f"={L}{r_run}/{R['students']}" for L in COLS], fmt=INR2, fill=KEY_FILL, bold=True)
+r_cash = srow("Of which NEW cash beyond the base plan (cloud + AI only) (₹)", [f"={L}{r_cloud}+{L}{r_aiCost}" for L in COLS], fmt=INR, note="team time is already in 'Team & Overheads'; this is the only line that changes the Google/AI invoice")
+rrow += 1
+section(ws, rrow, "7. Pricing the add-on (uses margin targets & contingency from Inputs)", span=5)
+rrow += 1
+r_p30 = srow(f"Price per student for the LOW margin target (year-1 cost basis, + contingency) (₹)", [f"={L}{r_y1ps}*(1+{R['cont']})/(1-{R['m1']})" for L in COLS], fmt=INR2, fill=KEY_FILL, note="Inputs!m1 / cont")
+r_p40 = srow(f"Price per student for the HIGH margin target (year-1 cost basis, + contingency) (₹)", [f"={L}{r_y1ps}*(1+{R['cont']})/(1-{R['m3']})" for L in COLS], fmt=INR2, fill=KEY_FILL, note="Inputs!m3 / cont")
+r_rev = srow("Revenue at the add-on price above (₹)", [f"={R['students']}*{X['addonPrice']}" for _ in COLS], fmt=INR)
+r_gp = srow("Year-1 gross profit at that price (₹)", [f"={L}{r_rev}-{L}{r_y1}" for L in COLS], fmt=INR, fill=KEY_FILL, bold=True)
+r_gm = srow("Year-1 gross margin at that price", [f"=IF({L}{r_rev}=0,0,{L}{r_gp}/{L}{r_rev})" for L in COLS], fmt=PCT, fill=KEY_FILL, bold=True)
+r_bund = srow("If bundled free into the base price: gross-margin points it costs on the base price", [f"={L}{r_y1ps}/{R['price']}" for L in COLS], fmt=PCT, note="year-1 cost per student ÷ the price on 'Pricing & P&L'")
+
+# Cap sensitivity
+rrow += 1
+section(ws, rrow, "8. What the cap actually changes — cloud cost per year if every EXPECTED-adoption student used every credit", span=5)
+rrow += 1
+header(ws, rrow, ["Credits per template", "Renders per year", "Cloud cost per year (₹)", "Cloud cost per student (₹)", "Reading"], col=2)
+rrow += 1
+caps = [(1, "one final version per template"), (2, ""), (3, "the proposed rule"), (5, ""), (10, "≈ unlimited in practice")]
+for capv, reading in caps:
+    ws.cell(row=rrow, column=2, value=capv).border = BOX
+    ws.cell(row=rrow, column=2).fill = INPUT_FILL
+    c = ws.cell(row=rrow, column=3, value=f"={R['students']}*$D${r_adopt}*{X['templates']}*B{rrow}"); c.number_format = NUM; c.fill = CALC_FILL; c.border = BOX
+    c = ws.cell(row=rrow, column=4, value=f"=C{rrow}*$D${r_perDl}"); c.number_format = INR; c.fill = KEY_FILL; c.border = BOX
+    c = ws.cell(row=rrow, column=5, value=f"=D{rrow}/{R['students']}"); c.number_format = INR2; c.fill = CALC_FILL; c.border = BOX
+    ws.cell(row=rrow, column=6, value=reading).font = NOTE
+    rrow += 1
+ws.cell(row=rrow, column=2, value="The cap is a product and pricing lever (scarcity, top-up revenue, abuse control) — not a cost lever. Even ten credits per template cost a few thousand rupees a year across 5,000 students.").font = NOTE
+rrow += 1
 
 # ── sheet order & save ───────────────────────────────────────────────────────
 wb.save(OUT)
