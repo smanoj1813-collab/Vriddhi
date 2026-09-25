@@ -1058,4 +1058,72 @@ export const BBA_PAPERS: PrepPaperSeed[] = [
     prepSubjectId: 'bba-karnataka-fin-markets',
     source: { title: 'B.B.A V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-bba-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University.' },
   },
+  {
+    id: 'stagnes-mu-bba-5-advanced-financial-management-2025-10',
+    program: 'bba',
+    university: 'stagnes-mu',
+    scheme: 'CBCS semester scheme (NEP 2021 batch), autonomous end-semester examination',
+    semester: 5,
+    subject: 'Advanced Financial Management',
+    subjectArea: 'Finance',
+    examMonth: 'October',
+    examYear: 2025,
+    durationMinutes: 120,
+    maxMarks: 60,
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any TWO of the following. Each question carries 15 marks.', answer: 2, marksEach: 15,
+        questions: [
+          'XYZ Ltd. expects earnings before interest and tax of Rs. 6,00,000 and belongs to a risk class of 10%. You are required to calculate the value of the firm and the cost of equity capital (according to the NOI approach) if it employs 8% debt to the extent of 20%, 40% or 60% of the total financial requirement of Rs. 30,00,000.',
+          {
+            text: 'Answer both parts:',
+            parts: [
+              '(a) What is meant by risk? Describe the causes of risk. (5 marks)',
+              '(b) Two mutually exclusive investment proposals are being considered. Cost: Project X Rs. 6,000, Project Y Rs. 6,000. Cash inflows (Rs. / probability) — Project X: Year 1 4,000 / 0.2; Year 2 8,000 / 0.6; Year 3 12,000 / 0.2. Project Y: Year 1 7,000 / 0.2; Year 2 8,000 / 0.6; Year 3 9,000 / 0.2. Assuming the cost of capital at 10%, advise the selection of the project under the probability approach of analysing risk in capital budgeting. The present value of Re. 1 at 10% is: Year 1 0.90909, Year 2 0.82654, Year 3 0.75131. (10 marks)',
+            ],
+          },
+          {
+            text: 'GHI Ltd. is considering a merger with JKL Ltd. GHI Ltd. (acquirer): current market price Rs. 45; shares outstanding 2,00,000; EAT Rs. 6,00,000. JKL Ltd. (target): shares outstanding 1,00,000; EAT Rs. 1,00,000. The merger will be effected by a stock swap; JKL has agreed to a plan under which GHI will offer the market value of JKL shares.',
+            parts: [
+              '(i) Compute pre-merger EPS and P/E for both firms.',
+              "(ii) If JKL's P/E = 10, find JKL's market price per share, the exchange ratio (market value basis) and GHI's post-merger EPS.",
+              "(iii) Find the exchange ratio required to keep GHI's EPS unchanged after the merger.",
+            ],
+          },
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any THREE of the following. Each question carries 7 marks.', answer: 3, marksEach: 7,
+        questions: [
+          {
+            text: 'Compute WACC using market values as weights (Book value Rs. / Market value Rs. / After-tax cost %):',
+            parts: [
+              'Equity — 1,80,00,000 / 3,00,00,000 / 20',
+              'Preference shares — 40,00,000 / 50,00,000 / 12',
+              'Retained earnings — 60,00,000 / — / 18',
+              'Debentures — 1,20,00,000 / 1,00,00,000 / 7',
+              'Total — 4,00,00,000 / 4,50,00,000',
+            ],
+          },
+          'A company issues Rs. 20,00,000, 10% redeemable debentures at a discount of 5%. The cost of floatation amounts to Rs. 50,000. The debentures are redeemable after 8 years. Calculate the before-tax and after-tax cost of debt, assuming a tax rate of 55%.',
+          {
+            text: "The earnings per share of a company are Rs. 10. It has an internal rate of return of 15% and the capitalisation rate of its risk class is 12.5%. If Walter's model is used:",
+            parts: ['(a) What should be the optimum payout ratio of the firm?', '(b) What would be the price of the share at this payout?', '(c) How shall the price of the share be affected if a 20% payout ratio were employed?'],
+          },
+          'Describe the various types of dividend policies.',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any THREE of the following. Each question carries 3 marks.', answer: 3, marksEach: 3,
+        questions: [
+          'A Ltd. issues Rs. 1,00,000, 10% perpetual debentures of Rs. 100 each. Compute the cost of debt capital if the debentures have been issued at par, and at a premium of 10%.',
+          "What is Modigliani and Miller's dividend policy?",
+          'What is objectivity in financial management, and how does it help in ensuring unbiased financial decisions and reporting?',
+          'What is a code of conduct in governance policies, and how does it guide ethical decision-making within an organisation?',
+        ],
+      },
+    ],
+    prepSubjectId: 'bba-karnataka-fin-mgmt',
+    source: { title: 'B.B.A V Semester — all papers, October 2025 (NEP)', url: 'https://library.stagnescollege.edu.in/wp-content/uploads/2026/01/agnes-bba-v-sem-all-papers-oct-2025-nep.pdf', publisher: 'St Agnes College (Autonomous) Library, Mangaluru', retrievedOn: '2026-09-25', note: 'Autonomous-college end-semester paper; degree awarded by Mangalore University. Q2 re-flowed from a two-column scan; Q4 amounts printed with Western digit grouping (18,000,000 etc.) are shown in Indian grouping.' },
+  },
 ]
