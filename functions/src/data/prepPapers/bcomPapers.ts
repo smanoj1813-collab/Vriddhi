@@ -801,4 +801,221 @@ export const BCOM_PAPERS: PrepPaperSeed[] = [
     prepSubjectId: 'bba-karnataka-gst',
     source: { title: 'V Semester B.Com question papers, January/February 2025 (bundle)', url: 'https://www.cicms.in/uploads/quastion-papers/bcom/5th-semester/2025-5th-Sem-Bcom.pdf', publisher: 'CIMS B-School, Bengaluru (BCU-affiliated college)', retrievedOn: '2026-09-25', note: 'Sub-items of Q8 were mis-numbered by the scan and have been re-lettered (a)–(l).' },
   },
+  // ── BCU · III Semester B.Com · January/February 2025 ───────────────────────
+  {
+    id: 'bcu-bcom-3-corporate-accounting-2025-01',
+    program: 'bcom',
+    university: 'bcu',
+    scheme: 'NEP scheme (F+R, 2022-23 onwards)',
+    semester: 3,
+    subject: 'Corporate Accounting',
+    subjectArea: 'Accounting',
+    paperCode: 'DCBC301',
+    paperNumber: '3.1',
+    examMonth: 'January/February',
+    examYear: 2025,
+    durationMinutes: 150,
+    maxMarks: 60,
+    instructions: ['Answers should be written in English only.'],
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any FIVE of the following sub-questions. Each sub-question carries 2 marks.', answer: 5, marksEach: 2, subLabels: true,
+        questions: [
+          'What do you mean by complete underwriting?',
+          'How do you treat pre-incorporation profits?',
+          'How do you find out the pre-incorporation period?',
+          'State any two circumstances necessitating the valuation of Goodwill.',
+          'What is intrinsic value?',
+          'Mention any two items that are shown under Non-current liabilities in the Balance Sheet of a company.',
+          'What is interim dividend?',
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any FOUR of the following questions. Each question carries 5 marks.', answer: 4, marksEach: 5,
+        questions: [
+          'Subbu Company issued 30,000 Debentures of Rs. 10 each. These Debentures were underwritten as follows: E — 21,000 Debentures, F — 9,000 Debentures. The public applied for 24,000 Debentures, which included marked applications as follows: E — 15,000 Debentures, F — 6,000 Debentures. Determine the liability of E and F if the unmarked Debentures are apportioned to underwriters on the basis of gross liability.',
+          'Calculate the goodwill of the company under the capitalisation of average profits method. The net profits of the company for the past 5 years are: 2019-20 Rs. 1,20,000; 2020-21 Rs. 1,35,000; 2021-22 Rs. 1,41,000; 2022-23 Rs. 1,20,000; 2023-24 Rs. 1,44,000. The capital employed in the business is Rs. 12,00,000, on which a reasonable rate of return of 10% is expected.',
+          {
+            text: 'Calculate the value of an equity share under the yield method.',
+            parts: [
+              '(a) The paid-up share capital of the company consists of 2,000 15% preference shares of Rs. 100 each and 40,000 equity shares of Rs. 10 each.',
+              '(b) The average annual profit of the company after providing for depreciation and taxation amounted to Rs. 1,50,000. It is considered necessary to transfer Rs. 20,000 to General Reserve before declaring a dividend.',
+              '(c) The normal return expected by investors on equity shares from this type of business carried on by the company is 10%.',
+            ],
+          },
+          {
+            text: 'Under which heading and sub-heading will the following items appear in the Balance Sheet of a company as per Schedule III, Part I of the Companies Act, 2013?',
+            parts: ['(a) Bills Payable', '(b) Bills Receivable', '(c) Trade Marks', '(d) Work-in-Progress', '(e) Prepaid Insurance'],
+          },
+          {
+            text: 'Prepare a statement showing the amount of profit made before and after incorporation using the following information. A company was incorporated on 30th September 2023 to acquire the business of Mohan as from 1st April 2023. The accounts for the year ended 31st March 2024 disclosed the following:',
+            parts: [
+              '(a) There was a gross profit of Rs. 7,20,000.',
+              '(b) The sales for the year amounted to Rs. 36,00,000, of which Rs. 16,20,000 were for the first six months.',
+              "(c) The expenses charged to the profit and loss account included Directors' fees Rs. 45,000, Bad debts Rs. 10,800, Advertising Rs. 36,000 (under a contract amounting to Rs. 3,000 p.m.), Salaries and general expenses Rs. 1,92,000, Preliminary expenses written off Rs. 15,000 and Donation to a political party given by the company Rs. 15,000.",
+            ],
+          },
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any TWO of the following questions. Each question carries 12 marks.', answer: 2, marksEach: 12,
+        questions: [
+          'Ganga Ltd. issued 5,00,000 shares of Rs. 10 each, which were underwritten as follows: A — 1,50,000 shares (firm underwriting 16,000 shares); B — 1,25,000 shares (firm underwriting 24,000 shares); C — 1,25,000 shares (firm underwriting nil); D — 1,00,000 shares (firm underwriting 60,000 shares). The total applications, excluding firm underwriting but including marked applications, were for 3,60,000 shares. The marked applications were: A — 80,000 shares; B — 72,000 shares; C — 48,000 shares; D — 96,000 shares. Calculate the total liability of each underwriter, treating firm underwriting as unmarked applications.',
+          'The net profits of a business after providing for taxation for the past five years are Rs. 3,20,000, Rs. 3,68,000, Rs. 3,40,000, Rs. 4,20,000 and Rs. 4,72,000. The capital employed in the business is Rs. 32,00,000. The normal rate of return expected in this type of business is 10%. It is expected that the company will be able to maintain its super-profit for the next 5 years. Calculate the value of Goodwill on the basis of (a) 2 years\u2019 purchase of super profit; (b) capitalisation of super profit; (c) annuity method, taking the present value of an annuity of Rs. 1 for five years at 10% as 3.78.',
+          'From the following particulars of MANGO Limited, calculate the Fair Value of each equity share: 2,80,000 equity shares of Rs. 10 each Rs. 28,00,000; 5% Debentures Rs. 7,00,000; Current Liabilities Rs. 9,10,000; Current Assets Rs. 14,00,000; Fixed Assets Rs. 38,50,000; Goodwill Rs. 3,50,000. The profits for the last three years were Rs. 3,61,200, Rs. 3,64,000 and Rs. 3,61,550 respectively; 20% is transferred to reserve. Normal rate of return is 10%.',
+        ],
+      },
+      {
+        id: 'D', instruction: 'Answer any One of the following questions. Each question carries 6 marks.', answer: 1, marksEach: 6,
+        questions: [
+          'Name any six Indian companies which issued FPOs in recent times.',
+          'Prepare a Balance Sheet as per Schedule III of the Companies Act, 2013 with imaginary figures.',
+        ],
+      },
+    ],
+    prepSubjectId: 'bba-karnataka-accounting',
+    source: { title: 'III Semester B.Com question papers, January/February 2025 (bundle)', url: 'https://www.cicms.in/uploads/quastion-papers/bcom/3rd-semester/2025-3rd-Sem-Bcom.pdf', publisher: 'CIMS B-School, Bengaluru (BCU-affiliated college)', retrievedOn: '2026-09-25', note: 'Q7 and Q9 re-flowed from a two-column scan.' },
+  },
+  {
+    id: 'bcu-bcom-3-cost-accounting-2025-01',
+    program: 'bcom',
+    university: 'bcu',
+    scheme: 'NEP scheme CBCS (F+R, 2022-23 onwards)',
+    semester: 3,
+    subject: 'Cost Accounting',
+    subjectArea: 'Accounting',
+    paperCode: 'DCBC303',
+    paperNumber: '3.3',
+    examMonth: 'January/February',
+    examYear: 2025,
+    durationMinutes: 150,
+    maxMarks: 60,
+    instructions: ['Answers should be written completely in English only.'],
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any Five of the following sub-questions. Each sub-question carries Two marks.', answer: 5, marksEach: 2, subLabels: true,
+        questions: [
+          'Define Costing.',
+          'What is a Stores Ledger?',
+          'What is Time Keeping?',
+          'What is Machine Hour Rate?',
+          'What is Prime Cost?',
+          'Mention any two differences between Cost Accounting and Financial Accounting.',
+          'What is a Bin Card?',
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any Four of the following questions. Each question carries Five marks.', answer: 4, marksEach: 5,
+        questions: [
+          'In a manufacturing company a material is used as follows: Maximum usage 12,000 units per week; Minimum usage 4,000 units per week; Normal usage 8,000 units per week; Re-order quantity 48,000 units; Time required for delivery 4–6 weeks. Calculate: Re-order Level, Minimum Level, Maximum Level and Average Stock Level.',
+          'State any five causes of Labour Turnover.',
+          'Standard time allowed to complete a job is 40 hours. Hourly rate is Rs. 30. Worker Manu completes the job in 40 hours and worker Ramu completes it in 35 hours. Calculate the earnings of the workers under the Halsey and Rowan plans.',
+          'State suitable bases for apportionment of the following expenses: (a) Rent, rates and taxes (b) Lighting charges (c) Indirect wages (d) Electric power (e) General overheads.',
+          'Compute the Machine Hour Rate from the following data: Cost of machine Rs. 2,00,000; Installation charges Rs. 20,000; Estimated scrap value after the expiry of its life of 15 years Rs. 10,000; Insurance premium for the machine per annum Rs. 1,920; Repair expenses per annum Rs. 2,000; Power 10 units per hour; Cost of power per 100 units Rs. 40; Estimated working hours per annum 2,000.',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any Two of the following questions. Each question carries 12 marks.', answer: 2, marksEach: 12,
+        questions: [
+          {
+            text: 'A company has 3 production departments and 2 service departments. The overhead distribution summary is as follows. Find out the total overheads of the production departments, charging service department costs to production departments on the basis of the simultaneous equation method.',
+            parts: [
+              'Total overheads (Rs.): Production Dept A 15,100; Production Dept B 14,400; Production Dept C 19,300; Service Dept X 9,250; Service Dept Y 3,150.',
+              'Distribution of Service Dept X expenses: A 20%, B 30%, C 40%, Y 10%.',
+              'Distribution of Service Dept Y expenses: A 40%, B 20%, C 30%, X 10%.',
+            ],
+          },
+          {
+            text: 'From the following data, prepare a Stores Ledger Account using the LIFO method of pricing material issues.',
+            parts: [
+              '1st December 2024 — Opening stock 400 units @ Rs. 8 per unit',
+              '2nd December 2024 — Received 800 units @ Rs. 7.80 per unit',
+              '8th December 2024 — Issued to Production Dept. 480 units',
+              '10th December 2024 — Received 1,000 units @ Rs. 7.70 per unit',
+              '12th December 2024 — Issued 320 units',
+              '16th December 2024 — Issued 800 units',
+              '19th December 2024 — Received 1,200 units @ Rs. 7 per unit',
+              '21st December 2024 — Issued 200 units',
+              '22nd December 2024 — Issued 520 units',
+              '23rd December 2024 — Issued 680 units',
+              '24th December 2024 — Refund of surplus units issued on 12th December 2024',
+              '30th December 2024 — The stock verification report revealed a shortage of 20 units',
+            ],
+          },
+          {
+            text: 'The following data is furnished by a company for the year: Stock of materials on 01.01.2024 Rs. 70,000; Stock of materials on 31.12.2024 Rs. 10,000; Purchase of materials Rs. 1,00,000; Wages Rs. 2,00,000; Factory overheads Rs. 40,000; Administration overheads Rs. 40,000; Closing stock of finished goods Rs. 40,000; Sales Rs. 5,00,000; Production during 2024 5,000 units. The company wants to quote for a contract for the supply of 1,000 units during the year 2025. The cost of materials is expected to increase by 15% and wages by 10%.',
+            parts: [
+              'Prepare a statement of cost for the year 2024 and an estimated cost statement for 2025 showing the price to be quoted per unit, if the same percentage of profit is maintained as in the previous year.',
+              'Factory overheads are based on wages and administrative overheads are based on works cost.',
+            ],
+          },
+        ],
+      },
+      {
+        id: 'D', instruction: 'Answer any One of the following questions. Each question carries Six marks.', answer: 1, marksEach: 6,
+        questions: [
+          'Prepare a cost sheet with imaginary figures.',
+          'List out the various overhead items under Factory, Administrative and Selling (and Distribution) overheads. (The last words are cut off at the page edge in the scan.)',
+        ],
+      },
+    ],
+    prepSubjectId: 'bba-karnataka-cost-accounting',
+    source: { title: 'III Semester B.Com question papers, January/February 2025 (bundle)', url: 'https://www.cicms.in/uploads/quastion-papers/bcom/3rd-semester/2025-3rd-Sem-Bcom.pdf', publisher: 'CIMS B-School, Bengaluru (BCU-affiliated college)', retrievedOn: '2026-09-25', note: 'Q4–Q7 re-flowed from a two-column scan.' },
+  },
+  {
+    id: 'bcu-bcom-3-entrepreneurship-skills-2025-01',
+    program: 'bcom',
+    university: 'bcu',
+    scheme: 'NEP scheme (2022-23 onwards, F+R)',
+    semester: 3,
+    subject: 'Entrepreneurship Skills (Open Elective)',
+    subjectArea: 'Entrepreneurship',
+    paperCode: 'OEBC312',
+    examMonth: 'January/February',
+    examYear: 2025,
+    durationMinutes: 150,
+    maxMarks: 60,
+    instructions: ['Answers should be written either in English or in Kannada.'],
+    sections: [
+      {
+        id: 'A', instruction: 'Answer any Five of the following sub-questions. Each sub-question carries two marks.', answer: 5, marksEach: 2, subLabels: true,
+        questions: [
+          'Define Entrepreneurship.',
+          'What is Economic Environment?',
+          'Expand PMRY.',
+          'What is Market Observation?',
+          'What is Creativity?',
+          'Mention any Two service-based startups.',
+          'Name any Two types of entrepreneurship.',
+        ],
+      },
+      {
+        id: 'B', instruction: 'Answer any Four of the following questions. Each question carries Five marks.', answer: 4, marksEach: 5,
+        questions: [
+          'Explain the financial aspects of a business plan.',
+          'Explain the advantages of entrepreneurship.',
+          'Write a short note on the Mudra Yojana scheme.',
+          'Explain the types of startups.',
+          'What are the key documents required for a new business?',
+        ],
+      },
+      {
+        id: 'C', instruction: 'Answer any Two of the following questions. Each question carries Twelve marks.', answer: 2, marksEach: 12,
+        questions: [
+          'Discuss the qualities required for an entrepreneur.',
+          'Explain the procedure involved in starting a business venture.',
+          'Explain the different government schemes for supporting entrepreneurship.',
+        ],
+      },
+      {
+        id: 'D', instruction: 'Answer any One of the following questions. The question carries Six marks.', answer: 1, marksEach: 6,
+        questions: [
+          'List out the practical challenges in setting up a business enterprise.',
+          'Prepare a budget for a new business with imaginary figures.',
+        ],
+      },
+    ],
+    prepSubjectId: 'bba-karnataka-entrepreneurship',
+    source: { title: 'III Semester B.Com question papers, January/February 2025 (bundle)', url: 'https://www.cicms.in/uploads/quastion-papers/bcom/3rd-semester/2025-3rd-Sem-Bcom.pdf', publisher: 'CIMS B-School, Bengaluru (BCU-affiliated college)', retrievedOn: '2026-09-25', note: 'Bilingual paper; only the English text is reproduced.' },
+  },
 ]
