@@ -7,6 +7,7 @@ import Layout from '@/shared/components/Layout';
 import { AdminPathGate } from './components/AdminPathGate';
 const LibraryManagement = lazy(() => import('@/modules/office/pages/LibraryManagement'));
 const LibraryFinesPage = lazy(() => import('@/modules/office/pages/LibraryFinesPage'));
+const InventoryManagement = lazy(() => import('@/modules/office/pages/InventoryManagement'));
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
@@ -146,6 +147,8 @@ export const adminRoutes: RouteObject[] = [
       { path: 'library', element: <LazyPage><LibraryManagement /></LazyPage> },
       { path: 'library/:tab', element: <LazyPage><LibraryManagement /></LazyPage> },
       { path: 'library-fines', element: <LazyPage><LibraryFinesPage /></LazyPage> },
+      { path: 'inventory', element: <LazyPage><InventoryManagement /></LazyPage> },
+      { path: 'inventory/:tab', element: <LazyPage><InventoryManagement /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },

@@ -794,7 +794,15 @@ service cloud.firestore {
       match /noDues/{docId} {
         allow read: if isBackOffice(collegeId)
           || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
-        allow create, update: if isFinance(collegeId) || isOps(collegeId);
+        allow create: if isFinance(collegeId) || isOps(collegeId)
+          // a student may APPLY (empty checklist — offices fill their sections)
+          || (role() == 'student' && inCollege(collegeId)
+            && request.resource.data.studentUid == request.auth.uid
+            && request.resource.data.status == 'open'
+            && request.resource.data.sections.size() == 0);
+        // Department heads clear their department's section; the page limits
+        // each office to the sections it owns.
+        allow update: if isBackOffice(collegeId);
         allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
       }
       match /counters/{docId} {
