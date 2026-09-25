@@ -5,6 +5,8 @@ import type { UserRole } from '@/modules/auth/context/AuthContext';
 import Layout from '@/shared/components/Layout';
 
 import { AdminPathGate } from './components/AdminPathGate';
+const LibraryManagement = lazy(() => import('@/modules/office/pages/LibraryManagement'));
+const LibraryFinesPage = lazy(() => import('@/modules/office/pages/LibraryFinesPage'));
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
@@ -140,6 +142,10 @@ export const adminRoutes: RouteObject[] = [
       { path: 'grade-records', element: <LazyPage><GradeRecords /></LazyPage> },
       { path: 'fee-management', element: <LazyPage><AdminFeeManagement /></LazyPage> },
       { path: 'finance-settings', element: <LazyPage><FinanceSettings /></LazyPage> },
+      // ── College office: library ──
+      { path: 'library', element: <LazyPage><LibraryManagement /></LazyPage> },
+      { path: 'library/:tab', element: <LazyPage><LibraryManagement /></LazyPage> },
+      { path: 'library-fines', element: <LazyPage><LibraryFinesPage /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },

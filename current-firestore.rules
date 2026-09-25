@@ -700,8 +700,14 @@ service cloud.firestore {
       // Titles/copies are the college catalogue: every member of the college
       // may browse. Loans, reservations and fines are personal: a borrower
       // sees only rows naming them (memberUid == uid); the desk sees all.
+      // A borrower's own row: matched on the auth uid stamped at issue, or —
+      // for students whose record predates auth linking — on the student
+      // record id (same resolution as fee ledger rows).
       function ownsMemberRow(cid) {
-        return inCollege(cid) && resource.data.memberUid == request.auth.uid;
+        return inCollege(cid) && (resource.data.memberUid == request.auth.uid
+          || (role() == 'student' && 'studentId' in resource.data
+            && resource.data.studentId is string && resource.data.studentId != ''
+            && ownsStudentId(resource.data.studentId)));
       }
       match /libraryTitles/{docId} {
         allow get, list: if isSuperadmin() || inCollege(collegeId);
