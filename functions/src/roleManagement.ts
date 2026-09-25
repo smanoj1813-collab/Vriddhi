@@ -4,7 +4,7 @@ import * as logger from 'firebase-functions/logger'
 import { IDENTITY_API_VERSION, generateRandomPassword, verifyAuthAccount } from './identityShared'
 
 const db = admin.firestore()
-const ALLOWED_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent'] as const
+const ALLOWED_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations'] as const
 type Role = typeof ALLOWED_ROLES[number]
 
 function password(): string {
@@ -180,6 +180,14 @@ export const grantUserRole = onCall(
         status: 'active',
         updatedAt: now,
         ...(existingProfile && existingProfile.createdAt ? {} : { createdAt: now }),
+      }, { merge: true })
+    }
+    // Office roles (accounts / operations) have no profile collection of their
+    // own; the college roster the principal manages lives under the college.
+    if ((role === 'accounts' || role === 'operations') && collegeId) {
+      batch.set(db.doc(`colleges/${collegeId}/officeStaff/${authUser.uid}`), {
+        uid: authUser.uid, email, name: resolvedName, role, collegeId,
+        status: 'active', updatedAt: now, managedBy: request.auth.uid,
       }, { merge: true })
     }
     if (role === 'student') {

@@ -22,8 +22,8 @@ const REPAIR_SCOPES: Record<'all' | 'students' | 'faculty' | 'staff', RepairInpu
   staff: ['admins', 'hods', 'mentors', 'superadmins'],
 }
 
-type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent'
-const roles: Role[] = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent']
+type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent' | 'accounts' | 'operations'
+const roles: Role[] = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations']
 const grant = httpsCallable<Record<string, string>, any>(functions, 'grantUserRole')
 const diagnose = httpsCallable<{ email: string }, any>(functions, 'diagnoseIdentity')
 const syncClaims = httpsCallable<Record<string, never>, { scanned: number; updated: number; skipped: number; errors: string[] }>(functions, 'syncIdentityClaims')

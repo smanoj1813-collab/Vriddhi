@@ -19,6 +19,8 @@ const ALLOWED_ROLES = [
   'mentor',
   'student',
   'parent',
+  'accounts',
+  'operations',
 ]
 
 const generatePassword = generateRandomPassword

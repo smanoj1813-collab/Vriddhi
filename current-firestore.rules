@@ -123,6 +123,35 @@ service cloud.firestore {
         || (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId());
     }
 
+    // -- College office roles -------------------------------------------------
+    // `accounts` (finance office) and `operations` (library, inventory,
+    // stores) are NOT staff in the academic sense (isStaff): they never read
+    // attendance, marks or papers. They reach the student/faculty directory
+    // (to bill and to lend) and their own modules only. HODs / department
+    // admins hold no finance access; the principal oversees everything.
+    // Mirrors src/modules/auth/permissions.ts.
+    function isOffice() {
+      return isSignedIn() && role() in ['accounts', 'operations'] && collegeId() != null;
+    }
+    function inCollege(cid) {
+      return isSignedIn() && collegeId() == cid;
+    }
+    function isFinance(cid) {
+      return isSuperadmin() || (role() in ['principal', 'accounts'] && collegeId() == cid);
+    }
+    function isOps(cid) {
+      return isSuperadmin() || (role() in ['principal', 'operations'] && collegeId() == cid);
+    }
+    // Back office incl. department heads (raise purchase requests, see vendors).
+    function isBackOffice(cid) {
+      return isSuperadmin()
+        || (role() in ['principal', 'accounts', 'operations', 'admin', 'hod'] && collegeId() == cid);
+    }
+    // Field-tenanted variant for legacy top-level finance collections.
+    function isFinanceData(data) {
+      return isSuperadmin() || (role() in ['principal', 'accounts'] && sameCollege(data));
+    }
+
     // -- Department scoping (admin ≡ department HOD) --------------------------
     // The department tag on the ID-token custom claim. Absent/empty claim ⇒
     // '' ⇒ no narrowing, exactly like the tolerant client filter in
@@ -297,7 +326,8 @@ service cloud.firestore {
         || (isSignedIn() && 'email' in request.auth.token
           && resource.data.email == request.auth.token.email)
         || isSuperadmin()
-        || (isStaff() && sameCollege(resource.data) && deptScoped(resource.data));
+        || (isStaff() && sameCollege(resource.data) && deptScoped(resource.data))
+        || (isOffice() && sameCollege(resource.data));
       // A list is authorised per candidate document, so a query the client
       // constrains to the caller's own row (where('userId','==',auth.uid),
       // where('uid',…), or documentId) satisfies ownsStudentProfile and is
@@ -305,7 +335,8 @@ service cloud.firestore {
       // student dashboard cannot resolve its own profile and reports "no
       // student record" for a correctly provisioned account.
       allow list: if isSignedIn() && (isSuperadmin() || isStaff()
-        || ownsStudentProfile(id, resource.data));
+        || ownsStudentProfile(id, resource.data)
+        || (isOffice() && sameCollege(resource.data)));
       allow create: if canManageCollege(request.resource.data)
         && noPrivilegedRole(request.resource.data)
         && noPasswordField();
@@ -328,6 +359,7 @@ service cloud.firestore {
       // whose claim has not been issued yet, so the self-scoped alternatives
       // are allowed here.
       allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+        || (isOffice() && sameCollege(resource.data))
         || isOwner(id)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
@@ -402,14 +434,15 @@ service cloud.firestore {
       match /students/{id} {
         allow get: if ownsStudentProfile(id, resource.data)
           || isSuperadmin()
-          || (isStaff() && collegeId() == collegeId && deptScoped(resource.data));
+          || (isStaff() && collegeId() == collegeId && deptScoped(resource.data))
+          || (isOffice() && collegeId() == collegeId);
         // `list` may reference resource.data because rules are evaluated per
         // candidate document; the client's query has to be constrained to rows
         // that satisfy the rule. The student branch therefore only admits a
         // query scoped to the caller's own record (studentDocId / userId),
         // which is what studentRecordResolver issues.
         allow list: if isSignedIn() && (isSuperadmin()
-          || (isStaff() && collegeId() == collegeId)
+          || ((isStaff() || isOffice()) && collegeId() == collegeId)
           || ownsStudentProfile(id, resource.data));
         allow create, update: if (isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId)) && noPasswordField();
@@ -427,11 +460,21 @@ service cloud.firestore {
         // config/branding is the college letterhead (name, address, receipt
         // footer) that students and faculty need to render their own fee
         // receipts / payslips; every other config doc stays staff-only.
+        // config/library (loan rules) is likewise shown to borrowers.
         allow get: if isSignedIn() && (isSuperadmin() || isStaff()
-          || (docId == 'branding' && collegeId() == collegeId));
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow write: if isSuperadmin()
-          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+          || (isOffice() && collegeId() == collegeId)
+          || (docId in ['branding', 'library'] && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+          || (isOffice() && collegeId() == collegeId));
+        // Each settings doc belongs to the office that runs it. config/access
+        // (who may see payroll) is the principal's alone.
+        allow write: if docId == 'access'
+          ? (isSuperadmin() || (role() == 'principal' && collegeId() == collegeId))
+          : docId in ['finance', 'branding']
+            ? isFinance(collegeId)
+            : docId in ['library', 'inventory', 'procurement', 'nodues']
+              ? isOps(collegeId)
+              : (isSuperadmin() || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId));
       }
 
       match /announcements/{docId} {
@@ -497,35 +540,39 @@ service cloud.firestore {
         // A student may read the fee structures of their own college: a published
         // structure carries no studentId and is shared reference data, while one
         // addressed to a student is theirs alone.
-        allow get, list: if isSignedIn() && (isSuperadmin() || isStaff()
+        allow get, list: if isSignedIn() && (isFinance(collegeId)
           || (role() == 'student' && collegeId() == collegeId
             && (!('studentId' in resource.data) || ownsStudentId(resource.data.studentId))));
-        allow write: if isSuperadmin()
-          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+        allow write: if isFinance(collegeId);
       }
 
       match /feePayments/{docId} {
         // Payments are personal transactions, so a student is admitted only to
         // their own rows — never to the college ledger the admin page reads.
-        allow get, list: if isSignedIn() && (isSuperadmin() || isStaff()
+        allow get, list: if isSignedIn() && (isFinance(collegeId)
           || (role() == 'student' && collegeId() == collegeId
             && 'studentId' in resource.data && ownsStudentId(resource.data.studentId)));
-        allow write: if isSuperadmin()
-          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+        allow write: if isFinance(collegeId);
+        // The library desk may post an (unpaid) library fine onto a student's
+        // fee account so the accounts team collects it like any other due.
+        allow create: if role() == 'operations' && collegeId() == collegeId
+          && request.resource.data.category == 'library'
+          && request.resource.data.paidAmount == 0
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0;
 
         // The ledger entry is the current balance; this append-only trail makes
         // receipts and waivers auditable without exposing another student's
         // payment history.
         match /transactions/{transactionId} {
-          allow get, list: if isSignedIn() && (isSuperadmin() || isStaff()
+          allow get, list: if isSignedIn() && (isFinance(collegeId)
             || (role() == 'student'
               && 'studentId' in get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data
               && ownsStudentId(get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data.studentId)));
           // Finance staff record a collected payment directly; a student may only
           // FILE their own proof — an append-only, unverified submission that
           // credits nothing until an admin approves it via verifyPaymentProof.
-          allow create: if isSuperadmin()
-            || (role() in ['admin', 'hod'] && collegeId() == collegeId)
+          allow create: if isFinance(collegeId)
             || (isSignedIn() && role() == 'student' && collegeId() == collegeId
               && 'studentId' in get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data
               && ownsStudentId(get(/databases/$(database)/documents/colleges/$(collegeId)/feePayments/$(docId)).data.studentId)
@@ -535,16 +582,14 @@ service cloud.firestore {
               && request.resource.data.amount > 0);
           // Verification only ever stamps review metadata onto an existing
           // submission; it cannot rewrite the amount or the submission type.
-          allow update: if (isSuperadmin()
-              || (role() in ['admin', 'hod'] && collegeId() == collegeId))
+          allow update: if isFinance(collegeId)
             && resource.data.submissionStatus == 'pending_verification'
             && request.resource.data.submissionStatus in ['verified', 'rejected']
             && request.resource.data.amount == resource.data.amount
             && request.resource.data.type == resource.data.type
             && request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['submissionStatus', 'verifiedBy', 'verifiedAt', 'receiptNo', 'rejectionReason', 'updatedAt']);
-          allow delete: if isSuperadmin()
-            || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+          allow delete: if isFinance(collegeId);
         }
       }
 
@@ -552,7 +597,7 @@ service cloud.firestore {
       // Cloud Function via the Admin SDK, which bypasses these rules — clients
       // never write here. Read is observability only for finance staff.
       match /paymentOrders/{docId} {
-        allow get, list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get, list: if isFinance(collegeId);
         allow write: if false;
       }
 
@@ -560,13 +605,16 @@ service cloud.firestore {
       // Salary data is personal: only the finance office manages it, and a
       // faculty member is admitted to their OWN rows only (facultyUid == uid).
       // The own-row branch is last so a row without facultyUid simply denies.
-      // Guest bills: admin / hod / principal (department heads certify guest
-      // periods). Payroll: admin / principal only.
+      // Guest bills: principal + accounts. Payroll: the principal always; the
+      // accounts team only when the college lists it in
+      // config/access.payrollRoles (Office Staff & Access page).
       function isPayrollManager(cid) {
-        return isSuperadmin() || (role() in ['admin', 'principal'] && collegeId() == cid);
+        return isSuperadmin() || (collegeId() == cid && (role() == 'principal'
+          || (role() == 'accounts'
+            && 'accounts' in get(/databases/$(database)/documents/colleges/$(cid)/config/access).data.get('payrollRoles', []))));
       }
       function isGuestBillManager(cid) {
-        return isSuperadmin() || (role() in ['admin', 'hod', 'principal'] && collegeId() == cid);
+        return isFinance(cid);
       }
       function ownsPayRow(cid) {
         return isSignedIn() && collegeId() == cid && resource.data.facultyUid == request.auth.uid;
@@ -590,7 +638,7 @@ service cloud.firestore {
       match /salaryCertificates/{docId} {
         allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
         allow create: if isPayrollManager(collegeId);
-        allow update, delete: if isSuperadmin() || (role() == 'admin' && collegeId() == collegeId);
+        allow update, delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
       }
 
       // University exam-fee challans (Karnataka-pattern 3-copy bank slips:
@@ -611,15 +659,13 @@ service cloud.firestore {
       // student record; the client query therefore carries the `studentId`
       // predicate, because a LIST an unbounded rule must not be attempted.
       match /challans/{docId} {
-        allow get, list: if isSignedIn() && (isSuperadmin()
-          || (isStaff() && collegeId() == collegeId)
+        allow get, list: if isSignedIn() && (isFinance(collegeId)
           || (role() == 'student' && collegeId() == collegeId
             && 'studentId' in resource.data && ownsStudentId(resource.data.studentId)));
         // Generation stamps the student, the amount and a due date; the number
         // is what a bank is asked to collect, so it may not be negative and a
         // fresh challan always starts life as `generated`.
-        allow create: if (isSuperadmin()
-          || (role() in ['admin', 'hod'] && collegeId() == collegeId))
+        allow create: if isFinance(collegeId)
           && request.resource.data.studentId is string
           && request.resource.data.studentId != ''
           && request.resource.data.amount is number
@@ -629,8 +675,7 @@ service cloud.firestore {
         // A student may never move their own challan to `verified`, and nobody
         // edits the amount or the addressee after issue — those two fields are
         // what a stamped slip is reconciled against.
-        allow update: if (isSuperadmin()
-          || (role() in ['admin', 'hod'] && collegeId() == collegeId))
+        allow update: if isFinance(collegeId)
           && request.resource.data.studentId == resource.data.studentId
           && request.resource.data.amount == resource.data.amount;
         // …but the student owns one transition: declaring that they paid at the
@@ -648,14 +693,120 @@ service cloud.firestore {
           && request.resource.data.bankReferenceNo.matches('^[A-Za-z0-9/-]{6,40}$')
           && request.resource.data.amount == resource.data.amount
           && request.resource.data.studentId == resource.data.studentId;
-        allow delete: if isSuperadmin()
-          || (role() in ['admin', 'hod'] && collegeId() == collegeId);
+        allow delete: if isFinance(collegeId);
+      }
+
+      // -- Library (operations team) -------------------------------------------
+      // Titles/copies are the college catalogue: every member of the college
+      // may browse. Loans, reservations and fines are personal: a borrower
+      // sees only rows naming them (memberUid == uid); the desk sees all.
+      function ownsMemberRow(cid) {
+        return inCollege(cid) && resource.data.memberUid == request.auth.uid;
+      }
+      match /libraryTitles/{docId} {
+        allow get, list: if isSuperadmin() || inCollege(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /libraryCopies/{docId} {
+        allow get, list: if isSuperadmin() || inCollege(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /libraryLoans/{docId} {
+        allow get, list: if isOps(collegeId) || isFinance(collegeId) || ownsMemberRow(collegeId);
+        allow write: if isOps(collegeId);
+        // A borrower may only ASK for a renewal; the desk grants it.
+        allow update: if ownsMemberRow(collegeId) && resource.data.status == 'issued'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['renewRequestedAt', 'updatedAt']);
+      }
+      match /libraryReservations/{docId} {
+        allow get, list: if isOps(collegeId) || ownsMemberRow(collegeId);
+        allow create: if isOps(collegeId) || (inCollege(collegeId)
+          && request.resource.data.memberUid == request.auth.uid
+          && request.resource.data.status == 'waiting');
+        allow update: if isOps(collegeId) || (ownsMemberRow(collegeId)
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']));
+        allow delete: if isOps(collegeId);
+      }
+      // Fines are shared by both offices: the desk assesses, collects at the
+      // counter or posts to the fee account; only finance may WAIVE.
+      match /libraryFines/{docId} {
+        allow get, list: if isOps(collegeId) || isFinance(collegeId) || ownsMemberRow(collegeId);
+        allow create: if isOps(collegeId) || isFinance(collegeId);
+        allow update: if isFinance(collegeId)
+          || (isOps(collegeId) && request.resource.data.status != 'waived');
+        allow delete: if isFinance(collegeId);
+      }
+      match /libraryVisits/{docId} {
+        allow read, write: if isOps(collegeId);
+      }
+      match /libraryStockChecks/{docId} {
+        allow read, write: if isOps(collegeId);
+      }
+
+      // -- Inventory, procurement, vendor bills --------------------------------
+      match /assets/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /inventoryItems/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /stockMovements/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /vendors/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if isOps(collegeId) || isFinance(collegeId);
+      }
+      // Departments raise requests in their own name; approvals follow the
+      // college chain (config/procurement), enforced by the page.
+      match /purchaseRequests/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow create: if isBackOffice(collegeId)
+          && request.resource.data.requestedBy.uid == request.auth.uid
+          && request.resource.data.status == 'submitted';
+        allow update: if isBackOffice(collegeId);
+        allow delete: if isOps(collegeId);
+      }
+      match /purchaseOrders/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /goodsReceipts/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if isOps(collegeId);
+      }
+      match /vendorBills/{docId} {
+        allow read, create: if isFinance(collegeId) || isOps(collegeId);
+        allow update, delete: if isFinance(collegeId);
+      }
+      // No-dues clearance: each office clears its own section; the student
+      // may follow their own request.
+      match /noDues/{docId} {
+        allow read: if isBackOffice(collegeId)
+          || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
+        allow create, update: if isFinance(collegeId) || isOps(collegeId);
+        allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
+      }
+      match /counters/{docId} {
+        allow read, write: if isBackOffice(collegeId);
+      }
+      // Roster of office staff — written only by the manageOfficeStaff callable.
+      match /officeStaff/{docId} {
+        allow read: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId)
+          || (isSignedIn() && docId == request.auth.uid);
+        allow write: if false;
       }
 
       match /faculty/{docId} {
         allow get: if isSignedIn() && (isSuperadmin()
-          || (isStaff() && deptScoped(resource.data)));
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+          || (isStaff() && deptScoped(resource.data))
+          || (isOffice() && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin() || isStaff()
+          || (isOffice() && collegeId() == collegeId));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
@@ -866,8 +1017,8 @@ service cloud.firestore {
     }
 
     match /payments/{id} {
-      allow read: if isSignedIn() && (isSuperadmin() || resource.data.studentId == request.auth.uid || (role() in ['admin', 'hod'] && sameCollege(resource.data)));
-      allow write: if isSuperadmin() || (role() == 'admin' && sameCollege(request.resource.data));
+      allow read: if isSignedIn() && (isSuperadmin() || resource.data.studentId == request.auth.uid || isFinanceData(resource.data));
+      allow write: if isFinanceData(request.resource.data);
     }
 
     // Top-level feeStructures holds one document per student (queried by
@@ -875,13 +1026,11 @@ service cloud.firestore {
     // reads only their own record; staff read within their own college.
     match /feeStructures/{id} {
       allow read: if isSignedIn()
-        && (isSuperadmin()
-          || (isStaff() && sameCollege(resource.data))
+        && (isFinanceData(resource.data)
           || ('studentId' in resource.data
             && (resource.data.studentId == request.auth.uid
               || ownsStudentId(resource.data.studentId))));
-      allow write: if isSuperadmin()
-        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+      allow write: if isFinanceData(request.resource.data);
     }
 
     // Scheme packs (G1): universities' examination schemes. Clients only read
@@ -1231,14 +1380,19 @@ service cloud.firestore {
     // profile rather than from a field on the fee document itself.
     match /fees/{studentId} {
       allow read: if isSignedIn()
-        && (isSuperadmin() || isStaff() || isOwner(studentId) || ownsStudentId(studentId));
+        && (isSuperadmin() || (role() in ['principal', 'accounts'] && studentCollegeId(studentId) == collegeId())
+          || isOwner(studentId) || ownsStudentId(studentId));
       allow write: if isSuperadmin()
-        || (role() in ['admin', 'hod'] && studentCollegeId(studentId) == collegeId());
+        || (role() in ['principal', 'accounts'] && studentCollegeId(studentId) == collegeId());
     }
 
+    // Legacy GLOBAL catalogue (not tenant-scoped): retired in favour of
+    // colleges/{id}/libraryTitles. Readable only for rows tagged with the
+    // caller's college; writes superadmin-only so no college can edit
+    // another's books.
     match /libraryBooks/{docId} {
-      allow read: if isSignedIn();
-      allow write: if isSuperadmin() || (role() in ['admin', 'hod']);
+      allow read: if isSignedIn() && sameCollege(resource.data);
+      allow write: if isSuperadmin();
     }
 
     match /issuedBooks/{docId} {

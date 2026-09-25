@@ -14,7 +14,9 @@ import * as admin from 'firebase-admin'
 import crypto from 'crypto'
 
 const db = admin.firestore()
-const STAFF_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+// Finance staff may act on any fee row of their college; everyone else only on
+// their own. HODs/admins no longer hold finance access (accounts team does).
+const STAFF_ROLES = ['superadmin', 'principal', 'accounts']
 
 function gatewayConfig() {
   const keyId = process.env.RAZORPAY_KEY_ID

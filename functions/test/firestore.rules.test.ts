@@ -1570,3 +1570,135 @@ describe('academic calendar (Auto-Scheduler v2)', () => {
     }))
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// College office roles: accounts (finance) / operations (library, inventory)
+// ═══════════════════════════════════════════════════════════════════════════
+describe('office roles — finance moved from HODs to the accounts team', () => {
+  const accounts = () => testEnv.authenticatedContext('accounts-a', { role: 'accounts', collegeId: COLLEGE_A })
+  const operations = () => testEnv.authenticatedContext('ops-a', { role: 'operations', collegeId: COLLEGE_A })
+  const hod = () => testEnv.authenticatedContext('hod-a', { role: 'hod', collegeId: COLLEGE_A })
+  const accountsB = () => testEnv.authenticatedContext('accounts-b', { role: 'accounts', collegeId: COLLEGE_B })
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'feePayments', 'fp1'), {
+          studentId: STUDENT_ID, studentName: 'Student A', amount: 1000, paidAmount: 0, category: 'tuition', collegeId: COLLEGE_A,
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'payslips', '2026-09_p1'), { facultyUid: 'faculty-a', net: 100, month: '2026-09' }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'libraryTitles', 't1'), { title: 'Algorithms', collegeId: COLLEGE_A }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), {
+          memberUid: STUDENT_UID, status: 'issued', titleId: 't1', dueDate: '2026-10-01',
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'libraryLoans', 'l2'), {
+          memberUid: OTHER_UID, status: 'issued', titleId: 't1', dueDate: '2026-10-01',
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'libraryFines', 'f1'), {
+          memberUid: STUDENT_UID, status: 'pending', amount: 20,
+        }),
+      ])
+    })
+  })
+
+  it('accounts reads and writes the fee ledger; HODs, admins and operations cannot', async () => {
+    await assertSucceeds(getDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'feePayments', 'fp1')))
+    await assertSucceeds(updateDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'feePayments', 'fp1'), { paidAmount: 500 }))
+    await assertSucceeds(updateDoc(doc(principalContext().firestore(), 'colleges', COLLEGE_A, 'feePayments', 'fp1'), { remarks: 'ok' }))
+    for (const ctx of [hod(), adminContext(), operations(), facultyContext()]) {
+      await assertFails(getDoc(doc(ctx.firestore(), 'colleges', COLLEGE_A, 'feePayments', 'fp1')))
+      await assertFails(updateDoc(doc(ctx.firestore(), 'colleges', COLLEGE_A, 'feePayments', 'fp1'), { paidAmount: 1 }))
+    }
+    await assertFails(getDoc(doc(accountsB().firestore(), 'colleges', COLLEGE_A, 'feePayments', 'fp1')))
+  })
+
+  it('operations may post an unpaid library fine to a fee account, nothing else', async () => {
+    const db = operations().firestore()
+    await assertSucceeds(setDoc(doc(db, 'colleges', COLLEGE_A, 'feePayments', 'lib1'), {
+      studentId: STUDENT_ID, amount: 30, paidAmount: 0, category: 'library', collegeId: COLLEGE_A,
+    }))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_A, 'feePayments', 'lib2'), {
+      studentId: STUDENT_ID, amount: 30, paidAmount: 0, category: 'tuition', collegeId: COLLEGE_A,
+    }))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_A, 'feePayments', 'lib3'), {
+      studentId: STUDENT_ID, amount: 30, paidAmount: 30, category: 'library', collegeId: COLLEGE_A,
+    }))
+  })
+
+  it('finance settings: accounts writes, HODs cannot; access settings are principal-only', async () => {
+    await assertSucceeds(setDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'config', 'finance'), { x: 1 }))
+    await assertFails(setDoc(doc(hod().firestore(), 'colleges', COLLEGE_A, 'config', 'finance'), { x: 1 }))
+    await assertFails(setDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'config', 'access'), { payrollRoles: ['accounts'] }))
+    await assertSucceeds(setDoc(doc(principalContext().firestore(), 'colleges', COLLEGE_A, 'config', 'access'), { payrollRoles: ['accounts'] }))
+    await assertSucceeds(setDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'config', 'library'), { x: 1 }))
+    await assertFails(setDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'config', 'library'), { x: 1 }))
+    // borrowers can read the loan rules
+    await assertSucceeds(getDoc(doc(studentContext().firestore(), 'colleges', COLLEGE_A, 'config', 'library')))
+  })
+
+  it('payroll: principal always; accounts only after the college grants it', async () => {
+    const path = ['colleges', COLLEGE_A, 'payslips', '2026-09_p1'] as const
+    await assertSucceeds(getDoc(doc(principalContext().firestore(), ...path)))
+    await assertFails(getDoc(doc(accounts().firestore(), ...path)))
+    await assertFails(getDoc(doc(hod().firestore(), ...path)))
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'colleges', COLLEGE_A, 'config', 'access'), { payrollRoles: ['accounts'] })
+    })
+    await assertSucceeds(getDoc(doc(accounts().firestore(), ...path)))
+    await assertFails(getDoc(doc(operations().firestore(), ...path)))
+    // faculty still sees their own payslip
+    await assertSucceeds(getDoc(doc(facultyContext().firestore(), ...path)))
+  })
+
+  it('library: borrowers see only their own loans and may only request renewal', async () => {
+    const st = studentContext().firestore()
+    await assertSucceeds(getDoc(doc(st, 'colleges', COLLEGE_A, 'libraryTitles', 't1')))
+    await assertSucceeds(getDoc(doc(st, 'colleges', COLLEGE_A, 'libraryLoans', 'l1')))
+    await assertFails(getDoc(doc(st, 'colleges', COLLEGE_A, 'libraryLoans', 'l2')))
+    await assertSucceeds(updateDoc(doc(st, 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), { renewRequestedAt: '2026-09-25T10:00:00Z' }))
+    await assertFails(updateDoc(doc(st, 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), { dueDate: '2027-01-01' }))
+    await assertFails(setDoc(doc(st, 'colleges', COLLEGE_A, 'libraryTitles', 't2'), { title: 'x' }))
+    await assertSucceeds(updateDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), { dueDate: '2026-10-15' }))
+    await assertFails(updateDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), { dueDate: '2026-10-15' }))
+    await assertFails(updateDoc(doc(hod().firestore(), 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), { dueDate: '2026-10-15' }))
+  })
+
+  it('library fines: both offices work them, only finance may waive', async () => {
+    const path = ['colleges', COLLEGE_A, 'libraryFines', 'f1'] as const
+    await assertSucceeds(getDoc(doc(accounts().firestore(), ...path)))
+    await assertSucceeds(getDoc(doc(operations().firestore(), ...path)))
+    await assertSucceeds(getDoc(doc(studentContext().firestore(), ...path)))
+    await assertSucceeds(updateDoc(doc(operations().firestore(), ...path), { status: 'collected' }))
+    await assertFails(updateDoc(doc(operations().firestore(), ...path), { status: 'waived' }))
+    await assertSucceeds(updateDoc(doc(accounts().firestore(), ...path), { status: 'waived' }))
+  })
+
+  it('reservations: a member reserves for themselves only', async () => {
+    const st = studentContext().firestore()
+    await assertSucceeds(setDoc(doc(st, 'colleges', COLLEGE_A, 'libraryReservations', 'r1'), { memberUid: STUDENT_UID, status: 'waiting', titleId: 't1' }))
+    await assertFails(setDoc(doc(st, 'colleges', COLLEGE_A, 'libraryReservations', 'r2'), { memberUid: OTHER_UID, status: 'waiting', titleId: 't1' }))
+    await assertFails(setDoc(doc(st, 'colleges', COLLEGE_A, 'libraryReservations', 'r3'), { memberUid: STUDENT_UID, status: 'ready', titleId: 't1' }))
+  })
+
+  it('office roles read the student directory but not academic records', async () => {
+    await assertSucceeds(getDocs(query(collection(accounts().firestore(), 'students'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(operations().firestore(), 'students'), where('collegeId', '==', COLLEGE_A))))
+    await assertFails(getDocs(query(collection(accounts().firestore(), 'students'), where('collegeId', '==', COLLEGE_B))))
+  })
+
+  it('procurement: HOD raises a request in their own name; vendor bills are finance-owned', async () => {
+    const h = hod().firestore()
+    await assertSucceeds(setDoc(doc(h, 'colleges', COLLEGE_A, 'purchaseRequests', 'pr1'), {
+      status: 'submitted', requestedBy: { uid: 'hod-a', name: 'HOD' }, items: [],
+    }))
+    await assertFails(setDoc(doc(h, 'colleges', COLLEGE_A, 'purchaseRequests', 'pr2'), {
+      status: 'submitted', requestedBy: { uid: 'someone-else', name: 'X' }, items: [],
+    }))
+    await assertFails(setDoc(doc(h, 'colleges', COLLEGE_A, 'vendorBills', 'vb1'), { amount: 10 }))
+    await assertSucceeds(setDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'vendorBills', 'vb1'), { amount: 10, status: 'pending' }))
+    await assertFails(updateDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'vendorBills', 'vb1'), { status: 'paid' }))
+    await assertSucceeds(updateDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'vendorBills', 'vb1'), { status: 'paid' }))
+    await assertFails(setDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'officeStaff', 'x'), { role: 'accounts' }))
+  })
+})

@@ -25,6 +25,9 @@ export const ROLE_DASHBOARD: Record<UserRole, string> = {
   // No parent portal is built yet. The student shell is a safe, read-only
   // landing that explains why there is no data, rather than /unauthorized.
   parent: '/student/dashboard',
+  // College office roles land on their own desk inside the /admin shell.
+  accounts: '/admin/accounts',
+  operations: '/admin/operations',
 }
 
 /**

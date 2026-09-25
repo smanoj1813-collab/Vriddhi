@@ -6,7 +6,7 @@ import { AuthenticatedRequest } from './authTypes';
 export type { AuthenticatedRequest } from './authTypes';
 export { requireRole, resolveCollegeId, assertCollegeAccess } from './authz';
 
-const VALID_ROLES = ['superadmin', 'admin', 'principal', 'faculty', 'hod', 'mentor', 'student', 'parent'];
+const VALID_ROLES = ['superadmin', 'admin', 'principal', 'faculty', 'hod', 'mentor', 'student', 'parent', 'accounts', 'operations'];
 
 function normalizeRole(raw: unknown): string | undefined {
   if (!raw) return undefined;

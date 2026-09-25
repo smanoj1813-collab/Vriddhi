@@ -4,6 +4,7 @@ import { RoleRoute } from '@/routes/components/RoleRoute';
 import type { UserRole } from '@/modules/auth/context/AuthContext';
 import Layout from '@/shared/components/Layout';
 
+import { AdminPathGate } from './components/AdminPathGate';
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
 const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
@@ -117,8 +118,12 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <RoleRoute allowedRoles={['admin', 'principal', 'hod', 'superadmin']}>
-        <Layout />
+      // Every role that uses the /admin shell; AdminPathGate then decides page
+      // by page (office roles reach only their modules, HODs no finance).
+      <RoleRoute allowedRoles={['admin', 'principal', 'hod', 'superadmin', 'accounts', 'operations']}>
+        <AdminPathGate>
+          <Layout />
+        </AdminPathGate>
       </RoleRoute>
     ),
     children: [
