@@ -24,11 +24,12 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import { onRequest } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions'
 
-import { generalLimiter } from '../middleware/rateLimit'
+import { generalLimiter, reportPdfLimiter } from '../middleware/rateLimit'
 import { verifyAuth, requireRole } from '../middleware/auth'
 import { renderPaperPdf } from './papers'
 import { exportQuestionsPdf } from './questions'
 import { resumePdfHandler } from './resume'
+import { exportAttendanceRegisterPdf } from './attendancePdf'
 
 // The role lists are duplicated from the owning routers on purpose: the guard on
 // a route must be visible next to the mount that exposes it, and the shared
@@ -36,6 +37,10 @@ import { resumePdfHandler } from './resume'
 const PAPER_READ_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor', 'student'] as const
 const QUESTION_DRAFT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'] as const
 const STUDENT_ROLES = ['student'] as const
+// Who may print a register: the staff who can already see one on screen. The
+// route renders the rows it is handed, so this list limits the renderer, not the
+// data — the college/department scope is applied by the client's own queries.
+const REPORT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'] as const
 
 export const pdfApp = express()
 
@@ -69,6 +74,10 @@ pdfApp.post('/questions/export/pdf', verifyAuth, requireRole(...QUESTION_DRAFT_R
 // handler's registration in routes/resume.ts; this mount only adds auth roles.
 pdfApp.post('/api/resume/pdf', requireRole(...STUDENT_ROLES), resumePdfHandler)
 pdfApp.post('/resume/pdf', requireRole(...STUDENT_ROLES), resumePdfHandler)
+// The attendance register (item 4.3). New route, so it exists only here — there
+// is no older bundle that calls it on the `api` function.
+pdfApp.post('/api/attendance/register/pdf', verifyAuth, requireRole(...REPORT_ROLES), reportPdfLimiter, exportAttendanceRegisterPdf)
+pdfApp.post('/attendance/register/pdf', verifyAuth, requireRole(...REPORT_ROLES), reportPdfLimiter, exportAttendanceRegisterPdf)
 
 pdfApp.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found', path: req.path, service: 'pdf' })

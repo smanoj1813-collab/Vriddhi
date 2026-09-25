@@ -462,8 +462,9 @@ by removing work, not by moving it.
 | 4.4 | PDF rendering moved off the main API function onto its own (`pdf`, 2 GiB, asia-south1). Papers, question banks and resumes all render there through one client helper. | `functions/src/routes/pdf.ts`, `src/shared/api/apiBase.ts` |
 | 4.5 | One install page implementation behind the three role routes. | `src/shared/pages/PWAInstallPage.tsx` |
 | 4.2 | Placement Pack: cover letter, LinkedIn About and interview prep for a real posting, plus a readiness column for the placement cell. | `docs/RESUME_BUILDER.md` §6b |
+| 4.3 | The 584 kB PDF libraries left the first page load, and the attendance register now prints on the server as a text PDF with the browser path kept as fallback. | §12 below |
 
-**Gates at hand-off:** functions 995/995, root 479/479, render check 382/382, `tsc` clean
+**Gates at hand-off:** functions 1013/1013, root 497/497, render check 382/382, `tsc` clean
 (root and `functions/`), production build clean.
 
 ## 11.1 Your action list (all six, in order)
@@ -510,13 +511,21 @@ by removing work, not by moving it.
 * **2.3 (dead-path removal)** stays an operator job: the 14 names are listed in
   `docs/HANDOFF_OPTIMISATION_2026-09-25.md` and none of them is referenced by code. Deleting
   them is a console action after the D5 waiting period, not a code change.
-* **4.3 (one lazy PDF entry point)** — the remaining work is listed in §12 below.
+* **4.3, second half** — the PDF libraries are lazy and the attendance register is
+  server-rendered (§12). The other four documents (finance reports, payslips, barcode
+  labels, no-dues certificate) still draw in the browser; §12.2 lists them in the order I
+  recommend doing them, and why the next one needs your eyes on the parity check.
 * Nothing in this release auto-publishes anything a student reads. Drafts stay drafts until
   a human reviews them; the review screen is the only publish path.
 
 ---
 
 # 12. Item 4.3 — the PDF stack, and what is left of it
+
+*(2.3 needs no code: it is the one-line `firebase functions:delete` in
+`docs/HANDOFF_OPTIMISATION_2026-09-25.md` §2.3, and it must not run until the Cloud Run
+console shows 0 requests over 30 days for all 14 services. The source stays in git, so the
+rollback is a redeploy if an old client turns out to still call one.)
 
 The plan's 4.3 wanted one PDF stack, server-rendered text PDFs, and the removal of
 `jspdf` + `html2canvas` from the client. Here is exactly where that stands, because part of
@@ -552,6 +561,41 @@ moment of use. The service worker still precaches the chunk in the background
 (`globPatterns: **/*.js`) so offline exports keep working — that download is off the
 critical path and does not block first paint. If you would rather never fetch it at all,
 exclude `pdf-*.js` from the precache and accept that the first export needs the network.
+
+## 12.1b Done — the attendance register prints on the server (with the old path intact)
+
+The first document is migrated, chosen because it is the most-used export and a plain
+table:
+
+* `POST /pdf/attendance/register/pdf` — the client posts the report it already built
+  (title, subtitle, sheets of headers + rows) and gets a text PDF back. It renders what it
+  is given and **reads nothing from Firestore**, so there is no second copy of the
+  attendance visibility rules to keep in step, and no data migration if the route changes.
+* The HTML builder (`functions/src/reports/attendanceRegister.ts`) is pure and validated
+  *before* Chrome starts: max 4 sheets, 8,000 rows, 16 columns, 300 characters per cell,
+  rows padded or trimmed to the header width, every cell escaped. 18 tests in
+  `functions/test/attendanceRegister.test.ts` cover exactly the things that would ruin a
+  printed register — an injected `<img onerror>` in a student name, a skewed table, or a
+  report big enough to hold a 2 GiB instance for a minute.
+* Client (`src/shared/utils/serverReportPdf.ts`, 12 tests): 503 (renderer cold), 429 (rate
+  limit), 400/401/403, a hosting rewrite answering with the SPA shell, a 0-byte body, a
+  timeout and a dead network all resolve to `{ kind: 'fallback' }` — the browser draws the
+  sheet with jsPDF exactly as it does today. **Nothing in the new path can fail a download
+  that used to work**; the worst case is a couple of seconds slower. `reportPdfLimiter`
+  (10/min per user) sits in front of the route for the same reason.
+* Verified on the branch: functions 1013/1013, root 497/497, render 382/382, both tsc clean,
+  build clean, and `dist/index.html` no longer references the PDF chunk at all.
+
+**Your parity check (the plan's own condition)** — after deploying, open Admin → Attendance,
+export PDF for one month, and compare it with the same export from a browser that fell back
+(the console prints one warning line when it does). Check the three things that differ by
+nature: the header band, whether column widths still suit your longest student name, and the
+page footer ("Page 2 of 7"). If it matches, the next release can drop the browser path for
+this document; if it does not, tell me which part and I will adjust the HTML — the jsPDF path
+stays either way until you say so.
+
+**Deploy note:** the route lives on the `pdf` function, so the deploy in §11.1 step 2 covers
+it. No new collection, no rules change, no index.
 
 ## 12.2 Not done — moving each document to a server-rendered text PDF
 

@@ -60,6 +60,21 @@ export const resumePdfLimiter = rateLimit({
   keyGenerator: (req: any) => req.user?.uid || req.ip || 'unknown',
 });
 /**
+ * Report PDF renders (`/attendance/register/pdf`) also launch Chrome. An admin
+ * exporting a register a few times is normal; a loop is not. The client falls
+ * back to its own renderer when this answers 429, so a tripped limiter costs a
+ * slower download, never a failed one.
+ */
+export const reportPdfLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Too many report downloads in a minute. The next one will render in your browser instead.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: any) => req.user?.uid || req.ip || 'unknown',
+});
+
+/**
  * Question-paper import worker. The browser drives the loop — one call per
  * document (or per unpack batch) — so a 40-document archive is 40+ calls in a
  * few minutes. The generic aiGenerationLimiter (20 per 15 min) would trip on the

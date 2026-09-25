@@ -13,6 +13,7 @@
 
 import * as XLSX from '@e965/xlsx';
 import { loadPdfLibs } from './pdfRuntime';
+import { describeServerReportFallback, fetchServerReportPdf } from './serverReportPdf';
 
 import {
   STAFF_STATUS_LABEL,
@@ -219,6 +220,14 @@ export function exportFilename(prefix: string, range: AttendanceRange, format: E
   return `${safePrefix}_${stamp}.${ext}`;
 }
 
+/**
+ * Download a register.
+ *
+ * PDF first asks the server to print a *text* PDF (item 4.3). Anything short of
+ * a PDF — cold renderer, spent rate limit, offline, no token — falls back to the
+ * browser's own jsPDF drawing, which is exactly what this did before. So the
+ * worst case of the new path is the old behaviour, a few seconds slower.
+ */
 export async function downloadAttendanceReport(
   format: ExportFormat,
   filenamePrefix: string,
@@ -226,12 +235,21 @@ export async function downloadAttendanceReport(
   report: { title: string; subtitle?: string; collegeName?: string; sheets: ExportSheet[]; columnWeights?: number[][] },
 ): Promise<string> {
   const filename = exportFilename(filenamePrefix, range, format);
-  const blob =
-    format === 'csv'
-      ? toCsvBlob(report.sheets[0] ?? { name: 'Report', headers: [], rows: [] })
-      : format === 'excel'
-        ? toXlsxBlob(report.sheets)
-        : await toPdfBlob(report);
+
+  if (format === 'pdf') {
+    const server = await fetchServerReportPdf({ ...report, landscape: true });
+    if (server.kind === 'pdf') {
+      triggerDownload(server.blob, filename);
+      return filename;
+    }
+    console.warn(`[Attendance] ${describeServerReportFallback(server.reason)}`);
+    triggerDownload(await toPdfBlob(report), filename);
+    return filename;
+  }
+
+  const blob = format === 'csv'
+    ? toCsvBlob(report.sheets[0] ?? { name: 'Report', headers: [], rows: [] })
+    : toXlsxBlob(report.sheets);
   triggerDownload(blob, filename);
   return filename;
 }
