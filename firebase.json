@@ -43,7 +43,7 @@
         ]
       },
       {
-        "source": "**/*.js",
+        "source": "/assets/**",
         "headers": [
           {
             "key": "Content-Type",
@@ -51,16 +51,16 @@
           },
           {
             "key": "Cache-Control",
-            "value": "max-age=0, no-cache, no-store, must-revalidate"
+            "value": "public, max-age=31536000, immutable"
           }
         ]
       },
       {
-        "source": "**/*.css",
+        "source": "/*.js",
         "headers": [
           {
             "key": "Content-Type",
-            "value": "text/css"
+            "value": "application/javascript"
           },
           {
             "key": "Cache-Control",
@@ -83,6 +83,15 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=604800"
+          }
+        ]
+      },
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=0, no-cache, must-revalidate"
           }
         ]
       }

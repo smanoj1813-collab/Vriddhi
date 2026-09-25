@@ -83,6 +83,12 @@ import {
   autoSubmitExpiredStudentTests,
 } from './studentAssessments'
 import { aiModelCanary } from './aiModelCanary'
+import { refreshPlatformStats } from './platformStats'
+import {
+  backfillAttendanceSummaries,
+  onAttendanceRecordWrite,
+  reconcileAttendanceSummaries,
+} from './attendanceSummary'
 import {
   listManagedGradeRecords,
   saveDraftGradeRecords,
@@ -283,6 +289,10 @@ export {
   listPendingAssessmentSubmissions,
   autoSubmitExpiredStudentTests,
   aiModelCanary,
+  refreshPlatformStats,
+  onAttendanceRecordWrite,
+  reconcileAttendanceSummaries,
+  backfillAttendanceSummaries,
   listManagedGradeRecords,
   saveDraftGradeRecords,
   publishGradeRecords,

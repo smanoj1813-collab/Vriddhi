@@ -1219,23 +1219,89 @@ describe('question bank import jobs are server-only', () => {
   })
 })
 
-describe('platform documents are server-only', () => {
-  // `platform/aiModelCanary` is written daily by the model canary function
-  // (functions/src/aiModelCanary.ts) and read by operators in the console.
-  // Item 2.4 later adds a superadmin read rule for `platform/stats`; until
-  // then the default deny below is the contract, so a client cannot read or
-  // forge the canary report.
-  it('denies client read and write to the canary report', async () => {
+describe('attendance summaries (item 3.1)', () => {
+  // attendanceSummaries/{studentId} is written only by the attendanceSummary
+  // Cloud Functions. A student reads their own; college staff read their
+  // college's; a client can never write a percentage.
+  beforeEach(async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
-      await setDoc(doc(context.firestore(), 'platform', 'aiModelCanary'), {
+      await setDoc(doc(context.firestore(), 'attendanceSummaries', STUDENT_ID), {
+        studentId: STUDENT_ID,
+        collegeId: COLLEGE_A,
+        total: 120,
+        present: 100,
+        absent: 15,
+        late: 5,
+        updatedAt: '2026-09-25T02:30:00.000Z',
+      })
+      await setDoc(doc(context.firestore(), 'attendanceSummaries', OTHER_STUDENT_ID), {
+        studentId: OTHER_STUDENT_ID,
+        collegeId: COLLEGE_A,
+        total: 90,
+        present: 60,
+        absent: 30,
+        updatedAt: '2026-09-25T02:30:00.000Z',
+      })
+    })
+  })
+
+  it('lets a student read their own summary and not another student\u2019s', async () => {
+    const db = studentContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'attendanceSummaries', STUDENT_ID)))
+    await assertFails(getDoc(doc(db, 'attendanceSummaries', OTHER_STUDENT_ID)))
+  })
+
+  it('denies every client write, including from a superadmin', async () => {
+    const student = studentContext().firestore()
+    await assertFails(setDoc(doc(student, 'attendanceSummaries', STUDENT_ID), { total: 999, present: 999 }))
+    await assertFails(updateDoc(doc(student, 'attendanceSummaries', STUDENT_ID), { present: 120 }))
+    const admin = superadminContext().firestore()
+    await assertFails(updateDoc(doc(admin, 'attendanceSummaries', STUDENT_ID), { present: 120 }))
+    await assertFails(deleteDoc(doc(admin, 'attendanceSummaries', STUDENT_ID)))
+  })
+
+  it('lets same-college staff read a student summary', async () => {
+    await assertSucceeds(getDoc(doc(facultyContext().firestore(), 'attendanceSummaries', STUDENT_ID)))
+  })
+})
+
+describe('platform documents are server-only', () => {
+  // `platform/stats` (refreshPlatformStats, item 2.4) and
+  // `platform/aiModelCanary` (model canary, item 2.1) are written only by Cloud
+  // Functions with the Admin SDK. A superadmin may READ them — the console needs
+  // to — but no client may write, so counters cannot be forged or wiped.
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await setDoc(doc(db, 'platform', 'stats'), {
+        totalColleges: 3,
+        totalStudents: 120,
+        updatedAt: '2026-09-25T06:00:00.000Z',
+      })
+      await setDoc(doc(db, 'platform', 'aiModelCanary'), {
         checkedAt: '2026-09-25T01:00:00.000Z',
         degradedTiers: [],
       })
     })
+  })
 
+  it('lets a superadmin read the stats and canary documents', async () => {
     const db = superadminContext().firestore()
-    await assertFails(getDoc(doc(db, 'platform', 'aiModelCanary')))
-    await assertFails(setDoc(doc(db, 'platform', 'aiModelCanary'), { degradedTiers: [] }))
+    await assertSucceeds(getDoc(doc(db, 'platform', 'stats')))
+    await assertSucceeds(getDoc(doc(db, 'platform', 'aiModelCanary')))
+  })
+
+  it('denies every client write, including from a superadmin', async () => {
+    const db = superadminContext().firestore()
+    await assertFails(setDoc(doc(db, 'platform', 'stats'), { totalStudents: 999999 }))
+    await assertFails(updateDoc(doc(db, 'platform', 'stats'), { totalColleges: 999 }))
+    await assertFails(deleteDoc(doc(db, 'platform', 'aiModelCanary')))
+  })
+
+  it('denies reads to college staff and students', async () => {
+    await assertFails(getDoc(doc(facultyContext().firestore(), 'platform', 'stats')))
+    await assertFails(getDoc(doc(studentContext().firestore(), 'platform', 'stats')))
+    await assertFails(getDoc(doc(facultyContext().firestore(), 'platform', 'aiModelCanary')))
   })
 })
 

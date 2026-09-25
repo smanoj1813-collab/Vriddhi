@@ -12,6 +12,7 @@ import {
   fetchScores,
   fetchActivities,
   fetchAggregatedStats,
+  fetchDashboardCounts,
   getStudentCount,
   getAttendanceRate,
   getWeeklyAttendanceByDay,
@@ -73,6 +74,10 @@ export function useDashboardData(options?: DashboardDataOptions) {
         setStats(aggregatedStats)
       }
 
+      // Item 3.2: raw counts from aggregation queries (one read each) instead of
+      // deriving them from at most 500 downloaded rows.
+      const counts = await fetchDashboardCounts()
+
       const [studentsData, attendanceData, assessmentsData, scoresData, activitiesData] = await Promise.all([
         fetchStudents(),
         fetchAttendanceRecords(),
@@ -100,6 +105,21 @@ export function useDashboardData(options?: DashboardDataOptions) {
       setAssessments(assessmentsData)
       setScores(scoresOut)
       setActivities(activitiesData)
+      // Item 3.2: aggregated totals win over the row-derived ones (which were
+      // capped at 500 rows). Kept out of `stats` when the aggregation failed.
+      if (Object.keys(counts).length > 0) {
+        setStats((prev) => {
+          const base: DashboardStats = prev ?? {
+            totalStudents: 0,
+            totalAssessments: 0,
+            totalScores: 0,
+            avgAttendance: 0,
+            passRate: 0,
+            activeAssessments: 0,
+          }
+          return { ...base, ...counts }
+        })
+      }
       loadedRef.current = true
     } catch (error) {
       console.error('Error fetching dashboard data:', error)

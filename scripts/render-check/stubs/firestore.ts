@@ -95,6 +95,18 @@ export function serverTimestamp() { return { __stub: 'serverTimestamp' }; }
 export function deleteField() { return { __stub: 'deleteField' }; }
 export function getFirestore(..._a: any[]) { return { __stub: 'firestore' }; }
 export function collectionGroup(..._a: any[]) { return {}; }
+// Aggregation reads (item 2.4/3.2 replaced row downloads with count()/sum()).
+// A check can seed one via globalThis.__RC_FIRESTORE_COUNT; unset means zero.
+export async function getCountFromServer(..._a: any[]) {
+  calls.push('getCountFromServer');
+  const seeded = Number((globalThis as any).__RC_FIRESTORE_COUNT);
+  return { data: () => ({ count: Number.isFinite(seeded) ? seeded : 0 }) };
+}
+export async function getAggregateFromServer(..._a: any[]) {
+  calls.push('getAggregateFromServer');
+  const seeded = (globalThis as any).__RC_FIRESTORE_AGGREGATE;
+  return { data: () => (seeded && typeof seeded === 'object' ? seeded : { sum: 0, average: 0, count: 0 }) };
+}
 export function startAfter(..._a: any[]) { return {}; }
 export function endBefore(..._a: any[]) { return {}; }
 export class Timestamp {

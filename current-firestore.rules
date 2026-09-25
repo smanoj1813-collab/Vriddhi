@@ -1471,6 +1471,29 @@ service cloud.firestore {
       allow write: if isSuperadmin() || isCollegeStaff();
     }
 
+    // One summary document per student, maintained by the attendanceSummary
+    // Cloud Functions (item 3.1: replaces the up-to-500-row read every student
+    // dashboard used to do). A student may read their OWN summary; college staff
+    // read their college's; nobody writes from a client — the totals must be
+    // server-computed or the percentage could be forged.
+    match /attendanceSummaries/{studentId} {
+      allow get: if isSignedIn() && (isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data))
+        || ownsStudentId(studentId));
+      allow list: if isSignedIn() && (isSuperadmin() || isCollegeStaff());
+      allow write: if false;
+    }
+
+    // Platform-level documents written only by Cloud Functions with the Admin
+    // SDK: `stats` (refreshPlatformStats, every 15 min — the superadmin
+    // dashboard's source, see item 2.4) and `aiModelCanary` (daily model
+    // liveness probe, item 2.1). Superadmins may READ them; nobody may write
+    // from a client, so a counter can never be forged.
+    match /platform/{docId} {
+      allow read: if isSuperadmin();
+      allow write: if false;
+    }
+
     // Import job bookkeeping for the Superadmin "Import papers (ZIP)" flow.
     // Every read and write goes through the api function's
     // /question-import/jobs routes, which run with the Admin SDK and enforce
