@@ -1176,6 +1176,83 @@ await section('student challans (empty)', '/src/modules/student/pages/StudentCha
 });
 
 
+// ── Placement Pack: cover letter / LinkedIn About / interview prep (item 4.2) ──
+// The checks that matter: the generated text must land in an editable field
+// (never silently in the resume), the AI allowance must be visible, and a
+// server refusal must be shown as the server worded it.
+globalThis.__RC_ROLE = 'student';
+const PACK_PANEL = '/src/modules/student/components/resume/PlacementPackPanel.tsx';
+globalThis.__RC_RESUME = { pack: {} };
+await section('placement pack (cover letter)', PACK_PANEL, { jobDescription: '', defaultJobTitle: 'Article Assistant' }, async (t, view) => {
+  check('placement pack: mounts without throwing', true);
+  check('placement pack: warns that nothing is added to the resume automatically',
+    /you decide what a recruiter reads/.test(t), t);
+  check('placement pack: asks for the posting, which is what makes it specific',
+    /Job description \(paste it/.test(t), t);
+  check('placement pack: the three tools are offered',
+    /Cover letter/.test(t) && /LinkedIn About/.test(t) && /Interview prep/.test(t), t);
+  const button = view.all('button').find((b) => /Write my cover letter/.test(b.textContent || ''));
+  await view.click(button);
+  await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
+  const letterField = view.all('[data-testid="cover-letter-output"]')[0];
+  check('placement pack: the letter lands in an editable field',
+    !!letterField && /I reconciled ledgers and filed GST returns/.test(letterField.value || ''), String(letterField && letterField.value).slice(0, 200));
+  // `t` is the text captured BEFORE the click, so post-click assertions read
+  // the live DOM.
+  const afterLetter = view.text();
+  check('placement pack: the remaining AI allowance is shown',
+    /4 AI suggestions left/.test(afterLetter), afterLetter);
+  check('placement pack: tells the student they are responsible for the claims',
+    /you are responsible for every claim/.test(afterLetter), afterLetter);
+  const calls = (globalThis.__RC_RESUME_CALLS ?? []).filter((c) => c.fn === 'coverLetter');
+  check('placement pack: the request carries the role and the posting',
+    calls.length === 1 && calls[0].params.jobTitle === 'Article Assistant', JSON.stringify(calls));
+});
+
+globalThis.__RC_RESUME = { pack: {} };
+await section('placement pack (LinkedIn About)', PACK_PANEL, {}, async (t, view) => {
+  check('placement pack (about): mounts without throwing', true);
+  const tab = view.all('button').find((b) => /LinkedIn About/.test(b.textContent || ''));
+  await view.click(tab);
+  const button = view.all('button').find((b) => /Write my About/.test(b.textContent || ''));
+  await view.click(button);
+  await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
+  const aboutField = view.all('[data-testid="linkedin-about-output"]')[0];
+  check('placement pack (about): the About text is shown in an editable field',
+    !!aboutField && /final-year B\.Com student/.test(aboutField.value || ''), String(aboutField && aboutField.value).slice(0, 160));
+});
+
+globalThis.__RC_RESUME = { pack: {} };
+await section('placement pack (interview prep)', PACK_PANEL, { defaultJobTitle: 'Article Assistant' }, async (t, view) => {
+  check('placement pack (interview): mounts without throwing', true);
+  const tab = view.all('button').find((b) => /Interview prep/.test(b.textContent || ''));
+  await view.click(tab);
+  const button = view.all('button').find((b) => /Prepare my questions/.test(b.textContent || ''));
+  await view.click(button);
+  await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
+  const afterQuestions = view.text();
+  check('placement pack (interview): questions render with what is being checked',
+    /reconciled 120 purchase ledgers/.test(afterQuestions) && /They are checking/.test(afterQuestions), afterQuestions);
+  check('placement pack (interview): an answer hint is given', /error rate you worked to/.test(afterQuestions), afterQuestions);
+});
+
+// A refused call (allowance exhausted / feature off) must show the server's own
+// sentence — not a generic failure message.
+globalThis.__RC_RESUME = { pack: { error: 'You have used all 6 AI suggestions for this year.' } };
+await section('placement pack (refused)', PACK_PANEL, { defaultJobTitle: 'Article Assistant' }, async (t, view) => {
+  check('placement pack (refused): mounts without throwing', true);
+  const button = view.all('button').find((b) => /Write my cover letter/.test(b.textContent || ''));
+  await view.click(button);
+  await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
+  const afterRefusal = view.text();
+  check('placement pack (refused): the server’s own message is shown',
+    /You have used all 6 AI suggestions for this year/.test(afterRefusal), afterRefusal);
+  check('placement pack (refused): no output is shown for a refused call',
+    view.all('[data-testid="cover-letter-output"]').length === 0, t);
+});
+
+globalThis.__RC_RESUME = undefined;
+
 // ── Install page: one shared implementation behind three routes (item 4.5) ──
 // The three per-role copies were identical in layout and had already drifted in
 // copy and padding. These checks pin the shared page plus the fact that each

@@ -109,6 +109,45 @@ indexes are needed (queries use equality filters only and sort in memory).
   `failed` row (credit was returned automatically); "student wants a redo" → credit reset on
   the college card; "PDF service down" → students see a 503 message and keep their credit.
 
+## 6b. Placement Pack extensions (item 4.2 of the optimisation hand-off)
+
+Three things a student needs the week a company visits, all built from the resume they
+already filled in. Nothing here writes to the resume: the generated text is shown in an
+editable field and the student copies it, because a model must never silently rewrite a
+document a recruiter will read.
+
+| Route | What it does | Tier | Cache key (content only) | Reuse |
+| --- | --- | --- | --- | --- |
+| `POST /resume/cover-letter` | 250–350 word letter for a posting | quality | profile digest + role + company + tone + first 400 chars of the JD | 7 days |
+| `POST /resume/linkedin-about` | 120–180 word LinkedIn About | fast | profile digest + goal | 30 days |
+| `POST /resume/interview-questions` | ≤15 questions with "what they check" + answer hint | quality | profile digest + role + company + count + first 400 chars of the JD | 7 days |
+
+* **Allowance:** all three spend one call from the **same** `aiCallsPerStudent` yearly
+  allowance as `POST /resume/ai/improve` (reserved in a transaction before the model is
+  called, so a failure cannot leave a half-spent credit), and all three return
+  `aiRemaining` so the page's counter stays true. Exhausted → `409 ai_exhausted`; the
+  student sees the server's own sentence.
+* **Flags:** `colleges/{id}/config/resumeBuilder` — the add-on must be `enabled` and
+  `aiAssist` must be on. Same refusals as the rest of the builder (`addon_disabled`,
+  `ai_disabled`).
+* **Cache:** the 4.1 content engine, so two students with the same profile digest
+  applying to the same posting generate it once. The key holds no uid, name or college.
+* **Sanitisers** (`functions/src/resume/extras.ts`): reject empty/refusal output, strip a
+  code fence (wherever it is), a preamble and a chat sign-off, remove unfilled
+  `[Your Name]`-style placeholders (the failure a recruiter actually notices), flag
+  over/under-length text, and drop unusable or duplicate interview questions instead of
+  failing the whole set.
+* **Placement cell:** `GET /resume/admin/placement-stats` (staff roles, college-scoped) —
+  one row per saved resume with a readiness score, a band, the gaps to chase, downloads
+  this cycle, plus a summary. `?format=csv` returns the same table as a download. The
+  score is computed **server-side on every save** and stored on
+  `resumes/{uid}.placement`; the dashboard prefers the stored value and computes on the
+  fly only for documents saved before this shipped. Stored fields used:
+  `score`, `band`, `missing[]`, `computedAt`.
+* **Not included yet:** mock-interview slots (would reuse `facultyAppointmentApi`) and
+  aptitude practice sets tagged `aptitude` (the prep catalogue already files its three
+  aptitude packs under placements, so the remaining work is the tagging pass).
+
 ## 7. Tests
 
 * `functions/test/resumeBuilder.test.ts` — sanitiser, credit cycle + ledger maths (N renders
@@ -117,9 +156,15 @@ indexes are needed (queries use equality filters only and sort in memory).
   PDF options, file names).
 * `src/shared/utils/resumeAts.test.ts` — ATS checker rules, keyword coverage, page estimate,
   prefill.
+* `functions/test/resumeExtras.test.ts` — prompt builders (facts carried, clichés and invented
+  facts forbidden, job description capped), the document sanitiser (fence/preamble/sign-off/
+  placeholder, length bands) and the interview-question parser (duplicates and unusable items
+  dropped, hints truncated), plus the readiness score (complete ⇒ 100, empty ⇒ bottom, exactly
+  the imperfect signal marked) and CSV escaping.
 * `scripts/render-check/run.mjs` — mounts the student page (editor, template picker, credit
   line, ATS panel, downloads; typing → debounced autosave + server preview; download → server
-  render, refresh; re-download → free fetch; exhausted state; add-on off) and the superadmin /
-  read-only add-on panel.
+  render, refresh; re-download → free fetch; exhausted state; add-on off), the superadmin /
+  read-only add-on panel, and the Placement Pack panel (all three tools, generated text in an
+  editable field, the allowance shown, a refusal showing the server's own message).
 * Run: `npm run test:unit`, `npm --prefix functions run test:unit`, `npm run test:render`,
   `npx tsc --noEmit` (root and `functions/`).

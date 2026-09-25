@@ -173,6 +173,82 @@ export async function improveWithAi(
   return authedJson('/resume/ai/improve', { method: 'POST', body: JSON.stringify({ kind, text, context, collegeId }) })
 }
 
+// ─── Placement Pack extensions (item 4.2) ───────────────────────────────────
+
+export async function generateCoverLetter(
+  params: { jobTitle: string; company?: string; jobDescription?: string; tone?: string },
+  collegeId?: string,
+): Promise<{ coverLetter: string; wordCount: number; issues: string[]; source: 'cache' | 'model'; aiRemaining: number }> {
+  return authedJson('/resume/cover-letter', { method: 'POST', body: JSON.stringify({ ...params, collegeId }) })
+}
+
+export async function generateLinkedinAbout(
+  params: { goal?: string },
+  collegeId?: string,
+): Promise<{ about: string; wordCount: number; issues: string[]; source: 'cache' | 'model'; aiRemaining: number }> {
+  return authedJson('/resume/linkedin-about', { method: 'POST', body: JSON.stringify({ ...params, collegeId }) })
+}
+
+export interface InterviewQuestion {
+  question: string
+  why: string
+  answerHint: string
+}
+
+export async function generateInterviewQuestions(
+  params: { jobTitle: string; company?: string; jobDescription?: string; count?: number },
+  collegeId?: string,
+): Promise<{ questions: InterviewQuestion[]; count: number; issues: string[]; source: 'cache' | 'model'; aiRemaining: number }> {
+  return authedJson('/resume/interview-questions', { method: 'POST', body: JSON.stringify({ ...params, collegeId }) })
+}
+
+export interface PlacementStatRow {
+  uid: string
+  name: string
+  email: string
+  course: string
+  templateId: string
+  updatedAt: string | null
+  readinessScore: number
+  readinessBand: 'Ready' | 'Nearly there' | 'Needs work' | 'Barely started'
+  missing: string[]
+  downloads: number
+}
+
+export interface PlacementStatsResponse {
+  collegeId: string
+  cycle: string
+  summary: {
+    students: number
+    ready: number
+    nearlyThere: number
+    needsWork: number
+    barelyStarted: number
+    averageScore: number
+    downloadsThisCycle: number
+  }
+  students: PlacementStatRow[]
+}
+
+/** The placement cell's readiness table. `format: 'csv'` returns the same rows as text. */
+export async function fetchResumePlacementStats(collegeId?: string, cycle?: string): Promise<PlacementStatsResponse> {
+  const params = new URLSearchParams()
+  if (collegeId) params.set('collegeId', collegeId)
+  if (cycle) params.set('cycle', cycle)
+  return authedJson<PlacementStatsResponse>(`/resume/admin/placement-stats${params.toString() ? `?${params}` : ''}`)
+}
+
+/** Downloads the same table as CSV (a plain text body, not JSON). */
+export async function downloadResumePlacementCsv(collegeId?: string, cycle?: string): Promise<void> {
+  const params = new URLSearchParams({ format: 'csv' })
+  if (collegeId) params.set('collegeId', collegeId)
+  if (cycle) params.set('cycle', cycle)
+  const endpoint = `/resume/admin/placement-stats?${params}`
+  const response = await authedRequest(endpoint)
+  if (!response.ok) throw new Error('Could not export the placement readiness list.')
+  saveBlobAs(await response.blob(), `placement-readiness-${cycle || 'current'}.csv`)
+}
+
 // ─── Staff / superadmin ─────────────────────────────────────────────────────
 
 export async function fetchResumeAdminSettings(collegeId?: string): Promise<ResumeAdminSettingsResponse> {

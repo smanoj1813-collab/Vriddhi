@@ -49,6 +49,11 @@ export const AI_PROMPT_VERSIONS = {
   paperAnswer: 'paper-answer-v1',
   mcqSet: 'mcq-set-v1',
   questionSet: 'question-set-v1',
+  // Item 4.2 — Placement Pack extensions. Keys are content-addressing only
+  // (profile + job description hash), never a student identity.
+  coverLetter: 'cover-letter-v1',
+  linkedinAbout: 'linkedin-about-v1',
+  interviewQuestions: 'interview-questions-v1',
 } as const
 
 export type PromptKind = keyof typeof AI_PROMPT_VERSIONS
