@@ -179,6 +179,8 @@ const navItems: NavItem[] = [
   { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
   { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" />, roles: ["admin", "principal"], section: "Students" },
   { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
+  { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
+  { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
   { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" />, roles: ["admin", "principal"], section: "Finance" },
   { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
   { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" />, roles: ["admin", "principal"], section: "Insights" },
@@ -298,6 +300,8 @@ const facultyNav: SidebarEntry[] = [
       { label: "Journey", path: "/faculty/journey", icon: <TrendingUp fontSize="small" /> },
     ],
   },
+
+  { kind: "link", label: "My Salary", path: "/faculty/my-salary", icon: <AttachMoney fontSize="small" /> },
   { kind: "link", label: "Install App", path: "/faculty/install-app", icon: <InstallMobile fontSize="small" /> },
   { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
   { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
@@ -345,7 +349,6 @@ const principalNav: SidebarEntry[] = [
       { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
-      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
 
@@ -381,6 +384,8 @@ const principalNav: SidebarEntry[] = [
     icon: <AttachMoney fontSize="small" />,
     children: [
       { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" /> },
+      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
       { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
       { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
     ],
@@ -442,7 +447,6 @@ const hodNav: SidebarEntry[] = [
       { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
       { label: "Scheme Packs", path: "/admin/scheme-packs", icon: <AccountBalance fontSize="small" /> },
-      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
     ],
   },
 
@@ -466,6 +470,8 @@ const hodNav: SidebarEntry[] = [
     icon: <AttachMoney fontSize="small" />,
     children: [
       { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" /> },
+      { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" /> },
+      { label: "Guest Faculty Billing", path: "/admin/guest-faculty-billing", icon: <BadgeIcon fontSize="small" /> },
       { label: "Finance Settings", path: "/admin/finance-settings", icon: <AttachMoney fontSize="small" /> },
       { label: "Challan Management", path: "/admin/challans", icon: <Description fontSize="small" /> },
     ],

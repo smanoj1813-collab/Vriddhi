@@ -29,6 +29,31 @@ export interface ReceiptModel {
   balance: number
   status: string
   remarks?: string
+  /** Letterhead extras (Finance Settings → Receipts & letterhead). */
+  collegeAddress?: string
+  collegeContact?: string
+  registrationLine?: string
+  title: string
+  footer: string
+  signatoryName?: string
+  signatoryDesignation?: string
+  showBalance: boolean
+}
+
+/** Subset of BrandingSettings the receipt needs (kept structural to stay pure). */
+export interface ReceiptBranding {
+  collegeName?: string
+  collegeCode?: string
+  address?: string
+  phone?: string
+  email?: string
+  website?: string
+  registrationLine?: string
+  receiptTitle?: string
+  receiptFooter?: string
+  signatoryName?: string
+  signatoryDesignation?: string
+  showBalanceOnReceipt?: boolean
 }
 
 export interface BuildReceiptArgs {
@@ -57,6 +82,7 @@ export interface BuildReceiptArgs {
   discountTotal?: number
   lateFine?: number
   remarks?: string
+  branding?: ReceiptBranding
 }
 
 function money(n: number): number {
@@ -87,11 +113,14 @@ export function buildReceiptModel(args: BuildReceiptArgs): ReceiptModel {
     (transaction.createdAt ? transaction.createdAt.slice(0, 10) : '') ||
     new Date().toISOString().slice(0, 10)
 
+  const b = args.branding || {}
+  const contact = [b.phone && `Ph: ${b.phone}`, b.email, b.website].filter(Boolean).join(' · ')
+
   return {
     receiptNo: transaction.receiptNo || '—',
     date,
-    collegeName: args.collegeName || 'College',
-    collegeCode: args.collegeCode,
+    collegeName: b.collegeName || args.collegeName || 'College',
+    collegeCode: b.collegeCode || args.collegeCode,
     studentName: payment.studentName,
     regNo: payment.regNo,
     course: payment.course,
@@ -107,5 +136,13 @@ export function buildReceiptModel(args: BuildReceiptArgs): ReceiptModel {
     balance: money(Math.max(0, totalFee - totalPaid)),
     status: transaction.submissionStatus || payment.status,
     remarks: args.remarks,
+    collegeAddress: b.address || undefined,
+    collegeContact: contact || undefined,
+    registrationLine: b.registrationLine || undefined,
+    title: b.receiptTitle || 'FEE PAYMENT RECEIPT',
+    footer: b.receiptFooter || 'This is a computer-generated receipt.',
+    signatoryName: b.signatoryName || undefined,
+    signatoryDesignation: b.signatoryDesignation || undefined,
+    showBalance: b.showBalanceOnReceipt !== false,
   }
 }

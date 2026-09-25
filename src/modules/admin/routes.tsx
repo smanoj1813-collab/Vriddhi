@@ -44,6 +44,7 @@ const BCUComplianceDashboard = lazy(() => import('./pages/BCUComplianceDashboard
 const SchemePacks = lazy(() => import('./pages/SchemePacks'));
 const AcademicCalendar = lazy(() => import('./pages/AcademicCalendar'));
 const GuestFacultyBilling = lazy(() => import('./pages/GuestFacultyBilling'));
+const FacultyPayroll = lazy(() => import('./pages/FacultyPayroll'));
 const ResultImporter = lazy(() => import('./pages/ResultImporter'));
 const ChallanManagement = lazy(() => import('./pages/ChallanManagement'));
 const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
@@ -161,6 +162,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'scheme-packs', element: <LazyPage><SchemePacks /></LazyPage> },
       { path: 'academic-calendar', element: <LazyPage><AcademicCalendar /></LazyPage> },
       { path: 'guest-faculty-billing', element: <LazyPage><GuestFacultyBilling /></LazyPage> },
+      { path: 'payroll', element: <LazyPage><FacultyPayroll /></LazyPage> },
       { path: 'result-importer', element: <LazyPage><ResultImporter /></LazyPage> },
       { path: 'challans', element: <LazyPage><ChallanManagement /></LazyPage> },
       { path: 'install-app', element: <LazyPage><PWAInstallPage /></LazyPage> },

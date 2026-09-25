@@ -36,6 +36,7 @@ const FacultySchedule = lazy(() => import('./pages/FacultySchedule'));
 const FacultyAIQuestions = lazy(() => import('./pages/FacultyAIQuestions'));
 const FacultyUniversalBank = lazy(() => import('./pages/FacultyUniversalBank'));
 const FacultySettings = lazy(() => import('./pages/FacultySettings'));
+const FacultyMySalary = lazy(() => import('./pages/FacultyMySalary'));
 const FacultyAppointmentsPage = lazy(() => import('./pages/FacultyAppointmentsPage'));
 const FacultyAutoGrading = lazy(() => import('./pages/FacultyAutoGrading'));
 const View360 = lazy(() => import('../admin/pages/View360'));
@@ -152,6 +153,7 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'auto-grading', element: <LazyPage label="faculty/auto-grading"><FacultyAutoGrading /></LazyPage> },
       { path: 'view360', element: <LazyPage label="faculty/view360"><View360 /></LazyPage> },
       { path: 'journey', element: <LazyPage label="faculty/journey"><FacultyJourneyPage /></LazyPage> },
+      { path: 'my-salary', element: <LazyPage label="faculty/my-salary"><FacultyMySalary /></LazyPage> },
       { path: 'settings', element: <LazyPage label="faculty/settings"><FacultySettings /></LazyPage> },
       { path: 'install-app', element: <LazyPage label="faculty/install-app"><PWAInstallPage /></LazyPage> },
       { path: 'pwa-install', element: <LazyPage label="faculty/pwa-install"><PWAInstallPage /></LazyPage> },

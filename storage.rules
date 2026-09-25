@@ -244,7 +244,7 @@ service firebase.storage {
         && request.resource.size <= 50 * 1024 * 1024
         && request.resource.contentType != null
         && request.resource.contentType.matches(
-          'application/pdf|application/msword|application/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application/vnd\.ms-powerpoint|application/vnd\.openxmlformats-officedocument\.presentationml\.presentation|image/.*|video/mp4|video/quicktime|video/webm'
+          'application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|application/vnd\\.ms-powerpoint|application/vnd\\.openxmlformats-officedocument\\.presentationml\\.presentation|image/.*|video/mp4|video/quicktime|video/webm'
         );
       allow delete: if isSuperadmin()
         || (isStaff() && tenantCollege() == collegeId);

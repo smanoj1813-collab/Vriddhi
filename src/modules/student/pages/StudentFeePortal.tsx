@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import {
   DollarSign, CreditCard, CheckCircle, Clock, AlertTriangle,
@@ -17,7 +17,9 @@ import { feeNetPayable } from '../../admin/utils/financeRules'
 import { buildReceiptModel } from '../../admin/utils/financeReceipt'
 import { downloadReceiptPdf } from '../../../shared/utils/receiptPdf'
 import { startOnlinePayment, type OnlinePaymentResult } from '../../../shared/utils/paymentGateway'
-import type { SubmitProofInput } from '../../admin/api/feeApi'
+import { fetchFeeTransactions, type FeeTransaction, type SubmitProofInput } from '../../admin/api/feeApi'
+import type { BrandingSettings } from '../../admin/api/financeApi'
+import { useCollegeBranding } from '../../admin/hooks/useFinanceRules'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 
 // ─── Status Config ─────────────────────────────────────
@@ -257,15 +259,29 @@ function PayFeeModal({
 }
 
 // ─── Receipt Modal ─────────────────────────────────────
-function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () => void }) {
+// Lists every credited payment on the fee with its own receipt (partial
+// payments each get one), branded with the college letterhead.
+function ReceiptModal({ payment, onClose, branding }: { payment: FeePayment; onClose: () => void; branding: BrandingSettings }) {
   const { showError } = useNotification()
   const status = STATUS_CONFIG[payment.status]
+  const [txns, setTxns] = useState<FeeTransaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const collegeName = branding.collegeName || 'College'
 
-  const downloadPdf = async () => {
+  useEffect(() => {
+    let active = true
+    fetchFeeTransactions(payment.id)
+      .then(rows => { if (active) setTxns(rows.filter(t => t.type === 'payment' && t.receiptNo && (t.submissionStatus === 'recorded' || t.submissionStatus === 'verified' || !t.submissionStatus))) })
+      .catch(() => { if (active) setTxns([]) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [payment.id])
+
+  const download = async (txn?: FeeTransaction) => {
     try {
       await downloadReceiptPdf(buildReceiptModel({
         payment,
-        transaction: {
+        transaction: txn ?? {
           amount: payment.paidAmount,
           paymentMode: payment.paymentMode,
           transactionId: payment.transactionId,
@@ -273,7 +289,7 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
           receiptNo: payment.receiptNo,
           paidOn: payment.paidDate,
         },
-        collegeName: 'Vriddhi Educational Institute',
+        branding,
         discountTotal: payment.discountTotal,
         lateFine: payment.lateFine,
       }))
@@ -284,20 +300,17 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Receipt className="w-5 h-5 text-teal-600" />
             Official Fee Receipt
           </h2>
           <div className="flex items-center gap-1.5">
-            <button onClick={downloadPdf} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" title="Download PDF Receipt">
-              <Download className="w-4 h-4 text-slate-500" />
-            </button>
             <button onClick={() => window.print()} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" title="Print Receipt">
               <Printer className="w-4 h-4 text-slate-500" />
             </button>
-            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
               <X className="w-4 h-4 text-slate-500" />
             </button>
           </div>
@@ -305,33 +318,34 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
 
         <div className="p-6 space-y-4 text-xs">
           <div className="text-center pb-4 border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-900 dark:text-white">Vriddhi Educational Institute</h3>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{collegeName}</h3>
+            {branding.address && <p className="text-slate-500 mt-0.5">{branding.address}</p>}
             <p className="text-slate-500 font-medium mt-0.5">Student E-Receipt for Academic Fees</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Receipt No</p>
-              <p className="font-mono font-bold text-slate-900 dark:text-slate-900 dark:text-white mt-0.5">{payment.receiptNo || 'RCP-884920'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Latest Receipt No</p>
+              <p className="font-mono font-bold text-slate-900 dark:text-white mt-0.5">{txns[0]?.receiptNo || payment.receiptNo || '—'}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Payment Date</p>
-              <p className="font-semibold text-slate-900 dark:text-slate-900 dark:text-white mt-0.5">{payment.paidDate || new Date().toLocaleDateString('en-IN')}</p>
+              <p className="font-semibold text-slate-900 dark:text-white mt-0.5">{txns[0]?.paidOn || payment.paidDate || '—'}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Student Name</p>
-              <p className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mt-0.5">{payment.studentName}</p>
+              <p className="font-bold text-slate-900 dark:text-white mt-0.5">{payment.studentName}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Reg. No</p>
-              <p className="font-semibold text-slate-900 dark:text-slate-900 dark:text-white mt-0.5">{payment.regNo}</p>
+              <p className="font-semibold text-slate-900 dark:text-white mt-0.5">{payment.regNo}</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Program</p>
-              <p className="font-semibold text-slate-900 dark:text-slate-900 dark:text-white mt-0.5">{payment.course} &bull; {payment.batch}</p>
+              <p className="font-semibold text-slate-900 dark:text-white mt-0.5">{payment.course} &bull; {payment.batch}</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Receipt Status</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Status</p>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-extrabold border mt-0.5 ${status.bg} ${status.color}`}>
                 <status.icon className="w-3 h-3" />
                 {status.label}
@@ -341,17 +355,44 @@ function ReceiptModal({ payment, onClose }: { payment: FeePayment; onClose: () =
 
           <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2">
             <div className="flex justify-between">
-              <span className="text-slate-500 capitalize">{payment.category} Fee</span>
-              <span className="font-bold text-slate-900 dark:text-slate-900 dark:text-white">₹{payment.amount.toLocaleString('en-IN')}</span>
+              <span className="text-slate-500 capitalize">{payment.category.replace(/_/g, ' ')} Fee</span>
+              <span className="font-bold text-slate-900 dark:text-white">₹{payment.amount.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-800 font-bold">
-              <span className="text-slate-700 dark:text-slate-700 dark:text-slate-300">Amount Paid</span>
+              <span className="text-slate-700 dark:text-slate-300">Amount Paid</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">₹{payment.paidAmount.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
+          <div className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Download receipts</p>
+            {loading ? (
+              <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+            ) : txns.length === 0 ? (
+              payment.receiptNo ? (
+                <button onClick={() => download()} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors">
+                  <Download className="w-4 h-4" /> Download receipt (PDF)
+                </button>
+              ) : (
+                <p className="text-slate-500">No receipt yet. A receipt is issued once your payment is recorded or verified by the finance office.</p>
+              )
+            ) : (
+              txns.map(t => (
+                <div key={t.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div>
+                    <p className="font-mono font-bold text-slate-900 dark:text-white">{t.receiptNo}</p>
+                    <p className="text-slate-500">₹{t.amount.toLocaleString('en-IN')} · {t.paidOn || t.createdAt.slice(0, 10)} · {(t.paymentMode || '').toUpperCase()}</p>
+                  </div>
+                  <button onClick={() => download(t)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors">
+                    <Download className="w-3.5 h-3.5" /> PDF
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
           <div className="text-center pt-3 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-600 dark:text-slate-400">
-            This is a computer-verified institutional fee receipt. No physical signature required.
+            {branding.receiptFooter || 'This is a computer-verified institutional fee receipt. No physical signature required.'}
           </div>
         </div>
       </div>
@@ -364,6 +405,7 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
   const { user } = useAuth();
   const { profile } = useStudentProfile(user?.uid);
   const studentId = studentIdProp || profile?.id || user?.uid || '';
+  const branding = useCollegeBranding((profile as { collegeId?: string } | undefined)?.collegeId || user?.collegeId || null);
   const {
     loading,
     studentPayments,
@@ -646,13 +688,13 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                               Pay now
                             </button>
                           )}
-                          {(payment.status === 'paid' || payment.status === 'partial' || payment.status === 'waived') && (
+                          {(payment.paidAmount > 0 || payment.status === 'paid' || payment.status === 'waived') && (
                             <button
                               onClick={() => { setSelectedPayment(payment); setModalMode('receipt') }}
-                              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors"
-                              title="View Official Receipt"
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors"
+                              title="View and download receipts"
                             >
-                              <Receipt className="w-4 h-4 text-teal-600" />
+                              <Download className="w-3.5 h-3.5" /> Receipt
                             </button>
                           )}
                         </div>
@@ -686,6 +728,7 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
       {modalMode === 'receipt' && selectedPayment && (
         <ReceiptModal
           payment={selectedPayment}
+          branding={branding}
           onClose={() => { setModalMode(null); setSelectedPayment(null) }}
         />
       )}

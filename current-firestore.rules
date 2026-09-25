@@ -424,7 +424,11 @@ service cloud.firestore {
       // rows that satisfy it, otherwise the whole request fails. That is why the
       // app's queries always carry the collegeId/documentId predicate.)
       match /config/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
+        // config/branding is the college letterhead (name, address, receipt
+        // footer) that students and faculty need to render their own fee
+        // receipts / payslips; every other config doc stays staff-only.
+        allow get: if isSignedIn() && (isSuperadmin() || isStaff()
+          || (docId == 'branding' && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
@@ -550,6 +554,43 @@ service cloud.firestore {
       match /paymentOrders/{docId} {
         allow get, list: if isSignedIn() && (isSuperadmin() || isStaff());
         allow write: if false;
+      }
+
+      // -- Faculty pay ledgers (Guest Faculty Billing + Payroll) --------------
+      // Salary data is personal: only the finance office manages it, and a
+      // faculty member is admitted to their OWN rows only (facultyUid == uid).
+      // The own-row branch is last so a row without facultyUid simply denies.
+      // Guest bills: admin / hod / principal (department heads certify guest
+      // periods). Payroll: admin / principal only.
+      function isPayrollManager(cid) {
+        return isSuperadmin() || (role() in ['admin', 'principal'] && collegeId() == cid);
+      }
+      function isGuestBillManager(cid) {
+        return isSuperadmin() || (role() in ['admin', 'hod', 'principal'] && collegeId() == cid);
+      }
+      function ownsPayRow(cid) {
+        return isSignedIn() && collegeId() == cid && resource.data.facultyUid == request.auth.uid;
+      }
+
+      match /guestBills/{docId} {
+        allow get, list: if isGuestBillManager(collegeId) || ownsPayRow(collegeId);
+        allow write: if isGuestBillManager(collegeId);
+      }
+
+      match /salaryStructures/{docId} {
+        allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
+        allow write: if isPayrollManager(collegeId);
+      }
+
+      match /payslips/{docId} {
+        allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
+        allow write: if isPayrollManager(collegeId);
+      }
+
+      match /salaryCertificates/{docId} {
+        allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
+        allow create: if isPayrollManager(collegeId);
+        allow update, delete: if isSuperadmin() || (role() == 'admin' && collegeId() == collegeId);
       }
 
       // University exam-fee challans (Karnataka-pattern 3-copy bank slips:
