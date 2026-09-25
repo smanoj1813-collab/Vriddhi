@@ -23,7 +23,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { getFile, ref, uploadBytes } from 'firebase/storage'
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import {
   get as getDatabaseValue,
   ref as databaseRef,
@@ -1136,6 +1136,89 @@ describe('paper authoring storage', () => {
   })
 })
 
+describe('question-paper import storage', () => {
+  // Path contract: question-paper-imports/{uid}/{jobId}/{fileName}
+  // Only the superadmin who owns the job folder may write; the document must be
+  // a supported type; a college user gets nothing.
+  it('allows the superadmin to upload into their own job folder only', async () => {
+    const storage = superadminContext().storage()
+    const pdf = new Uint8Array([37, 80, 68, 70])
+    await assertSucceeds(uploadBytes(
+      ref(storage, 'question-paper-imports/platform-root/job-abc123/BCU-BCom-5-Sem-2024.zip'),
+      pdf,
+      { contentType: 'application/zip' }
+    ))
+    // Someone else's uid segment: denied even for a superadmin.
+    await assertFails(uploadBytes(
+      ref(storage, 'question-paper-imports/other-admin/job-abc123/papers.zip'),
+      pdf,
+      { contentType: 'application/zip' }
+    ))
+    // Unsupported type: denied.
+    await assertFails(uploadBytes(
+      ref(storage, 'question-paper-imports/platform-root/job-abc123/answers.exe'),
+      pdf,
+      { contentType: 'application/x-msdownload' }
+    ))
+  })
+
+  it('denies college staff and students entirely', async () => {
+    const contents = new Uint8Array([37, 80, 68, 70])
+    await assertFails(uploadBytes(
+      ref(facultyContext().storage(), 'question-paper-imports/faculty-a/job-abc123/papers.zip'),
+      contents,
+      { contentType: 'application/zip' }
+    ))
+    await assertFails(getDownloadURL(ref(facultyContext().storage(), 'question-paper-imports/platform-root/job-abc123/papers.zip')))
+  })
+})
+
+describe('question bank import jobs are server-only', () => {
+  // Collection contract: questionBankImportJobs/{jobId} is written by the api
+  // function's /question-import routes with the Admin SDK, never by a browser.
+  // The panel reads job state back through GET /jobs/:id.
+  it('denies client reads and writes even for a superadmin', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'questionBankImportJobs', 'job-abc123'), {
+        jobId: 'job-abc123',
+        ownerUid: 'platform-root',
+        status: 'awaiting-upload',
+        counters: { files: 3, drafted: 0 },
+      })
+    })
+
+    const db = superadminContext().firestore()
+    await assertFails(getDoc(doc(db, 'questionBankImportJobs', 'job-abc123')))
+    await assertFails(getDocs(query(collection(db, 'questionBankImportJobs'), limit(10))))
+    await assertFails(setDoc(doc(db, 'questionBankImportJobs', 'forged'), {
+      jobId: 'forged',
+      ownerUid: 'platform-root',
+      status: 'complete',
+      counters: { files: 999, drafted: 999 },
+    }))
+    await assertFails(updateDoc(doc(db, 'questionBankImportJobs', 'job-abc123'), {
+      'counters.drafted': 999,
+    }))
+    await assertFails(deleteDoc(doc(db, 'questionBankImportJobs', 'job-abc123')))
+  })
+
+  it('leaves the drafts the worker writes readable in the question bank', async () => {
+    // The boundary that matters: only the bookkeeping is closed. Drafts land in
+    // questionBank_meta as `pending` and a superadmin still reviews them.
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'questionBank_meta', 'draft-1'), {
+        questionId: 'draft-1',
+        previewText: 'State the features of Indian economy.',
+        status: 'pending',
+        createdBy: { userId: 'platform-root', collegeId: null },
+      })
+    })
+
+    const db = superadminContext().firestore()
+    await assertSucceeds(getDoc(doc(db, 'questionBank_meta', 'draft-1')))
+  })
+})
+
 describe('teaching materials storage', () => {
   it('allows staff uploads only in their own tenant', async () => {
     const contents = new Uint8Array([37, 80, 68, 70])
@@ -1165,7 +1248,7 @@ describe('teaching materials storage', () => {
       contents,
       { contentType: 'application/pdf' }
     ))
-    await assertSucceeds(getFile(
+    await assertSucceeds(getDownloadURL(
       ref(studentContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000002_handout.pdf`)
     ))
     // A student of the OTHER college cannot read A's materials.
@@ -1173,7 +1256,7 @@ describe('teaching materials storage', () => {
       role: 'student',
       collegeId: COLLEGE_B,
     })
-    await assertFails(getFile(
+    await assertFails(getDownloadURL(
       ref(otherCollegeStudent.storage(), `colleges/${COLLEGE_A}/materials/1700000000002_handout.pdf`)
     ))
     await assertFails(uploadBytes(
@@ -1190,7 +1273,7 @@ describe('teaching materials storage', () => {
       contents,
       { contentType: 'video/mp4' }
     ))
-    await assertSucceeds(getFile(
+    await assertSucceeds(getDownloadURL(
       ref(superadminContext().storage(), `colleges/${COLLEGE_A}/materials/1700000000004_video.mp4`)
     ))
     // HTML is not a teaching material type.

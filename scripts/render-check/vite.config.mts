@@ -28,6 +28,12 @@ export default defineConfig({
       { find: '@/shared/api/staffAttendanceApi', replacement: stub('staffAttendanceApi.ts') },
       { find: '@/shared/services/prepContentService', replacement: stub('prepContentService.ts') },
       { find: '@/shared/services/resumeService', replacement: stub('resumeService.ts') },
+      // The question-paper import panel's API module owns every Firebase /
+      // Storage handle it needs; swapping it keeps the whole SDK out of the mount.
+      { find: '@/modules/superadmin/api/questionImportApi', replacement: stub('questionImportApi.ts') },
+      // …and the relative spelling PaperImportPanel uses ('../api/questionImportApi').
+      // Without it the panel reaches the REAL module and the mount dies on `fetch failed`.
+      { find: /(?:\.\.\/)+api\/questionImportApi$/, replacement: stub('questionImportApi.ts') },
       { find: '@/Firebase/config', replacement: stub('firebaseConfig.ts') },
       // Relative spellings of the same module ('../../../Firebase/config' from
       // the student API layer). Without this the real config initialises the

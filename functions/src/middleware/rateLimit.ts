@@ -60,6 +60,25 @@ export const resumePdfLimiter = rateLimit({
   keyGenerator: (req: any) => req.user?.uid || req.ip || 'unknown',
 });
 /**
+ * Question-paper import worker. The browser drives the loop — one call per
+ * document (or per unpack batch) — so a 40-document archive is 40+ calls in a
+ * few minutes. The generic aiGenerationLimiter (20 per 15 min) would trip on the
+ * second document, and importing is already superadmin-only, so this budget is
+ * per user and generous but still bounded: a runaway loop cannot spin forever.
+ * 300 calls ≈ 240 documents per 15 minutes, and every call is a superadmin action.
+ */
+export const importWorkerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: {
+    error: 'The import worker is running too fast. Wait a few minutes, then press Continue — the job resumes where it stopped.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: any) => req.user?.uid || req.ip || 'unknown',
+});
+
+/**
  * Public Google Form intake. Unauthenticated by design, so it gets a far
  * tighter budget than the general limiter: a real college form receives a
  * handful of submissions a minute at peak, and a leaked token should not turn

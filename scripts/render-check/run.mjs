@@ -1768,6 +1768,74 @@ await section('resume add-on panel (college admin, read-only)', '/src/shared/com
   check('addon panel (read-only): usage is still visible to the placement cell', /5 students downloaded/.test(t), t.slice(0, 400));
 });
 
+// ── Question-paper import panel ──────────────────────────────────────────────
+// The panel uploads the archive and then drives the server worker one document
+// per call. questionImportApi is stubbed (scripts/render-check/stubs/), so this
+// proves the real panel: form validation, the upload→run loop, the counters, and
+// that a failed document is surfaced instead of being swallowed.
+const IMPORT_PANEL = '/src/modules/superadmin/components/PaperImportPanel.tsx';
+const importStub = await server.ssrLoadModule('/scripts/render-check/stubs/questionImportApi.ts');
+const importCalls = (fn) => (globalThis.__RC_IMPORT_CALLS ?? []).filter((c) => c.fn === fn);
+
+globalThis.__RC_IMPORT_JOB = importStub.__defaultJob();
+globalThis.__RC_IMPORT_DONE = true;
+globalThis.__RC_IMPORT_CALLS = [];
+
+await section('paper import panel', IMPORT_PANEL, {}, async (t, view) => {
+  check('import panel: explains the flow and refuses a half-filled form',
+    /Import previous-year papers/.test(t) && /pending draft/.test(t) && /Name the subject/.test(t),
+    t.slice(0, 400));
+  check('import panel: start is disabled until the subject is filled in',
+    view.byText('Start import')?.disabled === true, String(view.byText('Start import')?.disabled));
+
+  await view.type('#import-subject', 'Financial Accounting');
+
+  const fileInput = view.el('#import-archive');
+  const archive = new window.File(['zip-bytes'], 'bcu-papers.zip', { type: 'application/zip' });
+  await act(async () => {
+    Object.defineProperty(fileInput, 'files', { value: [archive], configurable: true });
+    fileInput.dispatchEvent(new window.Event('change', { bubbles: true }));
+  });
+  check('import panel: the chosen archive and its size are shown',
+    /bcu-papers\.zip/.test(view.bodyText()) && /9 B/.test(view.bodyText()), view.bodyText().slice(0, 400));
+  check('import panel: start enables only once form and archive are both present',
+    view.byText('Start import')?.disabled === false, String(view.byText('Start import')?.disabled));
+
+  await view.click(view.byText('Start import'));
+  await act(async () => { await new Promise((r) => setTimeout(r, 60)); });
+
+  check('import panel: start reserves a job, uploads, then drives the worker',
+    importCalls('startImportJob').length === 1 && importCalls('runJob').length >= 1,
+    JSON.stringify((globalThis.__RC_IMPORT_CALLS ?? []).map((c) => c.fn)));
+  check('import panel: the job payload carries the chosen subject and programme',
+    importCalls('startImportJob')[0]?.params?.defaults?.subjectId === 'Financial Accounting'
+      && importCalls('startImportJob')[0]?.params?.defaults?.program === 'bcom',
+    JSON.stringify(importCalls('startImportJob')[0]?.params?.defaults));
+  check('import panel: progress counters and the finished message render',
+    /Questions drafted: 14/.test(view.bodyText()) && /Done: 14 question\(s\) drafted/.test(view.bodyText()),
+    view.bodyText().slice(0, 500));
+  check('import panel: a failed document is listed with its reason, not hidden',
+    /Needs attention \(1\)/.test(view.bodyText()) && /kannada-paper-2023\.pdf/.test(view.bodyText())
+      && /The model could not read this document/.test(view.bodyText()),
+    view.bodyText().slice(0, 600));
+  check('import panel: offers a duplicate check once documents have been parsed',
+    Boolean(view.byText('Check duplicates')), '');
+
+  await view.click(view.byText('Check duplicates'));
+  check('import panel: duplicate report is rendered with a bulk reject action',
+    /already exist/.test(view.bodyText()) && Boolean(view.byText('Reject them')),
+    view.bodyText().slice(0, 600));
+
+  await view.click(view.byText('Reject them'));
+  check('import panel: rejecting duplicates sends the ids and reports the count',
+    importCalls('rejectQuestions')[0]?.params?.ids?.length === 2 && /2 rejected/.test(view.bodyText()),
+    JSON.stringify(importCalls('rejectQuestions')) + ' | ' + view.bodyText().slice(0, 400));
+});
+
+globalThis.__RC_IMPORT_JOB = undefined;
+globalThis.__RC_IMPORT_DONE = undefined;
+globalThis.__RC_IMPORT_CALLS = [];
+
 globalThis.__RC_RESUME = undefined;
 globalThis.__RC_RESUME_CALLS = [];
 

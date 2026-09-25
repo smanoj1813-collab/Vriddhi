@@ -1471,6 +1471,18 @@ service cloud.firestore {
       allow write: if isSuperadmin() || isCollegeStaff();
     }
 
+    // Import job bookkeeping for the Superadmin "Import papers (ZIP)" flow.
+    // Every read and write goes through the api function's
+    // /question-import/jobs routes, which run with the Admin SDK and enforce
+    // requireRole('superadmin') plus a per-uid rate limit; the panel never
+    // touches this collection directly. Clients are denied outright rather than
+    // scoped, so a compromised superadmin session cannot forge job counters or
+    // edit another operator's progress. Drafts the worker produces land in
+    // questionBank_meta above and are read from there.
+    match /questionBankImportJobs/{docId} {
+      allow read, write: if false;
+    }
+
     match /papers_universal/{docId} {
       allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin() || isCollegeStaff();

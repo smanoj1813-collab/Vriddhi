@@ -226,6 +226,28 @@ service firebase.storage {
       allow delete: if isSuperadmin();
     }
 
+    // Bulk question-paper import (previous-year papers → question-bank drafts).
+    //
+    // The superadmin uploads ONE zip (or a single document) here; the
+    // `api` function's import worker unpacks it into `.../files/` and reads the
+    // bytes through the Admin SDK, so no read grant is needed for the browser
+    // beyond the operator being able to see their own upload. The path binds the
+    // object to the uploader's uid AND to the server-issued job id, so one
+    // superadmin can never write into another's job folder, and the 80 MB /
+    // document-MIME caps match IMPORT_MAX_ARCHIVE_BYTES in
+    // functions/src/questionImport.ts.
+    match /question-paper-imports/{uid}/{jobId}/{fileName} {
+      allow read: if isSuperadmin();
+      allow create, update: if isSuperadmin()
+        && request.auth.uid == uid
+        && request.resource.size <= 80 * 1024 * 1024
+        && request.resource.contentType != null
+        && request.resource.contentType.matches(
+          'application/pdf|application/zip|application/x-zip-compressed|application/msword|application/vnd\\\\.openxmlformats-officedocument\\\\.wordprocessingml\\\\.document|image/jpeg|image/png'
+        );
+      allow delete: if isSuperadmin();
+    }
+
     // Resume Builder PDFs: resumes/{collegeId}/{uid}/{downloadId}.pdf
     // Written by the api function after a credit is reserved and streamed back
     // through GET /resume/downloads/:id/file (owner or college staff, checked

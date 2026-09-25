@@ -24,6 +24,7 @@ import { router as configRouter } from './routes/config'
 import { router as resumeRouter } from './routes/resume'
 import { generalLimiter } from './middleware/rateLimit'
 import { router as admissionIntakeRouter } from './routes/admissionIntake'
+import { router as questionImportRouter } from './routes/questionImport'
 
 // ═══════ Student Auth callable functions ═══════
 import {
@@ -186,6 +187,11 @@ app.use('/api/config', configRouter)
 // Resume Builder add-on (student editor, PDF credits, college settings).
 app.use('/api/resume', resumeRouter)
 app.use('/resume', resumeRouter)
+
+// Bulk question-paper import (PYQ corpus → question bank drafts). Mounted on its
+// own prefix so it can never shadow /questions/:id style routes.
+app.use('/api/question-import', questionImportRouter)
+app.use('/question-import', questionImportRouter)
 
 // Public Google Form intake — token-gated, no Firebase auth.
 app.use('/api/admissions', admissionIntakeRouter)
