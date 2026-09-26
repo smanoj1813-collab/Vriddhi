@@ -67,6 +67,7 @@ import {
   type ImportJobFile,
 } from '../questionImport'
 import { readZipDirectory, readZipEntry, safeEntryName, selectZipDocuments } from '../utils/zipArchive'
+import { buildPaperTranscriptDocx } from '../utils/docxWriter'
 
 export const router = express.Router()
 
@@ -93,6 +94,16 @@ function bucket() {
 function documentStoragePath(job: ImportJobDoc, index: number, name: string): string {
   const dir = job.archive.storagePath.split('/').slice(0, -1).join('/')
   return `${dir}/files/${String(index).padStart(4, '0')}-${safeEntryName(name, index)}`
+}
+
+/**
+ * Storage object path for one document's Word transcript — the compact
+ * archival copy that replaces the source PDF once parsing succeeds.
+ */
+function transcriptStoragePath(job: ImportJobDoc, file: ImportJobFile): string {
+  const dir = job.archive.storagePath.split('/').slice(0, -1).join('/')
+  const base = safeEntryName(file.name.replace(/\.[^.]+$/, ''), file.index)
+  return `${dir}/transcripts/${String(file.index).padStart(4, '0')}-${base}.docx`
 }
 
 function publicJob(job: ImportJobDoc) {
@@ -268,6 +279,21 @@ router.post(
         updatedAt: FieldValue.serverTimestamp(),
         ...(updated.status === 'complete' ? { completedAt: FieldValue.serverTimestamp() } : {}),
       })
+
+      // Storage housekeeping: once every document parsed and each has its
+      // compact .docx transcript, the source archive is redundant — drop it.
+      // Truncated jobs keep theirs (un-imported entries are still inside) and
+      // jobs with failures keep theirs as a re-import fallback.
+      if (updated.status === 'complete' && updated.counters.failed === 0 && !updated.truncated) {
+        try {
+          await bucket().file(updated.archive.storagePath).delete({ ignoreNotFound: true })
+        } catch (cleanupErr: any) {
+          logger.warn('[QuestionImport] could not delete the source archive (transcripts are still saved)', {
+            jobId: job.id,
+            err: cleanupErr.message,
+          })
+        }
+      }
 
       logger.info('[QuestionImport] document processed', {
         jobId: job.id,
@@ -643,6 +669,58 @@ async function parseOneDocument(
     createdAt: FieldValue.serverTimestamp(),
   })
 
+  // 5. Compact archival copy — a Word transcript of the paper replaces the
+  //    source bytes in Storage. The questions are already in Firestore; the
+  //    transcript keeps the paper itself readable at a fraction of the size.
+  //    Non-fatal: on any failure the source document is kept untouched.
+  let transcriptPath = ''
+  let transcriptBytes = 0
+  let sourceDropped = false
+  try {
+    const docx = buildPaperTranscriptDocx({
+      title: paperMeta.title || file.name,
+      metaLines: [
+        `Source file: ${file.name}`,
+        paperMeta.university ? `University: ${paperMeta.university}` : '',
+        paperMeta.paperCode ? `Paper code: ${paperMeta.paperCode}` : '',
+        paperMeta.examYear ? `Exam: ${paperMeta.examMonth} ${paperMeta.examYear}`.trim() : '',
+        paperMeta.subject ? `Subject: ${paperMeta.subject}` : '',
+        `Import job: ${job.id} (${method}, ${pages} page(s))`,
+      ],
+      rawText: text,
+      questions: questions.map((question) => ({
+        text: question.text,
+        type: question.type,
+        marks: question.marks,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+      })),
+    })
+    const path = transcriptStoragePath(job, file)
+    await bucket().file(path).save(docx, {
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      metadata: { metadata: { importJobId: job.id, sourceFileName: file.name } },
+    })
+    transcriptPath = path
+    transcriptBytes = docx.length
+    if (file.storagePath) {
+      try {
+        await bucket().file(file.storagePath).delete({ ignoreNotFound: true })
+        sourceDropped = true
+      } catch (dropErr: any) {
+        logger.warn('[QuestionImport] transcript saved but the source document could not be deleted', {
+          file: file.name,
+          err: dropErr.message,
+        })
+      }
+    }
+  } catch (err: any) {
+    logger.warn('[QuestionImport] transcript archive step failed; source document kept', {
+      file: file.name,
+      err: err.message,
+    })
+  }
+
   const note = warnings.length ? warnings.join(' ') : ''
   return {
     outcome: {
@@ -653,6 +731,14 @@ async function parseOneDocument(
       questionCount: drafts.length,
       drafted: drafts.length,
       duplicates: questions.length - drafts.length,
+      ...(transcriptPath
+        ? {
+            transcriptStoragePath: transcriptPath,
+            transcriptBytes,
+            // Clearing the row's storagePath marks the source bytes as gone.
+            ...(sourceDropped ? { storagePath: '' } : {}),
+          }
+        : {}),
     },
     note,
   }
