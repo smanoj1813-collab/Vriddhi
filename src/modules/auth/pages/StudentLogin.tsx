@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { School, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { auth } from '../../../Firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
@@ -14,6 +16,12 @@ export default function StudentLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
   const [idleSignOut, setIdleSignOut] = useState(false);
+  // Self-service password recovery — the "Forgot?" link was a dead `href="#"`.
+  // Student accounts are bulk-provisioned with one-time passwords that are
+  // shown once and never stored, so a lost password must be recoverable
+  // without an admin: Firebase emails a reset link.
+  const [forgotMsg, setForgotMsg] = useState<{ kind: 'info' | 'ok' | 'err'; text: string } | null>(null);
+  const [forgotSending, setForgotSending] = useState(false);
 
   // Auto-logout leaves a flag so the student is told WHY the session ended
   // (see IdleSessionTimeout). Read-and-clear — a refresh must not repeat it.
@@ -58,6 +66,28 @@ export default function StudentLogin() {
       } else {
         setLocalError(msg || t('auth.loginFailed'));
       }
+    }
+  };
+
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const target = email.trim().toLowerCase();
+    if (!target) {
+      setForgotMsg({ kind: 'info', text: t('auth.forgotEnterEmail') });
+      return;
+    }
+    setForgotSending(true);
+    setForgotMsg({ kind: 'info', text: t('auth.forgotSending') });
+    try {
+      await sendPasswordResetEmail(auth, target);
+      setForgotMsg({ kind: 'ok', text: t('auth.forgotSent', { email: target }) });
+    } catch (err: any) {
+      // Same generic message for unknown addresses and send failures — the
+      // login page must not become an account enumerator.
+      console.warn('[StudentLogin] password reset email failed:', err?.code || err?.message);
+      setForgotMsg({ kind: 'err', text: t('auth.forgotError') });
+    } finally {
+      setForgotSending(false);
     }
   };
 
@@ -139,9 +169,14 @@ export default function StudentLogin() {
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300">
                   {t('auth.password')}
                 </label>
-                <a href="#" className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={forgotSending}
+                  className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium disabled:opacity-60"
+                >
                   {t('auth.forgot')}
-                </a>
+                </button>
               </div>
               <div className="relative">
                 <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -163,6 +198,22 @@ export default function StudentLogin() {
                 </button>
               </div>
             </div>
+
+            {forgotMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-3 rounded-xl border text-xs font-medium ${
+                  forgotMsg.kind === 'ok'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                    : forgotMsg.kind === 'err'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                      : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
+                }`}
+              >
+                {forgotMsg.text}
+              </motion.div>
+            )}
 
             {idleSignOut && !localError && (
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-medium text-amber-800 dark:text-amber-200">

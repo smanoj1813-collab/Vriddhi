@@ -71,6 +71,11 @@ export const manageOfficeStaff = onCall(
       if (action === 'resetPassword') {
         const password = generateRandomPassword()
         await admin.auth().updateUser(uid, { password })
+        // Force every signed-in session to re-authenticate with the new
+        // credential — same contract as resetUserPassword. Without this, a
+        // device that still holds a refresh token keeps a live session after
+        // the password it no longer knows was rotated.
+        await admin.auth().revokeRefreshTokens(uid)
         await admin.auth().setCustomUserClaims(uid, { ...(target.customClaims || {}), mustChangePassword: true })
         await rosterRef.set({ updatedAt: now, passwordResetAt: now }, { merge: true })
         return { ok: true, uid, temporaryPassword: password }
