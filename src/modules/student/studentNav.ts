@@ -22,6 +22,7 @@ import {
   School,
   Sparkles,
   Briefcase,
+  Award,
   type LucideIcon,
 } from 'lucide-react'
 import type { TranslationKey } from '../../shared/i18n'
@@ -64,6 +65,7 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   // Section hub: the phone's "Learning" tab.
   { id: 'learning', label: 'Learning', path: '/student/learning', icon: Sparkles, group: 'practice', hub: true },
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library, group: 'practice', translationKey: 'nav.materials', hint: 'Notes, slides and study material shared by faculty' },
+  { id: 'courses', label: 'Courses', path: '/student/courses', icon: Award, group: 'practice', hint: 'Self-paced certificate programmes — lessons, labs, quizzes and projects' },
   { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap, group: 'practice', translationKey: 'nav.library', hint: 'Books, journals and e-resources' },
   { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone, group: 'practice', translationKey: 'nav.journey', hint: 'Your progress across the programme' },
   { id: 'resume', label: 'Resume Builder', path: '/student/resume', icon: Briefcase, group: 'practice', hint: 'ATS-friendly resume templates, live preview and PDF download (Placement Pack)' },

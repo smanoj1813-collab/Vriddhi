@@ -4,6 +4,7 @@ import { RoleRoute } from '@/routes/components/RoleRoute';
 import ErrorBoundary from '@/shared/components/ErrorBoundary';
 import StudentLayout from './components/StudentLayout';
 import { StudentDataProvider } from './hooks/useStudentData';
+import { studentCourseRoutes } from '@/modules/courses/routes';
 
 // ── Lazy-loaded pages (all read identity from AuthContext) ────────────
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
@@ -72,6 +73,10 @@ export const studentRoutes: RouteObject[] = [
       { path: 'test/:testId/instructions', element: <TestInstructionsPage /> },
       { path: 'test/:testId/take', element: <ActiveTestPage /> },
       { path: 'test/:testId/result', element: <TestResultPage /> },
+
+      // Self-paced certificate courses (bundled content packs, see
+      // content/courses/README.md). Catalog → overview → lesson player.
+      ...studentCourseRoutes,
 
       // Secondary pages
       { path: 'materials', element: <StudentMaterials /> },
