@@ -57,7 +57,7 @@ function GroupSection({ title, icon: Icon, groups }: {
           {groups.map((group) => (
             <div key={group.key}>
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-900 dark:text-white font-medium truncate pr-2">{group.label}</span>
+                <span className="text-slate-900 dark:text-white font-medium truncate min-w-0 pr-2">{group.label}</span>
                 <span className="text-vriddhi-muted shrink-0">
                   {group.submitted}/{group.expected || 0} · {group.pct}%
                 </span>

@@ -37,12 +37,39 @@ function readStoredLanguage(): AppLanguage {
   return DEFAULT_LANGUAGE;
 }
 
+// Indic webfonts are only needed by the locale that renders them, but they
+// used to ride along in ONE render-blocking Google Fonts request for all six
+// languages on every first paint (~5 extra families of unicode-range CSS).
+// The static link in index.html now carries only Inter + Noto Sans; the
+// active language's family is injected here on demand (once), and the PWA's
+// fonts.googleapis/gstatic runtime caches make repeat loads instant.
+const INDIC_FONT_URLS: Partial<Record<AppLanguage, string>> = {
+  hi: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap',
+  kn: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap',
+  ta: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap',
+  te: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600;700&display=swap',
+  ml: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap',
+};
+
+function ensureLanguageFont(language: AppLanguage) {
+  const url = INDIC_FONT_URLS[language];
+  if (!url || typeof document === 'undefined') return;
+  const id = `vriddhi-font-${language}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = url;
+  document.head.appendChild(link);
+}
+
 function applyDocumentLanguage(language: AppLanguage) {
   const def = LANGUAGES[language];
   const root = document.documentElement;
   root.lang = def.bcp47;
   root.setAttribute('data-language', def.code);
   root.style.setProperty('--vriddhi-font-family', def.fontFamily);
+  ensureLanguageFont(language);
 }
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

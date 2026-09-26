@@ -257,9 +257,11 @@ function AssetDetail({ asset: a, settings, onClose, onChanged }: { asset: Asset;
           {schedule.length > 0 && (
             <div>
               <p className="font-medium text-slate-900 dark:text-white mb-1">Depreciation schedule</p>
+              <div className="overflow-x-auto">
               <table className="w-full text-xs"><thead><tr className="text-vriddhi-muted"><th className="text-left py-1">FY</th><th className="text-right">Opening</th><th className="text-right">Addition</th><th className="text-right">Depreciation</th><th className="text-right">Closing</th></tr></thead>
                 <tbody>{schedule.map(y => <tr key={y.fy} className="border-t border-vriddhi-border/50"><td className="py-1">{y.fy}</td><td className="text-right">{inr(y.opening)}</td><td className="text-right">{y.addition ? inr(y.addition) : ''}</td><td className="text-right">{inr(y.depreciation)}</td><td className="text-right font-medium">{inr(y.closing)}</td></tr>)}</tbody>
               </table>
+              </div>
             </div>
           )}
           {a.maintenance.length > 0 && (

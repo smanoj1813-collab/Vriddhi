@@ -260,9 +260,21 @@ html {
 
 @media (max-width: 767px) {
   /* Long university names, challan numbers and reg nos used to push the page
-     wider than the screen, which reads as "this is a desktop site". */
-  h1, h2, h3, p, span, td, th, button, label {
+     wider than the screen, which reads as "this is a desktop site". The list
+     covers EVERY common text carrier — emails, uids and invoice numbers also
+     live in plain divs, anchors, list items and <code>, and a single
+     unbreakable token in any of them is enough to push a line out of its
+     card ("lines out of the box"). `anywhere` only breaks a word when it
+     would otherwise overflow, so normal text is unaffected. */
+  h1, h2, h3, h4, h5, h6, p, span, div, a, li, td, th, button, label,
+  code, strong, em, small, dt, dd, figcaption {
     overflow-wrap: anywhere;
+  }
+  /* Inputs and media must never be wider than their container: a fixed-width
+     field inside a card that got narrow on a phone would otherwise spill past
+     the card border. */
+  input, select, textarea, svg, canvas {
+    max-width: 100%;
   }
   /* Keep the safe-area notch from clipping the bottom bar on a gesture phone. */
   body {
@@ -274,6 +286,14 @@ html {
   }
 }
 
+/* Flex rows are the #1 truncate failure: a flex child's min-width defaults to
+   its content size, so `truncate` never engages and the row pushes past the
+   card. Any element that opts in with .flex-min gets the fix without a global
+   `* { min-width: 0 }` (which would wreck intrinsic sizing everywhere). */
+.flex-min > * {
+  min-width: 0;
+}
+
 /* Hide scrollbars on touch devices: the OS draws its own overlay indicator. */
 @media (pointer: coarse) {
   * { scrollbar-width: none; }
@@ -281,6 +301,18 @@ html {
   button, a, input, select, textarea, [role="button"] {
     /* Removes the 300 ms double-tap-zoom delay on every tap. */
     touch-action: manipulation;
+  }
+  /* Table row actions are icon-only p-1.5 buttons ≈28px — under the 44px
+     touch-target guidance and a constant source of mis-taps (hit Deactivate
+     instead of View). Grow the hit area on touch devices only: the icon stays
+     visually the same size, centred in a thumb-sized box. Desktop is
+     untouched, and text buttons in cells merely get a comfortable height. */
+  td button, th button {
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 

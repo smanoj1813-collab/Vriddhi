@@ -370,7 +370,7 @@ export default function FacultyTopics() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
                   statusFilter === status
                     ? `${config.bg} ${config.color} border ${config.border}`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {config.label}
@@ -461,7 +461,7 @@ export default function FacultyTopics() {
                     <p className="text-slate-900 dark:text-white font-medium">{topic.duration}m</p>
                   </div>
                 </div>
-                <button className="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">
+                <button className="p-1 text-slate-600 hover:text-slate-900 dark:text-white transition-colors">
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
@@ -521,7 +521,7 @@ export default function FacultyTopics() {
                             {topic.resources.map((resource, i) => (
                               <span
                                 key={i}
-                                className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                                className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-500/20"
                               >
                                 {resource}
                               </span>
@@ -930,9 +930,9 @@ function TopicFormModal({
             {formData.resources.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.resources.map((r, i) => (
-                  <span key={i} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                  <span key={i} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-500/20">
                     {r}
-                    <button onClick={() => onRemoveResource(i)} className="hover:text-teal-200">✕</button>
+                    <button onClick={() => onRemoveResource(i)} className="hover:text-teal-900 dark:hover:text-teal-200">✕</button>
                   </span>
                 ))}
               </div>

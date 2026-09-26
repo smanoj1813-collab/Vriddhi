@@ -141,14 +141,14 @@ const SuperAdminFacultyDetail: React.FC = () => {
           type="number"
           value={(formData[name] as number) || 0}
           onChange={e => setFormData((prev: UpdateFacultyInput) => ({ ...prev, [name]: parseInt(e.target.value) || 0 }))}
-          className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
       ) : (
         <input
           type={type}
           value={(formData[name] as string) || ''}
           onChange={e => setFormData((prev: UpdateFacultyInput) => ({ ...prev, [name]: e.target.value }))}
-          className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
       )}
     </div>
@@ -160,7 +160,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/superadmin/faculty')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-400" />
+            <ArrowLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
@@ -183,7 +183,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
               <button
                 onClick={handleResetPassword}
                 disabled={resetPassword.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-600 dark:text-yellow-400 rounded-lg transition-colors text-sm"
               >
                 <Key className="w-4 h-4" /> Reset Password
               </button>
@@ -198,7 +198,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
             <>
               <button
                 onClick={() => setIsEditing(false)}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-sm"
               >
                 <XCircle className="w-4 h-4" /> Cancel
               </button>
@@ -224,10 +224,10 @@ const SuperAdminFacultyDetail: React.FC = () => {
             {faculty.status === 'active' ? (
               <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <XCircle className="w-5 h-5 text-orange-400" />
+              <XCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             )}
             <div>
-              <p className={`text-sm font-medium ${faculty.status === 'active' ? 'text-green-400' : 'text-orange-400'}`}>
+              <p className={`text-sm font-medium ${faculty.status === 'active' ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
                 {faculty.status === 'active' ? 'Active Faculty' : 'Inactive Faculty'}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -354,7 +354,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
                   <p className="text-xs text-slate-500 mb-2">UG Subjects</p>
                   <div className="flex flex-wrap gap-2">
                     {faculty.subjectsUG.map((s, i) => (
-                      <span key={i} className="px-2 py-1 bg-teal-500/10 text-teal-400 text-xs rounded-full">{s}</span>
+                      <span key={i} className="px-2 py-1 bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs rounded-full">{s}</span>
                     ))}
                   </div>
                 </div>
@@ -448,17 +448,17 @@ const SuperAdminFacultyDetail: React.FC = () => {
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                <Key className="w-5 h-5 text-yellow-400" />
+                <Key className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Password Reset</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">{faculty.firstName} {faculty.lastName}</p>
               </div>
             </div>
-            <div className="bg-slate-900 rounded-lg p-4 mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-4 mb-4">
               <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">New Temporary Password</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-lg font-mono text-teal-400 bg-slate-800 px-3 py-2 rounded">
+                <code className="flex-1 text-lg font-mono text-teal-600 dark:text-teal-400 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded">
                   {newPassword}
                 </code>
                 <button
@@ -466,7 +466,7 @@ const SuperAdminFacultyDetail: React.FC = () => {
                     navigator.clipboard.writeText(newPassword)
                     showInfo('Password copied to clipboard')
                   }}
-                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg text-sm transition-colors"
+                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
@@ -494,14 +494,14 @@ const SuperAdminFacultyDetail: React.FC = () => {
                   navigator.clipboard.writeText(resetAccount.resetLink || '')
                   showInfo('Reset link copied — it needs no shared password')
                 }}
-                className="w-full py-2 mb-3 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-700 transition-colors"
+                className="w-full py-2 mb-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 Copy password-reset link instead
               </button>
             )}
             <button
               onClick={() => setShowPassword(false)}
-              className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
+              className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
             >
               Close
             </button>

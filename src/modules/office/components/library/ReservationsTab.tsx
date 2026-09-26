@@ -75,7 +75,7 @@ export default function ReservationsTab({ settings }: { settings: LibrarySetting
       {list.length === 0 ? (
         <Empty title="No open reservations" hint={settings.allowReservations ? 'Members can reserve books that are all on loan from their library page.' : 'Member self-reservation is turned off in Library Settings.'} />
       ) : (
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-x-auto">
           <table className="w-full">
             <thead><tr className="border-b border-vriddhi-border"><th className="table-header">Member</th><th className="table-header">Title</th><th className="table-header">Status</th><th className="table-header" /></tr></thead>
             <tbody>

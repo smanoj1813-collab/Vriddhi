@@ -308,14 +308,14 @@ function DownloadMenu({ onCSV, onPDF }: { onCSV: () => void; onPDF: () => void }
         <div className="absolute right-0 top-full mt-2 w-48 bg-vriddhi-card border border-vriddhi-border rounded-xl shadow-xl z-50 overflow-hidden">
           <button
             onClick={() => { onCSV(); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-vriddhi-text hover:bg-white/5 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-vriddhi-text hover:bg-slate-500/5 dark:hover:bg-white/5 transition-colors"
           >
             <FileSpreadsheet size={16} className="text-emerald-600 dark:text-emerald-400" />
             Download Excel (CSV)
           </button>
           <button
             onClick={() => { onPDF(); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-vriddhi-text hover:bg-white/5 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-vriddhi-text hover:bg-slate-500/5 dark:hover:bg-white/5 transition-colors"
           >
             <Printer size={16} className="text-red-600 dark:text-red-400" />
             Print PDF (A4)
@@ -578,7 +578,7 @@ export default function View360() {
             {searchRegNo && <span className="px-2 py-1 bg-vriddhi-accent/20 text-vriddhi-accent rounded text-xs">Search: {searchRegNo}</span>}
             <button 
               onClick={() => { setFilterCourse('all'); setFilterBatch('all'); setFilterDivision('all'); setFilterStatus('all'); setSearchRegNo('') }}
-              className="text-xs text-red-400 hover:text-red-300 ml-auto"
+              className="text-xs text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 ml-auto"
             >
               Clear All
             </button>
@@ -637,7 +637,7 @@ export default function View360() {
                       <td className="table-cell font-semibold text-slate-900 dark:text-white">{course}</td>
                       <td className="table-cell">{stats.count}</td>
                       <td className="table-cell">
-                        <span className={`font-semibold ${stats.avgScore >= 80 ? 'text-green-400' : stats.avgScore >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className={`font-semibold ${stats.avgScore >= 80 ? 'text-green-600 dark:text-green-400' : stats.avgScore >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
                           {stats.avgScore}%
                         </span>
                       </td>
@@ -747,7 +747,7 @@ export default function View360() {
                     className="flex items-center gap-4 p-4 rounded-xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/10 transition-colors cursor-pointer"
                     onClick={() => setSelectedStudent(student)}
                   >
-                    <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 font-bold">
+                    <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 font-bold">
                       {student.name.charAt(0)}
                     </div>
                     <div className="flex-1">
@@ -817,7 +817,7 @@ export default function View360() {
                         </div>
                       </td>
                       <td className="table-cell">
-                        <span className={`font-semibold ${student.avgScore >= 80 ? 'text-green-400' : student.avgScore >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className={`font-semibold ${student.avgScore >= 80 ? 'text-green-600 dark:text-green-400' : student.avgScore >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
                           {student.avgScore}%
                         </span>
                       </td>
@@ -825,7 +825,7 @@ export default function View360() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize
                           ${student.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-green-400' : 
                             student.status === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400' : 
-                            'bg-red-500/20 text-red-400'}`}>
+                            'bg-red-500/20 text-red-600 dark:text-red-400'}`}>
                           {student.status}
                         </span>
                       </td>
@@ -860,14 +860,14 @@ export default function View360() {
                 {analytics.topPerformers.map((student, i) => (
                   <div 
                     key={student.id} 
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-500/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
                     onClick={() => setSelectedStudent(student)}
                   >
                     <div className={`
                       w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
                       ${i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400' : 
-                        i === 1 ? 'bg-slate-400/20 text-slate-400' : 
-                        i === 2 ? 'bg-orange-600/20 text-orange-400' : 'bg-vriddhi-border/50 text-vriddhi-muted'}
+                        i === 1 ? 'bg-slate-400/20 text-slate-500 dark:text-slate-400' : 
+                        i === 2 ? 'bg-orange-600/20 text-orange-600 dark:text-orange-400' : 'bg-vriddhi-border/50 text-vriddhi-muted'}
                     `}>
                       {i + 1}
                     </div>
@@ -1120,7 +1120,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                     <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-green-300">Exceptional Performer</p>
+                    <p className="font-medium text-green-600 dark:text-green-300">Exceptional Performer</p>
                     <p className="text-sm text-vriddhi-muted mt-1">Scoring {student.avgScore}% average, {student.name} is among the top performers in {student.course}. Consider for peer mentoring roles.</p>
                   </div>
                 </div>
@@ -1131,7 +1131,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                     <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-red-300">Attendance Concern</p>
+                    <p className="font-medium text-red-600 dark:text-red-300">Attendance Concern</p>
                     <p className="text-sm text-vriddhi-muted mt-1">At {student.attendance}%, attendance is below recommended threshold. Schedule a mentorship check-in with {student.mentor}.</p>
                   </div>
                 </div>
@@ -1153,7 +1153,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                     <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-amber-300">Development Areas</p>
+                    <p className="font-medium text-amber-600 dark:text-amber-300">Development Areas</p>
                     <p className="text-sm text-vriddhi-muted mt-1">Needs support in: {student.weaknesses.join(', ')}. Consider remedial classes or peer tutoring.</p>
                   </div>
                 </div>
@@ -1163,7 +1163,7 @@ function StudentDetailView({ student, onBack, allStudents }: { student: Student;
                   <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-blue-300">Recommendation</p>
+                  <p className="font-medium text-blue-600 dark:text-blue-300">Recommendation</p>
                   <p className="text-sm text-vriddhi-muted mt-1">
                     {student.avgScore >= 85 ? 'Eligible for honors program and internship opportunities.' : student.avgScore >= 70 ? 'On track. Focus on consistent practice and revision.' : 'Needs structured study plan and regular check-ins.'}
                   </p>

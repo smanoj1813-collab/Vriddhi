@@ -298,7 +298,7 @@ export default function StudentMaterials() {
       {/* Filters & Search */}
       <div className="flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
           <input
             type="text"
             placeholder="Search notes, chapters, topics..."
@@ -391,7 +391,7 @@ export default function StudentMaterials() {
                         <Sparkles className="w-3 h-3 text-teal-500" />
                         AI Summary
                       </button>
-                      <div className="p-1.5 rounded-lg text-slate-400">
+                      <div className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400">
                         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </div>
                     </div>
@@ -402,7 +402,7 @@ export default function StudentMaterials() {
                     <div className="p-4 sm:p-5 space-y-4 bg-slate-50/30 dark:bg-slate-950/20">
                       {/* Topics Checklist / Syllabus Topics */}
                       <div className="p-3.5 rounded-2xl bg-white dark:bg-[#182238] border border-slate-200/80 dark:border-slate-800">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                           Syllabus Topics Covered in this Module:
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -451,7 +451,7 @@ export default function StudentMaterials() {
                               </div>
 
                               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                                <span className="text-slate-400 truncate">By {material.uploadedBy}</span>
+                                <span className="text-slate-500 dark:text-slate-400 truncate">By {material.uploadedBy}</span>
                                 {material.url && material.url !== '#' && (
                                   <a
                                     href={material.url}
@@ -540,7 +540,7 @@ export default function StudentMaterials() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-400">{material.size || 'Document'}</span>
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{material.size || 'Document'}</span>
                     {material.url && material.url !== '#' && (
                       <a
                         href={material.url}
@@ -561,7 +561,7 @@ export default function StudentMaterials() {
 
           {filteredMaterials.length === 0 && (
             <div className="text-center py-16 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-xs">
-              <FolderOpen className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+              <FolderOpen className="w-12 h-12 text-slate-500 dark:text-slate-400 mx-auto mb-2" />
               <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">No course materials found</p>
               <p className="text-xs text-slate-500 mt-0.5">When professors share lecture notes or references for your syllabus, they will appear here.</p>
             </div>

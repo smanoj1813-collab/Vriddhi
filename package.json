@@ -25,6 +25,7 @@
     "dev": "vite",
     "identity:doctor": "node scripts/identity-doctor.mjs",
     "identity:restore-superadmin": "node scripts/restore-superadmin.mjs",
+    "identity:set-temp-password": "node scripts/set-temp-password.mjs",
     "preview": "vite preview",
     "test:functions:unit": "npm --prefix functions run test:unit",
     "test:render": "node --import ./scripts/render-check/domsetup.mjs scripts/render-check/run.mjs",

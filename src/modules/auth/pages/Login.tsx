@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { School, Eye, EyeOff, Lock, Mail, ArrowRight, Shield, Users, CheckCircle2, Sparkles } from 'lucide-react';
+import { auth } from '../../../Firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
@@ -17,6 +19,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [idleSignOut, setIdleSignOut] = useState(false);
+  // Self-service password recovery: the "Forgot?" link used to be a dead
+  // `href="#"`, which left anyone with a lost one-time password locked out
+  // (staff accounts are created with a generated password that is shown once
+  // and never stored). Firebase emails a reset link; the user sets their own
+  // password and the mustChangePassword flag is honoured at next sign-in.
+  const [forgotMsg, setForgotMsg] = useState<{ kind: 'info' | 'ok' | 'err'; text: string } | null>(null);
+  const [forgotSending, setForgotSending] = useState(false);
   const { login, isAuthenticated, user } = useAuth();
 
   // Auto-logout leaves a flag instead of a mystery: explain why the session
@@ -83,6 +92,30 @@ export default function Login() {
     }
   };
 
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const target = email.trim().toLowerCase();
+    if (!target) {
+      setForgotMsg({ kind: 'info', text: t('auth.forgotEnterEmail') });
+      return;
+    }
+    setForgotSending(true);
+    setForgotMsg({ kind: 'info', text: t('auth.forgotSending') });
+    try {
+      await sendPasswordResetEmail(auth, target);
+      setForgotMsg({ kind: 'ok', text: t('auth.forgotSent', { email: target }) });
+    } catch (err: any) {
+      // Firebase returns auth/user-not-found for unknown addresses. Tell the
+      // user the same "check the spelling / contact admin" story either way —
+      // echoing "no such account" would turn the login page into an account
+      // enumerator.
+      console.warn('[Login] password reset email failed:', err?.code || err?.message);
+      setForgotMsg({ kind: 'err', text: t('auth.forgotError') });
+    } finally {
+      setForgotSending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-4 transition-colors duration-200">
       <div className="absolute top-4 right-4">
@@ -104,10 +137,10 @@ export default function Login() {
               className="w-[92%] h-[92%] object-contain"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {t('brand.portal')}
           </h1>
-          <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-1 text-sm font-medium">
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
             {t('brand.academicSystem')}
           </p>
         </motion.div>
@@ -130,7 +163,7 @@ export default function Login() {
             </button>
             <Link
               to="/student/login"
-              className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-white transition-all flex items-center justify-center gap-1.5"
             >
               <Shield size={14} />
               {t('auth.studentPortal')}
@@ -139,7 +172,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300 mb-1.5 block">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
                 {t('auth.academicEmail')}
               </label>
               <div className="relative">
@@ -151,19 +184,24 @@ export default function Login() {
                   placeholder="name@college.edu"
                   required
                   autoComplete="email"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                   {t('auth.password')}
                 </label>
-                <a href="#" className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={forgotSending}
+                  className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium disabled:opacity-60"
+                >
                   {t('auth.forgot')}
-                </a>
+                </button>
               </div>
               <div className="relative">
                 <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -174,7 +212,7 @@ export default function Login() {
                   placeholder="Enter account password"
                   required
                   autoComplete="current-password"
-                  className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
+                  className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
                 />
                 <button
                   type="button"
@@ -191,6 +229,22 @@ export default function Login() {
                 <span className="font-semibold">Signed out for inactivity.</span>
                 <span>Your session ended automatically after a period without activity. Please sign in again.</span>
               </div>
+            )}
+
+            {forgotMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-3 rounded-xl border text-xs font-medium ${
+                  forgotMsg.kind === 'ok'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                    : forgotMsg.kind === 'err'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                      : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
+                }`}
+              >
+                {forgotMsg.text}
+              </motion.div>
             )}
 
             {error && (
@@ -220,7 +274,7 @@ export default function Login() {
 
           {/* Bottom hint */}
           <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Students should sign in using the{' '}
               <Link to="/student/login" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">
                 Student Portal →

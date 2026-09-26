@@ -484,7 +484,7 @@ const SuperAdminUniversities: React.FC = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowSeedConfirm(false)}
-                className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm"
+                className="px-4 py-2 text-slate-700 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-sm"
               >
                 Cancel
               </button>

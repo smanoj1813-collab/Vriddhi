@@ -10,6 +10,7 @@ import { LanguageProvider } from './shared/contexts/LanguageProvider'
 import { NotificationProvider } from './shared/providers/NotificationProvider'
 import { PwaPrompts } from './shared/pwa/PwaPrompts'
 import IdleSessionTimeout from './modules/auth/components/IdleSessionTimeout'
+import MustChangePasswordGate from './modules/auth/components/MustChangePasswordGate'
 import ErrorBoundary from './shared/components/ErrorBoundary'
 import ConfigRequiredScreen from './components/ConfigRequiredScreen'
 import { firebaseConfigStatus } from './Firebase/config'
@@ -44,6 +45,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                     <App />
                     <PwaPrompts />
                     <IdleSessionTimeout />
+                    <MustChangePasswordGate />
                   </NotificationProvider>
                 </LanguageProvider>
               </AppThemeProvider>

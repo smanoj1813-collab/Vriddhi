@@ -178,11 +178,11 @@ function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
         <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <FileText className="w-4 h-4 text-amber-600" />
           Previous year question papers
-          <span className="text-[11px] font-medium text-slate-400">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
             — {papers ? `${papers.length} in prep_papers` : 'BBA · B.Com · B.Sc · BA · BBM, Karnataka universities'}
           </span>
         </span>
-        <ChevronRight className={'w-4 h-4 text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
+        <ChevronRight className={'w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
@@ -217,14 +217,14 @@ function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
                 </a>
               </div>
               <div className="flex items-center gap-2">
-                <Search className="w-3.5 h-3.5 text-slate-400" />
+                <Search className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <input
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                   placeholder="Filter by subject, program, university, year or code"
                   className="flex-1 max-w-md text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5"
                 />
-                <span className="text-[11px] text-slate-400">{visible.length} shown</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">{visible.length} shown</span>
               </div>
               <div className="max-h-72 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
                 {visible.map((p) => (
@@ -239,7 +239,7 @@ function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
                       <span className="font-semibold text-slate-800 dark:text-slate-100">{p.subjectName}</span>
                       <span className="text-slate-500"> — {p.programLabel} Sem {p.semester} · {p.universityName} · {p.examLabel}{p.paperCode ? ` · ${p.paperCode}` : ''}</span>
                     </span>
-                    <span className="shrink-0 text-slate-400">
+                    <span className="shrink-0 text-slate-500 dark:text-slate-400">
                       {p.questionCount} Q · {p.maxMarks} marks{p.status !== 'published' ? ' · DRAFT' : ''}
                     </span>
                   </a>
@@ -313,9 +313,9 @@ function CompanyPrepVisibilitySection() {
         <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Eye className="w-4 h-4 text-teal-600" />
           Company prep visibility per college
-          <span className="text-[11px] font-medium text-slate-400">— show / hide company guides for a specific college</span>
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">— show / hide company guides for a specific college</span>
         </span>
-        <ChevronRight className={'w-4 h-4 text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
+        <ChevronRight className={'w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
@@ -364,9 +364,9 @@ function CourseAssignmentsSection() {
         <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Award className="w-4 h-4 text-teal-600" />
           Course assignments per college
-          <span className="text-[11px] font-medium text-slate-400">— assign courses and copy student URLs</span>
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">— assign courses and copy student URLs</span>
         </span>
-        <ChevronRight className={'w-4 h-4 text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
+        <ChevronRight className={'w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
@@ -744,7 +744,7 @@ export default function PrepContentStudioTab() {
             {toast.type === 'ok' ? <Check className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
             <span>{toast.text}</span>
           </div>
-          <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600">×</button>
+          <button onClick={() => setToast(null)} className="text-slate-500 dark:text-slate-400 hover:text-slate-600">×</button>
         </div>
       )}
 
@@ -774,7 +774,7 @@ export default function PrepContentStudioTab() {
                     'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors ' +
                     (active
                       ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-300 dark:border-teal-700'
-                      : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 hover:text-slate-600')
+                      : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-700 dark:hover:text-slate-300')
                   }
                 >
                   {active ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
@@ -797,7 +797,7 @@ export default function PrepContentStudioTab() {
           </button>
           <button
             onClick={() => setShowNewSubject(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white dark:text-slate-900 text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             New Subject
@@ -818,7 +818,7 @@ export default function PrepContentStudioTab() {
         <div className="lg:col-span-4 space-y-4">
           {/* Filters */}
           <div className="p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 flex items-center gap-2 text-xs">
-            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <Filter className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
             <select
               value={filterTrack}
               onChange={(e) => setFilterTrack(e.target.value as 'all' | PrepTrack)}
@@ -840,7 +840,7 @@ export default function PrepContentStudioTab() {
               <option value="final-year">Final Year (Capstone)</option>
             </select>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Semester:</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Semester:</span>
               <select
                 value={filterSemester}
                 onChange={(e) => setFilterSemester(e.target.value)}
@@ -859,13 +859,13 @@ export default function PrepContentStudioTab() {
 
           {/* Subject Selector */}
           <div className="bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 max-h-72 overflow-y-auto space-y-1.5">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 pb-1">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 pb-1">
               Subjects ({filteredSubjects.length})
             </div>
             {loadingSubjects ? (
-              <div className="p-4 text-center text-xs text-slate-400">Loading subjects…</div>
+              <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading subjects…</div>
             ) : filteredSubjects.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-400">No subjects found. Tick a program (BBA, B.Com, BA, B.Sc, M.Com) or the Aptitude track above and press "Seed".</div>
+              <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No subjects found. Tick a program (BBA, B.Com, BA, B.Sc, M.Com) or the Aptitude track above and press "Seed".</div>
             ) : (
               filteredSubjects.map((s) => (
                 <button
@@ -879,7 +879,7 @@ export default function PrepContentStudioTab() {
                 >
                   <div className="truncate pr-2">
                     <p className="truncate font-bold">{s.name}</p>
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       {effectivePrepTrack(s) === 'aptitude'
                         ? `Placement aptitude · all programs`
                         : `${formatStreamLabel(s.stream)} · ${s.yearGroup || 'All'}`}
@@ -896,7 +896,7 @@ export default function PrepContentStudioTab() {
           {/* Topics for Selected Subject */}
           <div className="bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 space-y-2">
             <div className="flex items-center justify-between px-2 pb-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Topics ({topics.length})
               </span>
               <button
@@ -910,9 +910,9 @@ export default function PrepContentStudioTab() {
 
             <div className="max-h-80 overflow-y-auto space-y-1">
               {loadingTopics ? (
-                <div className="p-4 text-center text-xs text-slate-400">Loading topics…</div>
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading topics…</div>
               ) : topics.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-400">No topics in this subject yet.</div>
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No topics in this subject yet.</div>
               ) : (
                 topics.map((t) => {
                   const badge = formatDifficultyBadge(t.difficulty);
@@ -967,7 +967,7 @@ export default function PrepContentStudioTab() {
                     >
                       {activeTopic.status}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400">v{activeTopic.contentVersion || 1}</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">v{activeTopic.contentVersion || 1}</span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Subject: {selectedSubject?.name} · Difficulty: {activeTopic.difficulty} · Tier: {activeTopic.tier}
@@ -1026,7 +1026,7 @@ export default function PrepContentStudioTab() {
 
                 <div>
                   <div className="flex items-center justify-between pb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Sub-topics &amp; briefs ({subtopicRows.length})
                     </span>
                     <button
@@ -1037,7 +1037,7 @@ export default function PrepContentStudioTab() {
                       + Add Sub-topic
                     </button>
                   </div>
-                  <p className="text-[11px] text-slate-400 mb-2">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                     Each sub-topic gets a title and a 1–3 sentence brief. Briefs are shown to learners on the public topic page under “What this topic covers”.
                   </p>
                   {subtopicRows.length > 0 ? (
@@ -1048,7 +1048,7 @@ export default function PrepContentStudioTab() {
                           className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2.5"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono text-slate-400 w-5 shrink-0">{sIdx + 1}.</span>
+                            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 w-5 shrink-0">{sIdx + 1}.</span>
                             <input
                               type="text"
                               value={st.title}
@@ -1064,7 +1064,7 @@ export default function PrepContentStudioTab() {
                               type="button"
                               onClick={() => updateSubtopics(subtopicRows.filter((_, idx) => idx !== sIdx))}
                               aria-label={`Remove sub-topic ${sIdx + 1}`}
-                              className="text-slate-400 hover:text-rose-500 font-bold px-1"
+                              className="text-slate-500 dark:text-slate-400 hover:text-rose-500 font-bold px-1"
                             >
                               ×
                             </button>
@@ -1087,7 +1087,7 @@ export default function PrepContentStudioTab() {
                       ))}
                     </div>
                   ) : (
-                    <span className="text-[11px] text-slate-400 italic">No sub-topics defined yet.</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">No sub-topics defined yet.</span>
                   )}
                 </div>
               </div>
@@ -1193,7 +1193,7 @@ export default function PrepContentStudioTab() {
                   </div>
 
                   {activeTopic.formulas?.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 border border-dashed rounded-xl">
+                    <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed rounded-xl">
                       No formula cards added for this topic yet.
                     </div>
                   ) : (
@@ -1216,14 +1216,14 @@ export default function PrepContentStudioTab() {
                               const updated = activeTopic.formulas.filter((_, idx) => idx !== i);
                               setActiveTopic({ ...activeTopic, formulas: updated });
                             }}
-                            className="text-slate-400 hover:text-rose-500"
+                            className="text-slate-500 dark:text-slate-400 hover:text-rose-500"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
                         <div>
-                          <label className="text-[10px] font-bold uppercase text-slate-400">Formula / Equation</label>
+                          <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Formula / Equation</label>
                           <input
                             type="text"
                             value={f.formula}
@@ -1239,7 +1239,7 @@ export default function PrepContentStudioTab() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                           <div>
-                            <label className="text-[10px] font-bold uppercase text-slate-400">Example Question</label>
+                            <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Example Question</label>
                             <textarea
                               rows={2}
                               value={f.exampleQ}
@@ -1253,7 +1253,7 @@ export default function PrepContentStudioTab() {
                             />
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold uppercase text-slate-400">Solution / Answer</label>
+                            <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Solution / Answer</label>
                             <textarea
                               rows={2}
                               value={f.exampleA}
@@ -1300,7 +1300,7 @@ export default function PrepContentStudioTab() {
                   </div>
 
                   {activeTopic.tricks?.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 border border-dashed rounded-xl">
+                    <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed rounded-xl">
                       No shortcuts or tricks added yet.
                     </div>
                   ) : (
@@ -1322,7 +1322,7 @@ export default function PrepContentStudioTab() {
                               const updated = activeTopic.tricks.filter((_, idx) => idx !== i);
                               setActiveTopic({ ...activeTopic, tricks: updated });
                             }}
-                            className="text-slate-400 hover:text-rose-500"
+                            className="text-slate-500 dark:text-slate-400 hover:text-rose-500"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1339,7 +1339,7 @@ export default function PrepContentStudioTab() {
                           placeholder="Shortcut / mnemonic..."
                         />
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="text-[10px] font-bold text-slate-400">When to use:</span>
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">When to use:</span>
                           <input
                             type="text"
                             value={t.whenToUse}
@@ -1384,7 +1384,7 @@ export default function PrepContentStudioTab() {
                   </div>
 
                   {activeTopic.howToSolve?.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 border border-dashed rounded-xl">
+                    <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed rounded-xl">
                       No step framework defined yet.
                     </div>
                   ) : (
@@ -1417,7 +1417,7 @@ export default function PrepContentStudioTab() {
                               const updated = activeTopic.howToSolve.filter((_, idx) => idx !== i);
                               setActiveTopic({ ...activeTopic, howToSolve: updated });
                             }}
-                            className="text-slate-400 hover:text-rose-500"
+                            className="text-slate-500 dark:text-slate-400 hover:text-rose-500"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1457,7 +1457,7 @@ export default function PrepContentStudioTab() {
                   </div>
 
                   {practicePool.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 border border-dashed rounded-xl">
+                    <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed rounded-xl">
                       {loadingPractice ? 'Sampling questions…' : 'No practice questions matched. Click Refresh Sample.'}
                     </div>
                   ) : (
@@ -1493,9 +1493,9 @@ export default function PrepContentStudioTab() {
             </div>
           ) : (
             <div className="p-12 text-center bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/50 space-y-3">
-              <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+              <BookOpen className="w-8 h-8 text-slate-400 dark:text-slate-400 mx-auto" />
               <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">Select a Topic from the Left Panel</h4>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                 Select any BBA subject and topic to view or edit the explanation, formula sheet, tricks, and step-by-step solver.
               </p>
             </div>

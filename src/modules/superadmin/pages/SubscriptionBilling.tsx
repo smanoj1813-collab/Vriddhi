@@ -19,29 +19,29 @@ import {
 import type { SubscriptionPlan, CollegeSubscription, PaymentHistory, RenewalAlert, PaymentStatus } from '../api/superAdminApi'
 
 const PLAN_COLORS: Record<string, { bg: string; border: string; text: string; icon: string }> = {
-  basic: { bg: 'bg-slate-800', border: 'border-slate-600', text: 'text-slate-300', icon: 'text-slate-400' },
-  standard: { bg: 'bg-blue-900/30', border: 'border-blue-600/50', text: 'text-blue-300', icon: 'text-blue-400' },
-  premium: { bg: 'bg-purple-900/30', border: 'border-purple-600/50', text: 'text-purple-300', icon: 'text-purple-400' },
-  enterprise: { bg: 'bg-amber-900/30', border: 'border-amber-600/50', text: 'text-amber-300', icon: 'text-amber-400' },
+  basic: { bg: 'bg-slate-50 dark:bg-slate-800', border: 'border-slate-300 dark:border-slate-600', text: 'text-slate-600 dark:text-slate-300', icon: 'text-slate-500 dark:text-slate-400' },
+  standard: { bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-600/50', text: 'text-blue-600 dark:text-blue-300', icon: 'text-blue-600 dark:text-blue-400' },
+  premium: { bg: 'bg-purple-50 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-600/50', text: 'text-purple-600 dark:text-purple-300', icon: 'text-purple-600 dark:text-purple-400' },
+  enterprise: { bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-200 dark:border-amber-600/50', text: 'text-amber-600 dark:text-amber-300', icon: 'text-amber-600 dark:text-amber-400' },
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  active: { bg: 'bg-green-500/10', text: 'text-green-400' },
-  trial: { bg: 'bg-blue-500/10', text: 'text-blue-400' },
-  trialing: { bg: 'bg-blue-500/10', text: 'text-blue-400' },
-  expired: { bg: 'bg-red-500/10', text: 'text-red-400' },
-  suspended: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
-  cancelled: { bg: 'bg-slate-500/10', text: 'text-slate-400' },
-  past_due: { bg: 'bg-orange-500/10', text: 'text-orange-400' },
-  canceled: { bg: 'bg-slate-500/10', text: 'text-slate-400' },
+  active: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400' },
+  trial: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400' },
+  trialing: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400' },
+  expired: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400' },
+  suspended: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400' },
+  cancelled: { bg: 'bg-slate-500/10', text: 'text-slate-500 dark:text-slate-400' },
+  past_due: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400' },
+  canceled: { bg: 'bg-slate-500/10', text: 'text-slate-500 dark:text-slate-400' },
 }
 
 const PAYMENT_STATUS_COLORS: Record<PaymentStatus, { bg: string; text: string; icon: any }> = {
-  paid: { bg: 'bg-green-500/10', text: 'text-green-400', icon: CheckCircle2 },
-  pending: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', icon: Clock },
-  overdue: { bg: 'bg-red-500/10', text: 'text-red-400', icon: AlertTriangle },
-  failed: { bg: 'bg-red-500/10', text: 'text-red-400', icon: XCircle },
-  refunded: { bg: 'bg-slate-500/10', text: 'text-slate-400', icon: Minus },
+  paid: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', icon: CheckCircle2 },
+  pending: { bg: 'bg-yellow-500/10', text: 'text-yellow-600 dark:text-yellow-400', icon: Clock },
+  overdue: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', icon: AlertTriangle },
+  failed: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', icon: XCircle },
+  refunded: { bg: 'bg-slate-500/10', text: 'text-slate-500 dark:text-slate-400', icon: Minus },
 }
 
 const PlanCard: React.FC<{ plan: SubscriptionPlan; isPopular?: boolean }> = ({ plan, isPopular }) => {
@@ -71,7 +71,7 @@ const PlanCard: React.FC<{ plan: SubscriptionPlan; isPopular?: boolean }> = ({ p
       <ul className="space-y-2 mb-5">
         {plan.features.map((feature, i) => (
           <li key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400 shrink-0" />
             {feature}
           </li>
         ))}
@@ -108,7 +108,7 @@ const SubscriptionRow: React.FC<{
   const storagePercent = Math.min((storageUsedGB / sub.plan.maxStorageGB) * 100, 100)
 
   return (
-    <div className="glass-card p-5 mb-4 hover:border-slate-600 transition-colors">
+    <div className="glass-card p-5 mb-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center`}>
@@ -136,7 +136,7 @@ const SubscriptionRow: React.FC<{
         <div>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-slate-600 dark:text-slate-400">Students</span>
-            <span className={`font-medium ${studentPercent > 90 ? 'text-red-400' : studentPercent > 75 ? 'text-yellow-400' : 'text-slate-300'}`}>
+            <span className={`font-medium ${studentPercent > 90 ? 'text-red-600 dark:text-red-400' : studentPercent > 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-600 dark:text-slate-300'}`}>
               {studentsUsed.toLocaleString()} / {sub.plan.maxStudents === 999999 ? '∞' : sub.plan.maxStudents.toLocaleString()}
             </span>
           </div>
@@ -160,7 +160,7 @@ const SubscriptionRow: React.FC<{
         <div>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-slate-600 dark:text-slate-400">Storage</span>
-            <span className={`font-medium ${storagePercent > 90 ? 'text-red-400' : storagePercent > 75 ? 'text-yellow-400' : 'text-slate-300'}`}>
+            <span className={`font-medium ${storagePercent > 90 ? 'text-red-600 dark:text-red-400' : storagePercent > 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-600 dark:text-slate-300'}`}>
               {storageUsedGB.toFixed(1)}GB / {sub.plan.maxStorageGB === 999999 ? '∞' : `${sub.plan.maxStorageGB}GB`}
             </span>
           </div>
@@ -303,11 +303,11 @@ const SubscriptionBilling: React.FC = () => {
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-400" />
+            <ArrowLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <CreditCard className="w-6 h-6 text-emerald-400" />
+              <CreditCard className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subscription & Billing</h1>
             </div>
             <p className="text-slate-600 dark:text-slate-400 text-sm">Manage college plans, payments, and renewals</p>
@@ -321,7 +321,7 @@ const SubscriptionBilling: React.FC = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search colleges..."
-              className="pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-64"
+              className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-64"
             />
           </div>
         </div>
@@ -345,7 +345,7 @@ const SubscriptionBilling: React.FC = () => {
                 {!alert.autoRenewEnabled && (
                   <button
                     onClick={() => handleSendReminder(alert.collegeId)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
                   >
                     <Mail className="w-3 h-3" /> Send Reminder
                   </button>
@@ -408,11 +408,11 @@ const SubscriptionBilling: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-slate-400" />
+              <Filter className="w-4 h-4 text-slate-500 dark:text-slate-400" />
               <select
                 value={paymentFilter}
                 onChange={e => setPaymentFilter(e.target.value as PaymentStatus | 'all')}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none"
+                className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none"
               >
                 <option value="all">All Status</option>
                 <option value="paid">Paid</option>
@@ -422,11 +422,11 @@ const SubscriptionBilling: React.FC = () => {
                 <option value="refunded">Refunded</option>
               </select>
             </div>
-            <button onClick={handleExportPayments} className="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-300 bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+            <button onClick={handleExportPayments} className="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
               <Download className="w-4 h-4" /> Export
             </button>
           </div>
-          <div className="glass-card overflow-hidden">
+          <div className="glass-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
@@ -478,7 +478,7 @@ const SubscriptionBilling: React.FC = () => {
 
       {/* Alerts Tab */}
       {activeTab === 'alerts' && (
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
@@ -494,10 +494,10 @@ const SubscriptionBilling: React.FC = () => {
             <tbody>
               {alerts?.map((alert: RenewalAlert) => {
                 const statusColors: Record<string, { bg: string; text: string; icon: any }> = {
-                  urgent: { bg: 'bg-red-500/10', text: 'text-red-400', icon: AlertTriangle },
-                  warning: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', icon: Clock },
-                  info: { bg: 'bg-blue-500/10', text: 'text-blue-400', icon: Bell },
-                  notice: { bg: 'bg-blue-500/10', text: 'text-blue-400', icon: Bell },
+                  urgent: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', icon: AlertTriangle },
+                  warning: { bg: 'bg-yellow-500/10', text: 'text-yellow-600 dark:text-yellow-400', icon: Clock },
+                  info: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', icon: Bell },
+                  notice: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', icon: Bell },
                 }
                 const sc = statusColors[alert.status] || statusColors.info
                 const Icon = sc.icon
@@ -506,16 +506,16 @@ const SubscriptionBilling: React.FC = () => {
                     <td className="px-4 py-3 text-slate-900 dark:text-white font-medium">{alert.collegeName}</td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{alert.planName}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`font-bold ${alert.daysUntilExpiry < 0 ? 'text-red-400' : alert.daysUntilExpiry <= 7 ? 'text-yellow-400' : 'text-slate-300'}`}>
+                      <span className={`font-bold ${alert.daysUntilExpiry < 0 ? 'text-red-600 dark:text-red-400' : alert.daysUntilExpiry <= 7 ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-600 dark:text-slate-300'}`}>
                         {alert.daysUntilExpiry < 0 ? `${Math.abs(alert.daysUntilExpiry)} days overdue` : `${alert.daysUntilExpiry} days`}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-slate-900 dark:text-white">₹{alert.amount.toLocaleString()}</td>
                     <td className="px-4 py-3 text-center">
                       {alert.autoRenewEnabled ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-400 mx-auto" />
+                        <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 mx-auto" />
                       ) : (
-                        <XCircle className="w-4 h-4 text-red-400 mx-auto" />
+                        <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 mx-auto" />
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -532,7 +532,7 @@ const SubscriptionBilling: React.FC = () => {
                             className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                             title="Send reminder"
                           >
-                            <Mail className="w-3.5 h-3.5 text-slate-400" />
+                            <Mail className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                           </button>
                         )}
                         <button

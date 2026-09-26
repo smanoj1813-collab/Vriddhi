@@ -57,12 +57,12 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-lg z-50">
-      <p className="text-xs font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-2">{label}</p>
+      <p className="text-xs font-bold text-slate-900 dark:text-white mb-2">{label}</p>
       {payload.map((entry: any, idx: number) => (
         <div key={idx} className="flex items-center gap-2 text-xs">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-slate-500 dark:text-slate-400">{entry.name}:</span>
-          <span className="text-slate-900 dark:text-slate-900 dark:text-white font-bold">
+          <span className="text-slate-900 dark:text-white font-bold">
             {typeof entry.value === 'number' ? `₹${entry.value.toLocaleString('en-IN')}` : entry.value}
           </span>
         </div>
@@ -83,9 +83,9 @@ function StatCard({ label, value, subtext, icon: Icon, color, loading }: any) {
       {loading ? (
         <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
       ) : (
-        <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white">{value}</p>
+        <p className="text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
       )}
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-1">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">{label}</p>
       {subtext && <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-medium">{subtext}</p>}
     </div>
   )
@@ -148,7 +148,7 @@ function PayFeeModal({
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-200">
               <CheckCircle className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white mb-2">
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">
               {proofSent ? 'Proof submitted!' : 'Payment successful!'}
             </h2>
             <p className="text-xs text-slate-500 mb-6">
@@ -163,7 +163,7 @@ function PayFeeModal({
         ) : (
           <>
             <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-teal-600" />
                 Pay Fee
               </h2>
@@ -468,16 +468,16 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <DollarSign className="text-teal-600" /> Student Fee Portal
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mt-0.5">
+          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Review academic dues, complete online fee payments, and download official receipts
           </p>
         </div>
         <button
           onClick={refreshData}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors shadow-xs self-start"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors shadow-xs self-start"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh Records
@@ -524,7 +524,7 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payment Status Distribution */}
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-1">Fee Status Breakdown</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Fee Status Breakdown</h3>
           <p className="text-xs text-slate-500 mb-4">Distribution by payment settlement category</p>
           {loading ? (
             <div className="h-[200px] flex items-center justify-center">
@@ -555,8 +555,8 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                 {statusData.map((item) => (
                   <div key={item.name} className="flex items-center gap-1.5 text-xs font-semibold">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-slate-600 dark:text-slate-600 dark:text-slate-400">{item.name}:</span>
-                    <span className="text-slate-900 dark:text-slate-900 dark:text-white font-bold">{item.value}</span>
+                    <span className="text-slate-600 dark:text-slate-400">{item.name}:</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -566,7 +566,7 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
 
         {/* Monthly Payment Trend */}
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-1">Monthly Billing Trend</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Monthly Billing Trend</h3>
           <p className="text-xs text-slate-500 mb-4">Monthly billed vs paid comparison</p>
           {loading ? (
             <div className="h-[200px] flex items-center justify-center">
@@ -603,7 +603,7 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                   activeTab === tab.id
                     ? 'bg-teal-600 text-slate-900 dark:text-white shadow-sm shadow-teal-600/20'
-                    : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {tab.label} ({tab.count})
@@ -642,14 +642,14 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                   const CatIcon = catConfig.icon
 
                   return (
-                    <tr key={payment.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr key={payment.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-xl ${catConfig.color} flex items-center justify-center shrink-0`}>
                             <CatIcon className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 dark:text-slate-900 dark:text-white capitalize">{payment.category} Fee</p>
+                            <p className="font-bold text-slate-900 dark:text-white capitalize">{payment.category} Fee</p>
                             <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">{payment.dueDate}</p>
                             {(discount > 0 || lateFine > 0) && (
                               <p className="text-[10px] font-semibold mt-0.5 flex items-center gap-1.5">
@@ -660,13 +660,13 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-5 text-right font-bold text-slate-900 dark:text-slate-900 dark:text-white">
+                      <td className="py-3.5 px-5 text-right font-bold text-slate-900 dark:text-white">
                         ₹{payment.amount.toLocaleString('en-IN')}
                       </td>
                       <td className="py-3.5 px-5 text-right text-emerald-600 font-bold">
                         ₹{payment.paidAmount.toLocaleString('en-IN')}
                       </td>
-                      <td className="py-3.5 px-5 text-right font-extrabold text-amber-600 dark:text-amber-600 dark:text-amber-400">
+                      <td className="py-3.5 px-5 text-right font-extrabold text-amber-600 dark:text-amber-400">
                         ₹{remaining.toLocaleString('en-IN')}
                       </td>
                       <td className="py-3.5 px-5 text-center">
@@ -710,7 +710,7 @@ export default function StudentFeePortal({ studentId: studentIdProp }: { student
         {filteredPayments.length === 0 && !loading && (
           <div className="p-12 text-center">
             <FileText className="w-10 h-10 text-slate-700 dark:text-slate-300 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-700 dark:text-slate-300">No invoices under this category</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No invoices under this category</p>
           </div>
         )}
       </div>

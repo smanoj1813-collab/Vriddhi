@@ -1,9 +1,11 @@
+import { PageSkeleton } from "../../../shared/components/Skeleton";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useAdmins,
   useCreateAdmin,
   useUpdateAdminStatus,
+  useResetOfficeStaffPassword,
   useColleges,
   useFacultyList,
   usePromoteToAdmin,
@@ -17,6 +19,7 @@ import {
   Eye,
   Power,
   PowerOff,
+  KeyRound,
   UserPlus,
   X,
   Check,
@@ -87,6 +90,17 @@ const SuperAdminAdmins: React.FC = () => {
   const createAdmin = useCreateAdmin();
   const updateAdminStatus = useUpdateAdminStatus();
   const promoteToAdmin = usePromoteToAdmin();
+  const resetOfficePassword = useResetOfficeStaffPassword();
+
+  // One-time credential display for office-staff password resets. The temp
+  // password exists only in this state — closing the modal destroys it for
+  // good, exactly like the Create Admin flow.
+  const [resetResult, setResetResult] = useState<{
+    name: string;
+    email: string;
+    temporaryPassword: string;
+  } | null>(null);
+  const [copiedTemp, setCopiedTemp] = useState(false);
 
   const admins = adminsData?.items || [];
   const colleges = collegesData?.items || [];
@@ -178,10 +192,49 @@ const SuperAdminAdmins: React.FC = () => {
     }
   };
 
+  // Office staff (accounts / operations) sign in with a generated one-time
+  // password that is never stored. If it is lost, `auth/invalid-credential`
+  // is the only symptom — this reissues a fresh one via manageOfficeStaff.
+  const handleResetOfficePassword = async (admin: Admin) => {
+    const confirmed = window.confirm(
+      `Issue a new one-time password for ${admin.name} (${admin.email})?\n\n` +
+        "Their current password stops working immediately and any signed-in " +
+        "session is signed out. The new password is shown exactly once — " +
+        "copy it before closing."
+    );
+    if (!confirmed) return;
+    try {
+      const result = await resetOfficePassword.mutateAsync({ uid: admin.id });
+      setCopiedTemp(false);
+      setResetResult({
+        name: admin.name,
+        email: admin.email,
+        temporaryPassword: result.temporaryPassword,
+      });
+    } catch (err: any) {
+      showError(err?.message || "Failed to reset password");
+    }
+  };
+
+  const copyTemporaryPassword = async () => {
+    if (!resetResult) return;
+    try {
+      await navigator.clipboard.writeText(resetResult.temporaryPassword);
+      setCopiedTemp(true);
+      window.setTimeout(() => setCopiedTemp(false), 1500);
+    } catch {
+      // Clipboard can be blocked (insecure context, permissions) — fall back
+      // to a manual copy prompt rather than losing the only copy.
+      window.prompt("Copy this one-time password", resetResult.temporaryPassword);
+    }
+  };
+
   if (isLoading) {
+    // Skeleton shaped like the loaded page — reads as "arriving" instead of
+    // "waiting", and the table frame stops the layout jumping on swap.
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 dark:border-teal-400" />
+      <div className="page-container">
+        <PageSkeleton stats={0} rows={8} cols={6} />
       </div>
     );
   }
@@ -302,7 +355,7 @@ const SuperAdminAdmins: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
@@ -376,6 +429,20 @@ const SuperAdminAdmins: React.FC = () => {
                         <Power className="w-4 h-4" />
                       )}
                     </button>
+                    {(admin.role === "accounts" || admin.role === "operations") && (
+                      <button
+                        onClick={() => handleResetOfficePassword(admin)}
+                        disabled={resetOfficePassword.isPending}
+                        className="p-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50"
+                        title="Reset password — issues a new one-time password"
+                      >
+                        {resetOfficePassword.isPending ? (
+                          <Loader2 className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin" />
+                        ) : (
+                          <KeyRound className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={() => setSelectedAdmin(admin)}
                       className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -760,6 +827,60 @@ const SuperAdminAdmins: React.FC = () => {
               className="w-full mt-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
             >
               Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── One-Time Password Modal (office staff reset) ─── */}
+      {resetResult && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-amber-500" />
+                New one-time password
+              </h2>
+              <button
+                onClick={() => setResetResult(null)}
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-1">
+              {resetResult.name} · {resetResult.email}
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mb-4">
+              Shown exactly once — it is not stored anywhere and cannot be
+              recovered after you close this window. Share it over a trusted
+              channel; the account must change it after signing in.
+            </p>
+
+            <div className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 p-3">
+              <code className="flex-1 font-mono text-sm text-slate-900 dark:text-white break-all select-all">
+                {resetResult.temporaryPassword}
+              </code>
+              <button
+                onClick={copyTemporaryPassword}
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-colors"
+              >
+                {copiedTemp ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" /> Copied
+                  </>
+                ) : (
+                  "Copy"
+                )}
+              </button>
+            </div>
+
+            <button
+              onClick={() => setResetResult(null)}
+              className="w-full mt-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
+            >
+              I have copied it — close
             </button>
           </div>
         </div>

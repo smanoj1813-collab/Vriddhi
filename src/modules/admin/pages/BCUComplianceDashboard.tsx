@@ -206,7 +206,7 @@ export default function BCUComplianceDashboard() {
                 row.eligible ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800'
               }`}>
                 <div className="flex items-center gap-3">
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white bg-${row.color}-500`}
+                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-slate-900 dark:text-white bg-${row.color}-500`}
                     style={{ backgroundColor: row.color === 'emerald' ? '#10b981' : row.color === 'teal' ? '#14b8a6' : row.color === 'blue' ? '#3b82f6' : row.color === 'amber' ? '#f59e0b' : '#ef4444' }}>
                     {row.marks}
                   </span>
@@ -341,7 +341,7 @@ export default function BCUComplianceDashboard() {
               <p className="text-lg font-black">{g.grade}</p>
               <p className="text-xs font-bold text-teal-600">{g.gp} GP</p>
               <p className="text-[10px] text-slate-500 mt-1">{g.range}</p>
-              <p className="text-[10px] text-slate-400">{g.label}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">{g.label}</p>
             </div>
           ))}
         </div>
@@ -354,7 +354,7 @@ export default function BCUComplianceDashboard() {
           Compliance Actions for Your College
         </h3>
         <div className="grid md:grid-cols-2 gap-4 mt-4">
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+          <div className="bg-slate-500/10 dark:bg-white/10 backdrop-blur rounded-xl p-4">
             <h4 className="font-bold text-sm">✅ Already in Vriddhi</h4>
             <ul className="text-sm mt-2 space-y-1 text-teal-50">
               <li>• Attendance tracking per student</li>
@@ -363,7 +363,7 @@ export default function BCUComplianceDashboard() {
               <li>• Kannada + English medium support</li>
             </ul>
           </div>
-          <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+          <div className="bg-slate-500/10 dark:bg-white/10 backdrop-blur rounded-xl p-4">
             <h4 className="font-bold text-sm">🚧 Needs Implementation</h4>
             <ul className="text-sm mt-2 space-y-1 text-teal-50">
               <li>• Auto-block &lt;75% attendance for hall tickets</li>

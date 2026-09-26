@@ -895,7 +895,7 @@ function Modal({ title, subtitle, onClose, children, footer, wide = false }: { t
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
             {subtitle && <p className="text-xs text-vriddhi-muted">{subtitle}</p>}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-vriddhi-muted" /></button>
+          <button onClick={onClose} className="p-2 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-vriddhi-muted" /></button>
         </div>
         <div className="p-5">{children}</div>
         {footer && <div className="p-5 border-t border-vriddhi-border flex gap-3">{footer}</div>}

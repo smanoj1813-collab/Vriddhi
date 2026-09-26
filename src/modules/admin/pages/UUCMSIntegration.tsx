@@ -377,7 +377,7 @@ UUCMS20240002,BCU2024BCA002,Priya S,priya@example.com,9876543211,BCA,2024-25,3,f
             </div>
 
             <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center">
-              <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <FileSpreadsheet className="w-12 h-12 text-slate-600 dark:text-slate-300 mx-auto mb-3" />
               <h4 className="font-bold text-slate-700 dark:text-slate-300">Upload UUCMS Export CSV</h4>
               <p className="text-sm text-slate-500 mt-1 mb-4">
                 Export from UUCMS Portal: Student Management to Admitted Students to Export
@@ -519,7 +519,7 @@ UUCMS20240002,BCU2024BCA002,Priya S,priya@example.com,9876543211,BCA,2024-25,3,f
                           {getUUCMSStatusLabel(student.uucmsStatus)}
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400">-</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">-</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-500">

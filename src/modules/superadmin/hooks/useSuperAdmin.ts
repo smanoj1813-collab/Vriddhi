@@ -47,6 +47,7 @@ import {
   deleteFaculty,
   toggleFacultyStatus,
   resetFacultyPassword,
+  resetOfficeStaffPassword,
   type CredentialResetResult,
   resetStudentPassword,
   bulkResetStudentPasswords,
@@ -258,6 +259,21 @@ export const useUpdateAdminStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: superAdminKeys.admins() });
     },
+  });
+};
+
+/**
+ * Reissue the one-time password for an office-staff account (accounts /
+ * operations). The temporary password is returned once and never persisted —
+ * the UI must show it immediately with a copy affordance.
+ */
+export const useResetOfficeStaffPassword = () => {
+  return useMutation<
+    { ok: boolean; uid: string; temporaryPassword: string },
+    SuperAdminApiError,
+    { uid: string }
+  >({
+    mutationFn: ({ uid }) => resetOfficeStaffPassword(uid),
   });
 };
 

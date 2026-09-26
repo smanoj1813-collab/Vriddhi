@@ -678,6 +678,42 @@ export async function updateAdminStatus(adminId: string, status: "active" | "ina
   await updateDoc(doc(db, "admins", adminId), { status, updatedAt: Timestamp.now() });
 }
 
+/**
+ * Rotate an office-staff credential (accounts / operations) server-side.
+ *
+ * `manageOfficeStaff({ action: 'resetPassword' })` sets a fresh random
+ * password in Firebase Auth, flags the account `mustChangePassword` and
+ * returns the temporary password EXACTLY ONCE — it is never persisted
+ * anywhere. The caller must show it immediately with a copy affordance.
+ *
+ * Why this exists: office staff created through the grant flow sign in with a
+ * generated one-time password. If that password is lost there was previously
+ * no UI path to reissue it (the bulk credential reset page only lists students
+ * and faculty), which left the account locked out with `auth/invalid-credential`
+ * despite a perfectly healthy identity.
+ */
+export async function resetOfficeStaffPassword(
+  uid: string
+): Promise<{ ok: boolean; uid: string; temporaryPassword: string }> {
+  const call = httpsCallable<
+    { action: string; uid: string },
+    { ok: boolean; uid: string; temporaryPassword: string }
+  >(functions, "manageOfficeStaff");
+
+  let result;
+  try {
+    result = await call({ action: "resetPassword", uid });
+  } catch (error) {
+    throw new SuperAdminApiError(describeIdentityError(error, "manageOfficeStaff"));
+  }
+
+  const temporaryPassword = result.data?.temporaryPassword;
+  if (!temporaryPassword) {
+    throw new SuperAdminApiError("Password reset did not return a temporary password");
+  }
+  return { ok: true, uid, temporaryPassword };
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // STUDENT API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════

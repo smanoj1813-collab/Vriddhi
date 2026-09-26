@@ -103,8 +103,8 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color = 'teal' }: 
     <div className="glass-card p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-1">{label}</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">{value}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
           {trend && (
             <p className={`text-xs mt-2 flex items-center gap-1 ${trendUp ? 'text-teal-400' : 'text-rose-400'}`}>
               <TrendingUp size={12} className={trendUp ? '' : 'rotate-180'} />
@@ -131,7 +131,7 @@ function SectionHeader({ title, icon: Icon, action }: {
         <div className="p-2 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
           <Icon size={20} />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">{title}</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h2>
       </div>
       {action}
     </div>
@@ -377,36 +377,36 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
             {filtered.map(user => {
               const RoleIcon = roleIcons[user.role] || UserIcon
               return (
-                <tr key={user.id} className="hover:bg-slate-200/30 dark:hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
+                <tr key={user.id} className="hover:bg-slate-200/30 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-400 font-bold text-sm">
                         {getInitials(user.name)}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-900 dark:text-white">{user.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">{user.email}</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{user.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
                       <RoleIcon size={14} className="text-slate-500" />
-                      <span className="capitalize text-slate-600 dark:text-slate-700 dark:text-slate-300">{user.role === 'admin' ? 'Principal' : user.role}</span>
+                      <span className="capitalize text-slate-600 dark:text-slate-300">{user.role === 'admin' ? 'Principal' : user.role}</span>
                     </div>
                   </td>
-                  <td className="table-cell text-slate-600 dark:text-slate-700 dark:text-slate-300">{user.department}</td>
+                  <td className="table-cell text-slate-600 dark:text-slate-300">{user.department}</td>
                   <td className="table-cell">
                     <Badge variant={user.status === 'active' ? 'success' : user.status === 'pending' ? 'warning' : 'danger'}>
                       {user.status}
                     </Badge>
                   </td>
-                  <td className="table-cell text-slate-500 dark:text-slate-600 dark:text-slate-400 text-xs">{user.lastActive}</td>
+                  <td className="table-cell text-slate-500 dark:text-slate-400 text-xs">{user.lastActive}</td>
                   <td className="table-cell text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white transition-colors"><Eye size={14} /></button>
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white transition-colors"><Edit3 size={14} /></button>
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-400 transition-colors"><Trash2 size={14} /></button>
+                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><Eye size={14} /></button>
+                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><Edit3 size={14} /></button>
+                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-400 transition-colors"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -432,23 +432,23 @@ function DepartmentOverview({ departments }: { departments: Department[] }) {
           <div key={dept.id} className="glass-card-hover p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white">{dept.name}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">Code: {dept.code} | HOD: {dept.hod}</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{dept.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Code: {dept.code} | HOD: {dept.hod}</p>
               </div>
               <Badge variant="info">{dept.code}</Badge>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 rounded-xl bg-slate-100/50 dark:bg-slate-50 dark:bg-slate-900/50">
-                <p className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">{dept.facultyCount}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Faculty</p>
+              <div className="text-center p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
+                <p className="text-xl font-bold text-slate-900 dark:text-white">{dept.facultyCount}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Faculty</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-slate-100/50 dark:bg-slate-50 dark:bg-slate-900/50">
-                <p className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">{dept.studentCount}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Students</p>
+              <div className="text-center p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
+                <p className="text-xl font-bold text-slate-900 dark:text-white">{dept.studentCount}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Students</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-slate-100/50 dark:bg-slate-50 dark:bg-slate-900/50">
-                <p className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">{dept.courses}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Courses</p>
+              <div className="text-center p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
+                <p className="text-xl font-bold text-slate-900 dark:text-white">{dept.courses}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Courses</p>
               </div>
             </div>
           </div>
@@ -457,7 +457,7 @@ function DepartmentOverview({ departments }: { departments: Department[] }) {
 
       {departments.length > 0 && (
         <div className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4">Department Performance</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Department Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={departments}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -487,7 +487,7 @@ function ReportsAnalytics({ totalStudents, totalFaculty }: { totalStudents: numb
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4">Role Distribution</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Role Distribution</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={roleDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value">
@@ -736,8 +736,8 @@ export default function AdminDashboard() {
             <div className="glass-card p-6 bg-teal-500/5 border border-teal-500/20">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-1">Welcome back, {user?.name?.split(' ')[0] || 'Principal'}</h2>
-                  <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Welcome back, {user?.name?.split(' ')[0] || 'Principal'}</h2>
+                  <p className="text-slate-500 dark:text-slate-400">
                     College-wide administration and oversight · {dashboardData.departments.length} Departments · {dashboardData.totalStudents} Students
                   </p>
                 </div>
@@ -759,15 +759,15 @@ export default function AdminDashboard() {
 
               <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white">Departments</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Departments</h3>
                   <Badge variant="info">{dashboardData.departments.length}</Badge>
                 </div>
                 <div className="space-y-3">
                   {dashboardData.departments.slice(0, 4).map(dept => (
-                    <div key={dept.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-100/50 dark:bg-slate-50 dark:bg-slate-900/50">
+                    <div key={dept.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
                       <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-900 dark:text-white">{dept.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">{dept.studentCount} students · {dept.facultyCount} faculty</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">{dept.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{dept.studentCount} students · {dept.facultyCount} faculty</p>
                       </div>
                     </div>
                   ))}
@@ -782,18 +782,18 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="glass-card p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white">Recent Users</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Users</h3>
                   <Badge variant="info">{dashboardData.users.length}</Badge>
                 </div>
                 <div className="space-y-3">
                   {dashboardData.users.slice(0, 4).map(u => (
-                    <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-50 dark:bg-slate-900/50">
+                    <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/50">
                       <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-400 font-bold text-xs">
                         {getInitials(u.name)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-900 dark:text-slate-900 dark:text-white truncate">{u.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">{u.role} · {u.department}</p>
+                        <p className="text-sm text-slate-900 dark:text-white truncate">{u.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{u.role} · {u.department}</p>
                       </div>
                     </div>
                   ))}
@@ -806,7 +806,7 @@ export default function AdminDashboard() {
 
             {dashboardData.departments.length > 0 && (
               <div className="glass-card p-6">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4">Department Overview</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Department Overview</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={dashboardData.departments}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -848,8 +848,8 @@ export default function AdminDashboard() {
               <Shield size={22} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">Principal Dashboard</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Principal Dashboard</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {activeTab === 'overview' && 'College-wide overview and key metrics'}
                 {activeTab === 'users' && 'Manage all users, roles and permissions'}
                 {activeTab === 'departments' && 'Department performance and analytics'}
@@ -880,7 +880,7 @@ export default function AdminDashboard() {
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200
-                ${active ? 'bg-teal-500/10 text-teal-400 border border-teal-500/30' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white hover:bg-slate-200/50 dark:hover:bg-slate-100 dark:hover:bg-slate-800/50 border border-transparent'}`}
+                ${active ? 'bg-teal-500/10 text-teal-400 border border-teal-500/30' : 'text-slate-500 hover:text-slate-900 dark:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 border border-transparent'}`}
             >
               <Icon size={16} />
               {tab.label}

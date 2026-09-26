@@ -336,7 +336,7 @@ export default function FacultyAttendance() {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-        <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Loading class sessions and students...</p>
+        <p className="text-slate-500 dark:text-slate-400">Loading class sessions and students...</p>
       </div>
     )
   }
@@ -345,8 +345,8 @@ export default function FacultyAttendance() {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
         <AlertTriangle className="w-12 h-12 text-rose-400 mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-2">Failed to Load</h2>
-        <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400 text-center max-w-md">{error}</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Failed to Load</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-center max-w-md">{error}</p>
         <button
           onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-blue-600 text-slate-900 dark:text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
@@ -361,15 +361,15 @@ export default function FacultyAttendance() {
     return (
       <div className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh]">
         <Calendar className="w-12 h-12 text-slate-600 dark:text-slate-400 mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-2">No Classes Scheduled</h2>
-        <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400 text-center max-w-md mb-4">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Classes Scheduled</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-4">
           No recurring or rescheduled classes were found for this date. Choose another date or contact your admin.
         </p>
         <input
           type="date"
           value={selectedDate}
           onChange={(event) => setSelectedDate(event.target.value)}
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
         />
         <Link to="/faculty/schedule" className="mt-4 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400">
           View my weekly schedule
@@ -383,13 +383,13 @@ export default function FacultyAttendance() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/faculty"
-          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500/30 text-slate-500 dark:text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-all"
+          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500/30 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-900 dark:text-white">Mark Attendance</h1>
-          <p className="text-slate-500 dark:text-slate-600 dark:text-slate-400">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mark Attendance</h1>
+          <p className="text-slate-500 dark:text-slate-400">
             {selectedClass
               ? `${selectedClass.subject} (${selectedClass.subjectCode}) • ${selectedClass.branch} • ${selectedClass.batch} • ${selectedClass.division} ${selectedClass.section} • ${selectedClass.timeSlot}`
               : "Select a class session"}
@@ -410,19 +410,19 @@ export default function FacultyAttendance() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="flex-1 sm:flex-none bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 sm:py-1.5 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="flex-1 sm:flex-none bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 sm:py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
           <div className="hidden sm:block h-4 w-px bg-slate-300 dark:bg-slate-600" />
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 shrink-0">Class:</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400 shrink-0">Class:</span>
             <select
               value={selectedClass?.id || ""}
               onChange={(e) => {
                 const cls = classSessions.find((c: FacultyClassSession) => c.id === e.target.value)
                 if (cls) setSelectedClass(cls)
               }}
-              className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-full min-w-0 sm:w-auto sm:min-w-[280px] sm:max-w-md py-2 sm:py-1.5"
+              className="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-full min-w-0 sm:w-auto sm:min-w-[280px] sm:max-w-md py-2 sm:py-1.5"
             >
               {classSessions.map((c: FacultyClassSession) => (
                 <option key={c.id} value={c.id}>
@@ -432,7 +432,7 @@ export default function FacultyAttendance() {
             </select>
           </div>
           <div className="hidden sm:block h-4 w-px bg-slate-300 dark:bg-slate-600" />
-          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
               <Users className="w-4 h-4" />
               <span className="text-sm">{students.length} students</span>
@@ -447,7 +447,7 @@ export default function FacultyAttendance() {
         </div>
         {selectedClass?.topicsPlanned && selectedClass.topicsPlanned.length > 0 && (
           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400">Topics:</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Topics:</span>
             {selectedClass.topicsPlanned.map((topic: string, i: number) => (
               <span key={i} className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs border border-blue-200 dark:border-blue-500/20">
                 {topic}
@@ -546,24 +546,24 @@ export default function FacultyAttendance() {
         </div>
         <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20">
           <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-amber-500 dark:text-amber-600 dark:text-amber-400" />
-            <span className="text-sm text-amber-600 dark:text-amber-600 dark:text-amber-400">Late</span>
+            <Clock className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <span className="text-sm text-amber-600 dark:text-amber-400">Late</span>
           </div>
-          <p className="text-xl font-bold text-amber-600 dark:text-amber-600 dark:text-amber-400">{stats.late}</p>
+          <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{stats.late}</p>
         </div>
         <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/5 border border-purple-200 dark:border-purple-500/20">
           <div className="flex items-center gap-2 mb-1">
-            <FileMinus className="w-4 h-4 text-purple-500 dark:text-purple-600 dark:text-purple-400" />
-            <span className="text-sm text-purple-600 dark:text-purple-600 dark:text-purple-400">Leave</span>
+            <FileMinus className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+            <span className="text-sm text-purple-600 dark:text-purple-400">Leave</span>
           </div>
-          <p className="text-xl font-bold text-purple-600 dark:text-purple-600 dark:text-purple-400">{stats.leave}</p>
+          <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{stats.leave}</p>
         </div>
         <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/20">
           <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="w-4 h-4 text-blue-500 dark:text-blue-600 dark:text-blue-400" />
-            <span className="text-sm text-blue-600 dark:text-blue-600 dark:text-blue-400">On Duty</span>
+            <AlertCircle className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+            <span className="text-sm text-blue-600 dark:text-blue-400">On Duty</span>
           </div>
-          <p className="text-xl font-bold text-blue-600 dark:text-blue-600 dark:text-blue-400">{stats.onDuty}</p>
+          <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{stats.onDuty}</p>
         </div>
         <div className="p-3 rounded-xl bg-pink-50 dark:bg-pink-500/5 border border-pink-200 dark:border-pink-500/20">
           <div className="flex items-center gap-2 mb-1">
@@ -590,13 +590,13 @@ export default function FacultyAttendance() {
           </button>
           <button
             onClick={() => setAllStatus('Late')}
-            className="px-3 py-1.5 rounded-lg text-sm bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-100 dark:bg-amber-900/30 transition-all"
+            className="px-3 py-1.5 rounded-lg text-sm bg-amber-50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-100 dark:bg-amber-900/30 transition-all"
           >
             All Late
           </button>
           <button
             onClick={resetAttendance}
-            className="px-3 py-1.5 rounded-lg text-sm bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center gap-1"
+            className="px-3 py-1.5 rounded-lg text-sm bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1"
           >
             <RotateCcw className="w-3 h-3" /> Reset
           </button>
@@ -610,13 +610,13 @@ export default function FacultyAttendance() {
               placeholder="Search by name, USN, or reg no..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-full sm:w-56 pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as AttendanceStatus | 'all')}
-            className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           >
             <option value="all">All Status</option>
             <option value="Present">Present</option>
@@ -726,14 +726,14 @@ export default function FacultyAttendance() {
           <table className="w-full">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider w-12">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">Student</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">USN</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">Reg No</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">Batch/Div</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">Notes</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-600 dark:text-slate-400 uppercase tracking-wider">Attendance %</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-12">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">USN</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Reg No</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Batch/Div</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Notes</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attendance %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -743,19 +743,19 @@ export default function FacultyAttendance() {
                 const StatusIcon = config.icon
 
                 return (
-                  <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">{index + 1}</td>
+                  <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{index + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-600 dark:text-slate-700 dark:text-slate-300">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-600 dark:text-slate-300">
                           {student.name.charAt(0)}
                         </div>
-                        <span className="text-sm font-medium text-slate-900 dark:text-slate-900 dark:text-white">{student.name}</span>
+                        <span className="text-sm font-medium text-slate-900 dark:text-white">{student.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-600 dark:text-slate-400 font-mono">{student.usn}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-600 dark:text-slate-400 font-mono">{student.regNo}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-600 dark:text-slate-400">
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 font-mono">{student.usn}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 font-mono">{student.regNo}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                       {student.batch} · {student.division}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -777,7 +777,7 @@ export default function FacultyAttendance() {
                         placeholder="Add notes..."
                         value={attendance[student.id]?.notes || ''}
                         onChange={(e) => updateStudentNotes(student.id, e.target.value)}
-                        className="w-full bg-transparent text-sm text-slate-700 dark:text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:text-slate-900 dark:focus:text-white"
+                        className="w-full bg-transparent text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:text-slate-900 dark:focus:text-white"
                       />
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -806,7 +806,7 @@ export default function FacultyAttendance() {
           </table>
         </div>
         {filteredStudents.length === 0 && (
-          <div className="text-center py-12 text-slate-500 dark:text-slate-600 dark:text-slate-400">
+          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
             {students.length === 0 && rosterDiagnostics && rosterDiagnostics.collegeTotal === 0 ? (
               <>
                 <Users className="w-8 h-8 mx-auto mb-3 opacity-50" />
@@ -827,7 +827,7 @@ export default function FacultyAttendance() {
       )}
 
       <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-slate-50/95 dark:bg-[#0b0f19]/95 sm:bg-transparent sm:dark:bg-transparent backdrop-blur sm:backdrop-blur-none border-t border-slate-200 dark:border-slate-800 sm:border-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-        <div className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400">
+        <div className="text-sm text-slate-500 dark:text-slate-400">
           Marked: {stats.present + stats.absent + stats.late + stats.leave + stats.onDuty + stats.medicalLeave} / {stats.total} students
           {isAttendanceAlreadySaved && existingAttendance && (
             <span className="ml-2 text-emerald-600 dark:text-emerald-400">

@@ -64,7 +64,7 @@ const BLANK_INPUT: AdmissionApplicationInput = {
 };
 
 function meritTone(score: number | null): string {
-  if (score === null) return 'text-slate-400';
+  if (score === null) return 'text-slate-500 dark:text-slate-400';
   if (score >= 80) return 'text-emerald-600 dark:text-emerald-400';
   if (score >= 60) return 'text-teal-600 dark:text-teal-400';
   if (score >= 40) return 'text-amber-600 dark:text-amber-400';
@@ -94,7 +94,7 @@ function Field({
     <div>
       <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{label}</label>
       {children}
-      {hint ? <p className="text-[11px] text-slate-400 mt-1">{hint}</p> : null}
+      {hint ? <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{hint}</p> : null}
     </div>
   );
 }
@@ -290,7 +290,7 @@ export default function AdmissionCenter() {
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
           <input
             value={filters.search}
             onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
@@ -337,7 +337,7 @@ export default function AdmissionCenter() {
         </div>
       ) : ranked.length === 0 ? (
         <div className="text-center py-20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e]">
-          <Users className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <Users className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto mb-3" />
           <p className="font-bold text-slate-900 dark:text-white text-sm">No applications yet</p>
           <p className="text-xs text-slate-500 mt-1">Record a walk-in enquiry to start the funnel.</p>
         </div>
@@ -370,7 +370,7 @@ export default function AdmissionCenter() {
                       {rank !== null ? (
                         <span className="text-xs font-bold text-slate-500">#{rank}</span>
                       ) : (
-                        <span className="text-[11px] text-slate-400 italic">not scored</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">not scored</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -381,7 +381,7 @@ export default function AdmissionCenter() {
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                       {application.program || '—'}
-                      <span className="text-slate-400"> · {application.batch || '—'}</span>
+                      <span className="text-slate-500 dark:text-slate-400"> · {application.batch || '—'}</span>
                     </td>
                     <td className={`px-4 py-3 font-bold ${meritTone(application.merit.score)}`}>
                       {application.merit.score !== null ? application.merit.score : '—'}
@@ -400,7 +400,7 @@ export default function AdmissionCenter() {
                         }}
                         disabled={busy || application.status === 'enrolled'}
                         aria-label={`Delete ${application.applicationNo}`}
-                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-500 disabled:opacity-30"
+                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 dark:text-slate-400 hover:text-rose-500 disabled:opacity-30"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -521,9 +521,9 @@ export default function AdmissionCenter() {
                 ) : (
                   currentSelected.stageHistory.map((entry, index) => (
                     <div key={index} className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                      <ChevronRight className="w-3 h-3 text-slate-400" />
+                      <ChevronRight className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                       <span className="font-semibold">{STAGE_LABELS[entry.stage] || entry.stage}</span>
-                      <span className="text-slate-400">
+                      <span className="text-slate-500 dark:text-slate-400">
                         {entry.at ? new Date(entry.at).toLocaleDateString('en-IN') : '—'} · {entry.by || 'system'}
                       </span>
                     </div>
@@ -546,7 +546,7 @@ export default function AdmissionCenter() {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                         allowed
                           ? 'border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-400'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                       }`}
                     >
                       {STAGE_LABELS[status]}
@@ -554,7 +554,7 @@ export default function AdmissionCenter() {
                   );
                 })}
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
                 Only legal moves are enabled. An offer requires program, batch and registration number;
                 the funnel cannot be skipped.
               </p>
@@ -671,7 +671,7 @@ function ComposeModal({
               placeholder="e.g. 2026"
             />
             {batches.length > 0 && (
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                 In use: {batches.join(', ')}
               </p>
             )}

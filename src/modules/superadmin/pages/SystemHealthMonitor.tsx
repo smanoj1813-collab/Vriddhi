@@ -235,7 +235,7 @@ const SystemHealthMonitor: React.FC = () => {
 
       {/* Slow Queries Tab */}
       {activeTab === "queries" && (
-        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-transparent">
@@ -276,7 +276,7 @@ const SystemHealthMonitor: React.FC = () => {
 
       {/* Error Logs Tab */}
       {activeTab === "errors" && (
-        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-transparent">
@@ -358,7 +358,7 @@ const SystemHealthMonitor: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto shadow-sm">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-transparent">

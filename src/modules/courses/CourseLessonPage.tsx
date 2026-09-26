@@ -196,16 +196,16 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
                 const tDone = hasReadTopic(progress, t.id)
                 const unlocked = isTopicUnlocked(manifest, progress, t.id)
                 const icon = !unlocked
-                  ? <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  ? <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
                   : tDone
                     ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
                     : t.type === 'project'
                       ? <FlaskConical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500" />
-                      : <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-600" />
+                      : <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-400" />
                 const content = (
-                  <span className={`flex items-start gap-2 rounded-lg px-2 py-1.5 text-xs ${active ? 'bg-teal-50 font-semibold text-teal-800 dark:bg-teal-950/50 dark:text-teal-200' : unlocked ? 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' : 'text-slate-400 opacity-60'}`}>
+                  <span className={`flex items-start gap-2 rounded-lg px-2 py-1.5 text-xs ${active ? 'bg-teal-50 font-semibold text-teal-800 dark:bg-teal-950/50 dark:text-teal-200' : unlocked ? 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' : 'text-slate-500 dark:text-slate-400 opacity-60'}`}>
                     {icon}
-                    <span className="min-w-0 flex-1"><span className="mr-1 text-[10px] font-bold text-slate-400">{t.number}</span>{t.title}</span>
+                    <span className="min-w-0 flex-1"><span className="mr-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">{t.number}</span>{t.title}</span>
                   </span>
                 )
                 return <li key={t.id}>{unlocked ? <Link to={`${courseHome}/learn/${t.id}`} aria-current={active ? 'page' : undefined}>{content}</Link> : <div aria-disabled="true">{content}</div>}</li>
@@ -286,7 +286,7 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
           <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 sm:p-7" role="tabpanel">
             {tab === 'lesson' ? (
               loading ? (
-                <div className="flex min-h-[40vh] items-center justify-center text-slate-400">
+                <div className="flex min-h-[40vh] items-center justify-center text-slate-500 dark:text-slate-400">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
               ) : error ? (
@@ -294,7 +294,7 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
               ) : (
                 <>
                   <CourseMarkdown source={body} skipTitle />
-                  <div ref={readingEndRef} className="mt-6 border-t border-dashed border-slate-200 pt-4 text-center text-xs text-slate-400 dark:border-slate-700" aria-live="polite">
+                  <div ref={readingEndRef} className="mt-6 border-t border-dashed border-slate-200 pt-4 text-center text-xs text-slate-500 dark:text-slate-400 dark:border-slate-700" aria-live="polite">
                     {done ? 'End of topic · content read' : 'End of topic · reaching this point marks the content as read'}
                   </div>
                 </>

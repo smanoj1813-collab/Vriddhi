@@ -75,9 +75,9 @@ export default function CollegeOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
+      <header className="sticky top-0 z-30 bg-slate-100 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/50">
         <div className="px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Onboarding Center</h1>
@@ -85,7 +85,7 @@ export default function CollegeOnboarding() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-slate-600 dark:text-slate-400">College Admin</span>
-            <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-red-400 transition-colors">
+            <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
               <LogOut size={18} />
             </button>
           </div>
@@ -105,7 +105,7 @@ export default function CollegeOnboarding() {
                 className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-teal-500 text-slate-900 dark:text-white shadow-lg shadow-teal-500/20'
-                    : 'bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                    : 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <Icon size={16} />
@@ -123,7 +123,7 @@ export default function CollegeOnboarding() {
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-card rounded-xl border border-slate-700/30 p-6"
+              className="glass-card rounded-xl border border-slate-200 dark:border-slate-700/30 p-6"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -132,7 +132,7 @@ export default function CollegeOnboarding() {
                 </div>
                 <button
                   onClick={handleDownloadTemplate}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-teal-400 text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-teal-600 dark:text-teal-400 text-sm font-medium transition-colors"
                 >
                   <Download size={14} />
                   Download Template
@@ -170,7 +170,7 @@ export default function CollegeOnboarding() {
               className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
                 uploadedFile
                   ? 'border-teal-500 bg-teal-500/5'
-                  : 'border-slate-700 hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/30'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/30'
               }`}
             >
               <input
@@ -180,7 +180,7 @@ export default function CollegeOnboarding() {
                 className="hidden"
                 onChange={handleFileSelect}
               />
-              <Upload size={36} className={`mx-auto mb-3 ${uploadedFile ? 'text-teal-400' : 'text-slate-600'}`} />
+              <Upload size={36} className={`mx-auto mb-3 ${uploadedFile ? 'text-teal-600 dark:text-teal-400' : 'text-slate-600'}`} />
               {uploadedFile ? (
                 <>
                   <p className="text-sm font-medium text-teal-600 dark:text-teal-400">{uploadedFile.name}</p>
@@ -201,16 +201,16 @@ export default function CollegeOnboarding() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="glass-card rounded-xl border border-slate-700/30 overflow-hidden"
+                  className="glass-card rounded-xl border border-slate-200 dark:border-slate-700/30 overflow-hidden"
                 >
-                  <div className="p-4 border-b border-slate-700/30 flex items-center justify-between">
+                  <div className="p-4 border-b border-slate-200 dark:border-slate-700/30 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {parseResult.valid ? (
-                        <CheckCircle2 size={20} className="text-emerald-400" />
+                        <CheckCircle2 size={20} className="text-emerald-600 dark:text-emerald-400" />
                       ) : (
                         <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />
                       )}
-                      <span className={`text-sm font-medium ${parseResult.valid ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      <span className={`text-sm font-medium ${parseResult.valid ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                         {parseResult.valid ? 'All records valid!' : `${parseResult.errors.length} errors found`}
                       </span>
                     </div>
@@ -219,7 +219,7 @@ export default function CollegeOnboarding() {
                         <span className="text-slate-900 dark:text-white font-medium">{parseResult.data.length}</span> valid
                       </span>
                       <span className="text-slate-600 dark:text-slate-400">
-                        <span className="text-red-400 font-medium">{parseResult.errors.length}</span> errors
+                        <span className="text-red-600 dark:text-red-400 font-medium">{parseResult.errors.length}</span> errors
                       </span>
                     </div>
                   </div>
@@ -228,8 +228,8 @@ export default function CollegeOnboarding() {
                   {parseResult.errors.length > 0 && (
                     <div className="max-h-48 overflow-y-auto">
                       {parseResult.errors.slice(0, 20).map((error: OnboardingError, i: number) => (
-                        <div key={i} className="px-4 py-2.5 border-b border-slate-700/30 flex items-start gap-3">
-                          <AlertTriangle size={14} className="text-red-400 shrink-0 mt-0.5" />
+                        <div key={i} className="px-4 py-2.5 border-b border-slate-200 dark:border-slate-700/30 flex items-start gap-3">
+                          <AlertTriangle size={14} className="text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                           <div>
                             <p className="text-xs text-slate-600 dark:text-slate-400">Row {error.rowNumber} • {error.regNoOrId}</p>
                             <p className="text-sm text-red-600 dark:text-red-400">{error.field}: {error.message}</p>
@@ -247,7 +247,7 @@ export default function CollegeOnboarding() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-slate-700/30">
+                          <tr className="border-b border-slate-200 dark:border-slate-700/30">
                             {currentTab.template.fields.slice(0, 6).map((f: TemplateField) => (
                               <th key={f.key} className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase">{f.name}</th>
                             ))}
@@ -270,10 +270,10 @@ export default function CollegeOnboarding() {
                   )}
 
                   {/* Action Buttons */}
-                  <div className="p-4 border-t border-slate-700/30 flex justify-end gap-3">
+                  <div className="p-4 border-t border-slate-200 dark:border-slate-700/30 flex justify-end gap-3">
                     <button
                       onClick={() => { setUploadedFile(null); setParseResult(null); }}
-                      className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
                       Clear
                     </button>
@@ -293,7 +293,7 @@ export default function CollegeOnboarding() {
 
           {/* Right Panel - Instructions */}
           <div className="space-y-6">
-            <div className="glass-card rounded-xl border border-slate-700/30 p-5">
+            <div className="glass-card rounded-xl border border-slate-200 dark:border-slate-700/30 p-5">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">How to Onboard</h3>
               <div className="space-y-4">
                 {[
@@ -315,11 +315,11 @@ export default function CollegeOnboarding() {
               </div>
             </div>
 
-            <div className="glass-card rounded-xl border border-slate-700/30 p-5">
+            <div className="glass-card rounded-xl border border-slate-200 dark:border-slate-700/30 p-5">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Field Guidelines</h3>
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {currentTab.template.fields.map((field: TemplateField) => (
-                  <div key={field.key} className="p-3 rounded-lg bg-slate-800/30">
+                  <div key={field.key} className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/30">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-slate-900 dark:text-white">{field.name}</span>
                       {field.required && (
@@ -327,7 +327,7 @@ export default function CollegeOnboarding() {
                       )}
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{field.description}</p>
-                    <p className="text-xs text-teal-400 mt-1">Example: {field.example}</p>
+                    <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">Example: {field.example}</p>
                     {field.type === 'select' && field.options && (
                       <p className="text-xs text-slate-500 mt-1">Options: {field.options.join(', ')}</p>
                     )}

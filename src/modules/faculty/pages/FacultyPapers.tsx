@@ -100,7 +100,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
           <div>
@@ -109,7 +109,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-all"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 hover:text-slate-900 dark:text-white transition-all"
           >
             <XCircle className="w-5 h-5" />
           </button>
@@ -138,10 +138,10 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               Question Breakdown
             </h3>
-            <div className="rounded-xl border border-slate-700/50 overflow-hidden">
-              <table className="w-full">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-x-auto">
+              <table className="w-full min-w-[520px]">
                 <thead>
-                  <tr className="bg-slate-800/80">
+                  <tr className="bg-slate-50 dark:bg-slate-800/80">
                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Q.No</th>
                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Topic</th>
                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Type</th>
@@ -171,7 +171,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
           </div>
 
           {/* PDF Preview Placeholder */}
-          <div className="p-8 rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed text-center">
+          <div className="p-8 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed text-center">
             <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <p className="text-sm text-slate-500 mb-2">PDF Preview</p>
             <p className="text-xs text-slate-600">{paper.fileName}</p>
@@ -199,7 +199,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               </button>
               <button
                 onClick={() => setMode('modify')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-100 dark:bg-amber-900/30 transition-all font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-100 dark:bg-amber-900/30 transition-all font-medium"
               >
                 <AlertTriangle className="w-4 h-4" />
                 Request Modification
@@ -217,7 +217,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               <div className="flex gap-3">
                 <button
                   onClick={() => setMode('view')}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   Cancel
                 </button>
@@ -274,7 +274,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               <div className="flex gap-3">
                 <button
                   onClick={() => setMode('view')}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   Cancel
                 </button>
@@ -619,7 +619,7 @@ export default function FacultyPapers() {
     'pending-verification': { label: 'Pending Verification', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
     'verified': { label: 'Verified', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
     'modification-requested': { label: 'Changes Requested', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
-    'draft': { label: 'Draft', color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
+    'draft': { label: 'Draft', color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
     'submitted-for-approval': { label: 'Submitted for Approval', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
     'approved-by-hod': { label: 'Approved by HOD', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
     'rejected-by-hod': { label: 'Rejected by HOD', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
@@ -657,7 +657,7 @@ export default function FacultyPapers() {
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -729,7 +729,7 @@ export default function FacultyPapers() {
                     className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
                       badges.print
                         ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30'
-                        : 'bg-slate-500/5 text-slate-400 border-slate-500/20 opacity-60'
+                        : 'bg-slate-500/5 text-slate-500 dark:text-slate-400 border-slate-500/20 opacity-60'
                     }`}
                   >
                     <Printer className="w-3 h-3" /> Print
@@ -741,7 +741,7 @@ export default function FacultyPapers() {
                     className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
                       badges.online
                         ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/30'
-                        : 'bg-slate-500/5 text-slate-400 border-slate-500/20 opacity-60'
+                        : 'bg-slate-500/5 text-slate-500 dark:text-slate-400 border-slate-500/20 opacity-60'
                     }`}
                   >
                     <Globe className="w-3 h-3" /> Online
@@ -753,7 +753,7 @@ export default function FacultyPapers() {
                     className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
                       badges.bank
                         ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30'
-                        : 'bg-slate-500/5 text-slate-400 border-slate-500/20 opacity-60'
+                        : 'bg-slate-500/5 text-slate-500 dark:text-slate-400 border-slate-500/20 opacity-60'
                     }`}
                   >
                     <Database className="w-3 h-3" /> Bank
@@ -855,7 +855,7 @@ export default function FacultyPapers() {
           })}
 
           {filteredPapers.length === 0 && (
-            <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
+            <div className="p-12 text-center rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed">
               <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-600 dark:text-slate-400">No papers found</p>
             </div>
@@ -897,7 +897,7 @@ export default function FacultyPapers() {
               </div>
             ))
           ) : (
-            <div className="p-12 text-center rounded-xl bg-slate-800/30 border border-slate-700/50 border-dashed">
+            <div className="p-12 text-center rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 border-dashed">
               <Clock className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-600 dark:text-slate-400">No verification requests yet</p>
             </div>
@@ -906,7 +906,7 @@ export default function FacultyPapers() {
       )}
 
       {/* Upload / Create Section */}
-      <div className="mt-8 pt-6 border-t border-slate-700/50">
+      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
           <Upload className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           Upload a Question Paper
@@ -971,7 +971,7 @@ export default function FacultyPapers() {
       {/* Delete confirmation dialog — the server enforces the same gates */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl p-6 space-y-4">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-2xl p-6 space-y-4">
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-rose-500/10 shrink-0">
                 <AlertTriangle className="w-5 h-5 text-rose-400" />
@@ -1000,7 +1000,7 @@ export default function FacultyPapers() {
               <button
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleteBusy}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-400 border border-slate-500/20 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-500/20 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all disabled:opacity-50"
               >
                 Keep paper
               </button>

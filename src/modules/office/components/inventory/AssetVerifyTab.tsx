@@ -63,7 +63,7 @@ export default function AssetVerifyTab({ settings }: { settings: InventorySettin
         </div>
         {scanned.length > 0 && <div className="flex flex-wrap gap-1.5">{scanned.slice(-20).map(id => { const a = active.find(x => x.id === id); return <Badge key={id} tone="green">{a?.tag}</Badge> })}</div>}
       </div>
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-x-auto">
         <div className="flex justify-between items-center px-4 pt-3">
           <p className="font-medium text-slate-900 dark:text-white">Not yet verified{location ? ` in ${location}` : ''}</p>
           <button onClick={() => downloadCsv(`assets-unverified-${today}.csv`, due.map(a => ({ tag: a.tag, name: a.name, department: a.department, location: a.location, custodian: a.custodian, lastVerifiedOn: a.lastVerifiedOn })))} disabled={!due.length} className={btn.small}><Download className="w-3 h-3" /> CSV</button>

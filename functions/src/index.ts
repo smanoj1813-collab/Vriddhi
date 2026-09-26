@@ -38,7 +38,7 @@ import { manageOfficeStaff } from './officeStaff'
 import { bulkProvisionStaff } from './staffAuth'
 import { updateFacultyBranches } from './facultyManagement'
 import { bulkUpdateStudentAcademicFields } from './studentManagement'
-import { resetUserPassword, syncIdentityClaims } from './accountManagement'
+import { resetUserPassword, syncIdentityClaims, clearMyMustChangePassword } from './accountManagement'
 import { auditAndRepairIdentities } from './identityRepair'
 import { syncMyIdentity } from './selfIdentity'
 import { saveMyStaffAttendance } from './staffAttendanceWrites'
@@ -252,6 +252,7 @@ export {
   bulkUpdateStudentAcademicFields,
   resetUserPassword,
   syncIdentityClaims,
+  clearMyMustChangePassword,
   grantUserRole,
   manageOfficeStaff,
   diagnoseIdentity,

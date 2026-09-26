@@ -596,3 +596,17 @@ export function secretFieldDeletes(
 export function withApiVersion<T extends object>(payload: T): T & { apiVersion: string } {
   return { ...payload, apiVersion: IDENTITY_API_VERSION }
 }
+
+/**
+ * Pure helper — unit tested (test/accountManagement.test.ts). Returns a copy
+ * of the claims with `mustChangePassword` removed, preserving every other
+ * claim exactly. Used by clearMyMustChangePassword after a user rotates their
+ * one-time password from the client.
+ */
+export function stripMustChangePassword(
+  claims: Record<string, unknown> | null | undefined
+): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...(claims || {}) }
+  delete next.mustChangePassword
+  return next
+}

@@ -47,19 +47,19 @@ interface CohortOptions {
 }
 
 const priorityConfig: Record<Priority, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
-  urgent: { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', icon: <AlertCircle className="w-4 h-4" />, label: 'Urgent' },
-  high: { color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20', icon: <AlertCircle className="w-4 h-4" />, label: 'High' },
-  normal: { color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: <Info className="w-4 h-4" />, label: 'Normal' },
-  low: { color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', icon: <Clock className="w-4 h-4" />, label: 'Low' },
+  urgent: { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/20', icon: <AlertCircle className="w-4 h-4" />, label: 'Urgent' },
+  high: { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20', icon: <AlertCircle className="w-4 h-4" />, label: 'High' },
+  normal: { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: <Info className="w-4 h-4" />, label: 'Normal' },
+  low: { color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', icon: <Clock className="w-4 h-4" />, label: 'Low' },
 }
 
 const categoryConfig: Record<string, { color: string; label: string }> = {
-  general: { color: 'bg-slate-500/10 text-slate-400 border-slate-500/20', label: 'General' },
-  exam: { color: 'bg-rose-500/10 text-rose-400 border-rose-500/20', label: 'Exam' },
-  assignment: { color: 'bg-amber-500/10 text-amber-400 border-amber-500/20', label: 'Assignment' },
-  schedule: { color: 'bg-teal-500/10 text-teal-400 border-teal-500/20', label: 'Schedule' },
-  event: { color: 'bg-purple-500/10 text-purple-400 border-purple-500/20', label: 'Event' },
-  placement: { color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'Placement' },
+  general: { color: 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20', label: 'General' },
+  exam: { color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20', label: 'Exam' },
+  assignment: { color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', label: 'Assignment' },
+  schedule: { color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20', label: 'Schedule' },
+  event: { color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', label: 'Event' },
+  placement: { color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', label: 'Placement' },
 }
 
 /**
@@ -277,10 +277,10 @@ export default function FacultyAnnouncements() {
     const avgReadRate = addressed > 0 ? Math.round((opened / addressed) * 100) : 0
 
     return [
-      { label: 'Total Sent', value: totalSent, color: 'text-teal-400' },
-      { label: 'High Priority', value: highPriority, color: 'text-rose-400' },
-      { label: 'Pinned', value: pinned, color: 'text-amber-400' },
-      { label: 'Read Rate', value: `${avgReadRate}%`, color: 'text-blue-400' },
+      { label: 'Total Sent', value: totalSent, color: 'text-teal-600 dark:text-teal-400' },
+      { label: 'High Priority', value: highPriority, color: 'text-rose-600 dark:text-rose-400' },
+      { label: 'Pinned', value: pinned, color: 'text-amber-600 dark:text-amber-400' },
+      { label: 'Read Rate', value: `${avgReadRate}%`, color: 'text-blue-600 dark:text-blue-400' },
     ]
   }, [announcements])
 
@@ -303,7 +303,7 @@ export default function FacultyAnnouncements() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Megaphone className="w-6 h-6 text-teal-400" />
+              <Megaphone className="w-6 h-6 text-teal-600 dark:text-teal-400" />
               Announcements
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-sm">Send and manage live notices to students</p>
@@ -319,14 +319,14 @@ export default function FacultyAnnouncements() {
       </div>
 
       {deliveryNotice && (
-        <div className="mb-6 flex items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+        <div className="mb-6 flex items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm">
           <span className="flex items-center gap-2"><Check className="w-4 h-4" />{deliveryNotice}</span>
           <button onClick={() => setDeliveryNotice('')} aria-label="Dismiss"><X className="w-4 h-4" /></button>
         </div>
       )}
 
       {loadError && (
-        <div className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+        <div className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm">
           {loadError}
         </div>
       )}
@@ -344,7 +344,7 @@ export default function FacultyAnnouncements() {
       {/* Filters */}
       <div className="flex flex-col lg:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -381,7 +381,7 @@ export default function FacultyAnnouncements() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
-          <Bell className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <Bell className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto mb-3" />
           <p className="text-slate-900 dark:text-white font-semibold text-sm">No announcements yet</p>
           <p className="text-xs text-slate-500 mt-1">Compose one to reach students by batch and branch.</p>
         </div>
@@ -399,7 +399,7 @@ export default function FacultyAnnouncements() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                      {a.pinned && <Pin className="w-3.5 h-3.5 text-amber-400" />}
+                      {a.pinned && <Pin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
                       <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{a.title}</h3>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border ${priority.bg} ${priority.color}`}>
                         {priority.label}
@@ -423,14 +423,14 @@ export default function FacultyAnnouncements() {
                     <button
                       onClick={() => void handlePin(a.id)}
                       title={a.pinned ? 'Unpin' : 'Pin'}
-                      className="p-2 rounded-lg hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 transition-colors"
+                      className="p-2 rounded-lg hover:bg-amber-500/10 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                     >
                       <Pin className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => void handleDelete(a.id)}
                       title="Delete"
-                      className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-colors"
+                      className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -511,7 +511,7 @@ export default function FacultyAnnouncements() {
                     onClick={() => setComposeTarget('cohort')}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
                       composeTarget === 'cohort'
-                        ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                        ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30'
                         : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/50'
                     }`}
                   >
@@ -522,7 +522,7 @@ export default function FacultyAnnouncements() {
                     onClick={() => setComposeTarget('all')}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
                       composeTarget === 'all'
-                        ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                        ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30'
                         : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600/50'
                     }`}
                   >
@@ -536,10 +536,10 @@ export default function FacultyAnnouncements() {
                 <>
                   <div>
                     <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">
-                      Batches <span className="text-slate-400">(select any)</span>
+                      Batches <span className="text-slate-500 dark:text-slate-400">(select any)</span>
                     </label>
                     {cohorts.batches.length === 0 ? (
-                      <p className="text-xs text-amber-400 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                         No batches found on student records for this college. Add batch values to student
                         profiles before targeting a cohort.
                       </p>
@@ -551,7 +551,7 @@ export default function FacultyAnnouncements() {
                             onClick={() => toggleValue(composeBatches, batch, setComposeBatches)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                               composeBatches.includes(batch)
-                                ? 'bg-teal-500/20 text-teal-400 border-teal-500/40'
+                                ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400 border-teal-500/40'
                                 : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
                             }`}
                           >
@@ -564,10 +564,10 @@ export default function FacultyAnnouncements() {
 
                   <div>
                     <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1.5">
-                      Branches <span className="text-slate-400">(select any)</span>
+                      Branches <span className="text-slate-500 dark:text-slate-400">(select any)</span>
                     </label>
                     {cohorts.branches.length === 0 ? (
-                      <p className="text-xs text-amber-400 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                         No branches found on student records for this college.
                       </p>
                     ) : (
@@ -578,7 +578,7 @@ export default function FacultyAnnouncements() {
                             onClick={() => toggleValue(composeBranches, branch, setComposeBranches)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                               composeBranches.includes(branch)
-                                ? 'bg-teal-500/20 text-teal-400 border-teal-500/40'
+                                ? 'bg-teal-500/20 text-teal-600 dark:text-teal-400 border-teal-500/40'
                                 : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
                             }`}
                           >
@@ -609,7 +609,7 @@ export default function FacultyAnnouncements() {
               </div>
 
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs">
                   {formError}
                 </div>
               )}

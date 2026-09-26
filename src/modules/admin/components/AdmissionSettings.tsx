@@ -371,7 +371,7 @@ export default function AdmissionSettings({
                       </div>
                       <div>
                         <label className={labelClass}>Apps Script — paste into the form</label>
-                        <pre className="max-h-56 overflow-auto text-[11px] leading-relaxed p-3 rounded-lg bg-slate-900 text-slate-100 whitespace-pre-wrap break-all">
+                        <pre className="max-h-56 overflow-auto text-[11px] leading-relaxed p-3 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 whitespace-pre-wrap break-all">
                           {tokenResult.script}
                         </pre>
                         <div className="mt-2">

@@ -60,11 +60,36 @@ export default defineConfig(({ mode }) => {
         ],
       },
       workbox: {
-        // Hashed build assets + index.html are precached. sw.js is served
-        // with no-cache (firebase.json), so every new deploy is detected on
-        // the next open and PwaPrompts offers a one-tap reload — users are
-        // never stuck on a stale build.
-        globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        // Precache ONLY the critical shell: the entry HTML/manifest, the
+        // initial JS graph (exactly the chunks index.html modulepreloads:
+        // index, react-core, firebase, mui-core, mui-icons, utils), the CSS,
+        // app icons and the login-page brand mark. Everything else — the ~90
+        // lazy route chunks plus the pdf/xlsx/charts libraries — is fetched on
+        // demand and kept by the /assets/ StaleWhileRevalidate route below, so
+        // a revisited page still works offline.
+        //
+        // Why: the old `**/*.{js,...}` glob precached the ENTIRE 12 MB build
+        // (9.7 MB / 376 entries) on first service-worker install. On a budget
+        // Android phone over 4G that is minutes of background download and
+        // storage pressure before the PWA is actually offline-ready; the shell
+        // is ~2.6 MB and installs in seconds.
+        //
+        // sw.js itself is served no-cache (firebase.json), so every deploy is
+        // detected on the next open and PwaPrompts offers a one-tap reload.
+        globPatterns: [
+          'index.html',
+          'manifest.webmanifest',
+          'workbox-*.js',
+          'assets/index-*.js',
+          'assets/index-*.css',
+          'assets/react-core-*.js',
+          'assets/firebase-*.js',
+          'assets/mui-core-*.js',
+          'assets/mui-icons-*.js',
+          'assets/utils-*.js',
+          'icons/**/*.{png,svg}',
+          'brand/**/*.{png,svg}',
+        ],
         globIgnores: ['**/stats.html'],
         navigateFallback: '/index.html',
         // Never intercept API / Firebase traffic — the SPA fallback would
@@ -75,6 +100,20 @@ export default defineConfig(({ mode }) => {
         skipWaiting: false,
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
+          {
+            // Lazy route chunks and heavy libraries (pdf, xlsx, charts,
+            // course packs): serve from cache while revalidating, so the
+            // second visit to any page is instant and works offline. Capped
+            // so an old install does not hoard every historical chunk.
+            urlPattern: ({ sameOrigin, url }: { sameOrigin: boolean; url: URL }) =>
+              sameOrigin && url.pathname.startsWith('/assets/'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'app-assets',
+              expiration: { maxEntries: 150, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'StaleWhileRevalidate',

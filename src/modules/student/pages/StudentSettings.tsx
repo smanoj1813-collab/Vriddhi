@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, GraduationCap, Building2, Hash, BookOpen } from 'lucide-react';
-import { updatePassword } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '@/Firebase/config';
+import ChangePasswordForm from '../../../shared/components/ChangePasswordForm';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
@@ -50,10 +50,9 @@ export default function StudentSettings() {
   const [prefsError, setPrefsError] = useState<string | null>(null);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  // Password change lives in the shared ChangePasswordForm (re-authenticates
+  // with the current password, enforces the platform 10-char floor, and clears
+  // the one-time-password flag server-side).
 
   useEffect(() => {
     if (profile) {
@@ -109,38 +108,6 @@ export default function StudentSettings() {
     }
   };
 
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: 'err', text: 'New passwords do not match.' });
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPasswordMsg({ type: 'err', text: 'Password must be at least 6 characters.' });
-      return;
-    }
-    setSavingPassword(true);
-    setPasswordMsg(null);
-    try {
-      if (auth.currentUser) {
-        await updatePassword(auth.currentUser, newPassword);
-        setPasswordMsg({ type: 'ok', text: 'Password updated successfully.' });
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        throw new Error('No authenticated user');
-      }
-    } catch (err: any) {
-      let msg = err.message || 'Failed to update password.';
-      if (msg.includes('requires-recent-login') || msg.includes('auth/requires-recent-login')) {
-        msg = 'For security, please log out and log in again, then try changing password.';
-      }
-      setPasswordMsg({ type: 'err', text: msg });
-    } finally {
-      setSavingPassword(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
@@ -189,8 +156,8 @@ export default function StudentSettings() {
                     : 'bg-white dark:bg-[#131b2e] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800'
                 }`}
               >
-                <Icon size={16} />
-                <span className="truncate">{tab.label}</span>
+                <Icon size={16} className="shrink-0" />
+                <span className="truncate min-w-0">{tab.label}</span>
               </button>
             );
           })}
@@ -375,72 +342,7 @@ export default function StudentSettings() {
           )}
 
           {activeTab === 'privacy' && (
-            <form onSubmit={handleUpdatePassword} className="space-y-5">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white pb-1">Security & Password</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Update your password regularly to keep your account secure.</p>
-              </div>
-
-              <div className="space-y-4 max-w-md pt-2">
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimum 6 characters"
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter password"
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
-                  <ul className="list-disc pl-4 space-y-1">
-                    <li>Use at least 6 characters</li>
-                    <li>Include numbers and symbols for stronger security</li>
-                    <li>Don&apos;t reuse your previous passwords</li>
-                  </ul>
-                </div>
-              </div>
-
-              {passwordMsg && (
-                <div className={`p-3 rounded-xl text-xs font-bold border flex items-center gap-2 max-w-md ${passwordMsg.type === 'ok' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800'}`}>
-                  {passwordMsg.type === 'ok' ? <Check size={14} /> : <Shield size={14} />}
-                  {passwordMsg.text}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={savingPassword}
-                className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-bold text-xs md:text-sm shadow-sm transition-all flex items-center gap-2"
-              >
-                {savingPassword ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
-                Update Password
-              </button>
-            </form>
+            <ChangePasswordForm />
           )}
 
           {activeTab === 'appearance' && (

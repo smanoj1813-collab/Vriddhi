@@ -209,7 +209,7 @@ function CollectPaymentModal({
             <CreditCard className="w-5 h-5 text-vriddhi-accent" />
             Record Payment
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5 text-vriddhi-muted" />
           </button>
         </div>
@@ -458,13 +458,13 @@ function WaiveFeeModal({
             <XCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             Waive Fee
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5 text-vriddhi-muted" />
           </button>
         </div>
         <div className="p-6 space-y-4">
           <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <p className="text-sm text-purple-300">
+            <p className="text-sm text-purple-600 dark:text-purple-300">
               You are about to waive <span className="font-bold">₹{payment.amount.toLocaleString('en-IN')}</span> for{' '}
               <span className="font-bold">{payment.studentName}</span> ({payment.regNo}).
             </p>
@@ -578,7 +578,7 @@ function PaymentDetailModal({
             <Receipt className="w-5 h-5 text-vriddhi-accent" />
             Payment Details
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5 text-vriddhi-muted" />
           </button>
         </div>
@@ -879,7 +879,7 @@ function RecordPaymentModal({
               {student ? 'Choose the fee this payment is for.' : 'Search the student who is paying.'}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5 text-vriddhi-muted" />
           </button>
         </div>
@@ -1728,7 +1728,7 @@ export default function AdminFeeManagement() {
                               <div className="flex items-center justify-center gap-1">
                                 <button
                                   onClick={() => { setSelectedPayment(payment); setModalMode('detail') }}
-                                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                  className="p-1.5 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg transition-colors"
                                   title="View Details"
                                 >
                                   <Eye className="w-4 h-4 text-vriddhi-muted" />
@@ -1763,7 +1763,7 @@ export default function AdminFeeManagement() {
                                 )}
                                 <button
                                   onClick={() => setExpandedRow(expandedRow === payment.id ? null : payment.id)}
-                                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                  className="p-1.5 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg transition-colors"
                                 >
                                   {expandedRow === payment.id ? (
                                     <ChevronUp className="w-4 h-4 text-vriddhi-muted" />
