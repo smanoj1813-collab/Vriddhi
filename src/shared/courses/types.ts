@@ -2,10 +2,11 @@
 //
 // Types for the bundled course packs under `content/courses/<id>/`.
 //
-// A course pack is a `course.json` manifest plus Markdown lessons and per-module
-// `quiz.json` banks. The manifest is the single source of truth for structure
-// (modules → topics), hours and the assessment scheme; the app never invents
-// ordering or weights of its own. See content/courses/README.md for the schema.
+// A course pack is a `course.json` manifest plus Markdown lessons, per-module
+// `quiz.json` banks and optional in-app `slides.json` decks. The manifest is the
+// single source of truth for structure (modules → topics), hours and the
+// assessment scheme; the app never invents ordering or weights. See
+// content/courses/README.md for the schema.
 
 export type CourseTopicType = 'lesson' | 'project'
 
@@ -117,6 +118,33 @@ export interface CourseModuleAssessmentBank {
   questions: CourseQuizQuestion[]
 }
 
+export type CourseSlideVisualKind = 'cards' | 'compare' | 'flow'
+
+export interface CourseSlideVisualItem {
+  title: string
+  detail: string
+}
+
+/** A small in-app teaching slide; it is not a downloadable file. */
+export interface CourseSlide {
+  id: string
+  title: string
+  summary: string
+  explanation: string
+  example?: string
+  takeaway: string
+  visual?: {
+    kind: CourseSlideVisualKind
+    items: CourseSlideVisualItem[]
+  }
+}
+
+/** Optional per-module slides, keyed by lesson topic id. */
+export interface CourseSlideBank {
+  moduleId: string
+  topics: Record<string, CourseSlide[]>
+}
+
 export interface CourseQuizBank {
   moduleId: string
   questions: Record<string, CourseQuizQuestion[]>
@@ -133,13 +161,15 @@ export interface CourseTopicRef extends CourseTopicManifest {
   index: number
 }
 
-/** Fully loaded course: manifest + lesson bodies + quiz banks. */
+/** Fully loaded course: manifest, lesson bodies, quiz banks and optional slide decks. */
 export interface LoadedCourse {
   manifest: CourseManifest
   /** topicId → Markdown source. */
   lessons: Record<string, string>
   /** topicId → quiz questions (may be empty for project topics). */
   quizzes: Record<string, CourseQuizQuestion[]>
+  /** topicId → optional in-app slide walkthroughs. */
+  slides: Record<string, CourseSlide[]>
   /** Flattened, ordered topics. */
   sequence: CourseTopicRef[]
 }

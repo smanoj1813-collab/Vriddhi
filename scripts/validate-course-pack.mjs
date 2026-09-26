@@ -205,6 +205,80 @@ function checkQuizBank(packId, packDir, mod, expectedLessonCount) {
   }
   return count
 }
+
+function checkSlides(packId, packDir, mod) {
+  const slidesPath = join(packDir, 'modules', mod.slug, 'slides.json')
+  if (!existsSync(slidesPath)) return 0
+
+  let bank
+  try {
+    bank = readJson(slidesPath)
+  } catch (err) {
+    fail(packId, `module ${mod.id}: slides.json is not valid JSON (${err.message})`)
+    return 0
+  }
+  if (bank.moduleId !== mod.id) fail(packId, `module ${mod.id}: slides.json moduleId is "${bank.moduleId}"`)
+  if (!bank.topics || typeof bank.topics !== 'object' || Array.isArray(bank.topics)) {
+    fail(packId, `module ${mod.id}: slides.json topics must be an object keyed by topic id`)
+    return 0
+  }
+
+  const topicIds = new Set(mod.topics.map((topic) => topic.id))
+  const slideIds = new Set()
+  let count = 0
+  for (const [topicId, slides] of Object.entries(bank.topics)) {
+    if (!topicIds.has(topicId)) fail(packId, `module ${mod.id}: slides bank has an unknown topic "${topicId}"`)
+    if (!Array.isArray(slides) || slides.length === 0) {
+      fail(packId, `topic ${topicId}: slide deck must be a non-empty array`)
+      continue
+    }
+    count += slides.length
+    slides.forEach((slide, index) => {
+      const fallbackId = `${topicId}-s${index + 1}`
+      if (!slide || typeof slide !== 'object' || Array.isArray(slide)) {
+        fail(packId, `${fallbackId}: slide must be an object`)
+        return
+      }
+      if (typeof slide.id !== 'string' || !slide.id.trim()) {
+        fail(packId, `${fallbackId}: missing slide id`)
+      } else if (slideIds.has(slide.id)) {
+        fail(packId, `duplicate slide id "${slide.id}"`)
+      } else {
+        slideIds.add(slide.id)
+      }
+      for (const field of ['title', 'summary', 'explanation', 'takeaway']) {
+        if (typeof slide[field] !== 'string' || !slide[field].trim()) {
+          fail(packId, `${slide.id || fallbackId}: missing slide ${field}`)
+        }
+      }
+      if (slide.example !== undefined && (typeof slide.example !== 'string' || !slide.example.trim())) {
+        fail(packId, `${slide.id || fallbackId}: example must be non-empty text when provided`)
+      }
+      if (slide.visual !== undefined) {
+        if (!slide.visual || typeof slide.visual !== 'object' || Array.isArray(slide.visual)) {
+          fail(packId, `${slide.id || fallbackId}: visual must be an object`)
+          return
+        }
+        if (!['cards', 'compare', 'flow'].includes(slide.visual.kind)) {
+          fail(packId, `${slide.id || fallbackId}: visual kind must be cards, compare, or flow`)
+        }
+        if (!Array.isArray(slide.visual.items) || slide.visual.items.length < 2 || slide.visual.items.length > 4) {
+          fail(packId, `${slide.id || fallbackId}: visual must have 2–4 items`)
+        } else {
+          slide.visual.items.forEach((item, itemIndex) => {
+            if (!item || typeof item !== 'object' || Array.isArray(item) ||
+              typeof item.title !== 'string' || !item.title.trim() ||
+              typeof item.detail !== 'string' || !item.detail.trim()) {
+              fail(packId, `${slide.id || fallbackId}: visual item ${itemIndex + 1} needs a title and detail`)
+            }
+          })
+        }
+      }
+    })
+  }
+  return count
+}
+
 function checkPack(packId) {
   const packDir = join(COURSES_DIR, packId)
   const manifestPath = join(packDir, 'course.json')
@@ -233,7 +307,11 @@ function checkPack(packId) {
     ? manifest.lessonQuizQuestionCount
     : DEFAULT_QUIZ_PER_LESSON
   let quizCount = 0
-  for (const mod of manifest.modules) quizCount += checkQuizBank(packId, packDir, mod, expectedLessonCount)
+  let slideCount = 0
+  for (const mod of manifest.modules) {
+    quizCount += checkQuizBank(packId, packDir, mod, expectedLessonCount)
+    slideCount += checkSlides(packId, packDir, mod)
+  }
 
   const docPaths = [
     ...Object.values(manifest.documents || {}),
@@ -255,7 +333,7 @@ function checkPack(packId) {
   const minutes = topics.reduce((n, t) => n + t.minutes, 0)
   notes.push(
     `${packId}: ${manifest.modules.length} modules · ${lessonCount} lessons · ${projectCount} projects · ` +
-      `${quizCount} quiz items · ${(minutes / 60).toFixed(1)} h of topics vs ${manifest.totalHours} h declared`,
+      `${quizCount} quiz items · ${slideCount} slides · ${(minutes / 60).toFixed(1)} h of topics vs ${manifest.totalHours} h declared`,
   )
 }
 

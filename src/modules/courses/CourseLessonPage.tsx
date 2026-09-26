@@ -19,10 +19,12 @@ import {
   Loader2,
   LockKeyhole,
   Menu,
+  Presentation,
   X,
 } from 'lucide-react'
 import CourseMarkdown from '@/shared/components/courses/CourseMarkdown'
 import CourseQuiz from '@/shared/components/courses/CourseQuiz'
+import CourseSlides from '@/shared/components/courses/CourseSlides'
 import { getCourse, loadLesson } from '@/shared/courses/courseCatalog'
 import { coursePercent, findTopic, formatMinutes, hasReadTopic, isModuleUnlocked, isTopicUnlocked, modulePercent, neighbours } from '@/shared/courses/courseModel'
 import { useCourseProgress } from '@/shared/courses/courseProgress'
@@ -34,7 +36,7 @@ interface CourseLessonPageProps {
   collegeId?: string
 }
 
-type Tab = 'lesson' | 'quiz'
+type Tab = 'lesson' | 'slides' | 'quiz'
 
 export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLessonPageProps) {
   const { courseId = '', topicId = '' } = useParams()
@@ -47,6 +49,7 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
   const { prev, next } = useMemo(() => (course ? neighbours(course.sequence, topicId) : {}), [course, topicId])
   const nextUnlocked = !!(course && next && isTopicUnlocked(course.manifest, progress, next.id))
   const questions = course?.quizzes[topicId] || []
+  const slides = course?.slides[topicId] || []
 
   const [tab, setTab] = useState<Tab>('lesson')
   const [body, setBody] = useState<string>('')
@@ -269,6 +272,11 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
             <TabButton active={tab === 'lesson'} onClick={() => setTab('lesson')} icon={<BookOpen className="h-4 w-4" />}>
               {isProject ? 'Brief' : 'Lesson'}
             </TabButton>
+            {slides.length > 0 ? (
+              <TabButton active={tab === 'slides'} onClick={() => setTab('slides')} icon={<Presentation className="h-4 w-4" />}>
+                Slides · {slides.length}
+              </TabButton>
+            ) : null}
             <TabButton active={tab === 'quiz'} onClick={() => setTab('quiz')} disabled={!done || progressLoading} icon={<ListChecks className="h-4 w-4" />}>
               Quiz{questions.length ? ` · ${questions.length}` : ''}
               {best ? <span className="ml-1 rounded-full bg-teal-600 px-1.5 text-[10px] font-bold text-white">{best.score}/{best.total}</span> : null}
@@ -291,6 +299,8 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
                   </div>
                 </>
               )
+            ) : tab === 'slides' ? (
+              <CourseSlides key={topic.id} slides={slides} moduleTitle={topic.moduleTitle} topicTitle={topic.title} />
             ) : (
               <CourseQuiz questions={questions} best={best} disabled={progressLoading || !done} onSubmit={(answers) => submitQuiz(topic.id, questions, answers)} />
             )}

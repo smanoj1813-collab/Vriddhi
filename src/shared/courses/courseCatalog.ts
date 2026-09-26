@@ -11,7 +11,7 @@
 // the build (same approach as the curated question-bank seed CSVs). Learner
 // progress lives in courseProgress.ts.
 
-import type { CourseManifest, CourseQuizBank, CourseQuizQuestion, CourseTopicRef } from './types'
+import type { CourseManifest, CourseQuizBank, CourseQuizQuestion, CourseSlide, CourseSlideBank, CourseTopicRef } from './types'
 import { flattenTopics, validateManifest } from './courseModel'
 
 const PACK_ROOT_RE = /content\/courses\/([^/]+)\/(.*)$/
@@ -25,6 +25,11 @@ const quizModules = import.meta.glob('../../../content/courses/*/modules/*/quiz.
   eager: true,
   import: 'default',
 }) as Record<string, CourseQuizBank>
+
+const slideModules = import.meta.glob('../../../content/courses/*/modules/*/slides.json', {
+  eager: true,
+  import: 'default',
+}) as Record<string, CourseSlideBank>
 
 const lessonLoaders = import.meta.glob('../../../content/courses/*/**/*.md', {
   query: '?raw',
@@ -45,6 +50,8 @@ export interface CourseCatalogEntry {
   quizzes: Record<string, CourseQuizQuestion[]>
   /** moduleId → end-of-module assessment questions. */
   moduleAssessments: Record<string, CourseQuizQuestion[]>
+  /** topicId → in-app slide walkthrough (optional per module). */
+  slides: Record<string, CourseSlide[]>
   /** Structural problems found in the manifest — surfaced in dev, never thrown. */
   problems: string[]
 }
@@ -65,6 +72,7 @@ function buildCatalog(): Record<string, CourseCatalogEntry> {
       sequence: flattenTopics(manifest),
       quizzes: {},
       moduleAssessments: {},
+      slides: {},
       problems,
     }
   }
@@ -76,6 +84,18 @@ function buildCatalog(): Record<string, CourseCatalogEntry> {
     }
     if (bank.moduleAssessment?.questions?.length) {
       out[split.courseId].moduleAssessments[bank.moduleId] = bank.moduleAssessment.questions
+    }
+  }
+  for (const [key, bank] of Object.entries(slideModules)) {
+    const split = splitPackPath(key)
+    if (!split || !out[split.courseId]) continue
+    const module = out[split.courseId].manifest.modules.find((item) => item.id === bank.moduleId)
+    if (!module) continue
+    const moduleTopicIds = new Set(module.topics.map((topic) => topic.id))
+    for (const [topicId, slides] of Object.entries(bank.topics || {})) {
+      if (moduleTopicIds.has(topicId) && Array.isArray(slides)) {
+        out[split.courseId].slides[topicId] = slides
+      }
     }
   }
   return out

@@ -15,7 +15,8 @@ content/courses/<course-id>/
 ├── course.json                 # manifest: metadata, modules → topics, assessment scheme, toolkit
 ├── modules/<module-slug>/
 │   ├── <n.n>-<lesson-slug>.md  # one lesson per topic
-│   └── quiz.json               # lesson MCQs + optional advanced module assessment
+│   ├── quiz.json               # lesson MCQs + optional advanced module assessment
+│   └── slides.json             # optional in-app visual walkthroughs, keyed by topic id
 ├── projects/*.md               # project-block and capstone briefs with rubrics
 ├── assessments/
 │   ├── final-assessment-blueprint.md
@@ -68,6 +69,10 @@ Lessons use a fixed structure so the renderer (`src/shared/components/courses/Co
 Renderer notes: GFM tables and task lists are supported; fenced blocks with no language or `text` render as copyable **Prompt** cards; blockquotes whose leading bold text matches *plan/time/duration* render as teal call-outs, *warn/caution/careful/never/do not* as amber, others as indigo; only `http(s)` images; no raw HTML; a `>` continuation line inside a list item renders as italics (nested blockquotes in lists are not supported).
 
 Style: ~1,200–1,500 words per lesson; version-agnostic tool names (product families, never model versions or prices); Indian and Karnataka examples; bilingual prompts welcome; every lab produces an artefact; every project brief includes an AI-use statement template.
+
+### In-app slide walkthroughs
+
+A module may include `slides.json` beside its quiz bank. The bank is keyed by lesson topic id and contains short, plain-language slides with a visual grouping (`cards`, `compare` or `flow`), explanation, everyday example and takeaway. Slides render inside the lesson player; they are a companion to the Markdown lesson, do not count as reading completion, and have no file-download option. Start with a small module pilot and add decks only when content has been reviewed for accuracy and accessibility.
 
 ## Adding or changing a pack
 

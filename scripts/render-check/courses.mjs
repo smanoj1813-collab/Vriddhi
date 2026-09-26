@@ -109,6 +109,9 @@ const { default: manifest } = await import(path.resolve(root, 'content/courses/g
 const firstTopic = manifest.modules[0].topics[0];
 const secondTopic = manifest.modules[0].topics[1];
 const topicCount = manifest.modules.reduce((n, m) => n + m.topics.length, 0);
+const { getCourse } = await server.ssrLoadModule('/src/shared/courses/courseCatalog.ts');
+const firstTopicSlides = getCourse(manifest.id)?.slides[firstTopic.id] ?? [];
+check('catalog: optional slide deck is loaded from the module bank', firstTopicSlides.length === 5, `slides=${firstTopicSlides.length}`);
 
 localStorage.clear();
 
@@ -241,6 +244,20 @@ await section('lesson', '/src/modules/courses/CourseLessonPage.tsx', { basePath:
   check('lesson: a table renders', v.el('table') !== null, t);
   check('lesson: quiz tab shows all 15 questions', /Quiz · 15/.test(t), t);
   check('lesson: outline lists the next topic', t.includes(secondTopic.title), t);
+  check('lesson: shows a Slides tab when a topic deck exists', new RegExp(`Slides · ${firstTopicSlides.length}`).test(t), t);
+  await v.click(v.byText('Slides'));
+  check('slides: opens an in-course visual walkthrough', v.text().includes(firstTopicSlides[0].title) && /Slide 1 of 5/.test(v.text()), v.text());
+  check('slides: provides accessible navigation and no download controls',
+    !!v.el('[aria-label="Slide navigation"]') && !!v.el('[aria-label^="Slide walkthrough"]')
+      && !v.el('[download]') && !/download|\.pdf|\.pptx/i.test(v.all('button').map((button) => button.textContent).join(' ')),
+    v.text());
+  await v.click(v.byText('Next slide'));
+  check('slides: next button advances the slide', v.text().includes(firstTopicSlides[1].title) && /Slide 2 of 5/.test(v.text()), v.text());
+  const slideViewer = v.el('[aria-label^="Slide walkthrough"]');
+  await act(async () => { slideViewer.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); });
+  await v.settle();
+  check('slides: arrow keys navigate the walkthrough', v.text().includes(firstTopicSlides[2].title) && /Slide 3 of 5/.test(v.text()), v.text());
+  await v.click(v.byText('Lesson'));
 
   // Reaching the end marker records the read event; there is no manual bypass.
   for (let i = 0; i < 10; i += 1) {
