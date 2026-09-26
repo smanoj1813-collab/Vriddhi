@@ -31,6 +31,23 @@ export interface CourseModuleManifest {
   hours: number
   outcomes: string[]
   topics: CourseTopicManifest[]
+  /** Optional end-of-module gate. The bank lives in that module's quiz.json. */
+  assessment?: {
+    title: string
+    passMark: number
+    questionCount: number
+  }
+}
+
+export interface CourseCertificateEligibilityManifest {
+  /** Minimum average across the lesson quizzes. */
+  minimumQuizAverage: number
+  /** Required score for every module assessment (also unlocks the next module). */
+  moduleAssessmentPassMark: number
+  /** Every topic, including project briefs, must be read to its end. */
+  requireAllTopicsRead: boolean
+  /** Every lesson quiz must have at least one submitted attempt. */
+  requireAllLessonQuizzes: boolean
 }
 
 export interface CourseAssessmentComponent {
@@ -77,6 +94,9 @@ export interface CourseManifest {
     components: CourseAssessmentComponent[]
     grades: CourseGradeBand[]
   }
+  /** Quiz-bank size per lesson; defaults to five for existing course packs. */
+  lessonQuizQuestionCount?: number
+  certificateEligibility?: CourseCertificateEligibilityManifest
   toolkit?: CourseToolkitGroup[]
   modules: CourseModuleManifest[]
   finalAssessment?: { title: string; minutes: number; blueprint?: string }
@@ -89,11 +109,19 @@ export interface CourseQuizQuestion {
   options: string[]
   answerIndex: number
   explanation?: string
+  difficulty?: 'core' | 'advanced'
+}
+
+export interface CourseModuleAssessmentBank {
+  title: string
+  questions: CourseQuizQuestion[]
 }
 
 export interface CourseQuizBank {
   moduleId: string
   questions: Record<string, CourseQuizQuestion[]>
+  /** Scenario-based, higher-difficulty assessment taken after a module. */
+  moduleAssessment?: CourseModuleAssessmentBank
 }
 
 /** A topic resolved against its module, with the flat position in the course. */
@@ -128,11 +156,28 @@ export interface CourseQuizResult {
 }
 
 export interface CourseProgress {
-  /** topicId → ISO timestamp when marked complete. */
+  /** topicId → ISO timestamp when the learner reached the end of the content. */
+  read?: Record<string, string>
+  /** topicId → ISO timestamp when marked complete (kept for existing progress). */
   completed: Record<string, string>
-  /** topicId → best quiz result. */
+  /** topicId → best lesson-quiz result. */
   quiz: Record<string, CourseQuizResult>
+  /** moduleId → best end-of-module assessment result. */
+  moduleAssessments?: Record<string, CourseQuizResult>
   /** The topic the learner opened most recently. */
   lastTopicId?: string
+  startedAt?: string
   updatedAt?: string
+  completedAt?: string
+}
+
+/** Denormalised tenant-scoped document stored at colleges/{cid}/courseProgress. */
+export interface CourseProgressRecord extends CourseProgress {
+  uid: string
+  collegeId: string
+  courseId: string
+  courseVersion: string
+  percent: number
+  completedCount: number
+  quizAverage: number | null
 }

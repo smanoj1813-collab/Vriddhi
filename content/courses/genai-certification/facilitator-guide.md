@@ -1,12 +1,12 @@
 # Facilitator Guide — VGC-101 GenAI for Career Impact
 
-Version 1.0 · Last reviewed September 2026 · For facilitators, placement-cell staff and faculty coordinators running the programme in affiliated colleges.
+Version 1.1 · Last reviewed September 2026 · For facilitators, placement-cell staff and faculty coordinators running the programme in affiliated colleges.
 
 ## 1. What this programme is
 
 A 60-hour, 10-week certificate that takes non-technical undergraduates (B.Com, BBA, BA, B.Sc) from AI-curious to job-ready practitioners: prompting, content creation (visual, video, audio), custom assistants and no-code automation, a real product pilot, responsible AI including India's DPDP framework, and career launch. No coding. Free tools throughout.
 
-Eight modules, 35 lessons, 5 project blocks, a capstone and a final assessment. Everything a learner needs is in the course pack (`content/courses/genai-certification/`) and rendered in the Vriddhi app under **Courses**.
+Eight modules, 35 lessons, 5 project blocks, a capstone and a final assessment. Each lesson has a 15-question bank; every module ends with a 10-question advanced mini-assessment, with 60% required to unlock the next module. In the app, learners must reach the end of each lesson/brief and submit its quiz before advancing. Everything a learner needs is in the course pack (`content/courses/genai-certification/`) and rendered in the Vriddhi app under **Courses**.
 
 **What makes it work:** every lesson ends in a lab that produces an artefact; artefacts accumulate into projects; projects become the portfolio; the portfolio becomes the interview. Protect the labs above everything else.
 
@@ -44,6 +44,7 @@ Modules 7 and 8 are deliberately interleaved with the capstone: the ethics audit
 - [ ] **Jury for the showcase:** one faculty member, one practitioner, one user-community representative where possible.
 - [ ] **Policy:** share the certification policy and the AI-use statement template in Week 1; agree the college's position on recording sessions.
 - [ ] **Data protection:** decide where learner work is stored (institutional Drive), who has access, and the deletion date.
+- [ ] **Time-sensitive review:** use §6 to re-check tool availability, free-tier limits, data terms, consent/licensing steps, language quality and current legal/policy dates. Verify legal claims against current official sources, record the source/review date in the cohort calendar, and tell learners what changed.
 
 ## 4. Running sessions well
 

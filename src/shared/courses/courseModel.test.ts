@@ -4,17 +4,23 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import {
+  canTakeModuleAssessment,
+  certificateEligibility,
   coursePercent,
   emptyProgress,
   flattenTopics,
   formatMinutes,
   gradeBand,
   markComplete,
+  isModuleUnlocked,
+  isTopicUnlocked,
   markIncomplete,
+  mergeCourseProgress,
   minutesSummary,
   modulePercent,
   neighbours,
   quizAverage,
+  recordModuleAssessmentAttempt,
   recordQuizAttempt,
   resumeTopic,
   scoreQuiz,
@@ -150,6 +156,78 @@ test('recordQuizAttempt keeps the best score while counting every attempt', () =
   assert.equal(quizAverage(emptyProgress()), null)
 })
 
+test('topics unlock sequentially only after content is read and the prior lesson quiz is submitted', () => {
+  const manifest = fixture()
+  const p0 = emptyProgress()
+  assert.equal(isTopicUnlocked(manifest, p0, 'm1-t1'), true)
+  assert.equal(isTopicUnlocked(manifest, p0, 'm1-t2'), false)
+
+  const readFirst = markComplete(p0, 'm1-t1')
+  assert.equal(isTopicUnlocked(manifest, readFirst, 'm1-t2'), false, 'reading alone does not unlock the next lesson')
+  const quizFirst = recordQuizAttempt(readFirst, 'm1-t1', { score: 0, total: 15 })
+  assert.equal(isTopicUnlocked(manifest, quizFirst, 'm1-t2'), true, 'any submitted lesson quiz unlocks the next topic')
+  assert.equal(isTopicUnlocked(manifest, quizFirst, 'm2-t1'), false, 'a new module needs its gate')
+})
+
+test('module mini-assessments require every topic and quiz, and 60% unlocks the next module', () => {
+  const manifest = fixture()
+  manifest.modules[0].assessment = { title: 'Gate A', passMark: 60, questionCount: 10 }
+  manifest.modules[1].assessment = { title: 'Gate B', passMark: 60, questionCount: 10 }
+  let progress = emptyProgress()
+  assert.equal(canTakeModuleAssessment(manifest.modules[0], progress), false)
+
+  for (const topic of manifest.modules[0].topics) {
+    progress = markComplete(progress, topic.id)
+    if (topic.type === 'lesson') progress = recordQuizAttempt(progress, topic.id, { score: 12, total: 15 })
+  }
+  assert.equal(canTakeModuleAssessment(manifest.modules[0], progress), true)
+  assert.equal(isModuleUnlocked(manifest, progress, 1), false)
+
+  progress = recordModuleAssessmentAttempt(progress, 'm1', { score: 5, total: 10 })
+  assert.equal(isModuleUnlocked(manifest, progress, 1), false)
+  progress = recordModuleAssessmentAttempt(progress, 'm1', { score: 6, total: 10 })
+  assert.equal(isModuleUnlocked(manifest, progress, 1), true)
+  assert.equal(isTopicUnlocked(manifest, progress, 'm2-t1'), true)
+})
+
+test('offline/cloud progress merge unions reads and preserves each highest quiz and assessment score', () => {
+  let local = recordQuizAttempt(markComplete(emptyProgress(), 'm1-t1'), 'm1-t1', { score: 12, total: 15 }, new Date('2026-01-01T00:00:00Z'))
+  local = recordQuizAttempt(local, 'm1-t1', { score: 8, total: 15 }, new Date('2026-01-01T01:00:00Z'))
+  const remote = recordQuizAttempt(markComplete(emptyProgress(), 'm1-t2'), 'm1-t1', { score: 10, total: 15 }, new Date('2026-01-02T00:00:00Z'))
+  const remoteWithAssessment = recordModuleAssessmentAttempt(remote, 'm1', { score: 8, total: 10 }, new Date('2026-01-03T00:00:00Z'))
+  const merged = mergeCourseProgress(local, remoteWithAssessment)
+  assert.ok(merged.read?.['m1-t1'])
+  assert.ok(merged.read?.['m1-t2'])
+  assert.equal(merged.quiz['m1-t1'].score, 12)
+  assert.equal(merged.quiz['m1-t1'].attempts, 2)
+  assert.equal(merged.moduleAssessments?.m1.score, 8)
+})
+
+test('certificate eligibility requires all content, all lesson quizzes, the minimum average and every module pass', () => {
+  const manifest = fixture()
+  manifest.certificateEligibility = {
+    minimumQuizAverage: 60,
+    moduleAssessmentPassMark: 60,
+    requireAllTopicsRead: true,
+    requireAllLessonQuizzes: true,
+  }
+  manifest.modules[0].assessment = { title: 'Gate A', passMark: 60, questionCount: 10 }
+  manifest.modules[1].assessment = { title: 'Gate B', passMark: 60, questionCount: 10 }
+  let progress = emptyProgress()
+  for (const module of manifest.modules) {
+    for (const topic of module.topics) {
+      progress = markComplete(progress, topic.id)
+      if (topic.type === 'lesson') progress = recordQuizAttempt(progress, topic.id, { score: 12, total: 15 })
+    }
+  }
+  progress = recordModuleAssessmentAttempt(progress, 'm1', { score: 6, total: 10 })
+  progress = recordModuleAssessmentAttempt(progress, 'm2', { score: 9, total: 10 })
+  assert.equal(certificateEligibility(manifest, progress).eligible, true)
+  assert.equal(certificateEligibility(manifest, emptyProgress()).eligible, false)
+  const failedGate = { ...progress, moduleAssessments: { ...progress.moduleAssessments, m2: { score: 5, total: 10, at: '2026-01-01T00:00:00Z', attempts: 1 } } }
+  assert.equal(certificateEligibility(manifest, failedGate).eligible, false)
+})
+
 test('gradeBand picks the highest band whose minimum is met, regardless of declared order', () => {
   const m = fixture()
   assert.equal(gradeBand(m, 95), 'Distinction')
@@ -198,7 +276,17 @@ test('the bundled GenAI certification manifest is valid and matches its publishe
   assert.equal(seq.filter((t) => t.type === 'lesson').length, 35)
   assert.equal(seq.filter((t) => t.type === 'project').length, 6)
   assert.equal(manifest.totalHours, 60)
+  assert.equal(manifest.lessonQuizQuestionCount, 15)
   assert.equal(manifest.assessment.components.reduce((n, c) => n + c.weight, 0), 100)
+  for (const mod of manifest.modules) {
+    const bankPath = resolve(dirname(PACK), 'modules', mod.slug, 'quiz.json')
+    const bank = JSON.parse(readFileSync(bankPath, 'utf8'))
+    for (const topic of mod.topics.filter((item) => item.type === 'lesson')) {
+      assert.equal(bank.questions[topic.id]?.length, 15, `${topic.id} has 15 lesson questions`)
+    }
+    assert.equal(bank.moduleAssessment.questions.length, mod.assessment?.questionCount)
+    assert.ok(bank.moduleAssessment.questions.every((question: { difficulty?: string }) => question.difficulty === 'advanced'))
+  }
   // Topic ids are unique and every lesson path lives under the pack.
   assert.equal(new Set(seq.map((t) => t.id)).size, seq.length)
   assert.ok(seq.every((t) => /^(modules|projects)\//.test(t.lesson)))

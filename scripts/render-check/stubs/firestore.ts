@@ -44,7 +44,11 @@ export async function getDocs(_q: any) {
   }
   return { empty: true, size: 0, docs: [], forEach: () => {} };
 }
-export async function setDoc(..._a: any[]) { calls.push('setDoc'); }
+export async function setDoc(...a: any[]) {
+  calls.push('setDoc');
+  const writes = ((globalThis as any).__RC_WRITES ??= [] as any[]);
+  writes.push({ path: (a[0] as any)?.__path, data: a[1] });
+}
 // Write/listen surfaces reached by pages further down the module graph
 // (curriculum, superadmin, layout). They are stubs like everything else here:
 // recorded, never persisted.

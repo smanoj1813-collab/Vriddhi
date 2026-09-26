@@ -13,8 +13,8 @@
 import { lazy, Suspense } from 'react'
 import type { RouteObject } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import { useAuth } from '@/modules/auth/context/AuthContext'
 import CoursePublicLayout from './CoursePublicLayout'
+import { CourseAccessStatus, StudentCourseAccessProvider, StudentCourseUnavailable, useStudentCourseAccess } from './StudentCourseAccess'
 
 const CourseCatalogPage = lazy(() => import('./CourseCatalogPage'))
 const CourseOverviewPage = lazy(() => import('./CourseOverviewPage'))
@@ -32,23 +32,40 @@ function Fallback() {
 }
 
 function StudentCatalog() {
-  const { user } = useAuth()
-  return <CourseCatalogPage basePath={STUDENT_COURSES_PATH} uid={user?.uid} />
+  const access = useStudentCourseAccess()
+  if (access.loading || access.error) return <CourseAccessStatus />
+  return <CourseCatalogPage basePath={STUDENT_COURSES_PATH} uid={access.uid} collegeId={access.collegeId} assignedCourseIds={access.assignedCourseIds} assignments={access.assignments} />
 }
 function StudentOverview() {
-  const { user } = useAuth()
-  return <CourseOverviewPage basePath={STUDENT_COURSES_PATH} uid={user?.uid} />
+  const access = useStudentCourseAccess()
+  if (access.loading || access.error) return <CourseAccessStatus />
+  return (
+    <StudentCourseUnavailable>
+      <CourseOverviewPage basePath={STUDENT_COURSES_PATH} uid={access.uid} collegeId={access.collegeId} learnerName={access.learnerName || undefined} />
+    </StudentCourseUnavailable>
+  )
 }
 function StudentLesson() {
-  const { user } = useAuth()
-  return <CourseLessonPage basePath={STUDENT_COURSES_PATH} uid={user?.uid} />
+  const access = useStudentCourseAccess()
+  if (access.loading || access.error) return <CourseAccessStatus />
+  return (
+    <StudentCourseUnavailable>
+      <CourseLessonPage basePath={STUDENT_COURSES_PATH} uid={access.uid} collegeId={access.collegeId} />
+    </StudentCourseUnavailable>
+  )
 }
 
 /** Mount under the `/student` layout route's `children`. */
 export const studentCourseRoutes: RouteObject[] = [
-  { path: 'courses', element: <StudentCatalog /> },
-  { path: 'courses/:courseId', element: <StudentOverview /> },
-  { path: 'courses/:courseId/learn/:topicId', element: <StudentLesson /> },
+  {
+    path: 'courses',
+    element: <StudentCourseAccessProvider />,
+    children: [
+      { index: true, element: <StudentCatalog /> },
+      { path: ':courseId', element: <StudentOverview /> },
+      { path: ':courseId/learn/:topicId', element: <StudentLesson /> },
+    ],
+  },
 ]
 
 /** Top-level public routes. */

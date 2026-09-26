@@ -2,39 +2,1049 @@
   "moduleId": "m3",
   "questions": {
     "m3-t1": [
-      { "id": "m3-t1-q1", "question": "In simple terms, how does a diffusion image model generate a picture?", "options": ["It searches the internet for a matching photo", "It starts from random noise and removes it step by step, steering toward the prompt", "It copies and pastes parts of training images", "It draws vector shapes from rules"], "answerIndex": 1, "explanation": "Diffusion models are trained to reverse noise; generation starts from static and denoises toward the caption you supply." },
-      { "id": "m3-t1-q2", "question": "Why is text inside generated images often wrong?", "options": ["Models are not allowed to write", "Letters are strict shapes that the model learned only as fuzzy visual patterns", "Text requires a paid plan", "Images have no colour channel for text"], "answerIndex": 1, "explanation": "The model learned letters as patterns, not rules. Newer tools improve, but adding text in a design tool is usually smarter." },
-      { "id": "m3-t1-q3", "question": "Which tool type is the recommended default for everyday generation in this course?", "options": ["Dedicated generators only", "Chat assistants or design-suite AI, escalating to dedicated tools only when needed", "Editing tools only", "Stock photo libraries"], "answerIndex": 1, "explanation": "Generate in a chat assistant or design suite, refine in a design tool, escalate only for demanding briefs." },
-      { "id": "m3-t1-q4", "question": "What should you write BEFORE prompting an image tool?", "options": ["A list of adjectives", "A brief: purpose, audience, format, must-haves, style, constraints", "The tool's licence", "A hashtag list"], "answerIndex": 1, "explanation": "A five-minute brief saves dozens of wasted generations." },
-      { "id": "m3-t1-q5", "question": "Which is a correct licence rule from the lesson?", "options": ["All AI images are public domain", "Free tiers always allow commercial use", "Read the tool's terms; prefer licensed-data tools for client work; never real faces or trademarked characters", "Licences only matter for video"], "answerIndex": 2, "explanation": "Ownership and commercial rights depend on tool terms and national law; keep records and be conservative for client work." }
+      {
+        "id": "m3-t1-q1",
+        "question": "In simple terms, how does a diffusion image model generate a picture?",
+        "options": [
+          "It searches the internet for a matching photo",
+          "It starts from random noise and removes it step by step, steering toward the prompt",
+          "It copies and pastes parts of training images",
+          "It draws vector shapes from rules"
+        ],
+        "answerIndex": 1,
+        "explanation": "Diffusion models are trained to reverse noise; generation starts from static and denoises toward the caption you supply."
+      },
+      {
+        "id": "m3-t1-q2",
+        "question": "Why is text inside generated images often wrong?",
+        "options": [
+          "Models are not allowed to write",
+          "Letters are strict shapes that the model learned only as fuzzy visual patterns",
+          "Text requires a paid plan",
+          "Images have no colour channel for text"
+        ],
+        "answerIndex": 1,
+        "explanation": "The model learned letters as patterns, not rules. Newer tools improve, but adding text in a design tool is usually smarter."
+      },
+      {
+        "id": "m3-t1-q3",
+        "question": "Which tool type is the recommended default for everyday generation in this course?",
+        "options": [
+          "Dedicated generators only",
+          "Chat assistants or design-suite AI, escalating to dedicated tools only when needed",
+          "Editing tools only",
+          "Stock photo libraries"
+        ],
+        "answerIndex": 1,
+        "explanation": "Generate in a chat assistant or design suite, refine in a design tool, escalate only for demanding briefs."
+      },
+      {
+        "id": "m3-t1-q4",
+        "question": "What should you write BEFORE prompting an image tool?",
+        "options": [
+          "A list of adjectives",
+          "A brief: purpose, audience, format, must-haves, style, constraints",
+          "The tool's licence",
+          "A hashtag list"
+        ],
+        "answerIndex": 1,
+        "explanation": "A five-minute brief saves dozens of wasted generations."
+      },
+      {
+        "id": "m3-t1-q5",
+        "question": "Which is a correct licence rule from the lesson?",
+        "options": [
+          "All AI images are public domain",
+          "Free tiers always allow commercial use",
+          "Read the tool's terms; prefer licensed-data tools for client work; never real faces or trademarked characters",
+          "Licences only matter for video"
+        ],
+        "answerIndex": 2,
+        "explanation": "Ownership and commercial rights depend on tool terms and national law; keep records and be conservative for client work."
+      },
+      {
+        "id": "m3-t1-q6",
+        "question": "A diffusion system starts with noise and generates a picture guided by a prompt. Which output property still needs human review?",
+        "options": [
+          "Whether the noise was random",
+          "Whether the prompt had a noun",
+          "Whether the depicted scene is accurate, appropriate and useful for its purpose",
+          "Whether the file uses pixels"
+        ],
+        "answerIndex": 2,
+        "explanation": "A plausible image can still misrepresent people, places or facts."
+      },
+      {
+        "id": "m3-t1-q7",
+        "question": "A science student needs an illustration of a cell process. What should they do before publishing an AI image?",
+        "options": [
+          "Assume a realistic style means scientific accuracy",
+          "Ask the generator if its diagram is correct",
+          "Remove all labels and skip review",
+          "Compare structures and labels with an authoritative biology source"
+        ],
+        "answerIndex": 3,
+        "explanation": "Generated visuals need subject-matter verification."
+      },
+      {
+        "id": "m3-t1-q8",
+        "question": "Why can a visual brief improve image-generation results?",
+        "options": [
+          "It fixes audience, purpose, format and constraints before style choices are made",
+          "It guarantees correct spelling inside the image",
+          "It removes licence requirements",
+          "It forces every model to return the same image"
+        ],
+        "answerIndex": 0,
+        "explanation": "A brief gives the generation task a clear purpose and boundaries."
+      },
+      {
+        "id": "m3-t1-q9",
+        "question": "A local business requests a public image featuring a real customer. What should be checked?",
+        "options": [
+          "Only the image dimensions",
+          "Consent, likeness rights, intended use and the image tool’s licence",
+          "Whether the customer has a social account",
+          "If the background is colourful"
+        ],
+        "answerIndex": 1,
+        "explanation": "Real likeness use requires permission and rights review."
+      },
+      {
+        "id": "m3-t1-q10",
+        "question": "A generated visual has six fingers and a misleading logo. What is the appropriate review?",
+        "options": [
+          "Publish because viewers know AI can err",
+          "Crop only the logo",
+          "Correct or regenerate the asset, remove inaccurate marks and inspect the complete export",
+          "Add a disclaimer without fixing the hand"
+        ],
+        "answerIndex": 2,
+        "explanation": "Visible errors and protected marks should be corrected before use."
+      },
+      {
+        "id": "m3-t1-q11",
+        "question": "A team wants to create a visual for a specific Indian audience. Which prompt detail is most useful?",
+        "options": [
+          "Use the phrase “exotic culture”",
+          "Assume the model knows every regional context",
+          "Avoid all demographic detail even when relevant",
+          "Name the intended audience and relevant setting respectfully, then review representation"
+        ],
+        "answerIndex": 3,
+        "explanation": "Specific, respectful context helps reduce defaults and stereotypes."
+      },
+      {
+        "id": "m3-t1-q12",
+        "question": "A prompt creates a beautiful scene with the wrong product shape. What should the designer do?",
+        "options": [
+          "Use a reference image or precise constraints and check product-critical details",
+          "Accept the style as more important than fidelity",
+          "Add more adjectives only",
+          "Blur the product"
+        ],
+        "answerIndex": 0,
+        "explanation": "Reference and constraint-based iteration are useful for fidelity."
+      },
+      {
+        "id": "m3-t1-q13",
+        "question": "An image generator returns a close imitation of a competitor’s trademarked character. What is the safe choice?",
+        "options": [
+          "Use it if the colours are changed",
+          "Do not publish it; create an original concept and review rights for the intended use",
+          "Remove the character’s name from the prompt",
+          "Publish only as a small image"
+        ],
+        "answerIndex": 1,
+        "explanation": "Changing surface details does not necessarily resolve intellectual-property or likeness concerns."
+      },
+      {
+        "id": "m3-t1-q14",
+        "question": "A student has no permission to use a classmate’s face in a training example. What should they use?",
+        "options": [
+          "The face if the classmate is not tagged",
+          "A public profile photo",
+          "A consenting subject, a generic illustration or a licensed synthetic alternative",
+          "A blurred copy that is still recognisable"
+        ],
+        "answerIndex": 2,
+        "explanation": "Choose a non-identifying or permitted alternative rather than reuse a likeness."
+      },
+      {
+        "id": "m3-t1-q15",
+        "question": "A visual asset will appear in print and mobile. What is the best preparation?",
+        "options": [
+          "Use one low-resolution image everywhere",
+          "Let each platform crop automatically without review",
+          "Stretch the source for print",
+          "Specify aspect ratios and resolution, then inspect each final crop at its actual size"
+        ],
+        "answerIndex": 3,
+        "explanation": "Format-specific exports and crop checks prevent production defects."
+      }
     ],
     "m3-t2": [
-      { "id": "m3-t2-q1", "question": "What is the recommended order of the image prompt formula?", "options": ["Quality – Lighting – Subject – Setting", "Subject – Setting – Style – Composition – Lighting – Quality/Constraints", "Style – Subject – Constraints", "Composition – Subject – Style"], "answerIndex": 1, "explanation": "Models weigh early words more, so the subject leads and constraints close." },
-      { "id": "m3-t2-q2", "question": "Why does the lesson advise against 'in the style of [living artist]'?", "options": ["It always produces low quality", "It is ethically dubious and often blocked; describe the qualities instead", "It costs extra credits", "Models cannot recognise artists"], "answerIndex": 1, "explanation": "Describe the properties you want (bold outlines, limited palette) rather than appropriating a living artist's style." },
-      { "id": "m3-t2-q3", "question": "What is the fastest route to visual consistency across a set?", "options": ["Generate each image with a new prompt", "A reused base prompt plus reference images, changing only the subject", "Using a different tool for each image", "Adding more adjectives"], "answerIndex": 1, "explanation": "Lock style, palette, lighting and composition in a base prompt; vary only the subject." },
-      { "id": "m3-t2-q4", "question": "You need a square image to become a 9:16 story without cropping the subject. Which edit?", "options": ["Inpainting", "Outpainting / expand", "Upscaling", "Background removal"], "answerIndex": 1, "explanation": "Outpainting extends the canvas; the model fills the new area." },
-      { "id": "m3-t2-q5", "question": "Which prompt best counters default bias for an Indian audience?", "options": ["'A group of engineers'", "'A diverse group of Indian college students in a Bengaluru campus'", "'Engineers, 8K, masterpiece'", "'Professional people'"], "answerIndex": 1, "explanation": "Model defaults are not neutral; specify age, gender, region and attire deliberately." }
+      {
+        "id": "m3-t2-q1",
+        "question": "What is the recommended order of the image prompt formula?",
+        "options": [
+          "Quality – Lighting – Subject – Setting",
+          "Subject – Setting – Style – Composition – Lighting – Quality/Constraints",
+          "Style – Subject – Constraints",
+          "Composition – Subject – Style"
+        ],
+        "answerIndex": 1,
+        "explanation": "Models weigh early words more, so the subject leads and constraints close."
+      },
+      {
+        "id": "m3-t2-q2",
+        "question": "Why does the lesson advise against 'in the style of [living artist]'?",
+        "options": [
+          "It always produces low quality",
+          "It is ethically dubious and often blocked; describe the qualities instead",
+          "It costs extra credits",
+          "Models cannot recognise artists"
+        ],
+        "answerIndex": 1,
+        "explanation": "Describe the properties you want (bold outlines, limited palette) rather than appropriating a living artist's style."
+      },
+      {
+        "id": "m3-t2-q3",
+        "question": "What is the fastest route to visual consistency across a set?",
+        "options": [
+          "Generate each image with a new prompt",
+          "A reused base prompt plus reference images, changing only the subject",
+          "Using a different tool for each image",
+          "Adding more adjectives"
+        ],
+        "answerIndex": 1,
+        "explanation": "Lock style, palette, lighting and composition in a base prompt; vary only the subject."
+      },
+      {
+        "id": "m3-t2-q4",
+        "question": "You need a square image to become a 9:16 story without cropping the subject. Which edit?",
+        "options": [
+          "Inpainting",
+          "Outpainting / expand",
+          "Upscaling",
+          "Background removal"
+        ],
+        "answerIndex": 1,
+        "explanation": "Outpainting extends the canvas; the model fills the new area."
+      },
+      {
+        "id": "m3-t2-q5",
+        "question": "Which prompt best counters default bias for an Indian audience?",
+        "options": [
+          "'A group of engineers'",
+          "'A diverse group of Indian college students in a Bengaluru campus'",
+          "'Engineers, 8K, masterpiece'",
+          "'Professional people'"
+        ],
+        "answerIndex": 1,
+        "explanation": "Model defaults are not neutral; specify age, gender, region and attire deliberately."
+      },
+      {
+        "id": "m3-t2-q6",
+        "question": "An image prompt says “beautiful cafe.” Which addition most improves controllability?",
+        "options": [
+          "Add “best image ever”",
+          "Ask for more realism only",
+          "Remove the audience",
+          "Specify subject, setting, style, composition, lighting and constraints"
+        ],
+        "answerIndex": 3,
+        "explanation": "A structured prompt formula communicates visual decisions explicitly."
+      },
+      {
+        "id": "m3-t2-q7",
+        "question": "A series should have the same camera angle and palette. What should remain stable?",
+        "options": [
+          "The base prompt and reference image, while changing only the intended subject detail",
+          "Every prompt word except punctuation",
+          "The image model’s random seed only",
+          "Nothing; new prompts create consistency"
+        ],
+        "answerIndex": 0,
+        "explanation": "Stable prompts and references support visual continuity."
+      },
+      {
+        "id": "m3-t2-q8",
+        "question": "A team needs more sky above an approved image for a title. Which operation fits?",
+        "options": [
+          "Cropping the existing image tighter",
+          "Outpainting to extend the canvas, followed by edge review",
+          "Upscaling without expanding",
+          "Changing the file format"
+        ],
+        "answerIndex": 1,
+        "explanation": "Outpainting extends the canvas beyond the original boundaries."
+      },
+      {
+        "id": "m3-t2-q9",
+        "question": "The image generator places tiny unreadable writing on a package. What should the designer request?",
+        "options": [
+          "More text in the prompt",
+          "A smaller export",
+          "A clean package with no text, then add checked type in the design software",
+          "A fake certification seal"
+        ],
+        "answerIndex": 2,
+        "explanation": "Exact text belongs in an editable layout layer, not generated lettering."
+      },
+      {
+        "id": "m3-t2-q10",
+        "question": "A style prompt uses “in the style of a living artist.” What alternative is preferable?",
+        "options": [
+          "Use the artist’s name in every version",
+          "Upload private sketches from their portfolio",
+          "Ask for an indistinguishable copy",
+          "Describe line quality, palette, mood and composition without naming or copying the artist"
+        ],
+        "answerIndex": 3,
+        "explanation": "Describe visual characteristics rather than directing imitation of a living artist."
+      },
+      {
+        "id": "m3-t2-q11",
+        "question": "A student generates ten images and selects the most attractive one, but it excludes a required accessibility feature. What should be prioritised?",
+        "options": [
+          "The brief’s must-have and audience needs over visual preference",
+          "The highest resolution",
+          "The most dramatic lighting",
+          "The image with the least review"
+        ],
+        "answerIndex": 0,
+        "explanation": "Selection should satisfy the brief and user need, not aesthetics alone."
+      },
+      {
+        "id": "m3-t2-q12",
+        "question": "A prompt includes “Indian students” and the results show only one stereotyped setting. What can the designer do?",
+        "options": [
+          "Repeat the same demographic label louder",
+          "Add a concrete, diverse campus context and review results for representation",
+          "Use a national flag in every image",
+          "Assume the generator’s default is neutral"
+        ],
+        "answerIndex": 1,
+        "explanation": "Specific inclusive context and review can counter narrow defaults."
+      },
+      {
+        "id": "m3-t2-q13",
+        "question": "A visual needs a consistent character across multiple scenes. What helps most?",
+        "options": [
+          "Change hair, clothing and lighting each time",
+          "Use unrelated models and no references",
+          "Use a suitable reference and keep defining features stable across prompts",
+          "Ask the model to remember without context"
+        ],
+        "answerIndex": 2,
+        "explanation": "A reference and stable character specification support continuity."
+      },
+      {
+        "id": "m3-t2-q14",
+        "question": "An edit changes the background but accidentally removes a hand. What is the right next step?",
+        "options": [
+          "Assume the thumbnail is sufficient",
+          "Publish because the background is correct",
+          "Use a warning label instead of fixing it",
+          "Inspect the edit at full size and revise the mask or prompt before approval"
+        ],
+        "answerIndex": 3,
+        "explanation": "Review edits for unintended changes, not just the requested one."
+      },
+      {
+        "id": "m3-t2-q15",
+        "question": "A generated image will be used for a client campaign. What additional check is important?",
+        "options": [
+          "Tool terms, commercial rights, likeness and trademark review",
+          "Only whether the prompt was polite",
+          "Whether the model is free",
+          "If the image is not a photograph"
+        ],
+        "answerIndex": 0,
+        "explanation": "Commercial use brings licence and rights considerations regardless of generation method."
+      }
     ],
     "m3-t3": [
-      { "id": "m3-t3-q1", "question": "Where should text be added for a poster?", "options": ["In the image generator, always", "In the design tool's text layer, with every letter checked", "Never; posters should not have text", "In a separate spreadsheet"], "answerIndex": 1, "explanation": "The design layer renders text perfectly and keeps it editable and translatable." },
-      { "id": "m3-t3-q2", "question": "What is the first step in getting a good deck from an AI presentation tool?", "options": ["Upload the raw report and accept the output", "Write a sentence-title story first (one message per slide), then generate from that outline", "Pick a template", "Choose a colour"], "answerIndex": 1, "explanation": "A narrative outline with message titles produces a coherent deck; raw documents produce bullet dumps." },
-      { "id": "m3-t3-q3", "question": "Why must charts never be drawn by an image generator?", "options": ["They look ugly", "The bars represent data that does not exist", "Generators cannot do colour", "It is too slow"], "answerIndex": 1, "explanation": "A chart is a claim about numbers; build it from real data in a chart tool." },
-      { "id": "m3-t3-q4", "question": "Which set is the five design fundamentals from the lesson?", "options": ["Speed, cost, size, colour, font", "Hierarchy, alignment, contrast, proximity, restraint", "Hook, body, CTA, hashtag, emoji", "Brand, logo, slogan, image, text"], "answerIndex": 1, "explanation": "These five fix most amateur designs; check them before exporting." },
-      { "id": "m3-t3-q5", "question": "Which fonts are recommended when a design must render Kannada or Hindi correctly?", "options": ["Any decorative display font", "Noto Sans / Noto Serif families", "Comic Sans", "System default only"], "answerIndex": 1, "explanation": "Noto fonts are free and cover Indian scripts reliably; still proofread with a native reader." }
+      {
+        "id": "m3-t3-q1",
+        "question": "Where should text be added for a poster?",
+        "options": [
+          "In the image generator, always",
+          "In the design tool's text layer, with every letter checked",
+          "Never; posters should not have text",
+          "In a separate spreadsheet"
+        ],
+        "answerIndex": 1,
+        "explanation": "The design layer renders text perfectly and keeps it editable and translatable."
+      },
+      {
+        "id": "m3-t3-q2",
+        "question": "What is the first step in getting a good deck from an AI presentation tool?",
+        "options": [
+          "Upload the raw report and accept the output",
+          "Write a sentence-title story first (one message per slide), then generate from that outline",
+          "Pick a template",
+          "Choose a colour"
+        ],
+        "answerIndex": 1,
+        "explanation": "A narrative outline with message titles produces a coherent deck; raw documents produce bullet dumps."
+      },
+      {
+        "id": "m3-t3-q3",
+        "question": "Why must charts never be drawn by an image generator?",
+        "options": [
+          "They look ugly",
+          "The bars represent data that does not exist",
+          "Generators cannot do colour",
+          "It is too slow"
+        ],
+        "answerIndex": 1,
+        "explanation": "A chart is a claim about numbers; build it from real data in a chart tool."
+      },
+      {
+        "id": "m3-t3-q4",
+        "question": "Which set is the five design fundamentals from the lesson?",
+        "options": [
+          "Speed, cost, size, colour, font",
+          "Hierarchy, alignment, contrast, proximity, restraint",
+          "Hook, body, CTA, hashtag, emoji",
+          "Brand, logo, slogan, image, text"
+        ],
+        "answerIndex": 1,
+        "explanation": "These five fix most amateur designs; check them before exporting."
+      },
+      {
+        "id": "m3-t3-q5",
+        "question": "Which fonts are recommended when a design must render Kannada or Hindi correctly?",
+        "options": [
+          "Any decorative display font",
+          "Noto Sans / Noto Serif families",
+          "Comic Sans",
+          "System default only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Noto fonts are free and cover Indian scripts reliably; still proofread with a native reader."
+      },
+      {
+        "id": "m3-t3-q6",
+        "question": "AI creates a poster with the event title misspelled. What is the reliable correction?",
+        "options": [
+          "Replace it in an editable text layer and proofread the exported image",
+          "Ask the model to spell the words more clearly",
+          "Use the poster without a title",
+          "Add a second generated title on top"
+        ],
+        "answerIndex": 0,
+        "explanation": "Design-tool text layers give control over exact copy."
+      },
+      {
+        "id": "m3-t3-q7",
+        "question": "A presentation has one key conclusion but ten unrelated slides. What should the author do first?",
+        "options": [
+          "Generate more decorative images",
+          "Write a sentence-title story with one message per slide",
+          "Add a transition to every slide",
+          "Increase the font size on the title slide"
+        ],
+        "answerIndex": 1,
+        "explanation": "A clear narrative precedes slide styling."
+      },
+      {
+        "id": "m3-t3-q8",
+        "question": "An AI infographic uses a bar chart based on made-up quantities. What should replace it?",
+        "options": [
+          "The same bars with no axis labels",
+          "A more realistic background",
+          "A chart built from verified data, or a clearly labelled qualitative illustration",
+          "A prompt saying “accurate chart”"
+        ],
+        "answerIndex": 2,
+        "explanation": "A chart must encode real data; an image model cannot supply evidence."
+      },
+      {
+        "id": "m3-t3-q9",
+        "question": "A campus design must display Kannada and Hindi correctly. What should the designer test?",
+        "options": [
+          "Only the font name",
+          "Latin text with similar shapes",
+          "A low-resolution thumbnail only",
+          "A compatible font such as a Noto family and the actual exported glyphs on target devices"
+        ],
+        "answerIndex": 3,
+        "explanation": "Font support and actual rendering must be checked for each target format."
+      },
+      {
+        "id": "m3-t3-q10",
+        "question": "A brand kit contains approved colours and logo files. How should AI support a poster?",
+        "options": [
+          "Generate or arrange supporting visuals, then use the approved logo and colours in the design layer",
+          "Ask the image model to redraw the logo",
+          "Use a competitor’s logo as a placeholder without marking it",
+          "Let the model pick unrelated colours"
+        ],
+        "answerIndex": 0,
+        "explanation": "Keep controlled brand assets intact and use AI for supporting work."
+      },
+      {
+        "id": "m3-t3-q11",
+        "question": "A presentation tool adds a statistic that was not in the outline. What should the presenter do?",
+        "options": [
+          "Keep it because slides need numbers",
+          "Remove it or source and verify it before presenting",
+          "Ask the tool to make the statistic more believable",
+          "Hide the footnote"
+        ],
+        "answerIndex": 1,
+        "explanation": "Every factual claim on a slide needs evidence."
+      },
+      {
+        "id": "m3-t3-q12",
+        "question": "A social graphic’s text is too small on a phone. What is a useful design check?",
+        "options": [
+          "Use more fonts",
+          "Add additional copy",
+          "Preview the asset at the expected mobile size and simplify the hierarchy if needed",
+          "Export a larger file without changing layout"
+        ],
+        "answerIndex": 2,
+        "explanation": "Readable hierarchy should be tested in the context where people will view it."
+      },
+      {
+        "id": "m3-t3-q13",
+        "question": "An AI slide deck uses a decorative image behind every paragraph. What should be refined?",
+        "options": [
+          "The number of image prompts",
+          "The model’s training data",
+          "The slide transition duration only",
+          "Hierarchy, contrast, alignment, proximity and restraint"
+        ],
+        "answerIndex": 3,
+        "explanation": "Visual fundamentals improve clarity more than decoration volume."
+      },
+      {
+        "id": "m3-t3-q14",
+        "question": "A student wants an infographic from survey results. What should happen before design?",
+        "options": [
+          "Clean and validate the data, decide the takeaway, then build a chart from the checked figures",
+          "Ask the image model to estimate the missing values",
+          "Choose colours before checking totals",
+          "Use generated icons as evidence"
+        ],
+        "answerIndex": 0,
+        "explanation": "Data quality and the message come before visual styling."
+      },
+      {
+        "id": "m3-t3-q15",
+        "question": "A tool exports a logo with slightly altered lettering. What should the final designer do?",
+        "options": [
+          "Accept it if the colours match",
+          "Replace it with the original approved asset and inspect the export",
+          "Tell the client it is close enough",
+          "Add a smaller generated version beside it"
+        ],
+        "answerIndex": 1,
+        "explanation": "Logos should remain exact controlled assets."
+      }
     ],
     "m3-t4": [
-      { "id": "m3-t4-q1", "question": "Which family of tools does 70% of the actual video work happen in?", "options": ["Generative clip tools", "Avatar presenters", "AI-assisted editors (captions, cuts, reframing, assembly)", "Image generators"], "answerIndex": 2, "explanation": "Clips and avatars are raw material; the editor turns them into a finished video." },
-      { "id": "m3-t4-q2", "question": "Why does the lesson prefer image-to-video over text-to-video?", "options": ["It is free", "Consistency and control improve greatly when you animate a still you already approved", "Text-to-video is banned", "It produces longer clips"], "answerIndex": 1, "explanation": "Approving the still first removes most of the randomness." },
-      { "id": "m3-t4-q3", "question": "Which is a non-negotiable rule for avatar videos?", "options": ["Always three minutes long", "Consent for any likeness used, and disclosure that the presenter is an AI avatar", "Never use captions", "Only English scripts"], "answerIndex": 1, "explanation": "Consent and disclosure protect people and viewers; both are required." },
-      { "id": "m3-t4-q4", "question": "What should you do with auto-generated captions?", "options": ["Trust them", "Proofread every word, especially names, numbers and Indian-language text", "Delete them", "Use them only on YouTube"], "answerIndex": 1, "explanation": "Most social video is watched muted; wrong captions are wrong content." },
-      { "id": "m3-t4-q5", "question": "A 45-second spoken script is roughly how many words?", "options": ["20–30", "75–150", "300–400", "1,000"], "answerIndex": 1, "explanation": "Speech runs at about 2–3 words per second; 30–60 seconds is 75–150 words." }
+      {
+        "id": "m3-t4-q1",
+        "question": "Which family of tools does 70% of the actual video work happen in?",
+        "options": [
+          "Generative clip tools",
+          "Avatar presenters",
+          "AI-assisted editors (captions, cuts, reframing, assembly)",
+          "Image generators"
+        ],
+        "answerIndex": 2,
+        "explanation": "Clips and avatars are raw material; the editor turns them into a finished video."
+      },
+      {
+        "id": "m3-t4-q2",
+        "question": "Why does the lesson prefer image-to-video over text-to-video?",
+        "options": [
+          "It is free",
+          "Consistency and control improve greatly when you animate a still you already approved",
+          "Text-to-video is banned",
+          "It produces longer clips"
+        ],
+        "answerIndex": 1,
+        "explanation": "Approving the still first removes most of the randomness."
+      },
+      {
+        "id": "m3-t4-q3",
+        "question": "Which is a non-negotiable rule for avatar videos?",
+        "options": [
+          "Always three minutes long",
+          "Consent for any likeness used, and disclosure that the presenter is an AI avatar",
+          "Never use captions",
+          "Only English scripts"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consent and disclosure protect people and viewers; both are required."
+      },
+      {
+        "id": "m3-t4-q4",
+        "question": "What should you do with auto-generated captions?",
+        "options": [
+          "Trust them",
+          "Proofread every word, especially names, numbers and Indian-language text",
+          "Delete them",
+          "Use them only on YouTube"
+        ],
+        "answerIndex": 1,
+        "explanation": "Most social video is watched muted; wrong captions are wrong content."
+      },
+      {
+        "id": "m3-t4-q5",
+        "question": "A 45-second spoken script is roughly how many words?",
+        "options": [
+          "20–30",
+          "75–150",
+          "300–400",
+          "1,000"
+        ],
+        "answerIndex": 1,
+        "explanation": "Speech runs at about 2–3 words per second; 30–60 seconds is 75–150 words."
+      },
+      {
+        "id": "m3-t4-q6",
+        "question": "A team has a 45-second video idea. What is a strong production sequence?",
+        "options": [
+          "Generate random clips, then invent a message",
+          "Script, storyboard, generate or capture, edit, caption and review",
+          "Publish the first render without sound",
+          "Add an avatar before defining the audience"
+        ],
+        "answerIndex": 1,
+        "explanation": "A planned workflow connects the story to the final edit and accessibility."
+      },
+      {
+        "id": "m3-t4-q7",
+        "question": "A realistic avatar delivers a public health message. What should viewers know?",
+        "options": [
+          "Only the brand of the generator",
+          "Nothing if the words are accurate",
+          "That the presenter is synthetic, and any real person’s likeness was used with consent",
+          "That the avatar is a real expert"
+        ],
+        "answerIndex": 2,
+        "explanation": "Disclosure and consent prevent deceptive synthetic presentation."
+      },
+      {
+        "id": "m3-t4-q8",
+        "question": "A prompt-to-video clip changes the speaker’s clothing between frames. What can improve continuity?",
+        "options": [
+          "Add more unrelated characters",
+          "Increase clip length without review",
+          "Remove the storyboard",
+          "Use an approved still or reference, stable scene details and short controlled shots"
+        ],
+        "answerIndex": 3,
+        "explanation": "References and shorter, controlled shots reduce visual drift."
+      },
+      {
+        "id": "m3-t4-q9",
+        "question": "A 60-second script is crowded with 250 words. What should the editor do?",
+        "options": [
+          "Shorten the spoken copy and time a real read-through",
+          "Speed the voice up until it fits",
+          "Remove pauses and captions",
+          "Keep it because the video is 60 seconds"
+        ],
+        "answerIndex": 0,
+        "explanation": "Spoken pacing must be measured, not inferred from the file duration."
+      },
+      {
+        "id": "m3-t4-q10",
+        "question": "Auto-captions misrecognise an Indian surname. What is the required final step?",
+        "options": [
+          "Leave it because captions are approximate",
+          "Correct names and other specific terms against the recording before publishing",
+          "Delete all captions",
+          "Change the speaker’s name in the script only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Names and numbers need explicit caption review."
+      },
+      {
+        "id": "m3-t4-q11",
+        "question": "A video shows a fake emergency alert as an example. How should it be framed?",
+        "options": [
+          "Post it without context for engagement",
+          "Use an official logo to make it credible",
+          "Clearly label it as a simulation and avoid presentation that could be mistaken for a real alert",
+          "Remove the date and location only"
+        ],
+        "answerIndex": 2,
+        "explanation": "Synthetic media should not mislead viewers about real events."
+      },
+      {
+        "id": "m3-t4-q12",
+        "question": "A product demo relies on generated footage of a real customer testimonial. What is safest?",
+        "options": [
+          "Invent a customer name",
+          "Use an AI avatar and call it the customer",
+          "Add quotation marks around the claim",
+          "Use only a consenting real speaker or clearly labelled synthetic demonstration, never fabricate a testimonial"
+        ],
+        "answerIndex": 3,
+        "explanation": "A testimonial must not be fabricated or misrepresented."
+      },
+      {
+        "id": "m3-t4-q13",
+        "question": "A short clip is intended for an audience with hearing loss. What should the creator include?",
+        "options": [
+          "Accurate captions and any essential sound information in text",
+          "Background music only",
+          "A transcript hidden from viewers",
+          "A louder voice without captions"
+        ],
+        "answerIndex": 0,
+        "explanation": "Captions make spoken content accessible and should include meaningful sound cues."
+      },
+      {
+        "id": "m3-t4-q14",
+        "question": "A team edits a clip with voice cloning. What evidence should be retained?",
+        "options": [
+          "Only the generated audio file",
+          "Documented consent, approved use, tool terms and the final disclosure",
+          "A prompt saying the speaker agreed",
+          "Nothing once the video is public"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consent and rights records support accountable synthetic media use."
+      },
+      {
+        "id": "m3-t4-q15",
+        "question": "A generated clip contains a distorted college logo. What is the best fix?",
+        "options": [
+          "Blur the whole video",
+          "Trust the generator on the next frame",
+          "Replace it with the approved logo asset in editing and review the complete clip",
+          "Publish with no institution name"
+        ],
+        "answerIndex": 2,
+        "explanation": "Use exact brand assets in post-production and inspect the result."
+      }
     ],
     "m3-t5": [
-      { "id": "m3-t5-q1", "question": "What is a repurposing matrix?", "options": ["A spreadsheet of costs", "A map from one core asset to many derived formats, each with a brief", "A list of hashtags", "A brand kit"], "answerIndex": 1, "explanation": "Start from one strong asset and plan clips, cards, carousels, posts, posters and more." },
-      { "id": "m3-t5-q2", "question": "Which three tools keep a brand consistent at scale?", "options": ["Kit, base prompts, a pre-publish checklist", "Filters, hashtags, emojis", "Three different generators", "Speed, luck, volume"], "answerIndex": 0, "explanation": "The kit fixes visuals, base prompts fix style and voice, and the checklist catches slips." },
-      { "id": "m3-t5-q3", "question": "What minimum contrast ratio does the lesson give for text?", "options": ["1:1", "2:1", "4.5:1", "10:1"], "answerIndex": 2, "explanation": "4.5:1 is the widely used accessibility threshold for body text." },
-      { "id": "m3-t5-q4", "question": "When must a synthetic image or video be labelled?", "options": ["Never; it is obviously AI", "Whenever a reasonable viewer might believe it depicts a real person, place or event", "Only on YouTube", "Only if it is over one minute"], "answerIndex": 1, "explanation": "Realistic depictions require labels; decorative imagery benefits from a brief note." },
-      { "id": "m3-t5-q5", "question": "Which is one of the four pre-publish ethics questions?", "options": ["Will this go viral?", "Whose likeness, work or symbol appears — and do I have consent or rights?", "Is the file size under 5 MB?", "Which filter looks best?"], "answerIndex": 1, "explanation": "The four questions: mistaken for real? whose likeness/work? accurate and respectful? provable claims?" }
+      {
+        "id": "m3-t5-q1",
+        "question": "What is a repurposing matrix?",
+        "options": [
+          "A spreadsheet of costs",
+          "A map from one core asset to many derived formats, each with a brief",
+          "A list of hashtags",
+          "A brand kit"
+        ],
+        "answerIndex": 1,
+        "explanation": "Start from one strong asset and plan clips, cards, carousels, posts, posters and more."
+      },
+      {
+        "id": "m3-t5-q2",
+        "question": "Which three tools keep a brand consistent at scale?",
+        "options": [
+          "Kit, base prompts, a pre-publish checklist",
+          "Filters, hashtags, emojis",
+          "Three different generators",
+          "Speed, luck, volume"
+        ],
+        "answerIndex": 0,
+        "explanation": "The kit fixes visuals, base prompts fix style and voice, and the checklist catches slips."
+      },
+      {
+        "id": "m3-t5-q3",
+        "question": "What minimum contrast ratio does the lesson give for text?",
+        "options": [
+          "1:1",
+          "2:1",
+          "4.5:1",
+          "10:1"
+        ],
+        "answerIndex": 2,
+        "explanation": "4.5:1 is the widely used accessibility threshold for body text."
+      },
+      {
+        "id": "m3-t5-q4",
+        "question": "When must a synthetic image or video be labelled?",
+        "options": [
+          "Never; it is obviously AI",
+          "Whenever a reasonable viewer might believe it depicts a real person, place or event",
+          "Only on YouTube",
+          "Only if it is over one minute"
+        ],
+        "answerIndex": 1,
+        "explanation": "Realistic depictions require labels; decorative imagery benefits from a brief note."
+      },
+      {
+        "id": "m3-t5-q5",
+        "question": "Which is one of the four pre-publish ethics questions?",
+        "options": [
+          "Will this go viral?",
+          "Whose likeness, work or symbol appears — and do I have consent or rights?",
+          "Is the file size under 5 MB?",
+          "Which filter looks best?"
+        ],
+        "answerIndex": 1,
+        "explanation": "The four questions: mistaken for real? whose likeness/work? accurate and respectful? provable claims?"
+      },
+      {
+        "id": "m3-t5-q6",
+        "question": "A long blog post will become a reel, carousel, email and podcast. What is a repurposing matrix for?",
+        "options": [
+          "Duplicating the same file four times",
+          "Replacing source checks with templates",
+          "Mapping one core asset to distinct formats, audiences and briefs",
+          "Listing every AI tool on the market"
+        ],
+        "answerIndex": 2,
+        "explanation": "Repurposing adapts a core idea to each channel rather than blindly copying."
+      },
+      {
+        "id": "m3-t5-q7",
+        "question": "A campaign uses AI-generated images. Which record helps later reviewers?",
+        "options": [
+          "Only the export filename",
+          "The model’s claimed confidence",
+          "A screenshot of the loading spinner",
+          "Prompt and tool/version details, human edits, source assets and rights checks"
+        ],
+        "answerIndex": 3,
+        "explanation": "Content provenance supports review and accountability."
+      },
+      {
+        "id": "m3-t5-q8",
+        "question": "A realistic generated news scene could be mistaken for a real event. What should the creator do?",
+        "options": [
+          "Label synthetic content clearly and avoid deceptive framing",
+          "Post it as breaking news",
+          "Add a tiny label after viewers share it",
+          "Use a real news logo"
+        ],
+        "answerIndex": 0,
+        "explanation": "Synthetic content needs context that prevents misleading audiences."
+      },
+      {
+        "id": "m3-t5-q9",
+        "question": "A team’s campaign uses the same logo, colours and prompt but the tone varies sharply by post. What should it add?",
+        "options": [
+          "More random styles",
+          "A shared voice guide and human review against the brand brief",
+          "A different logo each time",
+          "No review because the prompt is stable"
+        ],
+        "answerIndex": 1,
+        "explanation": "Brand consistency includes voice and content, not only visual assets."
+      },
+      {
+        "id": "m3-t5-q10",
+        "question": "A student wants to reuse a public image found online in a business campaign. What must be checked?",
+        "options": [
+          "Only its resolution",
+          "Whether it appears in search results",
+          "Licence and usage rights for the specific asset and intended context",
+          "Whether the image is old"
+        ],
+        "answerIndex": 2,
+        "explanation": "Public visibility does not automatically grant reuse rights."
+      },
+      {
+        "id": "m3-t5-q11",
+        "question": "A social post includes an AI-generated statistic. What should the content editor do?",
+        "options": [
+          "Leave it if it supports the campaign",
+          "Attribute it to “the internet”",
+          "Ask the model to produce a citation after the fact",
+          "Verify it from an independent source or remove it"
+        ],
+        "answerIndex": 3,
+        "explanation": "Generated claims need evidence even when used in promotional content."
+      },
+      {
+        "id": "m3-t5-q12",
+        "question": "A generated image includes a watermark and tool terms prohibit commercial reuse. What is the proper decision?",
+        "options": [
+          "Select a permitted alternative or obtain the correct licence before publication",
+          "Crop the watermark and publish",
+          "Use it because the client will not notice",
+          "Convert it to grayscale"
+        ],
+        "answerIndex": 0,
+        "explanation": "A crop does not change the underlying licence restriction."
+      },
+      {
+        "id": "m3-t5-q13",
+        "question": "A team publishes an AI avatar without disclosure. What issue arises?",
+        "options": [
+          "The video frame rate is too low",
+          "Viewers may be misled about who is speaking or whether a person endorsed the message",
+          "The prompt lacks a role",
+          "The caption file is too large"
+        ],
+        "answerIndex": 1,
+        "explanation": "Disclosure helps audiences understand synthetic media and endorsement."
+      },
+      {
+        "id": "m3-t5-q14",
+        "question": "A single campaign has ten formats, but a key offer changes in only one of them. What quality step catches it?",
+        "options": [
+          "Ask each platform to generate a new offer",
+          "Use the highest performing wording only",
+          "Cross-check every derivative against one approved source of truth",
+          "Remove all offer details"
+        ],
+        "answerIndex": 2,
+        "explanation": "Repurposed assets must stay consistent with the approved facts."
+      },
+      {
+        "id": "m3-t5-q15",
+        "question": "A prompt library produces recurring outputs. When should it be reviewed?",
+        "options": [
+          "Never once it works twice",
+          "Only when a model is retired",
+          "Only after a public complaint",
+          "On a planned cadence and whenever tool terms, audience needs or observed failures change"
+        ],
+        "answerIndex": 3,
+        "explanation": "Ongoing review maintains quality as tools and risks change."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Creative Production Quality Gate",
+    "questions": [
+      {
+        "id": "m3-assessment-q1",
+        "question": "A generated poster contains a misspelled event date. The composition is strong. What is the best production fix?",
+        "options": [
+          "Keep regenerating until every letter is correct",
+          "Ask the image model to sharpen the letters",
+          "Crop the date out without checking the event brief",
+          "Replace the text in the design tool’s editable text layer and proofread the export"
+        ],
+        "answerIndex": 3,
+        "explanation": "Generated lettering is unreliable; set exact copy as editable text and check it in the final export.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q2",
+        "question": "A client requests a consistent five-image campaign. Which workflow best controls continuity?",
+        "options": [
+          "Write five unrelated prompts and accept the first outputs",
+          "Use a different model for every image",
+          "Create an approved base prompt and reference image, then change one subject or scene variable at a time",
+          "Ask the model to remember the first image without a reference"
+        ],
+        "answerIndex": 2,
+        "explanation": "A shared base prompt and references reduce drift across a series.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q3",
+        "question": "An image tool produces a chart showing invented sales values. What should the designer do?",
+        "options": [
+          "Use it as an illustration because the exact values are decorative",
+          "Build the chart from verified data in a charting tool and use AI only for surrounding design",
+          "Generate a new chart with a better prompt",
+          "Remove the axis labels and keep the bars"
+        ],
+        "answerIndex": 1,
+        "explanation": "Charts encode claims; calculate them from real data rather than image-model output.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q4",
+        "question": "A portrait tool offers to imitate a living illustrator by name. What is the better prompt?",
+        "options": [
+          "Describe observable visual qualities such as palette, line weight and composition without copying the artist",
+          "Use the artist’s name and hide it later",
+          "Upload the artist’s full portfolio",
+          "Ask the model to make it indistinguishable"
+        ],
+        "answerIndex": 0,
+        "explanation": "Describe style attributes and avoid direct imitation of a living artist.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q5",
+        "question": "A square approved illustration must become a vertical story without losing the central subject. Which edit is appropriate?",
+        "options": [
+          "Crop tightly until it fills the frame",
+          "Stretch the image vertically",
+          "Add a black border and call it complete",
+          "Outpaint the canvas and inspect the newly generated edges"
+        ],
+        "answerIndex": 3,
+        "explanation": "Outpainting expands the frame while preserving the source composition; inspect generated extensions.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q6",
+        "question": "A team has an approved visual but needs a Kannada headline. Which pipeline is most reliable?",
+        "options": [
+          "Render the Kannada text inside the image model",
+          "Use a decorative Latin font that resembles Kannada",
+          "Generate the visual without lettering, add the headline as a font-tested text layer, and proofread on-device",
+          "Ask the model to approximate the headline"
+        ],
+        "answerIndex": 2,
+        "explanation": "Separate image generation from multilingual typography and validate the actual rendered glyphs.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q7",
+        "question": "An AI slide tool returns 18 slides with duplicated points. What should happen before regeneration?",
+        "options": [
+          "Ask for “more engaging slides”",
+          "Write a one-sentence message for each slide, remove duplicates, then generate from that story outline",
+          "Add more graphics to every slide",
+          "Let the audience decide which slides are relevant"
+        ],
+        "answerIndex": 1,
+        "explanation": "The narrative structure should be decided before slide styling.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q8",
+        "question": "A video avatar resembles a real faculty member, but no permission was obtained. What is the correct decision?",
+        "options": [
+          "Do not use the likeness without documented consent; use a generic avatar or a consenting presenter",
+          "Publish it because the script is educational",
+          "Add a small disclaimer after publishing",
+          "Change the voice but keep the face"
+        ],
+        "answerIndex": 0,
+        "explanation": "Likeness and voice use require informed consent and clear disclosure.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q9",
+        "question": "Auto-captions show “fifteen” where the speaker said “fifty” in a financial explainer. What is required?",
+        "options": [
+          "Accept captions because speech tools are usually accurate",
+          "Remove every number from captions",
+          "Ask the same caption tool to certify its result",
+          "Proofread captions against the recording, with extra attention to names, numbers and local-language text"
+        ],
+        "answerIndex": 3,
+        "explanation": "A small transcription error can reverse meaning; check every caption against the source.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q10",
+        "question": "A brand kit has logos, colours and two approved reference images. Which use supports safe reuse?",
+        "options": [
+          "Include the logo in every generated image prompt",
+          "Allow the model to redraw the logo",
+          "Apply the kit and reusable base prompts, keep generated logos as placeholders, and verify licence and likeness constraints",
+          "Copy a competitor’s campaign for consistency"
+        ],
+        "answerIndex": 2,
+        "explanation": "Keep brand assets controlled and use references without asking a model to recreate protected marks.",
+        "difficulty": "advanced"
+      }
     ]
   }
 }

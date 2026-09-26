@@ -461,11 +461,13 @@ service cloud.firestore {
         // footer) that students and faculty need to render their own fee
         // receipts / payslips; every other config doc stays staff-only.
         // config/library (loan rules) is likewise shown to borrowers.
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff()
+        allow get: if isSignedIn() && (isSuperadmin()
+          || (docId == 'courses' && role() in ['admin', 'hod', 'principal', 'student'] && collegeId() == collegeId)
+          || (docId != 'courses' && isStaff() && collegeId() == collegeId)
           || (isOffice() && collegeId() == collegeId)
           || (docId in ['branding', 'library', 'nodues'] && collegeId() == collegeId));
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff()
-          || (isOffice() && collegeId() == collegeId));
+        allow list: if isSignedIn() && (isSuperadmin()
+          || ((isStaff() || isOffice()) && collegeId() == collegeId));
         // Each settings doc belongs to the office that runs it. config/access
         // (who may see payroll) is the principal's alone.
         allow write: if docId == 'access'
@@ -478,6 +480,38 @@ service cloud.firestore {
             : docId in ['library', 'inventory', 'nodues']
               ? isOps(collegeId)
               : (isSuperadmin() || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId));
+      }
+
+      // Learner progress is tenant-path scoped. Students may read/write their
+      // own record only; college staff can report on records in their college.
+      match /courseProgress/{progressId} {
+        allow get: if isSignedIn() && (isSuperadmin()
+          || (role() in ['admin', 'principal', 'hod'] && collegeId() == collegeId)
+          || (role() == 'student' && collegeId() == collegeId
+            && resource.data.uid == request.auth.uid));
+        allow list: if isSignedIn() && (isSuperadmin()
+          || (role() in ['admin', 'principal', 'hod'] && collegeId() == collegeId)
+          || (role() == 'student' && collegeId() == collegeId
+            && resource.data.uid == request.auth.uid));
+        allow create: if isSignedIn() && role() == 'student'
+          && collegeId() == collegeId
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.collegeId == collegeId
+          && request.resource.data.courseId is string
+          && progressId == request.auth.uid + '__' + request.resource.data.courseId
+          && request.resource.data.completed is map
+          && request.resource.data.quiz is map;
+        allow update: if isSignedIn() && role() == 'student'
+          && collegeId() == collegeId
+          && resource.data.uid == request.auth.uid
+          && resource.data.collegeId == collegeId
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.collegeId == collegeId
+          && request.resource.data.courseId == resource.data.courseId
+          && progressId == request.auth.uid + '__' + request.resource.data.courseId
+          && request.resource.data.completed is map
+          && request.resource.data.quiz is map;
+        allow delete: if false;
       }
 
       match /announcements/{docId} {

@@ -2,39 +2,1049 @@
   "moduleId": "m5",
   "questions": {
     "m5-t1": [
-      { "id": "m5-t1-q1", "question": "What turns a normal chat model into a custom assistant?", "options": ["A faster server", "A persistent configuration: instructions, knowledge files, capabilities, conversation starters and sharing settings", "A new model architecture", "A paid subscription only"], "answerIndex": 1, "explanation": "GPTs, Gems, Projects and Agents are all the same idea: a saved configuration around a chat model." },
-      { "id": "m5-t1-q2", "question": "Which behaviour rule is TESTABLE?", "options": ["Be helpful and friendly", "Ask one question at a time and wait for the answer before explaining", "Be smart", "Try your best"], "answerIndex": 1, "explanation": "Concrete, observable rules can be checked in a test plan; vague adjectives cannot." },
-      { "id": "m5-t1-q3", "question": "What should the instructions say about uncertainty?", "options": ["Always give an answer", "Explicitly permit 'I don't know' and forbid inventing formulas, sections or figures", "Guess and apologise later", "Change the subject"], "answerIndex": 1, "explanation": "Uncertainty behaviour must be written in, or the model will fill gaps with plausible inventions." },
-      { "id": "m5-t1-q4", "question": "Which group belongs in an assistant test plan alongside happy-path, edge and knowledge-boundary prompts?", "options": ["Marketing prompts", "Adversarial prompts that try to break the rules", "Prompts in all languages", "Random trivia"], "answerIndex": 1, "explanation": "Adversarial tests ('ignore your instructions…') reveal guardrail weaknesses before real users do." },
-      { "id": "m5-t1-q5", "question": "Before sharing an assistant publicly you should NOT:", "options": ["Add a disclosure line", "Keep personal data in its knowledge files", "Name an owner and a feedback channel", "Test it link-only with a few users"], "answerIndex": 1, "explanation": "Personal data in knowledge files of a shared assistant is a privacy breach." }
+      {
+        "id": "m5-t1-q1",
+        "question": "What turns a normal chat model into a custom assistant?",
+        "options": [
+          "A faster server",
+          "A persistent configuration: instructions, knowledge files, capabilities, conversation starters and sharing settings",
+          "A new model architecture",
+          "A paid subscription only"
+        ],
+        "answerIndex": 1,
+        "explanation": "GPTs, Gems, Projects and Agents are all the same idea: a saved configuration around a chat model."
+      },
+      {
+        "id": "m5-t1-q2",
+        "question": "Which behaviour rule is TESTABLE?",
+        "options": [
+          "Be helpful and friendly",
+          "Ask one question at a time and wait for the answer before explaining",
+          "Be smart",
+          "Try your best"
+        ],
+        "answerIndex": 1,
+        "explanation": "Concrete, observable rules can be checked in a test plan; vague adjectives cannot."
+      },
+      {
+        "id": "m5-t1-q3",
+        "question": "What should the instructions say about uncertainty?",
+        "options": [
+          "Always give an answer",
+          "Explicitly permit 'I don't know' and forbid inventing formulas, sections or figures",
+          "Guess and apologise later",
+          "Change the subject"
+        ],
+        "answerIndex": 1,
+        "explanation": "Uncertainty behaviour must be written in, or the model will fill gaps with plausible inventions."
+      },
+      {
+        "id": "m5-t1-q4",
+        "question": "Which group belongs in an assistant test plan alongside happy-path, edge and knowledge-boundary prompts?",
+        "options": [
+          "Marketing prompts",
+          "Adversarial prompts that try to break the rules",
+          "Prompts in all languages",
+          "Random trivia"
+        ],
+        "answerIndex": 1,
+        "explanation": "Adversarial tests ('ignore your instructions…') reveal guardrail weaknesses before real users do."
+      },
+      {
+        "id": "m5-t1-q5",
+        "question": "Before sharing an assistant publicly you should NOT:",
+        "options": [
+          "Add a disclosure line",
+          "Keep personal data in its knowledge files",
+          "Name an owner and a feedback channel",
+          "Test it link-only with a few users"
+        ],
+        "answerIndex": 1,
+        "explanation": "Personal data in knowledge files of a shared assistant is a privacy breach."
+      },
+      {
+        "id": "m5-t1-q6",
+        "question": "A custom study assistant may answer only from a course syllabus. Which instruction is important?",
+        "options": [
+          "Cite syllabus sections and say when the answer is not in the supplied material",
+          "Answer every question confidently",
+          "Use unrelated web sources silently",
+          "Hide which document it used"
+        ],
+        "answerIndex": 0,
+        "explanation": "A bounded assistant should cite its approved knowledge and abstain when evidence is absent."
+      },
+      {
+        "id": "m5-t1-q7",
+        "question": "A study assistant starts answering questions about financial aid outside its intended scope. What guardrail helps?",
+        "options": [
+          "Add a friendlier greeting",
+          "Define the scope, provide an approved hand-off route and test out-of-scope prompts",
+          "Remove all source documents",
+          "Give it more conversation starters only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Scope and fallback instructions prevent overreach."
+      },
+      {
+        "id": "m5-t1-q8",
+        "question": "A custom assistant uses an outdated handbook. How should its owner fix the root cause?",
+        "options": [
+          "Tell users to ignore every date",
+          "Ask the model to guess which version is newest",
+          "Replace or version the source and test that citations point to the current approved document",
+          "Hide citations"
+        ],
+        "answerIndex": 2,
+        "explanation": "Knowledge needs an owner and version control."
+      },
+      {
+        "id": "m5-t1-q9",
+        "question": "A placement coach asks users to paste full identity documents into a public assistant. What should its builder change?",
+        "options": [
+          "Make uploads mandatory",
+          "Promise that public tools never retain data",
+          "Ask for more personal context",
+          "Minimise collection and direct users to share only approved, necessary information"
+        ],
+        "answerIndex": 3,
+        "explanation": "An assistant should collect the minimum data needed and respect tool controls."
+      },
+      {
+        "id": "m5-t1-q10",
+        "question": "A model gives different advice in two identical sessions. What feature improves repeatability?",
+        "options": [
+          "Stable instructions, source versioning and a test set of representative prompts",
+          "A more entertaining avatar",
+          "More open-ended instructions",
+          "No saved settings"
+        ],
+        "answerIndex": 0,
+        "explanation": "A controlled setup and evaluation set make changes detectable."
+      },
+      {
+        "id": "m5-t1-q11",
+        "question": "A conversation starter asks “Tell me your password so I can help.” What should the owner do?",
+        "options": [
+          "Keep it if the assistant is private",
+          "Remove it and prohibit collection of secrets",
+          "Ask users to change passwords afterward",
+          "Hide the starter from staff"
+        ],
+        "answerIndex": 1,
+        "explanation": "Assistants should never solicit passwords or secrets."
+      },
+      {
+        "id": "m5-t1-q12",
+        "question": "A custom assistant is shared with an entire college. What should be tested before launch?",
+        "options": [
+          "Only the welcome message",
+          "Whether the maker likes the icon",
+          "Role, permissions, source access and behaviour for unintended users",
+          "Its response length alone"
+        ],
+        "answerIndex": 2,
+        "explanation": "Shared assistants need access and abuse testing."
+      },
+      {
+        "id": "m5-t1-q13",
+        "question": "A user asks a course assistant for an answer that is missing from its documents. Which behaviour is safest?",
+        "options": [
+          "Generate a plausible policy",
+          "Cite the nearest unrelated page",
+          "Repeat the answer from memory",
+          "State the gap, avoid guessing and point to a human or official source"
+        ],
+        "answerIndex": 3,
+        "explanation": "Abstention and escalation prevent invented policy."
+      },
+      {
+        "id": "m5-t1-q14",
+        "question": "A builder changes instructions but does not test existing examples. What risk follows?",
+        "options": [
+          "A fix for one prompt may break previously working behaviour",
+          "The assistant becomes open source",
+          "The sources are automatically updated",
+          "The output format becomes secure"
+        ],
+        "answerIndex": 0,
+        "explanation": "Regression tests reveal unintended changes."
+      },
+      {
+        "id": "m5-t1-q15",
+        "question": "A student adds a copyrighted textbook to a personal assistant and shares access publicly. What should they check?",
+        "options": [
+          "Only the assistant’s name",
+          "Permission to upload and share, tool terms and access restrictions",
+          "Whether the textbook cover is visible",
+          "Nothing if the assistant is free"
+        ],
+        "answerIndex": 1,
+        "explanation": "Source rights and sharing scope must be reviewed."
+      }
     ],
     "m5-t2": [
-      { "id": "m5-t2-q1", "question": "What does RAG do when a question arrives?", "options": ["Retrains the model on your documents", "Retrieves relevant passages from your documents and makes the model answer from them with citations", "Searches the public web only", "Translates the question"], "answerIndex": 1, "explanation": "Retrieval-augmented generation grounds the answer in retrieved passages rather than the model's memory." },
-      { "id": "m5-t2-q2", "question": "Where do most RAG failures originate?", "options": ["The vector database brand", "The documents (scans, poor headings, giant files) and the question wording", "The colour of the interface", "The model's training year"], "answerIndex": 1, "explanation": "Ingest/chunk problems and mismatched question wording cause most misses — and you control both." },
-      { "id": "m5-t2-q3", "question": "Which document preparation step helps retrieval most?", "options": ["Merging everything into one 300-page file", "Descriptive headings, one topic per section, real text (OCR), versions dated", "Using scanned images", "Removing all headings"], "answerIndex": 1, "explanation": "Retrieval works on passages; clear, well-labelled, text-based sections are found reliably." },
-      { "id": "m5-t2-q4", "question": "In the grounding test, what should happen for a question NOT covered by the documents?", "options": ["The assistant invents a plausible answer", "The assistant says it cannot find it in the sources", "The assistant searches the web silently", "The assistant refuses to continue"], "answerIndex": 1, "explanation": "Honest boundary behaviour is a core test criterion; invention means the system is not trustworthy." },
-      { "id": "m5-t2-q5", "question": "Why must you click citations even when they are present?", "options": ["To increase usage statistics", "Because a cited passage does not always support the sentence attached to it", "Citations are always wrong", "It is required by the licence"], "answerIndex": 1, "explanation": "Cited is not the same as correct — verify that the passage says what the answer claims." }
+      {
+        "id": "m5-t2-q1",
+        "question": "What does RAG do when a question arrives?",
+        "options": [
+          "Retrains the model on your documents",
+          "Retrieves relevant passages from your documents and makes the model answer from them with citations",
+          "Searches the public web only",
+          "Translates the question"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retrieval-augmented generation grounds the answer in retrieved passages rather than the model's memory."
+      },
+      {
+        "id": "m5-t2-q2",
+        "question": "Where do most RAG failures originate?",
+        "options": [
+          "The vector database brand",
+          "The documents (scans, poor headings, giant files) and the question wording",
+          "The colour of the interface",
+          "The model's training year"
+        ],
+        "answerIndex": 1,
+        "explanation": "Ingest/chunk problems and mismatched question wording cause most misses — and you control both."
+      },
+      {
+        "id": "m5-t2-q3",
+        "question": "Which document preparation step helps retrieval most?",
+        "options": [
+          "Merging everything into one 300-page file",
+          "Descriptive headings, one topic per section, real text (OCR), versions dated",
+          "Using scanned images",
+          "Removing all headings"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retrieval works on passages; clear, well-labelled, text-based sections are found reliably."
+      },
+      {
+        "id": "m5-t2-q4",
+        "question": "In the grounding test, what should happen for a question NOT covered by the documents?",
+        "options": [
+          "The assistant invents a plausible answer",
+          "The assistant says it cannot find it in the sources",
+          "The assistant searches the web silently",
+          "The assistant refuses to continue"
+        ],
+        "answerIndex": 1,
+        "explanation": "Honest boundary behaviour is a core test criterion; invention means the system is not trustworthy."
+      },
+      {
+        "id": "m5-t2-q5",
+        "question": "Why must you click citations even when they are present?",
+        "options": [
+          "To increase usage statistics",
+          "Because a cited passage does not always support the sentence attached to it",
+          "Citations are always wrong",
+          "It is required by the licence"
+        ],
+        "answerIndex": 1,
+        "explanation": "Cited is not the same as correct — verify that the passage says what the answer claims."
+      },
+      {
+        "id": "m5-t2-q6",
+        "question": "A RAG assistant cites a paragraph from an irrelevant handbook chapter. What should be checked first?",
+        "options": [
+          "The assistant’s avatar",
+          "Retrieval chunking, metadata and whether the selected passage actually supports the question",
+          "Whether the answer sounds professional",
+          "The model temperature only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retrieval can return text that is close but not relevant."
+      },
+      {
+        "id": "m5-t2-q7",
+        "question": "A handbook was revised but the retrieval index still contains the old version. What is the failure?",
+        "options": [
+          "A perfect model refusing to answer",
+          "An output format mismatch only",
+          "Stale corpus or indexing pipeline",
+          "A user’s context window"
+        ],
+        "answerIndex": 2,
+        "explanation": "RAG depends on current sources and a maintained index."
+      },
+      {
+        "id": "m5-t2-q8",
+        "question": "The assistant returns a citation but the cited sentence does not support its conclusion. What should the evaluator record?",
+        "options": [
+          "A successful answer because there is a citation",
+          "A font issue",
+          "A successful retrieval by definition",
+          "A grounding failure: citation presence is not evidence support"
+        ],
+        "answerIndex": 3,
+        "explanation": "Citations must be checked for semantic support, not just existence."
+      },
+      {
+        "id": "m5-t2-q9",
+        "question": "A RAG system retrieves only the first page of a long policy. Which improvement may help?",
+        "options": [
+          "Use meaningful chunking with overlap and preserve section metadata",
+          "Remove all headings",
+          "Increase the answer length",
+          "Ask the model to fabricate missing sections"
+        ],
+        "answerIndex": 0,
+        "explanation": "Chunk design and metadata affect retrieval quality."
+      },
+      {
+        "id": "m5-t2-q10",
+        "question": "A question is not answered by the supplied handbook. What should a well-designed assistant do?",
+        "options": [
+          "Infer a policy from common practice",
+          "Abstain clearly and route the user to an authorised office",
+          "Cite an unrelated section",
+          "Ask the user to trust its judgement"
+        ],
+        "answerIndex": 1,
+        "explanation": "RAG should not turn missing evidence into invented policy."
+      },
+      {
+        "id": "m5-t2-q11",
+        "question": "A team wants to measure retrieval quality. Which test is useful?",
+        "options": [
+          "Measure answer length only",
+          "Ask the model whether it retrieved correctly",
+          "Create questions with known source passages and check whether the right evidence is retrieved",
+          "Use one easy question"
+        ],
+        "answerIndex": 2,
+        "explanation": "Ground-truth questions reveal whether the system finds relevant evidence."
+      },
+      {
+        "id": "m5-t2-q12",
+        "question": "A notebook answers fluently using only three uploaded documents. What limitation remains?",
+        "options": [
+          "The notebook must know every external fact",
+          "Source grounding proves the documents are current",
+          "Citations remove the need for review",
+          "The answer can be incomplete if the corpus is incomplete or poorly curated"
+        ],
+        "answerIndex": 3,
+        "explanation": "Grounded answers inherit omissions and errors from their sources."
+      },
+      {
+        "id": "m5-t2-q13",
+        "question": "A team uploads student records to a research notebook. What should it assess?",
+        "options": [
+          "Whether the service is approved, what data is retained and whether the task can use de-identified data",
+          "Only the file type",
+          "Whether the notebook can summarise quickly",
+          "How colourful the report is"
+        ],
+        "answerIndex": 0,
+        "explanation": "Data handling controls apply to document-grounded tools too."
+      },
+      {
+        "id": "m5-t2-q14",
+        "question": "The same term appears in two policies with different meanings. What should the source setup preserve?",
+        "options": [
+          "Only a plain-text paragraph",
+          "Document title, date, section and context so users can distinguish versions",
+          "A single answer with no citations",
+          "The model’s internal confidence"
+        ],
+        "answerIndex": 1,
+        "explanation": "Metadata helps retrieve and interpret the correct passage."
+      },
+      {
+        "id": "m5-t2-q15",
+        "question": "A user asks a RAG assistant for legal advice beyond the handbook. What is the correct boundary?",
+        "options": [
+          "Generate a legal conclusion from memory",
+          "Pretend the handbook covers it",
+          "Explain the source limitation and refer the user to a qualified authority",
+          "Offer a guarantee based on one passage"
+        ],
+        "answerIndex": 2,
+        "explanation": "A document assistant should not overclaim beyond its evidence and role."
+      }
     ],
     "m5-t3": [
-      { "id": "m5-t3-q1", "question": "Which block starts an automation run?", "options": ["Formatter", "Trigger", "Router", "Error handler"], "answerIndex": 1, "explanation": "A trigger (new form response, schedule, new email) begins each run; actions follow." },
-      { "id": "m5-t3-q2", "question": "How should AI steps inside automations be designed?", "options": ["One giant prompt doing everything", "Narrow, structured (JSON or fixed labels), validated by a filter, templated for external content, data-minimised and logged", "Free-form creative writing", "Without any logging"], "answerIndex": 1, "explanation": "Nobody watches each run, so outputs must be constrained and checkable." },
-      { "id": "m5-t3-q3", "question": "What is the safest way to test a flow that sends emails?", "options": ["Send to the full contact list", "Filter to your own address until the flow is proven", "Disable all filters", "Test in production on a weekend"], "answerIndex": 1, "explanation": "Runaway sends are a classic failure; test with yourself as the only recipient." },
-      { "id": "m5-t3-q4", "question": "What is a 'silent failure' and how do you prevent it?", "options": ["A quiet notification; ignore it", "A step failing unnoticed for weeks; prevent with an error handler that notifies you and a periodic run summary", "A muted video; add sound", "A slow run; upgrade the plan"], "answerIndex": 1, "explanation": "Error handlers and run summaries make failures visible." },
-      { "id": "m5-t3-q5", "question": "Which platform is highlighted as open source and self-hostable with no per-run cost?", "options": ["Zapier", "n8n", "Google Forms", "Canva"], "answerIndex": 1, "explanation": "n8n can be self-hosted, which suits privacy-sensitive or higher-volume flows." }
+      {
+        "id": "m5-t3-q1",
+        "question": "Which block starts an automation run?",
+        "options": [
+          "Formatter",
+          "Trigger",
+          "Router",
+          "Error handler"
+        ],
+        "answerIndex": 1,
+        "explanation": "A trigger (new form response, schedule, new email) begins each run; actions follow."
+      },
+      {
+        "id": "m5-t3-q2",
+        "question": "How should AI steps inside automations be designed?",
+        "options": [
+          "One giant prompt doing everything",
+          "Narrow, structured (JSON or fixed labels), validated by a filter, templated for external content, data-minimised and logged",
+          "Free-form creative writing",
+          "Without any logging"
+        ],
+        "answerIndex": 1,
+        "explanation": "Nobody watches each run, so outputs must be constrained and checkable."
+      },
+      {
+        "id": "m5-t3-q3",
+        "question": "What is the safest way to test a flow that sends emails?",
+        "options": [
+          "Send to the full contact list",
+          "Filter to your own address until the flow is proven",
+          "Disable all filters",
+          "Test in production on a weekend"
+        ],
+        "answerIndex": 1,
+        "explanation": "Runaway sends are a classic failure; test with yourself as the only recipient."
+      },
+      {
+        "id": "m5-t3-q4",
+        "question": "What is a 'silent failure' and how do you prevent it?",
+        "options": [
+          "A quiet notification; ignore it",
+          "A step failing unnoticed for weeks; prevent with an error handler that notifies you and a periodic run summary",
+          "A muted video; add sound",
+          "A slow run; upgrade the plan"
+        ],
+        "answerIndex": 1,
+        "explanation": "Error handlers and run summaries make failures visible."
+      },
+      {
+        "id": "m5-t3-q5",
+        "question": "Which platform is highlighted as open source and self-hostable with no per-run cost?",
+        "options": [
+          "Zapier",
+          "n8n",
+          "Google Forms",
+          "Canva"
+        ],
+        "answerIndex": 1,
+        "explanation": "n8n can be self-hosted, which suits privacy-sensitive or higher-volume flows."
+      },
+      {
+        "id": "m5-t3-q6",
+        "question": "An automation’s AI step sometimes returns malformed JSON. What should the workflow do?",
+        "options": [
+          "Send the malformed output to every user",
+          "Remove validation to reduce cost",
+          "Validate the schema, retry or route failures for human review before downstream actions",
+          "Assume the model will fix it later"
+        ],
+        "answerIndex": 2,
+        "explanation": "Structured outputs need validation and a controlled failure path."
+      },
+      {
+        "id": "m5-t3-q7",
+        "question": "A trigger watches a spreadsheet row and sends a student notification. What should be checked before activation?",
+        "options": [
+          "Only the spreadsheet colour",
+          "Whether the AI can write a poem",
+          "The number of staff in the department",
+          "Trigger conditions, test cases, permissions, duplicate behaviour and message content"
+        ],
+        "answerIndex": 3,
+        "explanation": "Automations need end-to-end tests before they create real side effects."
+      },
+      {
+        "id": "m5-t3-q8",
+        "question": "An AI step returns a student’s personal details in a public Slack channel. What was likely missing?",
+        "options": [
+          "Data minimisation and destination/access controls",
+          "A longer prompt",
+          "A new icon",
+          "An extra summary step"
+        ],
+        "answerIndex": 0,
+        "explanation": "Sensitive data must not flow to an audience that should not see it."
+      },
+      {
+        "id": "m5-t3-q9",
+        "question": "A scheduled automation runs each day, but yesterday’s task failed. What observability should exist?",
+        "options": [
+          "A hidden spreadsheet with no timestamps",
+          "Logs, status, error alerts and a responsible owner who can retry safely",
+          "A model-generated apology only",
+          "No record to protect the automation"
+        ],
+        "answerIndex": 1,
+        "explanation": "Monitoring and ownership make failures visible and recoverable."
+      },
+      {
+        "id": "m5-t3-q10",
+        "question": "A workflow posts a draft announcement without approval. Which design change fits?",
+        "options": [
+          "Add another generative step after posting",
+          "Disable logs",
+          "Insert a human approval step before publication",
+          "Make the trigger run faster"
+        ],
+        "answerIndex": 2,
+        "explanation": "External publication is a consequential action that should be approved."
+      },
+      {
+        "id": "m5-t3-q11",
+        "question": "A low-code flow gets rate-limited by a provider. What is a responsible response?",
+        "options": [
+          "Retry continuously every millisecond",
+          "Mark all tasks complete",
+          "Send duplicate messages manually",
+          "Queue work, back off safely and notify an owner rather than dropping or duplicating actions"
+        ],
+        "answerIndex": 3,
+        "explanation": "Rate limits require safe retry and queue management."
+      },
+      {
+        "id": "m5-t3-q12",
+        "question": "A prompt-based step extracts invoice totals. What output should be validated?",
+        "options": [
+          "Currency, numeric type, required fields and reconciliation against the source document",
+          "Only whether a number appears",
+          "Whether the output has a polite greeting",
+          "The model’s self-rated confidence"
+        ],
+        "answerIndex": 0,
+        "explanation": "Financial extraction needs deterministic format and source checks."
+      },
+      {
+        "id": "m5-t3-q13",
+        "question": "A flow has a manual correction step but no record of who approved it. What is missing?",
+        "options": [
+          "A colour label",
+          "An audit trail for review decisions and ownership",
+          "A longer prompt",
+          "A second AI model"
+        ],
+        "answerIndex": 1,
+        "explanation": "Approvals should be attributable and reviewable."
+      },
+      {
+        "id": "m5-t3-q14",
+        "question": "A team wants to compare Make and n8n for an institutional workflow. What matters beyond price?",
+        "options": [
+          "Only the number of templates",
+          "The interface colour",
+          "Hosting, data access, control, maintainer skills, audit needs and exit options",
+          "Which has the newest launch video"
+        ],
+        "answerIndex": 2,
+        "explanation": "Tool selection must include governance and long-term ownership."
+      },
+      {
+        "id": "m5-t3-q15",
+        "question": "A workflow uses an AI classification to route complaints. What should happen to low-confidence or sensitive cases?",
+        "options": [
+          "Auto-close them",
+          "Delete them",
+          "Publish the label publicly",
+          "Send them to a defined human review queue"
+        ],
+        "answerIndex": 3,
+        "explanation": "Uncertain and sensitive cases need accountable review."
+      }
     ],
     "m5-t4": [
-      { "id": "m5-t4-q1", "question": "What is the first step in improving a business process?", "options": ["Buying an automation subscription", "Mapping the process as it actually happens, with times, hand-offs and errors", "Writing the AI prompt", "Announcing the change"], "answerIndex": 1, "explanation": "You cannot improve what you have not seen; the swimlane map reveals waste." },
-      { "id": "m5-t4-q2", "question": "Which scorecard criterion is reverse-scored?", "options": ["Frequency", "Rule clarity", "Risk if wrong", "Data readiness"], "answerIndex": 2, "explanation": "High risk lowers the score: external, irreversible or legal impact argues against full automation." },
-      { "id": "m5-t4-q3", "question": "A task scores 20/30 on the scorecard. The recommended action is:", "options": ["Automate fully now", "Automate with a human checkpoint", "Leave it alone", "Hire a developer"], "answerIndex": 1, "explanation": "17–23 → automate with a human checkpoint; 24–30 automate now; 10–16 augment; below 10 leave or fix the process." },
-      { "id": "m5-t4-q4", "question": "Which human-in-the-loop pattern suits external, irreversible actions like sending a quote to a customer?", "options": ["Human after (audit sample)", "Human before (approval gate)", "No human", "Human alongside only for training"], "answerIndex": 1, "explanation": "Approval gates belong where errors are costly and cannot be undone." },
-      { "id": "m5-t4-q5", "question": "Why does the one-page proposal end with a two-week pilot?", "options": ["Pilots are cheaper to write", "People approve a limited trial with a success measure far more readily than a permanent change", "It is a legal requirement", "To avoid measuring results"], "answerIndex": 1, "explanation": "A bounded pilot with a decision date lowers the perceived risk of saying yes." }
+      {
+        "id": "m5-t4-q1",
+        "question": "What is the first step in improving a business process?",
+        "options": [
+          "Buying an automation subscription",
+          "Mapping the process as it actually happens, with times, hand-offs and errors",
+          "Writing the AI prompt",
+          "Announcing the change"
+        ],
+        "answerIndex": 1,
+        "explanation": "You cannot improve what you have not seen; the swimlane map reveals waste."
+      },
+      {
+        "id": "m5-t4-q2",
+        "question": "Which scorecard criterion is reverse-scored?",
+        "options": [
+          "Frequency",
+          "Rule clarity",
+          "Risk if wrong",
+          "Data readiness"
+        ],
+        "answerIndex": 2,
+        "explanation": "High risk lowers the score: external, irreversible or legal impact argues against full automation."
+      },
+      {
+        "id": "m5-t4-q3",
+        "question": "A task scores 20/30 on the scorecard. The recommended action is:",
+        "options": [
+          "Automate fully now",
+          "Automate with a human checkpoint",
+          "Leave it alone",
+          "Hire a developer"
+        ],
+        "answerIndex": 1,
+        "explanation": "17–23 → automate with a human checkpoint; 24–30 automate now; 10–16 augment; below 10 leave or fix the process."
+      },
+      {
+        "id": "m5-t4-q4",
+        "question": "Which human-in-the-loop pattern suits external, irreversible actions like sending a quote to a customer?",
+        "options": [
+          "Human after (audit sample)",
+          "Human before (approval gate)",
+          "No human",
+          "Human alongside only for training"
+        ],
+        "answerIndex": 1,
+        "explanation": "Approval gates belong where errors are costly and cannot be undone."
+      },
+      {
+        "id": "m5-t4-q5",
+        "question": "Why does the one-page proposal end with a two-week pilot?",
+        "options": [
+          "Pilots are cheaper to write",
+          "People approve a limited trial with a success measure far more readily than a permanent change",
+          "It is a legal requirement",
+          "To avoid measuring results"
+        ],
+        "answerIndex": 1,
+        "explanation": "A bounded pilot with a decision date lowers the perceived risk of saying yes."
+      },
+      {
+        "id": "m5-t4-q6",
+        "question": "Staff report that a written procedure differs from daily practice. Which source should the process map capture?",
+        "options": [
+          "Only the ideal policy text",
+          "Only the software screens",
+          "The automation vendor’s demo",
+          "The actual workflow, including informal hand-offs, exceptions and failure points"
+        ],
+        "answerIndex": 3,
+        "explanation": "Improvement starts from how work really happens."
+      },
+      {
+        "id": "m5-t4-q7",
+        "question": "A task saves 30 minutes but errors could trigger an incorrect fee notice. How should risk affect automation?",
+        "options": [
+          "Add a human checkpoint and measure both time saved and error consequences",
+          "Automate immediately because time savings are large",
+          "Ignore error cost",
+          "Remove logs to simplify operations"
+        ],
+        "answerIndex": 0,
+        "explanation": "Potential impact matters alongside efficiency."
+      },
+      {
+        "id": "m5-t4-q8",
+        "question": "An automation scorecard rates tasks on value, effort and risk. Why reverse-score risk?",
+        "options": [
+          "Higher risk is always better",
+          "Higher risk should reduce the recommendation to automate without controls",
+          "Risk has no relation to the task",
+          "It makes every score identical"
+        ],
+        "answerIndex": 1,
+        "explanation": "Risk should lower suitability unless mitigated."
+      },
+      {
+        "id": "m5-t4-q9",
+        "question": "An external quote is generated automatically. Which approval pattern is appropriate?",
+        "options": [
+          "Human after send only",
+          "No review if the prompt is detailed",
+          "Human before send, because the action is external and hard to reverse",
+          "A hidden second send"
+        ],
+        "answerIndex": 2,
+        "explanation": "Approval before an irreversible external action is the stronger control."
+      },
+      {
+        "id": "m5-t4-q10",
+        "question": "A two-week pilot has no success measure. What should the proposal add?",
+        "options": [
+          "A promise that staff will like it",
+          "An unlimited launch period",
+          "A list of every AI provider",
+          "A baseline, numeric target, owner, risk controls and decision date"
+        ],
+        "answerIndex": 3,
+        "explanation": "A bounded pilot needs a measurable decision rule."
+      },
+      {
+        "id": "m5-t4-q11",
+        "question": "A process includes many exceptions. What should happen before automating the common path?",
+        "options": [
+          "Document exception types and route them safely rather than silently dropping them",
+          "Assume exceptions will disappear",
+          "Delete the exception records",
+          "Send each exception to a public tool"
+        ],
+        "answerIndex": 0,
+        "explanation": "Exception handling is part of the workflow design."
+      },
+      {
+        "id": "m5-t4-q12",
+        "question": "A department measures automation success only by messages sent. What is a better measure?",
+        "options": [
+          "Number of prompts written",
+          "Task completion quality, error rate, time saved and user impact",
+          "Total AI tokens",
+          "How many apps are connected"
+        ],
+        "answerIndex": 1,
+        "explanation": "Operational outcomes are more meaningful than activity counts."
+      },
+      {
+        "id": "m5-t4-q13",
+        "question": "Staff spend four hours reformatting AI output. Is the workflow successful?",
+        "options": [
+          "Yes, because drafting was instant",
+          "Yes, if the AI output was long",
+          "Not necessarily; include correction and review effort in the ROI calculation",
+          "No, because all AI tools are bad"
+        ],
+        "answerIndex": 2,
+        "explanation": "ROI should include end-to-end effort and quality."
+      },
+      {
+        "id": "m5-t4-q14",
+        "question": "A business process changes every month. What should an automation owner plan?",
+        "options": [
+          "No future updates",
+          "One permanent prompt",
+          "An untracked spreadsheet",
+          "A maintenance owner, change review and safe rollback or pause process"
+        ],
+        "answerIndex": 3,
+        "explanation": "Automations require lifecycle ownership and adaptation."
+      },
+      {
+        "id": "m5-t4-q15",
+        "question": "A process touches personal records and a public chatbot. What should the redesign consider?",
+        "options": [
+          "Data minimisation, approved systems, access control and retention before automation",
+          "Only the number of actions",
+          "The model’s personality",
+          "The colour of the approval button"
+        ],
+        "answerIndex": 0,
+        "explanation": "Governance is part of process design, not a later add-on."
+      }
     ],
     "m5-t5": [
-      { "id": "m5-t5-q1", "question": "People need to enter, view and update structured records with different roles. What should you build?", "options": ["A custom assistant", "An automation only", "A no-code app", "A podcast"], "answerIndex": 2, "explanation": "Forms, lists, detail screens and permissions are what no-code app builders provide." },
-      { "id": "m5-t5-q2", "question": "What should be designed FIRST in an app?", "options": ["The colour scheme", "The data: tables, typed fields, owners and visibility", "The logo", "The launch post"], "answerIndex": 1, "explanation": "Screens are built on tables; changing data later forces rebuilds." },
-      { "id": "m5-t5-q3", "question": "How should an AI feature behave inside a no-code app?", "options": ["Decide and act automatically (auto-close, auto-approve)", "Suggest, be editable, be labelled as AI-suggested, and have a fallback value", "Hide its output", "Run on every row every minute"], "answerIndex": 1, "explanation": "AI should help a human decide, with visible, overridable output and a sensible failure state." },
-      { "id": "m5-t5-q4", "question": "Why test the app logged in as a second, lower-privilege account?", "options": ["To increase user count", "To check row-level visibility rules — where beginners leak data", "To speed up the app", "It is not necessary"], "answerIndex": 1, "explanation": "Permissions bugs are invisible when you test only as the owner." },
-      { "id": "m5-t5-q5", "question": "Which is part of a responsible hand-over?", "options": ["Deleting the documentation", "Transferring ownership to an institutional account, a privacy notice, an owner, and a retirement rule for data", "Keeping the app on your personal account forever", "Removing all users"], "answerIndex": 1, "explanation": "An app without an owner, notice and retirement rule becomes a liability." }
+      {
+        "id": "m5-t5-q1",
+        "question": "People need to enter, view and update structured records with different roles. What should you build?",
+        "options": [
+          "A custom assistant",
+          "An automation only",
+          "A no-code app",
+          "A podcast"
+        ],
+        "answerIndex": 2,
+        "explanation": "Forms, lists, detail screens and permissions are what no-code app builders provide."
+      },
+      {
+        "id": "m5-t5-q2",
+        "question": "What should be designed FIRST in an app?",
+        "options": [
+          "The colour scheme",
+          "The data: tables, typed fields, owners and visibility",
+          "The logo",
+          "The launch post"
+        ],
+        "answerIndex": 1,
+        "explanation": "Screens are built on tables; changing data later forces rebuilds."
+      },
+      {
+        "id": "m5-t5-q3",
+        "question": "How should an AI feature behave inside a no-code app?",
+        "options": [
+          "Decide and act automatically (auto-close, auto-approve)",
+          "Suggest, be editable, be labelled as AI-suggested, and have a fallback value",
+          "Hide its output",
+          "Run on every row every minute"
+        ],
+        "answerIndex": 1,
+        "explanation": "AI should help a human decide, with visible, overridable output and a sensible failure state."
+      },
+      {
+        "id": "m5-t5-q4",
+        "question": "Why test the app logged in as a second, lower-privilege account?",
+        "options": [
+          "To increase user count",
+          "To check row-level visibility rules — where beginners leak data",
+          "To speed up the app",
+          "It is not necessary"
+        ],
+        "answerIndex": 1,
+        "explanation": "Permissions bugs are invisible when you test only as the owner."
+      },
+      {
+        "id": "m5-t5-q5",
+        "question": "Which is part of a responsible hand-over?",
+        "options": [
+          "Deleting the documentation",
+          "Transferring ownership to an institutional account, a privacy notice, an owner, and a retirement rule for data",
+          "Keeping the app on your personal account forever",
+          "Removing all users"
+        ],
+        "answerIndex": 1,
+        "explanation": "An app without an owner, notice and retirement rule becomes a liability."
+      },
+      {
+        "id": "m5-t5-q6",
+        "question": "A no-code app stores student profiles. What data decision should come before screen design?",
+        "options": [
+          "Define data fields, owners, access rules and retention",
+          "Choose an animation style",
+          "Write a marketing headline",
+          "Add every field that might be useful someday"
+        ],
+        "answerIndex": 0,
+        "explanation": "Data structure and visibility are core design decisions."
+      },
+      {
+        "id": "m5-t5-q7",
+        "question": "An app’s AI assistant suggests a fee reminder. How should the suggestion appear?",
+        "options": [
+          "As an official payment demand without review",
+          "Clearly labelled as AI-suggested, editable and reviewed before sending",
+          "Hidden from the staff member",
+          "Automatically sent regardless of confidence"
+        ],
+        "answerIndex": 1,
+        "explanation": "AI assistance should remain visible, editable and subject to human checks."
+      },
+      {
+        "id": "m5-t5-q8",
+        "question": "A student account can view another student’s records. What test would catch this?",
+        "options": [
+          "Test only as the app owner",
+          "Ask the model whether privacy is correct",
+          "Sign in as a lower-privilege second account and verify row-level access",
+          "Check that the home screen loads"
+        ],
+        "answerIndex": 2,
+        "explanation": "Permission testing must use accounts with different access."
+      },
+      {
+        "id": "m5-t5-q9",
+        "question": "An app uses an external AI API. What should happen when the API is unavailable?",
+        "options": [
+          "Delete the form submission",
+          "Pretend the AI succeeded",
+          "Display another user’s answer",
+          "Show a clear fallback, preserve user work and route unresolved items for review"
+        ],
+        "answerIndex": 3,
+        "explanation": "Graceful failure preserves safety and trust."
+      },
+      {
+        "id": "m5-t5-q10",
+        "question": "A no-code builder creates an app from a prompt. What remains the builder’s responsibility?",
+        "options": [
+          "Validate data, permissions, functionality, privacy and accessibility before use",
+          "Nothing, because the builder is automated",
+          "Only change the icon",
+          "Ask AI to approve the launch"
+        ],
+        "answerIndex": 0,
+        "explanation": "Generated code or configuration still needs human testing."
+      },
+      {
+        "id": "m5-t5-q11",
+        "question": "A form collects birth date although the app only sends event reminders. What principle suggests removing it?",
+        "options": [
+          "Few-shot prompting",
+          "Data minimisation",
+          "Outpainting",
+          "Idempotency"
+        ],
+        "answerIndex": 1,
+        "explanation": "Collect only data needed for the stated purpose."
+      },
+      {
+        "id": "m5-t5-q12",
+        "question": "A builder uses a personal account to own an app for a college. What handover is appropriate?",
+        "options": [
+          "Keep the personal account permanently",
+          "Share the password with all staff",
+          "Transfer ownership to an institutional account and name a maintainer",
+          "Remove access controls"
+        ],
+        "answerIndex": 2,
+        "explanation": "Institutional systems need durable ownership."
+      },
+      {
+        "id": "m5-t5-q13",
+        "question": "A user submits an empty form and the app’s AI crashes. What should the test plan cover?",
+        "options": [
+          "Only a perfect happy path",
+          "The app logo",
+          "The builder’s marketing page",
+          "Malformed inputs and a safe error response"
+        ],
+        "answerIndex": 3,
+        "explanation": "Realistic tests include malformed data and error conditions."
+      },
+      {
+        "id": "m5-t5-q14",
+        "question": "A student-facing app displays generated advice as if it were a policy. What should change?",
+        "options": [
+          "Label suggestions, cite approved policy, provide a contact and avoid inventing rules",
+          "Remove every source",
+          "Add more confidence language",
+          "Hide the AI feature"
+        ],
+        "answerIndex": 0,
+        "explanation": "Users should know which content is generated and where to verify official rules."
+      },
+      {
+        "id": "m5-t5-q15",
+        "question": "Before launching an app to a pilot group, what is important?",
+        "options": [
+          "Launch to everyone and see what happens",
+          "Test with representative users, verify permissions, publish a privacy notice and define a rollback owner",
+          "Skip user feedback",
+          "Collect more data than needed"
+        ],
+        "answerIndex": 1,
+        "explanation": "A controlled pilot tests both usefulness and safeguards."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Automation and Knowledge Systems Gate",
+    "questions": [
+      {
+        "id": "m5-assessment-q1",
+        "question": "A custom assistant will answer questions from a college handbook. Which setup is strongest?",
+        "options": [
+          "Upload every available file and tell it to answer confidently",
+          "Curate current approved documents, define scope and citation behaviour, and instruct it to abstain when the answer is absent",
+          "Use a broad web search instead of the handbook",
+          "Hide the source files from reviewers"
+        ],
+        "answerIndex": 1,
+        "explanation": "A reliable assistant needs curated sources, a bounded role, traceable citations and an abstention path.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q2",
+        "question": "A handbook assistant cites the correct document but quotes an obsolete section. What failed?",
+        "options": [
+          "The source corpus or version metadata was not controlled; update and label authoritative documents",
+          "The model used retrieval, so the answer must be current",
+          "The user prompt was too polite",
+          "The citation format was too short"
+        ],
+        "answerIndex": 0,
+        "explanation": "RAG is only as reliable as its document selection, versioning and retrieval.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q3",
+        "question": "A Make automation sends fee reminders directly to students. Which action should require approval?",
+        "options": [
+          "Formatting a draft message",
+          "Sorting the internal queue",
+          "Counting pending rows",
+          "Sending an external message that could expose incorrect balances or personal data"
+        ],
+        "answerIndex": 3,
+        "explanation": "External, consequential and difficult-to-reverse actions should have a human approval checkpoint.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q4",
+        "question": "A workflow trigger fires twice after a network retry. How should the system avoid duplicate messages?",
+        "options": [
+          "Increase the model temperature",
+          "Add another AI step to decide whether it has sent",
+          "Use an idempotency key or processed-status check before the send step",
+          "Remove logs"
+        ],
+        "answerIndex": 2,
+        "explanation": "Idempotency prevents duplicate side effects when a job is retried.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q5",
+        "question": "A process scorecard rates automation value high but risk-if-wrong very high. Which recommendation fits?",
+        "options": [
+          "Fully automate because the total score is high",
+          "Keep a human checkpoint or approval gate because high error impact dominates the decision",
+          "Ignore the scorecard and launch immediately",
+          "Train the model on more examples and remove review"
+        ],
+        "answerIndex": 1,
+        "explanation": "High risk calls for a human-in-the-loop control even when potential value is attractive.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q6",
+        "question": "A no-code app has role-based student records. What is the most important test before launch?",
+        "options": [
+          "Sign in as a second lower-privilege account and verify row-level visibility and write permissions",
+          "Check the colours on the login page",
+          "Ask the builder AI whether security is enabled",
+          "Test only as the app owner"
+        ],
+        "answerIndex": 0,
+        "explanation": "Testing with a lower-privilege account catches cross-user data exposure.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q7",
+        "question": "A custom assistant is moved from a student’s personal account to a college workflow. Which hand-over matters most?",
+        "options": [
+          "Keep the personal account as the permanent owner",
+          "Remove all documentation to simplify support",
+          "Let the assistant approve its own updates",
+          "Transfer to an institutional owner, document approved data and retention, assign a maintainer and define retirement"
+        ],
+        "answerIndex": 3,
+        "explanation": "Institutional ownership and lifecycle responsibility are essential for a sustained system.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q8",
+        "question": "A small RAG pilot gives cited answers to handbook questions but fails on missing policies. What should the assistant do?",
+        "options": [
+          "Invent a likely rule and cite the closest section",
+          "Search unrelated public sites without telling the user",
+          "Say the supplied documents do not answer, route the case to the office and log the gap",
+          "Repeat the question until an answer appears"
+        ],
+        "answerIndex": 2,
+        "explanation": "A safe knowledge assistant abstains on missing evidence and provides a human route.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q9",
+        "question": "A college wants to automate a process, but staff disagree about the actual steps and exceptions. What comes first?",
+        "options": [
+          "Choose an automation vendor",
+          "Map the current process, hand-offs, exceptions, time and failure points with the people doing the work",
+          "Ask a model to infer the process from the policy",
+          "Automate the easiest screen immediately"
+        ],
+        "answerIndex": 1,
+        "explanation": "Understand the process as it actually operates before designing automation.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q10",
+        "question": "An AI step is unavailable during a student-support workflow. What is a responsible fallback?",
+        "options": [
+          "Use a reviewed template or queue for human follow-up, log the failure and avoid fabricating a response",
+          "Drop the student request silently",
+          "Send the last generated answer again",
+          "Mark the request complete"
+        ],
+        "answerIndex": 0,
+        "explanation": "Graceful degradation preserves service and accountability when AI fails.",
+        "difficulty": "advanced"
+      }
     ]
   }
 }

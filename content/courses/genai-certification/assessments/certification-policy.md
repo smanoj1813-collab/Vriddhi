@@ -1,6 +1,6 @@
 # Certification Policy — Certified GenAI Practitioner (Vriddhi)
 
-Programme: **VGC-101 GenAI for Career Impact — Certificate Program** · 60 hours · 4 credits (recommended) · 10 weeks · Version 1.0 (September 2026)
+Programme: **VGC-101 GenAI for Career Impact — Certificate Program** · 60 hours · 4 credits (recommended) · 10 weeks · Version 1.1 (September 2026)
 
 ## 1. Award
 
@@ -13,6 +13,10 @@ The certificate **Certified GenAI Practitioner (Vriddhi)** is awarded to learner
 5. **No unresolved academic-integrity finding.**
 
 Grade bands: **Distinction ≥ 80 · Merit ≥ 65 · Pass ≥ 50 · Not yet < 50.** The certificate states the grade band, the version of the programme and the date; a verification link or QR code points to the credential record.
+
+### Platform-download gate
+
+The course app applies a separate, visible eligibility gate before it creates the learner-downloadable completion PDF. A learner must (1) reach the end of every lesson and project brief, (2) submit every lesson quiz, (3) achieve a best-attempt lesson-quiz average of at least **60%**, and (4) pass all eight end-of-module mini-assessments at **60% or higher**. Each module mini-assessment is available only after all of that module’s topics have been read and all lesson quizzes submitted; passing unlocks the next module. The app merges offline progress into the signed-in student’s college-scoped record. This platform checklist does not independently verify attendance, project marking, final assessment, identity, or academic-integrity clearance; the facilitator/programme lead must still apply the award conditions above before recording an institutional award.
 
 ## 2. Credits and recognition
 

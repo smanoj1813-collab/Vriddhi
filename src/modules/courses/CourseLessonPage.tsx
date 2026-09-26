@@ -4,7 +4,7 @@
 // lesson body or its quiz on the right, previous / next and "mark complete".
 // Lesson Markdown is fetched lazily from the bundle (courseCatalog.loadLesson).
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -17,31 +17,35 @@ import {
   FlaskConical,
   ListChecks,
   Loader2,
+  LockKeyhole,
   Menu,
   X,
 } from 'lucide-react'
 import CourseMarkdown from '@/shared/components/courses/CourseMarkdown'
 import CourseQuiz from '@/shared/components/courses/CourseQuiz'
 import { getCourse, loadLesson } from '@/shared/courses/courseCatalog'
-import { coursePercent, findTopic, formatMinutes, modulePercent, neighbours } from '@/shared/courses/courseModel'
+import { coursePercent, findTopic, formatMinutes, hasReadTopic, isModuleUnlocked, isTopicUnlocked, modulePercent, neighbours } from '@/shared/courses/courseModel'
 import { useCourseProgress } from '@/shared/courses/courseProgress'
 import { Breadcrumb, Chip, EmptyState, ProgressBar } from './courseUi'
 
 interface CourseLessonPageProps {
   basePath: string
   uid?: string
+  collegeId?: string
 }
 
 type Tab = 'lesson' | 'quiz'
 
-export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProps) {
+export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLessonPageProps) {
   const { courseId = '', topicId = '' } = useParams()
   const navigate = useNavigate()
   const course = getCourse(courseId)
-  const { progress, complete, uncomplete, visit, submitQuiz } = useCourseProgress(uid, courseId)
+  const { progress, loading: progressLoading, complete, visit, submitQuiz } = useCourseProgress(uid, courseId, { collegeId, manifest: course?.manifest })
 
   const topic = useMemo(() => (course ? findTopic(course.sequence, topicId) : undefined), [course, topicId])
+  const topicUnlocked = !!(course && topic && isTopicUnlocked(course.manifest, progress, topic.id))
   const { prev, next } = useMemo(() => (course ? neighbours(course.sequence, topicId) : {}), [course, topicId])
+  const nextUnlocked = !!(course && next && isTopicUnlocked(course.manifest, progress, next.id))
   const questions = course?.quizzes[topicId] || []
 
   const [tab, setTab] = useState<Tab>('lesson')
@@ -49,10 +53,11 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [outlineOpen, setOutlineOpen] = useState(false)
+  const readingEndRef = useRef<HTMLDivElement | null>(null)
 
   // Load the Markdown for this topic; reset the tab and scroll on change.
   useEffect(() => {
-    if (!course || !topic) return
+    if (!course || !topic || !topicUnlocked) return
     let cancelled = false
     setLoading(true)
     setError(null)
@@ -76,12 +81,41 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
     return () => {
       cancelled = true
     }
-  }, [course, topic])
+  }, [course, topic, topicUnlocked])
 
   // Remember where the learner is, so "Continue" lands here.
   useEffect(() => {
-    if (topic) visit(topic.id)
-  }, [topic, visit])
+    if (topic && topicUnlocked && !progressLoading) visit(topic.id)
+  }, [topic, topicUnlocked, progressLoading, visit])
+
+  // A topic is marked read only after its end marker reaches the viewport.
+  // This is the completion condition used by topic locks and certificate checks.
+  useEffect(() => {
+    if (!topic || !topicUnlocked || progressLoading || loading || error || !body || tab !== 'lesson' || hasReadTopic(progress, topic.id)) return
+    const marker = readingEndRef.current
+    if (!marker) return
+    const markRead = () => complete(topic.id)
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          markRead()
+          observer.disconnect()
+        }
+      }, { threshold: 0.5 })
+      observer.observe(marker)
+      return () => observer.disconnect()
+    }
+    const checkPosition = () => {
+      const rect = marker.getBoundingClientRect()
+      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
+        markRead()
+        window.removeEventListener('scroll', checkPosition)
+      }
+    }
+    checkPosition()
+    window.addEventListener('scroll', checkPosition, { passive: true })
+    return () => window.removeEventListener('scroll', checkPosition)
+  }, [topic, topicUnlocked, progressLoading, loading, error, body, tab, progress, complete])
 
   if (!course || !topic) {
     return (
@@ -94,22 +128,39 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
       </div>
     )
   }
+  if (!topicUnlocked) {
+    const moduleIndex = course.manifest.modules.findIndex((mod) => mod.id === topic.moduleId)
+    const previousModule = course.manifest.modules[moduleIndex - 1]
+    const needsModulePass = moduleIndex > 0 && !isModuleUnlocked(course.manifest, progress, moduleIndex)
+    return (
+      <div className="mx-auto max-w-3xl">
+        <EmptyState
+          title="Topic locked"
+          body={needsModulePass
+            ? `Pass the previous module’s mini assessment with at least ${previousModule?.assessment?.passMark ?? 60}% to unlock this module.`
+            : 'Read the previous topic to its end and submit its lesson quiz to unlock this topic.'}
+          action={<Link to={`${basePath}/${course.manifest.id}`} className="text-sm font-semibold text-teal-700 underline">View course progress</Link>}
+        />
+      </div>
+    )
+  }
 
   const { manifest } = course
-  const done = !!progress.completed[topic.id]
+  const done = hasReadTopic(progress, topic.id)
   const best = progress.quiz[topic.id]
   const percent = coursePercent(manifest, progress)
   const courseHome = `${basePath}/${manifest.id}`
   const isProject = topic.type === 'project'
 
-  const toggleComplete = () => {
-    if (done) uncomplete(topic.id)
-    else complete(topic.id)
-  }
+  const lessonQuizDone = isProject || !!progress.quiz[topic.id]
 
   const completeAndNext = () => {
-    complete(topic.id)
-    if (next) navigate(`${courseHome}/learn/${next.id}`)
+    if (!done) return
+    if (!lessonQuizDone) {
+      setTab('quiz')
+      return
+    }
+    if (next && nextUnlocked) navigate(`${courseHome}/learn/${next.id}`)
     else navigate(courseHome)
   }
 
@@ -124,46 +175,37 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
           <span className="text-[11px] font-bold text-teal-700 dark:text-teal-300">{percent}%</span>
         </div>
       </div>
-      {manifest.modules.map((mod) => {
+      {manifest.modules.map((mod, moduleIndex) => {
         const pct = modulePercent(mod, progress)
         const isCurrent = mod.id === topic.moduleId
+        const moduleUnlocked = isModuleUnlocked(manifest, progress, moduleIndex)
         return (
           <details key={mod.id} open={isCurrent} className="group">
             <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
-              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] ${pct === 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
-                {pct === 100 ? '✓' : mod.number}
+              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] ${pct === 100 && moduleUnlocked ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
+                {!moduleUnlocked ? <LockKeyhole className="h-3 w-3" /> : pct === 100 ? '✓' : mod.number}
               </span>
               <span className="min-w-0 flex-1 truncate">{mod.title}</span>
             </summary>
             <ul className="mt-1 space-y-0.5 pl-1">
               {mod.topics.map((t) => {
                 const active = t.id === topic.id
-                const tDone = !!progress.completed[t.id]
-                return (
-                  <li key={t.id}>
-                    <Link
-                      to={`${courseHome}/learn/${t.id}`}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex items-start gap-2 rounded-lg px-2 py-1.5 text-xs ${
-                        active
-                          ? 'bg-teal-50 font-semibold text-teal-800 dark:bg-teal-950/50 dark:text-teal-200'
-                          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {tDone ? (
-                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                      ) : t.type === 'project' ? (
-                        <FlaskConical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500" />
-                      ) : (
-                        <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-600" />
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <span className="mr-1 text-[10px] font-bold text-slate-400">{t.number}</span>
-                        {t.title}
-                      </span>
-                    </Link>
-                  </li>
+                const tDone = hasReadTopic(progress, t.id)
+                const unlocked = isTopicUnlocked(manifest, progress, t.id)
+                const icon = !unlocked
+                  ? <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  : tDone
+                    ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    : t.type === 'project'
+                      ? <FlaskConical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500" />
+                      : <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-600" />
+                const content = (
+                  <span className={`flex items-start gap-2 rounded-lg px-2 py-1.5 text-xs ${active ? 'bg-teal-50 font-semibold text-teal-800 dark:bg-teal-950/50 dark:text-teal-200' : unlocked ? 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' : 'text-slate-400 opacity-60'}`}>
+                    {icon}
+                    <span className="min-w-0 flex-1"><span className="mr-1 text-[10px] font-bold text-slate-400">{t.number}</span>{t.title}</span>
+                  </span>
                 )
+                return <li key={t.id}>{unlocked ? <Link to={`${courseHome}/learn/${t.id}`} aria-current={active ? 'page' : undefined}>{content}</Link> : <div aria-disabled="true">{content}</div>}</li>
               })}
             </ul>
           </details>
@@ -227,7 +269,7 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
             <TabButton active={tab === 'lesson'} onClick={() => setTab('lesson')} icon={<BookOpen className="h-4 w-4" />}>
               {isProject ? 'Brief' : 'Lesson'}
             </TabButton>
-            <TabButton active={tab === 'quiz'} onClick={() => setTab('quiz')} icon={<ListChecks className="h-4 w-4" />}>
+            <TabButton active={tab === 'quiz'} onClick={() => setTab('quiz')} disabled={!done || progressLoading} icon={<ListChecks className="h-4 w-4" />}>
               Quiz{questions.length ? ` · ${questions.length}` : ''}
               {best ? <span className="ml-1 rounded-full bg-teal-600 px-1.5 text-[10px] font-bold text-white">{best.score}/{best.total}</span> : null}
             </TabButton>
@@ -242,10 +284,15 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
               ) : error ? (
                 <EmptyState title="Could not load this lesson" body={error} />
               ) : (
-                <CourseMarkdown source={body} skipTitle />
+                <>
+                  <CourseMarkdown source={body} skipTitle />
+                  <div ref={readingEndRef} className="mt-6 border-t border-dashed border-slate-200 pt-4 text-center text-xs text-slate-400 dark:border-slate-700" aria-live="polite">
+                    {done ? 'End of topic · content read' : 'End of topic · reaching this point marks the content as read'}
+                  </div>
+                </>
               )
             ) : (
-              <CourseQuiz questions={questions} best={best} onSubmit={(answers) => submitQuiz(topic.id, questions, answers)} />
+              <CourseQuiz questions={questions} best={best} disabled={progressLoading || !done} onSubmit={(answers) => submitQuiz(topic.id, questions, answers)} />
             )}
           </section>
 
@@ -261,27 +308,29 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <button
-                type="button"
-                onClick={toggleComplete}
-                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ${
-                  done
-                    ? 'border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-                    : 'border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800'
-                }`}
-              >
-                {done ? <CheckCircle2 className="h-4 w-4" /> : <ClipboardCheck className="h-4 w-4" />}
-                {done ? 'Completed · undo' : 'Mark complete'}
-              </button>
+              {!done ? (
+                <span className="inline-flex items-center gap-1.5 text-xs text-slate-500"><LockKeyhole className="h-3.5 w-3.5" /> Reach the end of the content to mark it read.</span>
+              ) : isProject ? (
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"><CheckCircle2 className="h-4 w-4" /> Project brief read</span>
+              ) : !lessonQuizDone ? (
+                <span className="inline-flex items-center gap-1.5 text-xs text-slate-500"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Content read · submit the {questions.length}-question quiz to unlock the next topic.</span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"><CheckCircle2 className="h-4 w-4" /> Content and quiz complete</span>
+              )}
               <button
                 type="button"
                 onClick={completeAndNext}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-700"
+                disabled={!done || progressLoading}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {next ? (
-                  <>
-                    {done ? 'Next' : 'Complete & next'} · {next.number} <ArrowRight className="h-4 w-4" />
-                  </>
+                {!done ? (
+                  <>Read to end to continue <LockKeyhole className="h-4 w-4" /></>
+                ) : !lessonQuizDone ? (
+                  <>Take quiz · {questions.length} questions <ListChecks className="h-4 w-4" /></>
+                ) : next && nextUnlocked ? (
+                  <>Next · {next.number} <ArrowRight className="h-4 w-4" /></>
+                ) : next ? (
+                  <>Take module assessment <ArrowRight className="h-4 w-4" /></>
                 ) : (
                   <>Finish course <ArrowRight className="h-4 w-4" /></>
                 )}
@@ -294,14 +343,15 @@ export default function CourseLessonPage({ basePath, uid }: CourseLessonPageProp
   )
 }
 
-function TabButton({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
+function TabButton({ active, onClick, icon, children, disabled }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode; disabled?: boolean }) {
   return (
     <button
       type="button"
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+      disabled={disabled}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         active ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-900 dark:text-teal-200' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
       }`}
     >

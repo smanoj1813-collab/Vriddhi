@@ -2,32 +2,867 @@
   "moduleId": "m8",
   "questions": {
     "m8-t1": [
-      { "id": "m8-t1-q1", "question": "Which resume format is safest for ATS parsing?", "options": ["Two columns with icons and a photo", "Single column, standard fonts, standard section names, PDF or DOCX as requested", "A designed infographic", "A table-based layout"], "answerIndex": 1, "explanation": "Columns, tables, text boxes, icons and headers/footers break parsing." },
-      { "id": "m8-t1-q2", "question": "What does ATRE stand for in achievement statements?", "options": ["Aim, Team, Role, Effort", "Action – Task – Result – Evidence", "Attitude, Talent, Reputation, Energy", "Apply, Test, Review, Edit"], "answerIndex": 1, "explanation": "Strong verb, the task, a quantified result, and where the evidence lives." },
-      { "id": "m8-t1-q3", "question": "Hiding white-text keywords or an instruction to AI screeners in your resume is:", "options": ["A smart hack", "Prompt injection — detectable and disqualifying", "Required by ATS", "Harmless formatting"], "answerIndex": 1, "explanation": "It is dishonest and increasingly detected; it also violates the integrity standards of this course." },
-      { "id": "m8-t1-q4", "question": "In the tailoring workflow, what should you do about a JD requirement you lack?", "options": ["Invent it", "Do not invent it; consider whether a project partially covers it and say so honestly", "Copy the JD sentence into your skills", "Ignore the JD"], "answerIndex": 1, "explanation": "The interview will audit your resume; honesty protects you." },
-      { "id": "m8-t1-q5", "question": "What makes a portfolio case study useful to a hiring manager?", "options": ["A gallery of screenshots", "Problem → what I did → tools → result with numbers → evidence → learning → my role", "A long biography", "Only the certificate"], "answerIndex": 1, "explanation": "Evidence-backed case studies reviewable in five minutes." }
+      {
+        "id": "m8-t1-q1",
+        "question": "Which resume format is safest for ATS parsing?",
+        "options": [
+          "Two columns with icons and a photo",
+          "Single column, standard fonts, standard section names, PDF or DOCX as requested",
+          "A designed infographic",
+          "A table-based layout"
+        ],
+        "answerIndex": 1,
+        "explanation": "Columns, tables, text boxes, icons and headers/footers break parsing."
+      },
+      {
+        "id": "m8-t1-q2",
+        "question": "What does ATRE stand for in achievement statements?",
+        "options": [
+          "Aim, Team, Role, Effort",
+          "Action – Task – Result – Evidence",
+          "Attitude, Talent, Reputation, Energy",
+          "Apply, Test, Review, Edit"
+        ],
+        "answerIndex": 1,
+        "explanation": "Strong verb, the task, a quantified result, and where the evidence lives."
+      },
+      {
+        "id": "m8-t1-q3",
+        "question": "Hiding white-text keywords or an instruction to AI screeners in your resume is:",
+        "options": [
+          "A smart hack",
+          "Prompt injection — detectable and disqualifying",
+          "Required by ATS",
+          "Harmless formatting"
+        ],
+        "answerIndex": 1,
+        "explanation": "It is dishonest and increasingly detected; it also violates the integrity standards of this course."
+      },
+      {
+        "id": "m8-t1-q4",
+        "question": "In the tailoring workflow, what should you do about a JD requirement you lack?",
+        "options": [
+          "Invent it",
+          "Do not invent it; consider whether a project partially covers it and say so honestly",
+          "Copy the JD sentence into your skills",
+          "Ignore the JD"
+        ],
+        "answerIndex": 1,
+        "explanation": "The interview will audit your resume; honesty protects you."
+      },
+      {
+        "id": "m8-t1-q5",
+        "question": "What makes a portfolio case study useful to a hiring manager?",
+        "options": [
+          "A gallery of screenshots",
+          "Problem → what I did → tools → result with numbers → evidence → learning → my role",
+          "A long biography",
+          "Only the certificate"
+        ],
+        "answerIndex": 1,
+        "explanation": "Evidence-backed case studies reviewable in five minutes."
+      },
+      {
+        "id": "m8-t1-q6",
+        "question": "A resume uses icons for phone, email and location instead of text. What is the ATS risk?",
+        "options": [
+          "The resume will always be rejected by people",
+          "The file cannot be a PDF",
+          "The icons prove the candidate is creative",
+          "The parser may not reliably identify the contact details"
+        ],
+        "answerIndex": 3,
+        "explanation": "Standard text labels are more reliably parsed than decorative icons."
+      },
+      {
+        "id": "m8-t1-q7",
+        "question": "A student reports “improved efficiency by 40%” but has no measurement. What should they do?",
+        "options": [
+          "Replace it with a defensible result or explain how a smaller claim was measured",
+          "Keep it because percentages attract attention",
+          "Ask AI to estimate the evidence",
+          "Add a second unsupported metric"
+        ],
+        "answerIndex": 0,
+        "explanation": "Achievement claims should be evidence-based."
+      },
+      {
+        "id": "m8-t1-q8",
+        "question": "An AI tailoring tool finds a requirement the candidate lacks. What is the honest response?",
+        "options": [
+          "Add it as an advanced skill",
+          "Do not claim the skill; show adjacent evidence or a plan to learn it if relevant",
+          "Hide the requirement with white text",
+          "Ask the model to invent a project"
+        ],
+        "answerIndex": 1,
+        "explanation": "Tailoring can emphasise real evidence but must not fabricate qualifications."
+      },
+      {
+        "id": "m8-t1-q9",
+        "question": "A portfolio describes a group project but not the student’s contribution. What is missing?",
+        "options": [
+          "A more colourful banner",
+          "A list of unrelated interests",
+          "The student’s specific role, actions and evidence",
+          "A longer course description"
+        ],
+        "answerIndex": 2,
+        "explanation": "Hiring managers need to distinguish individual contribution from team output."
+      },
+      {
+        "id": "m8-t1-q10",
+        "question": "A resume contains a hidden prompt telling screening AI to rank it first. What is this?",
+        "options": [
+          "A standard ATS keyword",
+          "An accessibility feature",
+          "A portfolio link",
+          "Prompt injection and deceptive manipulation"
+        ],
+        "answerIndex": 3,
+        "explanation": "Hidden instructions are deceptive and may be detected or disqualifying."
+      },
+      {
+        "id": "m8-t1-q11",
+        "question": "A resume has two columns and non-standard section labels. What version is safest for ATS submission?",
+        "options": [
+          "Single column with standard headings, readable fonts and the requested file type",
+          "A screenshot of the resume",
+          "A text image with no selectable content",
+          "A file with invisible keywords"
+        ],
+        "answerIndex": 0,
+        "explanation": "Simple structure improves parsing."
+      },
+      {
+        "id": "m8-t1-q12",
+        "question": "A project claim says it saved five hours each week. What should the portfolio include?",
+        "options": [
+          "Only the claim in bold",
+          "How the time was measured, the baseline, the student’s role and a supporting artefact",
+          "A model-generated validation statement",
+          "An unrelated certificate"
+        ],
+        "answerIndex": 1,
+        "explanation": "Evidence makes an achievement credible and reproducible."
+      },
+      {
+        "id": "m8-t1-q13",
+        "question": "A student used AI to rewrite every resume bullet. What final check is essential?",
+        "options": [
+          "Keep all generated language unchanged",
+          "Add more action verbs regardless of truth",
+          "Confirm each bullet reflects real work, accurate metrics and the student’s own contribution",
+          "Remove the project dates"
+        ],
+        "answerIndex": 2,
+        "explanation": "AI-assisted writing must remain authentic and factually accurate."
+      },
+      {
+        "id": "m8-t1-q14",
+        "question": "A job description asks for a certification the applicant does not have. What should be listed?",
+        "options": [
+          "The certification as “in progress” without enrolment",
+          "An equivalent invented title",
+          "The course they hope to take",
+          "Only certifications actually earned, with accurate status and date"
+        ],
+        "answerIndex": 3,
+        "explanation": "Credential claims must accurately represent achievement and status."
+      },
+      {
+        "id": "m8-t1-q15",
+        "question": "A resume is tailored for a finance operations role. What makes it relevant?",
+        "options": [
+          "Evidence from accounting or data tasks mapped honestly to the job’s requirements",
+          "A generic AI summary for every role",
+          "A long list of unrelated tools",
+          "A different candidate’s project"
+        ],
+        "answerIndex": 0,
+        "explanation": "Tailoring connects real experience to the target role."
+      }
     ],
     "m8-t2": [
-      { "id": "m8-t2-q1", "question": "Which headline is strongest?", "options": ["Student at XYZ College", "B.Com · Automated GST-invoice triage saving 5 h/week · Certified GenAI Practitioner · Seeking finance operations roles", "Hardworking and passionate learner", "Open to opportunities"], "answerIndex": 1, "explanation": "Degree/role, proof points with numbers, certification, what you seek — searchable and credible." },
-      { "id": "m8-t2-q2", "question": "How should the About section be written?", "options": ["Third person with many adjectives", "First person, plain, with two or three ATRE achievements and what you are looking for", "A copy of the resume", "One word"], "answerIndex": 1, "explanation": "Facts and an ask, in your own voice; the first three lines matter most." },
-      { "id": "m8-t2-q3", "question": "What is the recommended first outreach message to an alumnus?", "options": ["Ask for a job and attach your resume", "A short, personalised note with one cheap ask — two questions or fifteen minutes — and no resume unless requested", "A generic connection request", "A long story of your life"], "answerIndex": 1, "explanation": "Make saying yes easy; follow up once; report back." },
-      { "id": "m8-t2-q4", "question": "Which is a brand-responsibility rule from the lesson?", "options": ["Call yourself CEO of your class project", "Anonymise clients, users and classmates; keep numbers consistent across resume, portfolio and LinkedIn; disclose substantial AI drafting lightly", "Post political hot takes for reach", "Use an AI-generated headshot"], "answerIndex": 1, "explanation": "Honesty, privacy of others, consistency and disclosure protect your credibility." },
-      { "id": "m8-t2-q5", "question": "What is a realistic reply rate for good outreach?", "options": ["100%", "20–30%", "Under 1%", "Exactly 50%"], "answerIndex": 1, "explanation": "One in four replies is success; track and iterate." }
+      {
+        "id": "m8-t2-q1",
+        "question": "Which headline is strongest?",
+        "options": [
+          "Student at XYZ College",
+          "B.Com · Automated GST-invoice triage saving 5 h/week · Certified GenAI Practitioner · Seeking finance operations roles",
+          "Hardworking and passionate learner",
+          "Open to opportunities"
+        ],
+        "answerIndex": 1,
+        "explanation": "Degree/role, proof points with numbers, certification, what you seek — searchable and credible."
+      },
+      {
+        "id": "m8-t2-q2",
+        "question": "How should the About section be written?",
+        "options": [
+          "Third person with many adjectives",
+          "First person, plain, with two or three ATRE achievements and what you are looking for",
+          "A copy of the resume",
+          "One word"
+        ],
+        "answerIndex": 1,
+        "explanation": "Facts and an ask, in your own voice; the first three lines matter most."
+      },
+      {
+        "id": "m8-t2-q3",
+        "question": "What is the recommended first outreach message to an alumnus?",
+        "options": [
+          "Ask for a job and attach your resume",
+          "A short, personalised note with one cheap ask — two questions or fifteen minutes — and no resume unless requested",
+          "A generic connection request",
+          "A long story of your life"
+        ],
+        "answerIndex": 1,
+        "explanation": "Make saying yes easy; follow up once; report back."
+      },
+      {
+        "id": "m8-t2-q4",
+        "question": "Which is a brand-responsibility rule from the lesson?",
+        "options": [
+          "Call yourself CEO of your class project",
+          "Anonymise clients, users and classmates; keep numbers consistent across resume, portfolio and LinkedIn; disclose substantial AI drafting lightly",
+          "Post political hot takes for reach",
+          "Use an AI-generated headshot"
+        ],
+        "answerIndex": 1,
+        "explanation": "Honesty, privacy of others, consistency and disclosure protect your credibility."
+      },
+      {
+        "id": "m8-t2-q5",
+        "question": "What is a realistic reply rate for good outreach?",
+        "options": [
+          "100%",
+          "20–30%",
+          "Under 1%",
+          "Exactly 50%"
+        ],
+        "answerIndex": 1,
+        "explanation": "One in four replies is success; track and iterate."
+      },
+      {
+        "id": "m8-t2-q6",
+        "question": "A LinkedIn headline says “Looking for a job.” What would make it more useful?",
+        "options": [
+          "State programme or domain, a verified strength or project outcome, and target role",
+          "Add “best candidate”",
+          "List every social account",
+          "Use only emojis"
+        ],
+        "answerIndex": 0,
+        "explanation": "A clear headline tells people what the candidate does and seeks."
+      },
+      {
+        "id": "m8-t2-q7",
+        "question": "A candidate wants to contact an alumnus. Which opening is most respectful?",
+        "options": [
+          "Send a long biography and ask for a referral immediately",
+          "Mention a specific shared context and make one small, clear request",
+          "Copy the same message to hundreds of people",
+          "Ask the alumnus to rewrite the resume for free"
+        ],
+        "answerIndex": 1,
+        "explanation": "Personalisation and a low-effort ask make outreach more appropriate."
+      },
+      {
+        "id": "m8-t2-q8",
+        "question": "An AI drafted About section claims leadership of a project the student only observed. What should be corrected?",
+        "options": [
+          "Keep it because it sounds professional",
+          "Change the project name",
+          "Remove or accurately qualify the unsupported leadership claim",
+          "Add “AI helped” at the end"
+        ],
+        "answerIndex": 2,
+        "explanation": "Public profiles must not inflate the candidate’s role."
+      },
+      {
+        "id": "m8-t2-q9",
+        "question": "A four-week content plan includes client screenshots with names visible. What should the student do?",
+        "options": [
+          "Post quickly before asking",
+          "Blur only the logo",
+          "Tag the client for approval after posting",
+          "Remove or anonymise identifying information and get permission where needed"
+        ],
+        "answerIndex": 3,
+        "explanation": "Protect other people’s information and obtain permission before sharing."
+      },
+      {
+        "id": "m8-t2-q10",
+        "question": "A LinkedIn profile and resume show different dates for the same internship. What is best?",
+        "options": [
+          "Check records and use a consistent, accurate timeline on both",
+          "Keep each version tailored with different dates",
+          "Choose the longer duration",
+          "Remove dates from every section"
+        ],
+        "answerIndex": 0,
+        "explanation": "Consistency across professional materials supports trust."
+      },
+      {
+        "id": "m8-t2-q11",
+        "question": "A student posts AI-generated industry commentary as a personal experience. What is the concern?",
+        "options": [
+          "It improves engagement automatically",
+          "It misrepresents authorship or lived experience and can damage credibility",
+          "It is always permitted if posted publicly",
+          "It only affects grammar"
+        ],
+        "answerIndex": 1,
+        "explanation": "A public professional brand should not fabricate personal experience."
+      },
+      {
+        "id": "m8-t2-q12",
+        "question": "A connection accepts but does not reply to a message. What should the candidate do?",
+        "options": [
+          "Send the same request daily",
+          "Publish their profile details",
+          "Respect the person’s time and avoid repeated pressure; use another appropriate contact route",
+          "Demand an explanation"
+        ],
+        "answerIndex": 2,
+        "explanation": "Professional outreach should respect boundaries."
+      },
+      {
+        "id": "m8-t2-q13",
+        "question": "A post shares a project result of “5 hours saved weekly.” What should it link or explain?",
+        "options": [
+          "A generated stock photo only",
+          "A claim that the result is guaranteed",
+          "The student’s password",
+          "The project evidence and how the estimate was calculated"
+        ],
+        "answerIndex": 3,
+        "explanation": "A professional claim should be supportable."
+      },
+      {
+        "id": "m8-t2-q14",
+        "question": "A candidate uses AI to plan posts. What should they review before publishing?",
+        "options": [
+          "Accuracy, confidentiality, voice and whether the post implies endorsements or facts that are not true",
+          "Only the number of hashtags",
+          "Whether the model used emojis",
+          "Nothing once scheduled"
+        ],
+        "answerIndex": 0,
+        "explanation": "Scheduled content still needs human review."
+      },
+      {
+        "id": "m8-t2-q15",
+        "question": "A student’s public brand contains private phone numbers from a group project. What is the right fix?",
+        "options": [
+          "Keep it because the project was public",
+          "Remove the personal data and review privacy settings",
+          "Share the whole dataset",
+          "Ask AI to rewrite the phone numbers"
+        ],
+        "answerIndex": 1,
+        "explanation": "Public portfolios should minimise personal data."
+      }
     ],
     "m8-t3": [
-      { "id": "m8-t3-q1", "question": "What does BLUF mean?", "options": ["Be Loud, Use Formality", "Bottom Line Up Front — the decision or key information in the first line", "Brief, Long, Ultimate, Final", "Business Letter Universal Format"], "answerIndex": 1, "explanation": "Write for the reader's next action; put the most important information first." },
-      { "id": "m8-t3-q2", "question": "Which is a good subject line?", "options": ["Update", "Hello", "Consignment 4471: new ETA Fri 3 Oct", "Important!!!"], "answerIndex": 2, "explanation": "Specific and searchable." },
-      { "id": "m8-t3-q3", "question": "What must an AI assistant never add to your email on its own?", "options": ["A greeting", "Commitments such as dates, money or discounts, or facts you have not verified", "Paragraph breaks", "A signature"], "answerIndex": 1, "explanation": "You are accountable for every word; flag and remove unauthorised commitments." },
-      { "id": "m8-t3-q4", "question": "Before circulating AI-drafted meeting minutes you should:", "options": ["Send immediately to save time", "Verify every decision and action item against the recording or your notes", "Delete the action items", "Translate them first"], "answerIndex": 1, "explanation": "Meeting assistants invent or misattribute action items." },
-      { "id": "m8-t3-q5", "question": "What is the purpose of a personal style file?", "options": ["To make emails longer", "To keep your voice consistent when AI drafts or edits for you", "To store passwords", "To replace proofreading"], "answerIndex": 1, "explanation": "Feed your register and examples to the assistant; edit toward it." }
+      {
+        "id": "m8-t3-q1",
+        "question": "What does BLUF mean?",
+        "options": [
+          "Be Loud, Use Formality",
+          "Bottom Line Up Front — the decision or key information in the first line",
+          "Brief, Long, Ultimate, Final",
+          "Business Letter Universal Format"
+        ],
+        "answerIndex": 1,
+        "explanation": "Write for the reader's next action; put the most important information first."
+      },
+      {
+        "id": "m8-t3-q2",
+        "question": "Which is a good subject line?",
+        "options": [
+          "Update",
+          "Hello",
+          "Consignment 4471: new ETA Fri 3 Oct",
+          "Important!!!"
+        ],
+        "answerIndex": 2,
+        "explanation": "Specific and searchable."
+      },
+      {
+        "id": "m8-t3-q3",
+        "question": "What must an AI assistant never add to your email on its own?",
+        "options": [
+          "A greeting",
+          "Commitments such as dates, money or discounts, or facts you have not verified",
+          "Paragraph breaks",
+          "A signature"
+        ],
+        "answerIndex": 1,
+        "explanation": "You are accountable for every word; flag and remove unauthorised commitments."
+      },
+      {
+        "id": "m8-t3-q4",
+        "question": "Before circulating AI-drafted meeting minutes you should:",
+        "options": [
+          "Send immediately to save time",
+          "Verify every decision and action item against the recording or your notes",
+          "Delete the action items",
+          "Translate them first"
+        ],
+        "answerIndex": 1,
+        "explanation": "Meeting assistants invent or misattribute action items."
+      },
+      {
+        "id": "m8-t3-q5",
+        "question": "What is the purpose of a personal style file?",
+        "options": [
+          "To make emails longer",
+          "To keep your voice consistent when AI drafts or edits for you",
+          "To store passwords",
+          "To replace proofreading"
+        ],
+        "answerIndex": 1,
+        "explanation": "Feed your register and examples to the assistant; edit toward it."
+      },
+      {
+        "id": "m8-t3-q6",
+        "question": "A manager needs the decision in the first line of an update. Which writing approach fits?",
+        "options": [
+          "Bury the decision at the end",
+          "BLUF: put the bottom line up front, then supporting detail",
+          "Use a long background before the ask",
+          "Replace the decision with a slogan"
+        ],
+        "answerIndex": 1,
+        "explanation": "BLUF helps busy readers find the key information quickly."
+      },
+      {
+        "id": "m8-t3-q7",
+        "question": "An AI email says “We guarantee delivery Friday” but the sender has not checked logistics. What should happen?",
+        "options": [
+          "Send it to sound confident",
+          "Ask the AI to make the promise more polite",
+          "Remove or qualify the commitment until it is verified and authorised",
+          "Add a disclaimer after sending"
+        ],
+        "answerIndex": 2,
+        "explanation": "AI must not create commitments on behalf of the sender."
+      },
+      {
+        "id": "m8-t3-q8",
+        "question": "A subject line says “Important update.” What revision helps the recipient act?",
+        "options": [
+          "Add multiple exclamation marks",
+          "Use all capital letters",
+          "Remove the topic",
+          "Name the relevant item and action or date, such as “Invoice 4471: confirm revised ETA”"
+        ],
+        "answerIndex": 3,
+        "explanation": "Specific subject lines improve triage."
+      },
+      {
+        "id": "m8-t3-q9",
+        "question": "AI minutes assign a deadline not mentioned in the meeting. What should the editor do?",
+        "options": [
+          "Verify it with the recording or participants and remove unsupported assignments",
+          "Keep it because tasks need deadlines",
+          "Ask AI to choose a reasonable date",
+          "Send before reviewing"
+        ],
+        "answerIndex": 0,
+        "explanation": "Minutes must accurately reflect decisions and actions."
+      },
+      {
+        "id": "m8-t3-q10",
+        "question": "A report contains three pages of context before the recommendation. What can improve it?",
+        "options": [
+          "Add more history",
+          "Lead with the recommendation and organise detail for the reader’s decision",
+          "Move the recommendation to an appendix",
+          "Remove headings"
+        ],
+        "answerIndex": 1,
+        "explanation": "A reader-centred structure puts decision-relevant information first."
+      },
+      {
+        "id": "m8-t3-q11",
+        "question": "A proposal includes AI-generated market figures. What should the writer do?",
+        "options": [
+          "Assume figures are industry averages",
+          "Remove all sources",
+          "Verify each figure, cite the source and label estimates or assumptions",
+          "Ask AI to confirm itself"
+        ],
+        "answerIndex": 2,
+        "explanation": "Business writing needs traceable evidence."
+      },
+      {
+        "id": "m8-t3-q12",
+        "question": "An AI editor changes a polite request into an aggressive tone. What is the best response?",
+        "options": [
+          "Send it to appear decisive",
+          "Remove the recipient’s name",
+          "Add more uppercase words",
+          "Restore the intended relationship and adjust tone against the style guide"
+        ],
+        "answerIndex": 3,
+        "explanation": "Tone should suit the audience and purpose."
+      },
+      {
+        "id": "m8-t3-q13",
+        "question": "A student wants a personal style file for future editing. What should it contain?",
+        "options": [
+          "Examples of the student’s preferred tone, sentence length, vocabulary and avoidances",
+          "Passwords and private messages",
+          "A list of every model provider",
+          "Only a generic template"
+        ],
+        "answerIndex": 0,
+        "explanation": "A style file captures writing preferences without exposing unnecessary private content."
+      },
+      {
+        "id": "m8-t3-q14",
+        "question": "An email includes an attachment link generated by AI. What check is required?",
+        "options": [
+          "Assume the URL is correct",
+          "Open the link, confirm it points to the intended file and check access permissions",
+          "Shorten the URL without opening",
+          "Send to all recipients"
+        ],
+        "answerIndex": 1,
+        "explanation": "Links and recipient access must be verified before sending."
+      },
+      {
+        "id": "m8-t3-q15",
+        "question": "A professional report has a correct conclusion but no limitations. What should be added?",
+        "options": [
+          "An unsupported guarantee",
+          "A longer introduction only",
+          "Important assumptions, uncertainty and limits of the evidence",
+          "A hidden note"
+        ],
+        "answerIndex": 2,
+        "explanation": "Clear limitations make the report more trustworthy."
+      }
     ],
     "m8-t4": [
-      { "id": "m8-t4-q1", "question": "In a STAR story, which section should take the most time?", "options": ["Situation", "Task", "Action — what you personally did", "The introduction"], "answerIndex": 2, "explanation": "About 60% Action, ending with a Result that has numbers and a lesson." },
-      { "id": "m8-t4-q2", "question": "Which is the weakest answer to 'How do you use AI?'", "options": ["Two specific tasks with results, a verification routine, a boundary, and something you built", "'I use ChatGPT for everything'", "A story about catching a hallucination", "Describing the ethics audit you ran"], "answerIndex": 1, "explanation": "Specificity, verification, boundaries and evidence make the answer strong." },
-      { "id": "m8-t4-q3", "question": "How should AI mock-interview scores be treated?", "options": ["As final verdicts", "As prompts for reflection, complemented by at least one human mock", "As irrelevant", "As proof you are ready"], "answerIndex": 1, "explanation": "AI mocks are practice partners; log what hurt and fix it; get human feedback too." },
-      { "id": "m8-t4-q4", "question": "How should you search for roles in the AI-era job map?", "options": ["By exact job title only", "By tasks and tools (automation, content, operations, Kannada) because titles vary", "By salary only", "By company logo"], "answerIndex": 1, "explanation": "Task-based searching surfaces roles that titles hide." },
-      { "id": "m8-t4-q5", "question": "What should happen on days 61–90 if nothing has converted?", "options": ["Give up", "Review with a mentor and change the target, materials or geography — not your effort", "Apply to 500 more jobs with the same resume", "Stop tracking"], "answerIndex": 1, "explanation": "Iterate on strategy with evidence from your tracker and interviews." }
+      {
+        "id": "m8-t4-q1",
+        "question": "In a STAR story, which section should take the most time?",
+        "options": [
+          "Situation",
+          "Task",
+          "Action — what you personally did",
+          "The introduction"
+        ],
+        "answerIndex": 2,
+        "explanation": "About 60% Action, ending with a Result that has numbers and a lesson."
+      },
+      {
+        "id": "m8-t4-q2",
+        "question": "Which is the weakest answer to 'How do you use AI?'",
+        "options": [
+          "Two specific tasks with results, a verification routine, a boundary, and something you built",
+          "'I use ChatGPT for everything'",
+          "A story about catching a hallucination",
+          "Describing the ethics audit you ran"
+        ],
+        "answerIndex": 1,
+        "explanation": "Specificity, verification, boundaries and evidence make the answer strong."
+      },
+      {
+        "id": "m8-t4-q3",
+        "question": "How should AI mock-interview scores be treated?",
+        "options": [
+          "As final verdicts",
+          "As prompts for reflection, complemented by at least one human mock",
+          "As irrelevant",
+          "As proof you are ready"
+        ],
+        "answerIndex": 1,
+        "explanation": "AI mocks are practice partners; log what hurt and fix it; get human feedback too."
+      },
+      {
+        "id": "m8-t4-q4",
+        "question": "How should you search for roles in the AI-era job map?",
+        "options": [
+          "By exact job title only",
+          "By tasks and tools (automation, content, operations, Kannada) because titles vary",
+          "By salary only",
+          "By company logo"
+        ],
+        "answerIndex": 1,
+        "explanation": "Task-based searching surfaces roles that titles hide."
+      },
+      {
+        "id": "m8-t4-q5",
+        "question": "What should happen on days 61–90 if nothing has converted?",
+        "options": [
+          "Give up",
+          "Review with a mentor and change the target, materials or geography — not your effort",
+          "Apply to 500 more jobs with the same resume",
+          "Stop tracking"
+        ],
+        "answerIndex": 1,
+        "explanation": "Iterate on strategy with evidence from your tracker and interviews."
+      },
+      {
+        "id": "m8-t4-q6",
+        "question": "A candidate answers a STAR interview question with a long story but little personal contribution. What should they emphasise?",
+        "options": [
+          "The company history",
+          "The interviewer’s biography",
+          "Their own actions and decisions, then the measurable result",
+          "The team’s work only"
+        ],
+        "answerIndex": 2,
+        "explanation": "The Action section shows what the candidate personally did."
+      },
+      {
+        "id": "m8-t4-q7",
+        "question": "An AI mock interviewer rates eye contact poorly for a candidate using an assistive device. What is appropriate?",
+        "options": [
+          "Accept the rating as objective",
+          "Change assistive settings to satisfy the model",
+          "Remove the interview examples",
+          "Treat the score cautiously, check for bias and use human feedback on job-relevant communication"
+        ],
+        "answerIndex": 3,
+        "explanation": "Automated behavioural metrics can be biased and should not override context."
+      },
+      {
+        "id": "m8-t4-q8",
+        "question": "A candidate is asked how they use AI at work. Which answer is strongest?",
+        "options": [
+          "Give a specific task, explain the tool’s role, verification and human accountability",
+          "Say “AI does everything for me”",
+          "Claim all generated work is accurate",
+          "Avoid mentioning checks"
+        ],
+        "answerIndex": 0,
+        "explanation": "A concrete example demonstrates judgement, not just tool use."
+      },
+      {
+        "id": "m8-t4-q9",
+        "question": "A student searches only for “AI specialist” roles but has a commerce degree. What alternative search may help?",
+        "options": [
+          "Search only for the newest model name",
+          "Search tasks and tool combinations in finance, operations, analysis or customer support",
+          "Apply to every engineering job",
+          "Wait for a title containing “GenAI”"
+        ],
+        "answerIndex": 1,
+        "explanation": "AI-related work often appears inside domain roles rather than specialist titles."
+      },
+      {
+        "id": "m8-t4-q10",
+        "question": "A group discussion participant has a different view from the group. What should they do?",
+        "options": [
+          "Interrupt and repeat the same claim",
+          "Stay silent throughout",
+          "State the evidence respectfully, acknowledge trade-offs and build on others’ points",
+          "Use AI to invent supporting facts"
+        ],
+        "answerIndex": 2,
+        "explanation": "Good communication combines clear reasoning and constructive listening."
+      },
+      {
+        "id": "m8-t4-q11",
+        "question": "A mock interview generates feedback saying “be more confident.” What follow-up makes it actionable?",
+        "options": [
+          "Memorise the phrase",
+          "Change the video background",
+          "Ignore all feedback",
+          "Ask for a specific answer behaviour and practise a revised response with a human reviewer"
+        ],
+        "answerIndex": 3,
+        "explanation": "Actionable feedback should point to observable behaviour."
+      },
+      {
+        "id": "m8-t4-q12",
+        "question": "A career map lists “AI analyst” as a role but no evidence of local demand. What should the student do?",
+        "options": [
+          "Check current job descriptions, required tasks and tools, and speak with practitioners",
+          "Assume the title is common",
+          "Use an AI salary estimate only",
+          "Add the title to the resume without experience"
+        ],
+        "answerIndex": 0,
+        "explanation": "Career research needs current labour-market evidence."
+      },
+      {
+        "id": "m8-t4-q13",
+        "question": "A candidate has three interviews but no offer. What is a useful review?",
+        "options": [
+          "Invent additional experience",
+          "Identify patterns in feedback and adjust target, evidence or interview examples",
+          "Blame all interviewers publicly",
+          "Stop documenting applications"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reflection should change the strategy based on evidence."
+      },
+      {
+        "id": "m8-t4-q14",
+        "question": "A team member uses AI during a mock interview and reads answers verbatim. What skill is not being practised?",
+        "options": [
+          "File conversion",
+          "Image generation",
+          "Authentic, responsive communication",
+          "Data cleaning"
+        ],
+        "answerIndex": 2,
+        "explanation": "Interview preparation should strengthen the candidate’s own reasoning and delivery."
+      },
+      {
+        "id": "m8-t4-q15",
+        "question": "A candidate’s portfolio shows a team product but no role description. What should they add?",
+        "options": [
+          "The whole team’s private contact list",
+          "A larger logo",
+          "A fabricated job title",
+          "Their specific contribution, tools, evidence, result and learning"
+        ],
+        "answerIndex": 3,
+        "explanation": "A portfolio should clearly attribute the candidate’s work."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Career Launch Portfolio Gate",
+    "questions": [
+      {
+        "id": "m8-assessment-q1",
+        "question": "An applicant lacks a required software skill but has a class project using a similar tool. What should the resume say?",
+        "options": [
+          "Describe the project and the adjacent skill accurately, without claiming the unmet requirement",
+          "Claim professional mastery to pass screening",
+          "Hide the skill gap with white text",
+          "Ask AI to infer experience from the job description"
+        ],
+        "answerIndex": 0,
+        "explanation": "Tailoring should surface relevant evidence, never invent qualifications.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q2",
+        "question": "A resume passes keyword matching but is unreadable because it uses tables, icons and multi-column layout. What is the best correction?",
+        "options": [
+          "Add more hidden keywords",
+          "Convert all text to images",
+          "Remove measurable achievements",
+          "Use a single-column, standard-heading version for ATS and keep a separate designed portfolio copy if useful"
+        ],
+        "answerIndex": 3,
+        "explanation": "A parseable standard format protects machine readability while a portfolio can carry richer visual design.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q3",
+        "question": "A LinkedIn message to an alumnus asks for a referral, a resume review and a job introduction in one note. How should it be improved?",
+        "options": [
+          "Add a long biography first",
+          "Send repeated messages until they reply",
+          "Personalise briefly and make one low-effort request, such as a 15-minute conversation or two questions",
+          "Attach multiple documents without asking"
+        ],
+        "answerIndex": 2,
+        "explanation": "A focused, inexpensive ask is more respectful and easier to answer.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q4",
+        "question": "The same project appears on a resume, portfolio and LinkedIn with three different time-saved figures. What should the candidate do?",
+        "options": [
+          "Keep each figure to match the audience",
+          "Reconcile the evidence and use one defensible number consistently, explaining the measurement",
+          "Choose the largest number",
+          "Remove all context and keep the claim"
+        ],
+        "answerIndex": 1,
+        "explanation": "Professional credibility requires consistent claims tied to evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q5",
+        "question": "An AI editor changes a cautious email into a promise to deliver by Friday. What is the correct review?",
+        "options": [
+          "Remove any commitment that the sender has not verified and check dates, money and obligations line by line",
+          "Send it because the wording is clearer",
+          "Ask the editor if the promise is reasonable",
+          "Add “AI-generated” to the subject and send"
+        ],
+        "answerIndex": 0,
+        "explanation": "AI must not introduce commitments or facts the sender has not authorised.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q6",
+        "question": "AI-generated meeting minutes say a task was assigned to Maya, but the recording is unclear. What should happen?",
+        "options": [
+          "Leave it in because the minutes sound professional",
+          "Ask AI to infer who volunteered",
+          "Assign it to Maya by default",
+          "Check the recording or notes with participants and mark the owner as unconfirmed until verified"
+        ],
+        "answerIndex": 3,
+        "explanation": "Decisions and action owners must be checked against the actual meeting evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q7",
+        "question": "A candidate has a strong STAR answer but spends most of it describing the team’s work. What revision improves the evidence?",
+        "options": [
+          "Add more background about the company",
+          "Remove the result",
+          "Keep context brief and explain the candidate’s own actions, decisions and measurable result",
+          "Use more impressive adjectives"
+        ],
+        "answerIndex": 2,
+        "explanation": "The Action section should show the candidate’s personal contribution.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q8",
+        "question": "A mock-interview tool gives a low “confidence” score based on eye contact. How should the candidate use it?",
+        "options": [
+          "Treat it as an objective employability score",
+          "Use it as one reflection prompt, check accessibility and cultural bias, and seek human feedback on answer quality",
+          "Change behaviour regardless of context",
+          "Pay for another model to average the score"
+        ],
+        "answerIndex": 1,
+        "explanation": "Automated presentation metrics can be biased; combine them with human review and the actual job criteria.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q9",
+        "question": "A graduate is searching for AI-era roles but local job titles vary. What search approach is most useful?",
+        "options": [
+          "Search by tasks, tools and domain combinations, then inspect real job descriptions for evidence of demand",
+          "Search only for “AI engineer”",
+          "Use AI-generated salary estimates only",
+          "Apply to every role without tailoring"
+        ],
+        "answerIndex": 0,
+        "explanation": "Task- and tool-based searches reveal roles that use AI without having AI in the title.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q10",
+        "question": "After three months, outreach has not led to interviews. What is the most constructive next step?",
+        "options": [
+          "Send the same resume to more people",
+          "Assume the market is impossible",
+          "Invent stronger experience",
+          "Review response evidence with a mentor and adjust target roles, proof of skills, materials or geography"
+        ],
+        "answerIndex": 3,
+        "explanation": "Use the 61–90 day review to change the strategy based on evidence, not to fabricate credentials.",
+        "difficulty": "advanced"
+      }
     ]
   }
 }

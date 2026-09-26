@@ -12,9 +12,13 @@ interface CourseQuizProps {
   questions: CourseQuizQuestion[]
   best?: CourseQuizResult
   onSubmit: (answers: Record<string, number>) => { score: number; total: number }
+  /** Module assessments have an explicit gate; lesson quizzes are practice. */
+  passMark?: number
+  assessmentLabel?: string
+  disabled?: boolean
 }
 
-export default function CourseQuiz({ questions, best, onSubmit }: CourseQuizProps) {
+export default function CourseQuiz({ questions, best, onSubmit, passMark, assessmentLabel, disabled }: CourseQuizProps) {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [result, setResult] = useState<{ score: number; total: number } | null>(null)
 
@@ -39,6 +43,8 @@ export default function CourseQuiz({ questions, best, onSubmit }: CourseQuizProp
   }
 
   const pct = result ? Math.round((result.score / result.total) * 100) : 0
+  const passed = !!result && passMark !== undefined && pct >= passMark
+  const toneThreshold = passMark ?? 80
 
   return (
     <div className="space-y-5">
@@ -52,7 +58,7 @@ export default function CourseQuiz({ questions, best, onSubmit }: CourseQuizProp
       {result ? (
         <div
           className={`rounded-2xl border p-4 ${
-            pct >= 80
+            pct >= toneThreshold
               ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30'
               : pct >= 50
                 ? 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30'
@@ -63,11 +69,15 @@ export default function CourseQuiz({ questions, best, onSubmit }: CourseQuizProp
             {result.score} / {result.total} correct ({pct}%)
           </p>
           <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
-            {pct >= 80
-              ? 'Solid. Read the explanations for anything you guessed, then mark the lesson complete.'
-              : pct >= 50
-                ? 'Good start. Re-read the sections behind the questions you missed and try again.'
-                : 'Worth another pass through the lesson before retrying — the explanations below point to the right sections.'}
+            {assessmentLabel
+              ? passed
+                ? `${assessmentLabel} passed — module progression requirements met.`
+                : `A score of at least ${passMark}% is required to unlock the next module. Review the scenarios below and try again.`
+              : pct >= 80
+                ? 'Solid. Read the explanations for anything you guessed, then continue to the next topic.'
+                : pct >= 50
+                  ? 'Good start. Re-read the sections behind the questions you missed and try again.'
+                  : 'Worth another pass through the lesson before retrying — the explanations below point to the right sections.'}
           </p>
           <button
             type="button"
@@ -114,7 +124,7 @@ export default function CourseQuiz({ questions, best, onSubmit }: CourseQuizProp
                         name={q.id}
                         value={oIdx}
                         checked={selected}
-                        disabled={!!result}
+                        disabled={!!result || disabled}
                         onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: oIdx }))}
                         className="mt-1 h-4 w-4 accent-teal-600"
                       />
@@ -150,7 +160,7 @@ export default function CourseQuiz({ questions, best, onSubmit }: CourseQuizProp
           <button
             type="button"
             onClick={submit}
-            disabled={unanswered > 0}
+            disabled={unanswered > 0 || disabled}
             className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Check answers

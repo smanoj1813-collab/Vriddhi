@@ -15,6 +15,7 @@ import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBl
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import AiStudyContentTab from './AiStudyContentTab'
 import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel'
+import CourseAssignmentPanel from '@/shared/components/courses/CourseAssignmentPanel'
 import ResumeAddonPanel from '@/shared/components/resume/ResumeAddonPanel'
 
 // Toggle Switch Component
@@ -672,6 +673,12 @@ export default function Settings() {
               {user?.collegeId && ['admin', 'principal', 'hod', 'superadmin'].includes(user.role) && (
                 <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
                   <CompanyPrepVisibilityPanel collegeId={user.role === 'superadmin' ? user.collegeId : undefined} collegeName={collegeName} embedded />
+                </div>
+              )}
+
+              {user?.collegeId && ['admin', 'principal', 'hod', 'superadmin'].includes(user.role) && (
+                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+                  <CourseAssignmentPanel collegeId={user.collegeId} collegeName={collegeName} embedded />
                 </div>
               )}
 

@@ -401,6 +401,13 @@ function principalContext() {
   })
 }
 
+function hodContext(collegeId = COLLEGE_A) {
+  return testEnv.authenticatedContext(`hod-${collegeId}`, {
+    role: 'hod',
+    collegeId,
+  })
+}
+
 function superadminContext() {
   return testEnv.authenticatedContext('platform-root', { role: 'superadmin' })
 }
@@ -2000,5 +2007,150 @@ describe('office roles — finance moved from HODs to the accounts team', () => 
     await assertFails(updateDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'vendorBills', 'vb1'), { status: 'paid' }))
     await assertSucceeds(updateDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'vendorBills', 'vb1'), { status: 'paid' }))
     await assertFails(setDoc(doc(operations().firestore(), 'colleges', COLLEGE_A, 'officeStaff', 'x'), { role: 'accounts' }))
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// College course assignment and learner-progress tenancy
+// ═══════════════════════════════════════════════════════════════════════════
+describe('course assignments and course progress', () => {
+  const studentBContext = () => testEnv.authenticatedContext('student-auth-c', {
+    role: 'student', collegeId: COLLEGE_B,
+  })
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'config', 'courses'), {
+          assignments: {
+            'genai-certification': {
+              enabled: true,
+              assignedAt: '2026-09-26T10:00:00.000Z',
+              assignedBy: 'admin-a',
+            },
+          },
+          updatedAt: '2026-09-26T10:00:00.000Z',
+          updatedBy: 'admin-a',
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_B, 'config', 'courses'), { assignments: {} }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'courseProgress', `${STUDENT_UID}__genai-certification`), {
+          uid: STUDENT_UID,
+          collegeId: COLLEGE_A,
+          courseId: 'genai-certification',
+          courseVersion: '1.0.0',
+          completed: { 'm1-t1': '2026-09-26T10:00:00.000Z' },
+          quiz: {},
+          percent: 2,
+          completedCount: 1,
+          quizAverage: null,
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'courseProgress', `${OTHER_UID}__genai-certification`), {
+          uid: OTHER_UID,
+          collegeId: COLLEGE_A,
+          courseId: 'genai-certification',
+          courseVersion: '1.0.0',
+          completed: {},
+          quiz: {},
+          percent: 0,
+          completedCount: 0,
+          quizAverage: null,
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_B, 'courseProgress', `student-auth-c__genai-certification`), {
+          uid: 'student-auth-c',
+          collegeId: COLLEGE_B,
+          courseId: 'genai-certification',
+          courseVersion: '1.0.0',
+          completed: {},
+          quiz: {},
+          percent: 0,
+          completedCount: 0,
+          quizAverage: null,
+        }),
+      ])
+    })
+  })
+
+  it('students and college course managers can access only their college assignment settings', async () => {
+    const studentDb = studentContext().firestore()
+    const adminDb = adminContext().firestore()
+    const assignmentPath = (db: any, college: string) =>
+      doc(db, 'colleges', college, 'config', 'courses')
+    await assertSucceeds(getDoc(assignmentPath(studentDb, COLLEGE_A)))
+    await assertFails(getDoc(assignmentPath(studentDb, COLLEGE_B)))
+    await assertFails(getDoc(doc(studentDb, 'colleges', COLLEGE_A, 'config', 'prep')))
+    await assertSucceeds(getDoc(assignmentPath(adminDb, COLLEGE_A)))
+    await assertFails(getDoc(assignmentPath(adminDb, COLLEGE_B)))
+
+    const payload = {
+      assignments: { 'genai-certification': { enabled: false } },
+      updatedAt: '2026-09-26T11:00:00.000Z',
+      updatedBy: 'admin-a',
+    }
+    await assertSucceeds(setDoc(assignmentPath(adminDb, COLLEGE_A), payload))
+    await assertSucceeds(setDoc(assignmentPath(principalContext().firestore(), COLLEGE_A), payload))
+    await assertSucceeds(setDoc(assignmentPath(hodContext().firestore(), COLLEGE_A), payload))
+    await assertFails(getDoc(assignmentPath(facultyContext().firestore(), COLLEGE_A)))
+    await assertFails(setDoc(assignmentPath(facultyContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(assignmentPath(adminContext().firestore(), COLLEGE_B), { assignments: {} }))
+    await assertSucceeds(setDoc(assignmentPath(superadminContext().firestore(), COLLEGE_B), { assignments: {} }))
+  })
+
+  it('a student reads and writes only their own progress record in their college', async () => {
+    const db = studentContext().firestore()
+    const own = doc(db, 'colleges', COLLEGE_A, 'courseProgress', `${STUDENT_UID}__genai-certification`)
+    await assertSucceeds(getDoc(own))
+    await assertFails(getDoc(doc(db, 'colleges', COLLEGE_A, 'courseProgress', `${OTHER_UID}__genai-certification`)))
+    await assertFails(getDoc(doc(db, 'colleges', COLLEGE_B, 'courseProgress', 'student-auth-c__genai-certification')))
+
+    await assertSucceeds(updateDoc(own, {
+      completed: { 'm1-t1': '2026-09-26T11:00:00.000Z', 'm1-t2': '2026-09-26T11:01:00.000Z' },
+      percent: 5,
+      completedCount: 2,
+      updatedAt: '2026-09-26T11:01:00.000Z',
+    }))
+    await assertSucceeds(setDoc(doc(db, 'colleges', COLLEGE_A, 'courseProgress', `${STUDENT_UID}__another-course`), {
+      uid: STUDENT_UID,
+      collegeId: COLLEGE_A,
+      courseId: 'another-course',
+      completed: {},
+      quiz: {},
+      percent: 0,
+      completedCount: 0,
+    }))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_A, 'courseProgress', 'forged-owner'), {
+      uid: OTHER_UID,
+      collegeId: COLLEGE_A,
+      courseId: 'genai-certification',
+      completed: {},
+      quiz: {},
+    }))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_A, 'courseProgress', `${STUDENT_UID}__wrong-id`), {
+      uid: STUDENT_UID,
+      collegeId: COLLEGE_A,
+      courseId: 'genai-certification',
+      completed: {},
+      quiz: {},
+    }))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_B, 'courseProgress', `${STUDENT_UID}__genai-certification`), {
+      uid: STUDENT_UID,
+      collegeId: COLLEGE_B,
+      courseId: 'genai-certification',
+      completed: {},
+      quiz: {},
+    }))
+  })
+
+  it('college staff can report only within their college; students cannot list another learner', async () => {
+    const staff = adminContext().firestore()
+    await assertSucceeds(getDoc(doc(staff, 'colleges', COLLEGE_A, 'courseProgress', `${STUDENT_UID}__genai-certification`)))
+    const report = await assertSucceeds(getDocs(collection(staff, 'colleges', COLLEGE_A, 'courseProgress')))
+    assert.equal(report.size, 2)
+    const faculty = facultyContext().firestore()
+    await assertFails(getDoc(doc(faculty, 'colleges', COLLEGE_A, 'courseProgress', `${STUDENT_UID}__genai-certification`)))
+    await assertFails(getDocs(collection(faculty, 'colleges', COLLEGE_A, 'courseProgress')))
+    await assertFails(getDocs(collection(staff, 'colleges', COLLEGE_B, 'courseProgress')))
+    await assertFails(getDocs(collection(studentContext().firestore(), 'colleges', COLLEGE_A, 'courseProgress')))
+    await assertSucceeds(getDocs(collection(studentBContext().firestore(), 'colleges', COLLEGE_B, 'courseProgress')))
   })
 })

@@ -41,8 +41,10 @@ function splitPackPath(key: string): { courseId: string; rel: string } | null {
 export interface CourseCatalogEntry {
   manifest: CourseManifest
   sequence: CourseTopicRef[]
-  /** topicId → quiz questions (empty array when a topic has no quiz). */
+  /** topicId → lesson quiz questions (empty array when a topic has no quiz). */
   quizzes: Record<string, CourseQuizQuestion[]>
+  /** moduleId → end-of-module assessment questions. */
+  moduleAssessments: Record<string, CourseQuizQuestion[]>
   /** Structural problems found in the manifest — surfaced in dev, never thrown. */
   problems: string[]
 }
@@ -62,6 +64,7 @@ function buildCatalog(): Record<string, CourseCatalogEntry> {
       manifest,
       sequence: flattenTopics(manifest),
       quizzes: {},
+      moduleAssessments: {},
       problems,
     }
   }
@@ -70,6 +73,9 @@ function buildCatalog(): Record<string, CourseCatalogEntry> {
     if (!split || !out[split.courseId]) continue
     for (const [topicId, questions] of Object.entries(bank.questions || {})) {
       out[split.courseId].quizzes[topicId] = questions
+    }
+    if (bank.moduleAssessment?.questions?.length) {
+      out[split.courseId].moduleAssessments[bank.moduleId] = bank.moduleAssessment.questions
     }
   }
   return out

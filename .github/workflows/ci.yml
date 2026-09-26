@@ -29,8 +29,14 @@ jobs:
       - name: Check for dead code in src/
         run: node scripts/check-dead-code.cjs
 
-      - name: Frontend unit tests (API base URL + PDF contract)   # ← NEW
+      - name: Frontend unit tests
         run: npm run test:unit
+
+      - name: Validate course packs
+        run: npm run validate:courses
+
+      - name: Render-check course pages
+        run: npm run test:render:courses
 
       - name: Build the frontend
         run: npm run build
@@ -54,6 +60,12 @@ jobs:
           cache: npm
           cache-dependency-path: functions/package-lock.json
 
+      - name: Set up Java for Firebase emulators
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Install functions dependencies
         working-directory: functions
         run: npm ci
@@ -62,6 +74,10 @@ jobs:
         working-directory: functions
         run: npm run build
 
-      - name: Functions unit tests   # ← NEW
+      - name: Functions unit tests
         working-directory: functions
         run: npm run test:unit
+
+      - name: Firestore, Storage and Realtime Database rules tests
+        working-directory: functions
+        run: npm run test:rules
