@@ -190,7 +190,7 @@ const MultiCollegeComparison: React.FC = () => {
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-400" />
+            <ArrowLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -200,7 +200,7 @@ const MultiCollegeComparison: React.FC = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm">Cross-college analytics and benchmarking</p>
           </div>
         </div>
-        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
+        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
           <Download className="w-4 h-4" /> Export CSV
         </button>
       </div>
@@ -208,7 +208,7 @@ const MultiCollegeComparison: React.FC = () => {
       {/* Filters */}
       <div className="glass-card p-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-4 h-4 text-slate-400" />
+          <Filter className="w-4 h-4 text-slate-500 dark:text-slate-400" />
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filters</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -246,7 +246,7 @@ const MultiCollegeComparison: React.FC = () => {
                   key={s}
                   onClick={() => { if (sortBy === s) setSortDesc(!sortDesc); else { setSortBy(s); setSortDesc(true) } }}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    sortBy === s ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-white'
+                    sortBy === s ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {s === 'value' ? 'Score' : s === 'name' ? 'Name' : 'Trend'}
@@ -300,7 +300,7 @@ const MultiCollegeComparison: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Trend Detail</h2>
             {selectedCollegeId && (
-              <button onClick={() => setSelectedCollegeId(null)} className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white">Clear</button>
+              <button onClick={() => setSelectedCollegeId(null)} className="text-xs text-slate-600 hover:text-slate-900 dark:text-white">Clear</button>
             )}
           </div>
           {selectedCollegeId && trendData ? (
@@ -388,10 +388,10 @@ const MultiCollegeComparison: React.FC = () => {
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         {trend > 0.5 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> :
-                         trend < -0.5 ? <TrendingDown className="w-3.5 h-3.5 text-red-600 dark:text-red-600 dark:text-red-400" /> :
-                         <Minus className="w-3.5 h-3.5 text-slate-400" />}
+                         trend < -0.5 ? <TrendingDown className="w-3.5 h-3.5 text-red-600 dark:text-red-400" /> :
+                         <Minus className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
                         <span className={`text-xs font-medium ${
-                          trend > 0.5 ? 'text-green-600 dark:text-green-400' : trend < -0.5 ? 'text-red-600 dark:text-red-400' : 'text-slate-400'
+                          trend > 0.5 ? 'text-green-600 dark:text-green-400' : trend < -0.5 ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'
                         }`}>
                           {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
                         </span>
@@ -402,19 +402,19 @@ const MultiCollegeComparison: React.FC = () => {
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
                         college.avgAttendance >= 90 ? 'text-green-600 dark:text-green-400' :
-                        college.avgAttendance >= 80 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400'
+                        college.avgAttendance >= 80 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>{college.avgAttendance}%</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
                         college.passRate >= 90 ? 'text-green-600 dark:text-green-400' :
-                        college.passRate >= 75 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400'
+                        college.passRate >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>{college.passRate}%</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
                         college.placementRate >= 85 ? 'text-green-600 dark:text-green-400' :
-                        college.placementRate >= 70 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400'
+                        college.placementRate >= 70 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>{college.placementRate}%</span>
                     </td>
                     <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{college.researchPapers}</td>
@@ -423,7 +423,7 @@ const MultiCollegeComparison: React.FC = () => {
                         onClick={e => { e.stopPropagation(); navigate(`/superadmin/colleges/${college.collegeId}`) }}
                         className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                       >
-                        <Eye className="w-4 h-4 text-slate-400" />
+                        <Eye className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                       </button>
                     </td>
                   </tr>
@@ -454,8 +454,8 @@ const MultiCollegeComparison: React.FC = () => {
             </div>
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm font-medium text-yellow-400">Needs Attention</span>
+                <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Needs Attention</span>
               </div>
               <p className="text-slate-900 dark:text-white font-semibold">{data.worst.collegeName}</p>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">

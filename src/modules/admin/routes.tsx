@@ -69,7 +69,7 @@ function PageLoader() {
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-slate-400">Loading page...</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Loading page...</p>
       </div>
     </div>
   );
@@ -91,10 +91,10 @@ class LazyErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-6">
           <div className="text-center max-w-md">
-            <div className="text-rose-400 text-4xl mb-3">⚠</div>
-            <h3 className="text-lg font-bold text-white mb-2">Failed to load page</h3>
-            <p className="text-sm text-slate-400 mb-2 font-mono bg-slate-800 p-2 rounded">{this.state.error?.message || 'Unknown error'}</p>
-            <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-teal-500/20 text-teal-400 text-sm hover:bg-teal-500/30 transition-colors">Reload Page</button>
+            <div className="text-rose-600 dark:text-rose-400 text-4xl mb-3">⚠</div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Failed to load page</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-mono bg-slate-50 dark:bg-slate-800 p-2 rounded">{this.state.error?.message || 'Unknown error'}</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-teal-500/20 text-teal-600 dark:text-teal-400 text-sm hover:bg-teal-500/30 transition-colors">Reload Page</button>
           </div>
         </div>
       );

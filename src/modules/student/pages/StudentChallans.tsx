@@ -154,7 +154,7 @@ function ChallanPrintSheet({ challan, onClose }: { challan: Challan; onClose: ()
                   <span className="font-bold text-slate-900 dark:text-white">{inr(b.amount)}</span>
                 </div>
               ))}
-              <div className="flex justify-between gap-3 bg-slate-900 p-3 font-black text-white">
+              <div className="flex justify-between gap-3 bg-white dark:bg-slate-900 p-3 font-black text-slate-900 dark:text-white">
                 <span>Total Amount</span>
                 <span>{inr(challan.amount)}</span>
               </div>
@@ -446,7 +446,7 @@ export default function StudentChallans() {
                 }`}
               >
                 {filter.label}
-                <span className={`ml-1.5 ${active ? 'text-teal-100' : 'text-slate-400'}`}>{count}</span>
+                <span className={`ml-1.5 ${active ? 'text-teal-100' : 'text-slate-500 dark:text-slate-400'}`}>{count}</span>
               </button>
             )
           })}
@@ -482,7 +482,7 @@ export default function StudentChallans() {
           </div>
         ) : challans.length === 0 ? (
           <div className="p-8 text-center sm:p-12">
-            <Inbox className="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
+            <Inbox className="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-400" />
             <p className="font-bold text-slate-800 dark:text-slate-100">
               {statusFilter === 'all' ? 'No challans yet' : 'Nothing in this filter'}
             </p>

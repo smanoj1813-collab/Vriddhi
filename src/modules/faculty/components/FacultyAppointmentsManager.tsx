@@ -207,7 +207,7 @@ export default function FacultyAppointmentsManager() {
 
                   <button
                     onClick={() => handleRemoveSlot(slot.id)}
-                    className="p-1 rounded-md text-slate-400 hover:text-rose-500 transition-colors"
+                    className="p-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -215,7 +215,7 @@ export default function FacultyAppointmentsManager() {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">Start Time</label>
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Start Time</label>
                     <input
                       type="text"
                       value={slot.startTime}
@@ -225,7 +225,7 @@ export default function FacultyAppointmentsManager() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">End Time</label>
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">End Time</label>
                     <input
                       type="text"
                       value={slot.endTime}
@@ -237,7 +237,7 @@ export default function FacultyAppointmentsManager() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-0.5">Cabin / Link</label>
+                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Cabin / Link</label>
                   <input
                     type="text"
                     value={slot.location}
@@ -269,7 +269,7 @@ export default function FacultyAppointmentsManager() {
 
           {/* Filters */}
           <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <Filter className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -290,7 +290,7 @@ export default function FacultyAppointmentsManager() {
           </div>
         ) : filteredAppointments.length === 0 ? (
           <div className="p-12 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
-            <MessageSquare className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+            <MessageSquare className="w-8 h-8 text-slate-500 dark:text-slate-400 mx-auto opacity-50" />
             <p className="text-sm text-slate-500 font-medium">No student requests found in this category.</p>
           </div>
         ) : (
@@ -452,7 +452,7 @@ export default function FacultyAppointmentsManager() {
                 type="button"
                 onClick={handleProcessAction}
                 disabled={processingAction || (actionType === 'reject' && !remarks.trim())}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold text-white shadow-sm transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold text-slate-900 dark:text-white shadow-sm transition-all ${
                   actionType === 'confirm' ? 'bg-teal-600 hover:bg-teal-500' : 'bg-rose-600 hover:bg-rose-500'
                 }`}
               >

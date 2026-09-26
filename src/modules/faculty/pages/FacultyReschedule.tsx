@@ -369,7 +369,7 @@ export default function FacultyReschedule() {
         <div className="space-y-3">
           {filtered.length === 0 ? (
             <div className="bg-white/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 rounded-2xl p-12 text-center">
-              <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+              <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-400 mx-auto mb-3" />
               <p className="text-slate-600 dark:text-slate-400">No {activeTab} classes found</p>
             </div>
           ) : (

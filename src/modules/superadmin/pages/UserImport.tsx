@@ -254,14 +254,14 @@ const UserImport: React.FC = () => {
 
       {/* Pre-import sanity check */}
       {previewData.length > 0 && preflight && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6">
+        <div className="bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <FileSpreadsheet className="w-4 h-4 text-slate-400" />
-            <p className="text-sm font-medium text-slate-200">Pre-import check</p>
+            <FileSpreadsheet className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Pre-import check</p>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {previewData.length} row(s) read · {preflight.validCount} will be sent ·{' '}
-            <span className={preflight.invalidCount ? 'text-amber-300' : ''}>
+            <span className={preflight.invalidCount ? 'text-amber-600 dark:text-amber-300' : ''}>
               {preflight.invalidCount ?? 0} rejected before sending
             </span>
           </p>
@@ -334,14 +334,14 @@ const UserImport: React.FC = () => {
 
       {/* Import Result */}
       {importResult && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <div className="bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-4">
             {importResult.failed === 0 ? (
-              <CheckCircle2 className="w-6 h-6 text-green-400" />
+              <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
             ) : (
-              <AlertTriangle className="w-6 h-6 text-yellow-400" />
+              <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             )}
-            <h2 className="text-lg font-semibold text-white">Import Complete</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Import Complete</h2>
           </div>
           <ImportExports
             uploadedCount={previewData.length}
@@ -390,24 +390,24 @@ const UserImport: React.FC = () => {
           {importResult.errors && importResult.errors.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-red-400 font-medium">Failed / Issues ({importResult.failed})</p>
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">Failed / Issues ({importResult.failed})</p>
               </div>
               {importResult.failedStudents && importResult.failedStudents.length > 0 ? (
-                <div className="overflow-x-auto rounded-lg border border-red-900/50 max-h-96 overflow-y-auto">
+                <div className="overflow-x-auto rounded-lg border border-red-200 dark:border-red-900/50 max-h-96 overflow-y-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-red-950/40 sticky top-0">
+                    <thead className="bg-red-50 dark:bg-red-950/40 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left text-red-300 text-xs">Name</th>
-                        <th className="px-3 py-2 text-left text-red-300 text-xs">Email</th>
-                        <th className="px-3 py-2 text-left text-red-300 text-xs">Reg No</th>
-                        <th className="px-3 py-2 text-left text-red-300 text-xs">Reason</th>
+                        <th className="px-3 py-2 text-left text-red-600 dark:text-red-300 text-xs">Name</th>
+                        <th className="px-3 py-2 text-left text-red-600 dark:text-red-300 text-xs">Email</th>
+                        <th className="px-3 py-2 text-left text-red-600 dark:text-red-300 text-xs">Reg No</th>
+                        <th className="px-3 py-2 text-left text-red-600 dark:text-red-300 text-xs">Reason</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-red-900/40">
                       {importResult.failedStudents.map((f, i) => (
-                        <tr key={i} className="bg-slate-900/50">
-                          <td className="px-3 py-2 text-slate-300 text-xs">{f.name || '—'}</td>
-                          <td className="px-3 py-2 text-slate-400 text-xs">{f.email || '—'}</td>
+                        <tr key={i} className="bg-slate-100 dark:bg-slate-900/50">
+                          <td className="px-3 py-2 text-slate-600 dark:text-slate-300 text-xs">{f.name || '—'}</td>
+                          <td className="px-3 py-2 text-slate-500 dark:text-slate-400 text-xs">{f.email || '—'}</td>
                           <td className="px-3 py-2 text-slate-500 text-xs font-mono">{f.regNo || '—'}</td>
                           <td className="px-3 py-2 text-red-300/90 text-xs">{f.reason}</td>
                         </tr>

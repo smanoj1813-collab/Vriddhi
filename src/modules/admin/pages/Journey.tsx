@@ -628,7 +628,7 @@ const StudentJourney = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {suggestions.map((s, i) => <SuggestionCard key={i} suggestion={s} />)}
         </div>
-        <div className="mt-6 p-6 rounded-xl bg-gradient-to-r from-slate-800/80 to-slate-800/40 border border-slate-700/50">
+        <div className="mt-6 p-6 rounded-xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800/80 dark:to-slate-800/40 border border-slate-200 dark:border-slate-700/50">
           <h4 className="text-slate-900 dark:text-white font-semibold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-emerald-400" />Your End Goal & Path</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/30">
@@ -683,7 +683,7 @@ export default function Journey() {
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-500/10'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 border border-transparent'
+                : 'text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 border border-transparent'
             }`}
           >
             {tab.icon}

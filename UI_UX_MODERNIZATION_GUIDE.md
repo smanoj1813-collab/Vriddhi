@@ -195,58 +195,29 @@ className="hover:bg-slate-100 dark:hover:bg-slate-800"
 
 ---
 
-## 🚀 Pages Fixed (3/31)
+## 🚀 Status: sweep complete (2026-09-26)
 
-### SuperAdmin Module
-- ✅ SuperAdminDashboard.tsx (already modernized)
-- ✅ SuperAdminStudents.tsx
-- ✅ UserImport.tsx
+All 31 checklist pages — plus every other surface found by a repo-wide
+token scan — are now light-first dual-mode. The final sweep converted 400+
+dark-only tokens across ~40 files, removed 233 duplicate `dark:` tokens
+left behind by earlier chained-sed passes, and repaired dark-on-dark
+combinations (`dark:text-slate-900` next to `dark:text-white`).
 
----
+### Deliberately dark in BOTH modes (do not "fix" these)
+- Modal/page backdrops: `inset-0 bg-slate-900/50-60`, `bg-black/60-80`
+- Brand hero banners: `bg-gradient-to-r from-teal-900 via-slate-900 to-slate-900`
+  (AIAgentPage, StudentFacultyConnect, StudentMaterials)
+- Inverted CTAs: `bg-slate-900 text-white dark:bg-white dark:text-slate-900`
+- Camera scanner overlay (ScanInput), desktop-only splash (DesktopViewNotice),
+  blocking import overlay (ImportProgressOverlay)
+- Student toast pill: `bg-slate-900/90 text-white dark:bg-slate-100/95 dark:text-slate-900`
 
-## 📝 Pages Remaining (28/31)
-
-### SuperAdmin Module (8 remaining)
-- [ ] SuperAdminAdmins.tsx
-- [ ] SuperAdminCollegeDetail.tsx
-- [ ] SuperAdminColleges.tsx
-- [ ] SuperAdminFaculty.tsx
-- [ ] SuperAdminFacultyDetail.tsx
-- [ ] SuperAdminUniversities.tsx
-- [ ] SuperAdminUniversityDetail.tsx
-- [ ] CreateCollege.tsx
-- [ ] CreateCollegeAdmin.tsx
-- [ ] FacultyImport.tsx
-- [ ] MultiCollegeComparison.tsx
-- [ ] SubscriptionBilling.tsx
-
-### Admin Module (6)
-- [ ] AdminDashboard.tsx
-- [ ] Settings.tsx
-- [ ] Journey.tsx
-- [ ] Analytics.tsx
-- [ ] CollegeOnboarding.tsx
-- [ ] View360.tsx
-
-### Faculty Module (7)
-- [ ] FacultyAssignments.tsx
-- [ ] FacultyAttendance.tsx
-- [ ] FacultyCurriculum.tsx
-- [ ] FacultyPaperGenerator.tsx
-- [ ] FacultyPapers.tsx
-- [ ] FacultyStudentAnalysis.tsx
-- [ ] FacultyTopics.tsx
-
-### Student Module (4)
-- [ ] StudentDashboard.tsx
-- [ ] StudentFeePortal.tsx
-- [ ] StudentGrades.tsx
-- [ ] StudentSettings.tsx
-
-### Auth Module (3)
-- [ ] Login.tsx
-- [ ] StudentLogin.tsx
-- [ ] StaffLogin.tsx
+### Verification tooling
+A re-scan should report 0 unintended bare-dark tokens:
+- bare `bg/from/via/to-(slate|gray)-(800|900|950)` without a `dark:` pair
+- bare `text-white`/`text-slate-200..400`/`text-<color>-300|400` without a `dark:` pair
+  (excluding the deliberate-dark list above)
+- any duplicate `dark:` token of the same property inside one class segment
 
 ---
 

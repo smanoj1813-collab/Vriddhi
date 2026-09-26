@@ -386,7 +386,7 @@ export default function FacultyCalendar() {
                       onClick={() => setSelectedDate(day.fullDate)}
                       className={`aspect-square rounded-xl p-1.5 flex flex-col items-center justify-start transition-all relative ${
                         day.month !== 'current'
-                          ? 'text-slate-400 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/30'
+                          ? 'text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/30'
                           : isSelected
                           ? 'bg-teal-500/20 border border-teal-500/30 text-teal-600 dark:text-teal-400'
                           : isToday
@@ -437,7 +437,7 @@ export default function FacultyCalendar() {
               <div className="space-y-2">
                 {selectedEvents.length === 0 ? (
                   <div className="text-center py-8">
-                    <Sun className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
+                    <Sun className="w-10 h-10 text-slate-400 dark:text-slate-400 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">No events scheduled</p>
                   </div>
                 ) : (
@@ -513,7 +513,7 @@ export default function FacultyCalendar() {
                   <div key={i} className="min-h-[300px] bg-slate-50 dark:bg-slate-700/20 rounded-xl p-2 space-y-2">
                     {dayEvents.length === 0 ? (
                       <div className="h-full flex items-center justify-center">
-                        <p className="text-xs text-slate-400 dark:text-slate-600">No events</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-400">No events</p>
                       </div>
                     ) : (
                       dayEvents.map(event => (

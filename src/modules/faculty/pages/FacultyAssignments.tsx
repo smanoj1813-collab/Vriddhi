@@ -517,7 +517,7 @@ export default function FacultyAssignments() {
                       </button>
                     )}
                     {item.status === 'published' && (
-                      <button onClick={() => handleStatusChange(item.id, 'ongoing')} disabled={saving} className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-500/20 text-sm font-medium hover:bg-amber-100 dark:bg-amber-900/30 transition-all disabled:opacity-50">
+                      <button onClick={() => handleStatusChange(item.id, 'ongoing')} disabled={saving} className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-sm font-medium hover:bg-amber-100 dark:bg-amber-900/30 transition-all disabled:opacity-50">
                         Start
                       </button>
                     )}

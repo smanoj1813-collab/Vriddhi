@@ -559,7 +559,7 @@ function BillEditor({ row, month, settings, onClose, onSave }: {
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">{b ? 'Edit bill' : 'Create bill'} · {base.name}</h2>
             <p className="text-xs text-vriddhi-muted">{monthLabel(month)} · {base.department || '—'}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-vriddhi-muted" /></button>
+          <button onClick={onClose} className="p-2 hover:bg-slate-500/10 dark:hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-vriddhi-muted" /></button>
         </div>
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

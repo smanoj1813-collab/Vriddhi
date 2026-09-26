@@ -356,7 +356,7 @@ const SuperAdminFaculty: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredFaculty.map((f: Faculty) => (
-                <tr key={f.id} className="hover:bg-slate-100 dark:hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <tr key={f.id} className="hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-4 py-3">
                     <input type="checkbox" checked={selectedIds.has(f.id)} onChange={() => toggleOne(f.id)} className="rounded" />
                   </td>
@@ -438,7 +438,7 @@ const SuperAdminFaculty: React.FC = () => {
                       onClick={() => handleToggleStatus(f.id, f.status, `${f.firstName} ${f.lastName}`)}
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                         f.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 hover:bg-emerald-100 dark:bg-emerald-900/30'
+                          ? 'bg-emerald-100 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:bg-emerald-900/30'
                           : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-orange-500/20'
                       }`}
                     >

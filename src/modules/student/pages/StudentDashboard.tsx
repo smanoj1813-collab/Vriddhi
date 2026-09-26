@@ -57,9 +57,9 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
     <div className={`rounded-2xl border ${scheme.border} ${scheme.bg} p-4 md:p-5 shadow-sm transition-all duration-200 hover:shadow-md`}>
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-1 truncate">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 truncate">{label}</p>
           <h3 className={`text-xl md:text-2xl font-extrabold ${scheme.text}`}>{value}</h3>
-          {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-600 dark:text-slate-400 truncate font-medium">{subtext}</p>}
+          {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-400 truncate font-medium">{subtext}</p>}
         </div>
         <div className={`p-2.5 rounded-xl bg-white dark:bg-slate-900/60 shadow-xs shrink-0 ${scheme.text}`}>
           <Icon className="w-5 h-5" />
@@ -88,10 +88,10 @@ function ScheduleCard({ session }: { session: ClassSchedule }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{session.subject}</p>
+          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{session.subject}</p>
           {badge && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${badge.cls}`}>{badge.label}</span>}
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 truncate font-medium">
+        <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
           {session.teacher || session.facultyName || 'Faculty Member'}
         </p>
         {topics.length > 0 ? (
@@ -144,8 +144,8 @@ function NotificationCard({ notification }: { notification: {
            <Bell className="w-4 h-4 text-blue-500" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-slate-900 dark:text-slate-900 dark:text-white">{notification.title}</p>
-          <p className="text-xs text-slate-600 dark:text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">{notification.message}</p>
+          <p className="text-xs font-bold text-slate-900 dark:text-white">{notification.title}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2">{notification.message}</p>
           {(badge || countdown) && (
             <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
               {badge && (
@@ -182,7 +182,7 @@ function QuickAction({ to, icon: Icon, label, color }: {
       to={to}
       className="p-3 md:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-all text-center group flex flex-col items-center justify-center"
     >
-      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-slate-900 dark:text-white transition-all shadow-xs">
+      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-slate-900 dark:text-white transition-all shadow-xs">
         <Icon className="w-5 h-5" />
       </div>
       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{label}</p>
@@ -361,7 +361,7 @@ export default function StudentDashboard() {
           icons. On a phone this is four short scannable lists of 2-3 tiles
           rather than a 3-column grid of thirteen. */}
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-teal-600" />
           {t('student.quickNav')} - Karnataka University
         </h2>
@@ -407,7 +407,7 @@ export default function StudentDashboard() {
             className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/20'
-                : 'text-slate-600 dark:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -423,7 +423,7 @@ export default function StudentDashboard() {
             {/* Upcoming Assessments */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-teal-600" /> {t('student.availableAssessments')}
                 </h2>
                 <Link to="/student/assessments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
@@ -443,8 +443,8 @@ export default function StudentDashboard() {
                           {a.type || 'MCQ'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{a.title}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 font-medium">{a.subject}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{a.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{a.subject}</p>
                         </div>
                       </div>
                       <Link
@@ -457,7 +457,7 @@ export default function StudentDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
+                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t('student.noPendingAssessments')}</p>
                   <p className="text-xs text-slate-500 mt-0.5">You're all caught up with your online evaluations.</p>
@@ -468,7 +468,7 @@ export default function StudentDashboard() {
             {/* Pending Assignments */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-amber-600" /> {t('student.pendingAssignments')}
                 </h2>
                 <Link to="/student/assignments" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
@@ -488,8 +488,8 @@ export default function StudentDashboard() {
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-slate-900 dark:text-white truncate">{a.title}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{a.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
                             <span className="truncate">{a.subject}</span>
                             {linkageBadgeText(a.courseName, a.moduleTitle) && (
                               <span className="inline-flex items-center gap-1 max-w-[160px] px-1.5 py-0.5 rounded-full text-[10px] font-bold text-violet-700 dark:text-violet-300 bg-violet-500/10 border border-violet-500/20">
@@ -517,7 +517,7 @@ export default function StudentDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
+                <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800">
                   <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t('student.noPendingAssignments')}</p>
                   <p className="text-xs text-slate-500 mt-0.5">Great job! All assigned submissions are completed.</p>
@@ -530,13 +530,13 @@ export default function StudentDashboard() {
           <div className="space-y-6">
             {/* Fee Status Card */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-base">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 text-base">
                 <CreditCard className="w-5 h-5 text-teal-600" /> {t('student.feeSummary')}
               </h3>
               <div className="space-y-3.5">
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Total Paid</span>
+                    <span className="text-slate-500 dark:text-slate-400">Total Paid</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">₹{paidFees.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
@@ -546,7 +546,7 @@ export default function StudentDashboard() {
 
                 <div>
                   <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-slate-500 dark:text-slate-600 dark:text-slate-400">Pending Amount</span>
+                    <span className="text-slate-500 dark:text-slate-400">Pending Amount</span>
                     <span className="text-rose-600 dark:text-rose-400 font-extrabold">₹{pendingFees.toLocaleString()}</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
@@ -565,7 +565,7 @@ export default function StudentDashboard() {
 
             {/* Recent Notifications */}
             <div className="rounded-2xl bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 dark:text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-base">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-base">
                 <Bell className="w-5 h-5 text-teal-600" /> {t('student.recentAlerts')}
               </h3>
               <div className="space-y-2.5">
@@ -587,7 +587,7 @@ export default function StudentDashboard() {
       {activeTab === 'schedule' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-teal-600" /> Today's Scheduled Lectures
             </h2>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{todayDate}</span>
@@ -611,7 +611,7 @@ export default function StudentDashboard() {
 
       {activeTab === 'notifications' && (
         <div className="space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Bell className="w-5 h-5 text-teal-600" /> All Notifications
           </h2>
           {notifications.length > 0 ? (

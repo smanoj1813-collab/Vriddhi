@@ -42,12 +42,12 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xl">
-      <p className="text-sm font-semibold text-slate-900 dark:text-slate-900 dark:text-white mb-2">{label}</p>
+      <p className="text-sm font-semibold text-slate-900 dark:text-white mb-2">{label}</p>
       {payload.map((entry: any, idx: number) => (
         <div key={idx} className="flex items-center gap-2 text-xs">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-slate-500 dark:text-slate-400">{entry.name}:</span>
-          <span className="text-slate-900 dark:text-slate-900 dark:text-white font-medium">
+          <span className="text-slate-900 dark:text-white font-medium">
             {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
             {entry.unit || ''}
           </span>
@@ -660,11 +660,11 @@ export default function Analytics() {
           ) : (
             <div className="space-y-3">
               {topPerformers.map((student, i) => (
-                <div key={student.regNo} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors group">
+                <div key={student.regNo} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-500/5 dark:hover:bg-white/5 transition-colors group">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
                     ${i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-400 ring-1 ring-amber-500/30' :
                       i === 1 ? 'bg-slate-400/20 text-slate-600 dark:text-slate-400 ring-1 ring-slate-400/30' :
-                      i === 2 ? 'bg-orange-600/20 text-orange-400 ring-1 ring-orange-600/30' :
+                      i === 2 ? 'bg-orange-600/20 text-orange-600 dark:text-orange-400 ring-1 ring-orange-600/30' :
                       'bg-vriddhi-border/30 text-vriddhi-muted'}`}>
                     {student.rank}
                   </div>
@@ -740,7 +740,7 @@ export default function Analytics() {
                     <td className="table-cell text-center">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                         mentor.avg >= 80 ? 'bg-green-500/15 text-green-600 dark:text-green-400 ring-1 ring-green-500/20' :
-                        mentor.avg >= 60 ? 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/20' :
+                        mentor.avg >= 60 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20' :
                         'bg-red-500/15 text-red-600 dark:text-red-400 ring-1 ring-red-500/20'
                       }`}>
                         {mentor.avg >= 80 ? 'Excellent' : mentor.avg >= 60 ? 'Good' : 'Needs Improvement'}

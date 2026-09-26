@@ -109,7 +109,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-all"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 hover:text-slate-900 dark:text-white transition-all"
           >
             <XCircle className="w-5 h-5" />
           </button>
@@ -199,7 +199,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               </button>
               <button
                 onClick={() => setMode('modify')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-100 dark:bg-amber-900/30 transition-all font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-100 dark:bg-amber-900/30 transition-all font-medium"
               >
                 <AlertTriangle className="w-4 h-4" />
                 Request Modification
@@ -217,7 +217,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               <div className="flex gap-3">
                 <button
                   onClick={() => setMode('view')}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   Cancel
                 </button>
@@ -274,7 +274,7 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               <div className="flex gap-3">
                 <button
                   onClick={() => setMode('view')}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
                   Cancel
                 </button>
@@ -657,7 +657,7 @@ export default function FacultyPapers() {
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-400 border border-teal-500/30'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'text-slate-600 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}

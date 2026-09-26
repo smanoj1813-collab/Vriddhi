@@ -200,7 +200,7 @@ export default function AIAgentPage() {
             content: buildWelcomeContent(user?.name),
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }])}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700/60 transition-all self-start md:self-auto"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-slate-700/60 transition-all self-start md:self-auto"
         >
           <Trash2 className="w-3.5 h-3.5" />
           Clear Conversation
@@ -287,7 +287,7 @@ export default function AIAgentPage() {
                       <ChatActionPills actions={m.actions || []} size="md" />
                     )}
 
-                    <div className="flex items-center justify-between gap-4 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-slate-400">
+                    <div className="flex items-center justify-between gap-4 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-slate-500 dark:text-slate-400">
                       <span>{m.timestamp}</span>
                       {m.role === 'assistant' && (
                         <CopyMessageButton text={body} size="md" className="text-[10px]" />
@@ -336,7 +336,7 @@ export default function AIAgentPage() {
                 <span>Ask</span>
               </button>
             </div>
-            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-400">
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
               <MessageSquare className="w-3 h-3" />
               Natural-language only — no canned prompts. Action pills appear under each reply.
             </p>
@@ -374,7 +374,7 @@ export default function AIAgentPage() {
 
           {/* Direct Portals Access */}
           <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Quick Portals
             </h3>
             <div className="grid grid-cols-2 gap-2 text-xs">

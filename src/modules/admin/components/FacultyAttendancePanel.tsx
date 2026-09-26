@@ -461,7 +461,7 @@ export default function FacultyAttendancePanel({
                               {s.counts[status]}
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-300 dark:text-slate-600">–</span>
+                            <span className="text-xs text-slate-300 dark:text-slate-400">–</span>
                           )}
                         </td>
                       ))}
@@ -527,7 +527,7 @@ export default function FacultyAttendancePanel({
                               {cell === 'present' ? 'P' : cell === 'late' ? 'L' : cell === 'halfday' ? 'H' : cell === 'absent' ? 'A' : cell === 'leave' ? 'LV' : cell === 'medical' ? 'ML' : cell === 'onduty' ? 'OD' : 'W'}
                             </span>
                           ) : (
-                            <span className="text-slate-300 dark:text-slate-600">–</span>
+                            <span className="text-slate-300 dark:text-slate-400">–</span>
                           )}
                         </td>
                       ))}

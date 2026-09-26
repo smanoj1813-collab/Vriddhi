@@ -338,7 +338,7 @@ export default function AiStudyContentTab() {
 
   if (loading && !controls) {
     return (
-      <div className="py-16 flex flex-col items-center gap-3 text-slate-400">
+      <div className="py-16 flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400">
         <Loader2 className="w-7 h-7 animate-spin" />
         <p className="text-sm">Loading AI content controls…</p>
       </div>
@@ -408,7 +408,7 @@ export default function AiStudyContentTab() {
               Load campus
             </button>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
             Viewing: {controls.collegeId ? `campus ${controls.collegeId}` : 'global (all campuses)'} — limits and freezes apply to the loaded campus.
           </p>
         </Card>
@@ -428,13 +428,13 @@ export default function AiStudyContentTab() {
             <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Gauge className="w-4 h-4 text-teal-500" /> Today's usage ({controls.date}, UTC)
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Real-time spend meter (provider billing lags ~24h). Serves are free cache hits; generations are paid LLM calls. Counters reset at UTC midnight (05:30 IST).
             </p>
           </div>
           <button
             onClick={() => void load()}
-            className="p-2 rounded-xl text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -442,21 +442,21 @@ export default function AiStudyContentTab() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Cache serves</p>
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cache serves</p>
             <p className="text-xl font-black text-slate-800 dark:text-white mt-0.5">{fmt(controls.today.serves)}</p>
           </div>
           <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Generations</p>
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Generations</p>
             <p className="text-xl font-black text-slate-800 dark:text-white mt-0.5">{fmt(controls.today.generations)}</p>
           </div>
           <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Tokens in / out</p>
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Tokens in / out</p>
             <p className="text-xl font-black text-slate-800 dark:text-white mt-0.5">
-              {fmt(controls.today.tokensIn)} <span className="text-slate-400 text-sm font-bold">/ {fmt(controls.today.tokensOut)}</span>
+              {fmt(controls.today.tokensIn)} <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">/ {fmt(controls.today.tokensOut)}</span>
             </p>
           </div>
           <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 p-3">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Cache hit rate</p>
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cache hit rate</p>
             <p className="text-xl font-black text-teal-600 dark:text-teal-400 mt-0.5">{hitRate === null ? '—' : `${hitRate}%`}</p>
           </div>
         </div>
@@ -492,7 +492,7 @@ export default function AiStudyContentTab() {
                 </table>
               </div>
             ) : (
-              <p className="text-xs text-slate-400">No campus activity yet today.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">No campus activity yet today.</p>
             )}
           </div>
         )}
@@ -505,13 +505,13 @@ export default function AiStudyContentTab() {
             <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Library className="w-4 h-4 text-indigo-500" /> Study material library
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Every pack the platform has ever generated, shared by all colleges. Regenerating a row REPUBLISHES a new edition to every connected campus at once (respecting the 15-min per-key cooldown).
             </p>
           </div>
           <button
             onClick={() => void loadLibrary({})}
-            className="p-2 rounded-xl text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
             title="Refresh list"
           >
             <RefreshCw className={`w-4 h-4 ${libLoading ? 'animate-spin' : ''}`} />
@@ -540,7 +540,7 @@ export default function AiStudyContentTab() {
         {libMsg && <div className="mb-4"><Note type={libMsg.type} text={libMsg.text} /></div>}
 
         {libItems.length === 0 && !libLoading ? (
-          <p className="text-xs text-slate-400">No packs in the library yet — use pre-warm below to generate the first subject.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">No packs in the library yet — use pre-warm below to generate the first subject.</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800">
             <table className="w-full text-xs">
@@ -560,7 +560,7 @@ export default function AiStudyContentTab() {
                   <tr key={item.cacheKey} className="border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300">
                     <td className="px-3 py-2 max-w-[280px]">
                       <p className="font-bold text-slate-700 dark:text-slate-200 truncate">{item.topic || item.cacheKey}</p>
-                      <p className="text-[11px] text-slate-400 truncate">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                         {item.courseName || item.subject}{item.courseCode ? ` (${item.courseCode})` : ''} · <span className="font-mono">{item.cacheKey}</span>
                         {item.inProgress && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-bold text-[10px] uppercase">generating</span>}
                       </p>
@@ -599,7 +599,7 @@ export default function AiStudyContentTab() {
                 {libLoading ? 'Loading…' : 'Load more'}
               </button>
             )}
-            {libLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+            {libLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-500 dark:text-slate-400" />}
           </div>
         )}
       </Card>
@@ -609,7 +609,7 @@ export default function AiStudyContentTab() {
         <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-1">
           <Zap className="w-4 h-4 text-amber-500" /> Daily generation limits
         </h3>
-        <p className="text-xs text-slate-400 mb-4">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
           Cache serves are always unlimited and free — these caps only bound NEW generations (cold keys). Set 0 to disable a cap. Defaults: {controls.defaults.studentDailyGenerationLimit}/student, {controls.defaults.collegeDailyGenerationLimit}/campus.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -640,11 +640,11 @@ export default function AiStudyContentTab() {
         <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-1">
           <Snowflake className="w-4 h-4 text-sky-500" /> Exam freeze windows
         </h3>
-        <p className="text-xs text-slate-400 mb-4">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
           During a freeze, students keep reading cached packs for free but NO new packs can be generated or regenerated — spend and exam-season misuse both drop to zero.
         </p>
         {controls.config.freezeWindows.length === 0 ? (
-          <p className="text-xs text-slate-400 mb-4">No freeze windows configured.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">No freeze windows configured.</p>
         ) : (
           <div className="space-y-2 mb-4">
             {controls.config.freezeWindows.map((w, i) => (
@@ -654,13 +654,13 @@ export default function AiStudyContentTab() {
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     {new Date(w.start).toLocaleString()} → {new Date(w.end).toLocaleString()}
                   </p>
-                  {w.reason && <p className="text-[11px] text-slate-400 truncate">{w.reason}</p>}
+                  {w.reason && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{w.reason}</p>}
                 </div>
                 {canEdit && (
                   <button
                     onClick={() => void saveFreezeWindows(controls.config.freezeWindows.filter((_, j) => j !== i), 'Freeze window removed.')}
                     disabled={savingFreeze}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
+                    className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
                     title="Remove window"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -703,7 +703,7 @@ export default function AiStudyContentTab() {
           <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-1">
             <BookOpen className="w-4 h-4 text-teal-500" /> Pre-warm a subject's study packs
           </h3>
-          <p className="text-xs text-slate-400 mb-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
             Generate every module's pack once, calmly, before students ask. After that, the whole campus rides free cache hits and the per-student daily cap never bites. Already-cached modules are skipped at zero cost — safe to re-run.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -775,7 +775,7 @@ export default function AiStudyContentTab() {
         </Card>
       )}
 
-      <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
         <Sparkles className="w-3.5 h-3.5 text-teal-500" />
         Students always receive the shared cached pack instantly. Content is curated centrally: only this console can regenerate (each topic at most once every 15 minutes), concurrent requests share a single paid generation, and every republish reaches all connected colleges at once.
       </p>

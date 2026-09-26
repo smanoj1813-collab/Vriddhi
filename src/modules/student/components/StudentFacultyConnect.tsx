@@ -245,9 +245,9 @@ export default function StudentFacultyConnect() {
           </div>
         ) : appointments.length === 0 ? (
           <div className="p-12 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-3">
-            <MessageSquare className="w-10 h-10 text-slate-400 mx-auto opacity-50" />
+            <MessageSquare className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto opacity-50" />
             <p className="text-sm text-slate-500 font-medium">No appointment requests yet.</p>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Need help resolving difficult concepts or guidance on projects? Click "Request Conversation" to schedule time with your professors.
             </p>
           </div>
@@ -329,7 +329,7 @@ export default function StudentFacultyConnect() {
                 </h3>
                 <p className="text-xs text-slate-500">Book 1-on-1 doubt clearing or mentoring time.</p>
               </div>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white">✕</button>
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-white">✕</button>
             </div>
 
             <form onSubmit={handleSubmitRequest} className="space-y-4">

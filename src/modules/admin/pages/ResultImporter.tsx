@@ -87,19 +87,19 @@ export default function ResultImporter() {
               Uniclare only showed results. Vriddhi auto-imports from university Excel, calculates SGPA/CGPA per NEP, checks BCU pass criteria (35% uni + 40% aggregate), creates official grade records, and notifies students.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-              <div className="bg-white/10 rounded-xl p-3">
+              <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
                 <p className="text-xs text-teal-100 uppercase font-bold">Auto SGPA</p>
                 <p className="font-bold">Calculated</p>
               </div>
-              <div className="bg-white/10 rounded-xl p-3">
+              <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
                 <p className="text-xs text-teal-100 uppercase font-bold">BCU Pass Check</p>
                 <p className="font-bold">35% + 40%</p>
               </div>
-              <div className="bg-white/10 rounded-xl p-3">
+              <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
                 <p className="text-xs text-teal-100 uppercase font-bold">Grade Records</p>
                 <p className="font-bold">Auto Published</p>
               </div>
-              <div className="bg-white/10 rounded-xl p-3">
+              <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
                 <p className="text-xs text-teal-100 uppercase font-bold">Time Saved</p>
                 <p className="font-bold">~90% vs Manual</p>
               </div>
@@ -188,7 +188,7 @@ export default function ResultImporter() {
             </div>
 
             <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center">
-              <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <FileSpreadsheet className="w-12 h-12 text-slate-600 dark:text-slate-300 mx-auto mb-3" />
               <h4 className="font-bold text-slate-700 dark:text-slate-300">Upload Excel/CSV from University</h4>
               <p className="text-sm text-slate-500 mt-1 mb-4">
                 BCU/BNU portal export or manual Excel with regNo, subjectCode, internal, external, total, grade
@@ -229,7 +229,7 @@ export default function ResultImporter() {
         <div className="space-y-6">
           {!preview ? (
             <div className="text-center py-12 bg-white dark:bg-[#131b2e] rounded-2xl border border-dashed">
-              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <FileText className="w-12 h-12 text-slate-600 dark:text-slate-300 mx-auto mb-3" />
               <p className="font-bold">No file uploaded yet</p>
               <p className="text-sm text-slate-500">Go to Import tab and upload Excel/CSV</p>
             </div>
@@ -393,7 +393,7 @@ export default function ResultImporter() {
 
       {activeTab === 'history' && (
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center">
-          <BarChart3 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <BarChart3 className="w-12 h-12 text-slate-600 dark:text-slate-300 mx-auto mb-3" />
           <p className="font-bold">Import History</p>
           <p className="text-sm text-slate-500 mt-1">Previous imports will appear here with stats: pass %, avg SGPA, grade distribution</p>
         </div>

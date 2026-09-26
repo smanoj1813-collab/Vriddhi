@@ -1472,7 +1472,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 minWidth: 0,
               }}
             >
-              <span className="truncate text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <span className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 {t("role.portal", { role: currentRoleInfo.label })}
               </span>
               <div className="flex items-center gap-2 min-w-0">

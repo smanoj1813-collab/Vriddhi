@@ -185,7 +185,7 @@ const FacultyImport: React.FC = () => {
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-400" />
+            <ArrowLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -195,7 +195,7 @@ const FacultyImport: React.FC = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm">Bulk import faculty members from CSV file</p>
           </div>
         </div>
-        <button onClick={downloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
+        <button onClick={downloadTemplate} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors">
           <Download className="w-4 h-4" /> Download Template
         </button>
       </div>
@@ -247,7 +247,7 @@ const FacultyImport: React.FC = () => {
           ))}
         </select>
         {colleges.length === 0 && !collegesLoading && (
-          <p className="mt-2 text-xs text-yellow-400">No colleges found. Please create a college first.</p>
+          <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">No colleges found. Please create a college first.</p>
         )}
       </div>
 
@@ -278,8 +278,8 @@ const FacultyImport: React.FC = () => {
       {parseWarnings.length > 0 && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-400" />
-            <p className="text-sm font-medium text-yellow-400">CSV Parsing Notes</p>
+            <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">CSV Parsing Notes</p>
           </div>
           <ul className="space-y-1">
             {parseWarnings.map((err, i) => (
@@ -363,7 +363,7 @@ const FacultyImport: React.FC = () => {
                       <td className="px-4 py-2 text-slate-600 dark:text-slate-400 text-xs">{row.subjectsPG || '—'}</td>
                       <td className="px-4 py-2 text-center">
                         {parseBoolean(row.isHOD || '') ? (
-                          <span className="text-amber-400 text-xs font-medium">HOD</span>
+                          <span className="text-amber-600 dark:text-amber-400 text-xs font-medium">HOD</span>
                         ) : (
                           <span className="text-slate-600 text-xs">—</span>
                         )}
@@ -387,7 +387,7 @@ const FacultyImport: React.FC = () => {
             {importResult.failed === 0 ? (
               <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <AlertTriangle className="w-6 h-6 text-yellow-400" />
+              <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             )}
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Import Complete</h2>
           </div>

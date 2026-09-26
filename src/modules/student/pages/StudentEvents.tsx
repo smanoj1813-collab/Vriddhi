@@ -294,7 +294,7 @@ export default function StudentEvents() {
 
           {upcoming.length === 0 && (
             <div className="text-center py-16">
-              <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+              <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-400 mx-auto mb-3" />
               <p className="text-slate-600 dark:text-slate-400">No upcoming events</p>
             </div>
           )}
