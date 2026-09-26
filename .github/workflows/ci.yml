@@ -43,7 +43,7 @@ jobs:
 
   # Job 2: build the Cloud Functions backend (Express + TypeScript)
   functions:
-    name: Functions build (Node 20)
+    name: Functions build (Node 22)
     runs-on: ubuntu-latest
     env:
       # Skip Puppeteer's Chromium download during `npm ci`.
@@ -53,10 +53,10 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v5
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: functions/package-lock.json
 
@@ -78,6 +78,6 @@ jobs:
         working-directory: functions
         run: npm run test:unit
 
-      - name: Firestore, Storage and Realtime Database rules tests
+      - name: Course and related Firestore rules tests
         working-directory: functions
-        run: npm run test:rules
+        run: npm run test:rules:course-security

@@ -907,7 +907,7 @@ service cloud.firestore {
           && (isCollegeStaff() || role() == 'student');
         allow list: if isSignedIn() && isCollegeStaff() && collegeId() == collegeId;
         allow create, update: if isSignedIn() && collegeId() == collegeId
-          && (facultyId == request.auth.uid
+          && ((role() == 'faculty' && facultyId == request.auth.uid)
               || claimedRole() in ['admin', 'hod', 'principal'])
           && request.resource.data.facultyId == facultyId;
         allow delete: if isSignedIn() && collegeId() == collegeId
@@ -1102,7 +1102,7 @@ service cloud.firestore {
     // single door that validates the type enum, date order and tenancy before
     // anything can void a class session.
     match /academicCalendar/{eventId} {
-      allow get, list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow get, list: if isSignedIn() && isStaff() && sameCollege(resource.data);
       allow create, update, delete: if false;
     }
 

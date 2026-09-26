@@ -2151,6 +2151,16 @@ describe('course assignments and course progress', () => {
     await assertFails(getDocs(collection(faculty, 'colleges', COLLEGE_A, 'courseProgress')))
     await assertFails(getDocs(collection(staff, 'colleges', COLLEGE_B, 'courseProgress')))
     await assertFails(getDocs(collection(studentContext().firestore(), 'colleges', COLLEGE_A, 'courseProgress')))
-    await assertSucceeds(getDocs(collection(studentBContext().firestore(), 'colleges', COLLEGE_B, 'courseProgress')))
+
+    const studentB = studentBContext().firestore()
+    const ownRows = await assertSucceeds(getDocs(query(
+      collection(studentB, 'colleges', COLLEGE_B, 'courseProgress'),
+      where('uid', '==', 'student-auth-c'),
+    )))
+    assert.equal(ownRows.size, 1)
+    await assertFails(getDocs(query(
+      collection(studentB, 'colleges', COLLEGE_B, 'courseProgress'),
+      where('uid', '==', STUDENT_UID),
+    )))
   })
 })
