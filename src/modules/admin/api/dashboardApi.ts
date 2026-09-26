@@ -4,6 +4,7 @@
 import {
   collection, doc, getDocs, getDoc,
   query, where, limit,
+  getCountFromServer,
 } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
 
@@ -213,6 +214,39 @@ export async function fetchAggregatedStats(): Promise<DashboardStats | null> {
     console.warn('No aggregated stats found, falling back to computed')
   }
   return null
+}
+
+// ─── Aggregations (item 3.2) ────────────────────────────
+//
+// The headline numbers used to be derived from rows that were capped at
+// MAX_READS (500). Two things were wrong with that: above 500 students the
+// figure was silently short, and every dashboard load downloaded up to
+// 4 × 500 documents to count them. `count()` answers the same question in one
+// read. The row fetches stay — the page still renders lists, charts and
+// per-student filters from them — but they no longer decide the totals.
+//
+// Return type is Partial<DashboardStats> on purpose: a missing aggregate must
+// leave the caller's existing value alone rather than zero it.
+
+export async function fetchDashboardCounts(): Promise<Partial<DashboardStats>> {
+  try {
+    const [students, assessments, scores] = await Promise.all([
+      getCountFromServer(query(collegeRef('students'), where('status', '==', 'active'))),
+      getCountFromServer(collegeRef('assessments')),
+      getCountFromServer(collegeRef('scores')),
+    ])
+    trackRead(1)
+    return {
+      totalStudents: students.data().count,
+      totalAssessments: assessments.data().count,
+      totalScores: scores.data().count,
+    }
+  } catch (error) {
+    // Aggregations are eventually consistent and can be unavailable; the
+    // dashboard keeps the row-derived numbers in that case.
+    console.warn('Aggregation unavailable, using row-derived counts', error)
+    return {}
+  }
 }
 
 // ─── Computed Helpers (Client-side only) ────────────────

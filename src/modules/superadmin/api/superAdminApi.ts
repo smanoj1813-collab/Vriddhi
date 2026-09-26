@@ -31,6 +31,7 @@ import {
   where,
   orderBy,
   limit,
+  getCountFromServer,
   Timestamp,
   serverTimestamp,
   writeBatch,
@@ -1401,20 +1402,155 @@ export async function createFaculty(input: CreateFacultyInput): Promise<CreateFa
 // DASHBOARD API — REAL FIREBASE
 // ═══════════════════════════════════════════════════════════════════════
 
+// Item 2.4: the dashboard reads ONE document (`platform/stats`, refreshed every
+// 15 minutes by the scheduled `refreshPlatformStats`) instead of four whole
+// collections. If that document is missing or older than an hour — first deploy,
+// paused scheduler — the client counts for itself with aggregation queries
+// (`count()` is one read, not one per 1,000 documents). The return shape is
+// unchanged apart from `updatedAt`/`source`, so every caller keeps working.
+export const PLATFORM_STATS_MAX_AGE_MS = 60 * 60 * 1000;
+
 export async function getDashboardStats(): Promise<{
   stats: DashboardStats;
   recentActivity: RecentActivity[];
   topColleges: TopCollege[];
+  updatedAt?: string;
+  source?: "snapshot" | "live";
+  /** Item 4.1: AI content-cache hit/miss counters, from the same snapshot doc. */
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null;
 }> {
   try {
-    const collegesSnap = await getDocs(collection(db, "colleges"));
-    const studentsSnap = await getDocs(collection(db, "students"));
-    const facultySnap = await getDocs(collection(db, "faculty"));
-    const adminsSnap = await getDocs(collection(db, "admins"));
+    const snapshot = await readPlatformStats();
+    if (snapshot) {
+      return {
+        stats: {
+          totalColleges: snapshot.totalColleges,
+          totalStudents: snapshot.totalStudents,
+          totalFaculty: snapshot.totalFaculty,
+          totalAdmins: snapshot.totalAdmins,
+          activeColleges: snapshot.activeColleges,
+          suspendedColleges: snapshot.suspendedColleges,
+          newCollegesThisMonth: 0,
+          revenueThisMonth: 0,
+        },
+        recentActivity: [],
+        topColleges: (snapshot.topColleges || []).map((college) => ({
+          id: college.id,
+          name: college.name,
+          code: college.code,
+          studentCount: college.studentCount,
+          facultyCount: college.facultyCount,
+          students: college.studentCount,
+          faculty: college.facultyCount,
+          avgAttendance: 0,
+          passRate: 0,
+          score: 0,
+          status: college.status,
+        })),
+        updatedAt: snapshot.updatedAt,
+        source: "snapshot",
+        aiCache: snapshot.aiCache ?? null,
+      };
+    }
+    return await computeDashboardStatsLive();
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    return emptyDashboardStats();
+  }
+}
 
-    const colleges = collegesSnap.docs.map(docToCollege);
-    const activeColleges = colleges.filter(c => c.status === "active").length;
-    const suspendedColleges = colleges.filter(c => c.status === "suspended").length;
+interface PlatformStatsDoc {
+  totalColleges: number;
+  totalStudents: number;
+  totalFaculty: number;
+  totalAdmins: number;
+  activeColleges: number;
+  suspendedColleges: number;
+  topColleges: Array<{
+    id: string;
+    name: string;
+    code: string;
+    studentCount: number;
+    facultyCount: number;
+    status: string;
+  }>;
+  updatedAt: string;
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null;
+}
+
+/** Reads `platform/stats`; returns null when it is missing or stale. */
+async function readPlatformStats(): Promise<PlatformStatsDoc | null> {
+  const snap = await getDoc(doc(db, "platform", "stats"));
+  if (!snap.exists()) return null;
+  const data = snap.data() as Partial<PlatformStatsDoc> & { updatedAt?: string };
+  const updatedAtMs = data.updatedAt ? Date.parse(data.updatedAt) : Number.NaN;
+  if (!Number.isFinite(updatedAtMs) || Date.now() - updatedAtMs > PLATFORM_STATS_MAX_AGE_MS) return null;
+  return {
+    totalColleges: Number(data.totalColleges) || 0,
+    totalStudents: Number(data.totalStudents) || 0,
+    totalFaculty: Number(data.totalFaculty) || 0,
+    totalAdmins: Number(data.totalAdmins) || 0,
+    activeColleges: Number(data.activeColleges) || 0,
+    suspendedColleges: Number(data.suspendedColleges) || 0,
+    topColleges: Array.isArray(data.topColleges) ? data.topColleges : [],
+    updatedAt: String(data.updatedAt),
+    aiCache: data.aiCache
+      ? {
+          hits: Number(data.aiCache.hits) || 0,
+          misses: Number(data.aiCache.misses) || 0,
+          tokensServedFromCache: Number(data.aiCache.tokensServedFromCache) || 0,
+        }
+      : null,
+  };
+}
+
+function emptyDashboardStats() {
+  return {
+    stats: {
+      totalColleges: 0,
+      totalStudents: 0,
+      totalFaculty: 0,
+      totalAdmins: 0,
+      activeColleges: 0,
+      suspendedColleges: 0,
+      newCollegesThisMonth: 0,
+      revenueThisMonth: 0,
+    },
+    recentActivity: [] as RecentActivity[],
+    topColleges: [] as TopCollege[],
+  };
+}
+
+/** The pre-2.4 computation, kept as the fallback — but with counts instead of row downloads. */
+async function computeDashboardStatsLive(): Promise<{
+  stats: DashboardStats;
+  recentActivity: RecentActivity[];
+  topColleges: TopCollege[];
+  updatedAt?: string;
+  source?: "snapshot" | "live";
+}> {
+  try {
+    const [totalColleges, totalStudents, totalFaculty, totalAdmins, activeColleges, suspendedColleges] =
+      await Promise.all([
+        getCountFromServer(collection(db, "colleges")),
+        getCountFromServer(collection(db, "students")),
+        getCountFromServer(collection(db, "faculty")),
+        getCountFromServer(collection(db, "admins")),
+        getCountFromServer(query(collection(db, "colleges"), where("status", "==", "active"))),
+        getCountFromServer(query(collection(db, "colleges"), where("status", "==", "suspended"))),
+      ]);
+
+    // Only the top-college strip needs row data, and it is five rows.
+    let colleges: ReturnType<typeof docToCollege>[] = [];
+    try {
+      const topSnap = await getDocs(
+        query(collection(db, "colleges"), orderBy("studentCount", "desc"), limit(10)),
+      );
+      colleges = topSnap.docs.map(docToCollege);
+    } catch {
+      const allSnap = await getDocs(query(collection(db, "colleges"), limit(200)));
+      colleges = allSnap.docs.map(docToCollege);
+    }
 
     const topColleges: TopCollege[] = colleges
       .sort((a, b) => (b.studentCount || 0) - (a.studentCount || 0))
@@ -1435,34 +1571,23 @@ export async function getDashboardStats(): Promise<{
 
     return {
       stats: {
-        totalColleges: collegesSnap.size,
-        totalStudents: studentsSnap.size,
-        totalFaculty: facultySnap.size,
-        totalAdmins: adminsSnap.size,
-        activeColleges,
-        suspendedColleges,
+        totalColleges: totalColleges.data().count,
+        totalStudents: totalStudents.data().count,
+        totalFaculty: totalFaculty.data().count,
+        totalAdmins: totalAdmins.data().count,
+        activeColleges: activeColleges.data().count,
+        suspendedColleges: suspendedColleges.data().count,
         newCollegesThisMonth: 0,
         revenueThisMonth: 0,
       },
       recentActivity: [],
       topColleges,
+      updatedAt: new Date().toISOString(),
+      source: "live",
     };
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
-    return {
-      stats: {
-        totalColleges: 0,
-        totalStudents: 0,
-        totalFaculty: 0,
-        totalAdmins: 0,
-        activeColleges: 0,
-        suspendedColleges: 0,
-        newCollegesThisMonth: 0,
-        revenueThisMonth: 0,
-      },
-      recentActivity: [],
-      topColleges: [],
-    };
+    console.error("Error computing dashboard stats:", error);
+    return emptyDashboardStats();
   }
 }
 

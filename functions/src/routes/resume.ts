@@ -35,6 +35,7 @@ import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
 import { resumeEditorLimiter, resumePdfLimiter } from '../middleware/rateLimit'
 import { renderPdfToBuffer, pdfErrorResponse } from '../utils/pdfRenderer'
+import { geminiModelsFor, isModelUnavailableError } from '../config/aiModels'
 import { geminiClient } from '../config/aiProviders'
 import {
   RESUME_TEMPLATES,
@@ -59,6 +60,21 @@ import {
   type ResumeTemplateId,
 } from '../resume/model'
 import { pdfOptionsForTemplate, renderResumeHtml } from '../resume/templates'
+import {
+  MAX_INTERVIEW_QUESTIONS,
+  MAX_JOB_DESCRIPTION_CHARS,
+  buildCoverLetterPrompt,
+  buildInterviewQuestionsPrompt,
+  buildLinkedinAboutPrompt,
+  clampText,
+  csvCell,
+  profileDigest,
+  readinessFor,
+  sanitiseInterviewQuestions,
+  sanitiseResumeDoc,
+  type ResumeProfileInput,
+} from '../resume/extras'
+import { generateContentWithCache } from '../ai/contentEngine'
 
 export const router = express.Router()
 
@@ -191,6 +207,13 @@ function readStoredResume(snap: FirebaseFirestore.DocumentSnapshot): StoredResum
   }
 }
 
+/** Highest readiness first, then the least-recently touched — the chase order. */
+function sortByScoreDesc<T extends { readinessScore: number; updatedAt?: string | null }>(rows: T[]): T[] {
+  return [...rows].sort(
+    (a, b) => b.readinessScore - a.readinessScore || String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')),
+  )
+}
+
 async function listOwnDownloads(uid: string) {
   const snap = await db.collection(DOWNLOADS).where('uid', '==', uid).limit(200).get()
   return sortByCreatedDesc(snap.docs.map(serialiseDownload).filter((row) => row.status !== 'failed'))
@@ -240,6 +263,10 @@ router.put('/me', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req
     if (!settings.enabled) return refuseDisabled(res)
     const data = sanitizeResumeData(req.body?.data)
     const ref = db.collection(RESUMES).doc(ctx.uid)
+    // Item 4.2: the placement-cell dashboard needs a score per student, and it
+    // must not be one the browser sent. It is computed here, from the document
+    // being written, on every save.
+    const readiness = readinessFor(profileForPrompts(data))
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref)
       tx.set(
@@ -251,13 +278,25 @@ router.put('/me', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req
           studentEmail: (req.user?.email || data.contact.email || '').toLowerCase() || null,
           templateId,
           data,
+          // Denormalised for the placement cell: score + the gaps to chase.
+          placement: {
+            score: readiness.score,
+            band: readiness.band,
+            missing: readiness.missing,
+            computedAt: new Date().toISOString(),
+          },
           updatedAt: FieldValue.serverTimestamp(),
           ...(snap.exists ? {} : { createdAt: FieldValue.serverTimestamp(), credits: emptyCreditState(creditCycleKey()) }),
         },
         { merge: true },
       )
     })
-    res.json({ ok: true, savedAt: new Date().toISOString(), words: countResumeWords(data) })
+    res.json({
+      ok: true,
+      savedAt: new Date().toISOString(),
+      words: countResumeWords(data),
+      placement: readiness,
+    })
   } catch (err) {
     console.error('[resume/save]', err)
     res.status(500).json({ error: 'resume_save_failed', message: 'Could not save your resume. Your latest edits are kept in this browser; please retry.' })
@@ -297,7 +336,8 @@ class CreditsExhaustedError extends Error {
   }
 }
 
-router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, async (req: AuthenticatedRequest, res: Response) => {
+// Item 4.4: exported so the `pdf` function mounts the same handler (routes/pdf.ts).
+export const resumePdfHandler = async (req: AuthenticatedRequest, res: Response) => {
   const ctx = studentContext(req, res)
   if (!ctx) return
   const templateId = parseTemplateId(req.body?.templateId, res)
@@ -444,20 +484,9 @@ router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, async (req:
           : `${body.message} Your download credit has NOT been used.`,
     })
   }
-})
+}
 
-// ─── Student: history + free re-download ────────────────────────────────────
-
-router.get('/downloads', requireRole(...STUDENT_ROLES), async (req: AuthenticatedRequest, res: Response) => {
-  const ctx = studentContext(req, res)
-  if (!ctx) return
-  try {
-    res.json({ downloads: await listOwnDownloads(ctx.uid) })
-  } catch (err) {
-    console.error('[resume/downloads]', err)
-    res.status(500).json({ error: 'resume_downloads_failed' })
-  }
-})
+router.post('/pdf', requireRole(...STUDENT_ROLES), resumePdfLimiter, resumePdfHandler)
 
 router.get('/downloads/:id/file', requireRole(...STUDENT_ROLES, ...STAFF_VIEW_ROLES), async (req: AuthenticatedRequest, res: Response) => {
   const uid = req.user?.uid
@@ -601,9 +630,22 @@ router.post('/ai/improve', requireRole(...STUDENT_ROLES), async (req: Authentica
     }
 
     try {
-      const model = gemini.getGenerativeModel({ model: process.env.RESUME_AI_MODEL || 'gemini-2.5-flash' })
-      const result = await model.generateContent(aiPrompt(kind, text, context))
-      const reply = cleanAiReply(result.response.text() || '')
+      // RESUME_AI_MODEL still wins if the operator set it; otherwise the
+      // quality tier (with its in-Gemini fallback) supplies the model.
+      const models = geminiModelsFor('quality', [process.env.RESUME_AI_MODEL])
+      let reply = ''
+      let lastErr: unknown = new Error('AI service did not answer')
+      for (const modelId of models) {
+        try {
+          const result = await gemini.getGenerativeModel({ model: modelId }).generateContent(aiPrompt(kind, text, context))
+          reply = cleanAiReply(result.response.text() || '')
+          if (reply) break
+        } catch (err) {
+          lastErr = err
+          if (!isModelUnavailableError(err)) throw err
+        }
+      }
+      if (!reply) throw lastErr
       if (!reply) throw new Error('empty AI reply')
       res.json({ text: reply.slice(0, kind === 'summary' ? 1200 : 400), remaining })
     } catch (aiErr) {
@@ -662,6 +704,327 @@ async function usageSummary(collegeId: string, cycle: string) {
     recent: sortByCreatedDesc(rows.filter((r) => r.status !== 'rendering')).slice(0, 25),
   }
 }
+
+// ─── Placement Pack extensions (item 4.2) ───────────────────────────────────
+// Cover letter, LinkedIn "About" and interview questions for a job description.
+// All three: gated by the college's resumeBuilder flags, counted against the
+// same aiCallsPerStudent allowance as /ai/improve, and cached by the 4.1 engine
+// so the same profile + job description is paid for once per cycle.
+//
+// Where the cache key comes from: the candidate's own facts, the job title and
+// the job description — no uid, no name, no college — so two students applying
+// to the same posting with the same profile digest share one generation.
+
+/** The resume fields a prompt may use. Nothing else is read or sent. */
+function profileForPrompts(data: ReturnType<typeof sanitizeResumeData>): ResumeProfileInput {
+  return {
+    fullName: data.contact.fullName,
+    headline: data.contact.headline,
+    email: data.contact.email,
+    phone: data.contact.phone,
+    location: data.contact.location,
+    course: data.education[0]?.degree,
+    branch: data.education[0]?.field,
+    graduationYear: data.education[0]?.endYear ?? undefined,
+    summary: data.summary,
+    // The stored shapes are grouped (skills) and use `organisation`/`name`;
+    // the prompt shape is flat. This is the only place the two meet.
+    skills: (data.skills || []).flatMap((group) => (group.skills || []).map((name) => ({ name, category: group.name }))),
+    experience: data.experience.map((job) => ({ company: job.organisation, role: job.role, bullets: job.bullets })),
+    projects: data.projects.map((project) => ({ title: project.name, bullets: project.bullets })),
+    education: data.education.map((row) => ({ institution: row.institution, degree: row.degree, field: row.field, score: row.score })),
+    achievements: data.achievements,
+  }
+}
+
+async function aiGate(req: AuthenticatedRequest, res: Response): Promise<{
+  ctx: { uid: string; collegeId: string }
+  settings: ResumeSettings
+  cycle: string
+} | null> {
+  const ctx = studentContext(req, res)
+  if (!ctx) return null
+  const settings = await loadSettings(ctx.collegeId)
+  if (!settings.enabled) {
+    refuseDisabled(res)
+    return null
+  }
+  if (!settings.aiAssist || settings.aiCallsPerStudent <= 0) {
+    res.status(403).json({ error: 'ai_disabled', message: 'AI suggestions are switched off for your college.' })
+    return null
+  }
+  if (!geminiClient()) {
+    res.status(503).json({ error: 'ai_unavailable', message: 'AI suggestions are not configured on this server.' })
+    return null
+  }
+  return { ctx, settings, cycle: creditCycleKey() }
+}
+
+/** Reserves one AI call for this student, or answers 409. */
+async function reserveAiCredit(
+  uid: string,
+  collegeId: string,
+  settings: ResumeSettings,
+  cycle: string,
+  res: Response,
+): Promise<number | null> {
+  const resumeRef = db.collection(RESUMES).doc(uid)
+  try {
+    let remaining = 0
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(resumeRef)
+      const reserved = reserveAiCall(snap.data()?.credits, settings.aiCallsPerStudent, cycle)
+      if (!reserved.ok) throw new CreditsExhaustedError(reserved.used, reserved.allowed)
+      remaining = reserved.remaining
+      tx.set(
+        resumeRef,
+        {
+          uid,
+          collegeId,
+          credits: reserved.state,
+          updatedAt: FieldValue.serverTimestamp(),
+          ...(snap.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
+        },
+        { merge: true },
+      )
+    })
+    return remaining
+  } catch (err) {
+    if (err instanceof CreditsExhaustedError) {
+      res.status(409).json({
+        error: 'ai_exhausted',
+        used: err.used,
+        allowed: err.allowed,
+        message: `You have used all ${err.allowed} AI suggestions for this year.`,
+      })
+      return null
+    }
+    throw err
+  }
+}
+
+// POST /resume/cover-letter — { jobTitle, company?, jobDescription?, tone? }
+router.post('/cover-letter', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const gate = await aiGate(req, res)
+    if (!gate) return
+    const jobTitle = clampText(req.body?.jobTitle, 120)
+    if (jobTitle.length < 3) {
+      res.status(400).json({ error: 'invalid_request', message: 'Give the role you are applying for.' })
+      return
+    }
+    const company = clampText(req.body?.company, 120)
+    const jobDescription = clampText(req.body?.jobDescription, MAX_JOB_DESCRIPTION_CHARS)
+    const tone = clampText(req.body?.tone, 40)
+
+    const snap = await db.collection(RESUMES).doc(gate.ctx.uid).get()
+    const stored = readStoredResume(snap)
+    const profile = profileForPrompts(stored.data)
+    if (!profile.fullName && !profile.headline && profile.skills.length === 0) {
+      res.status(400).json({ error: 'empty_resume', message: 'Fill in your resume before generating a cover letter.' })
+      return
+    }
+
+    const remaining = await reserveAiCredit(gate.ctx.uid, gate.ctx.collegeId, gate.settings, gate.cycle, res)
+    if (remaining === null) return
+
+    const generated = await generateContentWithCache({
+      kind: 'coverLetter',
+      key: [profileDigest(profile), jobTitle, company, tone, jobDescription.slice(0, 400)].join('|'),
+      tier: 'quality',
+      prompt: buildCoverLetterPrompt({ profile, jobTitle, company, jobDescription, tone }),
+      parse: (raw) => sanitiseResumeDoc(raw, 'coverLetter'),
+      // A job posting is a moving target: reuse for a week, then regenerate.
+      maxAgeMs: 7 * 24 * 60 * 60 * 1000,
+    })
+    const doc = generated.content
+    if (!doc.ok) {
+      res.status(502).json({ error: 'generation_failed', message: 'The AI did not return a usable letter. Try again.', issues: doc.issues })
+      return
+    }
+    res.json({
+      success: true,
+      coverLetter: doc.text,
+      wordCount: doc.wordCount,
+      issues: doc.issues,
+      source: generated.source,
+      aiRemaining: remaining,
+    })
+  } catch (err) {
+    console.error('[resume/cover-letter]', err)
+    res.status(500).json({ error: 'cover_letter_failed', message: 'Could not generate a cover letter. Please retry.' })
+  }
+})
+
+// POST /resume/linkedin-about — { goal? }
+router.post('/linkedin-about', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const gate = await aiGate(req, res)
+    if (!gate) return
+    const goal = clampText(req.body?.goal, 160)
+    const snap = await db.collection(RESUMES).doc(gate.ctx.uid).get()
+    const profile = profileForPrompts(readStoredResume(snap).data)
+    if (!profile.fullName && profile.skills.length === 0 && !profile.summary) {
+      res.status(400).json({ error: 'empty_resume', message: 'Fill in your resume before generating an About section.' })
+      return
+    }
+    const remaining = await reserveAiCredit(gate.ctx.uid, gate.ctx.collegeId, gate.settings, gate.cycle, res)
+    if (remaining === null) return
+
+    const generated = await generateContentWithCache({
+      kind: 'linkedinAbout',
+      key: [profileDigest(profile), goal].join('|'),
+      tier: 'fast',
+      prompt: buildLinkedinAboutPrompt({ profile, goal }),
+      parse: (raw) => sanitiseResumeDoc(raw, 'linkedinAbout'),
+      maxAgeMs: 30 * 24 * 60 * 60 * 1000,
+    })
+    const doc = generated.content
+    if (!doc.ok) {
+      res.status(502).json({ error: 'generation_failed', message: 'The AI did not return a usable About section. Try again.', issues: doc.issues })
+      return
+    }
+    res.json({ success: true, about: doc.text, wordCount: doc.wordCount, issues: doc.issues, source: generated.source, aiRemaining: remaining })
+  } catch (err) {
+    console.error('[resume/linkedin-about]', err)
+    res.status(500).json({ error: 'linkedin_about_failed', message: 'Could not generate an About section. Please retry.' })
+  }
+})
+
+// POST /resume/interview-questions — { jobTitle, company?, jobDescription?, count? }
+router.post('/interview-questions', requireRole(...STUDENT_ROLES), resumeEditorLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const gate = await aiGate(req, res)
+    if (!gate) return
+    const jobTitle = clampText(req.body?.jobTitle, 120)
+    if (jobTitle.length < 3) {
+      res.status(400).json({ error: 'invalid_request', message: 'Give the role you are interviewing for.' })
+      return
+    }
+    const company = clampText(req.body?.company, 120)
+    const jobDescription = clampText(req.body?.jobDescription, MAX_JOB_DESCRIPTION_CHARS)
+    const count = Math.min(MAX_INTERVIEW_QUESTIONS, Math.max(1, Number(req.body?.count) || MAX_INTERVIEW_QUESTIONS))
+
+    const snap = await db.collection(RESUMES).doc(gate.ctx.uid).get()
+    const profile = profileForPrompts(readStoredResume(snap).data)
+
+    const remaining = await reserveAiCredit(gate.ctx.uid, gate.ctx.collegeId, gate.settings, gate.cycle, res)
+    if (remaining === null) return
+
+    const generated = await generateContentWithCache({
+      kind: 'interviewQuestions',
+      key: [profileDigest(profile), jobTitle, company, String(count), jobDescription.slice(0, 400)].join('|'),
+      tier: 'quality',
+      prompt: buildInterviewQuestionsPrompt({ profile, jobTitle, company, jobDescription, count }),
+      responseMimeType: 'application/json',
+      parse: (raw) => sanitiseInterviewQuestions(raw),
+      maxAgeMs: 7 * 24 * 60 * 60 * 1000,
+    })
+    const parsed = generated.content
+    if (!parsed.ok) {
+      res.status(502).json({ error: 'generation_failed', message: 'The AI did not return usable questions. Try again.', issues: parsed.issues })
+      return
+    }
+    res.json({
+      success: true,
+      questions: parsed.items,
+      count: parsed.items.length,
+      issues: parsed.issues,
+      source: generated.source,
+      aiRemaining: remaining,
+    })
+  } catch (err) {
+    console.error('[resume/interview-questions]', err)
+    res.status(500).json({ error: 'interview_questions_failed', message: 'Could not generate interview questions. Please retry.' })
+  }
+})
+
+// GET /resume/admin/placement-stats?format=json|csv
+// The placement cell's view: every student with a resume, their readiness score
+// and the gaps. Computed server-side from stored resumes, so the number on the
+// dashboard is not one a browser could inflate.
+router.get('/admin/placement-stats', requireRole(...STAFF_VIEW_ROLES), async (req: AuthenticatedRequest, res: Response) => {
+  const collegeId = adminCollege(req, res)
+  if (!collegeId) return
+  try {
+    const cycle = typeof req.query.cycle === 'string' && req.query.cycle ? req.query.cycle : creditCycleKey()
+    const [resumeSnap, downloadSnap] = await Promise.all([
+      db.collection(RESUMES).where('collegeId', '==', collegeId).limit(2000).get(),
+      db.collection(DOWNLOADS).where('collegeId', '==', collegeId).where('cycle', '==', cycle).limit(2000).get(),
+    ])
+
+    const downloadsByUid = new Map<string, number>()
+    for (const doc of downloadSnap.docs) {
+      const row = serialiseDownload(doc)
+      if (row.status === 'failed') continue
+      downloadsByUid.set(row.uid, (downloadsByUid.get(row.uid) || 0) + 1)
+    }
+
+    const rows = resumeSnap.docs.map((doc) => {
+      const stored = readStoredResume(doc)
+      const raw = doc.data() || {}
+      const storedPlacement = raw.placement as { score?: number; band?: string; missing?: string[] } | undefined
+      // Prefer the score written at save time; fall back for documents saved
+      // before this shipped (there is no backfill, and none is needed: the next
+      // save computes it).
+      const readiness =
+        typeof storedPlacement?.score === 'number'
+          ? {
+              score: storedPlacement.score,
+              band: (storedPlacement.band as ReturnType<typeof readinessFor>['band']) || 'Needs work',
+              missing: storedPlacement.missing || [],
+            }
+          : readinessFor({
+              ...profileForPrompts(stored.data),
+              resumeUpdatedAt: stored.updatedAt,
+              downloads: downloadsByUid.get(doc.id) || 0,
+            })
+      return {
+        uid: doc.id,
+        name: stored.data.contact.fullName || '(no name)',
+        email: stored.data.contact.email || '',
+        course: stored.data.education[0]?.degree || '',
+        templateId: stored.templateId,
+        updatedAt: stored.updatedAt,
+        readinessScore: readiness.score,
+        readinessBand: readiness.band,
+        missing: readiness.missing,
+        downloads: downloadsByUid.get(doc.id) || 0,
+      }
+    })
+
+    const summary = {
+      students: rows.length,
+      ready: rows.filter((row) => row.readinessBand === 'Ready').length,
+      nearlyThere: rows.filter((row) => row.readinessBand === 'Nearly there').length,
+      needsWork: rows.filter((row) => row.readinessBand === 'Needs work').length,
+      barelyStarted: rows.filter((row) => row.readinessBand === 'Barely started').length,
+      averageScore: rows.length ? Math.round(rows.reduce((sum, row) => sum + row.readinessScore, 0) / rows.length) : 0,
+      downloadsThisCycle: Array.from(downloadsByUid.values()).reduce((sum, n) => sum + n, 0),
+    }
+
+    if (String(req.query.format || '').toLowerCase() === 'csv') {
+      const header = ['uid', 'name', 'email', 'course', 'template', 'readinessScore', 'readinessBand', 'missing', 'downloads', 'updatedAt']
+      const lines = [
+        header.join(','),
+        ...rows.map((row) =>
+          [row.uid, row.name, row.email, row.course, row.templateId, row.readinessScore, row.readinessBand, row.missing.join('; '), row.downloads, row.updatedAt || '']
+            .map(csvCell)
+            .join(','),
+        ),
+      ]
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+      res.setHeader('Content-Disposition', `attachment; filename="placement-readiness-${cycle}.csv"`)
+      res.send(lines.join('\n'))
+      return
+    }
+
+    res.json({ success: true, collegeId, cycle, summary, students: sortByScoreDesc(rows) })
+  } catch (err) {
+    console.error('[resume/admin/placement-stats]', err)
+    res.status(500).json({ error: 'placement_stats_failed' })
+  }
+})
 
 router.get('/admin/settings', requireRole(...STAFF_VIEW_ROLES), async (req: AuthenticatedRequest, res: Response) => {
   const collegeId = adminCollege(req, res)

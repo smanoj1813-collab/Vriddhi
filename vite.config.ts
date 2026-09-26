@@ -122,6 +122,11 @@ export default defineConfig(({ mode }) => {
   const projectId = env.VITE_FIREBASE_PROJECT_ID || 'vriddhi-academic'
   const apiProxyTarget =
     env.VITE_DEV_API_PROXY_TARGET || `http://localhost:5001/${projectId}/asia-south1/api`
+  // Item 4.4: the Chrome-launching PDF routes now live in their own function.
+  // Same idea as the /api proxy above — the browser calls same-origin `/pdf/*`
+  // and the dev server forwards to the emulator's `pdf` function.
+  const pdfProxyTarget =
+    env.VITE_DEV_PDF_PROXY_TARGET || `http://localhost:5001/${projectId}/asia-south1/pdf`
 
   return {
     plugins,
@@ -141,6 +146,11 @@ export default defineConfig(({ mode }) => {
           // what the deployed function receives in production.
           rewrite: (p) => p.replace(/^\/api/, ''),
         },
+        '/pdf': {
+          target: pdfProxyTarget,
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/pdf/, ''),
+        },
       },
     },
     resolve: {
@@ -153,6 +163,13 @@ export default defineConfig(({ mode }) => {
       sourcemap: mode === 'development',
       chunkSizeWarningLimit: 500,
       minify: 'esbuild',
+      // Never preload the PDF chunk (jspdf + html2canvas, ~590 kB). It is reached
+      // only through `src/shared/utils/pdfRuntime.ts` at the moment a user asks
+      // for a PDF; without this filter Vite still emits a <link rel=modulepreload>
+      // for it and every visitor downloads the libraries for nothing.
+      modulePreload: {
+        resolveDependencies: (_filename, deps) => deps.filter((dep) => !/(^|\/)pdf-[\w-]+\.js$/.test(dep)),
+      },
       rollupOptions: {
         output: {
           manualChunks: {

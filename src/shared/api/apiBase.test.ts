@@ -11,9 +11,13 @@ import { describe, it } from 'node:test'
 import {
   ApiResponseError,
   DEFAULT_API_BASE_URL,
+  DEFAULT_PDF_BASE_URL,
   HOSTING_REWRITE_HINT,
+  PDF_BASE_URL,
   assertJsonResponse,
+  derivePdfBaseUrl,
   normalizeApiBaseUrl,
+  pdfUrl,
 } from './apiBase'
 
 const PROD_HOST = 'https://asia-south1-vriddhi-academic.cloudfunctions.net'
@@ -129,5 +133,43 @@ describe('assertJsonResponse', () => {
       assertJsonResponse(response(404, 'application/json', '{"error":"Route not found","path":"/api/api/papers/p1/pdf"}'), url),
       (err: unknown) => err instanceof ApiResponseError && err.message === 'Route not found' && (err.body as any).path === '/api/api/papers/p1/pdf',
     )
+  })
+})
+
+// ─── Item 4.4: the PDF routes moved to their own function ────────────────────
+
+describe('pdf base url', () => {
+  it('swaps the trailing /api for /pdf', () => {
+    assert.equal(derivePdfBaseUrl(`${PROD_HOST}/api`), `${PROD_HOST}/pdf`)
+    assert.equal(derivePdfBaseUrl(`${PROD_HOST}/api/`), `${PROD_HOST}/pdf`)
+  })
+
+  it('keeps a same-origin base same-origin (the dev proxy forwards /pdf too)', () => {
+    assert.equal(derivePdfBaseUrl('/api'), '/pdf')
+    assert.equal(derivePdfBaseUrl('/api/'), '/pdf')
+  })
+
+  it('returns null when there is no /api suffix to swap, so the caller uses the default', () => {
+    assert.equal(derivePdfBaseUrl(''), null)
+    assert.equal(derivePdfBaseUrl('   '), null)
+    assert.equal(derivePdfBaseUrl('https://example.edu/functions'), null)
+  })
+
+  it('resolves a base for this build', () => {
+    // Under Node `import.meta.env` is undefined, so this documents the default
+    // path: derived from the production API host.
+    assert.equal(PDF_BASE_URL, `${PROD_HOST}/pdf`)
+    assert.equal(PDF_BASE_URL.endsWith('/pdf'), true)
+  })
+
+  it('builds endpoint urls that target the pdf function, never api', () => {
+    const url = pdfUrl('/papers/p1/pdf')
+    assert.equal(url, `${PROD_HOST}/pdf/papers/p1/pdf`)
+    assert.equal(/\/api\//.test(url), false)
+    assert.equal(pdfUrl('questions/export/pdf'), `${PROD_HOST}/pdf/questions/export/pdf`)
+  })
+
+  it('keeps a documented fallback host for the deployed function', () => {
+    assert.equal(DEFAULT_PDF_BASE_URL.endsWith('/pdf'), true)
   })
 })

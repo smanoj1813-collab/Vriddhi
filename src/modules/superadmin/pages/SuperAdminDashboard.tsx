@@ -1,11 +1,12 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDashboardStats, useSystemHealth } from '../hooks/useSuperAdmin';
+import { describeFreshness } from '../utils/freshness';
 import { useSeedUniversities } from '../../admin/hooks/useUniversities';
 import { useNotification } from '../../../shared/providers/NotificationProvider';
 import {
   LayoutDashboard, ArrowLeft, Building2, Users, GraduationCap, Shield,
-  TrendingUp, Activity, BarChart3, Award, Clock, ArrowUpRight, Database, Loader2, Plus
+  TrendingUp, Activity, BarChart3, Award, Clock, ArrowUpRight, Database, Loader2, Plus, RefreshCw
 } from "lucide-react";
 import type { TopCollege, RecentActivity } from '../types/superAdmin';
 
@@ -33,7 +34,7 @@ const getActivityIcon = (type: string) => {
 const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
-  const { data, isLoading, error } = useDashboardStats();
+  const { data, isLoading, error, refetch, isFetching } = useDashboardStats();
   const { data: health } = useSystemHealth();
   const seedMutation = useSeedUniversities();
 
@@ -79,6 +80,11 @@ const SuperAdminDashboard: React.FC = () => {
   const stats = data?.stats;
   const recentActivity = data?.recentActivity || [];
   const topColleges = data?.topColleges || [];
+  // Snapshot doc timestamp when the server provided one, else this fetch's time.
+  const freshness = describeFreshness(
+    data?.updatedAt ?? (data ? new Date().toISOString() : null),
+    { staleAfterMs: 30 * 60 * 1000 },
+  );
 
   const statCards = [
     { label: "Partner Colleges", value: stats?.totalColleges || 0, icon: Building2, color: "text-teal-700 dark:text-teal-300", bg: "bg-teal-50 border-teal-200/80 dark:bg-teal-950/40 dark:border-teal-800" },
@@ -106,6 +112,40 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Item 2.4 / clause A11: the numbers are a 15-minute snapshot, so the
+              page says how old they are and offers a refresh instead of
+              pretending to be live. */}
+          <span
+            className={`text-[11px] font-semibold ${freshness.stale ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}
+            data-testid="dashboard-freshness"
+          >
+            {freshness.label}
+          </span>
+          {/* Item 4.1: the cache is the mitigation for the 3.x price change, so
+              its effectiveness sits next to the data freshness — a row of hits
+              that stops growing is the signal that a key changed. */}
+          {data?.aiCache ? (
+            <span
+              className="text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+              data-testid="ai-cache-summary"
+              title={`${data.aiCache.tokensServedFromCache.toLocaleString('en-IN')} output tokens served from cache instead of being generated`}
+            >
+              {(() => {
+                const { hits, misses } = data.aiCache;
+                const total = hits + misses;
+                const pct = total > 0 ? Math.round((hits / total) * 100) : 0;
+                return `AI cache ${pct}% (${hits}/${total} reused)`;
+              })()}
+            </span>
+          ) : null}
+          <button
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-all shadow-xs disabled:opacity-60"
+          >
+            {isFetching ? <Loader2 className="w-4 h-4 animate-spin text-teal-600" /> : <RefreshCw className="w-4 h-4 text-teal-600" />}
+            Refresh
+          </button>
           <button
             onClick={handleSeedUniversities}
             disabled={seedMutation.isPending}

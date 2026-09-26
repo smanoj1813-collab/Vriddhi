@@ -24,6 +24,14 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/Firebase/config';
 import { resolveStudentRecord } from '../services/studentRecordResolver';
+import {
+  attendanceFromSummary,
+  type AttendanceSummaryDocLike,
+  type AttendanceViewData,
+} from '../utils/attendanceDigest';
+
+export { attendanceFromSummary };
+export type { AttendanceSummaryDocLike, AttendanceViewData };
 
 // ─── Types returned to the UI (kept close to existing components) ──────
 
@@ -232,6 +240,29 @@ export async function fetchProfile(studentId: string, email?: string): Promise<S
 
 // ─── Attendance (from attendanceRecords) ───────────────────────────────
 
+/**
+ * Item 3.1: `attendanceSummaries/{studentId}` holds the totals (maintained by the
+ * attendanceSummary Cloud Functions). Reading ONE document replaces the up-to-500
+ * row query — and the number it produces covers the student's whole history
+ * instead of the most recent 500 records.
+ *
+ * The raw query below is kept as the fallback: while the collection is empty
+ * (before the backfill, or if the trigger was ever disabled) the app behaves
+ * exactly as it does today. Same return shape, same percentages.
+ */
+async function fetchAttendanceSummaryDoc(studentId: string): Promise<AttendanceSummaryDocLike | null> {
+  try {
+    const snap = await getDoc(doc(db, 'attendanceSummaries', studentId));
+    if (!snap.exists()) return null;
+    return snap.data() as AttendanceSummaryDocLike;
+  } catch (error) {
+    // Rules not deployed / offline: fall back to the raw query rather than
+    // showing an error on the student's dashboard.
+    console.warn('[attendance] summary unavailable, using raw records', error);
+    return null;
+  }
+}
+
 export async function fetchAttendance(
   studentId: string,
   collegeId: string
@@ -312,6 +343,38 @@ export async function fetchAttendance(
     monthlyBreakdown,
     records,
   };
+}
+
+/**
+ * Dashboard-facing read (item 3.1): the summary document when it exists, the raw
+ * window otherwise. Kept as its own export so `fetchAttendance` — which the
+ * AttendancePage uses to show individual records — is unchanged.
+ *
+ * Trade-off, deliberate and documented: `records` holds the most recent 20
+ * entries here (the card needs a handful), not the full history. Anything that
+ * lists records must keep using `fetchAttendance`.
+ */
+export async function fetchAttendanceDigest(
+  studentId: string,
+  collegeId: string,
+): Promise<AttendanceSummaryData> {
+  if (!studentId || !collegeId) {
+    return {
+      percentage: 0,
+      requiredPercentage: 75,
+      totalClasses: 0,
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0,
+      monthlyBreakdown: [],
+      records: [],
+    };
+  }
+  const summary = await fetchAttendanceSummaryDoc(studentId);
+  if (summary) return attendanceFromSummary(summary);
+  // Fallback: same numbers as today, computed from the raw window.
+  return fetchAttendance(studentId, collegeId);
 }
 
 // ─── Assessments / Tests (studentAssessments) ──────────────────────────

@@ -11,6 +11,7 @@ import {
 } from './assessmentGrading'
 import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
 import { geminiClient, openaiClient, deepseekClient } from './config/aiProviders'
+import { generateWithGeminiFallback, primaryGeminiModel } from './config/aiModels'
 import { maybeTrace, traceRequested } from './assessmentCostTrace'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
@@ -2515,8 +2516,12 @@ export const autoSubmitExpiredStudentTests = onSchedule(
 // grade when they press "Publish" via gradeStudentAssessmentSubmission.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// The Gemini entry comes from the quality tier (config/aiModels.ts) so a retired
+// model id falls through to the next one instead of killing grading; `model` is
+// recorded on the stored suggestion so every cached grade says which model
+// proposed the marks.
 const AI_GRADING_MODELS: Record<string, string> = {
-  gemini: 'gemini-2.5-flash',
+  gemini: primaryGeminiModel('quality'),
   openai: 'gpt-4o-mini',
   deepseek: 'deepseek-chat',
 }
@@ -2561,7 +2566,7 @@ export function extractFirstJsonObject(raw: string): unknown {
 async function requestAiGradingRaw(
   prompt: string,
   preferred: string
-): Promise<{ raw: string; provider: string }> {
+): Promise<{ raw: string; provider: string; model: string }> {
   const order = [preferred, 'gemini', 'openai', 'deepseek'].filter(
     (value, index, list) => list.indexOf(value) === index && value !== ''
   )
@@ -2571,14 +2576,25 @@ async function requestAiGradingRaw(
       if (provider === 'gemini') {
         const client = geminiClient()
         if (!client) continue
-        const model = client.getGenerativeModel({
-          model: AI_GRADING_MODELS.gemini,
-          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
-        })
-        const response = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        })
-        return { raw: response.response.text(), provider }
+        const generated = await generateWithGeminiFallback('quality', (modelId) =>
+          client
+            .getGenerativeModel({
+              model: modelId,
+              generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+            })
+            .generateContent({
+              contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            }),
+        {
+          onFallback: ({ failedModel, nextModel, error }) =>
+            logger.warn('[AiGrading] Gemini model unavailable, trying next tier entry', {
+              failedModel,
+              nextModel,
+              error: (error as Error)?.message,
+            }),
+        },
+        )
+        return { raw: generated.result.response.text(), provider, model: generated.model }
       }
       const client = provider === 'openai' ? openaiClient() : deepseekClient()
       if (!client) continue
@@ -2588,7 +2604,7 @@ async function requestAiGradingRaw(
         response_format: { type: 'json_object' },
         messages: [{ role: 'user', content: prompt }],
       })
-      return { raw: completion.choices[0]?.message?.content || '', provider }
+      return { raw: completion.choices[0]?.message?.content || '', provider, model: AI_GRADING_MODELS[provider] }
     } catch (err) {
       lastError = err
       logger.warn(`[AiGrading] provider ${provider} failed`, err)
@@ -2701,7 +2717,7 @@ export const suggestAssessmentGrading = onCall(
       questionBlock,
     ].join('\n')
 
-    const { raw, provider } = await requestAiGradingRaw(prompt, requestedProvider)
+    const { raw, provider, model: gradingModel } = await requestAiGradingRaw(prompt, requestedProvider)
     let parsed: unknown
     try {
       parsed = extractFirstJsonObject(raw)
@@ -2737,7 +2753,8 @@ export const suggestAssessmentGrading = onCall(
       totalMarks,
       overallFeedback,
       provider,
-      model: AI_GRADING_MODELS[provider],
+      // The model that actually answered (not the tier's first choice).
+      model: gradingModel,
       generatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }
     await attemptRef.update({ aiGradingSuggestion: suggestion })

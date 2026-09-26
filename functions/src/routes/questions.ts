@@ -2,7 +2,7 @@
 // Questions CRUD, linking, stats, PYQ config and PDF export.
 // All routes require a verified Firebase auth user.
 
-import express from 'express'
+import express, { type Response } from 'express'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
@@ -391,7 +391,8 @@ router.post('/bulk', verifyAuth, requireRole(...BULK_ROLES), async (req: Authent
 })
 
 // POST /api/questions/export/pdf
-router.post('/export/pdf', verifyAuth, requireRole(...DRAFT_ROLES), async (req: AuthenticatedRequest, res) => {
+// Item 4.4: exported so the `pdf` function mounts the same handler (routes/pdf.ts).
+export const exportQuestionsPdf = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { questionIds, title } = req.body || {}
     if (!Array.isArray(questionIds) || questionIds.length === 0) {
@@ -427,7 +428,9 @@ router.post('/export/pdf', verifyAuth, requireRole(...DRAFT_ROLES), async (req: 
       res.status(500).json({ error: 'pdf_render_failed', message: error.message || 'Failed to generate PDF' })
     }
   }
-})
+}
+
+router.post('/export/pdf', verifyAuth, requireRole(...DRAFT_ROLES), exportQuestionsPdf)
 
 // ═══════════════════════════════════════════════════════════════════════
 // DYNAMIC ROUTES

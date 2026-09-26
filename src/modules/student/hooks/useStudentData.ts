@@ -17,6 +17,7 @@ import type {
 import {
   fetchProfile,
   fetchAttendance,
+  fetchAttendanceDigest,
   fetchAssignments,
   fetchFees,
   fetchTodaySchedule,
@@ -231,7 +232,9 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       const today = new Date().toISOString().split('T')[0];
 
       const results = await Promise.allSettled([
-        fetchAttendance(profileData.id, profileData.collegeId || user?.collegeId || ''),
+        // Item 3.1: the dashboard reads the one-document summary instead of up to
+        // 500 attendance rows (~600 reads per open). Falls back on its own.
+        fetchAttendanceDigest(profileData.id, profileData.collegeId || user?.collegeId || ''),
         fetchAssignments(profileData.id),
         fetchFees(profileData.id, profileData.collegeId || user?.collegeId),
         fetchTodaySchedule(

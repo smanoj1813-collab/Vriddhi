@@ -1,7 +1,7 @@
 // src/routes/papers.ts
 // Backend routes for papers + PDF generation
 
-import express from 'express'
+import express, { type Response } from 'express'
 import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { db } from '../config/firebase'
 import { verifyAuth, requireRole, AuthenticatedRequest, resolveCollegeId, assertCollegeAccess } from '../middleware/auth'
@@ -298,7 +298,11 @@ router.post('/:id/status', verifyAuth, requireRole(...APPROVE_ROLES), async (req
  *   503 { error: 'pdf_renderer_unavailable', fallback: 'client' } → no Chrome
  *   500 { error: 'pdf_render_timeout' | 'pdf_render_failed' }     → render fault
  */
-router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: AuthenticatedRequest, res) => {
+// Item 4.4: the Chrome-launching handler is exported so the `pdf` function can
+// mount the same implementation (routes/pdf.ts). One implementation, two mount
+// points — a second copy would be a second place for the degradation contract
+// (503 + client fallback) to drift.
+export const renderPaperPdf = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params
     const user = req.user
@@ -354,7 +358,9 @@ router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), async (req: Authe
     }
     return
   }
-})
+}
+
+router.get('/:id/pdf', verifyAuth, requireRole(...READ_ROLES), renderPaperPdf)
 
 // ═══════════════════════════════════════════════════════════════════════
 // HTML Builders

@@ -363,12 +363,26 @@ export const useImportFaculty = () => {
 // ═══════════════════════════════════════════════════════════════════════
 // DASHBOARD HOOKS
 // ═══════════════════════════════════════════════════════════════════════
-export const useDashboardStats = (queryOptions?: Omit<UseQueryOptions<{ stats: DashboardStats; recentActivity: RecentActivity[]; topColleges: TopCollege[] }, SuperAdminApiError>, "queryKey" | "queryFn">) => {
-  return useQuery<{ stats: DashboardStats; recentActivity: RecentActivity[]; topColleges: TopCollege[] }, SuperAdminApiError>({
+
+/** Item 2.4: the payload carries the snapshot's timestamp and origin so the page
+ *  can say how old the numbers are (clause A11). */
+export interface DashboardPayload {
+  stats: DashboardStats;
+  recentActivity: RecentActivity[];
+  topColleges: TopCollege[];
+  updatedAt?: string;
+  source?: "snapshot" | "live";
+  /** Item 4.1: AI content-cache counters carried by the same snapshot doc. */
+  aiCache?: { hits: number; misses: number; tokensServedFromCache: number } | null;
+}
+export const useDashboardStats = (queryOptions?: Omit<UseQueryOptions<DashboardPayload, SuperAdminApiError>, "queryKey" | "queryFn">) => {
+  return useQuery<DashboardPayload, SuperAdminApiError>({
     queryKey: superAdminKeys.dashboard(),
     queryFn: getDashboardStats,
-    staleTime: 1000 * 60 * 1,
-    refetchInterval: 1000 * 60 * 2,
+    staleTime: 1000 * 60 * 5,
+    // Item 2.4: the numbers now come from a 15-minute snapshot doc, so polling
+    // more often than the snapshot changes only burns reads.
+    refetchInterval: 1000 * 60 * 10,
     ...queryOptions,
   });
 };
@@ -499,8 +513,8 @@ export const useSystemHealth = (queryOptions?: Omit<UseQueryOptions<SystemHealth
   return useQuery<SystemHealthStatus, SuperAdminApiError>({
     queryKey: superAdminKeys.health(),
     queryFn: getSystemHealth,
-    staleTime: 1000 * 30,
-    refetchInterval: 1000 * 60,
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 5,
     ...queryOptions,
   });
 };
@@ -529,8 +543,8 @@ export const useErrorLogs = (options?: { severity?: string; resolved?: boolean; 
   return useQuery<PaginatedResult<ErrorLog>, SuperAdminApiError>({
     queryKey: superAdminKeys.errors(options),
     queryFn: () => getErrorLogs(options),
-    staleTime: 1000 * 30,
-    refetchInterval: 1000 * 60,
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 5,
     ...queryOptions,
   });
 };

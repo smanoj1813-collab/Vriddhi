@@ -1,7 +1,9 @@
 // Generic A4 report PDF (letterhead + titled sections of key/value rows or
 // tables). Used by library, inventory and finance reports. jsPDF is lazily
-// imported; amounts should be pre-formatted by the caller ("Rs." — the
-// built-in font has no ₹ glyph).
+// imported through the shared lazy runtime; amounts should be pre-formatted by
+// the caller ("Rs." — the built-in font has no ₹ glyph).
+
+import { loadPdfLibs } from '@/shared/utils/pdfRuntime'
 
 export interface ReportSection {
   heading: string
@@ -26,8 +28,8 @@ export interface ReportDoc {
 export const pdfMoney = (n: number) => `Rs. ${(Number(n) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
 export async function downloadReportPdf(r: ReportDoc): Promise<void> {
-  const { default: JsPDF } = await import('jspdf')
-  const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: r.landscape ? 'landscape' : 'portrait' })
+  const { jsPDF } = await loadPdfLibs()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: r.landscape ? 'landscape' : 'portrait' })
   const W = doc.internal.pageSize.getWidth()
   const H = doc.internal.pageSize.getHeight()
   const M = 14

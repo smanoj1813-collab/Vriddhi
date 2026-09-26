@@ -117,3 +117,56 @@ export async function fetchResumeAdminDownloads() {
   record('fetchResumeAdminDownloads')
   return []
 }
+
+// ── Placement Pack extensions (item 4.2) ────────────────────────────────────
+// Fixtures: __RC_RESUME.pack = { coverLetter?, about?, questions?, error? }.
+export async function generateCoverLetter(params: any): Promise<any> {
+  record('coverLetter', params)
+  const pack = g().__RC_RESUME?.pack ?? {}
+  if (pack.error) throw new Error(pack.error)
+  return {
+    coverLetter: pack.coverLetter ?? 'Dear Hiring Team,\n\nI am applying for the Article Assistant role. ' + 'I reconciled ledgers and filed GST returns for mid-size clients. '.repeat(8),
+    wordCount: 180,
+    issues: [],
+    source: pack.source ?? 'model',
+    aiRemaining: 4,
+  }
+}
+
+export async function generateLinkedinAbout(params: any): Promise<any> {
+  record('linkedinAbout', params)
+  const pack = g().__RC_RESUME?.pack ?? {}
+  if (pack.error) throw new Error(pack.error)
+  return {
+    about: pack.about ?? 'I am a final-year B.Com student specialising in indirect taxation and audit.',
+    wordCount: 120,
+    issues: [],
+    source: 'model',
+    aiRemaining: 3,
+  }
+}
+
+export async function generateInterviewQuestions(params: any): Promise<any> {
+  record('interviewQuestions', params)
+  const pack = g().__RC_RESUME?.pack ?? {}
+  if (pack.error) throw new Error(pack.error)
+  return {
+    questions:
+      pack.questions ?? [
+        { question: 'Walk me through how you reconciled 120 purchase ledgers.', why: 'Checks real ownership', answerHint: 'Name the tool, the volume and the error rate you worked to.' },
+      ],
+    count: 1,
+    issues: [],
+    source: 'model',
+    aiRemaining: 2,
+  }
+}
+
+export async function fetchResumePlacementStats(): Promise<any> {
+  record('placementStats', undefined)
+  return g().__RC_RESUME?.placement ?? { collegeId: 'college-a', cycle: '2026-27', summary: { students: 0, ready: 0, nearlyThere: 0, needsWork: 0, barelyStarted: 0, averageScore: 0, downloadsThisCycle: 0 }, students: [] }
+}
+
+export async function downloadResumePlacementCsv(): Promise<void> {
+  record('placementCsv', undefined)
+}

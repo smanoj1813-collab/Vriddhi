@@ -3,6 +3,7 @@
 // no external service. Readable by every USB scanner and by BarcodeDetector.
 
 import { code39Widths } from './libraryEngine'
+import { loadPdfLibs } from '@/shared/utils/pdfRuntime'
 
 export interface LabelItem {
   code: string
@@ -46,8 +47,8 @@ const clip = (doc: Doc, s: string, w: number) => {
 }
 
 export async function downloadLabelSheet(items: LabelItem[], opts: LabelSheetOptions): Promise<void> {
-  const { default: JsPDF } = await import('jspdf')
-  const doc = new JsPDF({ unit: 'mm', format: 'a4' })
+  const { jsPDF } = await loadPdfLibs()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const cols = Math.max(1, opts.columns ?? 3)
   const rows = Math.max(1, opts.rows ?? 8)
   const marginX = 7
