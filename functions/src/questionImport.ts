@@ -67,6 +67,64 @@ export const QUESTION_REVIEWS_COLLECTION = 'questionReviews'
 
 export const IMPORT_CANDIDATE_EXTENSIONS = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg'] as const
 
+/** A `.zip` of documents (the bulk path). */
+export function isArchiveFileName(name: string): boolean {
+  return String(name || '')
+    .toLowerCase()
+    .endsWith('.zip')
+}
+
+/** A single document on its own (PDF / DOCX / scan image) — the one-at-a-time path. */
+export function isSingleDocumentFileName(name: string): boolean {
+  const lower = String(name || '').toLowerCase()
+  return (IMPORT_CANDIDATE_EXTENSIONS as readonly string[]).some((ext) => lower.endsWith(ext))
+}
+
+/**
+ * Gate for POST /jobs (and for the size re-check once the upload lands).
+ *
+ * Accepts either a `.zip` of documents (bounded by IMPORT_MAX_ARCHIVE_BYTES) or
+ * ONE document on its own (bounded by IMPORT_MAX_FILE_BYTES — the same bound a
+ * document inside a zip gets). Returns the operator-facing error, or null.
+ */
+export function validateImportUpload(fileName: string, bytes: number): string | null {
+  const name = String(fileName || '').trim()
+  if (!name) return 'fileName is required.'
+  const size = Number(bytes) || 0
+  if (isArchiveFileName(name)) {
+    if (size > IMPORT_MAX_ARCHIVE_BYTES) {
+      return `The archive is ${(size / 1024 / 1024).toFixed(0)} MB. The limit is ${Math.round(
+        IMPORT_MAX_ARCHIVE_BYTES / 1024 / 1024
+      )} MB — split it into smaller zips and run the import once per part.`
+    }
+    return null
+  }
+  if (isSingleDocumentFileName(name)) {
+    if (size > IMPORT_MAX_FILE_BYTES) {
+      return `This document is ${(size / 1024 / 1024).toFixed(1)} MB; the per-document limit is ${Math.round(
+        IMPORT_MAX_FILE_BYTES / 1024 / 1024
+      )} MB — split it or upload it inside a smaller batch.`
+    }
+    return null
+  }
+  return 'Upload question papers as .pdf, .docx or .png/.jpg (scans) — or a .zip of them.'
+}
+
+/**
+ * The one file row of a single-document job. The uploaded object IS the
+ * document's bytes — no unpack step exists — so the row points straight at the
+ * job's own storage path and the queue can parse it like any zip entry.
+ */
+export function singleDocumentRow(input: { name: string; bytes: number; storagePath: string }): ImportJobFile {
+  return {
+    index: 0,
+    name: input.name,
+    bytes: input.bytes,
+    storagePath: input.storagePath,
+    status: 'queued',
+  }
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type ImportJobStatus = 'awaiting-upload' | 'unpacking' | 'parsing' | 'complete' | 'failed'
@@ -89,6 +147,9 @@ export interface ImportJobFile {
   drafted?: number
   duplicates?: number
   error?: string
+  /** Word transcript that archives this document after parsing (see docxWriter). */
+  transcriptStoragePath?: string
+  transcriptBytes?: number
 }
 
 export interface ImportJobCounters {
@@ -572,6 +633,14 @@ export function buildImportDraftDocs(
   const branch = defaults.branch || defaults.program.toUpperCase()
   const language = detectQuestionLanguage(question.text, paper.language === 'kn' ? 'kn' : 'en')
   const questionText = question.text
+  // PYQ identity fields — the exact trio the college-side "PYQ Questions" tab
+  // filters on (`isPYQ == true`, `examYear`, `examName`). Imported papers ARE
+  // previous-year question papers, so every draft from this pipeline is a PYQ.
+  const examYear = String(defaults.examYear ?? paper.examYear ?? '').trim()
+  const examMonth = paper.examMonth.trim()
+  const examName = examMonth
+    ? `${examMonth} Examination`
+    : (paper.title.trim() || 'Previous Year Examination')
 
   const tags = [
     'pyq',
@@ -634,6 +703,11 @@ export function buildImportDraftDocs(
     subTopicName: '',
     bloomLevel: bloomLevelFor(question.type, defaults.difficulty),
     branch,
+    // PYQ identity — mirrors the `questions` collection's PYQ fields so the
+    // college-side PYQ tab (and any future bridge) can find these rows.
+    isPYQ: true,
+    examYear,
+    examName,
     // Import provenance (mirrors the seeder's seedSource/seedBatch extras) —
     // `fingerprintMetaDoc` reads `branch` and the wording, so provenance is free.
     importJobId: ctx.jobId,
@@ -687,6 +761,9 @@ export function buildImportDraftDocs(
     subTopic: '',
     branch,
     batch: '',
+    isPYQ: true,
+    examYear,
+    examName,
     explanationText: '',
     parts: question.parts,
     createdAt: ctx.now,
@@ -797,7 +874,10 @@ export function applyFileResult(
     drafted?: number
     duplicates?: number
     error?: string
+    /** Pass '' to clear the row: the source bytes were dropped after transcription. */
     storagePath?: string
+    transcriptStoragePath?: string
+    transcriptBytes?: number
   },
   now: string
 ): ImportJobDoc {
@@ -805,7 +885,7 @@ export function applyFileResult(
     f.index === fileIndex
       ? {
           ...f,
-          storagePath: result.storagePath || f.storagePath,
+          storagePath: result.storagePath ?? f.storagePath,
           status: result.status,
           method: result.method ?? f.method,
           pages: result.pages ?? f.pages,
@@ -814,6 +894,8 @@ export function applyFileResult(
           drafted: result.drafted ?? f.drafted,
           duplicates: result.duplicates ?? f.duplicates,
           error: result.error,
+          transcriptStoragePath: result.transcriptStoragePath ?? f.transcriptStoragePath,
+          transcriptBytes: result.transcriptBytes ?? f.transcriptBytes,
         }
       : f
   )

@@ -1044,11 +1044,11 @@ function ReceiptReadyModal({
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 text-left">
-          <div className="p-3 rounded-xl bg-vriddhi-dark/30">
+          <div className="p-3 rounded-xl bg-vriddhi-dark/30 min-w-0">
             <p className="text-[10px] uppercase tracking-wider text-vriddhi-muted">Receipt No</p>
-            <p className="text-sm font-mono text-slate-900 dark:text-white">{result.receiptNo}</p>
+            <p className="text-sm font-mono text-slate-900 dark:text-white truncate">{result.receiptNo}</p>
           </div>
-          <div className="p-3 rounded-xl bg-vriddhi-dark/30">
+          <div className="p-3 rounded-xl bg-vriddhi-dark/30 min-w-0">
             <p className="text-[10px] uppercase tracking-wider text-vriddhi-muted">Transaction ID</p>
             <p className="text-sm font-mono text-slate-900 dark:text-white truncate">{result.transactionId}</p>
           </div>

@@ -6,15 +6,20 @@ import { describe, it } from 'node:test'
 
 import {
   EMPTY_IMPORT_FORM,
+  IMPORT_MAX_ARCHIVE_BYTES,
+  IMPORT_MAX_FILE_BYTES,
   documentTotal,
   formatBytes,
   formToJobDefaults,
+  isArchiveFileName,
+  isDocumentFileName,
   jobPercent,
   jobSeverity,
   jobStateLabel,
   problemFiles,
   summariseJob,
   uploadedPercent,
+  validateImportFiles,
   validateImportForm,
   type ImportJobView,
 } from './importProgress'
@@ -162,5 +167,39 @@ describe('form validation', () => {
     const blank = formToJobDefaults(EMPTY_IMPORT_FORM)
     assert.equal(blank.semester, 0)
     assert.equal(blank.examYear, null)
+  })
+})
+
+describe('file validation', () => {
+  it('accepts a .zip or single documents, and names the one that is wrong', () => {
+    assert.deepEqual(validateImportFiles([{ name: 'papers.zip', size: 100 }]), [])
+    assert.deepEqual(validateImportFiles([{ name: 'AMC-106A OE-221.pdf', size: 29_000 }]), [])
+    assert.deepEqual(validateImportFiles([{ name: 'a.pdf', size: 1 }, { name: 'b.docx', size: 2 }]), [])
+
+    const mixed = validateImportFiles([{ name: 'good.pdf', size: 1 }, { name: 'notes.txt', size: 1 }])
+    assert.equal(mixed.length, 1)
+    assert.match(mixed[0], /notes\.txt/)
+  })
+
+  it('enforces each kind’s size bound and refuses an empty selection', () => {
+    const tooBig = validateImportFiles([{ name: 'paper.pdf', size: IMPORT_MAX_FILE_BYTES + 1 }])
+    assert.equal(tooBig.length, 1)
+    assert.match(tooBig[0], /per-document limit/)
+
+    const bigZip = validateImportFiles([{ name: 'papers.zip', size: IMPORT_MAX_ARCHIVE_BYTES + 1 }])
+    assert.equal(bigZip.length, 1)
+    assert.match(bigZip[0], /archive/)
+
+    const empty = validateImportFiles([])
+    assert.equal(empty.length, 1)
+    assert.match(empty[0], /Choose question paper files/)
+  })
+
+  it('classifies names the same way the server does', () => {
+    assert.equal(isArchiveFileName('PAPERS.ZIP'), true)
+    assert.equal(isDocumentFileName('scan.JPEG'), true)
+    assert.equal(isDocumentFileName('paper.docx'), true)
+    assert.equal(isDocumentFileName('notes.txt'), false)
+    assert.equal(isArchiveFileName('paper.pdf'), false)
   })
 })

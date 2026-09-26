@@ -456,7 +456,7 @@ function StatCard({
   subtext?: string;
 }) {
   return (
-    <div className="glass-card p-5">
+    <div className="glass-card p-5 min-w-0">
       <div className="flex items-center justify-between mb-3">
         <div className="p-2 bg-slate-700/50 rounded-lg">{icon}</div>
       </div>

@@ -13,6 +13,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { deflateRawSync } from 'node:zlib'
 import {
+  IMPORT_MAX_ARCHIVE_BYTES,
+  IMPORT_MAX_FILE_BYTES,
   IMPORT_MAX_QUESTIONS_PER_FILE,
   applyFileResult,
   applyUnpackResult,
@@ -30,14 +32,18 @@ import {
   detectQuestionLanguage,
   emptyCounters,
   extractJsonPayload,
+  isArchiveFileName,
   isBufferTooLargeForInline,
+  isSingleDocumentFileName,
   looksLikeLegacyFont,
   nextQueuedFile,
   normalizeDefaults,
   normalizeImportedQuestions,
   normalizeQuestionText,
+  singleDocumentRow,
   toUniversalDifficulty,
   toUniversalQuestionType,
+  validateImportUpload,
   type ImportDraftContext,
   type ImportJobDoc,
   type ImportJobFile,
@@ -484,6 +490,45 @@ test('job: unpack appends rows, switches to parsing, and caps the file list', ()
   const capped = applyUnpackResult(job, files, { maxFiles: 1, now: '2026-09-25T10:01:00.000Z' })
   assert.equal(capped.files.length, 1)
   assert.equal(capped.truncated, true)
+})
+
+test('job: upload gate accepts a .zip or one document, and rejects everything else', () => {
+  assert.equal(isArchiveFileName('PAPERS.ZIP'), true)
+  assert.equal(isSingleDocumentFileName('AMC-106A OE-221.pdf'), true)
+  assert.equal(isSingleDocumentFileName('paper.docx'), true)
+  assert.equal(isSingleDocumentFileName('scan.jpg'), true)
+  assert.equal(isSingleDocumentFileName('notes.txt'), false)
+
+  // Both kinds of upload are welcome at their own size bound.
+  assert.equal(validateImportUpload('papers.zip', 100), null)
+  assert.equal(validateImportUpload('AMC-106A OE-221.pdf', 100), null)
+  assert.equal(validateImportUpload('paper.DOCX', 100), null)
+
+  // …and each is rejected past its bound, with its own message.
+  const bigZip = validateImportUpload('papers.zip', IMPORT_MAX_ARCHIVE_BYTES + 1)
+  assert.ok(bigZip && /split it into smaller zips/i.test(bigZip))
+  const bigDoc = validateImportUpload('paper.pdf', IMPORT_MAX_FILE_BYTES + 1)
+  assert.ok(bigDoc && /per-document limit/i.test(bigDoc))
+
+  const wrongKind = validateImportUpload('notes.txt', 10)
+  assert.ok(wrongKind && /\.pdf/.test(wrongKind))
+  assert.ok(validateImportUpload('', 10))
+})
+
+test('job: a single document seeds its own row and goes straight to parsing', () => {
+  const job = baseJob()
+  assert.equal(job.status, 'awaiting-upload')
+  const row = singleDocumentRow({ name: 'AMC-106A OE-221.pdf', bytes: 29_000, storagePath: job.archive.storagePath })
+  assert.equal(row.index, 0)
+  assert.equal(row.status, 'queued')
+  // The uploaded object IS the document — no unpack copy is made.
+  assert.equal(row.storagePath, job.archive.storagePath)
+
+  const seeded = applyUnpackResult(job, [row], { now: '2026-09-25T10:01:00.000Z' })
+  assert.equal(seeded.status, 'parsing')
+  assert.equal(seeded.counters.files, 1)
+  assert.equal(seeded.counters.unpacked, 1)
+  assert.equal(nextQueuedFile(seeded)?.name, 'AMC-106A OE-221.pdf')
 })
 
 test('job: next queued file is the first pending one, and drains to null', () => {

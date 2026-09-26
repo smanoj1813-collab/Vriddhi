@@ -1046,12 +1046,12 @@ export default function FacultyPaperGenerator() {
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm">
-                <Eye className="w-4 h-4 text-teal-600" />
-                Paper Print &amp; PDF Preview
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm min-w-0">
+                <Eye className="w-4 h-4 text-teal-600 shrink-0" />
+                <span className="truncate">Paper Print &amp; PDF Preview</span>
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button onClick={handlePrint} className="px-3 py-1.5 text-xs font-bold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1">
                   <Printer className="w-3.5 h-3.5" /> Print
                 </button>

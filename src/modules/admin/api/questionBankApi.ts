@@ -25,6 +25,13 @@ import {
 } from '@/shared/constants/academicPrograms';
 import { Question, QuestionFilters, PaginatedResult, BulkImportResult } from '../../admin/types/questionBank';
 import { Paper } from '../../admin/types/questionBank';
+import {
+  isPlatformPyqMeta,
+  mapPlatformMetaToQuestion,
+  platformPyqExamName,
+  platformPyqExamYear,
+  type PlatformPyqMeta,
+} from '../utils/platformPyq';
 
 // ============================================================
 // UNIVERSAL QUESTION BANK TYPES
@@ -51,6 +58,47 @@ import {
 
 const QUESTIONS_COLLECTION = 'questions';
 const PAPERS_COLLECTION = 'papers';
+
+/**
+ * Platform-pool PYQ rows (questionBank_meta, written by the paper import
+ * pipeline / seeder) surfaced read-only inside the college PYQ tab.
+ * Uses a single-field `tags array-contains` query (no composite index);
+ * status and exam facets are filtered in memory so pending drafts stay out.
+ */
+async function loadPlatformPyqMetas(): Promise<PlatformPyqMeta[]> {
+  const snapshot = await getDocs(
+    query(collection(db, 'questionBank_meta'), where('tags', 'array-contains', 'pyq'), limit(200))
+  );
+  const metas = snapshot.docs.map((snap) => {
+    const data = snap.data() as Record<string, unknown>;
+    return { id: snap.id, ...(data as object) } as PlatformPyqMeta;
+  });
+  return metas.filter((meta) => isPlatformPyqMeta(meta));
+}
+
+async function fetchPlatformPyqQuestions(filters: QuestionFilters): Promise<Question[]> {
+  const approved = await loadPlatformPyqMetas();
+  const filtered = approved.filter((meta) => {
+    if (filters.examYear && platformPyqExamYear(meta) !== String(filters.examYear)) return false;
+    if (filters.examName && platformPyqExamName(meta) !== filters.examName) return false;
+    if (filters.subject && (meta.subjectName || meta.subjectId) !== filters.subject) return false;
+    return true;
+  });
+  const rows = filtered.slice(0, 50);
+  const texts = await Promise.all(
+    rows.map(async (meta) => {
+      try {
+        const snap = await getDoc(doc(db, 'questionBank_content', meta.id));
+        if (!snap.exists()) return '';
+        const data = snap.data() as Record<string, unknown>;
+        return String(data.questionText ?? data.text ?? '');
+      } catch {
+        return '';
+      }
+    })
+  );
+  return rows.map((meta, i) => mapPlatformMetaToQuestion(meta, texts[i] || undefined));
+}
 
 // Helper to strip undefined values — Firestore rejects undefined
 function cleanUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
@@ -234,8 +282,22 @@ export const getQuestions = async (
     questions.push(normalized as Question);
   });
 
+  // PYQ tab bridge: platform-pool questions (imported papers / seeded bank) are
+  // NOT in the college `questions` collection — merge them in read-only so the
+  // "PYQ Questions" tab shows every previous-year question. First page only.
+  let data = questions;
+  if (filters.isPYQ === true && !lastDoc) {
+    try {
+      const platformRows = await fetchPlatformPyqQuestions(filters);
+      const seen = new Set(questions.map((question) => question.id));
+      data = [...platformRows.filter((row) => !seen.has(row.id)), ...questions];
+    } catch (bridgeErr) {
+      console.warn('[getQuestions] Platform PYQ bridge failed (college rows still returned):', bridgeErr);
+    }
+  }
+
   return {
-    data: questions,
+    data,
     total: questions.length,
     page: 1,
     limit: pageSize,
@@ -692,6 +754,16 @@ export const getPYQExamYears = async (collegeId: string): Promise<string[]> => {
     if (data.examYear) years.add(data.examYear);
   });
 
+  // Include years from imported/seeded platform PYQs (best effort).
+  try {
+    (await loadPlatformPyqMetas()).forEach((meta) => {
+      const year = platformPyqExamYear(meta);
+      if (year) years.add(year);
+    });
+  } catch (bridgeErr) {
+    console.warn('[getPYQExamYears] Platform PYQ bridge failed:', bridgeErr);
+  }
+
   return Array.from(years).sort().reverse();
 };
 
@@ -713,6 +785,16 @@ export const getPYQExamNames = async (collegeId: string, examYear?: string): Pro
     const data = doc.data();
     if (data.examName) names.add(data.examName);
   });
+
+  // Include exam names from imported/seeded platform PYQs (best effort).
+  try {
+    (await loadPlatformPyqMetas()).forEach((meta) => {
+      if (examYear && platformPyqExamYear(meta) !== String(examYear)) return;
+      names.add(platformPyqExamName(meta));
+    });
+  } catch (bridgeErr) {
+    console.warn('[getPYQExamNames] Platform PYQ bridge failed:', bridgeErr);
+  }
 
   return Array.from(names).sort();
 };

@@ -204,7 +204,7 @@ const BulkCredentialReset: React.FC<BulkCredentialResetProps> = ({
               </div>
 
               <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                <div className="max-h-96 overflow-y-auto">
+                <div className="max-h-96 overflow-x-auto overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0">
                       <tr className="text-slate-600 dark:text-slate-400 text-xs">

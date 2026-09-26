@@ -434,8 +434,8 @@ export default function FacultyTopics() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{topic.title}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${config.bg} ${config.color} ${config.border}`}>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate min-w-0">{topic.title}</p>
+                    <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full border ${config.bg} ${config.color} ${config.border}`}>
                       {config.label}
                     </span>
                   </div>
@@ -783,8 +783,8 @@ function TopicFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up">
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white min-w-0 truncate">{title}</h3>
+          <button onClick={onClose} className="p-2 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
             <span className="text-slate-600 dark:text-slate-400">✕</span>
           </button>
         </div>

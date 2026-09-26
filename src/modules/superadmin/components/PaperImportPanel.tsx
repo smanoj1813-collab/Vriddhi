@@ -51,11 +51,13 @@ import {
   EMPTY_IMPORT_FORM,
   formatBytes,
   formToJobDefaults,
+  isArchiveFileName,
   jobPercent,
   jobSeverity,
   jobStateLabel,
   problemFiles,
   summariseJob,
+  validateImportFiles,
   validateImportForm,
   type ImportFormState,
 } from '../utils/importProgress'
@@ -95,7 +97,7 @@ export interface PaperImportPanelProps {
 export default function PaperImportPanel({ onImported }: PaperImportPanelProps) {
   const { user } = useAuth()
   const [form, setForm] = useState<ImportFormState>(EMPTY_IMPORT_FORM)
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [job, setJob] = useState<ImportJobView | null>(null)
   const [uploadPercent, setUploadPercent] = useState(0)
   const [busy, setBusy] = useState(false)
@@ -104,10 +106,20 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
   const [error, setError] = useState('')
   const [duplicates, setDuplicates] = useState<DuplicateReport | null>(null)
   const [rejected, setRejected] = useState(0)
+  /** Index of the file the queue is processing (display only). */
+  const [fileIndex, setFileIndex] = useState(0)
+  /** Per-file results accumulated across the queue. */
+  const [fileResults, setFileResults] = useState<Array<{ name: string; drafted: number; failed: number }>>([])
   const cancelled = useRef(false)
   // Mirror of `stopped` as a ref so the run loop sees the latest value without
   // needing a re-render mid-loop.
   const stoppedRef = useRef(false)
+  // Queue cursor: how many files have been uploaded and handed to a job. A ref
+  // so the loop and the Continue path always agree, even mid-run.
+  const startedRef = useRef(0)
+  // Synchronous mirror of `fileResults` so the run loop can seed its totals
+  // without closing over a stale render.
+  const fileResultsRef = useRef<Array<{ name: string; drafted: number; failed: number }>>([])
 
   const formErrors = useMemo(() => validateImportForm(form), [form])
 
@@ -122,27 +134,99 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
     stoppedRef.current = stopped
   }, [stopped])
 
-  /** One unit of work per call, looped until the job is done or the operator stops. */
+  /** One unit of work per call, looped until the job is done or the operator stops. Returns the last job view. */
   const driveJob = useCallback(
-    async (jobId: string) => {
+    async (jobId: string): Promise<ImportJobView | null> => {
+      let last: ImportJobView | null = null
       for (let guard = 0; guard < 5_000; guard += 1) {
-        if (cancelled.current || stoppedRef.current) return
+        if (cancelled.current || stoppedRef.current) return last
         const result = await runJob(jobId)
+        last = result.job
         setJob(result.job)
         if (result.done) {
-          setMessage(result.job.progressLabel)
           onImported?.(result.job)
-          return
+          return result.job
         }
       }
       setError('The import ran for a very long time and was paused. Press Continue to finish it.')
+      return last
     },
     [onImported]
   )
 
+  /**
+   * Drives the file queue from `nextIndex`, finishing `resumeJobId` first when
+   * the pause happened mid-job. Each selected file is its own import job — a
+   * lone PDF needs no zip; a zip simply carries more documents inside one job.
+   */
+  const runQueue = useCallback(
+    async (nextIndex: number, resumeJobId?: string | null) => {
+      setBusy(true)
+      setError('')
+      setStopped(false)
+      stoppedRef.current = false
+      try {
+        const totals = {
+          files: fileResultsRef.current.length,
+          drafted: fileResultsRef.current.reduce((n, f) => n + f.drafted, 0),
+          failed: fileResultsRef.current.reduce((n, f) => n + f.failed, 0),
+        }
+        let lastJob: ImportJobView | null = null
+        if (resumeJobId) {
+          const fresh = await getJob(resumeJobId)
+          setJob(fresh.job)
+          lastJob = fresh.job
+          if (fresh.job.status !== 'complete') {
+            lastJob = (await driveJob(resumeJobId)) ?? fresh.job
+          }
+        }
+        for (let i = nextIndex; i < files.length; i += 1) {
+          if (cancelled.current || stoppedRef.current) return
+          setFileIndex(i)
+          setUploadPercent(0)
+          setMessage(files.length > 1 ? `File ${i + 1} of ${files.length} — ${files[i].name}` : '')
+          const { jobId } = await startImportJob(files[i], formToJobDefaults(form), setUploadPercent)
+          startedRef.current = i + 1
+          if (cancelled.current || stoppedRef.current) return
+          setMessage(
+            isArchiveFileName(files[i].name)
+              ? 'Upload complete — unpacking the archive…'
+              : 'Upload complete — transcribing the document…'
+          )
+          const finalJob = await driveJob(jobId)
+          if (finalJob) {
+            lastJob = finalJob
+            totals.files += 1
+            totals.drafted += finalJob.counters.drafted
+            totals.failed += finalJob.counters.failed
+            const row = { name: files[i].name, drafted: finalJob.counters.drafted, failed: finalJob.counters.failed }
+            fileResultsRef.current = [...fileResultsRef.current, row]
+            setFileResults(fileResultsRef.current)
+          }
+          if (stoppedRef.current || cancelled.current) return
+        }
+        if (lastJob && !stoppedRef.current && !cancelled.current) {
+          setMessage(
+            files.length > 1
+              ? `Done: ${totals.drafted} question(s) drafted from ${totals.files} file(s)` +
+                  (totals.failed ? `, ${totals.failed} with problems` : '') +
+                  '.'
+              : lastJob.progressLabel
+          )
+        }
+      } catch (err: any) {
+        setError(err?.message || 'The import could not be started.')
+      } finally {
+        setBusy(false)
+      }
+    },
+    [files, form, driveJob]
+  )
+
   const handleStart = useCallback(async () => {
-    if (!file) {
-      setError('Choose the .zip archive of question papers first.')
+    const fileErrors = validateImportFiles(files)
+    if (fileErrors.length) {
+      setError(fileErrors.join(' '))
       return
     }
     const errors = validateImportForm(form)
@@ -150,45 +234,30 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
       setError(errors.join(' '))
       return
     }
-    setBusy(true)
-    setError('')
+    // A queue already in flight continues where it stopped instead of
+    // re-uploading everything from the top (picking a new selection resets it).
+    const queueInFlight =
+      startedRef.current > 0 && (startedRef.current < files.length || (job && job.status !== 'complete'))
+    if (queueInFlight) {
+      await runQueue(startedRef.current, job && job.status !== 'complete' ? job.id : null)
+      return
+    }
+    setJob(null)
     setMessage('')
+    setError('')
     setDuplicates(null)
     setRejected(0)
     setUploadPercent(0)
-    setStopped(false)
-    stoppedRef.current = false
-    try {
-      const { jobId } = await startImportJob(file, formToJobDefaults(form), setUploadPercent)
-      setMessage('Upload complete — unpacking the archive…')
-      await driveJob(jobId)
-    } catch (err: any) {
-      setError(err?.message || 'The import could not be started.')
-    } finally {
-      setBusy(false)
-    }
-  }, [file, form, driveJob])
+    setFileIndex(0)
+    fileResultsRef.current = []
+    setFileResults([])
+    startedRef.current = 0
+    await runQueue(0, null)
+  }, [files, form, job, runQueue])
 
   const handleResume = useCallback(async () => {
-    if (!job) return
-    setBusy(true)
-    setError('')
-    setStopped(false)
-    stoppedRef.current = false
-    try {
-      const fresh = await getJob(job.id)
-      setJob(fresh.job)
-      if (fresh.job.status === 'complete') {
-        setMessage(fresh.job.progressLabel)
-        return
-      }
-      await driveJob(job.id)
-    } catch (err: any) {
-      setError(err?.message || 'Could not resume the import.')
-    } finally {
-      setBusy(false)
-    }
-  }, [job, driveJob])
+    await runQueue(startedRef.current, job && job.status !== 'complete' ? job.id : null)
+  }, [runQueue, job])
 
   const handleRetryFailed = useCallback(async () => {
     if (!job) return
@@ -203,7 +272,11 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
     } finally {
       setBusy(false)
     }
-  }, [job, driveJob])
+    // Files still waiting in the queue keep going once the retries settle.
+    if (!cancelled.current && !stoppedRef.current && startedRef.current < files.length) {
+      await runQueue(startedRef.current, null)
+    }
+  }, [job, driveJob, files, runQueue])
 
   const handleDuplicateCheck = useCallback(async () => {
     if (!job) return
@@ -238,12 +311,12 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
   return (
     <Box data-testid="paper-import-panel">
       <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-        Import previous-year papers (ZIP)
+        Import previous-year papers (ZIP or PDF)
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        Drop a .zip of question papers — PDF or DOCX, English or Kannada, digital or scanned. Each document is
-        transcribed on the server and lands in the question bank as a <strong>pending draft</strong>: nothing is
-        published until the Review Queue approves it.
+        Drop question papers here — pick one or more PDF/DOCX files directly, or a .zip of them. English or Kannada,
+        digital or scanned. Each document is transcribed on the server and lands in the question bank as a{' '}
+        <strong>pending draft</strong>: nothing is published until the Review Queue approves it.
       </Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
@@ -345,27 +418,33 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: 'center', mb: 1.5 }}>
         <Button variant="outlined" component="label" startIcon={<UploadIcon />} disabled={busy}>
-          {file ? file.name : 'Choose .zip'}
+          {files.length === 0 ? 'Choose papers' : files.length === 1 ? files[0].name : `${files.length} files selected`}
           <input
             hidden
             id="import-archive"
             type="file"
-            accept=".zip,application/zip,.pdf,application/pdf"
+            multiple
+            accept=".zip,application/zip,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.doc,application/msword,.png,.jpg,.jpeg,image/png,image/jpeg"
             onChange={(e) => {
-              const picked = e.target.files?.[0] || null
-              setFile(picked)
+              setFiles(Array.from(e.target.files ?? []))
               setJob(null)
               setMessage('')
               setError('')
+              setFileIndex(0)
+              fileResultsRef.current = []
+              setFileResults([])
+              startedRef.current = 0
             }}
           />
         </Button>
-        {file && <Chip size="small" variant="outlined" label={formatBytes(file.size)} />}
+        {files.length > 0 && (
+          <Chip size="small" variant="outlined" label={formatBytes(files.reduce((n, f) => n + f.size, 0))} />
+        )}
         <Button
           variant="contained"
           startIcon={<UploadIcon />}
           onClick={handleStart}
-          disabled={busy || !file || formErrors.length > 0}
+          disabled={busy || files.length === 0 || formErrors.length > 0}
         >
           Start import
         </Button>
@@ -393,6 +472,9 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
         <Box sx={{ mb: 1.5 }} data-testid="paper-import-progress">
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5, flexWrap: 'wrap' }}>
             <Chip size="small" color={jobSeverity(job.status)} label={jobStateLabel(job.status)} />
+            {files.length > 1 && (
+              <Chip size="small" variant="outlined" label={`File ${fileIndex + 1} of ${files.length}`} />
+            )}
             <Typography variant="caption" color="text.secondary">
               {job.progressLabel}
             </Typography>
@@ -405,6 +487,16 @@ export default function PaperImportPanel({ onImported }: PaperImportPanelProps) 
               </Typography>
             ))}
           </Stack>
+
+          {files.length > 1 && fileResults.length > 0 && (
+            <Stack spacing={0.25} sx={{ mt: 0.75, maxHeight: 120, overflowY: 'auto' }}>
+              {fileResults.map((r) => (
+                <Typography key={r.name} variant="caption" color="text.secondary">
+                  ✓ {r.name} — {r.drafted} drafted{r.failed ? `, ${r.failed} failed` : ''}
+                </Typography>
+              ))}
+            </Stack>
+          )}
 
           <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
             {job.status !== 'complete' && (
