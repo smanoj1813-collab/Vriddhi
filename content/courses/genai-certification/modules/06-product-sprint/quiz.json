@@ -2,32 +2,867 @@
   "moduleId": "m6",
   "questions": {
     "m6-t1": [
-      { "id": "m6-t1-q1", "question": "Which is the best problem statement for a capstone?", "options": ["Farmers need an AI app", "Small vegetable growers near Yelahanka need yesterday's prices at three nearby markets before choosing where to sell, because prices differ 20–40% and they rely on one trader's call", "Everyone needs better information", "Students should use AI more"], "answerIndex": 1, "explanation": "Specific user, job, pain and current workaround — and you can find five such users this week." },
-      { "id": "m6-t1-q2", "question": "Which interview question yields the most reliable evidence?", "options": ["Would you use an app that does X?", "Do you like this idea?", "Tell me about the last time you did X — step by step, what did it cost you?", "How much would you pay for X?"], "answerIndex": 2, "explanation": "Past behaviour, time and money spent, and workarounds are evidence; hypotheticals produce polite yeses." },
-      { "id": "m6-t1-q3", "question": "Who is usually your real competitor?", "options": ["A Silicon Valley start-up", "The user's current workaround — the phone call, the WhatsApp group, the notebook", "Another student team", "Nobody"], "answerIndex": 1, "explanation": "You must explain why someone would switch from what they do today." },
-      { "id": "m6-t1-q4", "question": "What does 'Wizard of Oz' mean in an MVP?", "options": ["Using a fantasy theme", "Doing steps manually behind the scenes so users experience the value before it is automated", "Hiding the product from users", "A type of AI model"], "answerIndex": 1, "explanation": "You are testing whether users value the outcome, not whether you can automate it yet." },
-      { "id": "m6-t1-q5", "question": "A good MVP statement includes:", "options": ["Every feature you plan to build", "One user type, one job, one channel and a numeric success measure by a date", "The technology stack only", "A logo and a name"], "answerIndex": 1, "explanation": "The MVP exists to test the riskiest assumption with a number." }
+      {
+        "id": "m6-t1-q1",
+        "question": "Which is the best problem statement for a capstone?",
+        "options": [
+          "Farmers need an AI app",
+          "Small vegetable growers near Yelahanka need yesterday's prices at three nearby markets before choosing where to sell, because prices differ 20–40% and they rely on one trader's call",
+          "Everyone needs better information",
+          "Students should use AI more"
+        ],
+        "answerIndex": 1,
+        "explanation": "Specific user, job, pain and current workaround — and you can find five such users this week."
+      },
+      {
+        "id": "m6-t1-q2",
+        "question": "Which interview question yields the most reliable evidence?",
+        "options": [
+          "Would you use an app that does X?",
+          "Do you like this idea?",
+          "Tell me about the last time you did X — step by step, what did it cost you?",
+          "How much would you pay for X?"
+        ],
+        "answerIndex": 2,
+        "explanation": "Past behaviour, time and money spent, and workarounds are evidence; hypotheticals produce polite yeses."
+      },
+      {
+        "id": "m6-t1-q3",
+        "question": "Who is usually your real competitor?",
+        "options": [
+          "A Silicon Valley start-up",
+          "The user's current workaround — the phone call, the WhatsApp group, the notebook",
+          "Another student team",
+          "Nobody"
+        ],
+        "answerIndex": 1,
+        "explanation": "You must explain why someone would switch from what they do today."
+      },
+      {
+        "id": "m6-t1-q4",
+        "question": "What does 'Wizard of Oz' mean in an MVP?",
+        "options": [
+          "Using a fantasy theme",
+          "Doing steps manually behind the scenes so users experience the value before it is automated",
+          "Hiding the product from users",
+          "A type of AI model"
+        ],
+        "answerIndex": 1,
+        "explanation": "You are testing whether users value the outcome, not whether you can automate it yet."
+      },
+      {
+        "id": "m6-t1-q5",
+        "question": "A good MVP statement includes:",
+        "options": [
+          "Every feature you plan to build",
+          "One user type, one job, one channel and a numeric success measure by a date",
+          "The technology stack only",
+          "A logo and a name"
+        ],
+        "answerIndex": 1,
+        "explanation": "The MVP exists to test the riskiest assumption with a number."
+      },
+      {
+        "id": "m6-t1-q6",
+        "question": "A founder says “students need an AI app” but has no specific user or task. What should the team do first?",
+        "options": [
+          "Start with the most powerful model",
+          "Observe a specific user problem and write a narrow problem statement before choosing a solution",
+          "Build a generic chatbot",
+          "Estimate users from social media likes"
+        ],
+        "answerIndex": 1,
+        "explanation": "Start with a real user problem, not an assumed technology solution."
+      },
+      {
+        "id": "m6-t1-q7",
+        "question": "An interview asks “Would you use our app?” Why is this weak evidence?",
+        "options": [
+          "It is too short",
+          "It mentions a product",
+          "It invites polite speculation rather than describing observed past behaviour",
+          "It uses a question mark"
+        ],
+        "answerIndex": 2,
+        "explanation": "Recent concrete behaviour is stronger than hypothetical intent."
+      },
+      {
+        "id": "m6-t1-q8",
+        "question": "A user currently solves a task with phone calls and a notebook. What might that reveal?",
+        "options": [
+          "The market has no need",
+          "The user already has an AI app",
+          "The problem is solved permanently",
+          "The real competitor is the existing workaround"
+        ],
+        "answerIndex": 3,
+        "explanation": "A product must improve on the current workaround."
+      },
+      {
+        "id": "m6-t1-q9",
+        "question": "A team’s market scan uses only AI-generated competitor names. What is missing?",
+        "options": [
+          "Verification from real products, user interviews and current sources",
+          "More confident wording",
+          "A longer prompt",
+          "A logo for each competitor"
+        ],
+        "answerIndex": 0,
+        "explanation": "Generated competitor lists need independent validation."
+      },
+      {
+        "id": "m6-t1-q10",
+        "question": "A problem statement lists five user groups and four jobs. What would make it testable?",
+        "options": [
+          "Add more groups",
+          "Choose one user type, one job, one context and a measurable outcome",
+          "Remove the outcome",
+          "Use the phrase “everyone needs this”"
+        ],
+        "answerIndex": 1,
+        "explanation": "Narrow scope makes the hypothesis testable."
+      },
+      {
+        "id": "m6-t1-q11",
+        "question": "A team asks users what they disliked about a service. What follow-up gathers stronger evidence?",
+        "options": [
+          "Ask whether they like the team",
+          "Suggest the answer and request agreement",
+          "Ask for the last specific occasion, the steps taken, the cost and what happened next",
+          "Ask only if they would pay"
+        ],
+        "answerIndex": 2,
+        "explanation": "A detailed past episode reveals behaviour and pain."
+      },
+      {
+        "id": "m6-t1-q12",
+        "question": "A survey gets 80 responses from the team’s friends. What should the report say?",
+        "options": [
+          "The result proves market demand",
+          "Remove the sampling note",
+          "Expand the claim to all students",
+          "The sample is convenient and may not represent target users"
+        ],
+        "answerIndex": 3,
+        "explanation": "Sample selection limits generalisation."
+      },
+      {
+        "id": "m6-t1-q13",
+        "question": "A prototype tests a new registration workflow. What should success measure?",
+        "options": [
+          "A user completing the target task with a defined time or error threshold",
+          "The number of buttons",
+          "The team’s enthusiasm",
+          "The quality of the mockup shadows"
+        ],
+        "answerIndex": 0,
+        "explanation": "Measure user task completion, not design polish."
+      },
+      {
+        "id": "m6-t1-q14",
+        "question": "A founder wants to build all planned features before interviewing anyone. What is a better experiment?",
+        "options": [
+          "Add features until the idea feels complete",
+          "Test the riskiest assumption with a small prototype or manual service first",
+          "Ask an AI to simulate customers",
+          "Wait for a full semester"
+        ],
+        "answerIndex": 1,
+        "explanation": "Early experiments reduce uncertainty before expensive builds."
+      },
+      {
+        "id": "m6-t1-q15",
+        "question": "Interviews reveal that the problem occurs once per year, not each week. What should the team reconsider?",
+        "options": [
+          "The colour palette only",
+          "The model temperature",
+          "Frequency, value and whether the solution should target another recurring task",
+          "The font of the problem statement"
+        ],
+        "answerIndex": 2,
+        "explanation": "Problem frequency affects whether a recurring product provides enough value."
+      }
     ],
     "m6-t2": [
-      { "id": "m6-t2-q1", "question": "How many 'Must' stories should a one-week sprint have?", "options": ["As many as possible", "At most three", "Exactly ten", "None; just build"], "answerIndex": 1, "explanation": "Three Musts with definitions of done keep the sprint focused and demo-able." },
-      { "id": "m6-t2-q2", "question": "What is a 'definition of done'?", "options": ["The project deadline", "A concrete, checkable statement of what must be true for a story to be complete", "The team's motto", "A list of tools"], "answerIndex": 1, "explanation": "If you cannot write the done statement, the story is not clear enough to build." },
-      { "id": "m6-t2-q3", "question": "Before putting an AI prompt into an automation you should:", "options": ["Trust it", "Test it in a chat with about twenty realistic inputs, including malformed ones, until it passes 19/20", "Make it as long as possible", "Remove the examples"], "answerIndex": 1, "explanation": "Prompts are tested in chat first; validation in the flow adds a second layer." },
-      { "id": "m6-t2-q4", "question": "What should the daily build log contain?", "options": ["Only the final result", "Done items with names, decisions and reasons, blockers, evidence, tomorrow's plan and hours", "Motivational quotes", "Nothing until the last day"], "answerIndex": 1, "explanation": "The log is the team's proof of work and the source for the report and pitch." },
-      { "id": "m6-t2-q5", "question": "What does 'always be demo-able' mean?", "options": ["Rehearse the pitch daily", "At the end of each day the product runs end to end, even with some manual steps", "Never change the product", "Only demo on the last day"], "answerIndex": 1, "explanation": "Add features only in ways that keep the end-to-end flow working." }
+      {
+        "id": "m6-t2-q1",
+        "question": "How many 'Must' stories should a one-week sprint have?",
+        "options": [
+          "As many as possible",
+          "At most three",
+          "Exactly ten",
+          "None; just build"
+        ],
+        "answerIndex": 1,
+        "explanation": "Three Musts with definitions of done keep the sprint focused and demo-able."
+      },
+      {
+        "id": "m6-t2-q2",
+        "question": "What is a 'definition of done'?",
+        "options": [
+          "The project deadline",
+          "A concrete, checkable statement of what must be true for a story to be complete",
+          "The team's motto",
+          "A list of tools"
+        ],
+        "answerIndex": 1,
+        "explanation": "If you cannot write the done statement, the story is not clear enough to build."
+      },
+      {
+        "id": "m6-t2-q3",
+        "question": "Before putting an AI prompt into an automation you should:",
+        "options": [
+          "Trust it",
+          "Test it in a chat with about twenty realistic inputs, including malformed ones, until it passes 19/20",
+          "Make it as long as possible",
+          "Remove the examples"
+        ],
+        "answerIndex": 1,
+        "explanation": "Prompts are tested in chat first; validation in the flow adds a second layer."
+      },
+      {
+        "id": "m6-t2-q4",
+        "question": "What should the daily build log contain?",
+        "options": [
+          "Only the final result",
+          "Done items with names, decisions and reasons, blockers, evidence, tomorrow's plan and hours",
+          "Motivational quotes",
+          "Nothing until the last day"
+        ],
+        "answerIndex": 1,
+        "explanation": "The log is the team's proof of work and the source for the report and pitch."
+      },
+      {
+        "id": "m6-t2-q5",
+        "question": "What does 'always be demo-able' mean?",
+        "options": [
+          "Rehearse the pitch daily",
+          "At the end of each day the product runs end to end, even with some manual steps",
+          "Never change the product",
+          "Only demo on the last day"
+        ],
+        "answerIndex": 1,
+        "explanation": "Add features only in ways that keep the end-to-end flow working."
+      },
+      {
+        "id": "m6-t2-q6",
+        "question": "A one-week sprint backlog contains 14 must-have stories. What is the main risk?",
+        "options": [
+          "The app will use fewer tokens",
+          "Users cannot give feedback",
+          "Too much scope prevents a reliable end-to-end demo",
+          "The team has too many test cases"
+        ],
+        "answerIndex": 2,
+        "explanation": "A small sprint should focus on a few must-have outcomes."
+      },
+      {
+        "id": "m6-t2-q7",
+        "question": "A story says “AI works correctly.” Why is it not a good definition of done?",
+        "options": [
+          "It is too short",
+          "It uses the word AI",
+          "It mentions correctness",
+          "It is not observable or testable; define concrete behaviour and acceptance cases"
+        ],
+        "answerIndex": 3,
+        "explanation": "A definition of done must describe checkable conditions."
+      },
+      {
+        "id": "m6-t2-q8",
+        "question": "A prompt works on five clean examples but fails on empty and malformed inputs. What should the team do?",
+        "options": [
+          "Add realistic edge cases and fix the failure path before relying on the step",
+          "Launch because five examples passed",
+          "Remove input validation",
+          "Hide the empty-input result"
+        ],
+        "answerIndex": 0,
+        "explanation": "Representative testing includes malformed inputs."
+      },
+      {
+        "id": "m6-t2-q9",
+        "question": "An AI feature uses user data but no owner field. What should the builder clarify?",
+        "options": [
+          "The colour of the table header",
+          "Who can view, edit and maintain each record",
+          "The model’s nickname",
+          "Whether the prompt is poetic"
+        ],
+        "answerIndex": 1,
+        "explanation": "Data ownership and permissions shape safe app behaviour."
+      },
+      {
+        "id": "m6-t2-q10",
+        "question": "A daily build log lists “worked on app” for every day. What would improve it?",
+        "options": [
+          "Add more emojis",
+          "Remove hours and outcomes",
+          "Record completed tasks, decisions, blockers, evidence, next steps and time",
+          "Write only at demo day"
+        ],
+        "answerIndex": 2,
+        "explanation": "A useful log shows what changed and why."
+      },
+      {
+        "id": "m6-t2-q11",
+        "question": "At the end of day two, the app requires a manual step but completes the user task. Is it demo-able?",
+        "options": [
+          "No, every feature must be fully automated",
+          "Yes, if the team hides the manual step",
+          "Only if the model is proprietary",
+          "Yes, if the manual step is transparent and the flow works end to end"
+        ],
+        "answerIndex": 3,
+        "explanation": "Always demo-able means a working end-to-end path, even when some steps are manual."
+      },
+      {
+        "id": "m6-t2-q12",
+        "question": "The team changes the data schema after building screens. What should it do?",
+        "options": [
+          "Update screens, validation and tests together, then check existing records",
+          "Ignore the mismatch",
+          "Delete the data silently",
+          "Ask users to re-enter every record without notice"
+        ],
+        "answerIndex": 0,
+        "explanation": "Schema changes require coordinated updates and migration checks."
+      },
+      {
+        "id": "m6-t2-q13",
+        "question": "A sprint AI prompt produces a useful answer but frequently includes extra prose around JSON. What can help?",
+        "options": [
+          "Increase temperature",
+          "Use a strict schema, parse validation and a safe retry or review path",
+          "Ask for more creativity",
+          "Remove the parser"
+        ],
+        "answerIndex": 1,
+        "explanation": "Structured output needs constraints and validation."
+      },
+      {
+        "id": "m6-t2-q14",
+        "question": "A demo uses fabricated user statistics to look complete. What is the ethical alternative?",
+        "options": [
+          "Present the values as a pilot result",
+          "Remove the labels but keep the numbers",
+          "Label sample data clearly and show actual evidence separately",
+          "Say the model generated the metrics"
+        ],
+        "answerIndex": 2,
+        "explanation": "Demonstration data must not be represented as real user evidence."
+      },
+      {
+        "id": "m6-t2-q15",
+        "question": "A feature is almost finished but has no automated or manual test. What belongs in “done”?",
+        "options": [
+          "A polished description",
+          "A new feature request",
+          "An estimate of future accuracy",
+          "A reproducible test showing its acceptance criteria pass"
+        ],
+        "answerIndex": 3,
+        "explanation": "Completed work includes evidence that it meets the agreed criteria."
+      }
     ],
     "m6-t3": [
-      { "id": "m6-t3-q1", "question": "Which of these is an integration problem rather than an AI problem?", "options": ["The model invents a price", "Phone numbers saved without a country code so messages fail", "The prompt is too long", "The model's tone"], "answerIndex": 1, "explanation": "Formats, identity, timing, permissions and idempotence are the joins between tools." },
-      { "id": "m6-t3-q2", "question": "What does 'idempotent' mean for your flow?", "options": ["It runs faster", "Running it twice by accident does not send the user two messages", "It uses two AI models", "It has no triggers"], "answerIndex": 1, "explanation": "A 'sent' flag checked before sending prevents duplicates." },
-      { "id": "m6-t3-q3", "question": "How should the product behave when the AI step fails?", "options": ["Send nothing and say nothing", "Send nonsense", "Degrade gracefully — send the template or a 'delayed' message — and queue the item for review", "Crash"], "answerIndex": 2, "explanation": "Detect, degrade, instruct the user, never silently drop, notify a human." },
-      { "id": "m6-t3-q4", "question": "What must a pilot's privacy notice include?", "options": ["Legal jargon copied from a large company", "What is collected, why, who sees it, how long, how to leave or delete, and a contact — in plain language", "Only the team's names", "Nothing; pilots are exempt"], "answerIndex": 1, "explanation": "Plain, specific, in the users' language, with STOP/DELETE that actually work." },
-      { "id": "m6-t3-q5", "question": "How should you launch?", "options": ["To everyone at once", "Team phones → three friendly users → pilot group, with honest framing and a decision date", "Secretly", "Only after the product is perfect"], "answerIndex": 1, "explanation": "Launch small, monitor, and keep the kill switch handy." }
+      {
+        "id": "m6-t3-q1",
+        "question": "Which of these is an integration problem rather than an AI problem?",
+        "options": [
+          "The model invents a price",
+          "Phone numbers saved without a country code so messages fail",
+          "The prompt is too long",
+          "The model's tone"
+        ],
+        "answerIndex": 1,
+        "explanation": "Formats, identity, timing, permissions and idempotence are the joins between tools."
+      },
+      {
+        "id": "m6-t3-q2",
+        "question": "What does 'idempotent' mean for your flow?",
+        "options": [
+          "It runs faster",
+          "Running it twice by accident does not send the user two messages",
+          "It uses two AI models",
+          "It has no triggers"
+        ],
+        "answerIndex": 1,
+        "explanation": "A 'sent' flag checked before sending prevents duplicates."
+      },
+      {
+        "id": "m6-t3-q3",
+        "question": "How should the product behave when the AI step fails?",
+        "options": [
+          "Send nothing and say nothing",
+          "Send nonsense",
+          "Degrade gracefully — send the template or a 'delayed' message — and queue the item for review",
+          "Crash"
+        ],
+        "answerIndex": 2,
+        "explanation": "Detect, degrade, instruct the user, never silently drop, notify a human."
+      },
+      {
+        "id": "m6-t3-q4",
+        "question": "What must a pilot's privacy notice include?",
+        "options": [
+          "Legal jargon copied from a large company",
+          "What is collected, why, who sees it, how long, how to leave or delete, and a contact — in plain language",
+          "Only the team's names",
+          "Nothing; pilots are exempt"
+        ],
+        "answerIndex": 1,
+        "explanation": "Plain, specific, in the users' language, with STOP/DELETE that actually work."
+      },
+      {
+        "id": "m6-t3-q5",
+        "question": "How should you launch?",
+        "options": [
+          "To everyone at once",
+          "Team phones → three friendly users → pilot group, with honest framing and a decision date",
+          "Secretly",
+          "Only after the product is perfect"
+        ],
+        "answerIndex": 1,
+        "explanation": "Launch small, monitor, and keep the kill switch handy."
+      },
+      {
+        "id": "m6-t3-q6",
+        "question": "An automation sends the same confirmation twice after a retry. Which property would prevent this?",
+        "options": [
+          "Outpainting",
+          "Sycophancy",
+          "Few-shot prompting",
+          "Idempotency"
+        ],
+        "answerIndex": 3,
+        "explanation": "Idempotent actions safely tolerate retries."
+      },
+      {
+        "id": "m6-t3-q7",
+        "question": "An AI service fails during a pilot. What should the user experience?",
+        "options": [
+          "A clear delay or fallback with the task queued for human review",
+          "A fabricated success message",
+          "An empty screen that loses data",
+          "An automatic duplicate submission"
+        ],
+        "answerIndex": 0,
+        "explanation": "Graceful degradation preserves work and informs the user."
+      },
+      {
+        "id": "m6-t3-q8",
+        "question": "A privacy notice says “we value your privacy” but no specifics. What is missing?",
+        "options": [
+          "A more decorative logo",
+          "Collected data, purpose, access, retention, deletion choices and a contact",
+          "A list of model parameters",
+          "A guarantee that no risk exists"
+        ],
+        "answerIndex": 1,
+        "explanation": "A notice must explain actual data practices in understandable terms."
+      },
+      {
+        "id": "m6-t3-q9",
+        "question": "A pilot will use real students. What should be defined before recruitment?",
+        "options": [
+          "The number of social posts only",
+          "The final pitch title",
+          "Consent or notice, data minimisation, access, support route and stop conditions",
+          "A plan to keep every record forever"
+        ],
+        "answerIndex": 2,
+        "explanation": "A pilot needs participant protections and operational boundaries."
+      },
+      {
+        "id": "m6-t3-q10",
+        "question": "An integration maps a phone number without country code, so messages fail. Is this an AI failure?",
+        "options": [
+          "Yes; every integration problem is hallucination",
+          "Yes; the model must infer the country code",
+          "No; it should be ignored",
+          "No; it is a data integration or validation problem"
+        ],
+        "answerIndex": 3,
+        "explanation": "Many failures come from data contracts and integration, not model quality."
+      },
+      {
+        "id": "m6-t3-q11",
+        "question": "A launch checklist has a privacy review but no rollback plan. What is the gap?",
+        "options": [
+          "There is no defined way to pause or revert if harm or failure appears",
+          "The checklist is too long",
+          "The app has too few users",
+          "The model needs a different name"
+        ],
+        "answerIndex": 0,
+        "explanation": "Launch readiness includes a stop, rollback and incident process."
+      },
+      {
+        "id": "m6-t3-q12",
+        "question": "A new AI feature changes the output format used by an existing integration. What should the team do?",
+        "options": [
+          "Assume the integration adapts automatically",
+          "Test the contract end to end and deploy changes in a controlled sequence",
+          "Remove all previous data",
+          "Tell users to ignore errors"
+        ],
+        "answerIndex": 1,
+        "explanation": "Interfaces between systems must be validated after changes."
+      },
+      {
+        "id": "m6-t3-q13",
+        "question": "A pilot message may disclose a student’s fee balance to the wrong recipient. What control is essential?",
+        "options": [
+          "Send to every contact in the file",
+          "Use AI to choose a likely recipient",
+          "Verify recipient identity and data access before sending, with human approval for uncertain cases",
+          "Remove delivery logs"
+        ],
+        "answerIndex": 2,
+        "explanation": "Recipient and permission checks prevent sensitive disclosures."
+      },
+      {
+        "id": "m6-t3-q14",
+        "question": "A team tests only on its own phones. What is missing?",
+        "options": [
+          "More brand colours",
+          "A longer demo script",
+          "A second developer account only",
+          "Testing on representative devices, networks and user conditions"
+        ],
+        "answerIndex": 3,
+        "explanation": "Real-world launch needs device and connectivity coverage."
+      },
+      {
+        "id": "m6-t3-q15",
+        "question": "A launch uses a short pilot with three friendly users. What is the honest framing?",
+        "options": [
+          "A limited test whose findings may not generalise to all users",
+          "A proven college-wide success",
+          "A certified product outcome",
+          "An independent evaluation"
+        ],
+        "answerIndex": 0,
+        "explanation": "Pilot scope and evidence limits should be communicated accurately."
+      }
     ],
     "m6-t4": [
-      { "id": "m6-t4-q1", "question": "Which of these is a vanity metric?", "options": ["Users who changed a market decision", "Daily listeners", "Total sign-ups with almost no daily use", "AI accuracy on the review sample"], "answerIndex": 2, "explanation": "Lead with outcome and engagement; sign-ups alone say little." },
-      { "id": "m6-t4-q2", "question": "How should AI be used to synthesise feedback?", "options": ["Ask it to imagine what users probably think", "Strictly from the feedback log: group into themes with counts and verbatims, adding nothing not in the data", "Skip synthesis", "Let it decide the roadmap"], "answerIndex": 1, "explanation": "AI groups and counts; you combine with numbers and decide." },
-      { "id": "m6-t4-q3", "question": "When is 'stop' a successful capstone outcome?", "options": ["Never", "When evidence shows no real pain after novelty fades, and the team documents what it learned", "Only if the tools broke", "When the team runs out of time"], "answerIndex": 1, "explanation": "The rubric rewards evidence and learning, not survival of the idea." },
-      { "id": "m6-t4-q4", "question": "In the five-minute pitch, where does the technology belong?", "options": ["The first two minutes", "After the hook, problem and user — around slide four, in one picture", "Nowhere", "The last slide only"], "answerIndex": 1, "explanation": "Lead with the user and the number; show the architecture briefly; spend time on demo and evidence." },
-      { "id": "m6-t4-q5", "question": "Why include a graceful failure in the demo?", "options": ["To fill time", "It is the most credible evidence that the product is real and responsibly built", "Judges enjoy errors", "It is required by law"], "answerIndex": 1, "explanation": "Showing failure handled builds trust; hiding it invites the hardest questions." }
+      {
+        "id": "m6-t4-q1",
+        "question": "Which of these is a vanity metric?",
+        "options": [
+          "Users who changed a market decision",
+          "Daily listeners",
+          "Total sign-ups with almost no daily use",
+          "AI accuracy on the review sample"
+        ],
+        "answerIndex": 2,
+        "explanation": "Lead with outcome and engagement; sign-ups alone say little."
+      },
+      {
+        "id": "m6-t4-q2",
+        "question": "How should AI be used to synthesise feedback?",
+        "options": [
+          "Ask it to imagine what users probably think",
+          "Strictly from the feedback log: group into themes with counts and verbatims, adding nothing not in the data",
+          "Skip synthesis",
+          "Let it decide the roadmap"
+        ],
+        "answerIndex": 1,
+        "explanation": "AI groups and counts; you combine with numbers and decide."
+      },
+      {
+        "id": "m6-t4-q3",
+        "question": "When is 'stop' a successful capstone outcome?",
+        "options": [
+          "Never",
+          "When evidence shows no real pain after novelty fades, and the team documents what it learned",
+          "Only if the tools broke",
+          "When the team runs out of time"
+        ],
+        "answerIndex": 1,
+        "explanation": "The rubric rewards evidence and learning, not survival of the idea."
+      },
+      {
+        "id": "m6-t4-q4",
+        "question": "In the five-minute pitch, where does the technology belong?",
+        "options": [
+          "The first two minutes",
+          "After the hook, problem and user — around slide four, in one picture",
+          "Nowhere",
+          "The last slide only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Lead with the user and the number; show the architecture briefly; spend time on demo and evidence."
+      },
+      {
+        "id": "m6-t4-q5",
+        "question": "Why include a graceful failure in the demo?",
+        "options": [
+          "To fill time",
+          "It is the most credible evidence that the product is real and responsibly built",
+          "Judges enjoy errors",
+          "It is required by law"
+        ],
+        "answerIndex": 1,
+        "explanation": "Showing failure handled builds trust; hiding it invites the hardest questions."
+      },
+      {
+        "id": "m6-t4-q6",
+        "question": "Sign-ups rise after launch, but few users complete the main task. Which metric is more diagnostic?",
+        "options": [
+          "The percentage of target users who complete the task successfully",
+          "Total page views",
+          "Number of AI prompts",
+          "How many features are in the menu"
+        ],
+        "answerIndex": 0,
+        "explanation": "Measure user outcomes tied to the problem."
+      },
+      {
+        "id": "m6-t4-q7",
+        "question": "AI summarises feedback and invents a quote not in the log. What should the team require?",
+        "options": [
+          "Allow plausible quotes to improve the pitch",
+          "Use only logged responses, label counts and preserve verbatim evidence",
+          "Remove the raw feedback",
+          "Ask another model to approve the quote"
+        ],
+        "answerIndex": 1,
+        "explanation": "Feedback synthesis must not fabricate evidence."
+      },
+      {
+        "id": "m6-t4-q8",
+        "question": "A pilot shows users do not have the assumed pain after novelty fades. What can be a successful decision?",
+        "options": [
+          "Hide the low-use result",
+          "Build more features immediately",
+          "Stop or pivot and document the evidence and learning",
+          "Claim high demand based on sign-ups"
+        ],
+        "answerIndex": 2,
+        "explanation": "A reasoned stop prevents sunk-cost decisions and is a valid outcome."
+      },
+      {
+        "id": "m6-t4-q9",
+        "question": "A five-minute pitch spends three minutes describing model architecture before introducing the user. What should change?",
+        "options": [
+          "Add more architecture detail",
+          "Remove the outcome",
+          "Start with the team’s tool list",
+          "Lead with the user, problem and evidence; explain technology only as needed"
+        ],
+        "answerIndex": 3,
+        "explanation": "The audience should understand the human problem before implementation detail."
+      },
+      {
+        "id": "m6-t4-q10",
+        "question": "A growth plan predicts ten thousand users without evidence. How should it be revised?",
+        "options": [
+          "State assumptions, show a measured pilot baseline and propose a testable next step",
+          "Use a more precise invented number",
+          "Remove all assumptions",
+          "Ask AI to approve the forecast"
+        ],
+        "answerIndex": 0,
+        "explanation": "Forecasts should be transparent and grounded in evidence."
+      },
+      {
+        "id": "m6-t4-q11",
+        "question": "A user suggests a feature that conflicts with privacy safeguards. What should the team do?",
+        "options": [
+          "Implement it without review",
+          "Acknowledge the request, explain the trade-off and explore a safer way to meet the underlying need",
+          "Ignore the user",
+          "Remove the privacy safeguards"
+        ],
+        "answerIndex": 1,
+        "explanation": "Product decisions balance user value with safety and governance."
+      },
+      {
+        "id": "m6-t4-q12",
+        "question": "A pitch reports 90% satisfaction from 10 respondents. What context should accompany it?",
+        "options": [
+          "Only the percentage",
+          "A claim that the whole market agrees",
+          "Sample size, question wording, recruitment and limitations",
+          "The model’s confidence score"
+        ],
+        "answerIndex": 2,
+        "explanation": "Statistics need context to avoid overstating a small sample."
+      },
+      {
+        "id": "m6-t4-q13",
+        "question": "A team’s product is not ready for production but works as a prototype. How should it be presented?",
+        "options": [
+          "Call it production-ready",
+          "Hide manual steps",
+          "Claim institutional approval",
+          "Label it as a prototype and explain what is manual, tested and still unverified"
+        ],
+        "answerIndex": 3,
+        "explanation": "Honest scope protects users and reviewers."
+      },
+      {
+        "id": "m6-t4-q14",
+        "question": "A demo fails once during rehearsal. What should the team prepare?",
+        "options": [
+          "A truthful fallback or recorded walkthrough clearly labelled, while keeping the failure evidence",
+          "A fake live success",
+          "Delete the log",
+          "Blame the user"
+        ],
+        "answerIndex": 0,
+        "explanation": "Responsible demos handle failure without misrepresenting results."
+      },
+      {
+        "id": "m6-t4-q15",
+        "question": "Which evidence best supports the claim that an app reduced processing time?",
+        "options": [
+          "A team member’s memory",
+          "A defined before-and-after measurement with comparable cases and documented method",
+          "A model-generated estimate",
+          "A screenshot of the home page"
+        ],
+        "answerIndex": 1,
+        "explanation": "Performance claims need a reproducible comparison."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "AI Product Launch Readiness Gate",
+    "questions": [
+      {
+        "id": "m6-assessment-q1",
+        "question": "A capstone team has a polished prototype but no evidence that users need it. What should the team do before adding features?",
+        "options": [
+          "Build more screens to impress reviewers",
+          "Ask a language model to confirm market demand",
+          "Interview target users about a recent real instance of the problem and test the current workaround",
+          "Count team members who like the idea"
+        ],
+        "answerIndex": 2,
+        "explanation": "Recent behaviour and existing workarounds are stronger evidence than opinions or model-generated market claims.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q2",
+        "question": "A team tests an AI intake prompt on 20 realistic cases and it passes 16. What is the safest launch decision?",
+        "options": [
+          "Launch because most cases passed",
+          "Fix the failure modes and retest; keep a human checkpoint until the defined acceptance threshold is met",
+          "Hide the four failures from the demo",
+          "Increase temperature to make outputs more varied"
+        ],
+        "answerIndex": 1,
+        "explanation": "A missed threshold and known failures require remediation and human review before release.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q3",
+        "question": "A message automation sends a duplicate reminder when a job retries. Which design control addresses the cause?",
+        "options": [
+          "An idempotent operation keyed to the student and reminder period",
+          "A longer prompt",
+          "A larger language model",
+          "A more colourful success screen"
+        ],
+        "answerIndex": 0,
+        "explanation": "Idempotency makes retries safe and prevents duplicate external actions.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q4",
+        "question": "A team’s pilot metric is “number of accounts created,” but most users never return. What is a better measure?",
+        "options": [
+          "Total generated text",
+          "Number of screens built",
+          "How many models were tested",
+          "A behaviour linked to the user problem, such as successful task completion or repeat use after the novelty period"
+        ],
+        "answerIndex": 3,
+        "explanation": "Measure whether users achieve the intended outcome, not a vanity activity count.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q5",
+        "question": "A product needs two weeks to validate the concept, but the college requests a permanent rollout immediately. What is the best proposal?",
+        "options": [
+          "Agree to full rollout without measurement",
+          "Decline to test with users",
+          "Offer a limited pilot with a named owner, a numeric success threshold, risk controls and a decision date",
+          "Promise that AI will improve all outcomes"
+        ],
+        "answerIndex": 2,
+        "explanation": "A bounded pilot reduces commitment while defining evidence needed for a decision.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q6",
+        "question": "A student-support MVP will store student questions and phone numbers. What must its plain-language notice cover?",
+        "options": [
+          "Only the app title",
+          "What is collected, why, who can access it, retention/deletion, user choices and a contact",
+          "The model’s architecture only",
+          "A promise that data is completely risk-free"
+        ],
+        "answerIndex": 1,
+        "explanation": "Users need an honest explanation of collection, purpose, access, retention and choices.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q7",
+        "question": "The team’s AI provider is unavailable during a demo. What behaviour best proves production readiness?",
+        "options": [
+          "Show a safe fallback, mark the item for human review and explain the failure path",
+          "Pretend the generated answer was real",
+          "Remove the error logs",
+          "Restart until it works and hide the delay"
+        ],
+        "answerIndex": 0,
+        "explanation": "Responsible products handle failure transparently rather than masking it.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q8",
+        "question": "Feedback notes contain five complaints about the same delay. How should AI help synthesise them?",
+        "options": [
+          "Add a likely sixth complaint to improve the summary",
+          "Convert every complaint to a positive quote",
+          "Discard raw feedback after the summary",
+          "Group only the recorded evidence, report counts and verbatim examples, and label uncertainty"
+        ],
+        "answerIndex": 3,
+        "explanation": "Synthesis must stay grounded in the feedback log and preserve traceable evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q9",
+        "question": "A team cannot recruit enough users to test every automated step. What is a useful early MVP method?",
+        "options": [
+          "Claim the automated backend is complete",
+          "Publish fabricated usage statistics",
+          "Use a Wizard-of-Oz process transparently in the pilot, manually performing steps while testing user value",
+          "Wait until every feature is built"
+        ],
+        "answerIndex": 2,
+        "explanation": "Manual work behind the scenes can test value before automation, provided evidence is not misrepresented.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q10",
+        "question": "After a pilot, use is high during the first week and near zero later. What should the team conclude?",
+        "options": [
+          "The product is proven because sign-ups were high",
+          "Investigate whether it solves a recurring problem; adjust or stop based on sustained evidence, not novelty",
+          "Add more AI features immediately",
+          "Exclude inactive users from the report"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retention and repeated task success matter more than launch-day interest.",
+        "difficulty": "advanced"
+      }
     ]
   }
 }

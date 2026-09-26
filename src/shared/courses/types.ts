@@ -2,10 +2,11 @@
 //
 // Types for the bundled course packs under `content/courses/<id>/`.
 //
-// A course pack is a `course.json` manifest plus Markdown lessons and per-module
-// `quiz.json` banks. The manifest is the single source of truth for structure
-// (modules → topics), hours and the assessment scheme; the app never invents
-// ordering or weights of its own. See content/courses/README.md for the schema.
+// A course pack is a `course.json` manifest plus Markdown lessons, per-module
+// `quiz.json` banks and optional in-app `slides.json` decks. The manifest is the
+// single source of truth for structure (modules → topics), hours and the
+// assessment scheme; the app never invents ordering or weights. See
+// content/courses/README.md for the schema.
 
 export type CourseTopicType = 'lesson' | 'project'
 
@@ -31,6 +32,23 @@ export interface CourseModuleManifest {
   hours: number
   outcomes: string[]
   topics: CourseTopicManifest[]
+  /** Optional end-of-module gate. The bank lives in that module's quiz.json. */
+  assessment?: {
+    title: string
+    passMark: number
+    questionCount: number
+  }
+}
+
+export interface CourseCertificateEligibilityManifest {
+  /** Minimum average across the lesson quizzes. */
+  minimumQuizAverage: number
+  /** Required score for every module assessment (also unlocks the next module). */
+  moduleAssessmentPassMark: number
+  /** Every topic, including project briefs, must be read to its end. */
+  requireAllTopicsRead: boolean
+  /** Every lesson quiz must have at least one submitted attempt. */
+  requireAllLessonQuizzes: boolean
 }
 
 export interface CourseAssessmentComponent {
@@ -77,6 +95,9 @@ export interface CourseManifest {
     components: CourseAssessmentComponent[]
     grades: CourseGradeBand[]
   }
+  /** Quiz-bank size per lesson; defaults to five for existing course packs. */
+  lessonQuizQuestionCount?: number
+  certificateEligibility?: CourseCertificateEligibilityManifest
   toolkit?: CourseToolkitGroup[]
   modules: CourseModuleManifest[]
   finalAssessment?: { title: string; minutes: number; blueprint?: string }
@@ -89,11 +110,46 @@ export interface CourseQuizQuestion {
   options: string[]
   answerIndex: number
   explanation?: string
+  difficulty?: 'core' | 'advanced'
+}
+
+export interface CourseModuleAssessmentBank {
+  title: string
+  questions: CourseQuizQuestion[]
+}
+
+export type CourseSlideVisualKind = 'cards' | 'compare' | 'flow'
+
+export interface CourseSlideVisualItem {
+  title: string
+  detail: string
+}
+
+/** A small in-app teaching slide; it is not a downloadable file. */
+export interface CourseSlide {
+  id: string
+  title: string
+  summary: string
+  explanation: string
+  example?: string
+  takeaway: string
+  visual?: {
+    kind: CourseSlideVisualKind
+    items: CourseSlideVisualItem[]
+  }
+}
+
+/** Optional per-module slides, keyed by lesson topic id. */
+export interface CourseSlideBank {
+  moduleId: string
+  topics: Record<string, CourseSlide[]>
 }
 
 export interface CourseQuizBank {
   moduleId: string
   questions: Record<string, CourseQuizQuestion[]>
+  /** Scenario-based, higher-difficulty assessment taken after a module. */
+  moduleAssessment?: CourseModuleAssessmentBank
 }
 
 /** A topic resolved against its module, with the flat position in the course. */
@@ -105,13 +161,15 @@ export interface CourseTopicRef extends CourseTopicManifest {
   index: number
 }
 
-/** Fully loaded course: manifest + lesson bodies + quiz banks. */
+/** Fully loaded course: manifest, lesson bodies, quiz banks and optional slide decks. */
 export interface LoadedCourse {
   manifest: CourseManifest
   /** topicId → Markdown source. */
   lessons: Record<string, string>
   /** topicId → quiz questions (may be empty for project topics). */
   quizzes: Record<string, CourseQuizQuestion[]>
+  /** topicId → optional in-app slide walkthroughs. */
+  slides: Record<string, CourseSlide[]>
   /** Flattened, ordered topics. */
   sequence: CourseTopicRef[]
 }
@@ -128,11 +186,28 @@ export interface CourseQuizResult {
 }
 
 export interface CourseProgress {
-  /** topicId → ISO timestamp when marked complete. */
+  /** topicId → ISO timestamp when the learner reached the end of the content. */
+  read?: Record<string, string>
+  /** topicId → ISO timestamp when marked complete (kept for existing progress). */
   completed: Record<string, string>
-  /** topicId → best quiz result. */
+  /** topicId → best lesson-quiz result. */
   quiz: Record<string, CourseQuizResult>
+  /** moduleId → best end-of-module assessment result. */
+  moduleAssessments?: Record<string, CourseQuizResult>
   /** The topic the learner opened most recently. */
   lastTopicId?: string
+  startedAt?: string
   updatedAt?: string
+  completedAt?: string
+}
+
+/** Denormalised tenant-scoped document stored at colleges/{cid}/courseProgress. */
+export interface CourseProgressRecord extends CourseProgress {
+  uid: string
+  collegeId: string
+  courseId: string
+  courseVersion: string
+  percent: number
+  completedCount: number
+  quizAverage: number | null
 }

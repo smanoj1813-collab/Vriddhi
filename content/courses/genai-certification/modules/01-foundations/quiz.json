@@ -5,148 +5,863 @@
       {
         "id": "m1-t1-q1",
         "question": "According to the lesson, generative AI most often replaces which of the following?",
-        "options": ["Entire jobs", "Individual routine tasks within jobs", "Only technical jobs", "Only management roles"],
+        "options": [
+          "Entire jobs",
+          "Individual routine tasks within jobs",
+          "Only technical jobs",
+          "Only management roles"
+        ],
         "answerIndex": 1,
         "explanation": "A job is a bundle of tasks. AI takes over the routine, first-draft tasks far more often than it removes whole jobs."
       },
       {
         "id": "m1-t1-q2",
         "question": "Which set of four skills defines the 'AI-augmented graduate' in this course?",
-        "options": ["Code, design, market, sell", "Direct, verify, combine, judge", "Search, copy, paste, submit", "Read, write, speak, listen"],
+        "options": [
+          "Code, design, market, sell",
+          "Direct, verify, combine, judge",
+          "Search, copy, paste, submit",
+          "Read, write, speak, listen"
+        ],
         "answerIndex": 1,
         "explanation": "Directing tools precisely, verifying output, combining tools into workflows and judging what AI should not touch are the four skills the course is built around."
       },
       {
         "id": "m1-t1-q3",
         "question": "Which of these is given as a reason GenAI matters especially for non-technical graduates in India?",
-        "options": ["AI tools only work in English", "Small businesses cannot afford separate specialists and value a multi-skilled graduate", "Indian employers do not hire for judgement", "Paid AI plans are compulsory in Indian workplaces"],
+        "options": [
+          "AI tools only work in English",
+          "Small businesses cannot afford separate specialists and value a multi-skilled graduate",
+          "Indian employers do not hire for judgement",
+          "Paid AI plans are compulsory in Indian workplaces"
+        ],
         "answerIndex": 1,
         "explanation": "Small businesses are the largest employers; one graduate who can do competent design, analysis and content with AI is valuable. Language support and free tiers are the other two reasons."
       },
       {
         "id": "m1-t1-q4",
         "question": "A graduate who sits between a business and its AI tools — writing prompts, building assistants and checking outputs — is following which career play?",
-        "options": ["The multiplier", "The translator", "The builder", "The spectator"],
+        "options": [
+          "The multiplier",
+          "The translator",
+          "The builder",
+          "The spectator"
+        ],
         "answerIndex": 1,
         "explanation": "The translator role bridges business needs and AI tools; the multiplier does a conventional role faster; the builder creates something new."
       },
       {
         "id": "m1-t1-q5",
         "question": "Why does the lesson insist you keep studying your core degree subjects seriously?",
-        "options": ["Because AI cannot be used in exams", "Because AI amplifies what you know and you cannot verify output in a domain you do not understand", "Because employers ignore AI skills", "Because core subjects are easier than AI"],
+        "options": [
+          "Because AI cannot be used in exams",
+          "Because AI amplifies what you know and you cannot verify output in a domain you do not understand",
+          "Because employers ignore AI skills",
+          "Because core subjects are easier than AI"
+        ],
         "answerIndex": 1,
         "explanation": "You can only check an AI's journal entries or essay if you understand the subject. Domain knowledge is what makes AI use valuable."
+      },
+      {
+        "id": "m1-t1-q6",
+        "question": "A company automates invoice sorting, but accountants still handle exceptions and explain discrepancies. What changed most?",
+        "options": [
+          "Several routine tasks within roles changed; accountability and domain judgement remain",
+          "Every accounting job disappeared",
+          "The model became the legal owner of the accounts",
+          "Only the company’s job titles changed"
+        ],
+        "answerIndex": 0,
+        "explanation": "Automation often changes task bundles before it replaces whole occupations."
+      },
+      {
+        "id": "m1-t1-q7",
+        "question": "A graduate uses AI to create a first draft, checks every claim, combines it with spreadsheet analysis and decides what to recommend. Which skills are demonstrated?",
+        "options": [
+          "Memorise, prompt, copy and submit",
+          "Direct, verify, combine and judge",
+          "Automate, publish, outsource and forget",
+          "Search, format, translate and approve"
+        ],
+        "answerIndex": 1,
+        "explanation": "The course’s four skills describe an accountable AI-augmented workflow."
+      },
+      {
+        "id": "m1-t1-q8",
+        "question": "A small exporter cannot hire separate writers, analysts and designers. Which graduate profile may be especially valuable?",
+        "options": [
+          "A graduate who delegates every decision to one model",
+          "A specialist who refuses to learn new workflows",
+          "A multi-skilled graduate who can use tools across tasks and verify work",
+          "A candidate who lists the largest number of AI accounts"
+        ],
+        "answerIndex": 2,
+        "explanation": "Small organisations value adaptable graduates who combine skills and remain accountable."
+      },
+      {
+        "id": "m1-t1-q9",
+        "question": "A team needs someone to translate business goals into prompts, tests and review steps. Which career play fits?",
+        "options": [
+          "Model trainer who changes the foundation model weights",
+          "Unsupervised content copier",
+          "Compliance approver with no task knowledge",
+          "Translator between domain work and AI tools"
+        ],
+        "answerIndex": 3,
+        "explanation": "The translator connects a real domain need to the tools and quality checks."
+      },
+      {
+        "id": "m1-t1-q10",
+        "question": "Why is a student’s degree knowledge part of their AI advantage?",
+        "options": [
+          "It helps them identify when an output violates domain facts or context",
+          "It guarantees the model will follow instructions",
+          "It removes the need to cite sources",
+          "It lets them skip practice with tools"
+        ],
+        "answerIndex": 0,
+        "explanation": "Subject knowledge supports verification and judgement."
+      },
+      {
+        "id": "m1-t1-q11",
+        "question": "A manager says, “AI will remove the need for our whole support team next month.” What is a more careful analysis?",
+        "options": [
+          "Assume every task in a support job is identical",
+          "Map which tasks are automatable, which require human judgement, and what evidence is needed before changing roles",
+          "Replace the team based on a model’s forecast",
+          "Count only the time saved on one demonstration"
+        ],
+        "answerIndex": 1,
+        "explanation": "Task-level analysis is more credible than treating a job as one indivisible activity."
+      },
+      {
+        "id": "m1-t1-q12",
+        "question": "A student wants to show employers that AI improved their work. Which evidence is strongest?",
+        "options": [
+          "A screenshot of a chatbot greeting",
+          "A list of ten model names",
+          "A before-and-after example with the student’s checks, decisions and measurable result",
+          "A claim that the student is an AI expert"
+        ],
+        "answerIndex": 2,
+        "explanation": "A portfolio should demonstrate the work and the learner’s contribution."
+      },
+      {
+        "id": "m1-t1-q13",
+        "question": "A model drafts a marketing plan quickly but invents a customer preference. Who remains responsible for correcting it?",
+        "options": [
+          "The model, because it wrote the sentence",
+          "The customer, because preferences change",
+          "No one if the prompt was detailed",
+          "The human professional who approves and uses the plan"
+        ],
+        "answerIndex": 3,
+        "explanation": "The person using the output remains accountable for its consequences."
+      },
+      {
+        "id": "m1-t1-q14",
+        "question": "Which experiment best tests whether AI actually improves a graduate’s workflow?",
+        "options": [
+          "Compare time and quality on representative tasks, including verification and rework",
+          "Measure how quickly the first draft appears",
+          "Count how many prompts are written",
+          "Use only the easiest task and generalise"
+        ],
+        "answerIndex": 0,
+        "explanation": "A fair test includes the finished quality and the checking effort, not generation speed alone."
+      },
+      {
+        "id": "m1-t1-q15",
+        "question": "A student is unsure whether AI belongs in a task. Which first question is most useful?",
+        "options": [
+          "Which model is trending this week?",
+          "What part is repetitive, what part requires human judgement, and how could errors be checked?",
+          "Can the task be completed without opening a file?",
+          "How can all responsibility be removed?"
+        ],
+        "answerIndex": 1,
+        "explanation": "A task analysis identifies useful augmentation and appropriate checks."
       }
     ],
     "m1-t2": [
       {
         "id": "m1-t2-q1",
         "question": "Which ordering correctly shows the nested relationship from broadest to narrowest?",
-        "options": ["GenAI ⊃ Deep learning ⊃ Machine learning ⊃ AI", "AI ⊃ Machine learning ⊃ Deep learning ⊃ GenAI", "Machine learning ⊃ AI ⊃ GenAI ⊃ Deep learning", "Deep learning ⊃ AI ⊃ Machine learning ⊃ GenAI"],
+        "options": [
+          "GenAI ⊃ Deep learning ⊃ Machine learning ⊃ AI",
+          "AI ⊃ Machine learning ⊃ Deep learning ⊃ GenAI",
+          "Machine learning ⊃ AI ⊃ GenAI ⊃ Deep learning",
+          "Deep learning ⊃ AI ⊃ Machine learning ⊃ GenAI"
+        ],
         "answerIndex": 1,
         "explanation": "AI is the broadest field; machine learning learns from data; deep learning uses large neural networks; generative AI is deep learning that creates content."
       },
       {
         "id": "m1-t2-q2",
         "question": "What single skill has a large language model learned that explains how it produces text?",
-        "options": ["Looking up facts in a database", "Predicting the next token given the text so far", "Copying the most similar web page", "Following a grammar rulebook written by engineers"],
+        "options": [
+          "Looking up facts in a database",
+          "Predicting the next token given the text so far",
+          "Copying the most similar web page",
+          "Following a grammar rulebook written by engineers"
+        ],
         "answerIndex": 1,
         "explanation": "An LLM generates output one token at a time, each time choosing a likely continuation. This explains both its fluency and its errors."
       },
       {
         "id": "m1-t2-q3",
         "question": "A chatbot invents three research papers that do not exist. This is best described as:",
-        "options": ["A bug that only affects old models", "Hallucination — plausible but false output", "Evidence the model searched the wrong website", "Sycophancy"],
+        "options": [
+          "A bug that only affects old models",
+          "Hallucination — plausible but false output",
+          "Evidence the model searched the wrong website",
+          "Sycophancy"
+        ],
         "answerIndex": 1,
         "explanation": "Hallucination is confident fabrication that occurs when the plausible continuation differs from the true one — typical for rare, specific details like citations."
       },
       {
         "id": "m1-t2-q4",
         "question": "What does the 'context window' of a model refer to?",
-        "options": ["The years of data it was trained on", "The maximum amount of text it can consider at once", "The number of users it can serve", "The browser tab it runs in"],
+        "options": [
+          "The years of data it was trained on",
+          "The maximum amount of text it can consider at once",
+          "The number of users it can serve",
+          "The browser tab it runs in"
+        ],
         "answerIndex": 1,
         "explanation": "The context window limits how much prompt, conversation and attached text the model can use; content outside it is effectively forgotten."
       },
       {
         "id": "m1-t2-q5",
         "question": "Which of these is an example of discriminative (not generative) AI?",
-        "options": ["A tool that writes a leave application", "A spam filter deciding whether an email is junk", "An app that draws a poster from a description", "A voice generator reading a script"],
+        "options": [
+          "A tool that writes a leave application",
+          "A spam filter deciding whether an email is junk",
+          "An app that draws a poster from a description",
+          "A voice generator reading a script"
+        ],
         "answerIndex": 1,
         "explanation": "Discriminative AI classifies or predicts a narrow answer (spam or not). The other three create new content."
+      },
+      {
+        "id": "m1-t2-q6",
+        "question": "A language model gives the same fluent answer to two different prompts. What process best explains its text generation?",
+        "options": [
+          "It searches a verified encyclopedia for every sentence",
+          "It predicts likely next tokens from the context it receives",
+          "It reasons with guaranteed access to current facts",
+          "It retrieves a human-written answer for every prompt"
+        ],
+        "answerIndex": 1,
+        "explanation": "Next-token prediction explains fluency but does not guarantee factual retrieval."
+      },
+      {
+        "id": "m1-t2-q7",
+        "question": "Which statement correctly distinguishes a generative model from a spam classifier?",
+        "options": [
+          "A generative model only sorts records; a classifier writes essays",
+          "Both always create images",
+          "A generative model creates new content; a spam classifier assigns a category",
+          "A classifier is a language model with no output"
+        ],
+        "answerIndex": 2,
+        "explanation": "Generation produces content, while discriminative systems classify or predict labels."
+      },
+      {
+        "id": "m1-t2-q8",
+        "question": "A user pastes a 300-page policy into a chat, but the model ignores an early exception. Which limitation should be checked?",
+        "options": [
+          "The model has become a database administrator",
+          "The prompt is too short to contain words",
+          "The policy has been deleted from the internet",
+          "The input may exceed or crowd the model’s context window"
+        ],
+        "answerIndex": 3,
+        "explanation": "The context window limits how much input can be considered at once."
+      },
+      {
+        "id": "m1-t2-q9",
+        "question": "A model correctly completes a familiar quotation but gives a false current deadline. What should the user infer?",
+        "options": [
+          "Learned patterns can produce plausible text without verifying a current fact",
+          "The model has live access to every government calendar",
+          "A confident completion proves the deadline is correct",
+          "The context window controls legal commencement dates"
+        ],
+        "answerIndex": 0,
+        "explanation": "Pattern completion and factual verification are different capabilities."
+      },
+      {
+        "id": "m1-t2-q10",
+        "question": "A generated answer includes a realistic but nonexistent journal. What is the precise risk?",
+        "options": [
+          "A context window overflow",
+          "Hallucination: plausible language that is not supported by a real source",
+          "A discriminative classification",
+          "A model card disclosure"
+        ],
+        "answerIndex": 1,
+        "explanation": "Fluent, plausible output can contain fabricated sources."
+      },
+      {
+        "id": "m1-t2-q11",
+        "question": "A student changes the temperature setting and the answer becomes more varied. Does that establish truth?",
+        "options": [
+          "Yes; varied answers are always more accurate",
+          "Yes, if the answer is longer",
+          "No; generation variability does not verify the facts",
+          "No; temperature determines whether a source exists"
+        ],
+        "answerIndex": 2,
+        "explanation": "Sampling settings change style or variation, not evidence quality."
+      },
+      {
+        "id": "m1-t2-q12",
+        "question": "A chatbot explains a concept it learned during training but cannot identify the exact page it came from. What should the student do for a cited assignment?",
+        "options": [
+          "Cite the chatbot as the primary source for every claim",
+          "Invent a page number",
+          "Assume training data is a searchable bibliography",
+          "Find and verify an original source rather than cite the chatbot’s memory"
+        ],
+        "answerIndex": 3,
+        "explanation": "Model training is not equivalent to a traceable source citation."
+      },
+      {
+        "id": "m1-t2-q13",
+        "question": "Why can an answer be accurate for a common English question but poor for a Kannada query?",
+        "options": [
+          "Training coverage and evaluation quality differ across languages",
+          "The context window is always smaller in Kannada",
+          "Kannada questions cannot contain facts",
+          "Token prediction stops in Indian languages"
+        ],
+        "answerIndex": 0,
+        "explanation": "Language coverage varies; test the intended language rather than assuming parity."
+      },
+      {
+        "id": "m1-t2-q14",
+        "question": "A model is asked to summarise a file that was not attached. It produces a plausible summary anyway. What is the best response?",
+        "options": [
+          "Use it because summaries are generic",
+          "Stop and provide the correct source; do not treat the invented summary as evidence",
+          "Ask it to quote page numbers from the absent file",
+          "Assume the model accessed the user’s drive"
+        ],
+        "answerIndex": 1,
+        "explanation": "A model cannot verify content it did not receive; check the input and source."
+      },
+      {
+        "id": "m1-t2-q15",
+        "question": "Which claim about generative AI is safest?",
+        "options": [
+          "It understands every answer exactly as a human expert does",
+          "It is reliable whenever grammar is correct",
+          "It can produce useful drafts, but outputs need task-appropriate verification",
+          "It can replace all domain-specific review"
+        ],
+        "answerIndex": 2,
+        "explanation": "Capabilities and limitations must both shape how outputs are used."
       }
     ],
     "m1-t3": [
       {
         "id": "m1-t3-q1",
         "question": "What is the recommended starting point for almost any task in this course?",
-        "options": ["A specialist video tool", "A chat assistant, escalating to specialist tools only when needed", "A paid automation platform", "An open-weight model on a college server"],
+        "options": [
+          "A specialist video tool",
+          "A chat assistant, escalating to specialist tools only when needed",
+          "A paid automation platform",
+          "An open-weight model on a college server"
+        ],
         "answerIndex": 1,
         "explanation": "Chat assistants are the general-purpose workhorse; specialists are for polished video, automated workflows and apps with databases."
       },
       {
         "id": "m1-t3-q2",
         "question": "Why does the lesson recommend using at least two chat assistants during the course?",
-        "options": ["To use more free credits", "Because disagreement between tools is a cheap way to detect errors", "Because one assistant cannot handle Indian languages", "Because it is required for certification"],
+        "options": [
+          "To use more free credits",
+          "Because disagreement between tools is a cheap way to detect errors",
+          "Because one assistant cannot handle Indian languages",
+          "Because it is required for certification"
+        ],
         "answerIndex": 1,
         "explanation": "Comparing answers from two tools on the same prompt surfaces mistakes and hallucinations cheaply."
       },
       {
         "id": "m1-t3-q3",
         "question": "Which of the following is a typical free-tier limitation you should record in your toolkit sheet?",
-        "options": ["The tool's founding year", "Message caps, generation credits, watermarks and licence restrictions", "The number of employees at the vendor", "The colour scheme of the app"],
+        "options": [
+          "The tool's founding year",
+          "Message caps, generation credits, watermarks and licence restrictions",
+          "The number of employees at the vendor",
+          "The colour scheme of the app"
+        ],
         "answerIndex": 1,
         "explanation": "Free tiers cap messages and credits and may watermark output or restrict commercial use — all of which affect project planning."
       },
       {
         "id": "m1-t3-q4",
         "question": "Why might a hospital or bank prefer an open-weight model run locally?",
-        "options": ["Open models are always more accurate", "Sensitive data does not have to be sent to an external vendor", "They are required by Indian law", "They have no usage limits"],
+        "options": [
+          "Open models are always more accurate",
+          "Sensitive data does not have to be sent to an external vendor",
+          "They are required by Indian law",
+          "They have no usage limits"
+        ],
         "answerIndex": 1,
         "explanation": "Running a model on your own infrastructure keeps confidential data in-house, which is why regulated organisations increasingly prefer open models."
       },
       {
         "id": "m1-t3-q5",
         "question": "Which account-hygiene practice does the lesson recommend?",
-        "options": ["Use one shared password across AI tools for convenience", "Paste personal data only into tools with a free tier", "Turn on two-factor authentication and set the 'do not train on my data' option where available", "Always sign up with your college email for personal projects"],
+        "options": [
+          "Use one shared password across AI tools for convenience",
+          "Paste personal data only into tools with a free tier",
+          "Turn on two-factor authentication and set the 'do not train on my data' option where available",
+          "Always sign up with your college email for personal projects"
+        ],
         "answerIndex": 2,
         "explanation": "Treat AI accounts like bank logins: strong unique passwords, 2FA, privacy settings, and a deliberate choice between personal and college accounts."
+      },
+      {
+        "id": "m1-t3-q6",
+        "question": "A student starts an unfamiliar task. Which tool strategy minimises complexity?",
+        "options": [
+          "Open every available tool at once",
+          "Choose the tool with the most features",
+          "Try a general chat assistant first, then use a specialist tool if its capabilities or controls matter",
+          "Use image generation for all research"
+        ],
+        "answerIndex": 2,
+        "explanation": "Start with a simple general tool and escalate only when useful."
+      },
+      {
+        "id": "m1-t3-q7",
+        "question": "Two assistants disagree about a statistic. Why can that disagreement help?",
+        "options": [
+          "The majority answer must be correct",
+          "The less detailed answer is always accurate",
+          "The disagreement proves both tools are offline",
+          "It signals uncertainty and tells the learner where independent checking is important"
+        ],
+        "answerIndex": 3,
+        "explanation": "Disagreement can expose uncertainty but does not establish which answer is true."
+      },
+      {
+        "id": "m1-t3-q8",
+        "question": "A free design tool places a watermark on exported work. What should the student record?",
+        "options": [
+          "The free-tier restriction and whether the intended use permits the export",
+          "Only the tool’s logo colour",
+          "A promise that the watermark will disappear",
+          "Nothing, because free tools have no licence terms"
+        ],
+        "answerIndex": 0,
+        "explanation": "Credits, watermarks and licence restrictions affect whether an asset can be used."
+      },
+      {
+        "id": "m1-t3-q9",
+        "question": "A clinic needs to prototype with sensitive patient examples. Which choice deserves evaluation?",
+        "options": [
+          "A personal public chatbot account with identifiable records",
+          "A local or institution-approved environment with access, storage and retention controls",
+          "A shared computer without logout",
+          "Any app whose website says “AI-powered”"
+        ],
+        "answerIndex": 1,
+        "explanation": "Sensitive information requires an approved environment and appropriate safeguards."
+      },
+      {
+        "id": "m1-t3-q10",
+        "question": "A student uses a public assistant for coursework. Which account action improves basic hygiene?",
+        "options": [
+          "Reuse a password to simplify access",
+          "Share the account with the whole class",
+          "Enable two-factor authentication and review data-use settings where available",
+          "Turn off all security notices"
+        ],
+        "answerIndex": 2,
+        "explanation": "Strong authentication and data settings reduce avoidable account risk."
+      },
+      {
+        "id": "m1-t3-q11",
+        "question": "A team is selecting an AI tool for an assignment. Which comparison is most useful?",
+        "options": [
+          "Logo, launch date and influencer popularity",
+          "Number of buttons only",
+          "Whether the tool promises perfect accuracy",
+          "Task fit, data handling, output quality, accessibility, cost limits and licence"
+        ],
+        "answerIndex": 3,
+        "explanation": "Tool choice should reflect capabilities, risks and the intended use."
+      },
+      {
+        "id": "m1-t3-q12",
+        "question": "A free-tier model caps monthly image generations. What should the team do before promising a campaign volume?",
+        "options": [
+          "Test the quota and plan a fallback or alternative tool",
+          "Assume the limit will not apply to students",
+          "Buy a paid plan without checking requirements",
+          "Generate all images before reviewing the brief"
+        ],
+        "answerIndex": 0,
+        "explanation": "Quotas are operational constraints that should be tested and planned for."
+      },
+      {
+        "id": "m1-t3-q13",
+        "question": "A student wants to use an open-weight model. What should they check?",
+        "options": [
+          "Only whether source code is visible",
+          "Who operates the deployment, what data it logs, licence terms and maintenance responsibility",
+          "Whether it has a friendly interface",
+          "If the model has ever made a mistake"
+        ],
+        "answerIndex": 1,
+        "explanation": "Open weights do not answer questions about deployment security or licence."
+      },
+      {
+        "id": "m1-t3-q14",
+        "question": "A research assistant is unavailable during a lab. What is a reasonable fallback?",
+        "options": [
+          "Copy an unrelated answer from a previous learner",
+          "Remove the source-checking step",
+          "Use another approved tool or a manual workflow while preserving the same verification standard",
+          "Claim the assistant returned a result"
+        ],
+        "answerIndex": 2,
+        "explanation": "The workflow should degrade safely without lowering quality checks."
+      },
+      {
+        "id": "m1-t3-q15",
+        "question": "A student has many AI accounts and cannot remember where files were uploaded. What practice would help?",
+        "options": [
+          "Upload the same file everywhere",
+          "Store all passwords in a chat prompt",
+          "Use every tool with one shared public login",
+          "Maintain a toolkit sheet with purpose, data restrictions, limits and account owner"
+        ],
+        "answerIndex": 3,
+        "explanation": "A simple inventory supports responsible account and data management."
       }
     ],
     "m1-t4": [
       {
         "id": "m1-t4-q1",
         "question": "Which task belongs in the 'Avoid' zone of the Automate / Augment / Avoid framework?",
-        "options": ["Formatting lecture notes into bullet points", "Drafting a first version of a social-media caption", "Writing a reference letter that judges a specific person", "Outlining a presentation"],
+        "options": [
+          "Formatting lecture notes into bullet points",
+          "Drafting a first version of a social-media caption",
+          "Writing a reference letter that judges a specific person",
+          "Outlining a presentation"
+        ],
         "answerIndex": 2,
         "explanation": "Decisions and judgements about people, and work you must personally be accountable for, should not be delegated to AI."
       },
       {
         "id": "m1-t4-q2",
         "question": "A model praises your weak essay and softens its criticism. This failure mode is called:",
-        "options": ["Staleness", "Sycophancy", "Hallucination", "Leakage"],
+        "options": [
+          "Staleness",
+          "Sycophancy",
+          "Hallucination",
+          "Leakage"
+        ],
         "answerIndex": 1,
         "explanation": "Sycophancy is the tendency to agree with and please the user. Ask explicitly for strict, rubric-based criticism to counter it."
       },
       {
         "id": "m1-t4-q3",
         "question": "What is the best defence against hallucinated citations?",
-        "options": ["Asking the same chatbot 'are you sure?'", "Checking each source independently, or supplying the document and asking the tool to quote from it", "Using a longer prompt", "Asking for more citations"],
+        "options": [
+          "Asking the same chatbot 'are you sure?'",
+          "Checking each source independently, or supplying the document and asking the tool to quote from it",
+          "Using a longer prompt",
+          "Asking for more citations"
+        ],
         "answerIndex": 1,
         "explanation": "Verify against independent sources or give the model the actual document. The model's own confidence carries no information about truth."
       },
       {
         "id": "m1-t4-q4",
         "question": "Which is a compliant AI-use statement for a course submission?",
-        "options": ["'No AI was used' when a chatbot drafted the outline", "'I used Gemini to outline the report and Canva for the cover image; statistics were checked against the cited sources; the analysis is my own.'", "'AI helped' with no further detail", "Omitting the statement because the work was edited heavily"],
+        "options": [
+          "'No AI was used' when a chatbot drafted the outline",
+          "'I used Gemini to outline the report and Canva for the cover image; statistics were checked against the cited sources; the analysis is my own.'",
+          "'AI helped' with no further detail",
+          "Omitting the statement because the work was edited heavily"
+        ],
         "answerIndex": 1,
         "explanation": "A good statement names the tools, what they were used for, what was verified, and what is the author's own work."
       },
       {
         "id": "m1-t4-q5",
         "question": "Which three questions decide the zone of a task in the framework?",
-        "options": ["How long is it, how boring is it, how many people saw it", "How costly is a mistake, can I verify the output, who is accountable", "Is it in English, is it on a phone, is it free", "Does it need images, audio or video"],
+        "options": [
+          "How long is it, how boring is it, how many people saw it",
+          "How costly is a mistake, can I verify the output, who is accountable",
+          "Is it in English, is it on a phone, is it free",
+          "Does it need images, audio or video"
+        ],
         "answerIndex": 1,
         "explanation": "Cost of error, verifiability and accountability determine whether to automate, augment or avoid."
+      },
+      {
+        "id": "m1-t4-q6",
+        "question": "A manager asks AI to choose which named applicants to reject using a brief, biased note. Which framework outcome fits?",
+        "options": [
+          "Automate and hide the criteria",
+          "Augment the rejection with more confident language",
+          "Ask a second model to rank them",
+          "Avoid delegating the consequential judgement; use a fair accountable human process"
+        ],
+        "answerIndex": 3,
+        "explanation": "High-impact personal decisions belong in the Avoid zone."
+      },
+      {
+        "id": "m1-t4-q7",
+        "question": "An assistant praises every draft, including one with obvious errors. Which failure mode is present?",
+        "options": [
+          "Sycophancy",
+          "Outpainting",
+          "Retrieval",
+          "Idempotency"
+        ],
+        "answerIndex": 0,
+        "explanation": "Sycophancy is excessive agreement or praise that can suppress useful criticism."
+      },
+      {
+        "id": "m1-t4-q8",
+        "question": "A model produces three citations for a report. What is the minimum responsible check?",
+        "options": [
+          "Check only that the URLs look professional",
+          "Open each source and confirm it exists and supports the specific claim",
+          "Ask the same model whether they are real",
+          "Use the citation with the newest date"
+        ],
+        "answerIndex": 1,
+        "explanation": "Each source must be independently verified against the claim."
+      },
+      {
+        "id": "m1-t4-q9",
+        "question": "A student used AI to outline and edit a report but completed the analysis themselves. What should the disclosure include?",
+        "options": [
+          "A claim that no AI was used",
+          "Only the model’s marketing name",
+          "The tool and role it played, plus what the student verified and contributed",
+          "The full private conversation transcript regardless of policy"
+        ],
+        "answerIndex": 2,
+        "explanation": "A useful disclosure is truthful and distinguishes assistance from the learner’s work."
+      },
+      {
+        "id": "m1-t4-q10",
+        "question": "A task is low-risk but its output cannot be checked by the user. Which question should guide the decision?",
+        "options": [
+          "Can the model make it sound certain?",
+          "Can the team hide the source?",
+          "Is there a shorter prompt?",
+          "Can an accountable person verify it before it affects anyone?"
+        ],
+        "answerIndex": 3,
+        "explanation": "Verifiability and error cost are central to task triage."
+      },
+      {
+        "id": "m1-t4-q11",
+        "question": "A student wants to paste classmates’ unpublished projects into a public tool to get feedback. What is the safest choice?",
+        "options": [
+          "Get permission and remove identifying or sensitive content, or use an approved private method",
+          "Paste everything because feedback is educational",
+          "Change only the file name",
+          "Ask the tool not to remember it"
+        ],
+        "answerIndex": 0,
+        "explanation": "Respect consent and data minimisation before sharing other people’s work."
+      },
+      {
+        "id": "m1-t4-q12",
+        "question": "A generated recommendation could affect a person’s access to a service. What control is most important?",
+        "options": [
+          "A longer explanation written by the same model",
+          "Named human accountability, documented criteria and a meaningful appeal path",
+          "A higher confidence score",
+          "A hidden automated decision"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consequential decisions require human responsibility and recourse."
+      },
+      {
+        "id": "m1-t4-q13",
+        "question": "A prompt asks an assistant to summarise supplied notes but the answer adds a statistic absent from them. What should the learner do?",
+        "options": [
+          "Keep it because it sounds realistic",
+          "Add “AI says” after the statistic",
+          "Remove the unsupported claim or verify it from an independent source",
+          "Ask for a more persuasive explanation"
+        ],
+        "answerIndex": 2,
+        "explanation": "Unsupported additions must be excluded or evidenced."
+      },
+      {
+        "id": "m1-t4-q14",
+        "question": "An AI tool can draft a routine reminder with no sensitive details, and staff can review each message. Which zone is most plausible?",
+        "options": [
+          "Avoid every use of AI",
+          "Delegate all accountability to the model",
+          "Make an irreversible decision automatically",
+          "Augment or automate with a review step, depending on reversibility and scale"
+        ],
+        "answerIndex": 3,
+        "explanation": "Low-risk tasks can be augmented or automated when controls are proportionate."
+      },
+      {
+        "id": "m1-t4-q15",
+        "question": "A class policy bans undisclosed generated work, but the assignment permits language editing. What should the student do?",
+        "options": [
+          "Use only the permitted assistance and disclose it accurately",
+          "Assume every use is allowed because editing is small",
+          "Hide the tool to avoid confusion",
+          "Submit generated analysis as personal work"
+        ],
+        "answerIndex": 0,
+        "explanation": "Follow the specific policy and disclose the permitted use honestly."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Applied AI Foundations Gate",
+    "questions": [
+      {
+        "id": "m1-assessment-q1",
+        "question": "A student wants an assistant to analyse 200 customer complaints, but the file contains names and phone numbers. What is the safest first move?",
+        "options": [
+          "Paste it into a free chatbot because the task is only analysis",
+          "Remove or mask personal data, check the tool’s data terms, then analyse the minimum necessary fields",
+          "Ask the assistant to promise not to remember the file",
+          "Convert the file to PDF so personal data is protected"
+        ],
+        "answerIndex": 1,
+        "explanation": "Minimise personal data before sending anything to a tool; a format change or informal promise is not a privacy control.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q2",
+        "question": "Two chat assistants give confident but contradictory summaries of a new tax rule. What should the graduate do next?",
+        "options": [
+          "Check the current primary source and record which claim each source supports",
+          "Average the two answers and use the result",
+          "Choose the answer with more detail",
+          "Ask the more confident assistant to vote again"
+        ],
+        "answerIndex": 0,
+        "explanation": "Model disagreement is a warning signal, not a vote; verify current rules against an authoritative source.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q3",
+        "question": "A college office repeats the same low-risk, reversible data-cleaning task every day. The result can be checked against the source file. Which approach best fits the course framework?",
+        "options": [
+          "Avoid all AI because the task uses student records",
+          "Let AI decide the policy and delete exceptions",
+          "Use AI to replace the accountable staff member",
+          "Automate the repetitive steps and keep a human spot-check"
+        ],
+        "answerIndex": 3,
+        "explanation": "A repetitive, verifiable workflow can be automated with privacy controls and human checks.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q4",
+        "question": "A manager asks AI to rank named employees for termination using incomplete notes. What is the best response?",
+        "options": [
+          "Automate ranking and let the manager choose the top result",
+          "Use AI to draft a neutral explanation for the lowest-ranked person",
+          "Avoid AI for the consequential judgement; use accountable human review and a fair process",
+          "Ask three models to rank independently and average them"
+        ],
+        "answerIndex": 2,
+        "explanation": "High-impact judgements about individuals belong in the Avoid zone; model consensus does not make them fair.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q5",
+        "question": "A bank wants to test an open-weight model locally on confidential records. Which claim is accurate?",
+        "options": [
+          "Local hosting removes every security and governance risk",
+          "Local hosting can keep data within the bank’s environment, but access, retention and monitoring still need controls",
+          "Open-weight always means the vendor cannot see prompts",
+          "A local model never produces hallucinations"
+        ],
+        "answerIndex": 1,
+        "explanation": "Local deployment can reduce external data transfer, not eliminate operational or model risks.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q6",
+        "question": "A chatbot gives a plausible statistic with a footnote to a report. The report cannot be found. What should the learner do?",
+        "options": [
+          "Treat the claim as unverified and locate an independent source before using it",
+          "Keep the number but remove the footnote",
+          "Ask the same chatbot to confirm the citation",
+          "Use the number if it appears in two chatbot answers"
+        ],
+        "answerIndex": 0,
+        "explanation": "A model cannot independently validate its own generated citation; verify the original source.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q7",
+        "question": "A graduate knows accounting well and uses AI to draft reconciliations. Why does domain knowledge remain essential?",
+        "options": [
+          "It makes the model’s answer automatically correct",
+          "It removes the need to document AI use",
+          "It means the graduate should never use specialist tools",
+          "It helps the graduate detect accounting errors and decide what evidence is missing"
+        ],
+        "answerIndex": 3,
+        "explanation": "AI can accelerate work, but expertise is needed to validate outputs and remain accountable.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q8",
+        "question": "A long policy document exceeds the assistant’s context window. What is the most reliable workflow?",
+        "options": [
+          "Paste random pages until the model accepts the prompt",
+          "Ask it to remember the complete document from a previous chat",
+          "Split the document into labelled sections, analyse each with citations, then check the synthesis against the source",
+          "Remove the headings because they use tokens"
+        ],
+        "answerIndex": 2,
+        "explanation": "Chunking with labels and source checks preserves traceability when the full document cannot fit.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q9",
+        "question": "A team is choosing a tool for one task. When should it escalate from a general chat assistant to a specialist tool?",
+        "options": [
+          "For every task, regardless of setup cost",
+          "Only when the specialist capability, controls or output format materially improve the result",
+          "Whenever the specialist product has the newest name",
+          "Never; one tool should do everything"
+        ],
+        "answerIndex": 1,
+        "explanation": "Start simple, then escalate when a specialist tool provides a real capability or control advantage.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q10",
+        "question": "A student asks AI to write a reference letter judging a specific classmate, based on a few informal messages. What is the best action?",
+        "options": [
+          "Use AI only to correct spelling after the student writes a fair, evidence-based draft",
+          "Ask for a warmer tone and send it",
+          "Ask for a confidence score and include it",
+          "Use a second model to confirm the judgement"
+        ],
+        "answerIndex": 0,
+        "explanation": "The course framework avoids delegating consequential personal judgements; editing a human-authored, evidence-based draft is safer.",
+        "difficulty": "advanced"
       }
     ]
   }

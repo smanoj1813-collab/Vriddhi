@@ -2,24 +2,145 @@
 //
 // "Courses" — every bundled course pack with the learner's progress. Rendered
 // inside the student portal (/student/courses) and as the public preview
-// (/courses). Progress is per user on the device (courseProgress.ts).
+// (/courses). Signed-in student catalog cards hydrate their local cache from
+// Firestore; the public preview remains device-local.
 
 import { Link } from 'react-router-dom'
 import { Award, BookOpen, Clock, GraduationCap, Layers, PlayCircle } from 'lucide-react'
-import { listCourses } from '@/shared/courses/courseCatalog'
+import { listCourses, type CourseCatalogEntry } from '@/shared/courses/courseCatalog'
 import { coursePercent, formatMinutes, minutesSummary, resumeTopic } from '@/shared/courses/courseModel'
-import { progressStorageKey, readProgress } from '@/shared/courses/courseProgress'
+import { useCourseProgress } from '@/shared/courses/courseProgress'
+import type { CourseAssignment } from '@/shared/courses/courseCloud'
 import { Card, Chip, EmptyState, ProgressBar } from './courseUi'
 
 interface CourseCatalogPageProps {
   basePath: string
   uid?: string
+  collegeId?: string
   /** Public preview shows a discreet banner explaining what it is. */
   publicPreview?: boolean
+  /** When present, the student portal shows only college-assigned course ids. */
+  assignedCourseIds?: string[]
+  /** Assignment dates and student notes for the assigned-course cards. */
+  assignments?: Record<string, CourseAssignment>
 }
 
-export default function CourseCatalogPage({ basePath, uid, publicPreview }: CourseCatalogPageProps) {
-  const courses = listCourses()
+interface CourseCatalogCardProps {
+  entry: CourseCatalogEntry
+  basePath: string
+  uid?: string
+  collegeId?: string
+  assignedCourseIds?: string[]
+  assignments?: Record<string, CourseAssignment>
+}
+
+function localDateKey() {
+  const date = new Date()
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
+  return date.toISOString().slice(0, 10)
+}
+
+function CourseCatalogCard({ entry, basePath, uid, collegeId, assignedCourseIds, assignments }: CourseCatalogCardProps) {
+  const { manifest, sequence } = entry
+  const { progress } = useCourseProgress(uid, manifest.id, { collegeId, manifest })
+  const percent = coursePercent(manifest, progress)
+  const minutes = minutesSummary(manifest, progress)
+  const resume = resumeTopic(sequence, progress)
+  const assignment = assignments?.[manifest.id]
+  const startsInFuture = assignedCourseIds !== undefined && !!assignment?.startsOn && assignment.startsOn > localDateKey()
+  const topicCount = sequence.length
+  const lessonCount = sequence.filter((t) => t.type === 'lesson').length
+  const started = percent > 0 || !!progress.lastTopicId
+
+  return (
+    <Card className="flex flex-col gap-4">
+      <div className="flex items-start gap-4">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 text-white shadow-md">
+          <GraduationCap className="h-7 w-7" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip tone="teal">{manifest.code}</Chip>
+            <Chip>{manifest.level}</Chip>
+          </div>
+          <h2 className="mt-1.5 text-lg font-extrabold leading-tight text-slate-900 dark:text-white">{manifest.title}</h2>
+          <p className="mt-1 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{manifest.tagline}</p>
+        </div>
+      </div>
+
+      <dl className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
+          <dt className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><Layers className="h-3 w-3" /> Modules</dt>
+          <dd className="text-base font-extrabold text-slate-900 dark:text-white">{manifest.modules.length}</dd>
+        </div>
+        <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
+          <dt className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><BookOpen className="h-3 w-3" /> Lessons</dt>
+          <dd className="text-base font-extrabold text-slate-900 dark:text-white">{lessonCount}<span className="text-xs font-semibold text-slate-400"> +{topicCount - lessonCount} projects</span></dd>
+        </div>
+        <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
+          <dt className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><Clock className="h-3 w-3" /> Hours</dt>
+          <dd className="text-base font-extrabold text-slate-900 dark:text-white">{manifest.totalHours}</dd>
+        </div>
+      </dl>
+
+      <div>
+        <div className="mb-1 flex items-center justify-between text-xs">
+          <span className="font-semibold text-slate-700 dark:text-slate-200">Course progress</span>
+          <span className="font-bold text-teal-700 dark:text-teal-300">{percent}%</span>
+        </div>
+        <ProgressBar percent={percent} />
+        <p className="mt-1 text-[11px] text-slate-500">
+          {formatMinutes(minutes.done)} of {formatMinutes(minutes.total)} of content completed
+        </p>
+      </div>
+
+      {assignedCourseIds !== undefined && assignment ? (
+        <div className="rounded-xl border border-teal-100 bg-teal-50/60 px-3 py-2 text-xs text-teal-900 dark:border-teal-900/60 dark:bg-teal-950/20 dark:text-teal-100">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold">
+            {assignment.startsOn ? <span>{startsInFuture ? 'Opens' : 'Started'} {assignment.startsOn}</span> : null}
+            {assignment.dueOn ? <span>Due {assignment.dueOn}</span> : null}
+          </div>
+          {assignment.notes ? <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed">{assignment.notes}</p> : null}
+        </div>
+      ) : null}
+
+      <div className="mt-auto flex flex-wrap items-center gap-2">
+        {startsInFuture ? (
+          <span className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-sm font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">Available on {assignment?.startsOn}</span>
+        ) : (
+          <>
+            <Link
+              to={`${basePath}/${manifest.id}`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Syllabus & overview
+            </Link>
+            {resume ? (
+              <Link
+                to={`${basePath}/${manifest.id}/learn/${resume.id}`}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-700"
+              >
+                <PlayCircle className="h-4 w-4" />
+                {started ? `Continue · ${resume.number}` : 'Start course'}
+              </Link>
+            ) : null}
+          </>
+        )}
+        {manifest.certificateTitle ? (
+          <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+            <Award className="h-3.5 w-3.5 text-amber-500" /> {manifest.certificateTitle}
+          </span>
+        ) : null}
+      </div>
+    </Card>
+  )
+}
+
+export default function CourseCatalogPage({ basePath, uid, collegeId, publicPreview, assignedCourseIds, assignments }: CourseCatalogPageProps) {
+  const bundled = listCourses()
+  const courses = assignedCourseIds === undefined
+    ? bundled
+    : bundled.filter(({ manifest }) => assignedCourseIds.includes(manifest.id))
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-8">
@@ -37,84 +158,23 @@ export default function CourseCatalogPage({ basePath, uid, publicPreview }: Cour
       </header>
 
       {courses.length === 0 ? (
-        <EmptyState title="No courses yet" body="Course packs live in content/courses/ and are bundled at build time." />
+        <EmptyState
+          title={assignedCourseIds !== undefined ? 'No courses assigned to your college yet' : 'No courses yet'}
+          body={assignedCourseIds !== undefined ? 'Your college has not assigned a course to your programme. Check with your college administrator.' : 'Course packs live in content/courses/ and are bundled at build time.'}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {courses.map(({ manifest, sequence }) => {
-            const progress = readProgress(progressStorageKey(uid, manifest.id))
-            const percent = coursePercent(manifest, progress)
-            const minutes = minutesSummary(manifest, progress)
-            const resume = resumeTopic(sequence, progress)
-            const topicCount = sequence.length
-            const lessonCount = sequence.filter((t) => t.type === 'lesson').length
-            const started = percent > 0 || !!progress.lastTopicId
-            return (
-              <Card key={manifest.id} className="flex flex-col gap-4">
-                <div className="flex items-start gap-4">
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 text-white shadow-md">
-                    <GraduationCap className="h-7 w-7" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Chip tone="teal">{manifest.code}</Chip>
-                      <Chip>{manifest.level}</Chip>
-                    </div>
-                    <h2 className="mt-1.5 text-lg font-extrabold leading-tight text-slate-900 dark:text-white">{manifest.title}</h2>
-                    <p className="mt-1 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{manifest.tagline}</p>
-                  </div>
-                </div>
-
-                <dl className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
-                    <dt className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><Layers className="h-3 w-3" /> Modules</dt>
-                    <dd className="text-base font-extrabold text-slate-900 dark:text-white">{manifest.modules.length}</dd>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
-                    <dt className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><BookOpen className="h-3 w-3" /> Lessons</dt>
-                    <dd className="text-base font-extrabold text-slate-900 dark:text-white">{lessonCount}<span className="text-xs font-semibold text-slate-400"> +{topicCount - lessonCount} projects</span></dd>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60">
-                    <dt className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><Clock className="h-3 w-3" /> Hours</dt>
-                    <dd className="text-base font-extrabold text-slate-900 dark:text-white">{manifest.totalHours}</dd>
-                  </div>
-                </dl>
-
-                <div>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">Course progress</span>
-                    <span className="font-bold text-teal-700 dark:text-teal-300">{percent}%</span>
-                  </div>
-                  <ProgressBar percent={percent} />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    {formatMinutes(minutes.done)} of {formatMinutes(minutes.total)} of content completed
-                  </p>
-                </div>
-
-                <div className="mt-auto flex flex-wrap items-center gap-2">
-                  <Link
-                    to={`${basePath}/${manifest.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    Syllabus & overview
-                  </Link>
-                  {resume ? (
-                    <Link
-                      to={`${basePath}/${manifest.id}/learn/${resume.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-700"
-                    >
-                      <PlayCircle className="h-4 w-4" />
-                      {started ? `Continue · ${resume.number}` : 'Start course'}
-                    </Link>
-                  ) : null}
-                  {manifest.certificateTitle ? (
-                    <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                      <Award className="h-3.5 w-3.5 text-amber-500" /> {manifest.certificateTitle}
-                    </span>
-                  ) : null}
-                </div>
-              </Card>
-            )
-          })}
+          {courses.map((entry) => (
+            <CourseCatalogCard
+              key={entry.manifest.id}
+              entry={entry}
+              basePath={basePath}
+              uid={uid}
+              collegeId={collegeId}
+              assignedCourseIds={assignedCourseIds}
+              assignments={assignments}
+            />
+          ))}
         </div>
       )}
     </div>

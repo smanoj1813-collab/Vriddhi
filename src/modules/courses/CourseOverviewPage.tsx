@@ -16,26 +16,34 @@ import {
   Clock,
   FlaskConical,
   Layers,
+  Loader2,
+  LockKeyhole,
   PlayCircle,
   Target,
   Wrench,
 } from 'lucide-react'
 import { getCourse } from '@/shared/courses/courseCatalog'
-import { coursePercent, formatMinutes, moduleCounts, modulePercent, quizAverage, resumeTopic } from '@/shared/courses/courseModel'
+import { certificateEligibility, coursePercent, formatMinutes, hasReadTopic, isModuleUnlocked, isTopicUnlocked, moduleAssessmentPercent, moduleCounts, modulePercent, quizAverage, resumeTopic } from '@/shared/courses/courseModel'
 import { useCourseProgress } from '@/shared/courses/courseProgress'
+import { downloadCourseCertificate } from '@/shared/courses/courseCertificate'
+import CourseModuleAssessment from '@/shared/components/courses/CourseModuleAssessment'
 import type { CourseModuleManifest } from '@/shared/courses/types'
 import { Breadcrumb, Card, Chip, EmptyState, ProgressBar, SectionTitle } from './courseUi'
 
 interface CourseOverviewPageProps {
   basePath: string
   uid?: string
+  collegeId?: string
+  learnerName?: string
 }
 
-export default function CourseOverviewPage({ basePath, uid }: CourseOverviewPageProps) {
+export default function CourseOverviewPage({ basePath, uid, collegeId, learnerName }: CourseOverviewPageProps) {
   const { courseId = '' } = useParams()
   const course = getCourse(courseId)
-  const { progress } = useCourseProgress(uid, courseId)
+  const { progress, loading: progressLoading, submitModuleAssessment } = useCourseProgress(uid, courseId, { collegeId, manifest: course?.manifest })
   const [open, setOpen] = useState<Record<string, boolean>>({})
+  const [certificateBusy, setCertificateBusy] = useState(false)
+  const [certificateError, setCertificateError] = useState('')
 
   const resume = useMemo(() => (course ? resumeTopic(course.sequence, progress) : undefined), [course, progress])
 
@@ -55,10 +63,30 @@ export default function CourseOverviewPage({ basePath, uid }: CourseOverviewPage
   const percent = coursePercent(manifest, progress)
   const avg = quizAverage(progress)
   const totalTopics = course.sequence.length
-  const doneTopics = Object.keys(progress.completed).filter((id) => course.sequence.some((t) => t.id === id)).length
-  const firstIncompleteModule = manifest.modules.find((m) => modulePercent(m, progress) < 100)?.id
+  const doneTopics = course.sequence.filter((topic) => hasReadTopic(progress, topic.id)).length
+  const firstIncompleteModuleIndex = manifest.modules.findIndex((mod, index) => {
+    if (!isModuleUnlocked(manifest, progress, index)) return false
+    if (modulePercent(mod, progress) < 100) return true
+    const result = progress.moduleAssessments?.[mod.id]
+    const passMark = mod.assessment?.passMark ?? 60
+    return !!mod.assessment && (!result || result.total === 0 || (result.score / result.total) * 100 < passMark)
+  })
+  const certificate = certificateEligibility(manifest, progress)
 
-  const isOpen = (mod: CourseModuleManifest) => open[mod.id] ?? (mod.id === (firstIncompleteModule || manifest.modules[0].id))
+  const isOpen = (mod: CourseModuleManifest) => open[mod.id] ?? (manifest.modules.indexOf(mod) === (firstIncompleteModuleIndex >= 0 ? firstIncompleteModuleIndex : 0))
+
+  const handleDownloadCertificate = async () => {
+    if (!course || !uid || !certificate.eligible || progressLoading) return
+    setCertificateBusy(true)
+    setCertificateError('')
+    try {
+      await downloadCourseCertificate({ manifest, learnerName: learnerName || 'Learner', uid })
+    } catch (err) {
+      setCertificateError(err instanceof Error ? err.message : 'The certificate could not be generated.')
+    } finally {
+      setCertificateBusy(false)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-10">
@@ -136,9 +164,11 @@ export default function CourseOverviewPage({ basePath, uid }: CourseOverviewPage
       {/* Syllabus */}
       <section className="space-y-3">
         <SectionTitle kicker="Syllabus">{manifest.modules.length} modules · {totalTopics} lessons and projects</SectionTitle>
-        {manifest.modules.map((mod) => {
+        {manifest.modules.map((mod, moduleIndex) => {
           const counts = moduleCounts(mod, progress)
           const pct = modulePercent(mod, progress)
+          const moduleUnlocked = isModuleUnlocked(manifest, progress, moduleIndex)
+          const assessmentPct = moduleAssessmentPercent(progress, mod.id)
           const expanded = isOpen(mod)
           const modMinutes = mod.topics.reduce((n, t) => n + t.minutes, 0)
           return (
@@ -158,6 +188,8 @@ export default function CourseOverviewPage({ basePath, uid }: CourseOverviewPage
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-base font-extrabold text-slate-900 dark:text-white">Module {mod.number}: {mod.title}</span>
                     {mod.weeks ? <Chip>{mod.weeks}</Chip> : null}
+                    {!moduleUnlocked ? <Chip tone="amber"><LockKeyhole className="mr-1 h-3 w-3" /> Locked · pass previous assessment</Chip> : null}
+                    {mod.assessment && assessmentPct !== null ? <Chip tone={assessmentPct >= (mod.assessment.passMark ?? 60) ? 'emerald' : 'amber'}>Assessment {assessmentPct}%</Chip> : null}
                   </span>
                   <span className="mt-0.5 block text-sm text-slate-600 dark:text-slate-300">{mod.summary}</span>
                   <span className="mt-2 flex items-center gap-3">
@@ -182,39 +214,53 @@ export default function CourseOverviewPage({ basePath, uid }: CourseOverviewPage
                   ) : null}
                   <ol className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
                     {mod.topics.map((topic) => {
-                      const done = !!progress.completed[topic.id]
+                      const done = hasReadTopic(progress, topic.id)
                       const quiz = progress.quiz[topic.id]
                       const isProject = topic.type === 'project'
+                      const topicUnlocked = isTopicUnlocked(manifest, progress, topic.id)
+                      const row = (
+                        <div className={`-mx-2 flex items-start gap-3 rounded-lg px-2 py-2.5 ${topicUnlocked ? 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40' : 'opacity-60'}`}>
+                          {!topicUnlocked ? (
+                            <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
+                          ) : done ? (
+                            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                          ) : isProject ? (
+                            <FlaskConical className="mt-0.5 h-5 w-5 shrink-0 text-violet-500" />
+                          ) : (
+                            <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600" />
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className="flex flex-wrap items-center gap-x-2">
+                              <span className="text-xs font-bold text-slate-400">{topic.number}</span>
+                              <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{topic.title}</span>
+                              {isProject ? <Chip tone="violet">Project</Chip> : null}
+                              {!topicUnlocked ? <Chip tone="amber">Locked</Chip> : null}
+                            </span>
+                            {topic.summary ? <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{topic.summary}</span> : null}
+                            {!topicUnlocked ? <span className="mt-0.5 block text-[10px] text-slate-400">Read the previous topic and submit its quiz to unlock.</span> : null}
+                          </span>
+                          <span className="flex shrink-0 flex-col items-end gap-1 text-[11px] font-semibold text-slate-500">
+                            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {formatMinutes(topic.minutes)}</span>
+                            {quiz ? <span className="text-teal-700 dark:text-teal-300">Quiz {quiz.score}/{quiz.total}</span> : null}
+                          </span>
+                        </div>
+                      )
                       return (
                         <li key={topic.id}>
-                          <Link
-                            to={`${basePath}/${manifest.id}/learn/${topic.id}`}
-                            className="flex items-start gap-3 py-2.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 -mx-2 px-2 rounded-lg"
-                          >
-                            {done ? (
-                              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                            ) : isProject ? (
-                              <FlaskConical className="mt-0.5 h-5 w-5 shrink-0 text-violet-500" />
-                            ) : (
-                              <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600" />
-                            )}
-                            <span className="min-w-0 flex-1">
-                              <span className="flex flex-wrap items-center gap-x-2">
-                                <span className="text-xs font-bold text-slate-400">{topic.number}</span>
-                                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{topic.title}</span>
-                                {isProject ? <Chip tone="violet">Project</Chip> : null}
-                              </span>
-                              {topic.summary ? <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{topic.summary}</span> : null}
-                            </span>
-                            <span className="flex shrink-0 flex-col items-end gap-1 text-[11px] font-semibold text-slate-500">
-                              <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {formatMinutes(topic.minutes)}</span>
-                              {quiz ? <span className="text-teal-700 dark:text-teal-300">Quiz {quiz.score}/{quiz.total}</span> : null}
-                            </span>
-                          </Link>
+                          {topicUnlocked ? <Link to={`${basePath}/${manifest.id}/learn/${topic.id}`}>{row}</Link> : <div aria-disabled="true">{row}</div>}
                         </li>
                       )
                     })}
                   </ol>
+                  {mod.assessment ? (
+                    <CourseModuleAssessment
+                      module={mod}
+                      questions={course.moduleAssessments[mod.id] || []}
+                      progress={progress}
+                      moduleUnlocked={moduleUnlocked}
+                      onSubmit={(answers) => submitModuleAssessment(mod.id, course.moduleAssessments[mod.id] || [], answers)}
+                    />
+                  ) : null}
                 </div>
               ) : null}
             </Card>
@@ -270,6 +316,35 @@ export default function CourseOverviewPage({ basePath, uid }: CourseOverviewPage
           </ul>
         </Card>
       </div>
+
+      <Card>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <SectionTitle kicker="Certificate">Download eligibility</SectionTitle>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Complete every platform check below. Passing each module assessment with 60% or more also unlocks the next module.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleDownloadCertificate()}
+            disabled={!uid || !collegeId || !certificate.eligible || certificateBusy || progressLoading}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {certificateBusy || progressLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
+            {certificateBusy ? 'Preparing certificate…' : progressLoading ? 'Syncing progress…' : 'Download certificate'}
+          </button>
+        </div>
+        <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {certificate.checks.map((check) => (
+            <li key={check.id} className={`flex items-start gap-2 rounded-xl border px-3 py-2 ${check.passed ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/20' : 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40'}`}>
+              {check.passed ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />}
+              <span className="min-w-0"><span className="block text-xs font-semibold text-slate-800 dark:text-slate-100">{check.label}</span><span className="block text-[11px] text-slate-500">{check.detail}</span></span>
+            </li>
+          ))}
+        </ul>
+        {!uid || !collegeId ? <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">Sign in through an assigned college account to download the certificate.</p> : null}
+        {certificateError ? <p role="alert" className="mt-3 text-xs text-rose-700 dark:text-rose-300">{certificateError}</p> : null}
+        <p className="mt-3 text-[10px] leading-relaxed text-slate-400">This download verifies course-platform completion (all content, quizzes and module assessments). College credit, attendance, project grading and academic-integrity clearance may be governed by additional college rules.</p>
+      </Card>
 
       <p className="text-center text-[11px] text-slate-400">
         {manifest.title} · v{manifest.version}{manifest.lastReviewed ? ` · content reviewed ${manifest.lastReviewed}` : ''}

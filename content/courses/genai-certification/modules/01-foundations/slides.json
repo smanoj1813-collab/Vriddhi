@@ -1,0 +1,338 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-s1",
+        "title": "A job is a bundle of tasks",
+        "summary": "Generative AI often changes parts of a job before it changes the whole role.",
+        "explanation": "Think of a job as a set of different activities. Some are repetitive first drafts; others need context, judgement, conversation and responsibility. AI may help with one activity without replacing the entire job.",
+        "example": "Meghana's accounting team used AI to match invoices and draft mismatch emails. People still checked exceptions and spoke with clients.",
+        "takeaway": "Ask which task is changing—not only whether a job title is changing.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Routine task", "detail": "Repeatable work with a predictable first draft." },
+            { "title": "Human judgement", "detail": "Check exceptions, context and what matters to the client." },
+            { "title": "The job", "detail": "A combination of tasks; some may change while others remain human-led." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s2",
+        "title": "AI can draft; a person must verify",
+        "summary": "A polished answer is not automatically a correct answer.",
+        "explanation": "Generative AI can create a useful starting point quickly. A person still needs to check facts, fit the answer to the situation and take responsibility for the final decision.",
+        "example": "A B.Com student can ask for a first draft of a vendor email, then verify the invoice number, amount, tone and next step before sending it.",
+        "takeaway": "Treat generated work as a draft until you have checked it.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "AI helps with", "detail": "A first draft, a summary, a list of options or a repetitive transformation." },
+            { "title": "You remain responsible for", "detail": "Accuracy, domain context, fairness, privacy and the decision to use the output." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s3",
+        "title": "Build four habits: direct, verify, combine, judge",
+        "summary": "Being AI-capable is about how you work, not about being a programmer.",
+        "explanation": "Give the tool a clear brief, inspect its result, connect tools only when useful, and decide when AI should not be used. These habits transfer across courses, tools and jobs.",
+        "example": "For a campus event poster: describe the audience, verify every date, combine a draft with a design tool, then check accessibility and permissions before publishing.",
+        "takeaway": "The four habits are Direct · Verify · Combine · Judge.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Direct", "detail": "Explain the task and audience." },
+            { "title": "Verify", "detail": "Check claims and details." },
+            { "title": "Combine", "detail": "Use another tool only if it helps." },
+            { "title": "Judge", "detail": "Keep a human in charge." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s4",
+        "title": "Choose a career play that fits you",
+        "summary": "You can use AI to strengthen a role, help a team adopt it, or build something new.",
+        "explanation": "A multiplier uses AI to do a familiar job more effectively. A translator helps a team turn needs into workable AI processes. A builder creates and tests a product or service. These are paths to explore, not fixed job titles.",
+        "example": "A commerce student might speed up monthly reporting as a multiplier, help a small shop organise enquiries as a translator, or prototype a stock-tracking service as a builder.",
+        "takeaway": "Start with a real problem you understand; the tool comes second.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Multiplier", "detail": "Use AI to improve the work in your chosen field." },
+            { "title": "Translator", "detail": "Help people and processes use AI safely and well." },
+            { "title": "Builder", "detail": "Prototype and test a new product or service." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s5",
+        "title": "Map your own week",
+        "summary": "A small personal audit turns a big technology trend into a practical next step.",
+        "explanation": "List the tasks you did recently, then decide whether AI could automate part of the task, augment your work, or should be avoided. This is a planning exercise—not permission to upload private information.",
+        "example": "Making a first outline could be augmented; formatting a public event list could be automated; completing an exam or sharing a classmate's private details should be avoided.",
+        "takeaway": "Keep your subject knowledge strong: AI amplifies what you know.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "List", "detail": "Write down recent study or work tasks." },
+            { "title": "Classify", "detail": "Automate, augment or avoid." },
+            { "title": "Set a goal", "detail": "Choose one useful artefact to make by Week 10." }
+          ]
+        }
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-s1",
+        "title": "Four terms, one family",
+        "summary": "Generative AI is one part of the wider artificial-intelligence field.",
+        "explanation": "Artificial intelligence is the broad goal of making computer systems perform tasks associated with human intelligence. Machine learning is one way to do that by learning patterns from examples. Deep learning uses multi-layer neural networks. Generative AI uses learned patterns to create new content such as text, images or audio.",
+        "example": "A spam filter may classify an email. A generative assistant may draft a reply. Both can use AI, but they do different jobs.",
+        "takeaway": "GenAI is not a synonym for every kind of AI.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "AI", "detail": "The broad field." },
+            { "title": "Machine learning", "detail": "Learns patterns from examples." },
+            { "title": "Deep learning", "detail": "Uses layered neural networks." },
+            { "title": "Generative AI", "detail": "Creates new content from learned patterns." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s2",
+        "title": "Classify or create?",
+        "summary": "Some AI predicts a category; generative AI produces a new response.",
+        "explanation": "A classifier may estimate whether a transaction looks unusual. A generative tool may explain the pattern or draft a question about it. The generated explanation still needs evidence and human review.",
+        "example": "A photo app can label an image as a receipt. A generative assistant can turn receipt details into a draft expense note—but you check the amount and purpose.",
+        "takeaway": "Ask what output the task needs: a label, a prediction, or a new piece of content.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Classify / predict", "detail": "Choose a likely label or estimate from existing data." },
+            { "title": "Generate", "detail": "Create a new draft, image, summary, or other content." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s3",
+        "title": "How a chat assistant builds an answer",
+        "summary": "A language model generates likely next pieces of text using its prompt and learned patterns.",
+        "explanation": "The assistant uses the instructions and conversation context to produce a response a piece at a time. That process can create fluent explanations, but fluency is not the same as looking up a verified fact.",
+        "example": "If you ask for a summary of a document, provide the document and ask for source references. Then compare important claims against the original.",
+        "takeaway": "Give useful context, then verify the answer against reliable sources.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Your prompt", "detail": "Task, context and constraints." },
+            { "title": "Learned patterns", "detail": "The model estimates useful next text." },
+            { "title": "Generated response", "detail": "A fluent draft, not a guarantee." },
+            { "title": "Your check", "detail": "Compare key claims with evidence." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s4",
+        "title": "Plausible does not mean true",
+        "summary": "A confident tone cannot prove that a statement is accurate.",
+        "explanation": "Generative systems can make errors, omit context or invent a source. Treat facts that affect a decision as claims to check. If a tool cannot show where a claim came from, look it up in a credible source yourself.",
+        "example": "Before putting a statistic into a college presentation, find the original report, confirm its date and check that the number means what the slide says.",
+        "takeaway": "Verify consequential facts at their source—not by asking the same model again.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Fluent wording", "detail": "Can make an answer easy to read." },
+            { "title": "Missing context", "detail": "Can hide important limits or exceptions." },
+            { "title": "Source check", "detail": "Confirms whether the claim is supported." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s5",
+        "title": "A simple explanation to remember",
+        "summary": "GenAI learns patterns from examples and uses them to create a new response.",
+        "explanation": "This plain-language description is useful because it avoids treating the tool as a person. It can produce helpful work without understanding a situation exactly as a human does, so people still supply context, judgement and accountability.",
+        "example": "Ask a classmate to explain it in their own words: What does the system create, and what should a person still check?",
+        "takeaway": "Use the tool for a draft; use evidence and judgement for the answer you stand behind.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Learn patterns", "detail": "From training examples." },
+            { "title": "Create", "detail": "A new response for your prompt." },
+            { "title": "Review", "detail": "A person checks the result and its use." }
+          ]
+        }
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-s1",
+        "title": "A toolkit is a workflow, not one magic app",
+        "summary": "Choose a tool for the job, and keep a person checking the result.",
+        "explanation": "A useful workflow may involve research, drafting, design and review. You do not need to use every tool—or even AI at every step. Begin with the task and choose the smallest safe set of tools that helps.",
+        "example": "For a public information poster: confirm facts from an approved source, draft short text, make the layout, then review contrast, reading order and attribution.",
+        "takeaway": "A good process matters more than a long list of apps.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Research", "detail": "Find trustworthy material." },
+            { "title": "Draft", "detail": "Shape a first version." },
+            { "title": "Create", "detail": "Make the right format." },
+            { "title": "Review", "detail": "Check and approve." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s2",
+        "title": "Different tools support different steps",
+        "summary": "Think in tool categories so your skills transfer when products change.",
+        "explanation": "Chat assistants help with language and ideas. Research tools help locate and organise sources. Creative tools help make visual, audio or video drafts. Automation tools connect repeatable steps. Each category has limits and should be reviewed for the task.",
+        "example": "A student might use a research assistant to organise public sources, a chat assistant to outline a presentation and a design tool to arrange the slides.",
+        "takeaway": "Learn what a category can do; do not rely on one brand name.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Chat & writing", "detail": "Brainstorm, explain, draft and revise." },
+            { "title": "Research & study", "detail": "Find, organise and question sources." },
+            { "title": "Creative media", "detail": "Build visual, audio or video drafts." },
+            { "title": "Automation", "detail": "Connect repeatable steps with checks." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s3",
+        "title": "Choose by fit, privacy and access",
+        "summary": "The best tool is the one that safely fits the task and your situation.",
+        "explanation": "Check whether the tool can do the task, whether the data is allowed, whether you can access it, and whether the output can be verified. Free access can be enough for practice, but limits and terms still matter.",
+        "example": "Use public or synthetic data while learning. Do not paste student records, customer details or confidential college material into an unapproved service.",
+        "takeaway": "Check the data rules before you paste—not after you submit.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Fit", "detail": "Can it do the task well enough?" },
+            { "title": "Privacy", "detail": "May this data be shared here?" },
+            { "title": "Access", "detail": "Can you use it reliably?" },
+            { "title": "Evidence", "detail": "Can you check the output?" }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s4",
+        "title": "Free does not mean unlimited",
+        "summary": "A free tier can be useful while still having limits, changing terms or restricted features.",
+        "explanation": "Before building a routine around a tool, check the current institutional guidance, what data it stores, and whether you have a safe alternative. The course teaches transferable methods rather than promising a particular plan or price.",
+        "example": "If a presentation tool is unavailable on a shared lab computer, keep your outline and source notes in an approved format so you can finish the work another way.",
+        "takeaway": "Have a backup workflow that does not depend on one product.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Useful for learning", "detail": "Try small tasks with public or synthetic information." },
+            { "title": "Check before relying on it", "detail": "Usage limits, data terms, access needs and institutional approval." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s5",
+        "title": "Build a small starter toolkit",
+        "summary": "Start with one approved option for each task you actually need to do.",
+        "explanation": "A simple toolkit is easier to learn and review. Choose a tool for conversation, a way to find evidence and a way to make your final artefact. Add more only when a real need appears.",
+        "example": "For a research poster, write down the approved source, the drafting tool, the design method and who will review the final facts.",
+        "takeaway": "Keep a note of what each tool is for and what you must check.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Pick", "detail": "One approved tool for a real task." },
+            { "title": "Practise", "detail": "Use non-sensitive sample material." },
+            { "title": "Review", "detail": "Check output, terms and accessibility." }
+          ]
+        }
+      }
+    ],
+    "m1-t4": [
+      {
+        "id": "m1-t4-s1",
+        "title": "Use AI for a first pass, not final ownership",
+        "summary": "AI can support work; people remain accountable for what is shared or decided.",
+        "explanation": "The right level of oversight depends on the consequences. A low-risk brainstorm may need a quick review. A legal, financial, health or student-affecting decision needs stronger checks and an accountable human decision-maker.",
+        "example": "A draft event caption is easy to revise. A decision that affects someone's scholarship should not be made from an unchecked model response.",
+        "takeaway": "Match the amount of checking to the possible harm.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Helpful role", "detail": "Generate options, clarify language or organise a draft." },
+            { "title": "Human role", "detail": "Check the evidence, context and impact; approve the final action." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s2",
+        "title": "Four checks before you use the output",
+        "summary": "Purpose, privacy, fairness and rights belong in the workflow—not as an afterthought.",
+        "explanation": "Before entering data or publishing an output, ask whether the task is appropriate, whether the information is safe to share, whether the result treats people fairly, and whether you have permission to use the material.",
+        "example": "For a hiring summary, remove unnecessary personal details, use consistent criteria, check the source records and keep the final judgement with the authorised human reviewer.",
+        "takeaway": "If you cannot answer a safety question, pause and ask the course facilitator or approved data owner.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Purpose", "detail": "Is AI appropriate for this task?" },
+            { "title": "Privacy", "detail": "Is this information approved for sharing?" },
+            { "title": "Fairness", "detail": "Could the result disadvantage someone?" },
+            { "title": "Rights", "detail": "May you use the source material this way?" }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s3",
+        "title": "Check claims against evidence",
+        "summary": "For important facts, follow the claim back to a trustworthy source.",
+        "explanation": "Ask the tool to separate facts from suggestions and point to sources. Open those sources yourself, check their date and context, then correct or remove unsupported statements before sharing.",
+        "example": "If an assistant gives a statistic for a classroom slide, find the report that first published it and confirm the number, date and population.",
+        "takeaway": "A citation is a trail to check, not proof by itself.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Claim", "detail": "What exactly is being stated?" },
+            { "title": "Source", "detail": "Where is the original evidence?" },
+            { "title": "Context", "detail": "Does it support this meaning?" },
+            { "title": "Revise", "detail": "Keep, correct or remove the claim." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s4",
+        "title": "Use a simple green–amber–red pause",
+        "summary": "When risk rises, increase human review—or do not use the tool.",
+        "explanation": "This is a quick classroom decision aid, not a legal classification. Follow your institution's policy and ask for guidance when a task involves sensitive data or meaningful consequences for a person.",
+        "example": "Green: brainstorm names for a fictional club. Amber: summarise a public policy for a presentation, then verify it. Red: upload private student records to an unapproved tool.",
+        "takeaway": "When uncertain, do not paste sensitive information; ask first.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Green · low risk", "detail": "Practise with fictional or public information." },
+            { "title": "Amber · review", "detail": "Verify carefully and get the right person to approve." },
+            { "title": "Red · stop", "detail": "Do not share private data or automate harmful decisions." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s5",
+        "title": "A responsible workflow keeps a human in charge",
+        "summary": "Good use combines a clear task, safe information, review and accountability.",
+        "explanation": "Responsible use is a practical habit. Write down the purpose, use only permitted information, check the result and make sure a named person can correct or stop the process.",
+        "example": "For a class FAQ draft: use approved course notes, review every answer with the instructor, flag unanswered questions and publish only after approval.",
+        "takeaway": "The tool may generate; a person decides what is ready to use.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Define", "detail": "Set the task and limits." },
+            { "title": "Protect", "detail": "Use only permitted data." },
+            { "title": "Check", "detail": "Review evidence and impact." },
+            { "title": "Approve", "detail": "A person owns the final use." }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -15,7 +15,8 @@ content/courses/<course-id>/
 ├── course.json                 # manifest: metadata, modules → topics, assessment scheme, toolkit
 ├── modules/<module-slug>/
 │   ├── <n.n>-<lesson-slug>.md  # one lesson per topic
-│   └── quiz.json               # 5 MCQs per lesson topic in that module
+│   ├── quiz.json               # lesson MCQs + optional advanced module assessment
+│   └── slides.json             # optional in-app visual walkthroughs, keyed by topic id
 ├── projects/*.md               # project-block and capstone briefs with rubrics
 ├── assessments/
 │   ├── final-assessment-blueprint.md
@@ -27,12 +28,20 @@ content/courses/<course-id>/
 ### `course.json` essentials
 
 - `id` (folder name), `code`, `title`, `totalHours`, `credits`, `durationWeeks`, `outcomes[]`, `prerequisites[]`.
-- `modules[]`: `{ id: "m1", slug, title, hours, summary, topics[] }`.
+- `modules[]`: `{ id: "m1", slug, title, hours, summary, topics[], assessment? }`. An assessment declares `title`, `passMark` and `questionCount`; its advanced bank lives beside the lesson quizzes.
 - `topics[]`: `{ id: "m1-t1" | "m2-pb1" | "m6-cap", number: "1.1" | "PB1" | "CAP", title, type: "lesson" | "project", minutes, lesson: "<path relative to the pack>", summary }`.
 - `assessment`: `{ passMark, conditions[], components[{ id, name, weight, description }], grades[] }` — component weights must sum to 100.
+- `lessonQuizQuestionCount` optionally sets the exact lesson-bank size (defaults to **5** for existing packs). VGC-101 sets this to **15**.
 - `finalAssessment.blueprint` and `documents.*` point to Markdown files in the pack.
 
 The schema is defined in `src/shared/courses/types.ts`; `validateManifest()` in `src/shared/courses/courseModel.ts` reports structural problems (the app logs them in development).
+
+### College visibility and progress
+
+- `/courses` is the public preview and stores progress only in the current browser. `/student/courses` is the college-scoped learner experience and lists only courses assigned to that student's college and, when configured, programme.
+- Assignments live in `colleges/{collegeId}/config/courses`. Missing assignments are hidden by default. Superadmins can configure any college; college admins, principals and HODs can configure their own college through the Course assignments panel. The panel supports programme targeting, start/due dates, student notes, audit metadata, progress summaries and copyable student URLs.
+- Student progress syncs to `colleges/{collegeId}/courseProgress/{uid}__{courseId}` and remains cached in localStorage for offline use. Firestore rules provide the tenant boundary; course delivery does not require a Functions deployment.
+- Deploy and test Firestore rules before enabling assignments in production. Keep the public preview URL separate from the assigned student URL.
 
 ### Quiz banks
 
@@ -49,7 +58,7 @@ The schema is defined in `src/shared/courses/types.ts`; `validateManifest()` in 
 }
 ```
 
-Five items per lesson topic; project topics have no quiz (the app shows a rubric notice instead).
+The number of items per lesson topic must equal `course.json.lessonQuizQuestionCount` (five when omitted); project topics have no lesson quiz. If the module declares an assessment, `moduleAssessment` contains exactly its advanced scenario questions, with IDs `<moduleId>-assessment-q<N>`. Learners unlock it after reading every topic and submitting every lesson quiz; reaching its pass mark unlocks the next module.
 
 ### Lesson Markdown conventions
 
@@ -61,12 +70,16 @@ Renderer notes: GFM tables and task lists are supported; fenced blocks with no l
 
 Style: ~1,200–1,500 words per lesson; version-agnostic tool names (product families, never model versions or prices); Indian and Karnataka examples; bilingual prompts welcome; every lab produces an artefact; every project brief includes an AI-use statement template.
 
+### In-app slide walkthroughs
+
+A module may include `slides.json` beside its quiz bank. The bank is keyed by lesson topic id and contains short, plain-language slides with a visual grouping (`cards`, `compare` or `flow`), explanation, everyday example and takeaway. Slides render inside the lesson player; they are a companion to the Markdown lesson, do not count as reading completion, and have no file-download option. Start with a small module pilot and add decks only when content has been reviewed for accuracy and accessibility.
+
 ## Adding or changing a pack
 
 1. Create the folder and `course.json`; add lessons and quiz banks following the conventions above.
 2. The app discovers packs automatically via `import.meta.glob` in `src/shared/courses/courseCatalog.ts` — no code change needed for a new pack.
 3. Run the checks:
-   - `npm run validate:courses` — every manifest path exists, quiz ids/answer indices are valid, five MCQs per lesson topic, weights sum to 100.
+   - `npm run validate:courses` — every manifest path exists, quiz IDs/answer indices are valid, declared question counts and advanced module banks match, and weights sum to 100.
    - `npm run test:unit` — includes `courseModel.test.ts`.
    - `npm run test:render:courses` — renders the catalog, overview, lesson and quiz pages in jsdom.
 4. Bump `version` and `lastReviewed` in `course.json`; note the change in the facilitator guide if it affects delivery.

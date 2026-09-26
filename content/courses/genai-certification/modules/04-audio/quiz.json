@@ -2,25 +2,685 @@
   "moduleId": "m4",
   "questions": {
     "m4-t1": [
-      { "id": "m4-t1-q1", "question": "Why does modern neural TTS sound far more natural than older systems?", "options": ["It plays back recordings of professional actors", "It predicts pitch, timing and emphasis from meaning, like other generative models, instead of stitching fragments", "It only speaks slowly", "It uses louder volume"], "answerIndex": 1, "explanation": "Neural TTS learns to predict human-like delivery in context rather than concatenating recorded pieces." },
-      { "id": "m4-t1-q2", "question": "Which of these is your main control over pauses and phrasing in TTS?", "options": ["Font size", "Punctuation and paragraph breaks in a script written for the ear", "File format", "The length of the file name"], "answerIndex": 1, "explanation": "Commas, full stops and paragraph breaks shape delivery; write for the ear." },
-      { "id": "m4-t1-q3", "question": "How should you handle a local place name the voice mispronounces?", "options": ["Accept it", "Test, then fix with a phonetic spelling or the tool's pronunciation field", "Switch languages", "Remove the name"], "answerIndex": 1, "explanation": "A pronunciation pass on every proper noun is part of the workflow." },
-      { "id": "m4-t1-q4", "question": "What is the recommended pace for a spoken explainer?", "options": ["60–80 words per minute", "140–170 words per minute", "250–300 words per minute", "As fast as possible"], "answerIndex": 1, "explanation": "140–170 wpm is natural for explainers; slower for instructions." },
-      { "id": "m4-t1-q5", "question": "How should you choose a voice for a community announcement?", "options": ["Pick the first default voice", "Audition three voices and play the best two to members of the intended audience", "Always choose a male voice", "Choose the fastest voice"], "answerIndex": 1, "explanation": "A voice is a brand choice; the audience's preference matters more than yours." }
+      {
+        "id": "m4-t1-q1",
+        "question": "Why does modern neural TTS sound far more natural than older systems?",
+        "options": [
+          "It plays back recordings of professional actors",
+          "It predicts pitch, timing and emphasis from meaning, like other generative models, instead of stitching fragments",
+          "It only speaks slowly",
+          "It uses louder volume"
+        ],
+        "answerIndex": 1,
+        "explanation": "Neural TTS learns to predict human-like delivery in context rather than concatenating recorded pieces."
+      },
+      {
+        "id": "m4-t1-q2",
+        "question": "Which of these is your main control over pauses and phrasing in TTS?",
+        "options": [
+          "Font size",
+          "Punctuation and paragraph breaks in a script written for the ear",
+          "File format",
+          "The length of the file name"
+        ],
+        "answerIndex": 1,
+        "explanation": "Commas, full stops and paragraph breaks shape delivery; write for the ear."
+      },
+      {
+        "id": "m4-t1-q3",
+        "question": "How should you handle a local place name the voice mispronounces?",
+        "options": [
+          "Accept it",
+          "Test, then fix with a phonetic spelling or the tool's pronunciation field",
+          "Switch languages",
+          "Remove the name"
+        ],
+        "answerIndex": 1,
+        "explanation": "A pronunciation pass on every proper noun is part of the workflow."
+      },
+      {
+        "id": "m4-t1-q4",
+        "question": "What is the recommended pace for a spoken explainer?",
+        "options": [
+          "60–80 words per minute",
+          "140–170 words per minute",
+          "250–300 words per minute",
+          "As fast as possible"
+        ],
+        "answerIndex": 1,
+        "explanation": "140–170 wpm is natural for explainers; slower for instructions."
+      },
+      {
+        "id": "m4-t1-q5",
+        "question": "How should you choose a voice for a community announcement?",
+        "options": [
+          "Pick the first default voice",
+          "Audition three voices and play the best two to members of the intended audience",
+          "Always choose a male voice",
+          "Choose the fastest voice"
+        ],
+        "answerIndex": 1,
+        "explanation": "A voice is a brand choice; the audience's preference matters more than yours."
+      },
+      {
+        "id": "m4-t1-q6",
+        "question": "A text-to-speech tool makes a lecture accessible as audio. What should the editor check before sharing?",
+        "options": [
+          "Only whether the audio is loud",
+          "Whether the generated voice sounds famous",
+          "Nothing because the text is unchanged",
+          "Pronunciation, pacing, names, language quality and whether the source text is accurate"
+        ],
+        "answerIndex": 3,
+        "explanation": "Audio conversion can introduce pronunciation and accessibility issues."
+      },
+      {
+        "id": "m4-t1-q7",
+        "question": "A voice sounds natural but does not match the intended audience or purpose. What should guide voice selection?",
+        "options": [
+          "Audience, context, language, tone and consent or licence",
+          "The most dramatic voice available",
+          "The model’s default choice",
+          "The longest sample"
+        ],
+        "answerIndex": 0,
+        "explanation": "A voice should fit the use and rights constraints."
+      },
+      {
+        "id": "m4-t1-q8",
+        "question": "A college wants one announcement in Kannada, Hindi and English. Which workflow is strongest?",
+        "options": [
+          "Translate automatically and publish all versions without review",
+          "Prepare reviewed translations, generate short voice samples and ask fluent listeners to check each version",
+          "Use English audio for all audiences",
+          "Let the model decide the official wording"
+        ],
+        "answerIndex": 1,
+        "explanation": "Language and pronunciation quality need human review."
+      },
+      {
+        "id": "m4-t1-q9",
+        "question": "A generated voice mispronounces a student’s name. What should the producer try?",
+        "options": [
+          "Remove the student’s name from every official notice",
+          "Increase the background music",
+          "Use an approved phonetic spelling or pronunciation guide and test a short sample",
+          "Assume the listener will understand"
+        ],
+        "answerIndex": 2,
+        "explanation": "Phonetic guidance and sample review can improve pronunciation."
+      },
+      {
+        "id": "m4-t1-q10",
+        "question": "A student proposes a podcast for commuters. What audience need is most relevant?",
+        "options": [
+          "A complex chart that cannot be heard",
+          "A silent opening",
+          "A transcript without audio",
+          "Hands-free access, clear pacing and an episode length suitable for the listening context"
+        ],
+        "answerIndex": 3,
+        "explanation": "Audio format should suit how and where the audience listens."
+      },
+      {
+        "id": "m4-t1-q11",
+        "question": "An AI voice uses a confident tone to read uncertain research findings. What should the producer change?",
+        "options": [
+          "Preserve the uncertainty in the script and avoid vocal framing that implies certainty",
+          "Remove caveats to improve energy",
+          "Increase speaking speed",
+          "Add a dramatic soundtrack"
+        ],
+        "answerIndex": 0,
+        "explanation": "Audio delivery should not exaggerate the evidence."
+      },
+      {
+        "id": "m4-t1-q12",
+        "question": "A generated narration includes a product name that is pronounced incorrectly. What is best?",
+        "options": [
+          "Spell the name incorrectly in the published transcript",
+          "Check the tool’s pronunciation controls, use a phonetic guide and review the final take",
+          "Keep it because the listener can infer it",
+          "Add an unrelated jingle"
+        ],
+        "answerIndex": 1,
+        "explanation": "Named entities should be tested and corrected before publication."
+      },
+      {
+        "id": "m4-t1-q13",
+        "question": "An instructor wants audio notes from a lecture. What must be reviewed?",
+        "options": [
+          "Only the audio file size",
+          "Whether the voice is synthetic",
+          "Transcript completeness, speaker attribution and correctness against the original recording",
+          "The colour of the waveform"
+        ],
+        "answerIndex": 2,
+        "explanation": "Audio summarisation can omit or misattribute important content."
+      },
+      {
+        "id": "m4-t1-q14",
+        "question": "A voice tool lets users choose a “celebrity-like” voice. What is the ethical concern?",
+        "options": [
+          "It uses too few tokens",
+          "It cannot generate audio",
+          "It always lowers accessibility",
+          "It could imply endorsement or imitate a real person without consent"
+        ],
+        "answerIndex": 3,
+        "explanation": "Voice resemblance raises consent and deception risks."
+      },
+      {
+        "id": "m4-t1-q15",
+        "question": "Which use of generated speech is a plausible accessibility aid?",
+        "options": [
+          "Offering a reviewed audio version of text with a readable transcript and playback controls",
+          "Replacing all written notices",
+          "Making audio without a transcript or controls",
+          "Using a cloned instructor voice without approval"
+        ],
+        "answerIndex": 0,
+        "explanation": "Accessible audio should complement text and be checked for quality."
+      }
     ],
     "m4-t2": [
-      { "id": "m4-t2-q1", "question": "What is transcript-based editing?", "options": ["Editing the show notes", "Deleting words in the transcript so the audio is cut automatically", "Translating the audio", "Writing a transcript after editing"], "answerIndex": 1, "explanation": "The editor transcribes; you edit text; the audio follows. Always listen back afterwards." },
-      { "id": "m4-t2-q2", "question": "What is the risk of maximum-strength noise removal?", "options": ["It deletes the file", "The voice becomes watery and robotic", "It makes the file larger", "It removes the music licence"], "answerIndex": 1, "explanation": "Use the lightest setting that works; over-processing smears the voice." },
-      { "id": "m4-t2-q3", "question": "How loud should a background music bed be relative to the voice?", "options": ["Equal volume", "Louder than the voice", "About 15–20 dB below the voice", "Silent"], "answerIndex": 2, "explanation": "Ducking the bed 15–20 dB under speech keeps the voice intelligible." },
-      { "id": "m4-t2-q4", "question": "Which is a legitimate use of voice cloning under the course rules?", "options": ["Cloning a professor's voice for a parody", "Cloning your own voice to fix a mispronounced word or produce a Kannada version of your explainer", "Cloning a celebrity for a testimonial", "Cloning a classmate secretly for a surprise"], "answerIndex": 1, "explanation": "Your own voice, or a consenting classmate's with documented consent, labelled as synthetic." },
-      { "id": "m4-t2-q5", "question": "What does the lesson recommend to protect your family from cloned-voice scam calls?", "options": ["Never answer the phone", "Agree a private safe word and verify by calling back", "Post your voice online", "Use louder ringtones"], "answerIndex": 1, "explanation": "A safe word plus call-back verification defeats urgency-based impersonation." }
+      {
+        "id": "m4-t2-q1",
+        "question": "What is transcript-based editing?",
+        "options": [
+          "Editing the show notes",
+          "Deleting words in the transcript so the audio is cut automatically",
+          "Translating the audio",
+          "Writing a transcript after editing"
+        ],
+        "answerIndex": 1,
+        "explanation": "The editor transcribes; you edit text; the audio follows. Always listen back afterwards."
+      },
+      {
+        "id": "m4-t2-q2",
+        "question": "What is the risk of maximum-strength noise removal?",
+        "options": [
+          "It deletes the file",
+          "The voice becomes watery and robotic",
+          "It makes the file larger",
+          "It removes the music licence"
+        ],
+        "answerIndex": 1,
+        "explanation": "Use the lightest setting that works; over-processing smears the voice."
+      },
+      {
+        "id": "m4-t2-q3",
+        "question": "How loud should a background music bed be relative to the voice?",
+        "options": [
+          "Equal volume",
+          "Louder than the voice",
+          "About 15–20 dB below the voice",
+          "Silent"
+        ],
+        "answerIndex": 2,
+        "explanation": "Ducking the bed 15–20 dB under speech keeps the voice intelligible."
+      },
+      {
+        "id": "m4-t2-q4",
+        "question": "Which is a legitimate use of voice cloning under the course rules?",
+        "options": [
+          "Cloning a professor's voice for a parody",
+          "Cloning your own voice to fix a mispronounced word or produce a Kannada version of your explainer",
+          "Cloning a celebrity for a testimonial",
+          "Cloning a classmate secretly for a surprise"
+        ],
+        "answerIndex": 1,
+        "explanation": "Your own voice, or a consenting classmate's with documented consent, labelled as synthetic."
+      },
+      {
+        "id": "m4-t2-q5",
+        "question": "What does the lesson recommend to protect your family from cloned-voice scam calls?",
+        "options": [
+          "Never answer the phone",
+          "Agree a private safe word and verify by calling back",
+          "Post your voice online",
+          "Use louder ringtones"
+        ],
+        "answerIndex": 1,
+        "explanation": "A safe word plus call-back verification defeats urgency-based impersonation."
+      },
+      {
+        "id": "m4-t2-q6",
+        "question": "A student wants to clone a relative’s voice after receiving no response to a consent request. What should happen?",
+        "options": [
+          "Do not clone it; use a licensed generic voice or wait for explicit permission",
+          "Clone a short sample only",
+          "Use a recording from social media",
+          "Disclose only after publication"
+        ],
+        "answerIndex": 0,
+        "explanation": "Silence is not consent for voice cloning."
+      },
+      {
+        "id": "m4-t2-q7",
+        "question": "A music generator offers an “in the style of” prompt for a living musician. What is safer?",
+        "options": [
+          "Use the musician’s name to improve similarity",
+          "Describe tempo, instrumentation and mood without directing imitation of that musician",
+          "Upload unreleased tracks",
+          "Remove the artist name after export"
+        ],
+        "answerIndex": 1,
+        "explanation": "Describe musical attributes rather than copying a living artist’s style."
+      },
+      {
+        "id": "m4-t2-q8",
+        "question": "Noise reduction removes background hum but makes speech metallic. What adjustment is appropriate?",
+        "options": [
+          "Apply even stronger noise reduction",
+          "Add distortion to the voice",
+          "Reduce processing and compare with the untouched recording",
+          "Delete the source file"
+        ],
+        "answerIndex": 2,
+        "explanation": "Preserve the source and choose the least destructive cleanup."
+      },
+      {
+        "id": "m4-t2-q9",
+        "question": "A generated music track will appear in a client advertisement. What should the editor verify?",
+        "options": [
+          "Only the beat speed",
+          "Whether it sounds original",
+          "Whether the tool has a free plan",
+          "Licence, commercial rights, attribution and any restrictions on the generated output"
+        ],
+        "answerIndex": 3,
+        "explanation": "Commercial publication depends on applicable tool and music rights."
+      },
+      {
+        "id": "m4-t2-q10",
+        "question": "An audio editor automatically removes pauses and breaths. What can go wrong?",
+        "options": [
+          "It may change meaning, pacing or natural delivery, so edits must be listened to",
+          "It makes the voice legally identifiable",
+          "It turns all words into text",
+          "It guarantees a professional mix"
+        ],
+        "answerIndex": 0,
+        "explanation": "Automated editing can damage intelligibility or tone."
+      },
+      {
+        "id": "m4-t2-q11",
+        "question": "A speaker asks to withdraw voice-cloning consent before the episode is released. What should the team do?",
+        "options": [
+          "Publish because generation already happened",
+          "Stop use, remove derived material where feasible and follow the documented consent and retention process",
+          "Change only the episode title",
+          "Ignore it if the speaker is not named"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consent should include a clear process for withdrawal and data handling."
+      },
+      {
+        "id": "m4-t2-q12",
+        "question": "A clip has a loud hum in one channel only. What is a careful first step?",
+        "options": [
+          "Normalise the entire track to maximum",
+          "Remove all bass from both channels",
+          "Inspect the channel and make a conservative edit while preserving the original",
+          "Add music over the entire recording"
+        ],
+        "answerIndex": 2,
+        "explanation": "Targeted processing is less destructive than blanket edits."
+      },
+      {
+        "id": "m4-t2-q13",
+        "question": "A generated background track sounds similar to a known song. What should the publisher do?",
+        "options": [
+          "Assume AI generation removes copyright concerns",
+          "Add a credit to the famous artist",
+          "Publish it only on social media",
+          "Pause publication and review similarity and rights with an appropriate reviewer"
+        ],
+        "answerIndex": 3,
+        "explanation": "Generated output can still raise rights concerns."
+      },
+      {
+        "id": "m4-t2-q14",
+        "question": "A student edits an interview transcript and removes a sentence that changes the speaker’s meaning. What is the correct practice?",
+        "options": [
+          "Compare edits against the source and preserve meaning, marking any necessary cuts",
+          "Keep the cleaner version without review",
+          "Replace the quote with a model summary",
+          "Delete the recording"
+        ],
+        "answerIndex": 0,
+        "explanation": "Editing should not distort what the speaker said."
+      },
+      {
+        "id": "m4-t2-q15",
+        "question": "Which file-handling practice best protects raw voice recordings?",
+        "options": [
+          "Share the file publicly for convenience",
+          "Limit access, retain only as needed, store securely and delete under a stated schedule",
+          "Keep every take forever",
+          "Upload it to several personal accounts"
+        ],
+        "answerIndex": 1,
+        "explanation": "Voice data should follow minimisation, access and retention controls."
+      }
     ],
     "m4-t3": [
-      { "id": "m4-t3-q1", "question": "What is the common pattern for every text-to-audio conversion?", "options": ["Copy the document into TTS and export", "Plain-language rewrite for the ear → voice → light music → export → verify against the source", "Record, then write", "Translate word for word"], "answerIndex": 1, "explanation": "Re-tell for the ear, produce, then verify facts against the original." },
-      { "id": "m4-t3-q2", "question": "Why must AI-drafted meeting minutes be reviewed before circulation?", "options": ["They are too long", "Assistants can invent action items nobody agreed to", "They are always in English", "They lack timestamps"], "answerIndex": 1, "explanation": "Announce recording, get consent, and review minutes for invented or misattributed items." },
-      { "id": "m4-t3-q3", "question": "Which IVR rule is correct?", "options": ["Offer as many options as possible", "State the action before the number, at most four options, always an exit to a human", "Prompts should be at least 30 seconds", "Never offer a language choice"], "answerIndex": 1, "explanation": "Brief greeting, ≤4 options, action-before-number, confirm, exit, language choice." },
-      { "id": "m4-t3-q4", "question": "How should transcripts of other people be treated?", "options": ["As public content", "As personal data: stored securely, deleted when done, not uploaded to unvetted tools", "As marketing material", "As permanent records"], "answerIndex": 1, "explanation": "Recordings and transcripts are personal data; consent, secure storage and deletion apply." },
-      { "id": "m4-t3-q5", "question": "What belongs in show notes?", "options": ["Only the title", "Summary, timestamps, links, credits including music licence and AI tools, and a transcript link", "The raw audio file", "A list of hashtags only"], "answerIndex": 1, "explanation": "Show notes support search, accessibility, attribution and disclosure." }
+      {
+        "id": "m4-t3-q1",
+        "question": "What is the common pattern for every text-to-audio conversion?",
+        "options": [
+          "Copy the document into TTS and export",
+          "Plain-language rewrite for the ear → voice → light music → export → verify against the source",
+          "Record, then write",
+          "Translate word for word"
+        ],
+        "answerIndex": 1,
+        "explanation": "Re-tell for the ear, produce, then verify facts against the original."
+      },
+      {
+        "id": "m4-t3-q2",
+        "question": "Why must AI-drafted meeting minutes be reviewed before circulation?",
+        "options": [
+          "They are too long",
+          "Assistants can invent action items nobody agreed to",
+          "They are always in English",
+          "They lack timestamps"
+        ],
+        "answerIndex": 1,
+        "explanation": "Announce recording, get consent, and review minutes for invented or misattributed items."
+      },
+      {
+        "id": "m4-t3-q3",
+        "question": "Which IVR rule is correct?",
+        "options": [
+          "Offer as many options as possible",
+          "State the action before the number, at most four options, always an exit to a human",
+          "Prompts should be at least 30 seconds",
+          "Never offer a language choice"
+        ],
+        "answerIndex": 1,
+        "explanation": "Brief greeting, ≤4 options, action-before-number, confirm, exit, language choice."
+      },
+      {
+        "id": "m4-t3-q4",
+        "question": "How should transcripts of other people be treated?",
+        "options": [
+          "As public content",
+          "As personal data: stored securely, deleted when done, not uploaded to unvetted tools",
+          "As marketing material",
+          "As permanent records"
+        ],
+        "answerIndex": 1,
+        "explanation": "Recordings and transcripts are personal data; consent, secure storage and deletion apply."
+      },
+      {
+        "id": "m4-t3-q5",
+        "question": "What belongs in show notes?",
+        "options": [
+          "Only the title",
+          "Summary, timestamps, links, credits including music licence and AI tools, and a transcript link",
+          "The raw audio file",
+          "A list of hashtags only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Show notes support search, accessibility, attribution and disclosure."
+      },
+      {
+        "id": "m4-t3-q6",
+        "question": "A written blog becomes a podcast episode. What should not be copied mechanically?",
+        "options": [
+          "The verified central message",
+          "Visual references and hyperlinks that listeners cannot use; convert them into spoken context or show notes",
+          "Every source title",
+          "The disclosure statement"
+        ],
+        "answerIndex": 1,
+        "explanation": "Audio needs spoken explanations and accessible companion materials."
+      },
+      {
+        "id": "m4-t3-q7",
+        "question": "A lecture is converted to study audio. What must be checked before students rely on it?",
+        "options": [
+          "Whether the audio has a cover image",
+          "Whether every pause is removed",
+          "Key definitions, examples and speaker attribution against the lecture recording",
+          "Only the total duration"
+        ],
+        "answerIndex": 2,
+        "explanation": "Summaries can omit nuance and must be checked against their source."
+      },
+      {
+        "id": "m4-t3-q8",
+        "question": "An IVR menu uses AI voices. Which requirement matters most to callers?",
+        "options": [
+          "A theatrical voice",
+          "Long policy explanations in every menu",
+          "No option to correct a selection",
+          "Clear, short instructions with a reliable path to a human or repeat option"
+        ],
+        "answerIndex": 3,
+        "explanation": "Service audio should be understandable and provide an accessible fallback."
+      },
+      {
+        "id": "m4-t3-q9",
+        "question": "A 3-minute episode has no transcript. What important audience need is missed?",
+        "options": [
+          "A text alternative for deaf or hard-of-hearing listeners and for search or reference",
+          "A way to increase music volume",
+          "A more realistic voice",
+          "A larger audio bitrate"
+        ],
+        "answerIndex": 0,
+        "explanation": "Transcripts support accessibility and later use."
+      },
+      {
+        "id": "m4-t3-q10",
+        "question": "A podcast show note contains a link generated by AI that leads to an unrelated site. What should the producer do?",
+        "options": [
+          "Keep it because the URL format looks valid",
+          "Open and verify every link and source before release",
+          "Shorten it without opening",
+          "Ask the same model if it works"
+        ],
+        "answerIndex": 1,
+        "explanation": "Links should be tested against their intended destinations."
+      },
+      {
+        "id": "m4-t3-q11",
+        "question": "A voiceover is mixed so loudly that the music masks speech. What should the editor do?",
+        "options": [
+          "Increase the music further",
+          "Add more instruments",
+          "Adjust levels and listen on common devices to ensure speech remains clear",
+          "Remove captions"
+        ],
+        "answerIndex": 2,
+        "explanation": "Mixing should preserve speech intelligibility across listening contexts."
+      },
+      {
+        "id": "m4-t3-q12",
+        "question": "A campus audio explainer includes a claim from a lecture slide. What should the show notes provide?",
+        "options": [
+          "Only the AI voice model name",
+          "No references because it is audio",
+          "A generated citation without review",
+          "A checked source or reference so listeners can follow the claim"
+        ],
+        "answerIndex": 3,
+        "explanation": "Audio claims also need traceable sources."
+      },
+      {
+        "id": "m4-t3-q13",
+        "question": "A listener has limited bandwidth. What can improve access to the episode?",
+        "options": [
+          "Offer a compressed audio option and transcript without making quality unusable",
+          "Require only high-resolution video",
+          "Remove all text alternatives",
+          "Use the largest file available"
+        ],
+        "answerIndex": 0,
+        "explanation": "Multiple accessible formats support different devices and connections."
+      },
+      {
+        "id": "m4-t3-q14",
+        "question": "A student creates a voiceover for a short video in two languages. What should be reviewed in each version?",
+        "options": [
+          "Only the background music",
+          "Timing, meaning, pronunciation, captions and any claims added during translation",
+          "Whether the two audio files have identical durations",
+          "Nothing after translation"
+        ],
+        "answerIndex": 1,
+        "explanation": "Translation and audio production can introduce errors that need review."
+      },
+      {
+        "id": "m4-t3-q15",
+        "question": "A staff member wants to turn sensitive counselling notes into an audio summary. What should they do?",
+        "options": [
+          "Upload the notes to a personal public voice tool",
+          "Use a cloned counsellor voice",
+          "Use only an approved, privacy-protective workflow and remove unnecessary personal information",
+          "Share the output widely"
+        ],
+        "answerIndex": 2,
+        "explanation": "Sensitive records require strict data controls and minimisation."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Audio Production and Consent Gate",
+    "questions": [
+      {
+        "id": "m4-assessment-q1",
+        "question": "A team wants to clone a local shop owner’s voice for a promotion. The owner has not agreed. What should the producer do?",
+        "options": [
+          "Use a generic licensed voice or obtain documented informed consent before any cloning",
+          "Clone it because the campaign is positive",
+          "Clone it and disclose only in the video description",
+          "Use a short sample so consent is unnecessary"
+        ],
+        "answerIndex": 0,
+        "explanation": "Voice cloning requires consent; a positive purpose or short sample does not replace it.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q2",
+        "question": "A multilingual voice generator pronounces a Kannada place name incorrectly. What is the best next step?",
+        "options": [
+          "Publish the first take",
+          "Translate the place name into English",
+          "Increase the background music volume",
+          "Write a phonetic pronunciation guide, generate a short test, have a fluent speaker review it, then regenerate the full narration"
+        ],
+        "answerIndex": 3,
+        "explanation": "Test pronunciations with a fluent reviewer before producing the full asset.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q3",
+        "question": "A podcast script is 600 words and must fit a three-minute episode. What should the editor do?",
+        "options": [
+          "Speed up the voice until it sounds rushed",
+          "Leave the script and remove pauses",
+          "Estimate spoken duration, cut to the target word range, then time a real sample read",
+          "Add a faster music track"
+        ],
+        "answerIndex": 2,
+        "explanation": "A realistic read-through catches pace and duration issues before final production.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q4",
+        "question": "A recording has a hum and a quiet speaker. Which order is safest?",
+        "options": [
+          "Apply maximum denoise, then compress heavily",
+          "Keep an untouched source copy, reduce noise gently, level speech, then listen for artefacts",
+          "Remove all low frequencies and export immediately",
+          "Use music to cover every defect"
+        ],
+        "answerIndex": 1,
+        "explanation": "Preserve the source and use restrained processing with listening checks.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q5",
+        "question": "A student wants background music for a public podcast. What should they check before release?",
+        "options": [
+          "The tool’s licence and commercial-use terms, attribution requirements and rights for the intended distribution",
+          "Only whether the track sounds appropriate",
+          "Whether another podcast used the same track",
+          "Nothing if AI generated it"
+        ],
+        "answerIndex": 0,
+        "explanation": "Generated audio still has tool terms and distribution rights that must be checked.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q6",
+        "question": "An AI audio overview includes a claim not found in the source reading. What should the learner do?",
+        "options": [
+          "Trust it because the notebook cited a source elsewhere",
+          "Add more documents without checking",
+          "Ask the audio model to sound less confident",
+          "Remove or correct the claim and verify every substantive statement against the supplied documents"
+        ],
+        "answerIndex": 3,
+        "explanation": "Source-grounded audio can still overstate or introduce content; check against the actual documents.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q7",
+        "question": "A department creates a lecture-to-podcast workflow. Which hand-off is most useful?",
+        "options": [
+          "A raw voice file only",
+          "A prompt history without the final asset",
+          "A clean audio file plus checked transcript, source list, episode notes and accessibility-ready captions",
+          "An AI confidence score"
+        ],
+        "answerIndex": 2,
+        "explanation": "A publishable audio package includes accessible text and traceable sources.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q8",
+        "question": "A student records a peer’s voice for a language lesson. What should happen first?",
+        "options": [
+          "Record secretly and remove the file after generation",
+          "Explain the use, get explicit consent, limit the sample and retention, and offer a non-cloned alternative",
+          "Ask the AI tool to obtain consent",
+          "Use the voice only if the peer is not named"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consent, data minimisation and an alternative should be built into the workflow.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q9",
+        "question": "Noise removal makes a speaker’s voice sound metallic. What is the appropriate quality-control response?",
+        "options": [
+          "Back off processing, compare with the original and accept some background noise rather than damage speech",
+          "Increase the denoising amount",
+          "Add reverb to hide the artefact",
+          "Export at a higher bitrate only"
+        ],
+        "answerIndex": 0,
+        "explanation": "Over-processing harms intelligibility; compare against the source and use the least destructive settings.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q10",
+        "question": "A 60-second campus audio clip will be repurposed into a podcast, reel and accessible web page. What should remain consistent?",
+        "options": [
+          "Only the file name",
+          "The exact same crop and intro everywhere",
+          "The AI voice regardless of audience",
+          "The verified core message and facts, adapted per format with captions, context and appropriate rights checks"
+        ],
+        "answerIndex": 3,
+        "explanation": "Repurposing adapts the format while preserving verified claims and accessibility.",
+        "difficulty": "advanced"
+      }
     ]
   }
 }

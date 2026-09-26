@@ -2,46 +2,1231 @@
   "moduleId": "m2",
   "questions": {
     "m2-t1": [
-      { "id": "m2-t1-q1", "question": "Why does the lesson recommend 'one job per chat'?", "options": ["Assistants charge per conversation", "The model reads the whole conversation each time, so mixed topics contaminate later answers", "Chats cannot be renamed", "It is required by the vendor's terms"], "answerIndex": 1, "explanation": "Everything in the conversation is context. Unrelated material — or an early mistake — keeps influencing later answers." },
-      { "id": "m2-t1-q2", "question": "An assistant keeps repeating the same error after several corrections. What is the recommended action?", "options": ["Argue for a few more turns", "Copy the good parts, start a fresh chat and write a better opening prompt", "Switch off web search", "Ask it to apologise"], "answerIndex": 1, "explanation": "The wrong content is now part of the context. A reset with a better opening prompt is faster than arguing." },
-      { "id": "m2-t1-q3", "question": "Which of these is NOT one of the four things you should supply because the model cannot know it?", "options": ["Who the output is for", "The material (file or pasted text)", "The model's own training cut-off date", "The constraints and the standard expected"], "answerIndex": 2, "explanation": "You supply audience, material, constraints and standard. The training cut-off is a property of the model, not something you provide." },
-      { "id": "m2-t1-q4", "question": "Where should long pasted material sit in a prompt for best results?", "options": ["At the very top before any instruction", "In the middle, with instructions at the top and the question at the bottom", "At the very bottom after the question", "In a separate chat"], "answerIndex": 1, "explanation": "Models attend most to the beginning and end of long inputs, so put instructions first, the question last and the long document between." },
-      { "id": "m2-t1-q5", "question": "Which habit does the lesson say makes output WORSE?", "options": ["Naming the audience", "Using precise verbs like 'compare' or 'critique'", "Saying 'make it better' without stating what was wrong", "Iterating on the first answer"], "answerIndex": 2, "explanation": "'Make it better' gives the model nothing to act on. Specific diagnosis — what is wrong and for whom — is the brief." }
+      {
+        "id": "m2-t1-q1",
+        "question": "Why does the lesson recommend 'one job per chat'?",
+        "options": [
+          "Assistants charge per conversation",
+          "The model reads the whole conversation each time, so mixed topics contaminate later answers",
+          "Chats cannot be renamed",
+          "It is required by the vendor's terms"
+        ],
+        "answerIndex": 1,
+        "explanation": "Everything in the conversation is context. Unrelated material — or an early mistake — keeps influencing later answers."
+      },
+      {
+        "id": "m2-t1-q2",
+        "question": "An assistant keeps repeating the same error after several corrections. What is the recommended action?",
+        "options": [
+          "Argue for a few more turns",
+          "Copy the good parts, start a fresh chat and write a better opening prompt",
+          "Switch off web search",
+          "Ask it to apologise"
+        ],
+        "answerIndex": 1,
+        "explanation": "The wrong content is now part of the context. A reset with a better opening prompt is faster than arguing."
+      },
+      {
+        "id": "m2-t1-q3",
+        "question": "Which of these is NOT one of the four things you should supply because the model cannot know it?",
+        "options": [
+          "Who the output is for",
+          "The material (file or pasted text)",
+          "The model's own training cut-off date",
+          "The constraints and the standard expected"
+        ],
+        "answerIndex": 2,
+        "explanation": "You supply audience, material, constraints and standard. The training cut-off is a property of the model, not something you provide."
+      },
+      {
+        "id": "m2-t1-q4",
+        "question": "Where should long pasted material sit in a prompt for best results?",
+        "options": [
+          "At the very top before any instruction",
+          "In the middle, with instructions at the top and the question at the bottom",
+          "At the very bottom after the question",
+          "In a separate chat"
+        ],
+        "answerIndex": 1,
+        "explanation": "Models attend most to the beginning and end of long inputs, so put instructions first, the question last and the long document between."
+      },
+      {
+        "id": "m2-t1-q5",
+        "question": "Which habit does the lesson say makes output WORSE?",
+        "options": [
+          "Naming the audience",
+          "Using precise verbs like 'compare' or 'critique'",
+          "Saying 'make it better' without stating what was wrong",
+          "Iterating on the first answer"
+        ],
+        "answerIndex": 2,
+        "explanation": "'Make it better' gives the model nothing to act on. Specific diagnosis — what is wrong and for whom — is the brief."
+      },
+      {
+        "id": "m2-t1-q6",
+        "question": "A chat begins with a scholarship essay, then switches to a recipe, then returns to the essay. The assistant mixes details. What should the student do?",
+        "options": [
+          "Repeat all three topics in one long prompt",
+          "Start a fresh chat with only the relevant essay context",
+          "Ask the assistant to guess which details matter",
+          "Keep correcting the mixed answer indefinitely"
+        ],
+        "answerIndex": 1,
+        "explanation": "Separate conversations reduce cross-topic contamination."
+      },
+      {
+        "id": "m2-t1-q7",
+        "question": "A student uploads a spreadsheet and asks for totals. What must they check before using the result?",
+        "options": [
+          "Only whether the response is formatted as a table",
+          "Whether the assistant says “I checked”",
+          "Whether the assistant can actually read the file and whether formulas match the source rows",
+          "Nothing if the file name is correct"
+        ],
+        "answerIndex": 2,
+        "explanation": "File access and computed values must be verified against the original data."
+      },
+      {
+        "id": "m2-t1-q8",
+        "question": "An assistant repeatedly misunderstands a long conversation after many corrections. What is a sensible reset?",
+        "options": [
+          "Continue adding unrelated corrections",
+          "Delete the task requirements",
+          "Ask it to infer a better answer from tone",
+          "Copy the correct context, open a clean chat and give a precise opening instruction"
+        ],
+        "answerIndex": 3,
+        "explanation": "A clean, focused conversation can remove accumulated context noise."
+      },
+      {
+        "id": "m2-t1-q9",
+        "question": "A voice assistant transcribes “fifteen” as “fifty” in a budget note. What should happen?",
+        "options": [
+          "Verify numbers and names against the audio before copying them",
+          "Use the transcript because voice systems know context",
+          "Ask it to make the sentence smoother",
+          "Remove the budget figure"
+        ],
+        "answerIndex": 0,
+        "explanation": "Voice transcription errors can change meaning; check critical details."
+      },
+      {
+        "id": "m2-t1-q10",
+        "question": "A student wants an assistant to review a confidential assignment file. What should guide the upload decision?",
+        "options": [
+          "The assistant’s friendly tone",
+          "Institutional policy, the tool’s data controls and whether personal information can be removed",
+          "Whether the file is a DOCX rather than PDF",
+          "The amount of time left"
+        ],
+        "answerIndex": 1,
+        "explanation": "Upload decisions depend on data sensitivity and tool governance."
+      },
+      {
+        "id": "m2-t1-q11",
+        "question": "A conversation has used most of the model’s context window. Which symptom is plausible?",
+        "options": [
+          "The assistant gains guaranteed long-term memory",
+          "The uploaded file becomes legally verified",
+          "Earlier details may be dropped or compressed",
+          "The model can now browse every private folder"
+        ],
+        "answerIndex": 2,
+        "explanation": "Context limits can reduce what the model considers from earlier turns."
+      },
+      {
+        "id": "m2-t1-q12",
+        "question": "A student wants to compare two assistants for study support. What makes the comparison meaningful?",
+        "options": [
+          "Use a different task for each model",
+          "Choose the one that answers first",
+          "Compare only their product websites",
+          "Give both the same representative task and score them on accuracy, usefulness and verification effort"
+        ],
+        "answerIndex": 3,
+        "explanation": "A controlled comparison holds the task and evaluation criteria steady."
+      },
+      {
+        "id": "m2-t1-q13",
+        "question": "The assistant offers a confident answer about a university deadline. What is the safest next action?",
+        "options": [
+          "Check the university’s current official notice",
+          "Ask the assistant to repeat the date in bold",
+          "Assume confidence reflects certainty",
+          "Use a search snippet without opening it"
+        ],
+        "answerIndex": 0,
+        "explanation": "Current deadlines require primary-source verification."
+      },
+      {
+        "id": "m2-t1-q14",
+        "question": "A model can read a PDF but not the scanned images inside it. What should the user conclude?",
+        "options": [
+          "The PDF has no content",
+          "The assistant’s file capabilities have limits; OCR or an approved accessible version may be needed",
+          "The model saw every image despite saying otherwise",
+          "All scanned files are trustworthy"
+        ],
+        "answerIndex": 1,
+        "explanation": "Tool support varies by format and content type."
+      },
+      {
+        "id": "m2-t1-q15",
+        "question": "A prompt contains several unrelated requests. Why may “one job per chat” help?",
+        "options": [
+          "It forces the model to use current facts",
+          "It prevents every possible hallucination",
+          "It keeps context and success criteria focused on a single task",
+          "It increases the model’s training data"
+        ],
+        "answerIndex": 2,
+        "explanation": "Focused chats make instructions and evaluation clearer."
+      }
     ],
     "m2-t2": [
-      { "id": "m2-t2-q1", "question": "What do the letters in RTF stand for?", "options": ["Read, Think, Finish", "Role, Task, Format", "Rules, Tone, Facts", "Research, Test, Fix"], "answerIndex": 1, "explanation": "RTF — Role, Task, Format — is the three-line framework for quick, low-stakes prompts." },
-      { "id": "m2-t2-q2", "question": "In CO-STAR, what is the difference between the Task and the Objective?", "options": ["There is none", "The task is what to produce (an email); the objective is what it must achieve (30 RSVPs)", "The objective is the word count", "The task is the tone"], "answerIndex": 1, "explanation": "Stating the objective lets the model make better choices about content and emphasis than the task alone." },
-      { "id": "m2-t2-q3", "question": "Which building block is best served by showing the model a previous piece of work the client liked?", "options": ["Role", "Constraints", "Examples", "Format"], "answerIndex": 2, "explanation": "Examples show what 'good' looks like — more effective than describing it." },
-      { "id": "m2-t2-q4", "question": "After iterating to a final output you like, what does the lesson recommend doing last?", "options": ["Delete the chat", "Ask the assistant to rewrite your original prompt so it would produce the final version in one go, and save it", "Re-run the first prompt", "Switch tools"], "answerIndex": 1, "explanation": "Extracting a one-shot prompt turns a good conversation into a reusable playbook entry." },
-      { "id": "m2-t2-q5", "question": "Which is the most precise length instruction?", "options": ["Keep it short", "Not too long", "Three bullet points of one line each", "A few points"], "answerIndex": 2, "explanation": "Precise, countable constraints are followed; vague ones are interpreted differently every time." }
+      {
+        "id": "m2-t2-q1",
+        "question": "What do the letters in RTF stand for?",
+        "options": [
+          "Read, Think, Finish",
+          "Role, Task, Format",
+          "Rules, Tone, Facts",
+          "Research, Test, Fix"
+        ],
+        "answerIndex": 1,
+        "explanation": "RTF — Role, Task, Format — is the three-line framework for quick, low-stakes prompts."
+      },
+      {
+        "id": "m2-t2-q2",
+        "question": "In CO-STAR, what is the difference between the Task and the Objective?",
+        "options": [
+          "There is none",
+          "The task is what to produce (an email); the objective is what it must achieve (30 RSVPs)",
+          "The objective is the word count",
+          "The task is the tone"
+        ],
+        "answerIndex": 1,
+        "explanation": "Stating the objective lets the model make better choices about content and emphasis than the task alone."
+      },
+      {
+        "id": "m2-t2-q3",
+        "question": "Which building block is best served by showing the model a previous piece of work the client liked?",
+        "options": [
+          "Role",
+          "Constraints",
+          "Examples",
+          "Format"
+        ],
+        "answerIndex": 2,
+        "explanation": "Examples show what 'good' looks like — more effective than describing it."
+      },
+      {
+        "id": "m2-t2-q4",
+        "question": "After iterating to a final output you like, what does the lesson recommend doing last?",
+        "options": [
+          "Delete the chat",
+          "Ask the assistant to rewrite your original prompt so it would produce the final version in one go, and save it",
+          "Re-run the first prompt",
+          "Switch tools"
+        ],
+        "answerIndex": 1,
+        "explanation": "Extracting a one-shot prompt turns a good conversation into a reusable playbook entry."
+      },
+      {
+        "id": "m2-t2-q5",
+        "question": "Which is the most precise length instruction?",
+        "options": [
+          "Keep it short",
+          "Not too long",
+          "Three bullet points of one line each",
+          "A few points"
+        ],
+        "answerIndex": 2,
+        "explanation": "Precise, countable constraints are followed; vague ones are interpreted differently every time."
+      },
+      {
+        "id": "m2-t2-q6",
+        "question": "A prompt says “act like an expert, write about recycling.” Which RTF element is least specified?",
+        "options": [
+          "Role only",
+          "The model’s training data",
+          "Task detail and requested format",
+          "A confidence score"
+        ],
+        "answerIndex": 2,
+        "explanation": "RTF works when role, task and format are each explicit."
+      },
+      {
+        "id": "m2-t2-q7",
+        "question": "A college wants 30 registrations by Friday. In CO-STAR, which part states this measurable success target?",
+        "options": [
+          "Style",
+          "Audience",
+          "Response format",
+          "Objective"
+        ],
+        "answerIndex": 3,
+        "explanation": "The objective states the outcome the communication should achieve."
+      },
+      {
+        "id": "m2-t2-q8",
+        "question": "A prompt requests a “short summary.” Which revision makes length checkable?",
+        "options": [
+          "“Use exactly four bullets, each under 18 words”",
+          "“Be very concise”",
+          "“Write naturally”",
+          "“Use an expert voice”"
+        ],
+        "answerIndex": 0,
+        "explanation": "A numeric structure gives the model and reviewer a clear constraint."
+      },
+      {
+        "id": "m2-t2-q9",
+        "question": "A client likes a prior email. What is the best way to use it as an example?",
+        "options": [
+          "Say only “make it like before”",
+          "Provide the approved sample and say which qualities to reproduce without copying private details",
+          "Assume the model remembers every past email",
+          "Paste an unrelated sample and change no instructions"
+        ],
+        "answerIndex": 1,
+        "explanation": "Examples should be available in context and their desired features named."
+      },
+      {
+        "id": "m2-t2-q10",
+        "question": "The model produces a table that is too wide for a phone. Which prompt component should be changed?",
+        "options": [
+          "The model’s identity",
+          "The user’s college",
+          "Format constraints, such as a compact two-column table or short bullets",
+          "The training cut-off"
+        ],
+        "answerIndex": 2,
+        "explanation": "Output format should reflect how the result will be used."
+      },
+      {
+        "id": "m2-t2-q11",
+        "question": "A prompt includes a long source document. Where should the instructions and final question go?",
+        "options": [
+          "Only in the middle of the source",
+          "After unrelated examples",
+          "Nowhere; the model will infer the task",
+          "Instructions first, source material clearly delimited, question or output request last"
+        ],
+        "answerIndex": 3,
+        "explanation": "Clear structure separates instructions from data and ends with the requested action."
+      },
+      {
+        "id": "m2-t2-q12",
+        "question": "A model follows a role instruction but misses the real goal. What distinction may be missing?",
+        "options": [
+          "Task versus objective: what to produce versus what it must achieve",
+          "Tone versus punctuation",
+          "Context versus temperature",
+          "Role versus file type"
+        ],
+        "answerIndex": 0,
+        "explanation": "A deliverable can be correct while failing its underlying objective."
+      },
+      {
+        "id": "m2-t2-q13",
+        "question": "The first draft is strong except it includes unsupported claims. What iteration instruction is best?",
+        "options": [
+          "Make it more detailed",
+          "Keep the structure, remove claims without evidence, and mark missing data as [NEEDS SOURCE]",
+          "Add persuasive language",
+          "Regenerate with a new persona"
+        ],
+        "answerIndex": 1,
+        "explanation": "Feedback should isolate the issue and state how to handle evidence gaps."
+      },
+      {
+        "id": "m2-t2-q14",
+        "question": "A prompt is used by several classmates. Which detail improves repeatability?",
+        "options": [
+          "A vague request for the best answer",
+          "A changing set of hidden requirements",
+          "Named inputs, constraints, output schema and a short evaluation checklist",
+          "A request for maximum creativity in all fields"
+        ],
+        "answerIndex": 2,
+        "explanation": "Reusable prompts make inputs and success criteria explicit."
+      },
+      {
+        "id": "m2-t2-q15",
+        "question": "Why should a student save a successful prompt after iteration?",
+        "options": [
+          "The model will otherwise forget all AI",
+          "Saved prompts cannot contain errors",
+          "A prompt library replaces source checking",
+          "The original request can be rewritten to capture the working constraints and produce repeatable results"
+        ],
+        "answerIndex": 3,
+        "explanation": "A distilled prompt records what worked; it still needs future review."
+      }
     ],
     "m2-t3": [
-      { "id": "m2-t3-q1", "question": "Kavya shows five labelled complaints before asking the model to label sixty more. This pattern is:", "options": ["Step-back prompting", "Few-shot prompting", "Persona panel", "Prompt chaining"], "answerIndex": 1, "explanation": "Few-shot means giving worked examples of input → desired output so the model copies the standard." },
-      { "id": "m2-t3-q2", "question": "What is the main benefit of asking for visible step-by-step reasoning?", "options": ["It makes the answer shorter", "You can check the reasoning and the inputs it relies on", "It removes the need to verify", "It disables hallucination"], "answerIndex": 1, "explanation": "Visible steps let you verify logic and starting facts. They are an aid to checking, not proof of correctness." },
-      { "id": "m2-t3-q3", "question": "Which pattern directly counters sycophancy?", "options": ["Output templating", "Self-critique against explicit criteria", "Few-shot examples", "Asking twice"], "answerIndex": 1, "explanation": "Scoring against a rubric with 'harshest reasonable reviewer' framing pushes the model past flattery." },
-      { "id": "m2-t3-q4", "question": "Why is prompt chaining valuable for a long research-and-writing task?", "options": ["It uses fewer tokens", "Each step is simple and can be verified before the next one", "It avoids the need for sources", "It runs faster"], "answerIndex": 1, "explanation": "Checkpoints between steps are the whole point; skipping them makes chaining pointless." },
-      { "id": "m2-t3-q5", "question": "When is a pattern likely to HURT rather than help?", "options": ["Using few-shot for consistent categories", "Using chain-of-thought on a one-line factual question", "Using a template for output that feeds a spreadsheet", "Using a persona panel to stress-test a business plan"], "answerIndex": 1, "explanation": "Heavy patterns on trivial tasks waste time and can introduce errors. Match the pattern to the problem." }
+      {
+        "id": "m2-t3-q1",
+        "question": "Kavya shows five labelled complaints before asking the model to label sixty more. This pattern is:",
+        "options": [
+          "Step-back prompting",
+          "Few-shot prompting",
+          "Persona panel",
+          "Prompt chaining"
+        ],
+        "answerIndex": 1,
+        "explanation": "Few-shot means giving worked examples of input → desired output so the model copies the standard."
+      },
+      {
+        "id": "m2-t3-q2",
+        "question": "What is the main benefit of asking for visible step-by-step reasoning?",
+        "options": [
+          "It makes the answer shorter",
+          "You can check the reasoning and the inputs it relies on",
+          "It removes the need to verify",
+          "It disables hallucination"
+        ],
+        "answerIndex": 1,
+        "explanation": "Visible steps let you verify logic and starting facts. They are an aid to checking, not proof of correctness."
+      },
+      {
+        "id": "m2-t3-q3",
+        "question": "Which pattern directly counters sycophancy?",
+        "options": [
+          "Output templating",
+          "Self-critique against explicit criteria",
+          "Few-shot examples",
+          "Asking twice"
+        ],
+        "answerIndex": 1,
+        "explanation": "Scoring against a rubric with 'harshest reasonable reviewer' framing pushes the model past flattery."
+      },
+      {
+        "id": "m2-t3-q4",
+        "question": "Why is prompt chaining valuable for a long research-and-writing task?",
+        "options": [
+          "It uses fewer tokens",
+          "Each step is simple and can be verified before the next one",
+          "It avoids the need for sources",
+          "It runs faster"
+        ],
+        "answerIndex": 1,
+        "explanation": "Checkpoints between steps are the whole point; skipping them makes chaining pointless."
+      },
+      {
+        "id": "m2-t3-q5",
+        "question": "When is a pattern likely to HURT rather than help?",
+        "options": [
+          "Using few-shot for consistent categories",
+          "Using chain-of-thought on a one-line factual question",
+          "Using a template for output that feeds a spreadsheet",
+          "Using a persona panel to stress-test a business plan"
+        ],
+        "answerIndex": 1,
+        "explanation": "Heavy patterns on trivial tasks waste time and can introduce errors. Match the pattern to the problem."
+      },
+      {
+        "id": "m2-t3-q6",
+        "question": "A classifier must sort support messages into five categories. What makes few-shot examples useful?",
+        "options": [
+          "They remove the need to test unseen messages",
+          "They guarantee fairness",
+          "They give the model permission to invent labels",
+          "They demonstrate representative inputs and the desired label format for each category"
+        ],
+        "answerIndex": 3,
+        "explanation": "Examples teach the pattern, especially when coverage includes all categories."
+      },
+      {
+        "id": "m2-t3-q7",
+        "question": "A team requests chain-of-thought for a one-line unit conversion. What is the likely downside?",
+        "options": [
+          "Extra complexity without useful benefit; ask for the answer and a checkable calculation instead",
+          "The model cannot perform arithmetic at all",
+          "The context window becomes infinite",
+          "It removes the need to verify units"
+        ],
+        "answerIndex": 0,
+        "explanation": "Use reasoning patterns when they improve a task, not by default."
+      },
+      {
+        "id": "m2-t3-q8",
+        "question": "A model repeatedly agrees with a weak proposal. Which prompt pattern helps test it?",
+        "options": [
+          "Ask it to praise the proposal",
+          "Ask for a self-critique against explicit countercriteria and evidence",
+          "Remove all constraints",
+          "Request a longer answer only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Explicit criteria make critique less dependent on pleasing the user."
+      },
+      {
+        "id": "m2-t3-q9",
+        "question": "Before solving a detailed question, a student wants the assistant to identify the governing principle. Which pattern fits?",
+        "options": [
+          "Image outpainting",
+          "Few-shot classification only",
+          "Step-back prompting",
+          "Text-to-speech"
+        ],
+        "answerIndex": 2,
+        "explanation": "Step-back prompting asks for the broader concept before the specific answer."
+      },
+      {
+        "id": "m2-t3-q10",
+        "question": "A chain has four steps, but step two may be wrong. What control is best?",
+        "options": [
+          "Hide the intermediate outputs",
+          "Ask the final step to fix every upstream error",
+          "Run all steps without logging",
+          "Inspect and approve intermediate outputs before passing them forward"
+        ],
+        "answerIndex": 3,
+        "explanation": "Prompt chaining is valuable because intermediate stages can be checked."
+      },
+      {
+        "id": "m2-t3-q11",
+        "question": "A persona prompt says “you are a senior lawyer” but the task is a student’s personal tax filing. What risk remains?",
+        "options": [
+          "The persona can create an impression of authority without making the output qualified advice",
+          "The model becomes legally licensed",
+          "The user no longer needs official sources",
+          "The answer cannot hallucinate"
+        ],
+        "answerIndex": 0,
+        "explanation": "A role label changes style, not professional qualifications or accuracy."
+      },
+      {
+        "id": "m2-t3-q12",
+        "question": "The output must be imported into a spreadsheet. Which prompt constraint is best?",
+        "options": [
+          "Ask for an inspiring narrative",
+          "Specify stable columns, one record per row, valid values and no extra prose around the table",
+          "Request a free-form answer",
+          "Let the model choose a new schema for each row"
+        ],
+        "answerIndex": 1,
+        "explanation": "Structured output is easier to validate when the schema is explicit."
+      },
+      {
+        "id": "m2-t3-q13",
+        "question": "A self-critique says “everything looks correct” but cites no criteria. What should the reviewer do?",
+        "options": [
+          "Treat the critique as a guarantee",
+          "Ask for more compliments",
+          "Provide a rubric and ask for evidence against each criterion, then check independently",
+          "Remove the source documents"
+        ],
+        "answerIndex": 2,
+        "explanation": "Self-critique is useful only when tied to observable criteria and evidence."
+      },
+      {
+        "id": "m2-t3-q14",
+        "question": "A user asks for ten ideas, then a risk review, then a final selection. Why separate these stages?",
+        "options": [
+          "It prevents the user from seeing any output",
+          "It makes every idea factually true",
+          "It eliminates human judgement",
+          "Generation and evaluation use different goals; a staged workflow preserves options before judging them"
+        ],
+        "answerIndex": 3,
+        "explanation": "Separate divergent idea generation from evidence-based selection."
+      },
+      {
+        "id": "m2-t3-q15",
+        "question": "A prompt uses examples all from urban English-speaking users. What should be improved before broader deployment?",
+        "options": [
+          "Add representative examples for the actual audiences and evaluate performance across them",
+          "Increase the prompt’s font size",
+          "Remove the examples entirely without testing",
+          "Assume language coverage is universal"
+        ],
+        "answerIndex": 0,
+        "explanation": "Example coverage affects who the prompt serves well."
+      }
     ],
     "m2-t4": [
-      { "id": "m2-t4-q1", "question": "What is the characteristic AI failure in commerce and accounting tasks?", "options": ["Invented quotations", "Stale rates, thresholds and deadlines plus arithmetic slips", "Western cultural defaults", "Poor grammar"], "answerIndex": 1, "explanation": "Rules change after training; long arithmetic slips. Ask for the method and verify the rate and the sums yourself." },
-      { "id": "m2-t4-q2", "question": "For a BA essay, which instruction best protects you from fabricated sources?", "options": ["Ask for ten recent references", "'Using ONLY my notes, do not add quotations or works that are not in them'", "Ask the model to double-check itself", "Request APA format"], "answerIndex": 1, "explanation": "Restricting the model to material you supply prevents invented citations — the highest-risk failure in humanities work." },
-      { "id": "m2-t4-q3", "question": "Why does the bakery prompt include 'where a figure is needed write [ESTIMATE] and explain how to get it'?", "options": ["To make the output longer", "To stop the model inventing market statistics", "To satisfy the tone requirement", "To translate the plan into Kannada"], "answerIndex": 1, "explanation": "Management prompts attract invented statistics; forcing a placeholder makes gaps visible and honest." },
-      { "id": "m2-t4-q4", "question": "For a science calculation, what should you ask for in addition to the answer?", "options": ["A poem about the method", "A spreadsheet formula so you can recompute the arithmetic yourself", "A list of famous scientists", "A longer explanation"], "answerIndex": 1, "explanation": "The method may be right while a decimal slips. Recompute every number independently." },
-      { "id": "m2-t4-q5", "question": "Which is a good bilingual prompting practice?", "options": ["Never mix languages in one prompt", "Be explicit about languages, direction and register, e.g. 'explain in Kannada first, technical terms in English brackets'", "Always translate word by word", "Use only English for study"], "answerIndex": 1, "explanation": "Explicit language instructions produce reliable bilingual output; test which tool is stronger for each language." }
+      {
+        "id": "m2-t4-q1",
+        "question": "What is the characteristic AI failure in commerce and accounting tasks?",
+        "options": [
+          "Invented quotations",
+          "Stale rates, thresholds and deadlines plus arithmetic slips",
+          "Western cultural defaults",
+          "Poor grammar"
+        ],
+        "answerIndex": 1,
+        "explanation": "Rules change after training; long arithmetic slips. Ask for the method and verify the rate and the sums yourself."
+      },
+      {
+        "id": "m2-t4-q2",
+        "question": "For a BA essay, which instruction best protects you from fabricated sources?",
+        "options": [
+          "Ask for ten recent references",
+          "'Using ONLY my notes, do not add quotations or works that are not in them'",
+          "Ask the model to double-check itself",
+          "Request APA format"
+        ],
+        "answerIndex": 1,
+        "explanation": "Restricting the model to material you supply prevents invented citations — the highest-risk failure in humanities work."
+      },
+      {
+        "id": "m2-t4-q3",
+        "question": "Why does the bakery prompt include 'where a figure is needed write [ESTIMATE] and explain how to get it'?",
+        "options": [
+          "To make the output longer",
+          "To stop the model inventing market statistics",
+          "To satisfy the tone requirement",
+          "To translate the plan into Kannada"
+        ],
+        "answerIndex": 1,
+        "explanation": "Management prompts attract invented statistics; forcing a placeholder makes gaps visible and honest."
+      },
+      {
+        "id": "m2-t4-q4",
+        "question": "For a science calculation, what should you ask for in addition to the answer?",
+        "options": [
+          "A poem about the method",
+          "A spreadsheet formula so you can recompute the arithmetic yourself",
+          "A list of famous scientists",
+          "A longer explanation"
+        ],
+        "answerIndex": 1,
+        "explanation": "The method may be right while a decimal slips. Recompute every number independently."
+      },
+      {
+        "id": "m2-t4-q5",
+        "question": "Which is a good bilingual prompting practice?",
+        "options": [
+          "Never mix languages in one prompt",
+          "Be explicit about languages, direction and register, e.g. 'explain in Kannada first, technical terms in English brackets'",
+          "Always translate word by word",
+          "Use only English for study"
+        ],
+        "answerIndex": 1,
+        "explanation": "Explicit language instructions produce reliable bilingual output; test which tool is stronger for each language."
+      },
+      {
+        "id": "m2-t4-q6",
+        "question": "A B.Com student asks AI for a GST deadline. What must the prompt and workflow emphasise?",
+        "options": [
+          "Current official source and date of access, with independent verification of the deadline",
+          "A confident answer from memory",
+          "A fictional scenario to avoid numbers",
+          "A longer business persona"
+        ],
+        "answerIndex": 0,
+        "explanation": "Rates and deadlines change; verify them against current authoritative material."
+      },
+      {
+        "id": "m2-t4-q7",
+        "question": "A BA student wants an essay based only on class notes. Which constraint is essential?",
+        "options": [
+          "Add famous quotations to improve style",
+          "Do not add outside quotations or sources; identify any claim not supported by the notes",
+          "Invent page numbers if missing",
+          "Write as if every claim is settled"
+        ],
+        "answerIndex": 1,
+        "explanation": "Source boundaries reduce fabricated attribution."
+      },
+      {
+        "id": "m2-t4-q8",
+        "question": "A BBA team wants a market-size estimate but has no data. What is the best prompt behaviour?",
+        "options": [
+          "Generate an exact number without caveats",
+          "Use a competitor’s figure as if it were local",
+          "Mark assumptions as estimates and explain a method to obtain evidence",
+          "Remove uncertainty language"
+        ],
+        "answerIndex": 2,
+        "explanation": "Labelling estimates and stating how to validate them avoids false precision."
+      },
+      {
+        "id": "m2-t4-q9",
+        "question": "A science student receives a numeric answer from a chatbot. What should they request?",
+        "options": [
+          "A more enthusiastic tone",
+          "A claim that the answer is exact",
+          "An image of the result",
+          "Units, assumptions and a spreadsheet formula or reproducible calculation"
+        ],
+        "answerIndex": 3,
+        "explanation": "Reproducible calculations enable independent checking."
+      },
+      {
+        "id": "m2-t4-q10",
+        "question": "A Kannada-English prompt mixes local names and technical terms. How can the student reduce translation errors?",
+        "options": [
+          "Specify which language to use for explanation and which terms to preserve, then verify names and meaning",
+          "Tell the model “translate everything”",
+          "Remove all local references",
+          "Accept the first transliteration"
+        ],
+        "answerIndex": 0,
+        "explanation": "Language direction and terminology should be explicit and reviewed."
+      },
+      {
+        "id": "m2-t4-q11",
+        "question": "An accounting prompt asks the model to reconcile a ledger but gives no date range or currency. What is missing?",
+        "options": [
+          "A celebrity persona",
+          "Essential task context and constraints",
+          "A creative writing style",
+          "A request for a conclusion only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Required inputs such as period, currency and reconciliation rules must be supplied."
+      },
+      {
+        "id": "m2-t4-q12",
+        "question": "A management student wants a SWOT analysis based on one interview. What should be stated?",
+        "options": [
+          "Claim it represents the whole market",
+          "Generate missing quotes",
+          "Treat the single interview as limited evidence and separate direct observations from hypotheses",
+          "Hide the sample size"
+        ],
+        "answerIndex": 2,
+        "explanation": "The output should reflect the limits of the evidence."
+      },
+      {
+        "id": "m2-t4-q13",
+        "question": "A literature student asks for the meaning of a poem but provides no text or edition. What should the assistant do?",
+        "options": [
+          "Invent likely lines",
+          "Assume every edition is identical",
+          "Quote from memory without attribution",
+          "Request the poem or an authorised passage before making text-specific claims"
+        ],
+        "answerIndex": 3,
+        "explanation": "Text-specific interpretation requires access to the relevant source."
+      },
+      {
+        "id": "m2-t4-q14",
+        "question": "A biology student asks for a lab protocol summary. What is the safest check?",
+        "options": [
+          "Compare steps, concentrations and safety instructions with the approved lab manual and supervisor",
+          "Use the simplest generated procedure",
+          "Remove warnings to save space",
+          "Assume a citation makes the procedure safe"
+        ],
+        "answerIndex": 0,
+        "explanation": "Laboratory procedures require authoritative safety and method checks."
+      },
+      {
+        "id": "m2-t4-q15",
+        "question": "A discipline prompt produces a polished but generic result. What improves relevance?",
+        "options": [
+          "Ask for more buzzwords",
+          "Supply a realistic task, audience, local context, constraints and evidence standard",
+          "Increase the output length only",
+          "Remove the user’s objective"
+        ],
+        "answerIndex": 1,
+        "explanation": "Domain relevance comes from precise context and success criteria."
+      }
     ],
     "m2-t5": [
-      { "id": "m2-t5-q1", "question": "Which type of tool should NOT be used to generate citations?", "options": ["A source-grounded notebook", "A general chat assistant without search", "A search-grounded answer engine (with links opened)", "Google Scholar"], "answerIndex": 1, "explanation": "Without search or your documents, a chat assistant produces citations from patterns — the classic hallucination case." },
-      { "id": "m2-t5-q2", "question": "What is the correct order of the professional research workflow?", "options": ["Notebook → chat → search", "Understand with chat → discover with search → verify and analyse with a notebook", "Search → submit", "Deep research → submit"], "answerIndex": 1, "explanation": "Chat for framing, search for discovery, source-grounded notebooks for verification and cross-source analysis." },
-      { "id": "m2-t5-q3", "question": "What is the key limitation of a source-grounded notebook such as NotebookLM?", "options": ["It cannot cite passages", "It answers only from the documents you gave it, so poor curation gives confident, well-cited nonsense", "It only works in English", "It cannot summarise"], "answerIndex": 1, "explanation": "Grounding is powerful but the output quality depends entirely on the source set you chose." },
-      { "id": "m2-t5-q4", "question": "How should a deep-research report be used?", "options": ["Submitted directly", "As a map of what exists, followed by opening the sources that matter", "As a replacement for reading", "Only for citations"], "answerIndex": 1, "explanation": "Treat it as a fast assistant who has not earned trust: it structures the topic; you still read the sources." },
-      { "id": "m2-t5-q5", "question": "Presenting AI-generated text as your own analysis, without attribution, is:", "options": ["Paraphrase", "Plagiarism", "Fabrication", "Fair use"], "answerIndex": 1, "explanation": "Passing off others' words or ideas — including a model's — as your own is plagiarism. Inventing sources is fabrication." }
+      {
+        "id": "m2-t5-q1",
+        "question": "Which type of tool should NOT be used to generate citations?",
+        "options": [
+          "A source-grounded notebook",
+          "A general chat assistant without search",
+          "A search-grounded answer engine (with links opened)",
+          "Google Scholar"
+        ],
+        "answerIndex": 1,
+        "explanation": "Without search or your documents, a chat assistant produces citations from patterns — the classic hallucination case."
+      },
+      {
+        "id": "m2-t5-q2",
+        "question": "What is the correct order of the professional research workflow?",
+        "options": [
+          "Notebook → chat → search",
+          "Understand with chat → discover with search → verify and analyse with a notebook",
+          "Search → submit",
+          "Deep research → submit"
+        ],
+        "answerIndex": 1,
+        "explanation": "Chat for framing, search for discovery, source-grounded notebooks for verification and cross-source analysis."
+      },
+      {
+        "id": "m2-t5-q3",
+        "question": "What is the key limitation of a source-grounded notebook such as NotebookLM?",
+        "options": [
+          "It cannot cite passages",
+          "It answers only from the documents you gave it, so poor curation gives confident, well-cited nonsense",
+          "It only works in English",
+          "It cannot summarise"
+        ],
+        "answerIndex": 1,
+        "explanation": "Grounding is powerful but the output quality depends entirely on the source set you chose."
+      },
+      {
+        "id": "m2-t5-q4",
+        "question": "How should a deep-research report be used?",
+        "options": [
+          "Submitted directly",
+          "As a map of what exists, followed by opening the sources that matter",
+          "As a replacement for reading",
+          "Only for citations"
+        ],
+        "answerIndex": 1,
+        "explanation": "Treat it as a fast assistant who has not earned trust: it structures the topic; you still read the sources."
+      },
+      {
+        "id": "m2-t5-q5",
+        "question": "Presenting AI-generated text as your own analysis, without attribution, is:",
+        "options": [
+          "Paraphrase",
+          "Plagiarism",
+          "Fabrication",
+          "Fair use"
+        ],
+        "answerIndex": 1,
+        "explanation": "Passing off others' words or ideas — including a model's — as your own is plagiarism. Inventing sources is fabrication."
+      },
+      {
+        "id": "m2-t5-q6",
+        "question": "A general chatbot lists five papers with titles and authors. What should the researcher do before citing?",
+        "options": [
+          "Use the list because citations look complete",
+          "Find the papers in a library or publisher record and confirm each citation and claim",
+          "Invent DOI values if missing",
+          "Cite only the first result"
+        ],
+        "answerIndex": 1,
+        "explanation": "Generated bibliography entries must be checked against real publication records."
+      },
+      {
+        "id": "m2-t5-q7",
+        "question": "A notebook assistant answers only from uploaded documents. What is a key risk?",
+        "options": [
+          "It can only generate images",
+          "It always knows what was omitted",
+          "A poorly selected or outdated document set can produce confident, source-grounded but misleading answers",
+          "It cannot cite its sources"
+        ],
+        "answerIndex": 2,
+        "explanation": "Grounding does not make the chosen corpus complete or current."
+      },
+      {
+        "id": "m2-t5-q8",
+        "question": "A deep-research report is 20 pages long. What is the best use of it?",
+        "options": [
+          "Treat it as a finished literature review",
+          "Cite the report without reading any sources",
+          "Assume every linked source supports every claim",
+          "Use it to map the landscape, then open important primary sources and verify claims"
+        ],
+        "answerIndex": 3,
+        "explanation": "Research reports guide discovery; consequential claims need original-source checks."
+      },
+      {
+        "id": "m2-t5-q9",
+        "question": "A student asks a notebook to summarise a paper that was not uploaded. What is the correct response?",
+        "options": [
+          "Upload the intended source or state that the notebook cannot answer from it",
+          "Ask the notebook to guess the paper",
+          "Cite a different paper with a similar title",
+          "Assume it found the paper online"
+        ],
+        "answerIndex": 0,
+        "explanation": "A source-grounded assistant should not be treated as having unseen documents."
+      },
+      {
+        "id": "m2-t5-q10",
+        "question": "An assistant quotes a paragraph accurately but the quote is irrelevant to the conclusion. What remains to be checked?",
+        "options": [
+          "Only the quote’s punctuation",
+          "Whether the evidence actually supports the claim and is represented in context",
+          "Whether the answer is long enough",
+          "Nothing; exact quotation proves the argument"
+        ],
+        "answerIndex": 1,
+        "explanation": "Accurate quotation can still be misused or misinterpreted."
+      },
+      {
+        "id": "m2-t5-q11",
+        "question": "Which sequence best supports a credible research paragraph?",
+        "options": [
+          "Paste several search snippets",
+          "List citations without explanation",
+          "State a claim, cite a checked source, explain how its evidence supports the claim, and note limitations",
+          "Ask AI to make the evidence persuasive"
+        ],
+        "answerIndex": 2,
+        "explanation": "The writer must connect verified evidence to the claim."
+      },
+      {
+        "id": "m2-t5-q12",
+        "question": "A student’s summary accidentally reproduces distinctive phrasing without quotation marks. What risk arises?",
+        "options": [
+          "A context window error only",
+          "A harmless formatting issue",
+          "A model licence automatically permits copying",
+          "Plagiarism even if AI transformed some surrounding sentences"
+        ],
+        "answerIndex": 3,
+        "explanation": "Source language needs attribution or genuine paraphrase."
+      },
+      {
+        "id": "m2-t5-q13",
+        "question": "Two papers have different methods and samples. How should AI compare them?",
+        "options": [
+          "Ask for a table of population, method, measures and limitations, then verify against each paper",
+          "Ask which paper is “better” without criteria",
+          "Average their results",
+          "Merge both samples into one"
+        ],
+        "answerIndex": 0,
+        "explanation": "Method-aware comparison prevents misleading synthesis."
+      },
+      {
+        "id": "m2-t5-q14",
+        "question": "A citation manager shows a DOI that redirects to a different article. What should the student do?",
+        "options": [
+          "Keep it because a DOI is present",
+          "Correct or remove the reference after verifying the publisher record",
+          "Change the article title to match the DOI",
+          "Ask a chatbot to confirm the DOI"
+        ],
+        "answerIndex": 1,
+        "explanation": "A citation identifier must resolve to the claimed work."
+      },
+      {
+        "id": "m2-t5-q15",
+        "question": "A writing assistant offers to fill a gap with “a likely statistic.” What is the professional choice?",
+        "options": [
+          "Use the estimate without a label",
+          "Cite the assistant as the dataset",
+          "Leave a clear placeholder and research the needed statistic",
+          "Remove the sentence and hide the gap from reviewers"
+        ],
+        "answerIndex": 2,
+        "explanation": "An evidence gap should be transparent, not filled with invented data."
+      }
     ],
     "m2-t6": [
-      { "id": "m2-t6-q1", "question": "What is the first step of the five-minute fact-check routine?", "options": ["Read it aloud", "Highlight every specific — numbers, dates, names, laws, citations", "Ask the model if it is sure", "Check grammar"], "answerIndex": 1, "explanation": "Errors live in specifics. Highlight them, rank by damage, then verify independently." },
-      { "id": "m2-t6-q2", "question": "Why must verification use an independent source rather than the same tool?", "options": ["The tool is too slow", "The tool's reassurance carries no information about truth", "Independent sources are always free", "It is a licensing rule"], "answerIndex": 1, "explanation": "A model will usually confirm itself. Only an official source, the original document or a recalculation counts." },
-      { "id": "m2-t6-q3", "question": "In a fair A/B test of two prompts, you should:", "options": ["Change several things at once to save time", "Change one thing, use the same input and tool, score with the same rubric, and run more than once", "Use different tools for each", "Test only once"], "answerIndex": 1, "explanation": "Isolating one variable and repeating runs is the only way to know what actually improved the output." },
-      { "id": "m2-t6-q4", "question": "Which of these is an 'AI tell' the lesson recommends removing?", "options": ["A specific local example", "A named source", "'In today's rapidly evolving landscape…'", "A number you verified"], "answerIndex": 2, "explanation": "Generic openers, triplets, balanced non-answers and words like 'delve' signal unedited AI text. Add what is yours." },
-      { "id": "m2-t6-q5", "question": "Which rule keeps a prompt library useful?", "options": ["Add every prompt you ever wrote", "Only add prompts used successfully at least twice; review monthly; version them", "Never delete entries", "Keep it private from classmates"], "answerIndex": 1, "explanation": "Curation, review and versioning keep the library small enough to open and reliable enough to trust." }
+      {
+        "id": "m2-t6-q1",
+        "question": "What is the first step of the five-minute fact-check routine?",
+        "options": [
+          "Read it aloud",
+          "Highlight every specific — numbers, dates, names, laws, citations",
+          "Ask the model if it is sure",
+          "Check grammar"
+        ],
+        "answerIndex": 1,
+        "explanation": "Errors live in specifics. Highlight them, rank by damage, then verify independently."
+      },
+      {
+        "id": "m2-t6-q2",
+        "question": "Why must verification use an independent source rather than the same tool?",
+        "options": [
+          "The tool is too slow",
+          "The tool's reassurance carries no information about truth",
+          "Independent sources are always free",
+          "It is a licensing rule"
+        ],
+        "answerIndex": 1,
+        "explanation": "A model will usually confirm itself. Only an official source, the original document or a recalculation counts."
+      },
+      {
+        "id": "m2-t6-q3",
+        "question": "In a fair A/B test of two prompts, you should:",
+        "options": [
+          "Change several things at once to save time",
+          "Change one thing, use the same input and tool, score with the same rubric, and run more than once",
+          "Use different tools for each",
+          "Test only once"
+        ],
+        "answerIndex": 1,
+        "explanation": "Isolating one variable and repeating runs is the only way to know what actually improved the output."
+      },
+      {
+        "id": "m2-t6-q4",
+        "question": "Which of these is an 'AI tell' the lesson recommends removing?",
+        "options": [
+          "A specific local example",
+          "A named source",
+          "'In today's rapidly evolving landscape…'",
+          "A number you verified"
+        ],
+        "answerIndex": 2,
+        "explanation": "Generic openers, triplets, balanced non-answers and words like 'delve' signal unedited AI text. Add what is yours."
+      },
+      {
+        "id": "m2-t6-q5",
+        "question": "Which rule keeps a prompt library useful?",
+        "options": [
+          "Add every prompt you ever wrote",
+          "Only add prompts used successfully at least twice; review monthly; version them",
+          "Never delete entries",
+          "Keep it private from classmates"
+        ],
+        "answerIndex": 1,
+        "explanation": "Curation, review and versioning keep the library small enough to open and reliable enough to trust."
+      },
+      {
+        "id": "m2-t6-q6",
+        "question": "A model returns ten facts, but the student has only five minutes to check them. What should the fact-check routine prioritise?",
+        "options": [
+          "The assistant’s greeting",
+          "Every adjective equally",
+          "Specific claims that could change the conclusion: numbers, dates, names, laws and citations",
+          "Only the final sentence"
+        ],
+        "answerIndex": 2,
+        "explanation": "High-impact specifics are the highest-value verification targets."
+      },
+      {
+        "id": "m2-t6-q7",
+        "question": "The model says “I verified this with the latest sources,” but provides no sources. What does that statement prove?",
+        "options": [
+          "That the claim is current",
+          "That a primary source was opened",
+          "That the model accessed a database",
+          "Nothing by itself; the student still needs independent evidence"
+        ],
+        "answerIndex": 3,
+        "explanation": "A model’s self-report is not evidence of verification."
+      },
+      {
+        "id": "m2-t6-q8",
+        "question": "A/B test prompt A uses one input and B uses a different input. Why is the comparison weak?",
+        "options": [
+          "Prompt and input changed together, confounding the result",
+          "The test has too many control variables",
+          "The same rubric was used",
+          "The outputs were recorded"
+        ],
+        "answerIndex": 0,
+        "explanation": "Use the same inputs to isolate the prompt change."
+      },
+      {
+        "id": "m2-t6-q9",
+        "question": "A rubric asks whether an answer is accurate, complete and usable. How should two candidate outputs be compared?",
+        "options": [
+          "Choose the longer output",
+          "Score both against the same criteria and explain the evidence for each score",
+          "Choose the answer with fewer caveats",
+          "Ask the model to score itself and accept it"
+        ],
+        "answerIndex": 1,
+        "explanation": "A common rubric makes comparison transparent and repeatable."
+      },
+      {
+        "id": "m2-t6-q10",
+        "question": "A student wants a prompt library. Which entry is ready to include?",
+        "options": [
+          "A prompt copied from social media and never tested",
+          "A prompt that worked once by chance",
+          "A prompt that succeeded on multiple tasks with notes on inputs, limits and review",
+          "A prompt with unknown data requirements"
+        ],
+        "answerIndex": 2,
+        "explanation": "Tested, documented prompts are more reusable than unverified examples."
+      },
+      {
+        "id": "m2-t6-q11",
+        "question": "An A/B prompt test shows a small improvement on one sample. What is a sensible next step?",
+        "options": [
+          "Declare statistical certainty",
+          "Change several variables again",
+          "Delete the baseline",
+          "Repeat on more representative inputs before deciding the gain is reliable"
+        ],
+        "answerIndex": 3,
+        "explanation": "Repeated tests reduce the chance of mistaking noise for improvement."
+      },
+      {
+        "id": "m2-t6-q12",
+        "question": "A team changes the prompt monthly but keeps no version record. What is difficult afterward?",
+        "options": [
+          "Explaining which version produced an output and reproducing the result",
+          "Opening a chat window",
+          "Changing the output font",
+          "Counting the number of model providers"
+        ],
+        "answerIndex": 0,
+        "explanation": "Versioning supports reproducibility and incident review."
+      },
+      {
+        "id": "m2-t6-q13",
+        "question": "A response scores well for completeness but contains one unsupported legal deadline. How should a weighted rubric handle it?",
+        "options": [
+          "Ignore it because the overall score is high",
+          "Treat accuracy as a critical criterion and investigate the deadline, not just average away the error",
+          "Increase the completeness score",
+          "Ask the model to grade the response"
+        ],
+        "answerIndex": 1,
+        "explanation": "Some high-impact errors should be gating failures rather than averaged out."
+      },
+      {
+        "id": "m2-t6-q14",
+        "question": "An evaluation uses only easy, well-formed examples. What is missing?",
+        "options": [
+          "A longer introduction",
+          "More model names",
+          "Edge cases, malformed inputs and realistic variation from the intended population",
+          "A coloured chart"
+        ],
+        "answerIndex": 2,
+        "explanation": "Evaluation must include the situations likely to expose failure."
+      },
+      {
+        "id": "m2-t6-q15",
+        "question": "A prompt performs well but requires more manual correction than the old workflow. What should the team measure?",
+        "options": [
+          "Generation speed alone",
+          "The number of tokens",
+          "The model’s confidence score",
+          "End-to-end time and quality including review and rework"
+        ],
+        "answerIndex": 3,
+        "explanation": "Workflow value includes correction and verification effort."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Prompt Design and Verification Stress Test",
+    "questions": [
+      {
+        "id": "m2-assessment-q1",
+        "question": "A prompt A/B test changes the role, examples and output format at once. The new version scores higher. What can the team conclude?",
+        "options": [
+          "The role change caused the improvement",
+          "The examples caused the improvement",
+          "The combined revision performed better, but the cause is unknown; retest one change at a time",
+          "The result proves the prompt works for every task"
+        ],
+        "answerIndex": 2,
+        "explanation": "A fair experiment changes one factor at a time and repeats on the same inputs and rubric.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q2",
+        "question": "A marketing assistant returns a polished campaign but no sign-ups. Which prompt revision most directly fixes the objective?",
+        "options": [
+          "Add more adjectives to the role description",
+          "State the measurable goal, target audience and time window, then ask for a format that supports that goal",
+          "Ask the model to be creative and persuasive",
+          "Increase the word count"
+        ],
+        "answerIndex": 1,
+        "explanation": "A useful prompt distinguishes the deliverable from the outcome it must achieve.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q3",
+        "question": "You need a summary strictly from an uploaded policy. Which instruction best limits unsupported additions?",
+        "options": [
+          "Use only the supplied text, cite the relevant section for each claim, and say “not stated” when evidence is absent",
+          "Use your knowledge to fill any gaps",
+          "Summarise the policy and make it compelling",
+          "Write like a policy expert"
+        ],
+        "answerIndex": 0,
+        "explanation": "Source constraints, citations and an explicit abstention rule reduce unsupported claims.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q4",
+        "question": "A model gives a spreadsheet result for a multi-step finance calculation. What is the strongest verification request?",
+        "options": [
+          "Ask it to repeat the calculation more confidently",
+          "Ask it to hide intermediate values",
+          "Compare the answer with another model only",
+          "Request the formula, inputs, assumptions and a small worked check, then recompute independently"
+        ],
+        "answerIndex": 3,
+        "explanation": "An auditable formula and independent recomputation are stronger than model reassurance.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q5",
+        "question": "A few-shot classifier performs well on examples all labelled “urgent” but poorly on routine cases. What is the likely prompt-design problem?",
+        "options": [
+          "The prompt has too many output constraints",
+          "The role is missing a job title",
+          "The examples are unbalanced and do not represent the intended categories",
+          "The context window is too large"
+        ],
+        "answerIndex": 2,
+        "explanation": "Few-shot examples need representative coverage, including edge cases and each relevant label.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q6",
+        "question": "An assistant shows a persuasive step-by-step explanation for a medical recommendation. How should a non-clinician treat it?",
+        "options": [
+          "As proof that the recommendation is correct",
+          "As a rationale to inspect, while checking the recommendation and inputs with a qualified source",
+          "As a substitute for a clinician",
+          "As evidence that the model used the right data"
+        ],
+        "answerIndex": 1,
+        "explanation": "A fluent explanation can be wrong or post-hoc; verify high-stakes conclusions independently.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q7",
+        "question": "A research-to-report workflow has discovery, evidence selection, analysis and drafting. Why split it into a prompt chain?",
+        "options": [
+          "Each stage can be checked and corrected before errors flow into the next stage",
+          "It guarantees the model will not hallucinate",
+          "It eliminates the need for a human editor",
+          "It gives every stage the same output without context"
+        ],
+        "answerIndex": 0,
+        "explanation": "Small verifiable steps make the workflow easier to audit and improve.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q8",
+        "question": "A first draft is vague. Which feedback is most likely to improve the next response?",
+        "options": [
+          "Make it better",
+          "Be more professional",
+          "Try harder",
+          "The second paragraph has no evidence; add two source-backed examples and keep the answer under 120 words"
+        ],
+        "answerIndex": 3,
+        "explanation": "Specific feedback names the defect and the criterion for a better result.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q9",
+        "question": "A student needs current sources for an essay and citations that can be checked. Which workflow is strongest?",
+        "options": [
+          "Ask a general chat model to invent a bibliography",
+          "Use whichever answer has the most citations",
+          "Use search to discover sources, open and verify the originals, then use a notebook to analyse the selected documents",
+          "Copy search snippets directly into the essay"
+        ],
+        "answerIndex": 2,
+        "explanation": "Discovery, source verification and evidence-based analysis are separate steps.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q10",
+        "question": "A prompt must produce Kannada first and retain technical terms in English in brackets. Which specification is clearest?",
+        "options": [
+          "Translate naturally",
+          "Explain in Kannada; keep named technical terms in English brackets; use formal campus register; preserve figures and product names",
+          "Write in Indian language",
+          "Use two languages as needed"
+        ],
+        "answerIndex": 1,
+        "explanation": "Name the languages, direction, register and treatment of technical terms explicitly.",
+        "difficulty": "advanced"
+      }
     ]
   }
 }

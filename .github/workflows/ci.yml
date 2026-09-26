@@ -11,16 +11,16 @@ on:
 jobs:
   # Job 1: build the frontend (React + Vite + TypeScript)
   frontend:
-    name: Frontend build (Node 20)
+    name: Frontend build (Node 22)
     runs-on: ubuntu-latest
     steps:
       - name: Check out the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install frontend dependencies
@@ -29,15 +29,21 @@ jobs:
       - name: Check for dead code in src/
         run: node scripts/check-dead-code.cjs
 
-      - name: Frontend unit tests (API base URL + PDF contract)   # ← NEW
+      - name: Frontend unit tests
         run: npm run test:unit
+
+      - name: Validate course packs
+        run: npm run validate:courses
+
+      - name: Render-check course pages
+        run: npm run test:render:courses
 
       - name: Build the frontend
         run: npm run build
 
   # Job 2: build the Cloud Functions backend (Express + TypeScript)
   functions:
-    name: Functions build (Node 20)
+    name: Functions build (Node 22)
     runs-on: ubuntu-latest
     env:
       # Skip Puppeteer's Chromium download during `npm ci`.
@@ -45,14 +51,20 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: "true"
     steps:
       - name: Check out the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: functions/package-lock.json
+
+      - name: Set up Java 21 for Firebase emulators
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
 
       - name: Install functions dependencies
         working-directory: functions
@@ -62,6 +74,10 @@ jobs:
         working-directory: functions
         run: npm run build
 
-      - name: Functions unit tests   # ← NEW
+      - name: Functions unit tests
         working-directory: functions
         run: npm run test:unit
+
+      - name: Course and related Firestore rules tests
+        working-directory: functions
+        run: npm run test:rules:course-security
