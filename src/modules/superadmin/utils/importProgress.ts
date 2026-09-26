@@ -154,6 +154,46 @@ export function uploadedPercent(loaded: number, total: number): number {
 
 /** Guard mirrors the server's IMPORT_MAX_ARCHIVE_BYTES (80 MB). */
 export const IMPORT_MAX_ARCHIVE_BYTES = 80 * 1024 * 1024
+/** Guard mirrors the server's IMPORT_MAX_FILE_BYTES (25 MB) — per document. */
+export const IMPORT_MAX_FILE_BYTES = 25 * 1024 * 1024
+/** Mirrors the server's IMPORT_CANDIDATE_EXTENSIONS (one document on its own). */
+export const DOCUMENT_EXTENSIONS = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg'] as const
+
+export function isArchiveFileName(name: string): boolean {
+  return String(name || '').toLowerCase().endsWith('.zip')
+}
+
+export function isDocumentFileName(name: string): boolean {
+  const lower = String(name || '').toLowerCase()
+  return (DOCUMENT_EXTENSIONS as readonly string[]).some((ext) => lower.endsWith(ext))
+}
+
+/**
+ * File-side gate for the import panel — mirrors the server's `validateImportUpload`:
+ * a `.zip` of papers, or one document (PDF/DOCX/scan image) at a time, each at
+ * its own size bound. Returns operator-facing errors, empty when the set is good.
+ */
+export function validateImportFiles(files: Array<{ name: string; size: number }>): string[] {
+  const errors: string[] = []
+  if (!files.length) {
+    errors.push('Choose question paper files first (.pdf, .docx, or a .zip of them).')
+    return errors
+  }
+  for (const f of files) {
+    if (isArchiveFileName(f.name)) {
+      if (f.size > IMPORT_MAX_ARCHIVE_BYTES) {
+        errors.push(`${f.name}: the archive is over the ${Math.round(IMPORT_MAX_ARCHIVE_BYTES / 1024 / 1024)} MB limit.`)
+      }
+    } else if (isDocumentFileName(f.name)) {
+      if (f.size > IMPORT_MAX_FILE_BYTES) {
+        errors.push(`${f.name}: the document is over the ${Math.round(IMPORT_MAX_FILE_BYTES / 1024 / 1024)} MB per-document limit.`)
+      }
+    } else {
+      errors.push(`${f.name}: not a supported file — use .pdf, .docx or a .zip of question papers.`)
+    }
+  }
+  return errors
+}
 
 export interface ImportFormState {
   program: string

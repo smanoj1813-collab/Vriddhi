@@ -38,7 +38,6 @@ import { extractPaperText } from '../paperParsing'
 import {
   IMPORT_AI_MODEL,
   IMPORT_JOBS_COLLECTION,
-  IMPORT_MAX_ARCHIVE_BYTES,
   IMPORT_MAX_FILE_BYTES,
   IMPORT_QUESTIONS_PER_BATCH,
   IMPORT_RESPONSE_SCHEMA,
@@ -56,11 +55,14 @@ import {
   describeJobProgress,
   detectDocumentLanguage,
   extractJsonPayload,
+  isArchiveFileName,
   isBufferTooLargeForInline,
   looksLikeLegacyFont,
   nextQueuedFile,
   normalizeDefaults,
   normalizeImportedQuestions,
+  singleDocumentRow,
+  validateImportUpload,
   type ImportJobDoc,
   type ImportJobFile,
 } from '../questionImport'
@@ -136,20 +138,9 @@ router.post('/jobs', verifyAuth, requireRole('superadmin'), async (req: Authenti
   try {
     const fileName = String(req.body?.fileName || '').trim()
     const bytes = Number(req.body?.bytes) || 0
-    if (!fileName) {
-      res.status(400).json({ error: 'fileName is required.' })
-      return
-    }
-    if (!/\.(zip)$/i.test(fileName)) {
-      res.status(400).json({ error: 'Upload the papers as a single .zip archive (or import one PDF at a time).' })
-      return
-    }
-    if (bytes > IMPORT_MAX_ARCHIVE_BYTES) {
-      res.status(400).json({
-        error: `The archive is ${(bytes / 1024 / 1024).toFixed(0)} MB. The limit is ${Math.round(
-          IMPORT_MAX_ARCHIVE_BYTES / 1024 / 1024
-        )} MB — split it into smaller zips and run the import once per part.`,
-      })
+    const uploadProblem = validateImportUpload(fileName, bytes)
+    if (uploadProblem) {
+      res.status(400).json({ error: uploadProblem })
       return
     }
 
@@ -194,21 +185,47 @@ router.post(
         return
       }
 
-      // First call after upload: confirm the archive is really there.
+      // First call after upload: confirm the file is really there.
       if (job.status === 'awaiting-upload') {
         const [metadata] = await bucket().file(job.archive.storagePath).getMetadata()
         const size = Number(metadata?.size) || 0
         if (!size) {
-          res.status(400).json({ error: 'The archive has not finished uploading yet. Wait for the upload to reach 100 % and try again.' })
+          res.status(400).json({ error: 'The file has not finished uploading yet. Wait for the upload to reach 100 % and try again.' })
           return
         }
-        if (size > IMPORT_MAX_ARCHIVE_BYTES) {
-          await jobRef(job.id).update({ status: 'failed', error: 'Archive too large.', updatedAt: FieldValue.serverTimestamp() })
-          res.status(400).json({ error: 'The archive is larger than the import limit. Split it into smaller zips.' })
+        const sizeProblem = validateImportUpload(job.archive.fileName, size)
+        if (sizeProblem) {
+          await jobRef(job.id).update({ status: 'failed', error: sizeProblem, updatedAt: FieldValue.serverTimestamp() })
+          res.status(400).json({ error: sizeProblem })
           return
         }
-        await jobRef(job.id).update({ status: 'unpacking', updatedAt: FieldValue.serverTimestamp() })
-        job.status = 'unpacking'
+        if (isArchiveFileName(job.archive.fileName)) {
+          await jobRef(job.id).update({ status: 'unpacking', updatedAt: FieldValue.serverTimestamp() })
+          job.status = 'unpacking'
+        } else {
+          // A single document IS the whole upload: seed its one file row (the
+          // uploaded object is the document's bytes) and go straight to parsing.
+          const seeded = applyUnpackResult(
+            job,
+            [
+              singleDocumentRow({
+                name: job.archive.fileName,
+                bytes: size,
+                storagePath: job.archive.storagePath,
+              }),
+            ],
+            { now: new Date().toISOString() }
+          )
+          await jobRef(job.id).update({
+            files: seeded.files,
+            counters: seeded.counters,
+            status: seeded.status,
+            updatedAt: FieldValue.serverTimestamp(),
+          })
+          job.files = seeded.files
+          job.counters = seeded.counters
+          job.status = seeded.status
+        }
       }
 
       if (job.status === 'unpacking') {

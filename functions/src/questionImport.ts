@@ -67,6 +67,64 @@ export const QUESTION_REVIEWS_COLLECTION = 'questionReviews'
 
 export const IMPORT_CANDIDATE_EXTENSIONS = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg'] as const
 
+/** A `.zip` of documents (the bulk path). */
+export function isArchiveFileName(name: string): boolean {
+  return String(name || '')
+    .toLowerCase()
+    .endsWith('.zip')
+}
+
+/** A single document on its own (PDF / DOCX / scan image) — the one-at-a-time path. */
+export function isSingleDocumentFileName(name: string): boolean {
+  const lower = String(name || '').toLowerCase()
+  return (IMPORT_CANDIDATE_EXTENSIONS as readonly string[]).some((ext) => lower.endsWith(ext))
+}
+
+/**
+ * Gate for POST /jobs (and for the size re-check once the upload lands).
+ *
+ * Accepts either a `.zip` of documents (bounded by IMPORT_MAX_ARCHIVE_BYTES) or
+ * ONE document on its own (bounded by IMPORT_MAX_FILE_BYTES — the same bound a
+ * document inside a zip gets). Returns the operator-facing error, or null.
+ */
+export function validateImportUpload(fileName: string, bytes: number): string | null {
+  const name = String(fileName || '').trim()
+  if (!name) return 'fileName is required.'
+  const size = Number(bytes) || 0
+  if (isArchiveFileName(name)) {
+    if (size > IMPORT_MAX_ARCHIVE_BYTES) {
+      return `The archive is ${(size / 1024 / 1024).toFixed(0)} MB. The limit is ${Math.round(
+        IMPORT_MAX_ARCHIVE_BYTES / 1024 / 1024
+      )} MB — split it into smaller zips and run the import once per part.`
+    }
+    return null
+  }
+  if (isSingleDocumentFileName(name)) {
+    if (size > IMPORT_MAX_FILE_BYTES) {
+      return `This document is ${(size / 1024 / 1024).toFixed(1)} MB; the per-document limit is ${Math.round(
+        IMPORT_MAX_FILE_BYTES / 1024 / 1024
+      )} MB — split it or upload it inside a smaller batch.`
+    }
+    return null
+  }
+  return 'Upload question papers as .pdf, .docx or .png/.jpg (scans) — or a .zip of them.'
+}
+
+/**
+ * The one file row of a single-document job. The uploaded object IS the
+ * document's bytes — no unpack step exists — so the row points straight at the
+ * job's own storage path and the queue can parse it like any zip entry.
+ */
+export function singleDocumentRow(input: { name: string; bytes: number; storagePath: string }): ImportJobFile {
+  return {
+    index: 0,
+    name: input.name,
+    bytes: input.bytes,
+    storagePath: input.storagePath,
+    status: 'queued',
+  }
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type ImportJobStatus = 'awaiting-upload' | 'unpacking' | 'parsing' | 'complete' | 'failed'

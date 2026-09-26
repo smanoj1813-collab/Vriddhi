@@ -78,7 +78,7 @@ export default function SuperAdminQuestionBank() {
             onClick={() => setImportOpen((v) => !v)}
             disabled={!isSuperadmin}
           >
-            Import papers (ZIP)
+            Import papers (ZIP / PDF)
           </Button>
           <Button
             variant="contained"

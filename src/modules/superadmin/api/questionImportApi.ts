@@ -34,11 +34,18 @@ async function bearerToken(): Promise<string> {
   return ''
 }
 
-async function requestJson<T>(path: string, body?: unknown): Promise<T> {
+async function requestJson<T>(
+  path: string,
+  body?: unknown,
+  // Explicit because the run/retry endpoints are POST-only: passing no body must
+  // NOT silently fall back to GET (Express answers an unknown method with its
+  // 404 'Route not found', which reads like a missing endpoint).
+  method: 'GET' | 'POST' = body === undefined ? 'GET' : 'POST'
+): Promise<T> {
   const token = await bearerToken()
   const url = apiUrl(path)
   const response = await fetch(url, {
-    method: body === undefined ? 'GET' : 'POST',
+    method,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -67,6 +74,17 @@ export interface RunJobResult {
   note?: string
 }
 
+/** Fallback when the browser left `file.type` empty (some OS pickers do). */
+function guessUploadContentType(name: string): string {
+  const lower = name.toLowerCase()
+  if (lower.endsWith('.zip')) return 'application/zip'
+  if (lower.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  if (lower.endsWith('.doc')) return 'application/msword'
+  if (lower.endsWith('.png')) return 'image/png'
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg'
+  return 'application/pdf'
+}
+
 async function reserveJob(file: File, defaults: JobDefaultsPayload) {
   return requestJson<{ success: boolean; jobId: string; storagePath: string }>('/question-import/jobs', {
     fileName: file.name,
@@ -76,7 +94,8 @@ async function reserveJob(file: File, defaults: JobDefaultsPayload) {
 }
 
 export async function runJob(jobId: string): Promise<RunJobResult> {
-  return requestJson<RunJobResult>(`/question-import/jobs/${jobId}/run`)
+  // POST (no body) — the worker advances one unit of work per call.
+  return requestJson<RunJobResult>(`/question-import/jobs/${jobId}/run`, undefined, 'POST')
 }
 
 export async function getJob(jobId: string): Promise<{ success: boolean; job: ImportJobView }> {
@@ -84,7 +103,12 @@ export async function getJob(jobId: string): Promise<{ success: boolean; job: Im
 }
 
 export async function retryFailedJob(jobId: string): Promise<{ success: boolean; requeued: number; job: ImportJobView }> {
-  return requestJson<{ success: boolean; requeued: number; job: ImportJobView }>(`/question-import/jobs/${jobId}/retry`)
+  // POST (no body) — same worker contract as runJob.
+  return requestJson<{ success: boolean; requeued: number; job: ImportJobView }>(
+    `/question-import/jobs/${jobId}/retry`,
+    undefined,
+    'POST'
+  )
 }
 
 /**
@@ -99,7 +123,7 @@ export function uploadArchive(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const task = uploadBytesResumable(ref(storage, storagePath), file, {
-      contentType: file.type || (file.name.toLowerCase().endsWith('.zip') ? 'application/zip' : 'application/pdf'),
+      contentType: file.type || guessUploadContentType(file.name),
     })
     task.on(
       'state_changed',
