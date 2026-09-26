@@ -103,13 +103,13 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{paper.title}</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{paper.subject} • {paper.className}</p>
+          <div className="min-w-0 pr-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">{paper.title}</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 truncate">{paper.subject} • {paper.className}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 hover:text-slate-900 dark:text-white transition-all"
+            className="p-2 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 hover:text-slate-900 dark:text-white transition-all"
           >
             <XCircle className="w-5 h-5" />
           </button>

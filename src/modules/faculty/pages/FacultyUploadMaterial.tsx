@@ -448,16 +448,16 @@ export default function FacultyUploadMaterial() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 shrink-0">
                   <FileUp className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Upload Syllabus Material</h2>
                   <p className="text-xs text-slate-500">Automatically linked to students&apos; assigned curriculum</p>
                 </div>
               </div>
-              <button onClick={resetModal} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <button onClick={resetModal} className="p-1.5 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>

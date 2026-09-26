@@ -269,7 +269,7 @@ const MultiCollegeComparison: React.FC = () => {
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Median</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">{data.median.toFixed(1)}{currentMetric.unit}</p>
           </div>
-          <div className="glass-card p-4">
+          <div className="glass-card p-4 min-w-0">
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Best</p>
             <p className="text-lg font-bold text-green-600 dark:text-green-400 truncate">{data.best.collegeName}</p>
             <p className="text-sm text-green-700/80 dark:text-green-400/70">{getMetricValue(data.best, filters.metric).toFixed(1)}{currentMetric.unit}</p>

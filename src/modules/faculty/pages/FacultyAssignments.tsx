@@ -663,13 +663,13 @@ export default function FacultyAssignments() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{showDetail.title}</h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <div className="min-w-0 pr-2">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">{showDetail.title}</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 truncate">
                   {showDetail.topic && `${showDetail.topic} • `}Due: {formatDeadline(showDetail.deadline)} • Max: {showDetail.maxScore} pts
                 </p>
               </div>
-              <button onClick={() => setShowDetail(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+              <button onClick={() => setShowDetail(null)} className="p-1.5 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>

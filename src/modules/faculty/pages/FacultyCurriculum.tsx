@@ -304,10 +304,10 @@ export default function FacultyCurriculum() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate min-w-0">
                             {course.courseName}
                           </p>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                             {course.courseCode}
                           </span>
                         </div>
