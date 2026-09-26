@@ -147,6 +147,9 @@ export interface ImportJobFile {
   drafted?: number
   duplicates?: number
   error?: string
+  /** Word transcript that archives this document after parsing (see docxWriter). */
+  transcriptStoragePath?: string
+  transcriptBytes?: number
 }
 
 export interface ImportJobCounters {
@@ -630,6 +633,14 @@ export function buildImportDraftDocs(
   const branch = defaults.branch || defaults.program.toUpperCase()
   const language = detectQuestionLanguage(question.text, paper.language === 'kn' ? 'kn' : 'en')
   const questionText = question.text
+  // PYQ identity fields — the exact trio the college-side "PYQ Questions" tab
+  // filters on (`isPYQ == true`, `examYear`, `examName`). Imported papers ARE
+  // previous-year question papers, so every draft from this pipeline is a PYQ.
+  const examYear = String(defaults.examYear ?? paper.examYear ?? '').trim()
+  const examMonth = paper.examMonth.trim()
+  const examName = examMonth
+    ? `${examMonth} Examination`
+    : (paper.title.trim() || 'Previous Year Examination')
 
   const tags = [
     'pyq',
@@ -692,6 +703,11 @@ export function buildImportDraftDocs(
     subTopicName: '',
     bloomLevel: bloomLevelFor(question.type, defaults.difficulty),
     branch,
+    // PYQ identity — mirrors the `questions` collection's PYQ fields so the
+    // college-side PYQ tab (and any future bridge) can find these rows.
+    isPYQ: true,
+    examYear,
+    examName,
     // Import provenance (mirrors the seeder's seedSource/seedBatch extras) —
     // `fingerprintMetaDoc` reads `branch` and the wording, so provenance is free.
     importJobId: ctx.jobId,
@@ -745,6 +761,9 @@ export function buildImportDraftDocs(
     subTopic: '',
     branch,
     batch: '',
+    isPYQ: true,
+    examYear,
+    examName,
     explanationText: '',
     parts: question.parts,
     createdAt: ctx.now,
@@ -855,7 +874,10 @@ export function applyFileResult(
     drafted?: number
     duplicates?: number
     error?: string
+    /** Pass '' to clear the row: the source bytes were dropped after transcription. */
     storagePath?: string
+    transcriptStoragePath?: string
+    transcriptBytes?: number
   },
   now: string
 ): ImportJobDoc {
@@ -863,7 +885,7 @@ export function applyFileResult(
     f.index === fileIndex
       ? {
           ...f,
-          storagePath: result.storagePath || f.storagePath,
+          storagePath: result.storagePath ?? f.storagePath,
           status: result.status,
           method: result.method ?? f.method,
           pages: result.pages ?? f.pages,
@@ -872,6 +894,8 @@ export function applyFileResult(
           drafted: result.drafted ?? f.drafted,
           duplicates: result.duplicates ?? f.duplicates,
           error: result.error,
+          transcriptStoragePath: result.transcriptStoragePath ?? f.transcriptStoragePath,
+          transcriptBytes: result.transcriptBytes ?? f.transcriptBytes,
         }
       : f
   )

@@ -349,6 +349,12 @@ const FacultyQuestionBank: React.FC = () => {
   };
 
   const openEditForm = (question: Question) => {
+    // Platform-pool rows live in questionBank_meta — editing them here would
+    // write to the wrong store.
+    if (question.isPlatform) {
+      showSnackbar('Platform questions are read-only. Duplicate it to make a college copy.', 'error');
+      return;
+    }
     if (question.createdBy !== facultyId && user?.role !== 'admin') {
       showSnackbar('You can only edit your own questions', 'error');
       return;
@@ -582,6 +588,9 @@ const FacultyQuestionBank: React.FC = () => {
                       {question.isPYQ && (
                         <Chip size="small" label={`${question.examYear} - ${question.examName}`} color="secondary" sx={{ mt: 0.5, fontSize: '0.7rem' }} />
                       )}
+                      {question.isPlatform && (
+                        <Chip size="small" label="Platform" variant="outlined" sx={{ mt: 0.5, ml: 0.5, fontSize: '0.7rem' }} />
+                      )}
                       {question.tags && question.tags.length > 0 && (
                         <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                           {question.tags.slice(0, 3).map((tag: string) => (<Chip key={tag} label={tag} size="small" sx={{ fontSize: '0.65rem', height: 20 }} />))}
@@ -605,8 +614,10 @@ const FacultyQuestionBank: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title="Preview"><IconButton size="small" onClick={() => openPreview(question)}><ViewIcon fontSize="small" /></IconButton></Tooltip>
-                    <Tooltip title="Link to Paper"><IconButton size="small" onClick={() => openLinker(question)}><LinkIcon fontSize="small" /></IconButton></Tooltip>
-                    {canEdit(question) && (
+                    {!question.isPlatform && (
+                      <Tooltip title="Link to Paper"><IconButton size="small" onClick={() => openLinker(question)}><LinkIcon fontSize="small" /></IconButton></Tooltip>
+                    )}
+                    {canEdit(question) && !question.isPlatform && (
                       <>
                         <Tooltip title="Edit"><IconButton size="small" onClick={() => openEditForm(question)}><EditIcon fontSize="small" /></IconButton></Tooltip>
                         <Tooltip title="Delete"><IconButton size="small" onClick={() => handleDelete(question.id)} color="error"><DeleteIcon fontSize="small" /></IconButton></Tooltip>

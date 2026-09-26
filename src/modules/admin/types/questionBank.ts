@@ -51,6 +51,8 @@ export interface Question {
   isPYQ?: boolean;
   examYear?: string;
   examName?: string;
+  /** Platform-pool row (questionBank_meta) surfaced read-only in the college bank. */
+  isPlatform?: boolean;
   linkedPapers?: string[];
   linkedPaperIds?: string[];
   usageCount?: number;
