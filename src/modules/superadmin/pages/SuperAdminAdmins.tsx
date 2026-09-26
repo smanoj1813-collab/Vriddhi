@@ -1,3 +1,4 @@
+import { PageSkeleton } from "../../../shared/components/Skeleton";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -229,9 +230,11 @@ const SuperAdminAdmins: React.FC = () => {
   };
 
   if (isLoading) {
+    // Skeleton shaped like the loaded page — reads as "arriving" instead of
+    // "waiting", and the table frame stops the layout jumping on swap.
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 dark:border-teal-400" />
+      <div className="page-container">
+        <PageSkeleton stats={0} rows={8} cols={6} />
       </div>
     );
   }

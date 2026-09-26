@@ -4,7 +4,8 @@ import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useAuth } from '../../auth/context/AuthContext'
 import { auth, db } from '@/Firebase/config'
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore'
-import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase/auth'
+import { updateProfile as updateFirebaseProfile } from 'firebase/auth'
+import ChangePasswordForm from '../../../shared/components/ChangePasswordForm'
 import {
   Save, User, Building2, Bell, Shield, Palette, Database, Download,
   Sun, Moon, Monitor, Check, Upload, Trash2, AlertTriangle,
@@ -157,14 +158,10 @@ export default function Settings() {
     setNotifications(prev => ({ ...prev, [key]: value }))
   }
 
-  // Security state
-  const [showPassword, setShowPassword] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  // Security state — password change lives in the shared ChangePasswordForm
+  // (re-authenticates with the current password, 10-char floor, clears the
+  // mustChangePassword claim), so no local password state is needed here.
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
-  const [savingPassword, setSavingPassword] = useState(false)
-  const [securityMsg, setSecurityMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [saving2FA, setSaving2FA] = useState(false)
 
   // Appearance state
@@ -380,42 +377,6 @@ export default function Settings() {
       setNotificationMsg({ type: 'err', text: e.message || 'Failed to save preferences' })
     } finally {
       setSavingNotifications(false)
-    }
-  }
-
-  const handleUpdatePassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      setSecurityMsg({ type: 'err', text: 'Please fill all password fields' })
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setSecurityMsg({ type: 'err', text: 'New passwords do not match' })
-      return
-    }
-    if (newPassword.length < 6) {
-      setSecurityMsg({ type: 'err', text: 'Password must be at least 6 characters' })
-      return
-    }
-    setSavingPassword(true)
-    setSecurityMsg(null)
-    try {
-      if (auth.currentUser) {
-        await updatePassword(auth.currentUser, newPassword)
-        setSecurityMsg({ type: 'ok', text: 'Password updated successfully!' })
-        setCurrentPassword('')
-        setNewPassword('')
-        setConfirmPassword('')
-      } else {
-        throw new Error('No authenticated user')
-      }
-    } catch (e: any) {
-      let msg = e.message || 'Failed to update password'
-      if (msg.includes('requires-recent-login')) {
-        msg = 'For security, please log out and log in again, then try changing password.'
-      }
-      setSecurityMsg({ type: 'err', text: msg })
-    } finally {
-      setSavingPassword(false)
     }
   }
 
@@ -837,75 +798,13 @@ export default function Settings() {
               <SectionDesc>Manage your password and account security</SectionDesc>
 
               <div className="space-y-6">
+                {/* Shared flow: verifies the CURRENT password via Firebase
+                    re-authentication (the old local form collected it but
+                    never checked it), enforces the platform 10-char floor,
+                    and clears the mustChangePassword claim server-side. */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Change Password</h4>
-
-                  <div className="relative">
-                    <Label>Current Password (for verification, not saved)</Label>
-                    <SettingsInput
-                      type={showPassword ? 'text' : 'password'}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter current password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-9 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-
-                  <div>
-                    <Label>New Password</Label>
-                    <SettingsInput
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password (min 6 chars)"
-                    />
-                    {newPassword && (
-                      <div className="mt-2 flex gap-1">
-                        {[1, 2, 3, 4].map((i) => (
-                          <div
-                            key={i}
-                            className={`h-1.5 flex-1 rounded-full transition-colors ${
-                              newPassword.length >= i * 2
-                                ? newPassword.length >= 8
-                                  ? 'bg-green-500'
-                                  : 'bg-yellow-500'
-                                : 'bg-slate-200 dark:bg-slate-700'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label>Confirm New Password</Label>
-                    <SettingsInput
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
-                    />
-                    {confirmPassword && newPassword !== confirmPassword && (
-                      <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
-                    )}
-                  </div>
-
-                  {securityMsg && <Message type={securityMsg.type} text={securityMsg.text} />}
-
-                  <button
-                    onClick={handleUpdatePassword}
-                    disabled={savingPassword}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
-                  >
-                    {savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                    Update Password
-                  </button>
+                  <ChangePasswordForm bare />
                 </div>
 
                 <div className="border-t border-slate-200 dark:border-slate-700/50 pt-6">

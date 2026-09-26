@@ -302,6 +302,18 @@ html {
     /* Removes the 300 ms double-tap-zoom delay on every tap. */
     touch-action: manipulation;
   }
+  /* Table row actions are icon-only p-1.5 buttons ≈28px — under the 44px
+     touch-target guidance and a constant source of mis-taps (hit Deactivate
+     instead of View). Grow the hit area on touch devices only: the icon stays
+     visually the same size, centred in a thumb-sized box. Desktop is
+     untouched, and text buttons in cells merely get a comfortable height. */
+  td button, th button {
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* Printing a document (e.g. a bank challan) from the phone shows the sheet

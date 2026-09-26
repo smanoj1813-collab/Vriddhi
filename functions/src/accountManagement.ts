@@ -23,6 +23,7 @@ import {
   generateRandomPassword as sharedGeneratePassword,
   normalizeEmail,
   secretFieldDeletes,
+  stripMustChangePassword,
   verifyAuthAccount,
 } from './identityShared'
 import * as logger from 'firebase-functions/logger'
@@ -371,5 +372,55 @@ export const syncIdentityClaims = onCall(
       errors,
       reauthenticateRequired: updated > 0,
     }
+  }
+)
+
+// Pure claim surgery lives in identityShared (import-safe for unit tests);
+// re-exported here so the callable and its consumers share one spelling.
+export { stripMustChangePassword } from './identityShared'
+
+/**
+ * Self-service: clear the caller's own `mustChangePassword` claim after they
+ * have rotated their one-time password from the client (updatePassword).
+ *
+ * Deliberately narrow:
+ *   - operates ONLY on request.auth.uid — no target parameter exists, so it
+ *     can never touch another account;
+ *   - it only ever REMOVES mustChangePassword; role/collegeId/other claims
+ *     are copied through untouched;
+ *   - a no-op (still ok:true) when the flag is already absent, so a retry
+ *     after a token refresh is harmless.
+ *
+ * Note: claim changes take effect on the NEXT token refresh (<= 1 hour, or
+ * immediately if the client calls getIdToken(true)), so the client gate also
+ * keeps a per-session marker instead of relying on the claim disappearing
+ * mid-session.
+ */
+export const clearMyMustChangePassword = onCall(
+  { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required')
+    const uid = request.auth.uid
+
+    const record = await auth.getUser(uid)
+    const claims = (record.customClaims || {}) as Record<string, unknown>
+    if (claims.mustChangePassword !== true) {
+      return { ok: true, uid, cleared: false }
+    }
+
+    await auth.setCustomUserClaims(uid, stripMustChangePassword(claims))
+
+    try {
+      await db.collection('logs').add({
+        action: 'CLEAR_MUST_CHANGE_PASSWORD',
+        targetUid: uid,
+        performedBy: uid,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      })
+    } catch (logError) {
+      logger.error('[clearMyMustChangePassword] failed to write audit log', logError)
+    }
+
+    return { ok: true, uid, cleared: true }
   }
 )
