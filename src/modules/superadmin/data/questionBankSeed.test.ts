@@ -331,6 +331,24 @@ describe('dedupe fingerprints', () => {
     )
   })
 
+  // PARITY FIXTURE — duplicated verbatim in
+  // functions/test/questionImport.test.ts ("fingerprint: normalisation matches
+  // the client seeder exactly"). The bulk paper importer writes its own copy of
+  // this normaliser, and imported rows are deduped by THIS function, so the two
+  // implementations must agree character for character. If you change the regex
+  // below, change the fixture there in the same commit.
+  it('matches the server-side importer normaliser, including Kannada', () => {
+    const fixtures: Array<{ input: string; expected: string }> = [
+      { input: 'Explain the  Demographic   Features of India!', expected: 'explain the demographic features of india' },
+      // NOTE: Kannada combining marks are stripped by \p{L} (matras are \p{M}).
+      // Preserved so both copies stay in lockstep; fixing it means changing both
+      // copies AND re-fingerprinting the existing pool.
+      { input: 'ಭಾರತದ ಜನಸಂಖ್ಯಾ ಲಕ್ಷಣಗಳನ್ನು ವಿವರಿಸಿ?', expected: 'ಭರತದ ಜನಸಖಯ ಲಕಷಣಗಳನನ ವವರಸ' },
+      { input: 'What is 2+2 ?', expected: 'what is 22' },
+    ]
+    for (const f of fixtures) assert.equal(normalizeQuestionText(f.input), f.expected)
+  })
+
   it('matches the same question but separates different topics and programmes', () => {
     const a = fingerprintSeedRow(row(MCQ_LINE))
     const b = fingerprintSeedRow(row(MCQ_LINE))

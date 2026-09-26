@@ -5,6 +5,13 @@ import { FieldValue, FieldPath } from 'firebase-admin/firestore'
 import { verifyAuth, AuthenticatedRequest, resolveCollegeId } from '../middleware/auth'
 import { aiGenerationLimiter } from '../middleware/rateLimit'
 import { geminiClient, openaiClient, deepseekClient } from '../config/aiProviders'
+import { generateWithGeminiFallback, primaryGeminiModel, readGeminiUsage } from '../config/aiModels'
+import {
+  AI_CHAT_QUOTA_COLLECTION,
+  chatQuotaDocId,
+  chatQuotaExceededBody,
+  chatQuotaState,
+} from '../aiChatQuota'
 
 const router = express.Router()
 
@@ -247,19 +254,38 @@ function nextUtcMidnightIso(): string {
  */
 function usageIncrementPayload(
   collegeId: string | undefined,
-  deltas: { serves?: number; generations?: number; tokensIn?: number; tokensOut?: number; studentUid?: string },
+  deltas: {
+    serves?: number
+    generations?: number
+    tokensIn?: number
+    tokensOut?: number
+    /** Subset of tokensOut billed as thinking (3.x models). */
+    tokensThinking?: number
+    /** Subset of tokensIn served from a context cache (billed at a discount). */
+    tokensCached?: number
+    studentUid?: string
+  },
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {}
   if (deltas.serves) payload.serves = FieldValue.increment(deltas.serves)
   if (deltas.generations) payload.generations = FieldValue.increment(deltas.generations)
   if (deltas.tokensIn) payload.tokensIn = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensIn)))
   if (deltas.tokensOut) payload.tokensOut = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensOut)))
+  if (deltas.tokensThinking) {
+    payload.tokensThinking = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensThinking)))
+  }
+  if (deltas.tokensCached) {
+    payload.tokensCached = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensCached)))
+  }
   if (collegeId) {
     const perCollege: Record<string, unknown> = {}
     if (deltas.serves) perCollege.serves = FieldValue.increment(deltas.serves)
     if (deltas.generations) perCollege.generations = FieldValue.increment(deltas.generations)
     if (deltas.tokensIn) perCollege.tokensIn = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensIn)))
     if (deltas.tokensOut) perCollege.tokensOut = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensOut)))
+    if (deltas.tokensThinking) {
+      perCollege.tokensThinking = FieldValue.increment(Math.max(0, Math.floor(deltas.tokensThinking)))
+    }
     if (Object.keys(perCollege).length > 0) payload.colleges = { [collegeId]: perCollege }
   }
   if (deltas.studentUid && deltas.generations) {
@@ -450,23 +476,48 @@ async function requestStudyPackFromProviders(
   systemPrompt: string,
   subject: string,
   topic: string,
-): Promise<{ pack: any; provider: string; tokensIn: number; tokensOut: number }> {
+): Promise<{
+  pack: any
+  provider: string
+  model: string
+  tokensIn: number
+  tokensOut: number
+  thinkingTokens: number
+  cachedTokens: number
+}> {
   let rawJson = ''
   let provider = 'gemini'
+  let model = primaryGeminiModel('fast')
   let tokensIn = 0
   let tokensOut = 0
+  let thinkingTokens = 0
+  let cachedTokens = 0
 
   const gemini = geminiClient()
   if (gemini) {
     try {
-      const model = gemini.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-      })
-      const result = await model.generateContent(systemPrompt)
-      rawJson = result.response.text()
-      const usage = (result.response as any).usageMetadata
-      tokensIn = Number(usage?.promptTokenCount) || 0
-      tokensOut = Number(usage?.candidatesTokenCount) || 0
+      // Tiered model list, not a literal: a retired id falls through to the
+      // next model inside Gemini instead of taking the feature down.
+      const generated = await generateWithGeminiFallback('fast', (modelId) =>
+        gemini.getGenerativeModel({ model: modelId }).generateContent(systemPrompt),
+        {
+          onFallback: ({ failedModel, nextModel, error }) =>
+            console.warn('[StudyMaterial] Gemini model unavailable, trying next tier entry', {
+              failedModel,
+              nextModel,
+              error: (error as Error)?.message,
+            }),
+        },
+      )
+      model = generated.model
+      rawJson = generated.result.response.text()
+      const usage = readGeminiUsage((generated.result.response as any).usageMetadata)
+      tokensIn = usage.tokensIn
+      // Thinking tokens bill at the output rate — include them, and keep the
+      // separate counter so the cost meter can attribute them.
+      tokensOut = usage.tokensOut
+      thinkingTokens = usage.thinkingTokens
+      cachedTokens = usage.cachedTokens
     } catch (gemErr) {
       console.warn('[StudyMaterial] Gemini call failed, trying next provider:', gemErr)
     }
@@ -551,7 +602,7 @@ async function requestStudyPackFromProviders(
     tokensOut = 0
   }
 
-  return { pack: parsedStudyPack, provider, tokensIn, tokensOut }
+  return { pack: parsedStudyPack, provider, model, tokensIn, tokensOut, thinkingTokens, cachedTokens }
 }
 
 /**
@@ -569,8 +620,11 @@ async function commitStudyGeneration(
     topic: string
     pack: any
     provider: string
+    model: string
     tokensIn: number
     tokensOut: number
+    thinkingTokens: number
+    cachedTokens: number
     uid: string
     role: string
     collegeId: string | undefined
@@ -608,8 +662,11 @@ async function commitStudyGeneration(
       version: next,
       studyPack: opts.pack,
       provider: opts.provider,
+      model: opts.model,
       tokensIn: opts.tokensIn,
       tokensOut: opts.tokensOut,
+      tokensThinking: opts.thinkingTokens,
+      tokensCached: opts.cachedTokens,
       createdBy: opts.uid,
       collegeId: opts.collegeId || null,
       createdAt: now,
@@ -625,6 +682,7 @@ async function commitStudyGeneration(
       hitCount: Number(prev.hitCount || 0) + (snap.exists ? 0 : 1),
       regenCount: Number(prev.regenCount || 0) + (snap.exists ? 1 : 0),
       provider: opts.provider,
+      model: opts.model,
       collegeId: (opts.collegeId || prev.collegeId) || null,
       createdBy: prev.createdBy || opts.uid,
       totalTokensIn: Number(prev.totalTokensIn || 0) + opts.tokensIn,
@@ -651,6 +709,8 @@ async function commitStudyGeneration(
     tx.set(usageRef, usageIncrementPayload(opts.collegeId, {
       tokensIn: opts.tokensIn,
       tokensOut: opts.tokensOut,
+      tokensThinking: opts.thinkingTokens,
+      tokensCached: opts.cachedTokens,
     }), { merge: true })
     return next
   })
@@ -904,8 +964,11 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
       topic,
       pack: llm.pack,
       provider: llm.provider,
+      model: llm.model,
       tokensIn: llm.tokensIn,
       tokensOut: llm.tokensOut,
+      thinkingTokens: llm.thinkingTokens,
+      cachedTokens: llm.cachedTokens,
       uid: user.uid,
       role: String(user.role || ''),
       collegeId,
@@ -1059,8 +1122,11 @@ router.post('/study-material/prewarm', verifyAuth, aiGenerationLimiter, async (r
         topic,
         pack: llm.pack,
         provider: llm.provider,
+        model: llm.model,
         tokensIn: llm.tokensIn,
         tokensOut: llm.tokensOut,
+        thinkingTokens: llm.thinkingTokens,
+        cachedTokens: llm.cachedTokens,
         uid: user.uid,
         role: String(user.role || ''),
         collegeId,
@@ -1277,6 +1343,22 @@ router.post('/chat', verifyAuth, aiGenerationLimiter, async (req: AuthenticatedR
 
   const lastUserMessage = messages[messages.length - 1]?.content || ''
 
+  // Decision D2: a per-student daily turn budget. Staff roles are exempt, and
+  // AI_CHAT_DAILY_TURNS=0 switches the cap off entirely (see aiChatQuota.ts).
+  const quotaDay = new Date().toISOString().slice(0, 10)
+  const quotaRef = db.collection(AI_CHAT_QUOTA_COLLECTION).doc(chatQuotaDocId(user.uid, quotaDay))
+  try {
+    const quotaSnap = await quotaRef.get()
+    const quota = chatQuotaState(quotaSnap.data(), user.role)
+    if (quota.exceeded) {
+      res.status(429).json(chatQuotaExceededBody(quota))
+      return
+    }
+  } catch (quotaErr) {
+    // Fail open: a quota-read failure must never take the assistant down.
+    console.warn('[AI Chat] quota check failed, allowing the turn', quotaErr)
+  }
+
   try {
     // 1. Gather live contextual summary based on role & collegeId
     const role = user.role || 'student'
@@ -1375,21 +1457,42 @@ Guidelines:
     // 2. Try LLM providers
     let replyText = ''
 
-    // Try Gemini
+    // Try Gemini — tiered list, so a retired model id degrades instead of failing.
     const gemini = geminiClient()
     if (gemini) {
       try {
-        const model = gemini.getGenerativeModel({
-          model: 'gemini-1.5-flash',
-          systemInstruction: systemPrompt,
+        const generated = await generateWithGeminiFallback('fast', (modelId) => {
+          const model = gemini.getGenerativeModel({
+            model: modelId,
+            systemInstruction: systemPrompt,
+          })
+          const formattedHistory = messages.slice(0, -1).map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }],
+          }))
+          const chat = model.startChat({ history: formattedHistory })
+          return chat.sendMessage(lastUserMessage)
+        }, {
+          onFallback: ({ failedModel, nextModel, error }) =>
+            console.warn('[AI Chat] Gemini model unavailable, trying next tier entry', {
+              failedModel,
+              nextModel,
+              error: (error as Error)?.message,
+            }),
         })
-        const formattedHistory = messages.slice(0, -1).map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        }))
-        const chat = model.startChat({ history: formattedHistory })
-        const result = await chat.sendMessage(lastUserMessage)
-        replyText = result.response.text()
+        replyText = generated.result.response.text()
+        const chatUsage = readGeminiUsage((generated.result.response as any).usageMetadata)
+        // Chat is the biggest AI cost line; record what it actually spent.
+        void db.collection('ai_usage').doc(usageDocIdForDay()).set(
+          usageIncrementPayload(req.user?.collegeId as string | undefined, {
+            tokensIn: chatUsage.tokensIn,
+            tokensOut: chatUsage.tokensOut,
+            tokensThinking: chatUsage.thinkingTokens,
+            tokensCached: chatUsage.cachedTokens,
+            studentUid: req.user?.uid,
+          }),
+          { merge: true },
+        ).catch(() => undefined)
       } catch (err) {
         console.warn('[AI Chat] Gemini call failed, trying next provider:', err)
       }
@@ -1424,6 +1527,19 @@ Guidelines:
     if (!replyText) {
       replyText = generateGroundedFallbackResponse(role, lastUserMessage, contextSummary)
     }
+
+    // Count the turn only when the user actually got an answer.
+    void quotaRef
+      .set(
+        {
+          uid: user.uid,
+          day: quotaDay,
+          turns: FieldValue.increment(1),
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true },
+      )
+      .catch(() => undefined)
 
     res.json({
       success: true,

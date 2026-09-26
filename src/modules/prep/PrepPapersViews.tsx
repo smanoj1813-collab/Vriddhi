@@ -26,11 +26,23 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ChevronRight, Description, OpenInNew, Print, Search } from '@mui/icons-material';
+import { AutoAwesome, ChevronRight, Description, OpenInNew, Print, Search } from '@mui/icons-material';
+import { useAuth } from '@/modules/auth/context/AuthContext';
 import {
+  MODEL_ANSWER_LABEL,
+  fetchFrequentQuestions,
   fetchPrepPaper,
+  fetchPrepPaperAnswers,
   fetchPrepPapers,
+  fetchPrepMcqSets,
+  generatePrepPaperAnswers,
+  generatePrepMcqSet,
+  reviewPrepPaperAnswers,
+  reviewPrepMcqSets,
+  type PrepMcqSet,
+  type PrepPaperAnswer,
   PREP_PAPER_LEGACY_LABELS,
+  type FrequentQuestion,
   type PrepPaper,
   type PrepPaperFacets,
   type PrepPaperSummary,
@@ -474,12 +486,211 @@ function MarksTag({ marks }: { marks: number }) {
   );
 }
 
+/**
+ * The same id the server builds for one question (functions/src/prepModelAnswers
+ * `answerDocId`). Kept in sync deliberately: a mismatch would silently hide
+ * every published answer, so both sides derive it from (sectionId, label).
+ */
+function paperQid(sectionId: string | undefined, label: string | number | undefined): string {
+  const safe = (value: unknown) =>
+    String(value ?? '')
+      .normalize('NFKC')
+      .replace(/[/\u0000-\u001f\u007f]/g, '-')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 100);
+  return `${safe(sectionId || 's')}__${safe(label)}`;
+}
+
+/** A published model answer, rendered under the question it answers. */
+function ModelAnswerBlock({ answer }: { answer?: PrepPaperAnswer }) {
+  const [open, setOpen] = useState(false);
+  if (!answer) return null;
+  return (
+    <Box sx={{ mt: 1.25, pl: 1.5, borderLeft: '3px solid', borderColor: 'primary.main' }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+        <Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main' }}>
+          {MODEL_ANSWER_LABEL}
+        </Typography>
+        <Button size="small" variant="text" sx={{ textTransform: 'none', minWidth: 0 }} onClick={() => setOpen((v) => !v)}>
+          {open ? 'Hide answer' : 'Show answer'}
+        </Button>
+      </Stack>
+      {open ? (
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6, mt: 0.5 }}>
+          {answer.answerMd}
+        </Typography>
+      ) : null}
+    </Box>
+  );
+}
+
+/** Superadmin-only: generate, review and publish the paper's model answers. */
+function PaperAnswerReviewStrip({
+  paperId,
+  drafts,
+  mcqSets,
+  busy,
+  notice,
+  onGenerate,
+  onReview,
+  onGenerateMcqs,
+  onReviewMcqs,
+}: {
+  paperId: string;
+  drafts: PrepPaperAnswer[];
+  mcqSets: PrepMcqSet[];
+  busy: string | null;
+  notice: string | null;
+  onGenerate: () => void;
+  onReview: (ids: string[], action: 'publish' | 'reject' | 'reopen') => void;
+  onGenerateMcqs: () => void;
+  onReviewMcqs: (ids: string[], action: 'publish' | 'reject' | 'reopen') => void;
+}) {
+  const draftSetIds = mcqSets.filter((set) => set.status !== 'published').map((set) => set.id);
+  const publishedSets = mcqSets.filter((set) => set.status === 'published');
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 3, borderStyle: 'dashed' }} data-testid="answer-review-strip">
+      <Stack spacing={1.5} sx={{ p: { xs: 2, md: 2.5 } }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <AutoAwesome fontSize="small" sx={{ color: 'warning.main' }} />
+          <Typography sx={{ fontWeight: 800 }}>Content team · model answers</Typography>
+          <Chip size="small" label={`${drafts.length} awaiting review`} color={drafts.length ? 'warning' : 'default'} variant="outlined" />
+        </Stack>
+        <Typography variant="caption" color="text.secondary">
+          Generated answers stay invisible to students until they are published here. Nothing is published automatically.
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Button size="small" variant="contained" disableElevation disabled={busy !== null} onClick={onGenerate}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            {busy === 'generate' ? 'Generating…' : 'Generate next 25 answers'}
+          </Button>
+          <Button size="small" variant="outlined" disabled={busy !== null || drafts.length === 0}
+            onClick={() => onReview(drafts.map((d) => d.id || '').filter(Boolean), 'publish')}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            Publish all drafts ({drafts.length})
+          </Button>
+          <Button size="small" variant="outlined" color="error" disabled={busy !== null || drafts.length === 0}
+            onClick={() => onReview(drafts.map((d) => d.id || '').filter(Boolean), 'reject')}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            Reject all drafts
+          </Button>
+          <Button size="small" variant="outlined" disabled={busy !== null} onClick={onGenerateMcqs}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+            {busy === 'mcq' ? 'Generating…' : 'Generate quick-revision MCQs'}
+          </Button>
+          {draftSetIds.length > 0 ? (
+            <Button size="small" variant="outlined" color="success" disabled={busy !== null}
+              onClick={() => onReviewMcqs(draftSetIds, 'publish')}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+              Publish MCQ set{draftSetIds.length === 1 ? '' : 's'} ({draftSetIds.length})
+            </Button>
+          ) : null}
+        </Stack>
+        {notice ? (
+          <Typography variant="body2" color="text.secondary" data-testid="answer-review-notice">{notice}</Typography>
+        ) : null}
+        {drafts.slice(0, 6).map((draft) => (
+          <Box key={draft.qid} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+              Q{draft.label} · {draft.marks} marks · {draft.status}
+              {draft.issues && draft.issues.length > 0 ? ` · ${draft.issues.join('; ')}` : ''}
+            </Typography>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mt: 0.5, maxHeight: 140, overflow: 'auto' }}>
+              {draft.answerMd.slice(0, 600)}{draft.answerMd.length > 600 ? '…' : ''}
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mt: 0.75 }}>
+              <Button size="small" onClick={() => onReview([draft.id || ''], 'publish')}>Publish this</Button>
+              <Button size="small" color="error" onClick={() => onReview([draft.id || ''], 'reject')}>Reject this</Button>
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    </Card>
+  );
+}
+
+/**
+ * Item 3.5: published quick-revision sets, answered inline. The correct option
+ * is only revealed after the student answers, so the set works as practice.
+ */
+export function QuickRevisionSet({ set }: { set: PrepMcqSet }) {
+  const [picked, setPicked] = useState<Record<number, number>>({});
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 3 }} data-testid="quick-revision-set">
+      <Stack spacing={1.5} sx={{ p: { xs: 2, md: 2.5 } }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Typography sx={{ fontWeight: 800 }}>Quick revision · {set.subjectName}</Typography>
+          <Chip size="small" variant="outlined" label={`${set.items.length} MCQs`} />
+          <Typography variant="caption" color="text.secondary">{MODEL_ANSWER_LABEL}</Typography>
+        </Stack>
+        {set.items.map((item, index) => {
+          const chosen = picked[index];
+          return (
+            <Box key={index} sx={{ borderTop: index === 0 ? 'none' : '1px solid', borderColor: 'divider', pt: index === 0 ? 0 : 1.25 }}>
+              <Typography sx={{ fontWeight: 600, lineHeight: 1.5 }}>
+                {index + 1}. {item.question}
+              </Typography>
+              <Stack spacing={0.5} sx={{ mt: 1 }}>
+                {item.options.map((option, optionIndex) => {
+                  const isCorrect = optionIndex === item.correctIndex;
+                  const isChosen = chosen === optionIndex;
+                  return (
+                    <Button
+                      key={optionIndex}
+                      size="small"
+                      variant={isChosen ? 'contained' : 'outlined'}
+                      color={chosen === undefined ? 'primary' : isCorrect ? 'success' : isChosen ? 'error' : 'inherit'}
+                      disableElevation
+                      onClick={() => setPicked((prev) => ({ ...prev, [index]: optionIndex }))}
+                      sx={{ justifyContent: 'flex-start', textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+                    >
+                      {option}
+                    </Button>
+                  );
+                })}
+              </Stack>
+              {chosen !== undefined ? (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+                  {chosen === item.correctIndex ? 'Correct. ' : 'Not quite. '}
+                  {item.explanation}
+                </Typography>
+              ) : null}
+            </Box>
+          );
+        })}
+      </Stack>
+    </Card>
+  );
+}
+
 export function PaperView({ paperId }: { paperId: string }) {
   const [searchParams] = useSearchParams();
   const urlProgram = String(searchParams.get('program') || '').toLowerCase();
   const [paper, setPaper] = useState<PrepPaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Items 3.4 / 3.5. `answersByQid` holds PUBLISHED answers only unless the
+  // caller is the reviewer — the server decides, so a student's browser cannot
+  // ask for a draft.
+  const { user } = useAuth();
+  const isSuperadmin = String((user as { role?: string } | null)?.role || '').toLowerCase() === 'superadmin';
+  const [answersByQid, setAnswersByQid] = useState<Record<string, PrepPaperAnswer>>({});
+  const [drafts, setDrafts] = useState<PrepPaperAnswer[]>([]);
+  const [mcqSets, setMcqSets] = useState<PrepMcqSet[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const reloadAnswers = React.useCallback(async () => {
+    const [answerResult, sets] = await Promise.all([
+      fetchPrepPaperAnswers(paperId),
+      fetchPrepMcqSets(paperId).catch(() => [] as PrepMcqSet[]),
+    ]);
+    setAnswersByQid(answerResult.byQid);
+    setDrafts(answerResult.drafts || []);
+    setMcqSets(sets);
+  }, [paperId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -489,10 +700,13 @@ export function PaperView({ paperId }: { paperId: string }) {
       .then((p) => !cancelled && setPaper(p))
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : 'This paper does not exist or is not published.'))
       .finally(() => !cancelled && setLoading(false));
+    // Answers load on their own: a paper must still render if the answer
+    // endpoints are unavailable (they are an addition, not a dependency).
+    reloadAnswers().catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [paperId]);
+  }, [paperId, reloadAnswers]);
 
   if (loading) return <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
   if (error || !paper) {
@@ -505,6 +719,70 @@ export function PaperView({ paperId }: { paperId: string }) {
 
   const program = PROGRAM_LABELS[urlProgram] ? urlProgram : paper.program;
   const hubPath = `/prep?program=${program}`;
+
+  const runReview = async (ids: string[], action: 'publish' | 'reject' | 'reopen') => {
+    const clean = ids.filter(Boolean);
+    if (clean.length === 0) return;
+    setBusy(action);
+    setNotice(null);
+    try {
+      const result = await reviewPrepPaperAnswers(clean, action);
+      setNotice(`${result.updated} answer${result.updated === 1 ? '' : 's'} ${action === 'publish' ? 'published' : action === 'reject' ? 'rejected' : 'reopened'}.`);
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not update the answers.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runGenerate = async () => {
+    setBusy('generate');
+    setNotice(null);
+    try {
+      const result = await generatePrepPaperAnswers(paper.id);
+      const drafted = result.results.filter((r) => r.status === 'drafted').length;
+      setNotice(
+        drafted === 0
+          ? 'No new answers were generated. Nothing is published automatically — review the drafts above.'
+          : `${drafted} draft${drafted === 1 ? '' : 's'} generated${result.remaining > 0 ? `, ${result.remaining} question${result.remaining === 1 ? '' : 's'} left — run it again` : ''}. Nothing is published automatically.`,
+      );
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not generate answers.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runGenerateMcqs = async () => {
+    setBusy('mcq');
+    setNotice(null);
+    try {
+      const result = await generatePrepMcqSet(paper.id);
+      setNotice(`${result.count} quick-revision question${result.count === 1 ? '' : 's'} drafted. Publish them when you have read them.`);
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not generate quick-revision questions.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runReviewMcqs = async (ids: string[], action: 'publish' | 'reject' | 'reopen') => {
+    setBusy(action);
+    setNotice(null);
+    try {
+      const result = await reviewPrepMcqSets(ids, action);
+      setNotice(`${result.updated} MCQ set${result.updated === 1 ? '' : 's'} ${action === 'publish' ? 'published' : 'rejected'}.`);
+      await reloadAnswers();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not update the quick-revision sets.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const crumbs = [
     { label: 'Prep', to: '/prep' },
     { label: PROGRAM_LABELS[program] || program, to: hubPath },
@@ -583,6 +861,20 @@ export function PaperView({ paperId }: { paperId: string }) {
           </Box>
         </Card>
 
+        {isSuperadmin ? (
+          <PaperAnswerReviewStrip
+            paperId={paper.id}
+            drafts={drafts}
+            mcqSets={mcqSets}
+            busy={busy}
+            notice={notice}
+            onGenerate={() => void runGenerate()}
+            onReview={(ids, action) => void runReview(ids, action)}
+            onGenerateMcqs={() => void runGenerateMcqs()}
+            onReviewMcqs={(ids, action) => void runReviewMcqs(ids, action)}
+          />
+        ) : null}
+
         {/* Sections */}
         {paper.sections.map((section) => (
           <Card key={section.id} variant="outlined" sx={{ borderRadius: 3 }}>
@@ -616,6 +908,9 @@ export function PaperView({ paperId }: { paperId: string }) {
                           ))}
                         </Stack>
                       ) : null}
+                      {/* Item 3.4: the reviewed model answer, or nothing. A draft
+                          never reaches a student — the server does not send it. */}
+                      <ModelAnswerBlock answer={answersByQid[paperQid(section.id, q.label)]} />
                     </Box>
                     {q.marks && q.marks !== section.marksEach ? <MarksTag marks={q.marks} /> : null}
                   </Box>
@@ -624,6 +919,14 @@ export function PaperView({ paperId }: { paperId: string }) {
             </Box>
           </Card>
         ))}
+
+        {/* Item 3.5: quick revision from this paper's own questions. Only
+            published sets exist in this list for a student. */}
+        {mcqSets
+          .filter((set) => set.status === 'published')
+          .map((set) => (
+            <QuickRevisionSet key={set.id} set={set} />
+          ))}
 
         {/* Source attribution */}
         <Box sx={{ px: 1 }}>
@@ -646,5 +949,193 @@ export function PaperView({ paperId }: { paperId: string }) {
         </Box>
       </Stack>
     </Container>
+  );
+}
+
+
+// ─── Most repeated questions (item 3.3) ──────────────────────────────────────
+//
+// /prep/papers/repeats?program=bcom&subject=Financial%20Accounting
+//
+// The grouping itself happens on the server (functions/src/prepFrequentQuestions.ts)
+// so the rule that decides what counts as "the same question" exists once and is
+// unit-tested there. This view is presentation only: pick a subject, see what
+// keeps coming back, and open the papers it came from.
+
+export function FrequentQuestionsView() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const fromUrl = String(searchParams.get('program') || '').toLowerCase();
+  const program = PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
+  const subject = String(searchParams.get('subject') || '');
+
+  const [subjects, setSubjects] = useState<Array<{ subjectName: string; repeated: number }>>([]);
+  const [questions, setQuestions] = useState<FrequentQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchFrequentQuestions({ program, subject: subject || undefined })
+      .then((res) => {
+        if (cancelled) return;
+        setSubjects(res.subjects);
+        setQuestions(res.questions);
+      })
+      .catch((err) => !cancelled && setError(err instanceof Error ? err.message : 'Could not load repeated questions.'))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [program, subject, attempt]);
+
+  const pickProgram = (code: string) => {
+    rememberProgram(code);
+    // The subject list is per-program, so the chosen subject cannot carry over.
+    setSearchParams({ program: code }, { replace: true });
+  };
+
+  const pickSubject = (name: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (name) next.set('subject', name);
+    else next.delete('subject');
+    setSearchParams(next, { replace: true });
+  };
+
+  const hubPath = `/prep?program=${program}`;
+  const crumbs = [
+    { label: 'Prep', to: '/prep' },
+    { label: PROGRAM_LABELS[program] || program, to: hubPath },
+    { label: 'Most repeated questions' },
+  ];
+
+  return (
+    <>
+      <ProgramControl active={program} onPick={pickProgram} action={<ShareLinkButton path={`/prep/papers/repeats?program=${program}`} compact />} />
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
+        <Stack spacing={2}>
+          <PrepPageNav crumbs={crumbs} sharePath={`/prep/papers/repeats?program=${program}`} backTo={hubPath} />
+          <SectionHeader
+            kicker="Exam practice"
+            title={`${PROGRAM_LABELS[program] || program} — questions that keep coming back`}
+            meta={
+              loading
+                ? 'Loading…'
+                : subject
+                  ? `${questions.length} repeated question${questions.length === 1 ? '' : 's'} in ${subject}`
+                  : `Pick a subject — ${subjects.length} subject${subjects.length === 1 ? '' : 's'} in this program have questions that appear in more than one paper`
+            }
+          />
+
+          {error ? (
+            <Card variant="outlined">
+              <Stack spacing={1.5} sx={{ p: 3, alignItems: 'flex-start' }}>
+                <Typography sx={{ fontWeight: 700 }}>Could not load repeated questions</Typography>
+                <Typography variant="body2" color="error.main">{error}</Typography>
+                <Button size="small" variant="outlined" onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
+              </Stack>
+            </Card>
+          ) : loading ? (
+            <Stack spacing={1}>
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: 2.5 }} />
+              ))}
+            </Stack>
+          ) : subjects.length === 0 ? (
+            <Card variant="outlined">
+              <Box sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
+                <Typography sx={{ fontWeight: 700, mb: 0.5 }}>No repeats found yet</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  This program has papers, but no question appears in more than one of them yet. Open{' '}
+                  <Box component={Link} to={libraryPath(program)} sx={{ color: 'primary.main', fontWeight: 700 }}>
+                    previous year papers
+                  </Box>{' '}
+                  to practise the full sets.
+                </Typography>
+              </Box>
+            </Card>
+          ) : (
+            <>
+              <Stack spacing={1}>
+                <Typography variant="overline" color="text.secondary">Subject</Typography>
+                <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                  {subjects.map((entry) => (
+                    <Chip
+                      key={entry.subjectName}
+                      size="small"
+                      label={`${entry.subjectName} (${entry.repeated})`}
+                      color={subject === entry.subjectName ? 'primary' : 'default'}
+                      variant={subject === entry.subjectName ? 'filled' : 'outlined'}
+                      onClick={() => pickSubject(subject === entry.subjectName ? '' : entry.subjectName)}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+
+              {subject && questions.length === 0 ? (
+                <Card variant="outlined">
+                  <Box sx={{ p: 3 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No repeats found for {subject} in this program.
+                    </Typography>
+                  </Box>
+                </Card>
+              ) : null}
+
+              {questions.map((entry, index) => (
+                <Card key={entry.key} variant="outlined" data-testid="frequent-question">
+                  <Stack spacing={1.25} sx={{ p: { xs: 2, md: 2.5 } }}>
+                    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                      <Chip size="small" color="primary" label={`Asked ${entry.count} times`} />
+                      {entry.marks ? <Chip size="small" variant="outlined" label={`${entry.marks} marks`} /> : null}
+                      {entry.years.map((year) => (
+                        <Chip key={year} size="small" variant="outlined" label={year} />
+                      ))}
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                        #{index + 1}
+                      </Typography>
+                    </Stack>
+                    <Typography sx={{ fontWeight: 600, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{entry.question}</Typography>
+                    {entry.variants.length > 0 ? (
+                      <Box sx={{ pl: 1.5, borderLeft: '2px solid', borderColor: 'divider' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                          Also asked as
+                        </Typography>
+                        {entry.variants.map((variant, i) => (
+                          <Typography key={i} variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line', lineHeight: 1.5 }}>
+                            {variant}
+                          </Typography>
+                        ))}
+                      </Box>
+                    ) : null}
+                    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                      {entry.paperIds.slice(0, 6).map((paperId) => (
+                        <Button
+                          key={paperId}
+                          size="small"
+                          variant="text"
+                          endIcon={<ChevronRight />}
+                          component={Link}
+                          to={paperPath(paperId, program)}
+                        >
+                          {paperId}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Stack>
+                </Card>
+              ))}
+            </>
+          )}
+
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+            Grouped from the transcribed texts of published papers: two questions are treated as the same when their wording
+            overlaps closely and the marks agree. Nothing here is generated by AI — it is counting.
+          </Typography>
+        </Stack>
+      </Container>
+    </>
   );
 }

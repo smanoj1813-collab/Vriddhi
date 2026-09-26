@@ -19,5 +19,8 @@ export const prepRoutes: RouteObject[] = [
   { path: '/prep/company/:companyCode', element: <PrepPublicViewer view="company" /> },
   // Previous-year university question papers (published only, like the rest).
   { path: '/prep/papers', element: <PrepPublicViewer view="papers" /> },
+  // Item 3.3 — repeated-question groupings. Declared BEFORE /prep/papers/:paperId
+  // so 'repeats' can never be read as a paper id.
+  { path: '/prep/papers/repeats', element: <PrepPublicViewer view="repeats" /> },
   { path: '/prep/papers/:paperId', element: <PrepPublicViewer view="paper" /> },
 ];

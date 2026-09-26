@@ -12,7 +12,8 @@
 // the DOM.
 
 import * as XLSX from '@e965/xlsx';
-import { jsPDF } from 'jspdf';
+import { loadPdfLibs } from './pdfRuntime';
+import { describeServerReportFallback, fetchServerReportPdf } from './serverReportPdf';
 
 import {
   STAFF_STATUS_LABEL,
@@ -103,8 +104,12 @@ const PAGE_MARGIN = 28;
  * jsPDF has no autotable plugin in this project, so the table is laid out by
  * hand: fixed-weight columns, text clipped to the column, header repeated on
  * every page. It is plain but it prints, which is the point of a register.
+ *
+ * Async because jspdf is ~580 kB and is only fetched when someone actually
+ * exports a PDF (see `src/shared/utils/pdfRuntime.ts`) — never on page load.
  */
-export function toPdfBlob(options: PdfReportOptions): Blob {
+export async function toPdfBlob(options: PdfReportOptions): Promise<Blob> {
+  const { jsPDF } = await loadPdfLibs();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -215,19 +220,36 @@ export function exportFilename(prefix: string, range: AttendanceRange, format: E
   return `${safePrefix}_${stamp}.${ext}`;
 }
 
-export function downloadAttendanceReport(
+/**
+ * Download a register.
+ *
+ * PDF first asks the server to print a *text* PDF (item 4.3). Anything short of
+ * a PDF — cold renderer, spent rate limit, offline, no token — falls back to the
+ * browser's own jsPDF drawing, which is exactly what this did before. So the
+ * worst case of the new path is the old behaviour, a few seconds slower.
+ */
+export async function downloadAttendanceReport(
   format: ExportFormat,
   filenamePrefix: string,
   range: AttendanceRange,
   report: { title: string; subtitle?: string; collegeName?: string; sheets: ExportSheet[]; columnWeights?: number[][] },
-): string {
+): Promise<string> {
   const filename = exportFilename(filenamePrefix, range, format);
-  const blob =
-    format === 'csv'
-      ? toCsvBlob(report.sheets[0] ?? { name: 'Report', headers: [], rows: [] })
-      : format === 'excel'
-        ? toXlsxBlob(report.sheets)
-        : toPdfBlob(report);
+
+  if (format === 'pdf') {
+    const server = await fetchServerReportPdf({ ...report, landscape: true });
+    if (server.kind === 'pdf') {
+      triggerDownload(server.blob, filename);
+      return filename;
+    }
+    console.warn(`[Attendance] ${describeServerReportFallback(server.reason)}`);
+    triggerDownload(await toPdfBlob(report), filename);
+    return filename;
+  }
+
+  const blob = format === 'csv'
+    ? toCsvBlob(report.sheets[0] ?? { name: 'Report', headers: [], rows: [] })
+    : toXlsxBlob(report.sheets);
   triggerDownload(blob, filename);
   return filename;
 }

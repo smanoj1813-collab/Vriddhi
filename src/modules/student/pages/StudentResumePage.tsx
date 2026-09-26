@@ -31,6 +31,7 @@ import { emptyResumeData, prefillResumeData, type ResumeData, type ResumeDownloa
 import { countResumeWords, estimateResumePages } from '@/shared/utils/resumeAts'
 import ResumeEditor from '../components/resume/ResumeEditor'
 import { ResumeAtsPanel, ResumeDownloadsList, ResumePreviewFrame, ResumeTemplatePicker } from '../components/resume/ResumePanels'
+import PlacementPackPanel from '../components/resume/PlacementPackPanel'
 
 const AUTOSAVE_MS = 1500
 const PREVIEW_MS = 700
@@ -339,6 +340,16 @@ export default function StudentResumePage() {
             <ResumeAtsPanel data={data} onJobDescriptionChange={(jd) => onChange({ ...data, targetJobDescription: jd })} />
           </div>
           <div className={tab === 'ats' ? '' : 'hidden lg:block'}>
+            {/* Item 4.2: the week a company visits — cover letter, About and the
+                questions, all built from this resume. Sits under the ATS panel
+                because that panel owns the target job description. */}
+            <PlacementPackPanel
+              jobDescription={data.targetJobDescription || ''}
+              defaultJobTitle={data.contact.headline || ''}
+              collegeId={collegeId || undefined}
+              onCreditsChanged={() => void load()}
+            />
+
             <ResumeDownloadsList downloads={me.downloads} busyId={redownloadingId} onRedownload={(row) => void onRedownload(row)} />
           </div>
         </div>

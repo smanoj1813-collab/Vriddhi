@@ -13,7 +13,13 @@ import IdleSessionTimeout from './modules/auth/components/IdleSessionTimeout'
 import ErrorBoundary from './shared/components/ErrorBoundary'
 import ConfigRequiredScreen from './components/ConfigRequiredScreen'
 import { firebaseConfigStatus } from './Firebase/config'
+import { installChunkReloadGuard } from './shared/pwa/chunkReload'
 import './index.css'
+
+// Item 2.2: hashed build files are served `immutable`, so a browser holding an
+// old index.html (deep links keep Firebase's default caching) can request a
+// chunk the last deploy deleted. Reload once, then surface it.
+installChunkReloadGuard(window, window.sessionStorage)
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -10,6 +10,7 @@
 import { addDoc, getDoc, getDocs, limit, query, runTransaction, setDoc, where, type DocumentData } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
 import { actor, clean, formatDocNo, financialYear, nextCounter, nowIso, officeCol, officeDoc, str } from './officeDb'
+import { loadPdfLibs } from '@/shared/utils/pdfRuntime'
 import { normalizeNoDuesSettings, overallStatus, type NoDuesSettings, type NoDuesStatus, type SectionState, type SectionStatus } from '../utils/noDuesEngine'
 
 export async function fetchNoDuesSettings(cid?: string): Promise<NoDuesSettings> {
@@ -147,8 +148,8 @@ export async function cancelNoDues(reqId: string): Promise<void> {
 
 /** Certificate PDF — shared by the office page and the student page. */
 export async function downloadNoDuesCertificate(req: NoDuesRequest, settings: NoDuesSettings, college: { collegeName: string; address: string }): Promise<void> {
-  const { default: JsPDF } = await import('jspdf')
-  const doc = new JsPDF({ unit: 'mm', format: 'a4' })
+  const { jsPDF } = await loadPdfLibs()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const W = doc.internal.pageSize.getWidth()
   let y = 22
   doc.setFont('helvetica', 'bold')

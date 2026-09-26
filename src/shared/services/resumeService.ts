@@ -5,7 +5,7 @@
 // student may do (add-on enabled? template on? credits left?). Nothing about
 // credits is computed here — the page only displays what the server reports.
 
-import { apiUrl, ApiResponseError, assertJsonResponse, HOSTING_REWRITE_HINT, isHtmlContentType } from '../api/apiBase'
+import { apiUrl, pdfUrl, ApiResponseError, assertJsonResponse, HOSTING_REWRITE_HINT, isHtmlContentType } from '../api/apiBase'
 import type {
   ResumeAdminSettingsResponse,
   ResumeData,
@@ -27,12 +27,20 @@ async function getBearerToken(): Promise<string | null> {
   return stored || null
 }
 
-async function authedRequest(endpoint: string, init: RequestInit = {}): Promise<Response> {
+/**
+ * `service` selects which function the request goes to: `api` (default) or
+ * `pdf` (item 4.4 — the Chrome-launching routes).
+ */
+async function authedRequest(
+  endpoint: string,
+  init: RequestInit = {},
+  service: 'api' | 'pdf' = 'api',
+): Promise<Response> {
   const token = await getBearerToken()
   const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) }
   if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
   if (token) headers.Authorization = `Bearer ${token}`
-  return fetch(apiUrl(endpoint), { ...init, headers })
+  return fetch(service === 'pdf' ? pdfUrl(endpoint) : apiUrl(endpoint), { ...init, headers })
 }
 
 async function authedJson<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
@@ -127,9 +135,12 @@ export async function generateResumePdf(
   data: ResumeData,
   collegeId?: string,
 ): Promise<ResumePdfResult> {
+  // Item 4.4: the resume renderer launches Chrome too, so it lives in the `pdf`
+  // function. The route is still mounted on `api` for one release, so a client
+  // that has not picked up this build keeps working.
   const endpoint = '/resume/pdf'
-  const response = await authedRequest(endpoint, { method: 'POST', body: JSON.stringify({ templateId, data, collegeId }) })
-  return readPdfOrThrow(response, apiUrl(endpoint), 'Resume.pdf')
+  const response = await authedRequest(endpoint, { method: 'POST', body: JSON.stringify({ templateId, data, collegeId }) }, 'pdf')
+  return readPdfOrThrow(response, pdfUrl(endpoint), 'Resume.pdf')
 }
 
 /** Free: streams an already generated PDF. */
@@ -160,6 +171,82 @@ export async function improveWithAi(
   collegeId?: string,
 ): Promise<{ text: string; remaining: number }> {
   return authedJson('/resume/ai/improve', { method: 'POST', body: JSON.stringify({ kind, text, context, collegeId }) })
+}
+
+// ─── Placement Pack extensions (item 4.2) ───────────────────────────────────
+
+export async function generateCoverLetter(
+  params: { jobTitle: string; company?: string; jobDescription?: string; tone?: string },
+  collegeId?: string,
+): Promise<{ coverLetter: string; wordCount: number; issues: string[]; source: 'cache' | 'model'; aiRemaining: number }> {
+  return authedJson('/resume/cover-letter', { method: 'POST', body: JSON.stringify({ ...params, collegeId }) })
+}
+
+export async function generateLinkedinAbout(
+  params: { goal?: string },
+  collegeId?: string,
+): Promise<{ about: string; wordCount: number; issues: string[]; source: 'cache' | 'model'; aiRemaining: number }> {
+  return authedJson('/resume/linkedin-about', { method: 'POST', body: JSON.stringify({ ...params, collegeId }) })
+}
+
+export interface InterviewQuestion {
+  question: string
+  why: string
+  answerHint: string
+}
+
+export async function generateInterviewQuestions(
+  params: { jobTitle: string; company?: string; jobDescription?: string; count?: number },
+  collegeId?: string,
+): Promise<{ questions: InterviewQuestion[]; count: number; issues: string[]; source: 'cache' | 'model'; aiRemaining: number }> {
+  return authedJson('/resume/interview-questions', { method: 'POST', body: JSON.stringify({ ...params, collegeId }) })
+}
+
+export interface PlacementStatRow {
+  uid: string
+  name: string
+  email: string
+  course: string
+  templateId: string
+  updatedAt: string | null
+  readinessScore: number
+  readinessBand: 'Ready' | 'Nearly there' | 'Needs work' | 'Barely started'
+  missing: string[]
+  downloads: number
+}
+
+export interface PlacementStatsResponse {
+  collegeId: string
+  cycle: string
+  summary: {
+    students: number
+    ready: number
+    nearlyThere: number
+    needsWork: number
+    barelyStarted: number
+    averageScore: number
+    downloadsThisCycle: number
+  }
+  students: PlacementStatRow[]
+}
+
+/** The placement cell's readiness table. `format: 'csv'` returns the same rows as text. */
+export async function fetchResumePlacementStats(collegeId?: string, cycle?: string): Promise<PlacementStatsResponse> {
+  const params = new URLSearchParams()
+  if (collegeId) params.set('collegeId', collegeId)
+  if (cycle) params.set('cycle', cycle)
+  return authedJson<PlacementStatsResponse>(`/resume/admin/placement-stats${params.toString() ? `?${params}` : ''}`)
+}
+
+/** Downloads the same table as CSV (a plain text body, not JSON). */
+export async function downloadResumePlacementCsv(collegeId?: string, cycle?: string): Promise<void> {
+  const params = new URLSearchParams({ format: 'csv' })
+  if (collegeId) params.set('collegeId', collegeId)
+  if (cycle) params.set('cycle', cycle)
+  const endpoint = `/resume/admin/placement-stats?${params}`
+  const response = await authedRequest(endpoint)
+  if (!response.ok) throw new Error('Could not export the placement readiness list.')
+  saveBlobAs(await response.blob(), `placement-readiness-${cycle || 'current'}.csv`)
 }
 
 // ─── Staff / superadmin ─────────────────────────────────────────────────────

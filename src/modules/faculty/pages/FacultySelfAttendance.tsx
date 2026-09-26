@@ -142,7 +142,7 @@ export default function FacultySelfAttendance() {
     }
   };
 
-  const handleExport = (format: ExportFormat) => {
+  const handleExport = async (format: ExportFormat) => {
     setExporting(true);
     try {
       // The roster id MUST be the real uid: summarizeByFaculty keys off
@@ -158,7 +158,7 @@ export default function FacultySelfAttendance() {
         range: monthWindow,
         collegeName: department && department !== 'General' ? `Department: ${department}` : undefined,
       });
-      const filename = downloadAttendanceReport(format, 'my_attendance', monthWindow, {
+      const filename = await downloadAttendanceReport(format, 'my_attendance', monthWindow, {
         ...report,
         title: `${facultyName} — Attendance`,
       });

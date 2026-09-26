@@ -56,6 +56,48 @@ export function apiUrl(path: string): string {
   return `${API_BASE_URL}${suffix}`
 }
 
+// ─── PDF routes live in their own function (item 4.4) ───────────────────────
+//
+// The three Chrome-launching routes moved from `api` to `pdf` so that ordinary
+// API traffic no longer runs on a 2 GiB instance. `pdfUrl()` builds those URLs.
+//
+// `VITE_PDF_BASE_URL` overrides the host when the two functions live in
+// different regions. When nothing is set we derive it from the API base by
+// swapping the trailing `/api` for `/pdf` — which is what the deployed names
+// are — and fall back to the literal production host if that suffix is absent
+// (a same-origin `/api` dev proxy, for example).
+
+export const DEFAULT_PDF_BASE_URL = 'https://asia-south1-vriddhi-academic.cloudfunctions.net/pdf'
+
+/**
+ * `https://…/api` → `https://…/pdf`. Anything without a trailing `/api`
+ * (e.g. the same-origin `/api` dev proxy) yields null, and the caller then uses
+ * the production default, which the Vite dev proxy forwards in development.
+ */
+export function derivePdfBaseUrl(apiBase: string): string | null {
+  const trimmed = (apiBase || '').replace(/\/+$/, '')
+  if (!/\/api$/i.test(trimmed)) return null
+  return `${trimmed.slice(0, -4)}/pdf`
+}
+
+function readConfiguredPdfBase(): string | undefined {
+  const env = (import.meta as ImportMeta & { env?: Partial<ImportMetaEnv> }).env
+  return env?.VITE_PDF_BASE_URL || undefined
+}
+
+/** Absolute base URL of the `pdf` function, never with a trailing slash. */
+export const PDF_BASE_URL = (() => {
+  const configured = (readConfiguredPdfBase() || '').trim().replace(/\/+$/, '')
+  if (configured) return /\/pdf$/i.test(configured) ? configured : `${configured}/pdf`
+  return derivePdfBaseUrl(API_BASE_URL) || DEFAULT_PDF_BASE_URL
+})()
+
+/** Builds a PDF endpoint URL: `pdfUrl('/papers/x/pdf')`. */
+export function pdfUrl(path: string): string {
+  const suffix = path.startsWith('/') ? path : `/${path}`
+  return `${PDF_BASE_URL}${suffix}`
+}
+
 /**
  * Thrown by `assertJsonResponse` when the backend did not answer with a JSON
  * document. Carries enough context to diagnose a hosting-rewrite mishit from

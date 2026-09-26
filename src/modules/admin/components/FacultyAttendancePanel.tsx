@@ -117,7 +117,7 @@ export default function FacultyAttendancePanel({
     [trend],
   );
 
-  const handleExport = (format: ExportFormat) => {
+  const handleExport = async (format: ExportFormat) => {
     setExporting(format);
     try {
       const report = buildStaffAttendanceReport({
@@ -127,7 +127,7 @@ export default function FacultyAttendancePanel({
         range,
         collegeName,
       });
-      const filename = downloadAttendanceReport(format, 'faculty_attendance', range, report);
+      const filename = await downloadAttendanceReport(format, 'faculty_attendance', range, report);
       setToast(`Downloaded ${filename}`);
     } catch (err) {
       console.error('[FacultyAttendancePanel] export failed', err);

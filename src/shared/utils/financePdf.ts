@@ -8,6 +8,7 @@
 // jsPDF is lazily imported so it stays out of the main bundle. The built-in
 // Helvetica font has no ₹ glyph, so amounts print as "Rs." / "INR".
 
+import { loadPdfLibs } from './pdfRuntime'
 import type { ReceiptModel } from '../../modules/admin/utils/financeReceipt'
 
 type JsPDF = import('jspdf').jsPDF
@@ -33,7 +34,7 @@ export const rs = (n: number) =>
   `Rs. ${(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 async function newDoc(): Promise<JsPDF> {
-  const { default: jsPDF } = await import('jspdf')
+  const { jsPDF } = await loadPdfLibs()
   return new jsPDF({ unit: 'pt', format: 'a4' })
 }
 

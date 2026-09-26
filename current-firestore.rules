@@ -1471,6 +1471,61 @@ service cloud.firestore {
       allow write: if isSuperadmin() || isCollegeStaff();
     }
 
+    // One summary document per student, maintained by the attendanceSummary
+    // Cloud Functions (item 3.1: replaces the up-to-500-row read every student
+    // dashboard used to do). A student may read their OWN summary; college staff
+    // read their college's; nobody writes from a client — the totals must be
+    // server-computed or the percentage could be forged.
+    match /attendanceSummaries/{studentId} {
+      allow get: if isSignedIn() && (isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data))
+        || ownsStudentId(studentId));
+      allow list: if isSignedIn() && (isSuperadmin() || isCollegeStaff());
+      allow write: if false;
+    }
+
+    // Platform-level documents written only by Cloud Functions with the Admin
+    // SDK: `stats` (refreshPlatformStats, every 15 min — the superadmin
+    // dashboard's source, see item 2.4) and `aiModelCanary` (daily model
+    // liveness probe, item 2.1). Superadmins may READ them; nobody may write
+    // from a client, so a counter can never be forged.
+    match /platform/{docId} {
+      allow read: if isSuperadmin();
+      allow write: if false;
+    }
+
+    // Generated-content cache (item 4.1). `aiContentCache/{sha256(kind|key|
+    // model|promptVersion)}` holds study/prep/question output that came from a
+    // model. Only Cloud Functions touch it: the key can address content for any
+    // syllabus, so a client that could read the collection could enumerate the
+    // platform's whole draft library, and a client that could write it could
+    // poison what other colleges are served.
+    match /aiContentCache/{docId} {
+      allow read, write: if false;
+    }
+
+    // Daily AI-chat turn counters (item D2 of the optimisation hand-off).
+    // `ai_chat_quota/{uid}_{YYYY-MM-DD}` is written ONLY by the /ai/chat route
+    // with the Admin SDK, which checks the counter before doing any work and
+    // increments it after a reply is produced. Clients are denied outright:
+    // a student must not be able to reset their own cap, and nobody may read
+    // another student's usage.
+    match /ai_chat_quota/{docId} {
+      allow read, write: if false;
+    }
+
+    // Import job bookkeeping for the Superadmin "Import papers (ZIP)" flow.
+    // Every read and write goes through the api function's
+    // /question-import/jobs routes, which run with the Admin SDK and enforce
+    // requireRole('superadmin') plus a per-uid rate limit; the panel never
+    // touches this collection directly. Clients are denied outright rather than
+    // scoped, so a compromised superadmin session cannot forge job counters or
+    // edit another operator's progress. Drafts the worker produces land in
+    // questionBank_meta above and are read from there.
+    match /questionBankImportJobs/{docId} {
+      allow read, write: if false;
+    }
+
     match /papers_universal/{docId} {
       allow read: if isSignedIn() && (isSuperadmin() || isStaff());
       allow write: if isSuperadmin() || isCollegeStaff();
@@ -1526,6 +1581,23 @@ service cloud.firestore {
     // superadmins also see drafts, and every write goes through the Admin SDK
     // (POST /prep/papers, /prep/seed-all).
     match /prep_papers/{paperId} {
+      allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
+      allow write: if false;
+    }
+
+    // Model answers for those papers (item 3.4) and the quick-revision MCQ sets
+    // built from them (item 3.5). Same published/subject boundary as the papers
+    // they belong to, with one addition: a REJECTED answer is not readable even
+    // by a superadmin from a client, because the reviewer's queue goes through
+    // GET /prep/papers/answers (Admin SDK). Writes are server-only — publishing
+    // is the human gate the "AI-generated, reviewed" label promises, so a client
+    // must never be able to flip the status field itself.
+    match /prep_paper_answers/{answerId} {
+      allow read: if isSignedIn() && ((resource.data.status == 'published' && resource.data.rejected != true) || isSuperadmin());
+      allow write: if false;
+    }
+
+    match /prep_mcq_sets/{setId} {
       allow read: if isSignedIn() && (resource.data.status == 'published' || isSuperadmin());
       allow write: if false;
     }
