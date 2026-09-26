@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "id": "genai-certification",
+  "code": "VGC-101",
+  "title": "GenAI for Career Impact — Certificate Program",
+  "shortTitle": "GenAI Certification",
+  "tagline": "Go from AI-curious to AI-capable: prompt, create, automate, build and launch — responsibly.",
+  "version": "1.0.0",
+  "lastReviewed": "2026-09-26",
+  "owner": "Vriddhi Academic Cloud — Learning Content",
+  "audience": "Non-technical undergraduate students (B.Com, BBA, BA, B.Sc) in affiliated colleges. No coding required.",
+  "level": "Beginner → job-ready practitioner",
+  "language": "English, with bilingual (Kannada / Hindi) prompt examples",
+  "totalHours": 60,
+  "credits": 4,
+  "durationWeeks": 10,
+  "weeklyCommitment": "≈ 6 hours: 2 h guided session · 2 h self-study · 2 h lab / project",
+  "certificateTitle": "Certified GenAI Practitioner (Vriddhi)",
+  "prerequisites": [
+    "Comfortable using a smartphone or laptop and a web browser",
+    "A Google account (for Gemini, NotebookLM, Sheets and AppSheet free tiers)",
+    "Basic English reading; Kannada / Hindi speakers are supported throughout",
+    "No programming, statistics or design background needed"
+  ],
+  "outcomes": [
+    "Explain in plain language how generative AI works, what it can and cannot do, and choose an appropriate tool for a given task.",
+    "Design, evaluate and refine prompts for text, image, video and audio generation to a professional standard.",
+    "Produce a multi-format content portfolio — documents, visuals, video and audio — that meets brand, accessibility and ethical standards.",
+    "Build custom AI assistants and no-code automations that solve a real business or campus problem.",
+    "Ship and validate a minimum viable AI product using no-code tools, with users and evidence.",
+    "Apply responsible-AI principles — fairness, transparency, privacy, security and governance — including India's DPDP framework.",
+    "Use AI to accelerate career readiness: resume, LinkedIn presence, professional writing and interview performance."
+  ],
+  "assessment": {
+    "passMark": 50,
+    "conditions": [
+      "Overall score ≥ 50%",
+      "Capstone score ≥ 40% of its weight",
+      "At least 4 of 5 Project Blocks submitted",
+      "Attendance / activity ≥ 75% of guided sessions (instructor-led batches)"
+    ],
+    "components": [
+      { "id": "quizzes", "name": "Lesson quizzes", "weight": 15, "description": "Every lesson ends with a short quiz. Best attempt counts; the average across all lessons is scaled to 15 marks." },
+      { "id": "projects", "name": "Project Blocks 1–5", "weight": 35, "description": "Five applied projects (7 marks each), graded on the rubric in assessments/rubrics.md." },
+      { "id": "capstone", "name": "Capstone: AI product + pitch", "weight": 30, "description": "Working no-code AI product, evidence of user validation, 5-minute pitch and a 2-page report." },
+      { "id": "final", "name": "Final assessment", "weight": 15, "description": "60 MCQs (60 min) drawn from the lesson quiz bank plus two scenario responses (30 min)." },
+      { "id": "journal", "name": "Reflection journal", "weight": 5, "description": "One short reflection per module (8 entries) using the prompts at the end of each lesson." }
+    ],
+    "grades": [
+      { "band": "Distinction", "min": 80 },
+      { "band": "Merit", "min": 65 },
+      { "band": "Pass", "min": 50 },
+      { "band": "Not yet", "min": 0 }
+    ]
+  },
+  "toolkit": [
+    { "category": "Chat assistants", "tools": ["ChatGPT (OpenAI)", "Gemini (Google)", "Claude (Anthropic)", "Microsoft Copilot", "Meta AI", "DeepSeek"], "note": "Free tiers are enough for the whole course. Use whichever is available; the skills transfer." },
+    { "category": "Research & study", "tools": ["Perplexity", "NotebookLM", "Google Scholar", "Semantic Scholar"] },
+    { "category": "Images & design", "tools": ["ChatGPT / Gemini image generation", "Microsoft Designer", "Canva (Magic Studio)", "Adobe Firefly", "Ideogram", "Leonardo.Ai"] },
+    { "category": "Video", "tools": ["CapCut", "Canva Video", "Runway", "Pika", "Luma", "HeyGen", "Synthesia", "Google Veo (via Gemini / Flow)"] },
+    { "category": "Audio", "tools": ["ElevenLabs", "Google Cloud / Azure TTS", "OpenAI TTS", "Suno", "Udio", "Descript", "Adobe Podcast Enhance", "NotebookLM Audio Overviews"] },
+    { "category": "Assistants & automation", "tools": ["Custom GPTs", "Gemini Gems", "Claude Projects", "Copilot agents", "Zapier", "Make", "n8n", "Google Sheets + AI"] },
+    { "category": "No-code apps", "tools": ["Google AppSheet", "Glide", "Softr", "Bubble", "Lovable", "Bolt"] },
+    { "category": "Career", "tools": ["Vriddhi Resume Builder", "LinkedIn", "Naukri", "Internshala", "Google Interview Warmup"] }
+  ],
+  "modules": [
+    {
+      "id": "m1",
+      "number": 1,
+      "slug": "01-foundations",
+      "title": "AI Foundations & the Future of Work",
+      "summary": "What generative AI actually is, why it matters for your career right now, which tools exist, and how to use them responsibly from day one.",
+      "weeks": "Week 1",
+      "hours": 6,
+      "outcomes": [
+        "Describe how GenAI is changing entry-level roles in commerce, management, arts and science careers",
+        "Distinguish AI, machine learning, deep learning and generative AI with everyday analogies",
+        "Set up a personal AI toolkit using free tiers and explain the trade-offs between tools",
+        "Apply the Automate / Augment / Avoid framework to your own weekly tasks"
+      ],
+      "topics": [
+        { "id": "m1-t1", "number": "1.1", "type": "lesson", "title": "Why GenAI is rewriting careers", "minutes": 90, "lesson": "modules/01-foundations/1.1-why-genai-is-rewriting-careers.md", "summary": "The career transformation underway, what it means for a non-technical graduate in India, and the mindset of an AI-augmented professional." },
+        { "id": "m1-t2", "number": "1.2", "type": "lesson", "title": "AI, ML, deep learning & GenAI — what is actually different", "minutes": 90, "lesson": "modules/01-foundations/1.2-ai-ml-genai-what-is-different.md", "summary": "Types of AI, how a language model predicts the next token, why it can be brilliant and wrong at the same time." },
+        { "id": "m1-t3", "number": "1.3", "type": "lesson", "title": "The GenAI ecosystem: tools, tiers & your starter toolkit", "minutes": 90, "lesson": "modules/01-foundations/1.3-genai-ecosystem-and-toolkit.md", "summary": "Map the landscape — chat, image, video, audio, automation — and set up the free accounts you will use for ten weeks." },
+        { "id": "m1-t4", "number": "1.4", "type": "lesson", "title": "Capabilities, limits & responsible use", "minutes": 90, "lesson": "modules/01-foundations/1.4-capabilities-limits-responsible-use.md", "summary": "Hallucination, bias, privacy and academic integrity, plus the Automate / Augment / Avoid framework for deciding what AI should touch." }
+      ]
+    },
+    {
+      "id": "m2",
+      "number": 2,
+      "slug": "02-prompting",
+      "title": "Prompt Engineering & Conversational AI",
+      "summary": "The core skill of the course: getting reliable, professional-quality work out of chat assistants — and knowing when the output is wrong.",
+      "weeks": "Weeks 2–3",
+      "hours": 9,
+      "outcomes": [
+        "Structure prompts with RTF for quick tasks and CO-STAR for professional deliverables",
+        "Use few-shot examples, step-by-step reasoning, self-critique and prompt chaining to improve output quality",
+        "Adapt prompting to accounting, marketing, HR, research writing and data-analysis tasks",
+        "Run a research workflow with citations you have actually verified",
+        "Evaluate outputs against a rubric and maintain a personal prompt library"
+      ],
+      "topics": [
+        { "id": "m2-t1", "number": "2.1", "type": "lesson", "title": "Working with chat assistants: getting real work done", "minutes": 75, "lesson": "modules/02-prompting/2.1-working-with-chat-assistants.md", "summary": "Context windows, conversation hygiene, files and voice, and an honest comparison of the major assistants for student tasks." },
+        { "id": "m2-t2", "number": "2.2", "type": "lesson", "title": "Prompt anatomy: RTF and CO-STAR", "minutes": 90, "lesson": "modules/02-prompting/2.2-prompt-anatomy-rtf-and-co-star.md", "summary": "The building blocks of a good prompt, two frameworks you will use every day, and the iteration loop." },
+        { "id": "m2-t3", "number": "2.3", "type": "lesson", "title": "Advanced prompting patterns", "minutes": 90, "lesson": "modules/02-prompting/2.3-advanced-prompting-patterns.md", "summary": "Few-shot, chain-of-thought, step-back, persona, self-critique, output templating and prompt chaining — with when-to-use guidance." },
+        { "id": "m2-t4", "number": "2.4", "type": "lesson", "title": "Prompting for your discipline", "minutes": 90, "lesson": "modules/02-prompting/2.4-prompting-for-your-discipline.md", "summary": "Worked prompt sets for commerce, management, arts and science students, including bilingual Kannada–English prompting." },
+        { "id": "m2-t5", "number": "2.5", "type": "lesson", "title": "Research & writing assistants", "minutes": 75, "lesson": "modules/02-prompting/2.5-research-and-writing-assistants.md", "summary": "Perplexity, NotebookLM and deep-research modes; summarising papers; citing honestly and avoiding plagiarism." },
+        { "id": "m2-t6", "number": "2.6", "type": "lesson", "title": "Evaluating & refining GenAI outputs", "minutes": 60, "lesson": "modules/02-prompting/2.6-evaluating-and-refining-outputs.md", "summary": "A fact-checking routine, rubric-based evaluation, A/B testing prompts and building your prompt library." },
+        { "id": "m2-pb1", "number": "PB1", "type": "project", "title": "Project Block 1 — Personal Prompt Playbook", "minutes": 60, "lesson": "projects/pb1-prompt-playbook.md", "summary": "Ten tested, reusable prompts for your discipline with evaluation notes and a one-page reflection." }
+      ]
+    },
+    {
+      "id": "m3",
+      "number": 3,
+      "slug": "03-visual",
+      "title": "AI for Visual Content Creation",
+      "summary": "Images, designs, presentations and short videos — created, edited and repurposed with AI, to a standard a brand would accept.",
+      "weeks": "Weeks 3–4",
+      "hours": 7.5,
+      "outcomes": [
+        "Explain how image generators work and choose the right tool for a brief",
+        "Write image prompts that control subject, style, composition and consistency; edit with inpainting and outpainting",
+        "Produce posters, social posts, presentations and infographics using AI-assisted design tools",
+        "Create a short video with text-to-video, avatar and editing tools, including captions",
+        "Repurpose one asset across formats while keeping brand consistency and respecting copyright"
+      ],
+      "topics": [
+        { "id": "m3-t1", "number": "3.1", "type": "lesson", "title": "The visual content revolution & how image generators work", "minutes": 60, "lesson": "modules/03-visual/3.1-visual-content-revolution.md", "summary": "Why visual content matters for every career, an intuition for diffusion models, and the tool landscape." },
+        { "id": "m3-t2", "number": "3.2", "type": "lesson", "title": "Image prompt mastery & editing", "minutes": 90, "lesson": "modules/03-visual/3.2-image-prompt-mastery-and-editing.md", "summary": "The prompt formula for images, style and composition vocabulary, iteration, and editing techniques." },
+        { "id": "m3-t3", "number": "3.3", "type": "lesson", "title": "Design workflows: Canva, presentations & infographics", "minutes": 75, "lesson": "modules/03-visual/3.3-design-workflows-canva-presentations.md", "summary": "From generated image to finished design: brand kits, AI presentation builders and data-to-infographic." },
+        { "id": "m3-t4", "number": "3.4", "type": "lesson", "title": "AI video: text-to-video, avatars & short-form", "minutes": 90, "lesson": "modules/03-visual/3.4-ai-video-and-avatars.md", "summary": "Script → storyboard → generate → edit → caption: a complete workflow for a 30–60 second video." },
+        { "id": "m3-t5", "number": "3.5", "type": "lesson", "title": "Repurposing, brand consistency & visual ethics", "minutes": 60, "lesson": "modules/03-visual/3.5-repurposing-brand-consistency-ethics.md", "summary": "One idea, ten formats; brand rules; copyright, deepfakes, disclosure and content credentials." },
+        { "id": "m3-pb2", "number": "PB2", "type": "project", "title": "Project Block 2 — Campaign Kit", "minutes": 75, "lesson": "projects/pb2-campaign-kit.md", "summary": "A poster, three social posts and a 30-second video for a college event or a local business, with a brand sheet." }
+      ]
+    },
+    {
+      "id": "m4",
+      "number": 4,
+      "slug": "04-audio",
+      "title": "AI for Audio, Voice & Music",
+      "summary": "Voice generation, editing, music and voice cloning — and how audio fits into a modern content stack, in more than one language.",
+      "weeks": "Week 5",
+      "hours": 5,
+      "outcomes": [
+        "Identify audio content opportunities in education, business and creator careers",
+        "Generate natural multilingual speech and select the right voice for a purpose",
+        "Clean up recordings, generate background music and understand voice cloning and its consent requirements",
+        "Turn written content into a podcast, voiceover or accessible audio version"
+      ],
+      "topics": [
+        { "id": "m4-t1", "number": "4.1", "type": "lesson", "title": "Audio opportunities & voice generation", "minutes": 75, "lesson": "modules/04-audio/4.1-audio-opportunities-and-voice-generation.md", "summary": "Where audio is growing, how text-to-speech works, choosing voices, and Kannada / Hindi / Tamil generation." },
+        { "id": "m4-t2", "number": "4.2", "type": "lesson", "title": "Editing, music generation & voice cloning", "minutes": 75, "lesson": "modules/04-audio/4.2-editing-music-and-voice-cloning.md", "summary": "Text-based audio editing, noise removal, AI music for background scores, and voice cloning done ethically." },
+        { "id": "m4-t3", "number": "4.3", "type": "lesson", "title": "Audio in your content stack", "minutes": 60, "lesson": "modules/04-audio/4.3-audio-in-your-content-stack.md", "summary": "Blog → podcast, lecture → audio notes, video voiceovers, IVR scripts and accessibility." },
+        { "id": "m4-pb3", "number": "PB3", "type": "project", "title": "Project Block 3 — Bilingual Audio Episode", "minutes": 90, "lesson": "projects/pb3-bilingual-audio-episode.md", "summary": "A 3-minute explainer podcast or voiceover in English plus one Indian language, with music and show notes." }
+      ]
+    },
+    {
+      "id": "m5",
+      "number": 5,
+      "slug": "05-assistants-automation",
+      "title": "Custom Assistants & No-Code Automation",
+      "summary": "Move from using AI to building with it: purpose-built assistants, retrieval over your own documents, and automations that run while you sleep.",
+      "weeks": "Weeks 6–7",
+      "hours": 9,
+      "outcomes": [
+        "Build a custom assistant (GPT / Gem / Project) with instructions, knowledge files and guardrails",
+        "Explain retrieval-augmented generation without code and know where it fails",
+        "Create multi-step automations with triggers, AI steps and human checkpoints in Zapier, Make or n8n",
+        "Map a business process and identify automation candidates with a simple ROI estimate",
+        "Build a working no-code app with an AI feature"
+      ],
+      "topics": [
+        { "id": "m5-t1", "number": "5.1", "type": "lesson", "title": "Custom GPTs, Gems & Projects: purpose-built assistants", "minutes": 90, "lesson": "modules/05-assistants-automation/5.1-custom-assistants.md", "summary": "Instructions, knowledge, conversation starters and guardrails; building a study buddy and a placement coach." },
+        { "id": "m5-t2", "number": "5.2", "type": "lesson", "title": "Giving AI your knowledge: RAG without code", "minutes": 75, "lesson": "modules/05-assistants-automation/5.2-rag-without-code.md", "summary": "Why assistants need your documents, how retrieval works, NotebookLM as a RAG lab, and its limits." },
+        { "id": "m5-t3", "number": "5.3", "type": "lesson", "title": "Low-code automation with AI steps", "minutes": 90, "lesson": "modules/05-assistants-automation/5.3-low-code-automation.md", "summary": "Triggers, actions, filters and AI steps in Zapier, Make and n8n; Sheets + AI; three starter automations." },
+        { "id": "m5-t4", "number": "5.4", "type": "lesson", "title": "Business process design: finding what to automate", "minutes": 75, "lesson": "modules/05-assistants-automation/5.4-business-process-design.md", "summary": "Process mapping, the automation scorecard, ROI in minutes saved, and human-in-the-loop checkpoints." },
+        { "id": "m5-t5", "number": "5.5", "type": "lesson", "title": "Building a no-code AI app: idea to working MVP", "minutes": 90, "lesson": "modules/05-assistants-automation/5.5-no-code-ai-app.md", "summary": "Choosing a builder, designing data and screens, adding an AI feature, and testing with real users." },
+        { "id": "m5-pb4", "number": "PB4", "type": "project", "title": "Project Block 4 — Automation or Mini-App", "minutes": 120, "lesson": "projects/pb4-automation-or-mini-app.md", "summary": "A working automation or mini-app that solves a real college or small-business problem, with a demo video." }
+      ]
+    },
+    {
+      "id": "m6",
+      "number": 6,
+      "slug": "06-product-sprint",
+      "title": "AI Product Sprint (Capstone)",
+      "summary": "Take one idea from concept to launch: validate it, build it with no-code tools, integrate AI, test it with users and pitch it.",
+      "weeks": "Weeks 7–8",
+      "hours": 8,
+      "outcomes": [
+        "Write a problem statement and validate it with interviews and AI-assisted market research",
+        "Build an MVP that combines a no-code app, an AI feature and a data model",
+        "Run a go-live checklist covering testing, privacy, error handling and cost",
+        "Collect user insights, define metrics and present a credible growth plan"
+      ],
+      "topics": [
+        { "id": "m6-t1", "number": "6.1", "type": "lesson", "title": "Product concept & market validation", "minutes": 90, "lesson": "modules/06-product-sprint/6.1-product-concept-and-validation.md", "summary": "Problem framing, user interviews, competitor scans with AI, and a one-page lean canvas." },
+        { "id": "m6-t2", "number": "6.2", "type": "lesson", "title": "Build sprint: app, AI feature & data", "minutes": 120, "lesson": "modules/06-product-sprint/6.2-build-sprint.md", "summary": "Scoping the MVP, building screens and data, wiring the AI feature, and keeping a build log." },
+        { "id": "m6-t3", "number": "6.3", "type": "lesson", "title": "Integration, testing, privacy & go-live", "minutes": 90, "lesson": "modules/06-product-sprint/6.3-integration-testing-go-live.md", "summary": "Connecting automations, test plans, privacy notices, failure handling and the launch checklist." },
+        { "id": "m6-t4", "number": "6.4", "type": "lesson", "title": "User insights, growth planning & the pitch", "minutes": 90, "lesson": "modules/06-product-sprint/6.4-user-insights-growth-and-pitch.md", "summary": "Feedback loops, simple analytics, iteration priorities and a 5-minute pitch built with AI." },
+        { "id": "m6-cap", "number": "CAP", "type": "project", "title": "Capstone — AI Product Demo Day", "minutes": 90, "lesson": "projects/capstone-ai-product.md", "summary": "Working product, evidence of user validation, 5-minute pitch and a 2-page report." }
+      ]
+    },
+    {
+      "id": "m7",
+      "number": 7,
+      "slug": "07-responsible-ai",
+      "title": "Responsible AI: Ethics, Fairness, Security & Governance",
+      "summary": "The judgement employers are asking for: spotting bias, demanding transparency, protecting data and following the rules — in India and globally.",
+      "weeks": "Week 9",
+      "hours": 6,
+      "outcomes": [
+        "Apply the principles of fairness, accountability, transparency and privacy to real cases",
+        "Test an AI system for bias and propose mitigations",
+        "Read a model card or system card and explain a model's limits to a non-expert",
+        "Recognise prompt injection, data leakage and shadow-AI risks; summarise DPDP and EU AI Act obligations that matter to a workplace"
+      ],
+      "topics": [
+        { "id": "m7-t1", "number": "7.1", "type": "lesson", "title": "AI ethics principles & real-world failures", "minutes": 75, "lesson": "modules/07-responsible-ai/7.1-ai-ethics-principles-and-failures.md", "summary": "FATE principles through case studies in hiring, lending, policing, exam proctoring and content moderation." },
+        { "id": "m7-t2", "number": "7.2", "type": "lesson", "title": "Detecting and reducing bias — hands-on", "minutes": 90, "lesson": "modules/07-responsible-ai/7.2-detecting-and-reducing-bias.md", "summary": "Where bias enters, a bias-testing protocol for chatbots and image generators, and fairness metrics intuition." },
+        { "id": "m7-t3", "number": "7.3", "type": "lesson", "title": "Explainability, model cards & transparency", "minutes": 75, "lesson": "modules/07-responsible-ai/7.3-explainability-and-model-cards.md", "summary": "Why black boxes are a business risk, intuition for LIME and SHAP, and how to read a model or system card." },
+        { "id": "m7-t4", "number": "7.4", "type": "lesson", "title": "Security, privacy law & AI governance", "minutes": 75, "lesson": "modules/07-responsible-ai/7.4-security-privacy-law-governance.md", "summary": "Prompt injection, data leakage, shadow AI, India's DPDP Act and Rules, the EU AI Act, and writing a team AI policy." },
+        { "id": "m7-pb5", "number": "PB5", "type": "project", "title": "Project Block 5 — AI Ethics Audit", "minutes": 45, "lesson": "projects/pb5-ai-ethics-audit.md", "summary": "Audit one AI tool you used in this course against a fairness, transparency, privacy and safety checklist." }
+      ]
+    },
+    {
+      "id": "m8",
+      "number": 8,
+      "slug": "08-career-launch",
+      "title": "AI-Powered Career Launch",
+      "summary": "Convert ten weeks of work into a job search advantage: resume, portfolio, LinkedIn, professional writing and interview practice — all AI-assisted, all authentically yours.",
+      "weeks": "Week 10",
+      "hours": 6,
+      "outcomes": [
+        "Produce an ATS-friendly resume and a portfolio that showcases course projects",
+        "Optimise a LinkedIn profile and plan a month of professional content",
+        "Write clear business emails, reports and proposals with AI as an editor, not a ghostwriter",
+        "Practise interviews and group discussions with AI feedback and map AI-augmented roles for your degree"
+      ],
+      "topics": [
+        { "id": "m8-t1", "number": "8.1", "type": "lesson", "title": "Resume & portfolio building with AI", "minutes": 90, "lesson": "modules/08-career-launch/8.1-resume-and-portfolio.md", "summary": "ATS rules, achievement statements, tailoring to a job description, and turning course projects into a portfolio." },
+        { "id": "m8-t2", "number": "8.2", "type": "lesson", "title": "LinkedIn & your professional brand", "minutes": 75, "lesson": "modules/08-career-launch/8.2-linkedin-and-professional-brand.md", "summary": "Headline, About, featured projects, a 4-week content plan and outreach messages that get replies." },
+        { "id": "m8-t3", "number": "8.3", "type": "lesson", "title": "Professional writing & email with AI", "minutes": 75, "lesson": "modules/08-career-launch/8.3-professional-writing-and-email.md", "summary": "Emails, reports, proposals and minutes; tone for Indian workplaces; editing prompts that keep your voice." },
+        { "id": "m8-t4", "number": "8.4", "type": "lesson", "title": "Interview & communication practice; the AI-era job map", "minutes": 90, "lesson": "modules/08-career-launch/8.4-interview-practice-and-job-map.md", "summary": "Mock interviews with AI, STAR stories, GD practice, presentation feedback, and roles for commerce, arts and science graduates." }
+      ]
+    }
+  ],
+  "finalAssessment": {
+    "title": "Final assessment",
+    "minutes": 90,
+    "blueprint": "assessments/final-assessment-blueprint.md"
+  },
+  "documents": {
+    "facilitatorGuide": "facilitator-guide.md",
+    "rubrics": "assessments/rubrics.md",
+    "certificationPolicy": "assessments/certification-policy.md"
+  }
+}

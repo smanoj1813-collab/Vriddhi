@@ -10,6 +10,7 @@ import { facultyRoutes } from '@/modules/faculty/routes';
 import { adminRoutes } from '@/modules/admin/routes';
 import { superadminRoutes } from '@/modules/superadmin/routes';
 import { prepRoutes } from '@/modules/prep/routes';
+import { publicCourseRoutes } from '@/modules/courses/routes';
 
 function RootRedirect() {
   const { user, isLoading } = useAuth();
@@ -73,5 +74,8 @@ export const appRoutes: RouteObject[] = [
   // Public Prep catalog (shareable, college-free) — must sit before the
   // catch-all so /prep/... links resolve instead of 404-redirecting home.
   ...prepRoutes,
+  // Public course preview (/courses/...) — same reasoning as /prep: a
+  // shareable, login-free link to verify course content. Device-local progress.
+  ...publicCourseRoutes,
   { path: '*', element: <NotFoundHandler /> },
 ];
