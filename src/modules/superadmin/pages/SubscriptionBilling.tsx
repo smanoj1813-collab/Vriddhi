@@ -426,7 +426,7 @@ const SubscriptionBilling: React.FC = () => {
               <Download className="w-4 h-4" /> Export
             </button>
           </div>
-          <div className="glass-card overflow-hidden">
+          <div className="glass-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">
@@ -478,7 +478,7 @@ const SubscriptionBilling: React.FC = () => {
 
       {/* Alerts Tab */}
       {activeTab === 'alerts' && (
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">

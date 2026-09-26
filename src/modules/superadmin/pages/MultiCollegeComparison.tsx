@@ -176,7 +176,7 @@ const MultiCollegeComparison: React.FC = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <AlertTriangle className="w-12 h-12 text-red-600 dark:text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Failed to load comparison</h2>
           <button onClick={() => refetch()} className="px-4 py-2 bg-violet-600 text-slate-900 dark:text-white rounded-lg">Retry</button>
         </div>
@@ -271,8 +271,8 @@ const MultiCollegeComparison: React.FC = () => {
           </div>
           <div className="glass-card p-4">
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Best</p>
-            <p className="text-lg font-bold text-green-400 truncate">{data.best.collegeName}</p>
-            <p className="text-sm text-green-400/70">{getMetricValue(data.best, filters.metric).toFixed(1)}{currentMetric.unit}</p>
+            <p className="text-lg font-bold text-green-600 dark:text-green-400 truncate">{data.best.collegeName}</p>
+            <p className="text-sm text-green-700/80 dark:text-green-400/70">{getMetricValue(data.best, filters.metric).toFixed(1)}{currentMetric.unit}</p>
           </div>
           <div className="glass-card p-4">
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Std Dev</p>
@@ -364,8 +364,8 @@ const MultiCollegeComparison: React.FC = () => {
                   >
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                        isBest ? 'bg-emerald-100 dark:bg-emerald-900/30 text-green-400' :
-                        isWorst ? 'bg-red-500/20 text-red-400' :
+                        isBest ? 'bg-emerald-100 dark:bg-emerald-900/30 text-green-600 dark:text-green-400' :
+                        isWorst ? 'bg-red-500/20 text-red-600 dark:text-red-400' :
                         'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
                       }`}>
                         {index + 1}
@@ -388,10 +388,10 @@ const MultiCollegeComparison: React.FC = () => {
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         {trend > 0.5 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> :
-                         trend < -0.5 ? <TrendingDown className="w-3.5 h-3.5 text-red-600 dark:text-red-400" /> :
+                         trend < -0.5 ? <TrendingDown className="w-3.5 h-3.5 text-red-600 dark:text-red-600 dark:text-red-400" /> :
                          <Minus className="w-3.5 h-3.5 text-slate-400" />}
                         <span className={`text-xs font-medium ${
-                          trend > 0.5 ? 'text-green-400' : trend < -0.5 ? 'text-red-400' : 'text-slate-400'
+                          trend > 0.5 ? 'text-green-600 dark:text-green-400' : trend < -0.5 ? 'text-red-600 dark:text-red-400' : 'text-slate-400'
                         }`}>
                           {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
                         </span>
@@ -401,20 +401,20 @@ const MultiCollegeComparison: React.FC = () => {
                     <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{college.faculty}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
-                        college.avgAttendance >= 90 ? 'text-green-400' :
-                        college.avgAttendance >= 80 ? 'text-yellow-400' : 'text-red-400'
+                        college.avgAttendance >= 90 ? 'text-green-600 dark:text-green-400' :
+                        college.avgAttendance >= 80 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>{college.avgAttendance}%</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
-                        college.passRate >= 90 ? 'text-green-400' :
-                        college.passRate >= 75 ? 'text-yellow-400' : 'text-red-400'
+                        college.passRate >= 90 ? 'text-green-600 dark:text-green-400' :
+                        college.passRate >= 75 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>{college.passRate}%</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium ${
-                        college.placementRate >= 85 ? 'text-green-400' :
-                        college.placementRate >= 70 ? 'text-yellow-400' : 'text-red-400'
+                        college.placementRate >= 85 ? 'text-green-600 dark:text-green-400' :
+                        college.placementRate >= 70 ? 'text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>{college.placementRate}%</span>
                     </td>
                     <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{college.researchPapers}</td>

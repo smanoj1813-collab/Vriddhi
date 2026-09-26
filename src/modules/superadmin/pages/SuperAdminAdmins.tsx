@@ -352,7 +352,7 @@ const SuperAdminAdmins: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-slate-600 dark:border-b border-slate-200 dark:border-slate-700">

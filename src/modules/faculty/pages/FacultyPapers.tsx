@@ -138,8 +138,8 @@ function VerificationModal({ paper, onClose, onVerify, onRequestModify, onDownlo
               <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               Question Breakdown
             </h3>
-            <div className="rounded-xl border border-slate-700/50 overflow-hidden">
-              <table className="w-full">
+            <div className="rounded-xl border border-slate-700/50 overflow-x-auto">
+              <table className="w-full min-w-[520px]">
                 <thead>
                   <tr className="bg-slate-800/80">
                     <th className="text-left px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Q.No</th>

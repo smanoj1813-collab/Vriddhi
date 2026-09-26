@@ -84,7 +84,7 @@ const SuggestionCard = ({ suggestion }: { suggestion: Suggestion }) => {
         <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">{suggestion.title}</h4>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{suggestion.description}</p>
         {suggestion.action && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-800/50 px-2.5 py-1.5 rounded-lg w-fit">
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-lg w-fit">
             <ArrowRight className="w-3 h-3" /><span>{suggestion.action}</span>
           </div>
         )}
@@ -179,9 +179,9 @@ const CollegeJourney = () => {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />Current Standing</h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Students</p><p className="text-slate-900 dark:text-white font-medium">{students.length}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Top Performer</p><p className="text-slate-900 dark:text-white font-medium">{topPerformers[0]?.name || 'N/A'}</p><p className="text-xs text-blue-600 dark:text-blue-400">{topPerformers[0]?.avg || 0}% avg</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Programs Offered</p><p className="text-slate-900 dark:text-white font-medium">{Array.from(new Set(students.map(s => s.course))).join(', ') || 'N/A'}</p></div>
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Students</p><p className="text-slate-900 dark:text-white font-medium">{students.length}</p></div>
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Top Performer</p><p className="text-slate-900 dark:text-white font-medium">{topPerformers[0]?.name || 'N/A'}</p><p className="text-xs text-blue-600 dark:text-blue-400">{topPerformers[0]?.avg || 0}% avg</p></div>
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Programs Offered</p><p className="text-slate-900 dark:text-white font-medium">{Array.from(new Set(students.map(s => s.course))).join(', ') || 'N/A'}</p></div>
               <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                 <p className="text-xs text-green-400 mb-1">Weekly Attendance</p>
                 <div className="flex items-end gap-1 h-16 mt-2">
@@ -356,15 +356,15 @@ const FacultyJourney = () => {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Layers className="w-5 h-5 text-emerald-400" />Teaching Progress</h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-800/50">
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
                 <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Topics Covered</span><span className="text-xs text-emerald-400">{data.topicsCovered}/{data.topicsCovered + data.topicsPending}</span></div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(data.topicsCovered + data.topicsPending) > 0 ? (data.topicsCovered / (data.topicsCovered + data.topicsPending)) * 100 : 0}%` }} /></div>
               </div>
-              <div className="p-3 rounded-lg bg-slate-800/50">
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
                 <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Papers Uploaded</span><span className="text-xs text-blue-600 dark:text-blue-400">{data.papersUploaded}</span></div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(data.papersUploaded * 20, 100)}%` }} /></div>
               </div>
-              <div className="p-3 rounded-lg bg-slate-800/50">
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
                 <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Avg Attendance</span><span className="text-xs text-purple-600 dark:text-purple-400">{data.avgAttendance}%</span></div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${data.avgAttendance}%` }} /></div>
               </div>
@@ -524,7 +524,7 @@ const StudentJourney = () => {
           <select
             value={selectedStudentId}
             onChange={(e) => setSelectedStudentId(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-900 dark:text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
           >
             {allStudents.map(s => <option key={s.id} value={s.id}>{s.name} ({s.regNo})</option>)}
           </select>
@@ -550,7 +550,7 @@ const StudentJourney = () => {
               <p className="text-slate-500">No timeline yet. Timeline auto-connects from:</p>
               <div className="flex flex-wrap gap-2 justify-center mt-3">
                 {['Fee Payments','Challans','Hall Tickets','Grade Records','Assessments'].map(t => (
-                  <span key={t} className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">{t}</span>
+                  <span key={t} className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{t}</span>
                 ))}
               </div>
             </div>
@@ -563,13 +563,13 @@ const StudentJourney = () => {
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-emerald-400" />Current Status</h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Program</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.course} - Batch {studentData.student.batch}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Branch</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.branch}</p></div>
-              <div className="p-3 rounded-lg bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">CGPA</p><p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{studentData.cgpa !== null ? studentData.cgpa : '—'}</p></div>
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Program</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.course} - Batch {studentData.student.batch}</p></div>
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Branch</p><p className="text-slate-900 dark:text-white font-medium">{studentData.student.branch}</p></div>
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50"><p className="text-xs text-slate-600 dark:text-slate-400 mb-1">CGPA</p><p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{studentData.cgpa !== null ? studentData.cgpa : '—'}</p></div>
               <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <p className="text-xs text-emerald-400 mb-1">Assessments</p>
                 <p className="text-slate-900 dark:text-white font-medium">{studentData.assessmentsTaken} graded attempt{studentData.assessmentsTaken === 1 ? '' : 's'}</p>
-                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${studentData.assessmentsTaken > 0 ? 100 : 0}%` }} /></div>
+                <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${studentData.assessmentsTaken > 0 ? 100 : 0}%` }} /></div>
               </div>
             </div>
           </div>
@@ -631,17 +631,17 @@ const StudentJourney = () => {
         <div className="mt-6 p-6 rounded-xl bg-gradient-to-r from-slate-800/80 to-slate-800/40 border border-slate-700/50">
           <h4 className="text-slate-900 dark:text-white font-semibold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-emerald-400" />Your End Goal & Path</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Current Standing</p>
               <p className="text-slate-900 dark:text-white font-medium">{endGoal.standing}</p>
               <div className="mt-2 flex items-center gap-2"><div className={`w-2 h-2 rounded-full bg-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>CGPA: {studentData.currentGPA !== null ? studentData.currentGPA : '—'} | Rank: {studentData.rank !== null ? `#${studentData.rank}/${studentData.totalStudents}` : '—'}</span></div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Projected Outcome</p>
               <p className="text-slate-900 dark:text-white font-medium">{endGoal.outcome}</p>
               <div className="mt-2 flex items-center gap-2"><TrendingUp className={`w-4 h-4 text-${endGoal.color}-400`} /><span className={`text-xs text-${endGoal.color}-400`}>{percentile === null ? 'Publish grades to measure outcome' : percentile >= 75 ? 'On track for honors' : 'Recovery possible with effort'}</span></div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-700/30">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/30">
               <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider">Next Path</p>
               <p className="text-slate-900 dark:text-white font-medium">{endGoal.path}</p>
               <div className="mt-2 flex items-center gap-2"><ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-blue-600 dark:text-blue-400">{percentile === null ? 'Awaiting published results' : percentile >= 75 ? 'Apply for summer internships' : percentile >= 40 ? 'Focus on weak subjects' : 'Meet mentor immediately'}</span></div>

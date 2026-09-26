@@ -96,8 +96,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       value={{ showNotification, showSuccess, showError, showWarning, showInfo }}
     >
       {children}
-      {/* Toast Container */}
-      <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2">
+      {/* Toast Container — full-width sheets on phones (a fixed 320px toast
+          anchored right-4 overflows a 360px screen once the container padding
+          is counted), compact bottom-right stack from sm: up. Bottom offset
+          respects the gesture-bar safe area in the installed PWA. */}
+      <div
+        className="fixed right-4 left-4 sm:left-auto z-[9999] flex flex-col gap-2 items-stretch sm:items-end"
+        style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         {notifications.map((notification) => {
           const config = severityConfig[notification.severity || "info"];
           const Icon = config.icon;
@@ -105,7 +111,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           return (
             <div
               key={notification.id}
-              className={`flex items-start gap-3 min-w-[320px] max-w-[420px] p-4 rounded-xl border ${config.bg} ${config.border} backdrop-blur-xl animate-in slide-in-from-right-full duration-300`}
+              className={`flex items-start gap-3 w-full sm:w-auto sm:min-w-[320px] max-w-[420px] p-4 rounded-xl border ${config.bg} ${config.border} backdrop-blur-xl animate-in slide-in-from-right-full duration-300`}
             >
               <Icon className={`w-5 h-5 mt-0.5 shrink-0 ${config.iconColor}`} />
               <div className="flex-1 min-w-0">

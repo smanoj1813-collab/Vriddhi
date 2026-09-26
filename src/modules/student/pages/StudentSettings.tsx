@@ -189,8 +189,8 @@ export default function StudentSettings() {
                     : 'bg-white dark:bg-[#131b2e] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800'
                 }`}
               >
-                <Icon size={16} />
-                <span className="truncate">{tab.label}</span>
+                <Icon size={16} className="shrink-0" />
+                <span className="truncate min-w-0">{tab.label}</span>
               </button>
             );
           })}

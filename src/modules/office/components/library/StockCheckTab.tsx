@@ -98,7 +98,7 @@ export default function StockCheckTab() {
       )}
 
       {checks.filter(c => c.status === 'closed').length > 0 && (
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-x-auto">
           <p className="px-4 pt-3 font-medium text-slate-900 dark:text-white">Past verifications</p>
           <table className="w-full">
             <thead><tr className="border-b border-vriddhi-border"><th className="table-header">Session</th><th className="table-header text-center">Found</th><th className="table-header text-center">Missing</th><th className="table-header text-center">Not in register</th><th className="table-header" /></tr></thead>

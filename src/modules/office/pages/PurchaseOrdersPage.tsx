@@ -246,10 +246,12 @@ function PoModal({ po, settings, onClose }: { po: PurchaseOrder; settings: Procu
         {['issued', 'partial'].includes(po.status) && <button className={btn.primary} onClick={() => setReceiving(true)}><PackageCheck className="w-4 h-4" />Receive goods</button>}
       </>}>
         <div className="flex flex-wrap gap-2 mb-3"><Badge tone={poTone(po.status)}>{PO_STATUS_LABEL[po.status]}</Badge>{po.department && <Badge>{po.department}</Badge>}{po.budgetHead && <Badge tone="purple">{po.budgetHead}</Badge>}<Badge tone="teal">{po.interState ? 'IGST' : 'CGST + SGST'}</Badge></div>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-left text-xs text-vriddhi-muted border-b border-vriddhi-border"><th className="py-2">Item</th><th className="py-2 text-right">Ordered</th><th className="py-2 text-right">Received</th><th className="py-2 text-right">Rate</th><th className="py-2 text-right">GST</th><th className="py-2 text-right">Amount</th></tr></thead>
           <tbody>{po.lines.map((l, i) => <tr key={i} className="border-b border-vriddhi-border/40"><td className="py-2">{l.description}{l.itemId && <span className="ml-1 text-xs text-teal-600">· stock</span>}</td><td className="py-2 text-right">{l.qty} {l.unit}</td><td className="py-2 text-right">{l.receivedQty}</td><td className="py-2 text-right">{inr(l.rate)}</td><td className="py-2 text-right">{l.gstRate}%</td><td className="py-2 text-right">{inr(lineTotals(l).total)}</td></tr>)}</tbody>
         </table>
+        </div>
         <div className="text-sm text-right mt-3 space-y-0.5">
           <p>Taxable {inr(po.totals.taxable)}</p>
           {po.interState ? <p>IGST {inr(po.totals.igst)}</p> : <p>CGST {inr(po.totals.cgst)} · SGST {inr(po.totals.sgst)}</p>}
@@ -291,6 +293,7 @@ function ReceiveModal({ po, settings, onClose, onDone }: { po: PurchaseOrder; se
         <Field label="Vendor invoice / DC no."><input className="input-field" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} /></Field>
         <Field label="Invoice date"><input type="date" className="input-field" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} /></Field>
       </div>
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead><tr className="text-left text-xs text-vriddhi-muted border-b border-vriddhi-border"><th className="py-2">Item</th><th className="py-2 text-right">Pending</th><th className="py-2">Accepted</th><th className="py-2">Rejected</th><th className="py-2">Add to stock</th></tr></thead>
         <tbody>
@@ -314,6 +317,7 @@ function ReceiveModal({ po, settings, onClose, onDone }: { po: PurchaseOrder; se
           })}
         </tbody>
       </table>
+      </div>
       <Field label="Note" className="mt-3"><input className="input-field" value={note} onChange={e => setNote(e.target.value)} placeholder="Condition, shortages, inspection remarks" /></Field>
       <p className="text-xs text-vriddhi-muted mt-2">Capital items? Register them on Inventory → Assets after receipt (use the PO/GRN number as the reference).</p>
     </Modal>

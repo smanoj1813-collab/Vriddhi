@@ -135,14 +135,14 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
   return (
     <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onMouseDown={onClose}>
       <div
-        className={`bg-white dark:bg-slate-900 border border-vriddhi-border w-full ${wide ? 'sm:max-w-4xl' : 'sm:max-w-lg'} max-h-[92vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl`}
+        className={`bg-white dark:bg-slate-900 border border-vriddhi-border w-full ${wide ? 'sm:max-w-4xl' : 'sm:max-w-lg'} max-h-[92vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl pb-[env(safe-area-inset-bottom)] sm:pb-0`}
         onMouseDown={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-vriddhi-border">
-          <h2 className="font-semibold text-slate-900 dark:text-white">{title}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-vriddhi-border/50 text-vriddhi-muted" aria-label="Close"><X className="w-4 h-4" /></button>
+        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-vriddhi-border">
+          <h2 className="font-semibold text-slate-900 dark:text-white min-w-0 truncate">{title}</h2>
+          <button onClick={onClose} className="p-2.5 -mr-1 shrink-0 rounded-lg hover:bg-vriddhi-border/50 text-vriddhi-muted" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-5 overflow-y-auto">{children}</div>
         {footer && <div className="px-5 py-3 border-t border-vriddhi-border flex flex-wrap justify-end gap-2">{footer}</div>}

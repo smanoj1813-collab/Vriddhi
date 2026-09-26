@@ -54,7 +54,7 @@ export default function GateRegisterTab() {
         <input type="date" className="input-field !w-auto" value={date} max={todayIso()} onChange={e => setDate(e.target.value)} />
         <button onClick={() => downloadCsv(`gate-register-${date}.csv`, visits.map(v => ({ name: v.memberName, code: v.memberCode, type: v.memberType, department: v.department, purpose: v.purpose, in: v.inAt, out: v.outAt })))} disabled={!visits.length} className={btn.ghost}><Download className="w-4 h-4" /> CSV</button>
       </div>
-      <div className="glass-card overflow-hidden">
+      <div className="glass-card overflow-x-auto">
         <table className="w-full">
           <thead><tr className="border-b border-vriddhi-border"><th className="table-header">Member</th><th className="table-header">Purpose</th><th className="table-header">In</th><th className="table-header">Out</th></tr></thead>
           <tbody>
