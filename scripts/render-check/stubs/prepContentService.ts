@@ -120,6 +120,10 @@ export async function publishPrepTopic(_payload?: any): Promise<any> {
 export async function savePrepTopic(_subjectId?: string, _topic?: any): Promise<any> {
   return { ok: true }
 }
+export async function savePrepPaper(payload?: any): Promise<any> {
+  record('savePaper', payload);
+  return { data: payload ?? {}, warnings: [] };
+}
 export async function savePrepSubject(_subject?: any): Promise<any> {
   return { ok: true }
 }
