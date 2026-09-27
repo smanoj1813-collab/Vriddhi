@@ -1,0 +1,388 @@
+{
+  "moduleId": "m1",
+  "questions": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-q1",
+        "question": "According to the lesson, what is the decisive difference between digital marketing and traditional marketing?",
+        "options": [
+          "Digital marketing reaches younger audiences than hoardings or print",
+          "Almost everything in digital marketing can be measured, so it can be improved and defended",
+          "Digital marketing does not require any budget to start",
+          "Traditional marketing cannot create awareness for a brand"
+        ],
+        "answerIndex": 1,
+        "explanation": "The lesson defines digital marketing as attract–convert–keep, measurably: measurement is what lets you improve campaigns and justify spend."
+      },
+      {
+        "id": "m1-t1-q2",
+        "question": "A small café's WhatsApp broadcast list of regular customers is an example of which kind of media?",
+        "options": [
+          "Paid media, because sending messages consumes budget",
+          "Earned media, because customers opted in voluntarily",
+          "Owned media, because the business controls the list and it costs nothing per use",
+          "Shared media, because it exists on a phone"
+        ],
+        "answerIndex": 2,
+        "explanation": "Owned media — website, blog, email/WhatsApp lists — is fully controlled by the business and compounds without per-use cost."
+      },
+      {
+        "id": "m1-t1-q3",
+        "question": "Which statement best describes how the channels in a healthy marketing plan relate?",
+        "options": [
+          "Each channel should be judged independently, and the weakest one cut",
+          "Channels assist each other: social finds winning messages, paid amplifies them, content receives the traffic, email retains it",
+          "Paid media should be used only after all other channels have failed",
+          "Search, social and email target different customers and should never overlap"
+        ],
+        "answerIndex": 1,
+        "explanation": "The lesson's pattern: channels do not compete, they assist — each stage of the journey is served by a different channel's strengths."
+      },
+      {
+        "id": "m1-t1-q4",
+        "question": "Why does the lesson call a plan that runs only on paid media 'renting growth'?",
+        "options": [
+          "Because ad platforms charge commissions on every sale",
+          "Because paid media stops delivering the moment spending stops, unlike owned and earned assets that keep working",
+          "Because paid media cannot be measured accurately",
+          "Because paid ads are always more expensive than hoardings"
+        ],
+        "answerIndex": 1,
+        "explanation": "Paid media is instant but rented; owned (site, list) and earned (rankings, reviews) assets keep paying after the spend ends."
+      },
+      {
+        "id": "m1-t1-q5",
+        "question": "A café gets more morning orders after setting up a Google Business Profile, a WhatsApp combo broadcast and small search ads. What did the student actually change?",
+        "options": [
+          "The café's pricing and menu",
+          "The café's location advantage",
+          "The system: matching channels to where customers already are, each with a measurable job",
+          "The café's staff training"
+        ],
+        "answerIndex": 2,
+        "explanation": "Same café and same tools — the shift was from random activity to a measured system where each channel has a job."
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-q1",
+        "question": "In the funnel arithmetic 1000 visitors × 3% enquiry × 40% qualified × 25% close, how many customers result?",
+        "options": [
+          "12",
+          "3",
+          "30",
+          "120"
+        ],
+        "answerIndex": 1,
+        "explanation": "1000 × 0.03 = 30 enquiries; × 0.40 = 12 qualified; × 0.25 = 3 customers. Funnel maths is honest multiplication."
+      },
+      {
+        "id": "m1-t2-q2",
+        "question": "A customer reading comparison articles and reviews is in which stage, and what are they really asking?",
+        "options": [
+          "Awareness — 'does this exist?'",
+          "Consideration — 'is this right for me, and better than the others?'",
+          "Conversion — 'is it safe to go ahead?'",
+          "Advocacy — 'should I tell others?'"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consideration is the comparison stage; the customer's question is fit and relative superiority, served by honest proof."
+      },
+      {
+        "id": "m1-t2-q3",
+        "question": "Traffic is healthy but almost nobody fills the enquiry form. What does the lesson say to do first?",
+        "options": [
+          "Buy more traffic to compensate for the low rate",
+          "Switch the whole budget to television",
+          "Diagnose and fix the conversion-stage leak before buying more traffic",
+          "Post more frequently on social media"
+        ],
+        "answerIndex": 2,
+        "explanation": "Do not pour more traffic into a leaky funnel: fixing a 1% → 2% conversion rate doubles results at zero extra spend."
+      },
+      {
+        "id": "m1-t2-q4",
+        "question": "Cost per acquisition (CPA) must be judged against which other number?",
+        "options": [
+          "The campaign's total budget",
+          "The number of impressions served",
+          "The customer's lifetime value (LTV)",
+          "The competitor's ad spend"
+        ],
+        "answerIndex": 2,
+        "explanation": "CPA below customer lifetime value is a good trade; the same CPA can be profitable for one business and ruinous for another."
+      },
+      {
+        "id": "m1-t2-q5",
+        "question": "Which channel pairing is correctly matched to its home funnel stage?",
+        "options": [
+          "Search ads on high-intent keywords → awareness",
+          "Email journeys to existing customers → retention",
+          "Reels and influencer content → conversion",
+          "Retargeting ads → awareness"
+        ],
+        "answerIndex": 1,
+        "explanation": "Email and messaging own retention and advocacy; search ads convert existing intent; social and influencers build awareness."
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-q1",
+        "question": "Why does the lesson call imagined personas 'a mirror'?",
+        "options": [
+          "Because they must be reviewed every quarter",
+          "Because they usually describe the marketer's assumptions rather than the actual customer",
+          "Because customers change their minds too often",
+          "Because every persona needs a photo to feel real"
+        ],
+        "answerIndex": 1,
+        "explanation": "Imagination-based personas reflect the writer's guesses; evidence-based personas are built from search data, reviews, listening and interviews."
+      },
+      {
+        "id": "m1-t3-q2",
+        "question": "You want to find market gaps for a new tutoring service. What does the lesson suggest reading first?",
+        "options": [
+          "The 5-star reviews of the market leader, for inspiration",
+          "The competitor's 'About us' page",
+          "The 1–3 star reviews of competitors, because every complaint is a market gap",
+          "The competitor's follower count on Instagram"
+        ],
+        "answerIndex": 2,
+        "explanation": "Low-star reviews are the cheapest research goldmine: each recurring complaint is a gap you can own."
+      },
+      {
+        "id": "m1-t3-q3",
+        "question": "Which persona field does the lesson say actually changes marketing decisions?",
+        "options": [
+          "The persona's name and age",
+          "The persona's favourite colour",
+          "Triggers and barriers — what makes them start looking and what stops them buying",
+          "The stock photo chosen for the persona"
+        ],
+        "answerIndex": 2,
+        "explanation": "Situation, goals and fears, watering holes, triggers and barriers, and proof that moves them — the fields that change what you write and spend."
+      },
+      {
+        "id": "m1-t3-q4",
+        "question": "In interviews, why does the lesson forbid 'would you be interested in…?' questions?",
+        "options": [
+          "They are too long to ask in ten minutes",
+          "People politely say yes to hypotheticals; asking about the last real instance gets the truth",
+          "They only work on social media",
+          "Because surveys are always better than interviews"
+        ],
+        "answerIndex": 1,
+        "explanation": "Hypothetical interest is social politeness; 'tell me about the last time you…' reconstructs real behaviour."
+      },
+      {
+        "id": "m1-t3-q5",
+        "question": "What can you learn from the Meta Ad Library that you cannot see on a competitor's public page?",
+        "options": [
+          "Their employee count",
+          "The paid messages they are actively running right now",
+          "Their annual revenue",
+          "Their customer personas"
+        ],
+        "answerIndex": 1,
+        "explanation": "The Ad Library shows every active ad a brand runs — the messaging they are willing to pay for, not just what they post organically."
+      }
+    ],
+    "m1-t4": [
+      {
+        "id": "m1-t4-q1",
+        "question": "Which goal passes the SMART test?",
+        "options": [
+          "Increase brand awareness for the campus store",
+          "Get more engagement on our posts",
+          "Get 300 of the college's 2,400 students to use WhatsApp ordering before the November exams at under ₹40 per first order",
+          "Become the most popular store on campus"
+        ],
+        "answerIndex": 2,
+        "explanation": "Number + audience + channel + deadline + efficiency line: a stranger could verify success on the deadline date."
+      },
+      {
+        "id": "m1-t4-q2",
+        "question": "In a KPI tree, what is the role of diagnostic metrics like opens and scroll depth?",
+        "options": [
+          "They are the numbers the budget is defended with",
+          "They explain why a KPI moved, but do not drive decisions on their own",
+          "They replace KPIs when baselines are missing",
+          "They are reported only to the finance team"
+        ],
+        "answerIndex": 1,
+        "explanation": "KPIs drive decisions; diagnostics explain them. Confusing the two is how dashboards fill with noise."
+      },
+      {
+        "id": "m1-t4-q3",
+        "question": "The goal is admissions, but the enquiry-to-admission rate is weak. What does the KPI tree suggest is the likely right move?",
+        "options": [
+          "Immediately double the ad budget",
+          "Shift spend and effort to follow-up quality and CRM discipline instead of more awareness",
+          "Stop all marketing until the rate improves",
+          "Report only reach and impressions to the client"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reading the whole tree tells you where the constraint is; buying more traffic into a weak conversion stage wastes money."
+      },
+      {
+        "id": "m1-t4-q4",
+        "question": "Why is the 'out of scope' line the most underrated part of a one-page brief?",
+        "options": [
+          "It makes the brief look professional to investors",
+          "It is how professionals say no without conflict and keep a two-week project two weeks long",
+          "It is required by the DPDP Act",
+          "It lists the KPIs the client cares about"
+        ],
+        "answerIndex": 1,
+        "explanation": "Explicit exclusions prevent scope creep — every line you do not exclude will arrive at your door by week two."
+      },
+      {
+        "id": "m1-t4-q5",
+        "question": "A brief sets a target of 800 marketing-sourced enquiries with no record of how many enquiries came last month. What is missing?",
+        "options": [
+          "The message",
+          "The baseline — without today's number you can never prove you moved it",
+          "The audience",
+          "The channel mix"
+        ],
+        "answerIndex": 1,
+        "explanation": "Baselines can be rough estimates, but they cannot be missing: no baseline means no provable result."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Digital Marketing Foundations Gate",
+    "questions": [
+      {
+        "id": "m1-assessment-q1",
+        "question": "A boutique spends ₹30,000 on ads, gets 2,000 visitors, 80 enquiries and 10 customers. A customer spends ₹6,000 and typically returns twice a year. What is the honest verdict?",
+        "options": [
+          "Profitable: CPA ₹3,000 is below the ₹6,000 first purchase",
+          "Unprofitable: 2,000 visitors is too few to judge",
+          "Profitable only if the customer returns — CPA ₹3,000 against ₹12,000 annual value makes it a strong trade",
+          "Impossible to judge without knowing the click-through rate"
+        ],
+        "answerIndex": 2,
+        "explanation": "CPA = 30,000 ÷ 10 = ₹3,000. With repeat purchases the customer's value compounds; the funnel arithmetic and LTV together justify the spend.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q2",
+        "question": "A dental clinic's website gets 1,500 visits a month, a 4% call-button click rate, but only 1 in 12 callers books. Where is the constraint, and what is the first fix?",
+        "options": [
+          "Awareness — the clinic should buy more ads immediately",
+          "Conversion-to-booking — the leak is at the front desk / follow-up; script, response speed and reminder flow come before more traffic",
+          "Consideration — the website needs more blog articles",
+          "The clinic should switch from ads to hoardings"
+        ],
+        "answerIndex": 1,
+        "explanation": "Traffic and click intent are healthy; the bottleneck is the human follow-up stage. Fix the leak before buying more traffic.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q3",
+        "question": "Which set contains ONLY KPIs (decision-driving numbers) for a goal of '300 WhatsApp first-orders by November'?",
+        "options": [
+          "First orders, cost per first order, share of orders from WhatsApp vs walk-in",
+          "Followers, impressions, story views",
+          "Page likes, post reach, hashtag uses",
+          "Number of posts published, hours spent, photos taken"
+        ],
+        "answerIndex": 0,
+        "explanation": "KPIs connect to the goal and its economics; followers and impressions are diagnostics that explain, not decide.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q4",
+        "question": "Reading a competitor's 5-star reviews, you notice the words 'patient' and 'explained everything' appear constantly; 2-star reviews of other competitors say 'rushed'. What is the gap sentence?",
+        "options": [
+          "Everyone says quality, so we should also say quality louder",
+          "Everyone rushes, nobody promises patience and clear explanations — so we will make 'we take time to explain' the lead promise and prove it",
+          "We should copy the competitor's pricing",
+          "Reviews are unreliable and should be ignored in research"
+        ],
+        "answerIndex": 1,
+        "explanation": "The gap sentence names the shared cliché, the silence in the market, and your ownership of it — built directly from review evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q5",
+        "question": "A team's persona says 'likes fitness and Instagram' but their sign-ups are flat. Their interviews revealed timing clashes and class-WhatsApp as the real channel. What did the original persona violate?",
+        "options": [
+          "The rule that personas need photos",
+          "Evidence-based construction — the persona was imagination, so the campaign targeted the wrong barrier and the wrong watering hole",
+          "The requirement to survey at least 100 people",
+          "Nothing; the campaign just needed more budget"
+        ],
+        "answerIndex": 1,
+        "explanation": "The campaign failed on barrier ('not fitness people') and channel (WhatsApp groups) — both fields a persona must capture from evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q6",
+        "question": "Which situation is 'always-on marketing' rather than a campaign?",
+        "options": [
+          "A Diwali discount week with a fixed start and end date",
+          "A one-time product-launch burst with a dedicated budget",
+          "A claimed Google Business Profile, weekly newsletter and community replies that run every week",
+          "A two-week admissions push with a deadline"
+        ],
+        "answerIndex": 2,
+        "explanation": "Always-on marketing compounds quietly every day; campaigns are focused bursts with a goal and an end date. Healthy brands run both.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q7",
+        "question": "Your KPI tree shows 800 enquiries needed for 120 admissions (15% conversion), but the current rate is 10%. Which re-forecast is consistent with the tree?",
+        "options": [
+          "Keep the 800 target and accept 120 admissions",
+          "Either raise enquiries to 1,200 at the current 10%, or lift the conversion rate to 15% through counselling quality",
+          "Reduce the goal to 80 admissions and report success",
+          "Move the entire budget to brand awareness"
+        ],
+        "answerIndex": 1,
+        "explanation": "The tree makes the two honest levers visible: more enquiries at the same rate, or a better rate on the same enquiries — the second is usually cheaper.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q8",
+        "question": "A business owner says: 'Our customers are everyone in the city.' What is the professionally correct first response?",
+        "options": [
+          "Agree and design a broad awareness campaign",
+          "Ask for evidence: autocomplete phrases, low-star reviews of competitors, and five ten-minute customer interviews before choosing a target",
+          "Start paid ads and let the data decide later",
+          "Build a persona with a name, age and photo first"
+        ],
+        "answerIndex": 1,
+        "explanation": "The four evidence sources — search data, reviews, listening, interviews — turn 'everyone' into a targetable audience with real barriers and watering holes.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q9",
+        "question": "During a campaign, reach doubles but orders stay flat. Which interpretation fits the lesson?",
+        "options": [
+          "The campaign is working; orders will follow eventually",
+          "Reach is an awareness-stage diagnostic — the constraint is further down the funnel, so audit consideration and conversion stages next",
+          "The audience must be expanded further",
+          "The metric tool is broken"
+        ],
+        "answerIndex": 1,
+        "explanation": "When a top-of-funnel diagnostic moves but the outcome does not, the constraint lives in a later stage — that is what the tree is for.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q10",
+        "question": "Which brief line most reliably prevents a two-week project from becoming two months?",
+        "options": [
+          "'Channels: we will use all of them'",
+          "'Out of scope: no logo redesign, no website rebuild, no offline events'",
+          "'Goal: maximise engagement across platforms'",
+          "'Budget: as needed'"
+        ],
+        "answerIndex": 1,
+        "explanation": "Explicit exclusions are how professionals say no without conflict — scope creep arrives through every door left open.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

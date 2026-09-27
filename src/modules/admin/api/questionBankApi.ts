@@ -1221,11 +1221,13 @@ export const paperTemplateApi = {
 
 // --- Review Queue API ---
 export const reviewQueueApi = {
-  async getPending(): Promise<ApiResponse<QuestionReview[]>> {
+  // Loads reviews of EVERY status (pending + approved + rejected). The Review
+  // Queue's tabs and stats cards filter client-side, so a pending-only query
+  // here left the Approved / Rejected / All tabs permanently empty.
+  async getAll(): Promise<ApiResponse<QuestionReview[]>> {
     try {
       const q = query(
         collection(db, 'questionReviews'),
-        where('status', '==', 'pending'),
         orderBy('submittedAt', 'desc')
       );
       const snapshot = await getDocs(q);
@@ -1272,6 +1274,80 @@ export const reviewQueueApi = {
         updatedAt: new Date().toISOString(),
       });
       return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
+
+  // Bulk "approve all" for the Review Queue (used after a paper import drops
+  // dozens of pending drafts at once). One call performs the SAME two writes
+  // per question that `review()` + `questionMetadataApi.updateStatus()` do for
+  // a single approval, but packed into Firestore write batches instead of one
+  // round-trip per question.
+  async approveMany(
+    items: Array<{ reviewId: string; questionId: string }>,
+    reviewerId: string,
+    reviewerName: string,
+    comment?: string
+  ): Promise<ApiResponse<{ approved: number; failed: number }>> {
+    const now = new Date().toISOString();
+    const approvedIds = new Set<string>();
+    const failedIds = new Set<string>();
+
+    const writeItem = async (item: { reviewId: string; questionId: string }) => {
+      try {
+        await updateDoc(doc(db, 'questionReviews', item.reviewId), {
+          status: 'approved' as ReviewStatus,
+          reviewerId,
+          reviewerName,
+          reviewComment: comment || '',
+          reviewedAt: now,
+          updatedAt: now,
+        });
+        await updateDoc(doc(db, 'questionBank_meta', item.questionId), {
+          status: 'approved' as ReviewStatus,
+          reviewedBy: reviewerId,
+          updatedAt: now,
+        });
+        approvedIds.add(item.reviewId);
+      } catch {
+        failedIds.add(item.reviewId);
+      }
+    };
+
+    try {
+      // 2 writes per item → chunks of 200 stay under the 500-op batch limit.
+      // Batches are atomic, so a chunk that fails (e.g. a draft whose meta doc
+      // is missing) is retried item-by-item to let the healthy rows through.
+      const CHUNK = 200;
+      for (let i = 0; i < items.length; i += CHUNK) {
+        const chunk = items.slice(i, i + CHUNK);
+        try {
+          const batch = writeBatch(db);
+          chunk.forEach((item) => {
+            batch.update(doc(db, 'questionReviews', item.reviewId), {
+              status: 'approved' as ReviewStatus,
+              reviewerId,
+              reviewerName,
+              reviewComment: comment || '',
+              reviewedAt: now,
+              updatedAt: now,
+            });
+            batch.update(doc(db, 'questionBank_meta', item.questionId), {
+              status: 'approved' as ReviewStatus,
+              reviewedBy: reviewerId,
+              updatedAt: now,
+            });
+          });
+          await batch.commit();
+          chunk.forEach((item) => approvedIds.add(item.reviewId));
+        } catch {
+          for (const item of chunk) {
+            if (!approvedIds.has(item.reviewId)) await writeItem(item);
+          }
+        }
+      }
+      return { success: true, data: { approved: approvedIds.size, failed: failedIds.size } };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }

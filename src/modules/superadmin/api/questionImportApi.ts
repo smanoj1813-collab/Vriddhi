@@ -195,6 +195,7 @@ export async function checkJobDuplicates(jobId: string): Promise<DuplicateReport
 export async function rejectQuestions(ids: string[], reviewerName = 'Import duplicate check'): Promise<number> {
   let rejected = 0
   const now = new Date().toISOString()
+  const note = `Rejected by ${reviewerName}: already present in the question bank.`
   for (let i = 0; i < ids.length; i += 400) {
     const slice = ids.slice(i, i + 400)
     const batch = writeBatch(db)
@@ -202,11 +203,48 @@ export async function rejectQuestions(ids: string[], reviewerName = 'Import dupl
       batch.update(doc(db, 'questionBank_meta', id), {
         status: 'rejected',
         updatedAt: now,
-        reviewNote: `Rejected by ${reviewerName}: already present in the question bank.`,
+        reviewNote: note,
       })
     })
     await batch.commit()
     rejected += slice.length
   }
+  await closeReviewsForQuestions(ids, reviewerName, note, now)
   return rejected
+}
+
+/**
+ * Closes the paired `questionReviews` entries for question ids the duplicate
+ * pass rejected. Without this the drafts stayed `pending` in the Review Queue
+ * forever — and "Approve all" would happily re-approve a duplicate the operator
+ * had just rejected. Review docs carry `questionId` (not the question id as doc
+ * id), so they are looked up in `in`-chunks of 30.
+ */
+async function closeReviewsForQuestions(
+  questionIds: string[],
+  reviewerName: string,
+  note: string,
+  now: string
+): Promise<void> {
+  for (let i = 0; i < questionIds.length; i += 30) {
+    const slice = questionIds.slice(i, i + 30)
+    const snap = await getDocs(
+      query(collection(db, 'questionReviews'), where('questionId', 'in', slice))
+    )
+    const batch = writeBatch(db)
+    snap.forEach((d) => {
+      // Only pending entries need closing — already-decided reviews keep their
+      // original reviewer and comment.
+      if ((d.data() as Record<string, any>)?.status === 'pending') {
+        batch.update(doc(db, 'questionReviews', d.id), {
+          status: 'rejected',
+          reviewerName,
+          reviewComment: note,
+          reviewedAt: now,
+          updatedAt: now,
+        })
+      }
+    })
+    if (snap.size > 0) await batch.commit()
+  }
 }

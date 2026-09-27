@@ -1,0 +1,388 @@
+{
+  "moduleId": "m3",
+  "questions": {
+    "m3-t1": [
+      {
+        "id": "m3-t1-q1",
+        "question": "In the content strategy formula, what are the three decisions and their correct order?",
+        "options": [
+          "Formats → topics → cadence",
+          "Topics (from research) → formats (from funnel stage) → cadence (from honest capacity)",
+          "Cadence → topics → platforms",
+          "Platforms → topics → budget"
+        ],
+        "answerIndex": 1,
+        "explanation": "Topics come from research, formats serve the funnel stage, cadence is what the team can sustain — strategy is the product of all three."
+      },
+      {
+        "id": "m3-t1-q2",
+        "question": "What is a pillar-and-cluster structure?",
+        "options": [
+          "One long post split into daily instalments",
+          "A comprehensive pillar page per theme, surrounded by narrower cluster pieces that each answer one question and link back",
+          "A social media calendar organised by month",
+          "A paid campaign structure in Google Ads"
+        ],
+        "answerIndex": 1,
+        "explanation": "Pillars demonstrate topical authority to search engines and give readers a path from their exact question to the full guide."
+      },
+      {
+        "id": "m3-t1-q3",
+        "question": "What does the 50% rule protect against?",
+        "options": [
+          "Spending more than half the budget on one channel",
+          "Planning the calendar at full capacity, which fails by day ten when real weeks happen",
+          "Publishing more than half the pieces as videos",
+          "Using AI for more than half the content"
+        ],
+        "answerIndex": 1,
+        "explanation": "Weeks contain exams, festivals and emergencies; a calendar that cannot absorb a bad week dies — plan at most 50% of capacity."
+      },
+      {
+        "id": "m3-t1-q4",
+        "question": "A consultancy posts daily but enquiries do not move. Which diagnosis does the lesson most support?",
+        "options": [
+          "They need a bigger ad budget",
+          "Posting volume was never the strategy — the right content, in a structure, on a sustainable rhythm is",
+          "They should switch platforms entirely",
+          "They need to post more frequently"
+        ],
+        "answerIndex": 1,
+        "explanation": "The opening story: random activity trained the audience to ignore them; a pillar/cluster structure at lower cadence tripled enquiries."
+      },
+      {
+        "id": "m3-t1-q5",
+        "question": "What belongs in the 'distribution' column of a content calendar?",
+        "options": [
+          "The file format of each asset",
+          "Where the piece goes after publishing — channels, groups, newsletter, and when",
+          "The name of the competitor being targeted",
+          "The ad budget for the piece"
+        ],
+        "answerIndex": 1,
+        "explanation": "Publishing is the start of the work, not the end; distribution planning is part of content itself."
+      }
+    ],
+    "m3-t2": [
+      {
+        "id": "m3-t2-q1",
+        "question": "Why can't better prompting fully eliminate AI factual errors in content?",
+        "options": [
+          "Because prompts have a length limit",
+          "Because models predict plausible text, not verified text — they do not know which of their facts are verified",
+          "Because AI cannot write about India-specific topics",
+          "Because prompts are ignored by newer models"
+        ],
+        "answerIndex": 1,
+        "explanation": "Plausibility includes fabrication; 'be accurate' is not a control. The professional rule: the AI writes, you own every claim."
+      },
+      {
+        "id": "m3-t2-q2",
+        "question": "In the five-step AI-assisted workflow, which step is described as 'the non-negotiable'?",
+        "options": [
+          "Draft",
+          "Brief",
+          "Verify — every claim checked against a source or cut",
+          "Disclose"
+        ],
+        "answerIndex": 2,
+        "explanation": "Brief → draft → VERIFY → edit → disclose. Anything you cannot verify does not publish."
+      },
+      {
+        "id": "m3-t2-q3",
+        "question": "What makes a content brief 'half the work'?",
+        "options": [
+          "It is twice as long as the draft",
+          "It supplies audience, angle, verified facts and sources — converting the model from a guesser into a formatter of your material",
+          "It must be written by AI itself",
+          "It replaces the editing step"
+        ],
+        "answerIndex": 1,
+        "explanation": "A brief with your verified facts and explicit 'do not add new claims' instructions makes the first draft usable."
+      },
+      {
+        "id": "m3-t2-q4",
+        "question": "What is a voice sheet for?",
+        "options": [
+          "Recording narration for videos",
+          "Keeping AI drafts on brand — adjectives, banned words, sentence feel, one good-vs-bad rewrite example pasted into every brief",
+          "Interview transcripts for personas",
+          "Legal disclosure of AI use"
+        ],
+        "answerIndex": 1,
+        "explanation": "With a voice sheet, drafts arrive 80% on brand; without one, you rewrite everything anyway."
+      },
+      {
+        "id": "m3-t2-q5",
+        "question": "Which use of AI in marketing content follows the lesson's safe pattern?",
+        "options": [
+          "Asking the model for current scholarship deadlines from memory",
+          "Supplying your verified price list and asking the model to structure it into a comparison table",
+          "Publishing the model's draft because it reads confidently",
+          "Asking the model to invent testimonials in customer voices"
+        ],
+        "answerIndex": 1,
+        "explanation": "Safe pattern: you supply the truth, the machine supplies the words — structuring verified material is the classic safe use."
+      }
+    ],
+    "m3-t3": [
+      {
+        "id": "m3-t3-q1",
+        "question": "'2 PM. Your eyes are closing and the coffee has stopped working.' Which hook type is this?",
+        "options": [
+          "Specificity",
+          "Recognition — the reader sees themselves in the scene",
+          "Curiosity with a promise",
+          "Stakes"
+        ],
+        "answerIndex": 1,
+        "explanation": "Recognition hooks work because the reader's own situation is the most interesting subject available."
+      },
+      {
+        "id": "m3-t3-q2",
+        "question": "Climbing the 'so what?' ladder from 'cold-pressed, no added sugar' should end where?",
+        "options": [
+          "At the manufacturing process",
+          "At a felt benefit — e.g. 'energy that doesn't betray you at 4 PM'",
+          "At the price",
+          "At the brand's founding story"
+        ],
+        "answerIndex": 1,
+        "explanation": "Keep asking 'so what?' until the answer is a feeling; that felt benefit is what the copy sells, with the feature as proof."
+      },
+      {
+        "id": "m3-t3-q3",
+        "question": "Why does the lesson insist on ONE call to action per piece?",
+        "options": [
+          "Multiple CTAs are grammatically incorrect",
+          "Two CTAs halve response — a confused reader does nothing",
+          "Ad platforms charge per CTA",
+          "Readers cannot scroll past two buttons"
+        ],
+        "answerIndex": 1,
+        "explanation": "'Follow, share, and visit' is three ways of asking the reader to do nothing. One verb, with specifics."
+      },
+      {
+        "id": "m3-t3-q4",
+        "question": "What is the professional's test for any line of copy?",
+        "options": [
+          "Would a copywriter admire it?",
+          "Could a tired reader on a bus understand it in one pass?",
+          "Does it contain the keyword three times?",
+          "Is it shorter than ten words?"
+        ],
+        "answerIndex": 1,
+        "explanation": "Clarity is the style: read aloud, mark stumbles — every sentence that needs a second read will not get one."
+      },
+      {
+        "id": "m3-t3-q5",
+        "question": "How should benefits and features be paired in copy?",
+        "options": [
+          "Features first, benefits in the FAQ",
+          "Benefit first, feature as proof — 'Energy that lasts the afternoon (cold-pressed, zero added sugar)'",
+          "Only benefits; features confuse readers",
+          "Alternate them paragraph by paragraph"
+        ],
+        "answerIndex": 1,
+        "explanation": "The reader buys the afternoon; the parenthetical feature makes the promise believable."
+      }
+    ],
+    "m3-t4": [
+      {
+        "id": "m3-t4-q1",
+        "question": "In the repurposing waterfall, what is the role of the pillar guide?",
+        "options": [
+          "It is retired once the social assets are made",
+          "It is the source of truth — every asset links back to it because it converts and ranks",
+          "It is only for email subscribers",
+          "It replaces the need for social channels"
+        ],
+        "answerIndex": 1,
+        "explanation": "The unit of content is the idea; the pillar is its home, and every waterfall asset funnels attention back to it."
+      },
+      {
+        "id": "m3-t4-q2",
+        "question": "What is the most common content-marketing failure the lesson names?",
+        "options": [
+          "Writing too many pillar guides",
+          "The silent publish — the piece goes live, nobody is told, and the team concludes content doesn't work",
+          "Spending too long on distribution",
+          "Making too few quote cards"
+        ],
+        "answerIndex": 1,
+        "explanation": "Publishing is the start; a distribution checklist (own channels, social, communities, drip, paid) multiplies reach several-fold."
+      },
+      {
+        "id": "m3-t4-q3",
+        "question": "After two weeks, a carousel earns 4× its channel average engagement while reels earn nothing. What is the professional move?",
+        "options": [
+          "Keep the original format mix unchanged",
+          "Double down on carousels and retire the reels — asymmetric effort toward evidence",
+          "Make more reels to give them a fair chance",
+          "Stop all content and start ads"
+        ],
+        "answerIndex": 1,
+        "explanation": "Iteration beats volume: read the evidence, make more of what worked, stop making what the audience voted against."
+      },
+      {
+        "id": "m3-t4-q4",
+        "question": "Which asset is NOT channel-native repurposing?",
+        "options": [
+          "A carousel that restructures the guide one point per slide with a hook slide",
+          "Copying the blog's first two paragraphs as the Instagram caption",
+          "A 40-second script covering one sub-idea with its own hook",
+          "A 5-line WhatsApp broadcast in plain language plus link"
+        ],
+        "answerIndex": 1,
+        "explanation": "Channel-native means using the channel's grammar — copy-paste captions train every audience to ignore you."
+      },
+      {
+        "id": "m3-t4-q5",
+        "question": "What are 'kill criteria' in a content plan?",
+        "options": [
+          "Legal reasons to delete old posts",
+          "Thresholds decided in advance for retiring topics or channels that the evidence does not support",
+          "The rules for firing the content owner",
+          "Word-count limits for each format"
+        ],
+        "answerIndex": 1,
+        "explanation": "Deciding what NOT to make is half of distribution discipline — pieces with no engagement or demand after a fair trial are retired, not repeated."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Content Quality and AI Verification Gate",
+    "questions": [
+      {
+        "id": "m3-assessment-q1",
+        "question": "An AI draft of a scholarships post contains a confident deadline table. Your verified source list has 7 of the 10 deadlines. What is the correct action?",
+        "options": [
+          "Publish all ten — the model usually has current data",
+          "Publish the 7 verified deadlines only; cut the three you cannot verify",
+          "Publish all ten with a disclaimer that dates may vary",
+          "Ask the model again more forcefully and trust the second answer"
+        ],
+        "answerIndex": 1,
+        "explanation": "Anything you cannot verify does not publish — confidence is a writing style, not a source.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q2",
+        "question": "A team's calendar is filled to 100% capacity for 30 days and collapses in week two. Which two lesson rules were violated?",
+        "options": [
+          "One CTA per piece and benefit-first copy",
+          "The 50% capacity rule and the pre-decided cut order",
+          "Pillar clustering and internal linking",
+          "Voice sheet and disclosure policy"
+        ],
+        "answerIndex": 1,
+        "explanation": "Plan at most 50% capacity and mark the cut order in advance — a calendar that cannot absorb a bad week dies.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q3",
+        "question": "A reel gets 20,000 views and 2 enquiries; a carousel gets 900 views and 14 enquiries. Which interpretation and action fit the lesson?",
+        "options": [
+          "The reel won — make more reels; views are the KPI",
+          "Relative to the goal, the carousel is the winner — read which asset drove the actual outcome, then double down accordingly",
+          "Both failed because neither went viral",
+          "Move the entire budget to ads immediately"
+        ],
+        "answerIndex": 1,
+        "explanation": "Engagement and views are diagnostics; the goal metric decides. Asymmetric effort follows the evidence, not the spectacle.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q4",
+        "question": "The AI draft's opening reads: 'In today's fast-paced world, education is more important than ever.' What does the lesson say to do?",
+        "options": [
+          "Keep it — AI openings are professionally neutral",
+          "Rewrite the opening in your voice; AI openings are usually generic, and the first line is where the reader decides to stay",
+          "Move it to the conclusion instead",
+          "Add the keyword to it and publish"
+        ],
+        "answerIndex": 1,
+        "explanation": "The edit step exists precisely for this: fix the generic opening, cut filler, tighten to voice, and confirm the CTA.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q5",
+        "question": "Which brief instruction best prevents AI hallucination in a draft?",
+        "options": [
+          "'Write accurately and factually at all times'",
+          "'Use ONLY these ten scholarships with these amounts from these URLs; do not add others'",
+          "'Make it engaging and SEO-friendly'",
+          "'Write like an expert with 20 years of experience'"
+        ],
+        "answerIndex": 1,
+        "explanation": "Supply the verified facts and explicitly forbid additions — instructions about accuracy are not controls; source lists are.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q6",
+        "question": "A client asks for a week of daily posts before exams. Applying strategy first, what is the professional response?",
+        "options": [
+          "Agree — the client is paying for volume",
+          "Propose a sustainable cadence (e.g., 3–4/week) built around 2–3 pillars tied to exam-period questions, with distribution planned per piece",
+          "Refuse content entirely and suggest ads",
+          "Post daily but skip verification to save time"
+        ],
+        "answerIndex": 1,
+        "explanation": "Strategy is topics × formats × sustainable cadence; more content was never the strategy, and verification is never the step to cut.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q7",
+        "question": "You published a strong guide but had no distribution plan. The lesson's evidence would most likely show…",
+        "options": [
+          "Slow organic growth over a year regardless",
+          "A silent publish — minimal reach — leading the team to wrongly conclude 'content doesn't work'",
+          "The guide outranking competitors within a week",
+          "No effect either way; distribution is optional"
+        ],
+        "answerIndex": 1,
+        "explanation": "The most common failure in content marketing: ten minutes of distribution planning per piece typically multiplies reach several-fold.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q8",
+        "question": "Which combination correctly pairs funnel stage with format?",
+        "options": [
+          "Guide → conversion; case study → awareness",
+          "Comparison content → consideration; case study/offer → conversion; newsletter → retention",
+          "Reel → retention; newsletter → awareness",
+          "Carousel → conversion; guide → discovery only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Formats have home stages: guides and video build awareness, comparisons serve consideration, case studies convert, email retains.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q9",
+        "question": "Your AI-use statement says: 'Drafted with AI; edited by me.' What is missing by this lesson's standard?",
+        "options": [
+          "Nothing — that is a complete statement",
+          "Specificity: what the AI drafted, what you verified claim-by-claim, and what you changed",
+          "The model's version number",
+          "A link to the prompt used"
+        ],
+        "answerIndex": 1,
+        "explanation": "A useful AI-use statement separates drafting (machine) from truth ownership (human) and shows the verification trail.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q10",
+        "question": "Two months in, one cluster topic consistently outperforms everything else. Applying BOTH the waterfall and iteration lessons, what do you build next?",
+        "options": [
+          "A new pillar on an unrelated topic to widen the brand",
+          "A dedicated pillar page for the winning cluster topic, with a fresh waterfall of native assets and distribution behind it",
+          "More posts on every topic equally, for fairness",
+          "Nothing — avoid overexposing a good topic"
+        ],
+        "answerIndex": 1,
+        "explanation": "Winning evidence earns a bigger bet: promote the cluster to a pillar, re-waterfall it, and distribute deliberately.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

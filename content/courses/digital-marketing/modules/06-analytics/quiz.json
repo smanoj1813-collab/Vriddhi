@@ -1,0 +1,388 @@
+{
+  "moduleId": "m6",
+  "questions": {
+    "m6-t1": [
+      {
+        "id": "m6-t1-q1",
+        "question": "What is the test that separates a decision metric from a vanity metric?",
+        "options": [
+          "Whether the number is large or small",
+          "Whether knowing it would change what we do next",
+          "Whether the platform highlights it on the home screen",
+          "Whether it can be shown as a chart"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reach, impressions and followers feel good and answer no question — if no action changes, it is decoration."
+      },
+      {
+        "id": "m6-t1-q2",
+        "question": "In the KPI tree, what sits between the business goal and the diagnostics?",
+        "options": [
+          "Vanity metrics",
+          "Channel KPIs like enquiries per channel and the conversion rate",
+          "The ad budget",
+          "Follower counts per platform"
+        ],
+        "answerIndex": 1,
+        "explanation": "Goal → KPIs → channel KPIs → diagnostics: the tree shows where money and effort convert and which branch is thin."
+      },
+      {
+        "id": "m6-t1-q3",
+        "question": "A report says 'form conversion 12%'. What two companions make this number meaningful?",
+        "options": [
+          "The ad spend and the bounce rate",
+          "The baseline (it was 8% last month) and a benchmark (category range 6–10%)",
+          "The page speed score and word count",
+          "The number of likes on the post"
+        ],
+        "answerIndex": 1,
+        "explanation": "Your own before and the industry's typical turn a bare number into a sentence with direction."
+      },
+      {
+        "id": "m6-t1-q4",
+        "question": "In the weekly insight ritual, how many anomalies should you chase?",
+        "options": [
+          "All of them, to be thorough",
+          "One — the number that moved most, up or down",
+          "Three, spread across channels",
+          "None — just record the numbers"
+        ],
+        "answerIndex": 1,
+        "explanation": "Find the one anomaly, diagnose with the tree's diagnostics, decide one action with an owner and date, and log it."
+      },
+      {
+        "id": "m6-t1-q5",
+        "question": "Why is the insight log called the secret weapon?",
+        "options": [
+          "It hides underperforming channels from the client",
+          "After a quarter it becomes a narrative of what worked — portfolio and interview material",
+          "It replaces the need for GA4",
+          "It guarantees budget increases"
+        ],
+        "answerIndex": 1,
+        "explanation": "The log records what moved, why, and what you did — a quarter later it is exactly the story employers ask for."
+      }
+    ],
+    "m6-t2": [
+      {
+        "id": "m6-t2-q1",
+        "question": "What is the core unit of measurement in GA4?",
+        "options": [
+          "The visit",
+          "The event — an action with parameters (which page, which link, what value)",
+          "The bounce",
+          "The impression"
+        ],
+        "answerIndex": 1,
+        "explanation": "GA4 counts events; users, sessions and page views are aggregations of events, not separate categories."
+      },
+      {
+        "id": "m6-t2-q2",
+        "question": "What is the rule about unverified GA4 installations?",
+        "options": [
+          "They work fine after 48 hours automatically",
+          "An unverified installation does not exist — confirm in Realtime/DebugView",
+          "Google emails you when the tag fires",
+          "Verification is only needed for e-commerce"
+        ],
+        "answerIndex": 1,
+        "explanation": "Verify with DebugView or the Realtime report; a typo'd ID or wrong property is invisible until you look."
+      },
+      {
+        "id": "m6-t2-q3",
+        "question": "In Traffic acquisition, which source/medium row represents Google Ads traffic?",
+        "options": [
+          "google / organic",
+          "l.google (paid) — alongside cpc bidding",
+          "(direct) / (none)",
+          "instagram.com / referral"
+        ],
+        "answerIndex": 1,
+        "explanation": "Organic is google/organic; paid search arrives as l.google with cpc; social arrives as referral from the platform."
+      },
+      {
+        "id": "m6-t2-q4",
+        "question": "If you configure only ONE thing in a new GA4 property, what should it be?",
+        "options": [
+          "Forty conversions, to be thorough",
+          "One key event that proxies the business action — enquiry, WhatsApp start, or booking",
+          "Page views as conversions",
+          "A custom dimension for weather"
+        ],
+        "answerIndex": 1,
+        "explanation": "One business-proxy conversion first; then link Search Console and Ads; leave enhanced measurement on."
+      },
+      {
+        "id": "m6-t2-q5",
+        "question": "Why should GA4 numbers be quoted with a little humility?",
+        "options": [
+          "GA4 is known to double-count everything",
+          "Consent mode, sampling in explorations, and modelled attribution make the edges soft — say 'about'",
+          "Google rounds all numbers up",
+          "Only paid accounts get accurate data"
+        ],
+        "answerIndex": 1,
+        "explanation": "GA4 numbers are the best available estimate, not an audit — treat them as decision-grade, not accounting-grade."
+      }
+    ],
+    "m6-t3": [
+      {
+        "id": "m6-t3-q1",
+        "question": "What is 'the manual layer' in dashboard design?",
+        "options": [
+          "The platform's data, entered by hand",
+          "The numbers no platform has — how-did-you-hear tallies, walk-ins, WhatsApp conversation counts — kept in a sheet",
+          "The PDF that is printed each month",
+          "A backup of the dashboard"
+        ],
+        "answerIndex": 1,
+        "explanation": "Spreadsheets hold what no platform tracks; they are a first-class data source in Looker Studio, not a second-class citizen."
+      },
+      {
+        "id": "m6-t3-q2",
+        "question": "Which set describes the five panels of the stakeholder dashboard?",
+        "options": [
+          "Logo, hero image, three photo galleries",
+          "Header KPIs with comparison, one trend line, channel breakdown, funnel, anomaly notes",
+          "Twenty charts covering every metric",
+          "A table of all raw events"
+        ],
+        "answerIndex": 1,
+        "explanation": "The dashboard IS the KPI tree drawn live: KPIs, trend, channels, funnel, and notes that explain the numbers."
+      },
+      {
+        "id": "m6-t3-q3",
+        "question": "According to the lesson, what is the number-one source of broken dashboards?",
+        "options": [
+          "Too few charts",
+          "Clever data blends — joining sources breaks silently; prefer side-by-side panels",
+          "Using the demo property",
+          "Sharing view access too widely"
+        ],
+        "answerIndex": 1,
+        "explanation": "Blending two connectors on a shared dimension is fragile; adjacent panels deliver the same insight safely."
+      },
+      {
+        "id": "m6-t3-q4",
+        "question": "Which is the strongest form of automation for reporting?",
+        "options": [
+          "A bigger server",
+          "Culture — the standing agenda item where the weekly ritual opens on the dashboard",
+          "Exporting to PDF manually each week",
+          "Emailing raw CSV files"
+        ],
+        "answerIndex": 1,
+        "explanation": "Scheduled PDFs and alerts help, but the standing meeting ritual is the automation that cannot be uninstalled."
+      },
+      {
+        "id": "m6-t3-q5",
+        "question": "The audience principle says a report's job is to:",
+        "options": [
+          "Demonstrate how hard the team worked",
+          "Provoke a decision or renew confidence — if a reader can do nothing with a panel, delete it",
+          "Include every metric for completeness",
+          "Look impressive to outsiders"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reports exist to be acted on; effort-display panels are posters, and posters get ignored."
+      }
+    ],
+    "m6-t4": [
+      {
+        "id": "m6-t4-q1",
+        "question": "Why did the home-bakery owner wrongly conclude 'Instagram brings no sales'?",
+        "options": [
+          "She posted at the wrong times",
+          "Last-click attribution credited conversions to direct/WhatsApp, hiding Instagram's role as the discovery touch",
+          "Instagram deleted her analytics",
+          "Her reels were too short"
+        ],
+        "answerIndex": 1,
+        "explanation": "The last touch gets all the credit; discovery channels that feed the funnel get starved — the most expensive reading mistake."
+      },
+      {
+        "id": "m6-t4-q2",
+        "question": "Which attribution model is GA4's default, using machine learning to distribute credit?",
+        "options": [
+          "Last-click",
+          "Data-driven attribution (DDA)",
+          "First-click",
+          "Linear"
+        ],
+        "answerIndex": 1,
+        "explanation": "DDA weights credit by which touch sequences actually precede conversion; know which model is speaking and never compare across models."
+      },
+      {
+        "id": "m6-t4-q3",
+        "question": "What question does attribution NOT answer, that incrementality does?",
+        "options": [
+          "Which channel got credit?",
+          "Would it have happened anyway?",
+          "Which touch was last?",
+          "How many conversions occurred?"
+        ],
+        "answerIndex": 1,
+        "explanation": "Attribution distributes credit for what happened; only incrementality checks (pause tests, geo splits, how-did-you-hear logs) reveal what the channel actually caused."
+      },
+      {
+        "id": "m6-t4-q4",
+        "question": "Which of these is NOT a valid A/B test?",
+        "options": [
+          "Random 50/50 split of visitors between two headlines",
+          "Comparing last month's page (A) with this month's page (B)",
+          "Meta A/B test campaigns with automatic random assignment",
+          "Email subject line tests with randomised sends"
+        ],
+        "answerIndex": 1,
+        "explanation": "Before-vs-after changed time too — seasonality, campaigns and luck ride along. Randomised simultaneous assignment is non-negotiable."
+      },
+      {
+        "id": "m6-t4-q5",
+        "question": "Why must decision rules be written BEFORE the data arrive?",
+        "options": [
+          "Because platforms require it",
+          "To prevent panic-scaling on a good day and sunk-cost patience on a bad one",
+          "So clients cannot argue later",
+          "Because GA4 deletes old data"
+        ],
+        "answerIndex": 1,
+        "explanation": "E.g., 'CPA < ₹150 for two weeks → scale +20%; CPA > ₹300 for three days → pause and diagnose' — thresholds set in advance remove emotion."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Analytics Interpretation Gate",
+    "questions": [
+      {
+        "id": "m6-assessment-q1",
+        "question": "A monthly report shows reach up 300% and enquiries down 25%. What is the professionally correct interpretation?",
+        "options": [
+          "The campaign is succeeding; enquiries will follow next month",
+          "A vanity metric rose while a decision metric fell — diagnose the funnel: where exactly are enquiries lost between reach and conversion?",
+          "Analytics tools are unreliable",
+          "Increase the posting frequency to fix enquiries"
+        ],
+        "answerIndex": 1,
+        "explanation": "When applause metrics and business metrics diverge, the business metric wins — walk the KPI tree to find the broken branch.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q2",
+        "question": "GA4 shows form_submit at 3% from social but 11% from organic search. Social volume is 10× larger. What should you check before cutting social?",
+        "options": [
+          "Nothing — 3% justifies cutting social immediately",
+          "Assisted conversions and incrementality: social may be the discovery touch that feeds the organic searches, and last-click may be starving it",
+          "Whether the social posts used enough hashtags",
+          "The bounce rate of the homepage"
+        ],
+        "answerIndex": 1,
+        "explanation": "Channel-level last-click rates hide upstream discovery roles — model comparison or a geo/pause test before firing a channel.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q3",
+        "question": "A stakeholder asks for 'a report with everything'. Applying this module, what do you deliver?",
+        "options": [
+          "A 20-panel dashboard covering every available metric",
+          "The five-panel dashboard: header KPIs vs previous period, trend with target line, channel breakdown, funnel, and three insight notes",
+          "A raw export of all GA4 events",
+          "A weekly email with screenshots from each platform"
+        ],
+        "answerIndex": 1,
+        "explanation": "Stakeholders want the KPI tree live, not a wall of charts; panels that provoke no decision get deleted.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q4",
+        "question": "Your A/B test shows variant B at 52% vs A at 48% on 60 conversions total. A colleague wants to ship B. What is the correct response?",
+        "options": [
+          "Ship B — 52% is higher",
+          "The sample is far too small; run to sufficiency (a significance calculator) before believing a 4-point gap",
+          "Ship A to be safe",
+          "Run both forever"
+        ],
+        "answerIndex": 1,
+        "explanation": "Small samples produce noise wearing the costume of insight; pre-compute required sample size and run to it.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q5",
+        "question": "Retargeting ads show the best ROAS in the account. Why is this not automatically proof they deserve more budget?",
+        "options": [
+          "Retargeting is banned in India",
+          "Retargeting converts people who were often returning anyway — the incrementality question decides, not the attributed ROAS",
+          "ROAS cannot be measured for retargeting",
+          "Retargeting only works for e-commerce"
+        ],
+        "answerIndex": 1,
+        "explanation": "High conversion rates on warm audiences may reflect selection, not causation — a pause test or geo split reveals the truth.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q6",
+        "question": "A new GA4 property is installed on a client site by the developer. What is your first professional act?",
+        "options": [
+          "Build a Looker Studio dashboard",
+          "Verify the installation in Realtime/DebugView and configure ONE key event proxying the business action",
+          "Create 40 conversions for completeness",
+          "Turn off enhanced measurement to save data"
+        ],
+        "answerIndex": 1,
+        "explanation": "Unverified installations do not exist; then one business-proxy conversion, then Search Console/Ads links, enhanced measurement stays on.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q7",
+        "question": "Under last-click, brand search gets 40% of conversions. The team wants to double brand-search budget. What does this module caution?",
+        "options": [
+          "Brand search is always worth doubling",
+          "Brand search conversions are often partly harvesting demand created elsewhere — check what drives the searches before crediting the channel",
+          "Brand search is a vanity metric",
+          "GA4 cannot track brand search"
+        ],
+        "answerIndex": 1,
+        "explanation": "Last-click rewards the bottom of the funnel; the harvest channel gets credit for seeds planted by discovery channels.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q8",
+        "question": "Which monthly practice embodies the optimisation loop's budget discipline?",
+        "options": [
+          "Move the entire budget to the current best channel",
+          "Reallocate 10–20% from worst to best CPA, keeping one experimental line item, all logged",
+          "Keep budgets frozen for a quarter regardless of results",
+          "Spend equally on all channels for fairness"
+        ],
+        "answerIndex": 1,
+        "explanation": "Small, continuous, documented reallocation — the 70/20/10 discipline from Lesson 4.4 applied monthly — beats wholesale bets.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q9",
+        "question": "The 'how did you hear about us?' log at every order is valuable because it:",
+        "options": [
+          "Is required by GA4",
+          "Provides model-free, consent-safe attribution evidence that triangulates platform claims",
+          "Replaces the need for a website",
+          "Automatically improves ad targeting"
+        ],
+        "answerIndex": 1,
+        "explanation": "The unglamorous truth-teller: free of attribution-model bias, it grounds every dashboard's channel story.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q10",
+        "question": "A dashboard blend of GA4 + Google Ads + a manual sheet broke after a platform field rename. What does the lesson recommend instead?",
+        "options": [
+          "Rebuild the blend with more joins",
+          "Side-by-side panels per source, with the manual sheet as its own data source — no cross-connector joins",
+          "Abandon dashboards and use spreadsheets only",
+          "Screenshot the platforms weekly"
+        ],
+        "answerIndex": 1,
+        "explanation": "Blends break silently; adjacent panels deliver the same insight without the fragility — the manual layer stays first-class.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

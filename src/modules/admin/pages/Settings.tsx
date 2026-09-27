@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { getStoredAccent, setAccent } from '@/shared/theme/accent'
+import {
+  appearanceKey,
+  getStoredAccent,
+  readAppearancePref,
+  setAccent,
+  writeAppearancePref,
+} from '@/shared/theme/accent'
 import { useSearchParams } from 'react-router-dom'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useAuth } from '../../auth/context/AuthContext'
@@ -166,10 +172,11 @@ export default function Settings() {
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
   const [saving2FA, setSaving2FA] = useState(false)
 
-  // Appearance state
-  const [accentColor, setAccentColor] = useState(() => getStoredAccent())
+  // Appearance state — prefs are per-account (uid-scoped), so one account's
+  // colours never follow the operator into another account on the same browser.
+  const [accentColor, setAccentColor] = useState(() => getStoredAccent(user?.uid))
   // Apply the accent app-wide as soon as it changes (swatch click, profile load, reset).
-  useEffect(() => { setAccent(accentColor) }, [accentColor])
+  useEffect(() => { setAccent(accentColor, true, user?.uid) }, [accentColor, user?.uid])
   const [fontSize, setFontSize] = useState('medium')
   const [compactMode, setCompactMode] = useState(false)
   const [animationsEnabled, setAnimationsEnabled] = useState(true)
@@ -277,17 +284,17 @@ export default function Settings() {
           setPhone(user.phone || '')
         }
 
-        // Load local prefs
+        // Load local prefs (this account's keys only)
         try {
           const localNotif = localStorage.getItem('vriddhi_admin_notifications')
           if (localNotif) setNotifications(prev => ({ ...prev, ...JSON.parse(localNotif) }))
-          const localAccent = localStorage.getItem('vriddhi_accent_color')
+          const localAccent = readAppearancePref('vriddhi_accent_color', user?.uid)
           if (localAccent) setAccentColor(localAccent)
-          const localFont = localStorage.getItem('vriddhi_font_size')
+          const localFont = readAppearancePref('vriddhi_font_size', user?.uid)
           if (localFont) setFontSize(localFont)
-          const localCompact = localStorage.getItem('vriddhi_compact_mode')
+          const localCompact = readAppearancePref('vriddhi_compact_mode', user?.uid)
           if (localCompact) setCompactMode(localCompact === 'true')
-          const localAnim = localStorage.getItem('vriddhi_animations')
+          const localAnim = readAppearancePref('vriddhi_animations', user?.uid)
           if (localAnim) setAnimationsEnabled(localAnim === 'true')
           const local2FA = localStorage.getItem('vriddhi_2fa_enabled')
           if (local2FA) setTwoFAEnabled(local2FA === 'true')
@@ -431,10 +438,10 @@ export default function Settings() {
     setSavingAppearance(true)
     setAppearanceMsg(null)
     try {
-      localStorage.setItem('vriddhi_accent_color', accentColor)
-      localStorage.setItem('vriddhi_font_size', fontSize)
-      localStorage.setItem('vriddhi_compact_mode', String(compactMode))
-      localStorage.setItem('vriddhi_animations', String(animationsEnabled))
+      writeAppearancePref('vriddhi_accent_color', user?.uid, accentColor)
+      writeAppearancePref('vriddhi_font_size', user?.uid, fontSize)
+      writeAppearancePref('vriddhi_compact_mode', user?.uid, String(compactMode))
+      writeAppearancePref('vriddhi_animations', user?.uid, String(animationsEnabled))
       localStorage.setItem('vriddhi_auto_backup', autoBackup)
 
       // Apply font size to root
@@ -665,18 +672,33 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Placement prep visibility — which company guides this
-                  college's learners see on /prep. Saved via the prep API
-                  (server-enforced), independent of the profile fields above. */}
-              {user?.collegeId && ['admin', 'principal', 'hod', 'superadmin'].includes(user.role) && (
-                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
-                  <CompanyPrepVisibilityPanel collegeId={user.role === 'superadmin' ? user.collegeId : undefined} collegeName={collegeName} embedded />
-                </div>
+              {/* Placement prep visibility and course assignments are PLATFORM
+                  controls. The Vriddhi superadmin decides which company guides
+                  and course packs a college's learners see — college staff
+                  (principal / HOD / admin) get a pointer instead of the
+                  switches, mirroring how the Resume Builder add-on is governed.
+                  Server side: the prep settings API and the Firestore rules for
+                  colleges/{id}/config/courses both enforce superadmin-only
+                  writes, so this is convenience rather than the boundary. */}
+              {user?.role === 'superadmin' && user?.collegeId && (
+                <>
+                  <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+                    <CompanyPrepVisibilityPanel collegeId={user.collegeId} collegeName={collegeName} embedded />
+                  </div>
+                  <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+                    <CourseAssignmentPanel collegeId={user.collegeId} collegeName={collegeName} embedded />
+                  </div>
+                </>
               )}
-
-              {user?.collegeId && ['admin', 'principal', 'hod', 'superadmin'].includes(user.role) && (
+              {user?.role && user.role !== 'superadmin' && ['admin', 'principal', 'hod'].includes(user.role) && (
                 <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
-                  <CourseAssignmentPanel collegeId={user.collegeId} collegeName={collegeName} embedded />
+                  <div className="flex items-start gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-4 py-3">
+                    <Shield className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                    <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">Company-specific placement prep and course assignments are managed by the Vriddhi platform team.</span>{' '}
+                      To switch a company guide or course pack on or off for your college, please contact the platform superadmin.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -1112,10 +1134,10 @@ export default function Settings() {
                             setCompactMode(false)
                             setAnimationsEnabled(true)
                             setMode('light')
-                            localStorage.removeItem('vriddhi_accent_color')
-                            localStorage.removeItem('vriddhi_font_size')
-                            localStorage.removeItem('vriddhi_compact_mode')
-                            localStorage.removeItem('vriddhi_animations')
+                            for (const base of ['vriddhi_accent_color', 'vriddhi_font_size', 'vriddhi_compact_mode', 'vriddhi_animations']) {
+                              localStorage.removeItem(appearanceKey(base, user?.uid))
+                              localStorage.removeItem(base)
+                            }
                             document.documentElement.style.fontSize = '16px'
                             showSuccess('Appearance reset to defaults')
                           }

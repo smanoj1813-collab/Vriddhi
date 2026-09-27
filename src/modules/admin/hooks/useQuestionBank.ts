@@ -197,7 +197,8 @@ export interface UseQuestionBankReturn {
   loadQuestionDetail: (questionId: string) => Promise<void>;
   loadPapers: (filter: PaperFilter, page?: number) => Promise<void>;
   loadTemplates: () => Promise<void>;
-  loadPendingReviews: () => Promise<void>;
+  /** Loads reviews of every status — the Review Queue filters by tab client-side. */
+  loadReviews: () => Promise<void>;
   loadUniversalStats: () => Promise<void>;
   loadTopicStats: (topicId: string) => Promise<void>;
   generatePaper: (config: PaperGenerationConfig, createdBy: {
@@ -247,6 +248,13 @@ export interface UseQuestionBankReturn {
   submitReview: (review: Omit<QuestionReview, 'id' | 'createdAt' | 'updatedAt'>) => Promise<boolean>;
   approveReview: (reviewId: string, reviewerId: string, reviewerName: string, comment?: string) => Promise<boolean>;
   rejectReview: (reviewId: string, reviewerId: string, reviewerName: string, comment?: string) => Promise<boolean>;
+  /** Approves many pending reviews in one batched pass. Returns counts, or null when the call failed. */
+  bulkApproveReviews: (
+    reviewIds: string[],
+    reviewerId: string,
+    reviewerName: string,
+    comment?: string
+  ) => Promise<{ approved: number; failed: number } | null>;
   invalidateCache: (pattern?: string) => void;
   clearUniversalErrors: () => void;
 }
@@ -762,11 +770,14 @@ export function useQuestionBank(): UseQuestionBankReturn {
     }
   }, []);
 
-  const loadPendingReviews = useCallback(async () => {
+  const loadReviews = useCallback(async () => {
     setLoadingUniversal(prev => ({ ...prev, reviews: true }));
     setErrorsUniversal(prev => ({ ...prev, reviews: null }));
     try {
-      const result = await reviewQueueApi.getPending();
+      // Every status is loaded — the Review Queue's tabs and stats cards filter
+      // client-side, so a pending-only query here left Approved/Rejected/All
+      // permanently empty.
+      const result = await reviewQueueApi.getAll();
       if (result.success && result.data) {
         // HOD/admin: only reviews tagged with their department (untagged
         // legacy rows stay visible — see shared/utils/departmentScope).
@@ -961,7 +972,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
         }
         globalCache.invalidate('reviews');
         globalCache.invalidate('questions');
-        await loadPendingReviews();
+        await loadReviews();
         return true;
       }
       return false;
@@ -970,7 +981,40 @@ export function useQuestionBank(): UseQuestionBankReturn {
     } finally {
       setLoadingUniversal(prev => ({ ...prev, saving: false }));
     }
-  }, [reviews, loadPendingReviews]);
+  }, [reviews, loadReviews]);
+
+  // "Approve all" — one batched pass over the pending reviews the viewer can
+  // see (the reviews state is already department-scoped), instead of one
+  // reload-heavy approveReview() call per question. The queue is refreshed
+  // once at the end.
+  const bulkApproveReviews = useCallback(async (
+    reviewIds: string[],
+    reviewerId: string,
+    reviewerName: string,
+    comment?: string
+  ): Promise<{ approved: number; failed: number } | null> => {
+    setLoadingUniversal(prev => ({ ...prev, saving: true }));
+    try {
+      const items = reviewIds
+        .map((id) => reviews.find((r) => r.id === id))
+        .filter((r): r is QuestionReview => Boolean(r && r.status === 'pending'))
+        .map((r) => ({ reviewId: r.id, questionId: r.questionId }));
+      if (items.length === 0) return { approved: 0, failed: 0 };
+
+      const result = await reviewQueueApi.approveMany(items, reviewerId, reviewerName, comment);
+      if (result.success && result.data) {
+        globalCache.invalidate('reviews');
+        globalCache.invalidate('questions');
+        await loadReviews();
+        return result.data;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      setLoadingUniversal(prev => ({ ...prev, saving: false }));
+    }
+  }, [reviews, loadReviews]);
 
   const rejectReview = useCallback(async (reviewId: string, reviewerId: string, reviewerName: string, comment?: string) => {
     setLoadingUniversal(prev => ({ ...prev, saving: true }));
@@ -982,7 +1026,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
           await questionMetadataApi.updateStatus(review.questionId, 'rejected', reviewerId);
         }
         globalCache.invalidate('reviews');
-        await loadPendingReviews();
+        await loadReviews();
         return true;
       }
       return false;
@@ -991,7 +1035,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
     } finally {
       setLoadingUniversal(prev => ({ ...prev, saving: false }));
     }
-  }, [reviews, loadPendingReviews]);
+  }, [reviews, loadReviews]);
 
   const invalidateCache = useCallback((pattern?: string) => {
     globalCache.invalidate(pattern);
@@ -1056,7 +1100,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
     loadQuestionDetail,
     loadPapers,
     loadTemplates,
-    loadPendingReviews,
+    loadReviews,
     loadUniversalStats,
     loadTopicStats,
     generatePaper,
@@ -1065,6 +1109,7 @@ export function useQuestionBank(): UseQuestionBankReturn {
     getStudentPaper,
     submitReview,
     approveReview,
+    bulkApproveReviews,
     rejectReview,
     invalidateCache,
     clearUniversalErrors,

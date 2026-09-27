@@ -1,0 +1,331 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-s1",
+        "title": "Marketing is conversation at scale",
+        "summary": "Traditional marketing shouted at everyone; digital marketing talks with the people who are listening.",
+        "explanation": "A newspaper ad interrupts a lakh readers to reach two hundred buyers. A search ad appears at the exact moment someone types what they need. The revolution is not the screen — it is targeting, measurement and the two-way channel.",
+        "example": "Ashok's Jayanagara café has a leaflet dropped in 5,000 letterboxes (most go unread) and an Instagram reel of a customer's filter-coffee review shared by 300 locals who then walk in.",
+        "takeaway": "Digital marketing is measurable conversation — you can see who replied, and improve.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Traditional", "detail": "One message, everyone, expensive to measure, no reply channel." },
+            { "title": "Digital", "detail": "The right message, the interested few, tracked to the rupee, two-way." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s2",
+        "title": "One conversation, many rooms",
+        "summary": "The channels are different rooms where the same customers carry on the same conversation.",
+        "explanation": "Search, social, email, WhatsApp, ads and the website are not separate jobs — a customer moves between them in minutes. The marketer's job is one strategy expressed consistently across rooms.",
+        "example": "A parent sees a tuition centre's reel, searches its reviews, fills the website form, then asks a question on WhatsApp — four rooms, one journey, one campaign.",
+        "takeaway": "Manage the conversation, not the channels.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Discover", "detail": "Social, search, ads — attention begins." },
+            { "title": "Evaluate", "detail": "Website, reviews, content — trust builds." },
+            { "title": "Converse", "detail": "WhatsApp, DM, email — questions answered." },
+            { "title": "Buy & return", "detail": "Order, then review and repeat." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s3",
+        "title": "Owned, earned and paid",
+        "summary": "Every digital asset belongs to you, to your audience, or to a landlord you pay.",
+        "explanation": "Owned channels (website, email list) are yours. Earned channels (reviews, shares, mentions) are won from the audience. Paid channels (ads, boosts) are rented attention. Strong strategies balance all three.",
+        "example": "The bakery's website and WhatsApp list survive an algorithm change; its Instagram followers and Google reviews must be earned again; its ads stop the moment the budget stops.",
+        "takeaway": "Paid rents attention, earned borrows trust, owned keeps both — build owned assets early.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Owned", "detail": "Website, email list — your rules, your data." },
+            { "title": "Earned", "detail": "Reviews, shares, mentions — won trust." },
+            { "title": "Paid", "detail": "Ads and boosts — rented reach, instant but temporary." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s4",
+        "title": "Marketing runs on identity and data",
+        "summary": "Cookies, logins and consent decide what marketers can know — and the rules are tightening.",
+        "explanation": "Platforms recognise users through logins and identifiers, letting campaigns target and measure. Privacy laws and browser changes keep shrinking what can be tracked without permission, which is why first-party data (your own customer list) is gold.",
+        "example": "A ₹5,000 campaign can target 'Bengaluru, 22–35, interested in fitness' — but only inside each platform's rules, and only with consent for your own tracking.",
+        "takeaway": "Collect consented first-party data from day one; borrowed targeting is shrinking.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Who you reach", "detail": "Login-based audiences inside each platform." },
+            { "title": "What you can measure", "detail": "Only what consent and tools permit." },
+            { "title": "What you own", "detail": "Your customer list — consent-first, future-proof." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s5",
+        "title": "The job-to-be-done lens",
+        "summary": "People don't buy products; they hire them to make progress.",
+        "explanation": "Ask what progress a customer is trying to achieve — the 'job' — and the product is just one candidate for hire. This lens explains both what to say and where to say it.",
+        "example": "Nobody wants a '5-inch hole' — they want to hang a photo. The tuition centre sells 'a confident child', the café sells 'an hour that feels like a break'.",
+        "takeaway": "Write the job, not the feature — the message follows the progress sought.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Feature talk", "detail": "'We sell filter coffee, 40 seats, AC.'" },
+            { "title": "Job talk", "detail": "'A calm hour with a proper filter coffee, five minutes from your desk.'" }
+          ]
+        }
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-s1",
+        "title": "Touchpoints stitch into a journey",
+        "summary": "A customer's path is a sequence of touchpoints across days, channels and devices.",
+        "explanation": "The reel, the search, the review page, the website, the WhatsApp chat — each touchpoint either advances or leaks the journey. Mapping them reveals where interest dies.",
+        "example": "A bride-to-be finds a Mysuru photographer on Instagram, reads two reviews, checks the portfolio on the website, then messages on WhatsApp to check the date.",
+        "takeaway": "Map the actual path your customers take — then fix the leaks.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Touch", "detail": "First contact — reel, ad, search result." },
+            { "title": "Check", "detail": "Reviews, portfolio, website — trust checks." },
+            { "title": "Ask", "detail": "DM, call, form — intent appears." },
+            { "title": "Decide", "detail": "Buy, book, or bounce." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s2",
+        "title": "The funnel: awareness, consideration, conversion",
+        "summary": "The classic funnel turns strangers into visitors, leads, then customers.",
+        "explanation": "Each stage has a different job: awareness earns attention, consideration builds trust and comparison, conversion asks for the action. Content that converts badly at the top is normal — the funnel's job is narrowing.",
+        "example": "10,000 reel views → 800 profile visits → 120 website clicks → 15 enquiries → 6 orders. Every stage divides; the leaks between stages are the improvement areas.",
+        "takeaway": "Measure between the stages — the leak, not the pool, is the work.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Awareness", "detail": "Strangers notice you exist." },
+            { "title": "Consideration", "detail": "They compare and trust-check." },
+            { "title": "Conversion", "detail": "They act: buy, book, enrol." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s3",
+        "title": "Linear funnels lie; loops tell the truth",
+        "summary": "Real journeys loop: customers research, compare, disappear, return with a coupon.",
+        "explanation": "Nobody buys on the first touch. People loop between channels, wait for salary day, compare three competitors, and respond to retargeting. Modern models add retention, advocacy and repeat purchase as the engine of the loop.",
+        "example": "The 22% who abandon the cart include tomorrow's buyers — the retargeting ad and the WhatsApp reminder close loops that a 'leaky funnel' would call lost.",
+        "takeaway": "A customer who leaves without buying is often mid-loop, not gone.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Funnel view", "detail": "Attention narrowing to a decision." },
+            { "title": "Loop view", "detail": "Research, compare, wait, return — with retention and advocacy feeding the top." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s4",
+        "title": "AIDA gives each stage its message",
+        "summary": "Attention, Interest, Desire, Action — the copy pattern matched to funnel depth.",
+        "explanation": "Top-of-funnel content earns attention and interest with value; bottom-of-funnel content sharpens desire and asks for action. The commonest beginner error: asking for action where you should earn interest.",
+        "example": "A carousel '5 signs your child's maths needs a different approach' earns interest; a form 'Book Saturday's free demo class' asks for action. Each belongs at its own stage.",
+        "takeaway": "Match the message to the stage — value before ask.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Attention", "detail": "Stop the scroll: hook, face, claim." },
+            { "title": "Interest", "detail": "Teach and show: proof, story, detail." },
+            { "title": "Desire", "detail": "Make it theirs: offer, urgency, reassurance." },
+            { "title": "Action", "detail": "One clear ask: book, buy, message." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s5",
+        "title": "Small-business funnels are short and personal",
+        "summary": "Local businesses skip stages — but the stages still exist as human moments.",
+        "explanation": "A kirana store's funnel is a WhatsApp group and a counter conversation, not a nine-step automation. The stages compress into moments: the word-of-mouth touch, the question, the deal. The framework still explains where growth comes from.",
+        "example": "For the tuition centre: a parent's trust (awareness) built by a neighbour's praise, a demo class (consideration), a fee conversation (conversion), and the results message that renews next year (retention).",
+        "takeaway": "Scale the funnel to the business — the concepts travel, the machinery doesn't have to.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Enterprise funnel", "detail": "Nine touchpoints, automation, CRM stages." },
+            { "title": "Small-business funnel", "detail": "Word of mouth, one conversation, one satisfied customer telling the next." }
+          ]
+        }
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-s1",
+        "title": "Audience research: the one-page persona",
+        "summary": "A usable persona fits on one page: goals, pains, waterholes, buying triggers.",
+        "explanation": "Demographics alone don't create messages. A working persona names what the person wants to achieve, what stops them, where they hang out online, and what makes them buy — written from evidence, not imagination.",
+        "example": "'Pune parent, 38, wants a safe weekend activity for a hyperactive 8-year-old; fears injuries and overspending; scrolls Instagram evenings; buys after a trial class.'",
+        "takeaway": "One page, evidence-based: goals, pains, waterholes, triggers.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Goals", "detail": "What progress do they seek?" },
+            { "title": "Pains", "detail": "What stops or worries them?" },
+            { "title": "Waterholes", "detail": "Where do they actually spend attention?" },
+            { "title": "Triggers", "detail": "What makes them act now?" }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s2",
+        "title": "Find the words your customers use",
+        "summary": "Reviews, comment sections and sales conversations are free, honest research.",
+        "explanation": "Your customers describe your category in their own words in reviews and comments — the phrases they use are the phrases that will stop their scroll. Collect them verbatim; they become ad copy, headlines and captions.",
+        "example": "Ten café reviews say 'quiet place to work' — that exact phrase becomes the reel hook and the ad headline, because it is the customers' language, not the owner's.",
+        "takeaway": "Steal honestly: your best copy already exists in your reviews.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Collect", "detail": "Reviews, comments, sales-call notes." },
+            { "title": "Highlight", "detail": "Repeating phrases and pains." },
+            { "title": "Deploy", "detail": "Use their words in headlines and captions." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s3",
+        "title": "Competitor research starts with search",
+        "summary": "Search for what your customer searches, and study who competes for that attention.",
+        "explanation": "Your real competitors are whoever appears when your customer searches — not just the shop next door. Study their listing, reviews, content and offers to find the gaps you can own.",
+        "example": "Searching 'best cake Mangaluru' shows who owns the map pack, who answers reviews well, whose photos look professional — and which gap (eggless custom cakes, maybe) nobody owns.",
+        "takeaway": "Compete where your customer is looking, not where you happen to be.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            { "title": "Search results", "detail": "Who owns the page and the map?" },
+            { "title": "Reviews", "detail": "What do customers praise and complain about?" },
+            { "title": "Gaps", "detail": "Which promise is nobody making?" }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s4",
+        "title": "Positioning: the space between competitors",
+        "summary": "Positioning is the one sentence that makes you the obvious choice for someone.",
+        "explanation": "You cannot be the best at everything; you can be the clearest at one thing for one audience. Positioning chooses the comparison you win — price, speed, specialisation, location, care.",
+        "example": "'Same-day delivery' wins speed; 'only physiotherapy for badminton players' wins specialisation; 'the cheapest' is a strategy that works until someone undercuts it.",
+        "takeaway": "Pick a comparison you win, and say it plainly.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Vague", "detail": "'Quality service, best prices, wide range.'" },
+            { "title": "Positioned", "detail": "'Bengaluru's only Sunday-open physiotherapy clinic for athletes.'" }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s5",
+        "title": "The positioning statement formula",
+        "summary": "For [who] who [want], [product] is the [category] that [key benefit], unlike [alternative].",
+        "explanation": "The formula forces every choice: the audience, the job, the category you compete in, the benefit you lead with, and the alternative you beat. If a word in the statement is interchangeable, it is not yet a decision.",
+        "example": "'For busy Jayanagara professionals who want a real break, our café is the filter-coffee spot that slows the morning down — unlike juice chains rushing you out.'",
+        "takeaway": "Write it, test it, use it everywhere the brand speaks.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Who", "detail": "Name the audience narrowly." },
+            { "title": "Want", "detail": "State the job-to-be-done." },
+            { "title": "Benefit", "detail": "The one thing you lead with." },
+            { "title": "Unlike", "detail": "The alternative you beat." }
+          ]
+        }
+      }
+    ],
+    "m1-t4": [
+      {
+        "id": "m1-t4-s1",
+        "title": "Likes are not goals",
+        "summary": "A marketing goal is a business outcome with a number and a date.",
+        "explanation": "'More followers' is not a goal; '300 qualified enquiries by March 31' is. Goals come from the business: revenue, enquiries, admissions, footfall. Vanity metrics may rise on the way — they are not the destination.",
+        "example": "The café's campaign goal: 200 extra weekend covers a month at under ₹80 per new cover — followers, likes and reach are diagnostics, not the goal.",
+        "takeaway": "Write goals as outcomes with numbers and dates; treat applause as feedback.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Not a goal", "detail": "'Grow our social media presence.'" },
+            { "title": "A goal", "detail": "'300 qualified enquiries by March 31 at ₹150 CPA or less.'" }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s2",
+        "title": "The KPI tree connects effort to outcome",
+        "summary": "Business goal → channel KPIs → diagnostics: one diagram, no orphan metrics.",
+        "explanation": "Every metric earns its place by explaining the one above it. The goal sits at the top; each channel contributes its KPI (enquiries, orders, signups); diagnostics (clicks, CTR, conversion rate) explain channel performance.",
+        "example": "Admissions goal → enquiries by channel → clicks, CPC and page conversion rate. When admissions fall, the tree shows which branch broke.",
+        "takeaway": "If a metric explains nothing above it, stop reporting it.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Goal", "detail": "The business outcome with a number." },
+            { "title": "Channel KPIs", "detail": "Each channel's contribution." },
+            { "title": "Diagnostics", "detail": "Clicks, rates, positions — explanations." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s3",
+        "title": "SMART is a checklist, not a slogan",
+        "summary": "Specific, Measurable, Achievable, Relevant, Time-bound — test every goal against all five.",
+        "explanation": "The five letters catch the five ways goals fail: vague direction, unmeasurable success, fantasy targets, activity disconnected from the business, and no deadline to create urgency.",
+        "example": "'Increase repeat orders' fails four tests; 'lift monthly repeat orders from 90 to 120 by June 30 through the WhatsApp list' passes all five.",
+        "takeaway": "Run the five-letter checklist before you commit a budget.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Fails the tests", "detail": "'Increase repeat orders' — no audience, no number, no date; four of five letters missing." },
+            { "title": "Passes all five", "detail": "'Lift monthly repeat orders from 90 to 120 by June 30 through the WhatsApp list' — Specific, Measurable, Achievable, Relevant, Time-bound." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s4",
+        "title": "The marketing brief: one page that prevents chaos",
+        "summary": "A brief states goal, audience, message, budget, timeline and success metric before work begins.",
+        "explanation": "The brief is the contract between intent and execution. Written before creating, it prevents the two classic failures: beautiful work aimed at the wrong audience, and endless revisions because success was never defined.",
+        "example": "The tuition centre's demo-class campaign brief: goal 40 demo bookings; audience parents of Class 8–10 within 5 km; message 'see the class before you pay'; budget ₹6,000; timeline 3 weeks; success ₹150 per booking.",
+        "takeaway": "No brief, no campaign — one page agreed before anything is made.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            { "title": "Goal & metric", "detail": "What success is, numerically." },
+            { "title": "Audience & message", "detail": "Who, and what they should believe." },
+            { "title": "Budget & timeline", "detail": "The constraints that shape choices." },
+            { "title": "Measurement", "detail": "How it will be tracked." }
+          ]
+        }
+      },
+      {
+        "id": "m1-t4-s5",
+        "title": "Your campaign starts on paper",
+        "summary": "The brief is the deliverable that every later module builds on.",
+        "explanation": "Strategy is deciding what not to do. The written brief is where those decisions get made cheaply — changing a sentence costs nothing; changing a launched campaign costs money and trust.",
+        "example": "Project Block 3 and the capstone both begin with this one-pager: business context, goal, audience, message, channels, budget, timeline, measurement.",
+        "takeaway": "Decide on paper first — campaigns are cheap to fix before they exist.",
+        "visual": {
+          "kind": "compare",
+          "items": [
+            { "title": "Without a brief", "detail": "Random posts, drifting budget, arguments about taste." },
+            { "title": "With a brief", "detail": "Every asset answers to a goal; success is known in advance." }
+          ]
+        }
+      }
+    ]
+  }
+}

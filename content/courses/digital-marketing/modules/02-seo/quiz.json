@@ -1,0 +1,388 @@
+{
+  "moduleId": "m2",
+  "questions": {
+    "m2-t1": [
+      {
+        "id": "m2-t1-q1",
+        "question": "Put the search engine's three stages in the correct order.",
+        "options": [
+          "Index → rank → crawl",
+          "Crawl → index → rank",
+          "Rank → crawl → index",
+          "Crawl → rank → index"
+        ],
+        "answerIndex": 1,
+        "explanation": "Crawlers discover pages (crawl), the engine stores and understands them (index), then scores them per query (rank)."
+      },
+      {
+        "id": "m2-t1-q2",
+        "question": "A searcher types 'order eggless cake Tumakuru delivery'. What intent is this, and what page should target it?",
+        "options": [
+          "Informational — a guide about baking",
+          "Navigational — the brand's home page only",
+          "Transactional — the order/product page with a clear action",
+          "Commercial — a comparison article"
+        ],
+        "answerIndex": 2,
+        "explanation": "'Order' plus product plus city is transactional intent; it deserves the transaction page, not an article."
+      },
+      {
+        "id": "m2-t1-q3",
+        "question": "Why does the lesson warn against targeting the single word 'cake' for a local bakery?",
+        "options": [
+          "The word has no search volume",
+          "It is informational and national in scale, so the bakery competes with portals and recipe sites instead of winning local, specific phrases",
+          "Google forbids single-word keywords",
+          "It has the wrong intent for search engines to understand"
+        ],
+        "answerIndex": 1,
+        "explanation": "High-volume head terms are dominated by national players; local businesses win specific commercial/transactional phrases with local words."
+      },
+      {
+        "id": "m2-t1-q4",
+        "question": "What is 'keyword cannibalisation'?",
+        "options": [
+          "A competitor copying your keywords",
+          "Two of your own pages targeting the same phrase and competing with each other",
+          "Using a keyword too many times in one page",
+          "A keyword that loses volume over time"
+        ],
+        "answerIndex": 1,
+        "explanation": "One primary keyword per page: two pages after the same phrase split signals and compete against each other."
+      },
+      {
+        "id": "m2-t1-q5",
+        "question": "Which pairing correctly shows what a keyword map turns research into?",
+        "options": [
+          "A list of keywords with volume numbers",
+          "Keyword → assigned page, so every phrase has a home and every page has a reason to exist",
+          "Keyword → competitor's ranking position",
+          "Keyword → ad budget"
+        ],
+        "answerIndex": 1,
+        "explanation": "Unmapped keywords are trivia; the map assigns each phrase to one target page (existing or 'new page needed')."
+      }
+    ],
+    "m2-t2": [
+      {
+        "id": "m2-t2-q1",
+        "question": "What is the guideline for title tag length given in the lesson?",
+        "options": [
+          "Under ~160 characters",
+          "Under ~60 characters so it is not cut off on mobile",
+          "Exactly 30 characters",
+          "There is no limit that matters"
+        ],
+        "answerIndex": 1,
+        "explanation": "Lead with the primary phrase, stay under ~60 characters, add a differentiator — the highest-leverage on-page element."
+      },
+      {
+        "id": "m2-t2-q2",
+        "question": "Why write a meta description if it rarely affects ranking directly?",
+        "options": [
+          "It is required by Google to index the page",
+          "It is your 150-character advertisement on the results page, and Google bolds matching words",
+          "It improves page speed",
+          "It counts as an internal link"
+        ],
+        "answerIndex": 1,
+        "explanation": "The description is free ad copy: what the searcher gets, for whom, one proof point. Left empty, Google invents a snippet."
+      },
+      {
+        "id": "m2-t2-q3",
+        "question": "The phrase is 'eggless cake price list'. What does 'answer first, then explain' say the page must do?",
+        "options": [
+          "Open with the bakery's founding story to build trust",
+          "Lead with the price list itself, then explain sizes, delivery areas and ordering",
+          "Repeat the phrase 'eggless cake price list' in every paragraph",
+          "Show a full-screen popup before any content"
+        ],
+        "answerIndex": 1,
+        "explanation": "Give the searcher the thing they came for in the first screen; depth and detail follow, then one clear next step."
+      },
+      {
+        "id": "m2-t2-q4",
+        "question": "Which anchor text best serves both users and crawlers?",
+        "options": [
+          "Click here",
+          "Learn more",
+          "B.Com 1st year syllabus and fees",
+          "www.collegesite.com/syllabus"
+        ],
+        "answerIndex": 2,
+        "explanation": "Descriptive anchor text tells both readers and search engines what the destination page is about."
+      },
+      {
+        "id": "m2-t2-q5",
+        "question": "How many H1 headings should a page have, and why?",
+        "options": [
+          "As many as needed for keyword coverage",
+          "None — H2s are enough",
+          "Exactly one, carrying the page's headline and primary phrase naturally",
+          "Two: one for the brand and one for the topic"
+        ],
+        "answerIndex": 2,
+        "explanation": "One H1, then a logical H2/H3 hierarchy — a table of contents for skimmers, screen readers and search engines."
+      }
+    ],
+    "m2-t3": [
+      {
+        "id": "m2-t3-q1",
+        "question": "A clinic's site is invisible in Google despite good content. Which technical failure did the lesson's opening story show?",
+        "options": [
+          "Missing meta descriptions",
+          "'Discourage search engines' left on — an indexability failure found in Search Console",
+          "Images without alt text",
+          "No H1 heading"
+        ],
+        "answerIndex": 1,
+        "explanation": "Content cannot rank if the site is noindexed or unreachable; the Pages/Coverage report in Search Console exposes it in minutes."
+      },
+      {
+        "id": "m2-t3-q2",
+        "question": "What are the three factors that decide map-pack ranking?",
+        "options": [
+          "Relevance, distance, prominence",
+          "Keywords, links, speed",
+          "Reviews, ads, followers",
+          "Freshness, HTTPS, mobile-first"
+        ],
+        "answerIndex": 0,
+        "explanation": "Google names relevance, distance and prominence for local ranking; you control relevance and heavily influence prominence."
+      },
+      {
+        "id": "m2-t3-q3",
+        "question": "What is NAP consistency, and why does it matter?",
+        "options": [
+          "Posting at consistent times on social media",
+          "Identical Name, Address and Phone everywhere the business is listed, so listings do not split its identity",
+          "A backup schedule for the website",
+          "Number of Ads Placed per month"
+        ],
+        "answerIndex": 1,
+        "explanation": "Inconsistent details across Google, directories and the site split the business's identity and weaken local ranking."
+      },
+      {
+        "id": "m2-t3-q4",
+        "question": "Google indexes which version of a site first?",
+        "options": [
+          "The desktop version",
+          "The mobile version",
+          "The AMP version",
+          "The version with more backlinks"
+        ],
+        "answerIndex": 1,
+        "explanation": "Mobile-first indexing: the mobile experience IS the indexed experience, on India's phone-majority internet."
+      },
+      {
+        "id": "m2-t3-q5",
+        "question": "An audit lists forty issues. What makes it a plan rather than a report?",
+        "options": [
+          "Colour-coding every row",
+          "Scoring each finding by impact × effort and naming the first three actions",
+          "Listing all forty alphabetically",
+          "Adding screenshots to every issue"
+        ],
+        "answerIndex": 1,
+        "explanation": "High impact/low effort = do now; the discipline of prioritisation is what clients pay for and Project Block 1 grades."
+      }
+    ],
+    "m2-t4": [
+      {
+        "id": "m2-t4-q1",
+        "question": "Why did three links from local news portals beat sixty link-exchange links?",
+        "options": [
+          "News sites load faster",
+          "Search engines count trust transferred by relevant, editorial links — not raw link counts",
+          "Sixty links triggered a manual penalty",
+          "The exchange links were all broken"
+        ],
+        "answerIndex": 1,
+        "explanation": "A link's value depends on who votes (relevant, established sources), how (editorial, descriptive anchor) and where (in-body)."
+      },
+      {
+        "id": "m2-t4-q2",
+        "question": "Which of these is a 'built' link rather than an earned or bought one?",
+        "options": [
+          "A blogger links to your guide unprompted",
+          "A guest article you wrote for an association site with an in-body link",
+          "500 directory submissions for ₹999",
+          "A link farm network placement"
+        ],
+        "answerIndex": 1,
+        "explanation": "Built links are manually created but honest occasions: guest articles, partnerships, association directories. Bought bulk links are the trap."
+      },
+      {
+        "id": "m2-t4-q3",
+        "question": "Which link plays best fits a small business with zero budget?",
+        "options": [
+          "Buying a sponsored footer link on a popular blog",
+          "Publishing a genuinely useful local resource no one else has, then telling relevant outlets about it",
+          "Joining a link-exchange WhatsApp group",
+          "Commenting links on every popular article in the niche"
+        ],
+        "answerIndex": 1,
+        "explanation": "Be worth linking to (citable resource), then make sure the right people know — the two halves of every legitimate link play."
+      },
+      {
+        "id": "m2-t4-q4",
+        "question": "In the five-question link quality filter, which question is the ultimate tiebreaker?",
+        "options": [
+          "Is the site older than five years?",
+          "Would you want the link even if search engines did not exist?",
+          "Does the site have a .com domain?",
+          "Is the page in English?"
+        ],
+        "answerIndex": 1,
+        "explanation": "If the link has no human value, its SEO value is borrowed risk — two 'no' answers mean walk away."
+      },
+      {
+        "id": "m2-t4-q5",
+        "question": "Besides links, which of these is part of off-page SEO?",
+        "options": [
+          "Your site's heading structure",
+          "Brand searches — people typing your business name directly",
+          "Your page speed score",
+          "Your robots.txt file"
+        ],
+        "answerIndex": 1,
+        "explanation": "Off-page is bigger than links: brand searches, reviews, social mentions and citation consistency all signal a business worth trusting."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "SEO Audit Readiness Gate",
+    "questions": [
+      {
+        "id": "m2-assessment-q1",
+        "question": "A site's Search Console Pages report shows 200 pages 'Excluded — Crawled, currently not indexed' and traffic has fallen 60%. What is the most defensible first diagnosis?",
+        "options": [
+          "The site needs more backlinks immediately",
+          "Indexing/quality is the constraint — likely thin or duplicate pages diluting the site; consolidate and strengthen the important ones",
+          "The meta descriptions are too short",
+          "Google has penalised the site for buying links"
+        ],
+        "answerIndex": 1,
+        "explanation": "The Pages report is the window into indexing health: mass exclusions point to thin/duplicate content, not a links problem.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q2",
+        "question": "A money page targets 'custom photo cake under 800 rupees'. The owner rewrote the title to 'Sweet Memories — Crafting Joy Since 2009'. What is the correct professional advice?",
+        "options": [
+          "Keep it; brand-first titles build recall",
+          "Restore the phrase: titles must lead with the primary keyword and differentiator, not the founding story",
+          "Add the phrase to the meta keywords tag instead",
+          "Buy ads to compensate for the lost ranking"
+        ],
+        "answerIndex": 1,
+        "explanation": "The ~60-character title is the highest-leverage element; brand-only titles discard the query match that earned the ranking.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q3",
+        "question": "PageSpeed mobile scores 34, and the top opportunity is 'Serve images in next-gen formats' (saving 3.1s). Which action fits the lesson's prioritisation discipline?",
+        "options": [
+          "Note all twelve opportunities in the report and fix them alphabetically",
+          "Fix the image formats first — highest impact, low effort — then re-test and re-score before touching anything else",
+          "Rebuild the website on a new platform",
+          "Ignore speed because content matters more"
+        ],
+        "answerIndex": 1,
+        "explanation": "Compressing images is a marketing-team fix with huge impact for low effort — exactly the quadrant to act on first, then re-measure.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q4",
+        "question": "A Business Profile has 12 reviews, none answered, wrong Sunday hours, two photos, no posts. A competitor has 300 answered reviews and weekly posts. What is the realistic local-SEO plan?",
+        "options": [
+          "Report the competitor's reviews as fake",
+          "Fix hours and fields now, add photos, reply to every review going forward, ask every happy customer for a review, and post weekly",
+          "Change the business name to include keywords",
+          "Delete the profile and start fresh"
+        ],
+        "answerIndex": 1,
+        "explanation": "Prominence is earned through activity and genuine reviews; keyword-stuffed names violate guidelines and fake reports backfire.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q5",
+        "question": "Two pages on one site both target 'B.Com tuition Tumakuru' — the home page and a fees page; neither ranks above position 40. What is happening and what is the fix?",
+        "options": [
+          "The site needs more backlinks",
+          "Keyword cannibalisation: assign the phrase to one primary page and repoint the other page (and its internal links) to a different intent",
+          "Both pages need longer meta descriptions",
+          "The phrase has no search volume"
+        ],
+        "answerIndex": 1,
+        "explanation": "Two pages after one phrase split relevance signals; the keyword map's one-phrase-one-page rule resolves it.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q6",
+        "question": "A client receives an offer: '500 quality backlinks, ₹4,999, delivery in 7 days.' Using the lesson, what do you tell them?",
+        "options": [
+          "Take it if the links come from Indian sites",
+          "Decline — bulk link patterns are detectable manipulative schemes; recovery from a link penalty costs far more than restraint",
+          "Take it but ask for the links to be added slowly",
+          "Counter-offer ₹2,500"
+        ],
+        "answerIndex": 1,
+        "explanation": "Bought bulk links are the trap the five-question filter rejects; unnatural growth patterns are exactly what algorithms target.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q7",
+        "question": "Search Console Performance shows the site gets impressions for 'how to store fondant cake' (avg position 8) but the site sells cakes and has no such article. What is the opportunity?",
+        "options": [
+          "Ignore it — informational traffic does not convert",
+          "Publish the informational guide (harvesting People Also Ask), earn the click, and link it internally to the order pages",
+          "Change the home page title to include 'fondant'",
+          "Bid on the phrase with ads instead"
+        ],
+        "answerIndex": 1,
+        "explanation": "Real demand data shows an intent the site does not serve: informational content builds topical authority and funnels readers to money pages.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q8",
+        "question": "Which audit section best demonstrates the 'honesty and scope' standard?",
+        "options": [
+          "A list of competitor backlinks you could not analyse",
+          "'No Search Console access — indexing health could not be verified; a verification record would close this gap in one day'",
+          "A projection that rankings will double in three months",
+          "A note that the client's previous agency was unprofessional"
+        ],
+        "answerIndex": 1,
+        "explanation": "Naming what could not be checked and what would close the gap is professional honesty — projections and blame are not.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q9",
+        "question": "The business is new with a strong profile but almost no backlinks. Which single off-page play has the best effort-to-authority ratio?",
+        "options": [
+          "Exchanging links with ten friendly local businesses",
+          "Publishing the one local resource nobody else has (prices, documents, data) and pitching five relevant outlets with a short, factual email",
+          "Submitting to 500 directories",
+          "Buying sponsored posts on three national blogs"
+        ],
+        "answerIndex": 1,
+        "explanation": "Citable, original local content plus a real pitch list is the highest-return legitimate play for a new business.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q10",
+        "question": "Six weeks after on-page fixes, impressions rise but clicks do not. What does the lesson's framework point to next?",
+        "options": [
+          "The titles and descriptions are doing their ranking job but not their clicking job — rewrite them as honest ad copy with proof points and re-measure",
+          "The site was penalised",
+          "Add more keywords to the pages",
+          "Start a link exchange programme"
+        ],
+        "answerIndex": 0,
+        "explanation": "Impressions without clicks is a snippet problem: the title/description pair must earn the click, not just match the query.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getStoredAccent, setAccent } from '@/shared/theme/accent'
+import {
+  getStoredAccent,
+  readAppearancePref,
+  setAccent,
+  writeAppearancePref,
+} from '@/shared/theme/accent'
 import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, Building2, Phone, GraduationCap } from 'lucide-react'
 import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase/auth'
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
@@ -70,10 +75,11 @@ export default function FacultySettings() {
   const [passwordMsg, setPasswordMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
 
-  // Appearance
-  const [accentColor, setAccentColor] = useState(() => getStoredAccent())
+  // Appearance — prefs are per-account (uid-scoped), so one account's colours
+  // never follow the operator into another account on the same browser.
+  const [accentColor, setAccentColor] = useState(() => getStoredAccent(user?.uid))
   // Apply the accent app-wide as soon as it changes (swatch click, profile load, reset).
-  useEffect(() => { setAccent(accentColor) }, [accentColor])
+  useEffect(() => { setAccent(accentColor, true, user?.uid) }, [accentColor, user?.uid])
   const [fontSize, setFontSize] = useState('medium')
   const [compactMode, setCompactMode] = useState(false)
   const [savingAppearance, setSavingAppearance] = useState(false)
@@ -121,13 +127,13 @@ export default function FacultySettings() {
           }
         } catch { }
 
-        // Local prefs
+        // Local prefs (this account's keys only)
         try {
-          const localAccent = localStorage.getItem('vriddhi_accent_color')
+          const localAccent = readAppearancePref('vriddhi_accent_color', user.uid)
           if (localAccent) setAccentColor(localAccent)
-          const localFont = localStorage.getItem('vriddhi_font_size')
+          const localFont = readAppearancePref('vriddhi_font_size', user.uid)
           if (localFont) setFontSize(localFont)
-          const localCompact = localStorage.getItem('vriddhi_compact_mode')
+          const localCompact = readAppearancePref('vriddhi_compact_mode', user.uid)
           if (localCompact) setCompactMode(localCompact === 'true')
           const local2FA = localStorage.getItem('vriddhi_faculty_2fa')
           if (local2FA) setTwoFAEnabled(local2FA === 'true')
@@ -220,9 +226,9 @@ export default function FacultySettings() {
     setSavingAppearance(true)
     setAppearanceMsg(null)
     try {
-      localStorage.setItem('vriddhi_accent_color', accentColor)
-      localStorage.setItem('vriddhi_font_size', fontSize)
-      localStorage.setItem('vriddhi_compact_mode', String(compactMode))
+      writeAppearancePref('vriddhi_accent_color', user?.uid, accentColor)
+      writeAppearancePref('vriddhi_font_size', user?.uid, fontSize)
+      writeAppearancePref('vriddhi_compact_mode', user?.uid, String(compactMode))
       const root = document.documentElement
       if (fontSize === 'small') root.style.fontSize = '14px'
       else if (fontSize === 'large') root.style.fontSize = '18px'

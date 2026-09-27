@@ -2082,14 +2082,18 @@ describe('course assignments and course progress', () => {
     await assertSucceeds(getDoc(assignmentPath(adminDb, COLLEGE_A)))
     await assertFails(getDoc(assignmentPath(adminDb, COLLEGE_B)))
 
+    // Course assignments are platform curriculum control: college staff keep
+    // READ access (their learners' course list resolves from this doc) but the
+    // writes are superadmin-only, so a principal cannot switch course packs on
+    // or off for their own college.
     const payload = {
       assignments: { 'genai-certification': { enabled: false } },
       updatedAt: '2026-09-26T11:00:00.000Z',
       updatedBy: 'admin-a',
     }
-    await assertSucceeds(setDoc(assignmentPath(adminDb, COLLEGE_A), payload))
-    await assertSucceeds(setDoc(assignmentPath(principalContext().firestore(), COLLEGE_A), payload))
-    await assertSucceeds(setDoc(assignmentPath(hodContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(assignmentPath(adminDb, COLLEGE_A), payload))
+    await assertFails(setDoc(assignmentPath(principalContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(assignmentPath(hodContext().firestore(), COLLEGE_A), payload))
     await assertFails(getDoc(assignmentPath(facultyContext().firestore(), COLLEGE_A)))
     await assertFails(setDoc(assignmentPath(facultyContext().firestore(), COLLEGE_A), payload))
     await assertFails(setDoc(assignmentPath(adminContext().firestore(), COLLEGE_B), { assignments: {} }))
