@@ -1,5 +1,6 @@
 // src/modules/faculty/pages/FacultyQuestionBank.tsx
-// FIXED: Child component props aligned with actual FacultyQuestionForm, FacultyBulkImport, FacultyPaperLinker
+// Tabs (All / My / PYQ / Linked) each drive their own query. Bulk entry goes
+// through "Upload Questions" only — the duplicate "Paste Import" was removed.
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -31,8 +32,6 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
-  FormControlLabel,
-  Switch,
   Tabs,
   Tab,
   Divider,
@@ -69,13 +68,11 @@ import {
   getPYQExamYears,
   getPYQExamNames,
   getQuestionStats,
-  bulkImportQuestions,
   linkQuestionToPaper,
   unlinkQuestionFromPaper
 } from '../../../services/questionBankAPI';
 import { getPapers } from '../../admin/services/paperAPI';
 import FacultyQuestionForm from '@/modules/admin/components/question-bank/FacultyQuestionForm';
-import FacultyBulkImport from '@/modules/admin/components/question-bank/FacultyBulkImport';
 import FacultyPaperLinker from '@/modules/admin/components/question-bank/FacultyPaperLinker';
 import QuestionPDFExport from '@/modules/admin/components/question-bank/QuestionPDFExport';
 import QuestionManager from '../components/QuestionManager';
@@ -130,12 +127,10 @@ const FacultyQuestionBank: React.FC = () => {
   const [pyqYears, setPyqYears] = useState<string[]>([]);
   const [pyqNames, setPyqNames] = useState<string[]>([]);
 
-  const [pyqMode, setPyqMode] = useState(false);
   const [pdfExportOpen, setPdfExportOpen] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
   const [uploadEditorOpen, setUploadEditorOpen] = useState(false);
   const [linkerOpen, setLinkerOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
@@ -155,7 +150,13 @@ const FacultyQuestionBank: React.FC = () => {
   });
 
   const [tabValue, setTabValue] = useState(0);
-  const [myQuestionsOnly, setMyQuestionsOnly] = useState(false);
+  // Tab indices: 0 All, 1 My, 2 PYQ, 3 Linked, 4 Assessment Pool, 5 Universal
+  const pyqMode = tabValue === 2;
+  const myQuestionsOnly = tabValue === 1;
+  const linkedOnly = tabValue === 3;
+  // Question ids referenced by saved papers (papers store questionIds /
+  // linkedQuestionIds) — covers links recorded only on the paper side.
+  const [paperLinkedIds, setPaperLinkedIds] = useState<Set<string>>(new Set());
 
   const collegeId = user?.collegeId || '';
   const facultyId = user?.id || '';
@@ -179,6 +180,15 @@ const FacultyQuestionBank: React.FC = () => {
       setPyqYears(years);
 
       const allPapers = await getPapers(collegeId);
+      const ids = new Set<string>();
+      allPapers.forEach((p: any) => {
+        [...(p.questionIds || []), ...(p.linkedQuestionIds || [])].forEach((id: unknown) => { if (typeof id === 'string') ids.add(id); });
+        (p.sections || []).forEach((sec: any) => (sec.questions || []).forEach((q: any) => {
+          const id = q?.questionId || q?.id;
+          if (typeof id === 'string') ids.add(id);
+        }));
+      });
+      setPaperLinkedIds(ids);
       setAvailablePapers(allPapers.map((p: any) => ({
         id: p.id,
         title: p.title || 'Untitled Paper',
@@ -211,7 +221,22 @@ const FacultyQuestionBank: React.FC = () => {
       const currentFilters = { ...filters };
       if (searchQuery) currentFilters.searchQuery = searchQuery;
       if (pyqMode) currentFilters.isPYQ = true;
+      else delete currentFilters.isPYQ;
       if (myQuestionsOnly) currentFilters.createdBy = facultyId;
+      delete (currentFilters as any).linkedToPaper;
+
+      if (linkedOnly) {
+        // Firestore can't query "array is non-empty", so load a wide page and
+        // keep only questions that are linked to at least one paper.
+        const result = await getQuestions(collegeId, currentFilters, 500);
+        const linked = result.data.filter((q) =>
+          (Array.isArray(q.linkedPaperIds) && q.linkedPaperIds.length > 0) || paperLinkedIds.has(q.id)
+        );
+        setQuestions(linked);
+        setLastDoc(null);
+        setHasMore(false);
+        return;
+      }
 
       const result = await getQuestions(collegeId, currentFilters, 20, reset ? undefined : lastDoc);
 
@@ -226,11 +251,20 @@ const FacultyQuestionBank: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [collegeId, filters, searchQuery, pyqMode, myQuestionsOnly, lastDoc, facultyId]);
+  }, [collegeId, filters, searchQuery, pyqMode, myQuestionsOnly, linkedOnly, paperLinkedIds, lastDoc, facultyId]);
 
   useEffect(() => {
+    if (tabValue > 3) return; // Assessment Pool / Universal Bank load their own data
+    setLastDoc(null);
     loadQuestions(true);
-  }, [filters, searchQuery, pyqMode, myQuestionsOnly]);
+  }, [filters, searchQuery, tabValue, paperLinkedIds, collegeId]);
+
+  // Leaving the PYQ tab drops the PYQ-only filters so they don't leak into other tabs.
+  useEffect(() => {
+    if (!pyqMode && (filters.examYear || filters.examName)) {
+      setFilters((prev) => ({ ...prev, examYear: undefined, examName: undefined }));
+    }
+  }, [pyqMode]);
 
   useEffect(() => {
     if (filters.examYear && collegeId) {
@@ -250,8 +284,6 @@ const FacultyQuestionBank: React.FC = () => {
   const clearFilters = () => {
     setFilters({});
     setSearchQuery('');
-    setPyqMode(false);
-    setMyQuestionsOnly(false);
     setLastDoc(null);
   };
 
@@ -292,37 +324,6 @@ const FacultyQuestionBank: React.FC = () => {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       showSnackbar(`Error deleting question: ${msg}`, 'error');
-    }
-  };
-
-  // Receives parsed question rows from FacultyBulkImport (format: Record<string, unknown>[])
-  const handleBulkImport = async (questions: Record<string, unknown>[]) => {
-    try {
-      if (!collegeId) throw new Error('collegeId is required to import questions');
-      const mapped = questions.map((q) => ({
-        text: String(q.text || ''),
-        subject: String(q.subject || ''),
-        topic: String(q.topic || q.chapter || ''),
-        chapter: String(q.chapter || q.topic || ''),
-        type: (q.type as Question['type']) || 'short_answer',
-        difficulty: (q.difficulty as Question['difficulty']) || 'medium',
-        marks: Number(q.marks) || 1,
-        unit: q.unit ? String(q.unit) : undefined,
-        correctAnswer: q.correctAnswer ? String(q.correctAnswer) : undefined,
-        batch: q.batch ? String(q.batch) : undefined,
-        branch: q.branch ? String(q.branch) : undefined,
-        tags: Array.isArray(q.tags) ? q.tags.map(String) : [],
-        status: 'active',
-        createdBy: user?.id || user?.uid || '',
-        createdByName: user?.name || 'Unknown',
-      }));
-      const result = await bulkImportQuestions(collegeId, mapped as any);
-      showSnackbar(`Imported ${result.success} of ${mapped.length} questions`, 'success');
-      setImportOpen(false);
-      loadQuestions(true);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      showSnackbar(`Error importing questions: ${msg}`, 'error');
     }
   };
 
@@ -385,7 +386,7 @@ const FacultyQuestionBank: React.FC = () => {
   };
 
   const activeFilterCount = Object.values(filters).filter(v => v !== undefined && v !== '').length +
-    (searchQuery ? 1 : 0) + (pyqMode ? 1 : 0) + (myQuestionsOnly ? 1 : 0);
+    (searchQuery ? 1 : 0);
 
   const canEdit = (question: Question) => question.createdBy === facultyId || user?.role === 'admin';
 
@@ -407,7 +408,6 @@ const FacultyQuestionBank: React.FC = () => {
           <Button variant="outlined" startIcon={<AssessmentIcon />} onClick={loadStats}>Analytics</Button>
           <Button variant="outlined" onClick={() => setPdfExportOpen(true)}>Export PDF</Button>
           <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setUploadEditorOpen(true)}>Upload Questions</Button>
-          <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setImportOpen(true)}>Paste Import</Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditingQuestion(null); setFormOpen(true); }}>Add Question</Button>
         </Box>
       </Box>
@@ -424,13 +424,13 @@ const FacultyQuestionBank: React.FC = () => {
 
         <TabPanel value={tabValue} index={0}></TabPanel>
         <TabPanel value={tabValue} index={1}>
-          <FormControlLabel control={<Switch checked={myQuestionsOnly} onChange={(e) => setMyQuestionsOnly(e.target.checked)} />} label="Show only my questions" />
+          <Typography variant="body2" color="text.secondary">Questions you created.</Typography>
         </TabPanel>
         <TabPanel value={tabValue} index={2}>
-          <FormControlLabel control={<Switch checked={pyqMode} onChange={(e) => { setPyqMode(e.target.checked); if (!e.target.checked) { handleFilterChange('isPYQ', undefined); handleFilterChange('examYear', undefined); handleFilterChange('examName', undefined); } }} />} label="Show only Previous Year Questions" />
+          <Typography variant="body2" color="text.secondary">Previous Year Questions only — use Filters to narrow by exam year and exam name.</Typography>
         </TabPanel>
         <TabPanel value={tabValue} index={3}>
-          <Typography variant="body2" color="text.secondary">Questions linked to generated papers will appear here.</Typography>
+          <Typography variant="body2" color="text.secondary">Questions that are linked to at least one question paper.</Typography>
         </TabPanel>
         <TabPanel value={tabValue} index={4}>
           <QuestionManager collegeId={collegeId} />
@@ -548,9 +548,6 @@ const FacultyQuestionBank: React.FC = () => {
                   </Box>
                 </>
               )}
-              <Box sx={{ flex: '1 1 200px', minWidth: 160 }}>
-                <FormControlLabel control={<Switch checked={filters.linkedToPaper || false} onChange={(e) => handleFilterChange('linkedToPaper', e.target.checked)} />} label="Linked to Papers" />
-              </Box>
             </Box>
             {activeFilterCount > 0 && (
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
@@ -675,20 +672,6 @@ const FacultyQuestionBank: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* FacultyBulkImport in Dialog */}
-      <Dialog open={importOpen} onClose={() => setImportOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Bulk Import Questions</DialogTitle>
-        <DialogContent>
-          <FacultyBulkImport
-            batches={batches}
-            branches={branches}
-            subjects={subjects}
-            onImport={handleBulkImport}
-            onCancel={() => setImportOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
       {/* FacultyPaperLinker */}
       {selectedQuestion && linkerOpen && (
         <FacultyPaperLinker
@@ -753,7 +736,7 @@ const FacultyQuestionBank: React.FC = () => {
                   <Typography variant="subtitle2" gutterBottom>Linked Papers:</Typography>
                   <List dense>
                     {previewQuestion.linkedPaperIds.map((paperId: string) => (
-                      <ListItem key={paperId}><ListItemText primary={paperId} /></ListItem>
+                      <ListItem key={paperId}><ListItemText primary={availablePapers.find((p) => p.id === paperId)?.title || paperId} /></ListItem>
                     ))}
                   </List>
                 </Box>
