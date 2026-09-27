@@ -307,6 +307,19 @@ service firebase.storage {
         || (isStaff() && tenantCollege() == collegeId);
     }
 
+    // College branding: logo and campus/cover image. Everyone in the college
+    // (students included — digital ID cards show the logo) may read; the
+    // principal / admin (or superadmin) may upload. Images only, 3 MB cap.
+    match /colleges/{collegeId}/branding/{fileName} {
+      allow read: if isSignedIn() && (isSuperadmin() || tenantCollege() == collegeId);
+      allow create, update, delete: if isSignedIn()
+        && (isSuperadmin() || (tenantCollege() == collegeId && role() in ['principal', 'admin']))
+        && (request.resource == null || (
+          request.resource.size <= 3 * 1024 * 1024
+          && request.resource.contentType != null
+          && request.resource.contentType.matches('image/.*')));
+    }
+
     // No implicit authenticated-user access. Additional product workflows
     // receive explicit path contracts as they are implemented.
     match /{allPaths=**} {

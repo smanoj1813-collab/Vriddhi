@@ -19,6 +19,7 @@ import AiStudyContentTab from './AiStudyContentTab'
 import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel'
 import CourseAssignmentPanel from '@/shared/components/courses/CourseAssignmentPanel'
 import ResumeAddonPanel from '@/shared/components/resume/ResumeAddonPanel'
+import CollegeBrandingUpload from '@/shared/components/CollegeBrandingUpload'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
@@ -592,6 +593,11 @@ export default function Settings() {
               <SectionDesc>Configure your college and academic preferences. Changes are saved to your college profile in Firestore.</SectionDesc>
 
               <div className="space-y-6">
+                {user?.collegeId && ['principal', 'admin', 'superadmin'].includes(String(user?.role)) && (
+                  <div className="pb-6 border-b border-slate-200 dark:border-slate-700/50">
+                    <CollegeBrandingUpload collegeId={user.collegeId} />
+                  </div>
+                )}
                 <div>
                   <Label>College Name</Label>
                   <SettingsInput

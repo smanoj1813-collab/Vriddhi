@@ -70,6 +70,10 @@ export interface BrandingSettings {
   signatoryDesignation: string
   /** Print "Balance due" on fee receipts. */
   showBalanceOnReceipt: boolean
+  /** College logo (Storage download URL) — header, ID cards, letterheads. */
+  logoUrl: string
+  /** College campus photo / cover image. */
+  coverImageUrl: string
 }
 
 export const DEFAULT_BRANDING: BrandingSettings = {
@@ -86,6 +90,8 @@ export const DEFAULT_BRANDING: BrandingSettings = {
   signatoryName: '',
   signatoryDesignation: 'Accounts Officer',
   showBalanceOnReceipt: true,
+  logoUrl: '',
+  coverImageUrl: '',
 }
 
 function resolveCollegeId(collegeId?: string | null): string {
