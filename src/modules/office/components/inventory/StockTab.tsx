@@ -3,16 +3,19 @@
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Download, History, Pencil, Plus, Scale, Search } from 'lucide-react'
+import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Download, FileUp, History, Pencil, Plus, Scale, Search } from 'lucide-react'
 import { Badge, Empty, Field, Loading, Modal, PillTabs, btn, downloadCsv, errMsg, fmtDate, inr } from '../officeUi'
 import { useNotification } from '@/shared/providers/NotificationProvider'
 import { fetchMovements, recordMovement, saveItem, type InventoryItem } from '../../api/inventoryApi'
 import { needsReorder, type InventorySettings } from '../../utils/inventoryEngine'
 import { todayIso } from '../../api/officeDb'
+import CsvBulkImport from '../CsvBulkImport'
 import { useCollegeId } from '../../hooks/useLibrary'
 import { useInventoryRefresh, useItems } from '../../hooks/useInventory'
 
 type MoveKind = 'in' | 'out' | 'adjust'
+
+const STOCK_IMPORT_COLUMNS = ['name', 'sku', 'category', 'unit', 'store', 'reorderLevel', 'movement', 'qty', 'rate', 'date', 'department', 'refNo']
 
 export default function StockTab({ settings }: { settings: InventorySettings }) {
   const itemsQ = useItems()
@@ -23,6 +26,8 @@ export default function StockTab({ settings }: { settings: InventorySettings }) 
   const [editing, setEditing] = useState<InventoryItem | 'new' | null>(null)
   const [moving, setMoving] = useState<{ item: InventoryItem; kind: MoveKind } | null>(null)
   const [ledger, setLedger] = useState<InventoryItem | null>(null)
+  const [importing, setImporting] = useState(false)
+  const bulkNotify = useNotification()
 
   const items = (itemsQ.data || []).filter(i => i.active)
   const reorder = items.filter(needsReorder)
@@ -44,9 +49,51 @@ export default function StockTab({ settings }: { settings: InventorySettings }) 
         </div>
         <select className="input-field !w-auto" value={cat} onChange={e => setCat(e.target.value)}><option value="all">All categories</option>{settings.consumableCategories.map(c => <option key={c}>{c}</option>)}</select>
         <button onClick={() => setEditing('new')} className={btn.primary}><Plus className="w-4 h-4" /> New item</button>
+        <button onClick={() => setImporting(true)} className={btn.ghost}><FileUp className="w-4 h-4" /> Bulk upload</button>
         <button onClick={() => downloadCsv(`stock-${todayIso()}.csv`, rows.map(i => ({ item: i.name, sku: i.sku, category: i.category, store: i.store, unit: i.unit, qty: i.qty, avgCost: i.avgCost, value: Math.round(i.qty * i.avgCost * 100) / 100, reorderLevel: i.reorderLevel })))} disabled={!rows.length} className={btn.ghost}><Download className="w-4 h-4" /> CSV</button>
       </div>
       <p className="text-xs text-vriddhi-muted">Stock value {inr(value)} (moving-average cost) · {reorder.length} item(s) at or below reorder level</p>
+
+      {importing && (
+        <CsvBulkImport
+          title="Bulk upload consumables / stock"
+          description={<>Creates new items and records stock in one go. Items are matched by <b>sku</b> (or <b>name</b>) — existing items are not duplicated. <b>movement</b> = <code>in</code> (receipt, default), <code>out</code> (issue) or <code>adjust</code> (physical count → sets the balance to qty). Leave qty empty to only create the item.</>}
+          templateName="stock-import-template.csv"
+          columns={STOCK_IMPORT_COLUMNS}
+          templateRows={[
+            { name: 'A4 Paper Ream (500 sheets)', sku: 'STN-A4', category: settings.consumableCategories[0] || 'Stationery', unit: settings.units[0] || 'nos', store: settings.stores[0] || 'Main Store', reorderLevel: 20, movement: 'in', qty: 100, rate: 240, date: todayIso(), department: '', refNo: 'INV-55' },
+            { name: 'A4 Paper Ream (500 sheets)', sku: 'STN-A4', category: '', unit: '', store: '', reorderLevel: '', movement: 'out', qty: 10, rate: '', date: todayIso(), department: 'Commerce', refNo: 'IND-12' },
+          ]}
+          processRow={async (r) => {
+            const name = String(r.name || '').trim()
+            const sku = String(r.sku || '').trim()
+            if (!name && !sku) return false
+            // Re-read items each row so rows created earlier in the same file are found.
+            const current = (await itemsQ.refetch()).data || []
+            const item = current.find(i => (sku && i.sku.toLowerCase() === sku.toLowerCase()) || (!sku && i.name.toLowerCase() === name.toLowerCase()))
+            let itemId = item?.id
+            if (!itemId) {
+              if (!name) throw new Error(`No item with SKU "${sku}" and no name to create it`)
+              itemId = await saveItem({
+                name,
+                sku,
+                category: r.category || settings.consumableCategories[0] || '',
+                unit: r.unit || settings.units[0] || 'nos',
+                store: r.store || settings.stores[0] || '',
+                reorderLevel: Number(r.reorderLevel) || 0,
+                active: true,
+              })
+            }
+            const qty = Number(r.qty) || 0
+            if (qty > 0 || (String(r.movement).trim() === 'adjust' && r.qty !== '')) {
+              const type = (['in', 'out', 'adjust'].includes(String(r.movement).trim()) ? String(r.movement).trim() : 'in') as 'in' | 'out' | 'adjust'
+              await recordMovement(itemId, { type, qty, rate: Number(r.rate) || undefined, date: r.date || todayIso(), department: r.department || '', refNo: r.refNo || '', note: 'Bulk upload' })
+            }
+          }}
+          onClose={() => setImporting(false)}
+          onDone={(res) => { refresh(); if (res.ok) bulkNotify.showSuccess(`Processed ${res.ok} row(s).`) }}
+        />
+      )}
 
       {rows.length === 0 ? (
         <Empty title={items.length ? 'No items match' : 'No consumables yet'} hint="Add stationery, lab consumables, housekeeping and other store items, then record receipts and issues." />

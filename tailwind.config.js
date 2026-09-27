@@ -9,8 +9,8 @@ export default {
     extend: {
       colors: {
         'vriddhi-dark': '#0f172a',
-        'vriddhi-primary': '#14b8a6',
-        'vriddhi-accent': '#14b8a6',
+        'vriddhi-primary': 'rgb(var(--accent-500) / <alpha-value>)',
+        'vriddhi-accent': 'rgb(var(--accent-500) / <alpha-value>)',
         'vriddhi-light': '#f0fdfa',
         'vriddhi-text': '#e2e8f0',
         'vriddhi-card': '#1e293b',

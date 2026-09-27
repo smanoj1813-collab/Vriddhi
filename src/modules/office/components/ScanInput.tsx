@@ -8,7 +8,7 @@
 //   desk types the number instead — no third-party scanning service involved.
 
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
-import { Camera, Loader2, ScanLine, X } from 'lucide-react'
+import { Camera, ClipboardList, CornerDownLeft, Loader2, ScanLine, X } from 'lucide-react'
 
 interface BarcodeDetectorLike {
   detect: (source: CanvasImageSource) => Promise<Array<{ rawValue: string }>>
@@ -32,14 +32,19 @@ interface Props {
   /** Keep scanning after a hit (stock verification). */
   continuous?: boolean
   className?: string
+  /** Show a "Paste list" button to enter many codes at once (defaults to `continuous`). */
+  bulk?: boolean
 }
 
 export const ScanInput = forwardRef<ScanInputHandle, Props>(function ScanInput(
-  { placeholder = 'Scan or type, then Enter', onScan, busy, autoFocus, continuous, className = '' },
+  { placeholder = 'Scan or type, then Enter', onScan, busy, autoFocus, continuous, className = '', bulk },
   ref,
 ) {
   const [value, setValue] = useState('')
   const [camOpen, setCamOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+  const showBulk = bulk ?? !!continuous
   const inputRef = useRef<HTMLInputElement>(null)
   useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }))
 
@@ -72,6 +77,45 @@ export const ScanInput = forwardRef<ScanInputHandle, Props>(function ScanInput(
         />
         {busy && <Loader2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-vriddhi-muted" />}
       </div>
+      {/* Manual entry: typing works like a scanner, this makes it obvious and tappable. */}
+      <button
+        type="button"
+        onClick={() => submit(value)}
+        disabled={!value.trim()}
+        title="Enter / look up typed code"
+        className="px-3 rounded-xl bg-vriddhi-accent text-white text-xs font-semibold flex items-center gap-1 disabled:opacity-40"
+      >
+        <CornerDownLeft className="w-4 h-4" /> <span className="hidden sm:inline">Enter</span>
+      </button>
+      {showBulk && (
+        <button type="button" onClick={() => setBulkOpen(true)} title="Paste a list of codes" className="px-3 rounded-xl bg-vriddhi-card border border-vriddhi-border text-vriddhi-text hover:bg-vriddhi-border/50">
+          <ClipboardList className="w-4 h-4" />
+        </button>
+      )}
+      {bulkOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setBulkOpen(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 w-full max-w-md space-y-3" onClick={e => e.stopPropagation()}>
+            <p className="font-semibold text-slate-900 dark:text-white">Paste codes</p>
+            <p className="text-xs text-vriddhi-muted">One code per line (or separated by commas) — e.g. copied from Excel.</p>
+            <textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={8} className="input-field font-mono" placeholder={'ACC0001\nACC0002'} />
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setBulkOpen(false)} className="px-3 py-1.5 rounded-xl text-sm text-vriddhi-muted">Cancel</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const codes = bulkText.split(/[\n,;\t]+/).map(c => c.trim()).filter(Boolean)
+                  codes.forEach(c => onScan(c))
+                  setBulkText('')
+                  setBulkOpen(false)
+                }}
+                className="px-3 py-1.5 rounded-xl bg-vriddhi-accent text-white text-sm font-semibold"
+              >
+                Add {bulkText.split(/[\n,;\t]+/).filter(c => c.trim()).length || ''} codes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <button type="button" onClick={() => setCamOpen(true)} title="Scan with camera" className="px-3 rounded-xl bg-vriddhi-card border border-vriddhi-border text-vriddhi-text hover:bg-vriddhi-border/50">
         <Camera className="w-4 h-4" />
       </button>

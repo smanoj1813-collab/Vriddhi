@@ -2,7 +2,7 @@
 // maintenance history, transfers, depreciation and disposal.
 
 import { useMemo, useState } from 'react'
-import { AlertTriangle, ArrowLeftRight, Download, Loader2, PackagePlus, Pencil, Printer, Search, Trash2, Wrench } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, Download, FileUp, Loader2, PackagePlus, Pencil, Printer, Search, Trash2, Wrench } from 'lucide-react'
 import { Badge, Empty, Field, Loading, Modal, btn, downloadCsv, errMsg, fmtDate, inr } from '../officeUi'
 import { useNotification } from '@/shared/providers/NotificationProvider'
 import {
@@ -20,6 +20,7 @@ import {
 import { bookValue, depreciationSchedule, expiryState, fyStartYear, verificationDue, type InventorySettings } from '../../utils/inventoryEngine'
 import { downloadLabelSheet } from '../../utils/labelsPdf'
 import { todayIso } from '../../api/officeDb'
+import CsvBulkImport from '../CsvBulkImport'
 import { useAssets, useInventoryRefresh } from '../../hooks/useInventory'
 
 const STATUS_TONE: Record<AssetStatus, 'green' | 'slate' | 'amber' | 'red' | 'purple'> = { in_use: 'green', in_store: 'slate', under_repair: 'amber', condemned: 'purple', disposed: 'slate', lost: 'red' }
@@ -28,6 +29,8 @@ const EMPTY: AssetInput = {
   name: '', category: '', department: '', location: '', custodian: '', make: '', model: '', serialNo: '', purchaseDate: todayIso(), cost: 0, salvage: 0,
   vendor: '', invoiceNo: '', poNo: '', fundSource: '', warrantyUntil: '', amcVendor: '', amcUntil: '', status: 'in_use', notes: '', serials: [], qty: 1,
 }
+
+const ASSET_IMPORT_COLUMNS = ['name', 'category', 'department', 'location', 'custodian', 'make', 'model', 'serialNo', 'serials', 'qty', 'purchaseDate', 'cost', 'salvage', 'vendor', 'invoiceNo', 'poNo', 'fundSource', 'warrantyUntil', 'amcUntil', 'notes']
 
 export default function AssetsTab({ settings, collegeName }: { settings: InventorySettings; collegeName: string }) {
   const assetsQ = useAssets()
@@ -38,6 +41,8 @@ export default function AssetsTab({ settings, collegeName }: { settings: Invento
   const [status, setStatus] = useState<'active' | AssetStatus | 'all'>('active')
   const [flag, setFlag] = useState<'none' | 'warranty' | 'amc' | 'verify'>('none')
   const [registering, setRegistering] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const notify = useNotification()
   const [open, setOpen] = useState<Asset | null>(null)
   const today = todayIso()
   const fy = fyStartYear(today)
@@ -86,10 +91,52 @@ export default function AssetsTab({ settings, collegeName }: { settings: Invento
           <option value="none">No alert filter</option><option value="warranty">Warranty expiring</option><option value="amc">AMC expiring</option><option value="verify">Verification due</option>
         </select>
         <button onClick={() => setRegistering(true)} className={btn.primary}><PackagePlus className="w-4 h-4" /> Register asset</button>
+        <button onClick={() => setImporting(true)} className={btn.ghost}><FileUp className="w-4 h-4" /> Bulk upload</button>
         <button onClick={printTags} disabled={!rows.length} className={btn.ghost}><Printer className="w-4 h-4" /> Tags</button>
         <button onClick={exportCsv} disabled={!rows.length} className={btn.ghost}><Download className="w-4 h-4" /> CSV</button>
       </div>
       <p className="text-xs text-vriddhi-muted">{rows.length} assets · cost {inr(rows.reduce((s, a) => s + a.cost, 0))} · book value {inr(rows.reduce((s, a) => s + bv(a), 0))} (FY {fy}-{String((fy + 1) % 100).padStart(2, '0')})</p>
+
+      {importing && (
+        <CsvBulkImport
+          title="Bulk upload assets"
+          description={<>One row per asset line. <b>category</b> must match a category in Inventory Settings ({settings.categories.map(c => c.name).join(', ') || 'none yet'}). Use <b>qty</b> to register several identical units (each gets its own tag), or put comma-separated serial numbers in <b>serials</b>.</>}
+          templateName="asset-import-template.csv"
+          columns={ASSET_IMPORT_COLUMNS}
+          templateRows={[{ name: 'Dell OptiPlex 3000 Desktop', category: settings.categories[0]?.name || 'Computers', department: 'Computer Lab', location: 'Lab 1', custodian: 'Lab Assistant', make: 'Dell', model: 'OptiPlex 3000', serials: '', qty: 10, purchaseDate: todayIso(), cost: 45000, salvage: 0, vendor: 'ABC Systems', invoiceNo: 'INV-101', poNo: '', fundSource: 'College', warrantyUntil: '', amcUntil: '', notes: '' }]}
+          processRow={async (r) => {
+            if (!r.name?.trim()) return false
+            const category = settings.categories.find(c => c.name.toLowerCase() === String(r.category || '').trim().toLowerCase())
+            if (!category) throw new Error(`Unknown category "${r.category || ''}"`)
+            const serials = String(r.serials || '').split(/[,;|]/).map(x => x.trim()).filter(Boolean)
+            await registerAssets({
+              ...EMPTY,
+              name: r.name.trim(),
+              category: category.name,
+              department: r.department || '',
+              location: r.location || '',
+              custodian: r.custodian || '',
+              make: r.make || '',
+              model: r.model || '',
+              serialNo: serials.length ? '' : (r.serialNo || ''),
+              serials,
+              qty: Number(r.qty) || 1,
+              purchaseDate: r.purchaseDate || todayIso(),
+              cost: Number(r.cost) || 0,
+              salvage: Number(r.salvage) || 0,
+              vendor: r.vendor || '',
+              invoiceNo: r.invoiceNo || '',
+              poNo: r.poNo || '',
+              fundSource: r.fundSource || '',
+              warrantyUntil: r.warrantyUntil || '',
+              amcUntil: r.amcUntil || '',
+              notes: r.notes || '',
+            }, category, settings)
+          }}
+          onClose={() => setImporting(false)}
+          onDone={(res) => { refresh(); if (res.ok) notify.showSuccess(`Registered ${res.ok} asset line(s).`) }}
+        />
+      )}
 
       {rows.length === 0 ? (
         <Empty icon={<PackagePlus className="w-6 h-6" />} title={assets.length ? 'No assets match' : 'No assets registered yet'} hint="Register computers, furniture, lab equipment and more. Each unit gets a barcode tag for audits." />
