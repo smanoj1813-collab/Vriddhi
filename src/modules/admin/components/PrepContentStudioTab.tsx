@@ -387,8 +387,8 @@ function CourseAssignmentsSection() {
             <CourseAssignmentPanel key={collegeId} collegeId={collegeId} collegeName={selected?.name} embedded />
           ) : (
             <p className="text-xs text-slate-500">
-              Course assignments default to hidden for every college. College administrators can manage their own college under
-              <span className="font-semibold"> Settings → General → Course assignments</span>.
+              Course assignments default to hidden for every college. This is a platform control: pick a college above to
+              assign course packs on its behalf — colleges see the result, but only the superadmin can change it.
             </p>
           )}
         </div>

@@ -1491,32 +1491,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Right Header Utilities */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
             <LanguageSwitcher compact showLabel={false} className="hidden sm:inline-flex" />
-            {/* Theme toggle + sign-out: phone/tablet only. On desktop (md+) the
-                permanent sidebar footer already has Dark Mode and Sign Out, so
-                showing them here too was a duplicate. */}
+            {/* Theme toggle: phone/tablet only. On desktop (md+) the permanent
+                sidebar footer already has Dark Mode, so showing it here too was
+                a duplicate. */}
             <Tooltip title={resolvedMode === "dark" ? t("common.lightMode") : t("common.darkMode")}>
               <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1, display: { xs: "inline-flex", md: "none" } }}>
                 {resolvedMode === "dark" ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
               </IconButton>
             </Tooltip>
 
-            {/* Explicit sign-out — previously buried in the drawer footer /
-                avatar menu, it now sits in the header on every screen size. */}
-            <Tooltip title={t("common.signOut")}>
-              <IconButton
-                onClick={handleLogout}
-                aria-label={t("common.signOut")}
-                size="small"
-                sx={{
-                  p: 1,
-                  display: { xs: "inline-flex", md: "none" },
-                  color: "error.main",
-                  "&:hover": { bgcolor: "error.light", opacity: 0.15 },
-                }}
-              >
-                <ExitToApp fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {/* No sign-out up here: a destructive action in the persistent
+                header was one thumb-tap away on every screen. On phones it
+                lives at the bottom of the "More" sheet; everywhere else it is
+                in the avatar menu (and the desktop sidebar footer). */}
 
             {/* Portal Switch Links */}
             <Link

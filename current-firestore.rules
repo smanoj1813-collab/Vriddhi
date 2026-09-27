@@ -472,6 +472,12 @@ service cloud.firestore {
         // (who may see payroll) is the principal's alone.
         allow write: if docId == 'access'
           ? (isSuperadmin() || (role() == 'principal' && collegeId() == collegeId))
+          : docId == 'courses'
+            // Course assignments are PLATFORM curriculum control — which course
+            // packs a college's learners see. Superadmin-only: college staff can
+            // read the doc (students must, to resolve their assigned courses),
+            // but only the platform decides what is switched on.
+            ? isSuperadmin()
           : docId in ['finance', 'branding', 'tally']
             ? isFinance(collegeId)
             : docId == 'procurement'

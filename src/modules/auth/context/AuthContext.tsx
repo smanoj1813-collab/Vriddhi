@@ -4,6 +4,7 @@ import { auth } from '@/Firebase/config';
 import { resolveIdentity, type FirebaseUserData, type UserRole } from './auth';
 import { roleHasPermission } from '../permissions';
 import { syncMyIdentity } from '@/shared/services/identityBackend';
+import { applyStoredAppearanceForUser } from '@/shared/theme/accent';
 
 export { UserRole };
 export type { FirebaseUserData };
@@ -185,6 +186,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('vriddhi_college_id');
     await signOut(auth); setUser(null); setFirebaseUser(null);
   }, []);
+
+  // Appearance prefs (accent colour, font size) are PER-ACCOUNT, keyed by uid
+  // in localStorage. Re-apply them whenever the signed-in account settles:
+  // a user gets their own colours, and the sign-in screen / the next account
+  // on a shared browser gets the platform defaults — never the previous
+  // account's accent. Skipped while loading so the boot-time accent (from
+  // ThemeProvider) doesn't flash to default before the session resolves.
+  useEffect(() => {
+    if (isLoading) return
+    applyStoredAppearanceForUser(user?.uid ?? null)
+  }, [isLoading, user?.uid])
 
   // FIX: Roles must be explicit. Do NOT conflate principal/hod with faculty.
   // A principal is a principal. A faculty is a faculty.

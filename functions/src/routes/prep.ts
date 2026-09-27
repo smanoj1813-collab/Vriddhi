@@ -758,12 +758,18 @@ async function loadVisibleCompanies(req: any): Promise<{ companies: PrepCompany[
 }
 
 // GET /companies/settings?collegeId= — the college's visibility toggles.
-// College admins/principals read their own; superadmin reads any.
+// Company-specific placement prep is a PLATFORM control: only the superadmin
+// reads or changes which company guides a college's learners see. College
+// staff get a 403 (the UI shows them a "managed by the platform team" note).
 router.get('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (req.user?.role !== 'superadmin') {
+      res.status(403).json({ error: 'Company prep visibility is managed by the platform superadmin.' })
+      return
+    }
     const collegeId = resolveCollegeForSettings(req)
     if (!collegeId) {
-      res.status(400).json({ error: 'collegeId is required (superadmin) or must be on your account.' })
+      res.status(400).json({ error: 'collegeId is required.' })
       return
     }
     const settings = await loadCompanyPrepSettings(collegeId)
@@ -778,11 +784,17 @@ router.get('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, 
 })
 
 // PUT /companies/settings — save the toggles. Body: { collegeId?, enabled, hiddenCompanies }.
+// Superadmin-only: the prep catalogue a college sees is platform curriculum,
+// not a college-side setting.
 router.put('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (req.user?.role !== 'superadmin') {
+      res.status(403).json({ error: 'Company prep visibility is managed by the platform superadmin.' })
+      return
+    }
     const collegeId = resolveCollegeForSettings(req)
     if (!collegeId) {
-      res.status(400).json({ error: 'collegeId is required (superadmin) or must be on your account.' })
+      res.status(400).json({ error: 'collegeId is required.' })
       return
     }
     const known = new Set((await loadCompanies()).map((c) => c.code))
@@ -805,7 +817,9 @@ router.put('/companies/settings', verifyAuth, async (req: AuthenticatedRequest, 
   }
 })
 
-const SETTINGS_ROLES = new Set(['admin', 'principal', 'hod'])
+// The settings endpoints above are superadmin-only (they gate the role before
+// calling this), so this resolver only needs to answer for a superadmin: an
+// explicit ?collegeId= / body.collegeId, else their own claim.
 function resolveCollegeForSettings(req: AuthenticatedRequest): string | null {
   const role = req.user?.role || ''
   if (role === 'superadmin') {
@@ -816,7 +830,6 @@ function resolveCollegeForSettings(req: AuthenticatedRequest): string | null {
       ''
     return requested ? String(requested).trim() : null
   }
-  if (SETTINGS_ROLES.has(role) && req.user?.collegeId) return req.user.collegeId
   return null
 }
 
