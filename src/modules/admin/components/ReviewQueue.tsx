@@ -38,6 +38,7 @@ import {
 } from '@mui/material';
 import {
   CheckCircle as ApproveIcon,
+  DoneAll as ApproveAllIcon,
   Cancel as RejectIcon,
   Visibility as ViewIcon,
   Refresh as RefreshIcon,
@@ -429,10 +430,12 @@ export function ReviewQueue() {
   const error = hookResult.errorsUniversal?.reviews ?? hookResult.error ?? null;
 
   // Dynamically resolve methods
-  const loadPendingReviews = hookResult.loadPendingReviews || hookResult.loadReviews || (() => {});
+  const loadReviews = hookResult.loadReviews || hookResult.loadPendingReviews || (() => {});
   const loadQuestionDetail = hookResult.loadQuestionDetail || (() => {});
   const approveReview = hookResult.approveReview || (() => Promise.resolve(false));
   const rejectReview = hookResult.rejectReview || (() => Promise.resolve(false));
+  const bulkApproveReviews =
+    hookResult.bulkApproveReviews || (() => Promise.resolve(null) as Promise<{ approved: number; failed: number } | null>);
 
   const [activeTab, setActiveTab] = useState(0);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -440,10 +443,14 @@ export function ReviewQueue() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  // "Approve all" confirmation dialog state.
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkComment, setBulkComment] = useState('');
+  const [bulkApprovedCount, setBulkApprovedCount] = useState<number | null>(null);
   const rowsPerPage = 10;
 
   useEffect(() => {
-    loadPendingReviews();
+    loadReviews();
   }, []);
 
   const filteredReviews = reviews.filter((r) => {
@@ -538,6 +545,50 @@ export function ReviewQueue() {
     setIsProcessing(false);
   };
 
+  // ---- Approve all pending questions in one batched pass ----
+  // After a paper import drops dozens of drafts into the queue, approving them
+  // one by one is tedious. This approves every pending review the viewer can
+  // see (superadmin: the whole queue; HOD: their department), via a guarded
+  // confirmation dialog.
+  const pendingReviews = reviews.filter((r) => r.status === 'pending');
+
+  const handleApproveAll = () => {
+    if (pendingReviews.length === 0) return;
+    setBulkComment('');
+    setBulkOpen(true);
+  };
+
+  const confirmApproveAll = async () => {
+    if (!user || pendingReviews.length === 0) return;
+    setIsProcessing(true);
+    setActionError(null);
+    setBulkApprovedCount(null);
+    try {
+      const result = await bulkApproveReviews(
+        pendingReviews.map((r) => r.id),
+        user.id,
+        user.name || 'Superadmin',
+        bulkComment.trim() || undefined
+      );
+      if (result) {
+        setBulkOpen(false);
+        if (result.failed > 0) {
+          setActionError(
+            `Approved ${result.approved} question(s), but ${result.failed} could not be approved. ` +
+              'Press Refresh and approve those individually.'
+          );
+        } else {
+          setBulkApprovedCount(result.approved);
+          setPage(1);
+        }
+      } else {
+        setActionError('Bulk approve failed. Please try again.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
       {/* Header */}
@@ -550,14 +601,29 @@ export function ReviewQueue() {
             Review and approve questions submitted by faculty across all colleges
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={loadPendingReviews}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          {stats.pending > 0 && (
+            <Tooltip title="Approve every pending question in the queue in one batched pass">
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<ApproveAllIcon />}
+                onClick={handleApproveAll}
+                disabled={loading || isProcessing}
+              >
+                Approve all ({stats.pending})
+              </Button>
+            </Tooltip>
+          )}
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadReviews}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+        </Stack>
       </Box>
 
       {/* Stats */}
@@ -573,6 +639,13 @@ export function ReviewQueue() {
       {actionError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setActionError(null)}>
           {actionError}
+        </Alert>
+      )}
+
+      {bulkApprovedCount !== null && bulkApprovedCount > 0 && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setBulkApprovedCount(null)}>
+          Approved <strong>{bulkApprovedCount}</strong> question{bulkApprovedCount === 1 ? '' : 's'} — they are now
+          visible to colleges.
         </Alert>
       )}
 
@@ -657,6 +730,47 @@ export function ReviewQueue() {
         onReject={handleReject}
         isProcessing={isProcessing}
       />
+
+      {/* Approve-all confirmation Dialog */}
+      <Dialog
+        open={bulkOpen}
+        onClose={() => { if (!isProcessing) setBulkOpen(false); }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Approve all pending questions?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            This approves all <strong>{pendingReviews.length}</strong> pending question
+            {pendingReviews.length === 1 ? '' : 's'} in your queue at once — including those on later pages.
+            Approved questions become visible to colleges immediately. If any of them still need a closer
+            look, review those individually instead.
+          </Typography>
+          <TextField
+            fullWidth
+            size="small"
+            label="Comment (optional)"
+            placeholder="e.g. Bulk approved after paper import review"
+            value={bulkComment}
+            onChange={(e) => setBulkComment(e.target.value)}
+            disabled={isProcessing}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkOpen(false)} disabled={isProcessing}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={isProcessing ? undefined : <ApproveAllIcon />}
+            onClick={confirmApproveAll}
+            disabled={isProcessing || pendingReviews.length === 0}
+          >
+            {isProcessing ? <CircularProgress size={20} /> : `Approve ${pendingReviews.length} question${pendingReviews.length === 1 ? '' : 's'}`}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
