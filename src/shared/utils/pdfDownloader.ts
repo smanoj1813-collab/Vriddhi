@@ -100,7 +100,10 @@ function saveBlob(blob: Blob, filename: string): void {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
-  window.URL.revokeObjectURL(url)
+  // Safari/iOS and installed PWAs may begin consuming a Blob URL after the
+  // click handler returns. Revoking it synchronously produces a zero-byte or
+  // blank PDF on those browsers; release it after the download has started.
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000)
 }
 
 async function fetchServerPdf(url: string, init: RequestInit): Promise<ServerPdfOutcome> {

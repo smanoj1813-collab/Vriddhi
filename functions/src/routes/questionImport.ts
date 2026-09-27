@@ -49,6 +49,10 @@ import {
   applyUnpackResult,
   buildImportDraftDocs,
   buildImportPrompt,
+  buildSeedFingerprint,
+  createImportDraftIdFactory,
+  requeueFailedImportFiles,
+  stripUndefinedValues,
   buildVisionImportPrompt,
   chunk,
   createImportJob,
@@ -336,7 +340,7 @@ router.post(
     try {
       const job = await loadJob(req, res)
       if (!job) return
-      const files = job.files.map((f) => (f.status === 'failed' ? { ...f, status: 'queued' as const, error: undefined } : f))
+      const files = requeueFailedImportFiles(job.files)
       const requeued = files.filter((f) => f.status === 'queued').length
       const updated: ImportJobDoc = {
         ...job,
@@ -602,6 +606,12 @@ async function parseOneDocument(
   const seen = new Set<string>()
   const drafts = []
   for (const question of questions) {
+    const fingerprint = buildSeedFingerprint({
+      text: question.text,
+      subject: job.defaults.subjectId.trim() || paperMeta.subject.trim() || 'General',
+      topic: (question.topic || job.defaults.topicId).trim() || 'General',
+      branch: job.defaults.branch || job.defaults.program.toUpperCase(),
+    })
     const docs = buildImportDraftDocs(
       question,
       {
@@ -612,7 +622,7 @@ async function parseOneDocument(
         paper: paperMeta,
         author: job.createdBy,
         now,
-        newId: () => db.collection(QUESTION_META_COLLECTION).doc().id,
+        newId: createImportDraftIdFactory(job.id, file.index, fingerprint),
       },
       { pages, method, language: meta.language || detectDocumentLanguage(text) }
     )
@@ -626,9 +636,9 @@ async function parseOneDocument(
     for (const group of chunk(drafts, IMPORT_QUESTIONS_PER_BATCH)) {
       const batch = db.batch()
       for (const docs of group) {
-        batch.set(db.collection(QUESTION_META_COLLECTION).doc(String(docs.meta.id)), docs.meta)
-        batch.set(db.collection(QUESTION_CONTENT_COLLECTION).doc(String(docs.content.id)), docs.content)
-        batch.set(db.collection(QUESTION_REVIEWS_COLLECTION).doc(String(docs.review.id)), docs.review)
+        batch.set(db.collection(QUESTION_META_COLLECTION).doc(String(docs.meta.id)), stripUndefinedValues(docs.meta))
+        batch.set(db.collection(QUESTION_CONTENT_COLLECTION).doc(String(docs.content.id)), stripUndefinedValues(docs.content))
+        batch.set(db.collection(QUESTION_REVIEWS_COLLECTION).doc(String(docs.review.id)), stripUndefinedValues(docs.review))
       }
       await batch.commit()
       if (Date.now() > deadline) break

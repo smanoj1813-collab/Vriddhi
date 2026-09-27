@@ -27,6 +27,7 @@ import {
   buildVisionImportPrompt,
   chunk,
   createImportJob,
+  createImportDraftIdFactory,
   describeJobProgress,
   detectDocumentLanguage,
   detectQuestionLanguage,
@@ -40,7 +41,9 @@ import {
   normalizeDefaults,
   normalizeImportedQuestions,
   normalizeQuestionText,
+  requeueFailedImportFiles,
   singleDocumentRow,
+  stripUndefinedValues,
   toUniversalDifficulty,
   toUniversalQuestionType,
   validateImportUpload,
@@ -391,6 +394,7 @@ test('draft docs: identical field contract to a manual superadmin submission', (
   assert.equal(meta.language, 'en')
   assert.deepEqual(content.options, [])
   assert.equal(content.storagePath, `questionBank_content/${meta.id}.json`)
+  assert.equal(meta.storagePath, `questionBank_content/${meta.id}.json`)
   assert.equal(content.metadataDocId, meta.id)
   assert.equal(Array.isArray(meta.searchKeywords), true)
   assert.ok(meta.tags.includes('pyq'))
@@ -402,6 +406,66 @@ test('draft docs: identical field contract to a manual superadmin submission', (
   assert.equal(docs.fingerprint, meta.importFingerprint)
   assert.equal(docs.fingerprint.split('|')[3], 'b.com')
   assert.notEqual(meta.id, review.id)
+})
+
+test('import draft ids are stable across retries and unique per job/file/question', () => {
+  const make = () => createImportDraftIdFactory('job-1', 2, 'stable-fingerprint')
+  const firstAttempt = make()
+  const retryAttempt = make()
+  const firstIds = [firstAttempt(), firstAttempt()]
+  const retryIds = [retryAttempt(), retryAttempt()]
+
+  assert.deepEqual(retryIds, firstIds)
+  assert.notEqual(firstIds[0], firstIds[1])
+  assert.notEqual(createImportDraftIdFactory('job-2', 2, 'stable-fingerprint')(), firstIds[0])
+  assert.notEqual(createImportDraftIdFactory('job-1', 3, 'stable-fingerprint')(), firstIds[0])
+})
+
+test('file result reducers omit undefined values before Firestore updates', () => {
+  const job = createImportJob({
+    id: 'job-1',
+    storagePath: 'question-paper-imports/u/job-1/paper.pdf',
+    fileName: 'paper.pdf',
+    bytes: 10,
+    defaults: {},
+    author: { uid: 'u', name: 'Admin' },
+    now: '2026-09-25T10:00:00.000Z',
+  })
+  const withFile = applyUnpackResult(job, [
+    { index: 0, name: 'paper.pdf', bytes: 10, status: 'queued' },
+  ], { now: '2026-09-25T10:00:00.000Z' })
+  const completed = applyFileResult(withFile, 0, {
+    status: 'done',
+    drafted: 2,
+  }, '2026-09-25T10:01:00.000Z')
+  const file = completed.files[0] as unknown as Record<string, unknown>
+
+  for (const key of ['error', 'method', 'pages', 'language', 'transcriptStoragePath', 'transcriptBytes']) {
+    assert.equal(Object.prototype.hasOwnProperty.call(file, key), false, `${key} should be omitted, not undefined`)
+  }
+  assert.equal(JSON.parse(JSON.stringify(completed.files))[0].status, 'done')
+})
+
+test('retry reducer clears failure text without persisting an undefined Firestore field', () => {
+  const rows = requeueFailedImportFiles([
+    { index: 0, name: 'failed.pdf', bytes: 10, status: 'failed', error: 'temporary failure' },
+    { index: 1, name: 'done.pdf', bytes: 10, status: 'done', drafted: 3 },
+  ])
+
+  assert.equal(rows[0].status, 'queued')
+  assert.equal(Object.prototype.hasOwnProperty.call(rows[0], 'error'), false)
+  assert.equal(rows[1].status, 'done')
+  assert.equal(Object.prototype.hasOwnProperty.call(rows[1], 'error'), false)
+})
+
+test('stripUndefinedValues recursively removes undefined object properties', () => {
+  assert.deepEqual(
+    stripUndefinedValues({
+      files: [{ name: 'paper.pdf', error: undefined, stats: { pages: undefined, drafted: 2 } }],
+      tags: ['pyq', undefined, 'import'],
+    }),
+    { files: [{ name: 'paper.pdf', stats: { drafted: 2 } }], tags: ['pyq', 'import'] },
+  )
 })
 
 test('draft docs: an MCQ keeps letters and only the printed answer', () => {

@@ -26,6 +26,7 @@
 // src/modules/superadmin/data/questionBankSeed.ts) recognises it. The two
 // fingerprint helpers are pinned by a shared fixture in both test suites.
 
+import { createHash } from 'node:crypto'
 import { SchemaType, type ResponseSchema } from '@google/generative-ai'
 
 import { geminiModelsFor } from './config/aiModels'
@@ -282,6 +283,45 @@ export function buildSeedFingerprint(input: {
     String(input.topic || '').trim().toLowerCase(),
     String(input.branch || '').trim().toLowerCase(),
   ].join('|')
+}
+
+/**
+ * Stable ids make importing idempotent when Firestore accepts the draft batch
+ * but a later job-progress write fails. Retrying the same parsed question then
+ * overwrites the same metadata/content/review documents instead of creating a
+ * second set of drafts.
+ */
+export function createImportDraftIdFactory(jobId: string, fileIndex: number, fingerprint: string): () => string {
+  const digest = createHash('sha256')
+    .update(`${jobId}\u0000${fileIndex}\u0000${fingerprint}`)
+    .digest('hex')
+    .slice(0, 40)
+  let sequence = 0
+  return () => `import-${sequence++ === 0 ? 'q' : 'r'}-${digest}`
+}
+
+/** Recursively removes undefined object properties before Firestore writes. */
+export function stripUndefinedValues<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.filter((entry) => entry !== undefined).map((entry) => stripUndefinedValues(entry)) as T
+  }
+  if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    const clean: Record<string, unknown> = {}
+    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+      if (entry !== undefined) clean[key] = stripUndefinedValues(entry)
+    }
+    return clean as T
+  }
+  return value
+}
+
+/** Remove the previous failure message without introducing an undefined field. */
+export function requeueFailedImportFiles(files: ImportJobFile[]): ImportJobFile[] {
+  return files.map((file) => {
+    if (file.status !== 'failed') return file
+    const { error: _oldError, ...withoutError } = file
+    return { ...withoutError, status: 'queued' }
+  })
 }
 
 /** Mirrors `buildPreviewText` (list views read this and never the content doc). */
@@ -693,7 +733,9 @@ export function buildImportDraftDocs(
     visibility: 'public',
     sharedWith: [] as string[],
     source: 'platform',
-    storagePath: '',
+    // The review queue resolves the content document from this path. Leaving it
+    // blank makes imported drafts look like an empty question when reviewed.
+    storagePath: `${QUESTION_CONTENT_COLLECTION}/${id}.json`,
     hasImage: false,
     qualityRating: 0,
     usageCount: 0,
@@ -883,7 +925,7 @@ export function applyFileResult(
 ): ImportJobDoc {
   const files = job.files.map((f) =>
     f.index === fileIndex
-      ? {
+      ? stripUndefinedValues({
           ...f,
           storagePath: result.storagePath ?? f.storagePath,
           status: result.status,
@@ -896,7 +938,7 @@ export function applyFileResult(
           error: result.error,
           transcriptStoragePath: result.transcriptStoragePath ?? f.transcriptStoragePath,
           transcriptBytes: result.transcriptBytes ?? f.transcriptBytes,
-        }
+        })
       : f
   )
 

@@ -693,7 +693,12 @@ export function useQuestionBank(): UseQuestionBankReturn {
         setErrorsUniversal(prev => ({ ...prev, questionDetail: metaRes.error || 'Question not found' }));
         return;
       }
-      const contentRes = await questionStorageApi.downloadQuestion(metaRes.data.storagePath);
+      // Imported platform drafts can predate the content-path fix and have an
+      // empty path in metadata. The question id is the content document id, so
+      // resolve the canonical path here rather than leaving the review dialog blank.
+      const contentPath = String(metaRes.data.storagePath || '').trim()
+        || `questionBank_content/${questionId}.json`
+      const contentRes = await questionStorageApi.downloadQuestion(contentPath);
       if (contentRes.success && contentRes.data) {
         setSelectedQuestion(contentRes.data);
         globalCache.set(cacheKey, contentRes.data, 10 * 60 * 1000);

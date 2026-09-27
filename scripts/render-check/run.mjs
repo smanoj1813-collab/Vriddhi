@@ -264,7 +264,11 @@ globalThis.__RC_CALLABLE_DATA = { getFacultyAcademicContext: facultyContextFixtu
 await section('faculty academic planner', '/src/modules/faculty/components/FacultyAcademicPlanner.tsx', {}, (t) => {
   check('planner: mounts without throwing', true);
   check('planner: lists both college courses with codes', t.includes('CS301 — DBMS') && t.includes('CS302 — Operating Systems'), t);
-  check('planner: lists the upcoming session on its date', t.includes('CS301') && t.includes('Sep 22'), t);
+  const expectedSessionDate = new Date('2026-09-22').toLocaleDateString(undefined, {
+    weekday: 'short', day: 'numeric', month: 'short',
+  });
+  check('planner: lists the upcoming session on its date',
+    t.includes('CS301') && t.includes(expectedSessionDate), t);
   check('planner: shows open assignments but not graded ones as open',
     t.includes('Normalization Worksheet') && !/Graded Worksheet/.test(t), t);
   check('planner: shows upcoming assessments but not completed ones',
