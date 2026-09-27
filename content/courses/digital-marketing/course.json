@@ -1,0 +1,644 @@
+{
+  "schemaVersion": 1,
+  "id": "digital-marketing",
+  "code": "VDM-101",
+  "title": "Digital Marketing for Career Impact — Certificate Program",
+  "shortTitle": "Digital Marketing",
+  "tagline": "Learn SEO, SEM, social media, analytics and AI content by running real campaigns — and walk out with a portfolio, not just a certificate.",
+  "version": "1.0.0",
+  "lastReviewed": "2026-09-27",
+  "owner": "Vriddhi Academic Cloud — Learning Content",
+  "audience": "Non-technical undergraduate students (B.Com, BBA, BA, B.Sc) in affiliated colleges. No coding required.",
+  "level": "Beginner → job-ready practitioner",
+  "language": "English, with bilingual (Kannada / Hindi) campaign examples",
+  "totalHours": 52,
+  "credits": 4,
+  "durationWeeks": 10,
+  "weeklyCommitment": "≈ 5 hours: 2 h guided session · 1.5 h self-study · 1.5 h lab / project",
+  "certificateTitle": "Certified Digital Marketing Practitioner (Vriddhi)",
+  "prerequisites": [
+    "Comfortable using a smartphone or laptop and a web browser",
+    "A Google account (for Search Console, GA4, Keyword Planner, Looker Studio and Sheets free tiers)",
+    "Basic English reading; Kannada / Hindi speakers are supported throughout",
+    "No marketing, statistics or design background needed"
+  ],
+  "outcomes": [
+    "Explain how the digital marketing ecosystem fits together — search, social, content, email and paid media — and choose the right channel mix for a given goal.",
+    "Run a full SEO workflow: keyword research, on-page optimisation, technical and local fixes, and link building, using free tools.",
+    "Plan and produce a content calendar that mixes human judgement with AI-assisted drafting, fact-checking and brand-voice control.",
+    "Set up and reason about paid campaigns on search and social: auctions, budgets, targeting, ad copy and landing pages.",
+    "Measure everything that matters: build KPI trees, read GA4, assemble dashboards, and optimise campaigns with experiments.",
+    "Run email and automation journeys that respect consent, including India's DPDP framework.",
+    "Ship an integrated campaign end-to-end and present it with evidence — the portfolio employers ask for."
+  ],
+  "assessment": {
+    "passMark": 50,
+    "conditions": [
+      "Overall score ≥ 50%",
+      "Capstone score ≥ 40% of its weight",
+      "At least 3 of 4 Project Blocks submitted",
+      "Attendance / activity ≥ 75% of guided sessions (instructor-led batches)",
+      "Score at least 60% on each module mini-assessment; all eight must be passed for the platform completion certificate."
+    ],
+    "components": [
+      {
+        "id": "quizzes",
+        "name": "Lesson quizzes",
+        "weight": 15,
+        "description": "Every lesson ends with a short quiz. Best attempt counts; the average across all lessons is scaled to 15 marks."
+      },
+      {
+        "id": "projects",
+        "name": "Project Blocks 1–4",
+        "weight": 28,
+        "description": "Four applied projects (7 marks each): SEO audit, content engine, campaign plan and analytics dashboard, graded on the rubric in assessments/rubrics.md."
+      },
+      {
+        "id": "capstone",
+        "name": "Capstone: integrated campaign + pitch",
+        "weight": 30,
+        "description": "A two-to-four-week integrated campaign for a real or realistic client, with live assets, data and a 5-minute Demo Day pitch."
+      },
+      {
+        "id": "final",
+        "name": "Final assessment",
+        "weight": 20,
+        "description": "A 90-minute assessment (60 MCQs + two scenario responses) drawn from the blueprint in assessments/final-assessment-blueprint.md."
+      },
+      {
+        "id": "journal",
+        "name": "Reflection journal",
+        "weight": 7,
+        "description": "Weekly reflection entries completed inside lessons; graded on completion and honesty, not length."
+      }
+    ]
+  },
+  "toolkit": [
+    {
+      "category": "Search & SEO",
+      "tools": [
+        "Google Search Console",
+        "Google Trends",
+        "Google Keyword Planner",
+        "Ubersuggest (free tier)"
+      ],
+      "note": "Search Console needs a website you control — the course labs use a free blog or a college club site."
+    },
+    {
+      "category": "Analytics & dashboards",
+      "tools": [
+        "Google Analytics 4",
+        "Looker Studio",
+        "Google Sheets"
+      ]
+    },
+    {
+      "category": "Ads",
+      "tools": [
+        "Google Ads (starter / demo account)",
+        "Meta Ads Manager (draft mode)"
+      ],
+      "note": "No paid spend is required. Labs use draft campaigns, planning templates and simulation numbers."
+    },
+    {
+      "category": "Content & AI",
+      "tools": [
+        "Gemini (Google)",
+        "ChatGPT (OpenAI)",
+        "Canva",
+        "Google Docs"
+      ],
+      "note": "Free tiers are enough. AI drafts every artefact, but every artefact is also checked, edited and owned by you."
+    },
+    {
+      "category": "Social & email",
+      "tools": [
+        "Meta Business Suite",
+        "Buffer or Later (free tiers)",
+        "Mailchimp or Brevo (free tiers)"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "m1",
+      "number": 1,
+      "slug": "01-foundations",
+      "title": "Digital Marketing Foundations",
+      "summary": "What digital marketing actually is, how customers move from stranger to fan, how to research an audience and its competitors, and how to write the one-page brief every campaign needs.",
+      "weeks": "Week 1",
+      "hours": 6,
+      "outcomes": [
+        "Map the channel ecosystem — search, social, content, email, paid — and match channels to business goals",
+        "Describe the customer journey and build a simple funnel with realistic conversion maths",
+        "Run audience and competitor research with free tools and turn findings into personas",
+        "Write a one-page marketing brief with a SMART goal and a KPI tree"
+      ],
+      "assessment": {
+        "title": "Digital Marketing Foundations Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m1-t1",
+          "number": "1.1",
+          "type": "lesson",
+          "title": "What digital marketing really is",
+          "minutes": 90,
+          "lesson": "modules/01-foundations/1.1-what-digital-marketing-really-is.md",
+          "summary": "The ecosystem beyond 'posting on Instagram': owned, earned and paid media, and how the channels support each other."
+        },
+        {
+          "id": "m1-t2",
+          "number": "1.2",
+          "type": "lesson",
+          "title": "Customer journeys and funnels",
+          "minutes": 90,
+          "lesson": "modules/01-foundations/1.2-customer-journeys-and-funnels.md",
+          "summary": "How a stranger becomes a customer, the funnel maths that sets honest expectations, and where each channel fits."
+        },
+        {
+          "id": "m1-t3",
+          "number": "1.3",
+          "type": "lesson",
+          "title": "Audience and competitor research",
+          "minutes": 90,
+          "lesson": "modules/01-foundations/1.3-audience-and-competitor-research.md",
+          "summary": "Personas built from evidence, not imagination: search data, reviews, social listening and a competitor teardown."
+        },
+        {
+          "id": "m1-t4",
+          "number": "1.4",
+          "type": "lesson",
+          "title": "Goals, KPIs and the marketing brief",
+          "minutes": 90,
+          "lesson": "modules/01-foundations/1.4-goals-kpis-and-the-marketing-brief.md",
+          "summary": "SMART goals, KPI trees and the one-page brief that keeps a campaign honest before a single rupee is spent."
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "number": 2,
+      "slug": "02-seo",
+      "title": "Search Engine Optimisation (SEO)",
+      "summary": "The complete SEO workflow on free tools: how search engines decide, keyword research, on-page writing, technical and local fixes, and earning links. Ends with a full SEO audit of a real site.",
+      "weeks": "Weeks 2–3",
+      "hours": 7,
+      "outcomes": [
+        "Explain how crawlers, indexes and ranking systems decide what appears on a results page",
+        "Build a keyword map with intent, volume and difficulty, and assign keywords to pages",
+        "Optimise a page's titles, headings, content and internal links for humans first",
+        "Diagnose technical and local-SEO issues and earn links without spam",
+        "Deliver a prioritised, evidence-based SEO audit (Project Block 1)"
+      ],
+      "assessment": {
+        "title": "SEO Audit Readiness Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m2-t1",
+          "number": "2.1",
+          "type": "lesson",
+          "title": "How search works and keyword research",
+          "minutes": 90,
+          "lesson": "modules/02-seo/2.1-how-search-works-and-keyword-research.md",
+          "summary": "Crawling, indexing and ranking in plain language; then the keyword research workflow that feeds everything else."
+        },
+        {
+          "id": "m2-t2",
+          "number": "2.2",
+          "type": "lesson",
+          "title": "On-page SEO",
+          "minutes": 90,
+          "lesson": "modules/02-seo/2.2-on-page-seo.md",
+          "summary": "Titles, meta descriptions, headings, intent-matched content and internal linking — the writing craft of SEO."
+        },
+        {
+          "id": "m2-t3",
+          "number": "2.3",
+          "type": "lesson",
+          "title": "Technical and local SEO",
+          "minutes": 90,
+          "lesson": "modules/02-seo/2.3-technical-and-local-seo.md",
+          "summary": "Speed, mobile-friendliness, crawlability and indexability — plus winning the local map pack for a real business."
+        },
+        {
+          "id": "m2-t4",
+          "number": "2.4",
+          "type": "lesson",
+          "title": "Off-page SEO, links and authority",
+          "minutes": 90,
+          "lesson": "modules/02-seo/2.4-off-page-seo-links-and-authority.md",
+          "summary": "Why links are votes, which votes count, and how to earn them with digital PR and genuinely useful content."
+        },
+        {
+          "id": "m2-pb1",
+          "number": "PB1",
+          "type": "project",
+          "title": "Project Block 1 — SEO Audit",
+          "minutes": 60,
+          "lesson": "projects/pb1-seo-audit.md",
+          "summary": "A prioritised audit of a real small-business site: findings, evidence, effort estimates and a 90-day roadmap."
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "number": 3,
+      "slug": "03-content-ai",
+      "title": "Content Marketing & AI Content",
+      "summary": "Content as a system, not a scramble: strategy, calendar, and an AI-assisted workflow where the human briefs, checks facts, controls brand voice and takes responsibility. Ends with a 30-day content engine.",
+      "weeks": "Weeks 3–4",
+      "hours": 7,
+      "outcomes": [
+        "Design a content strategy tied to the funnel: pillar pages, clusters and a realistic calendar",
+        "Run an AI-assisted content workflow — brief, draft, fact-check, edit, disclose — without publishing hallucinations",
+        "Write copy that earns attention: hooks, structure, benefits over features and clear calls to action",
+        "Repurpose one strong idea across formats and channels efficiently"
+      ],
+      "assessment": {
+        "title": "Content Quality and AI Verification Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m3-t1",
+          "number": "3.1",
+          "type": "lesson",
+          "title": "Content strategy and the calendar",
+          "minutes": 90,
+          "lesson": "modules/03-content-ai/3.1-content-strategy-and-the-calendar.md",
+          "summary": "Topics, pillars and formats chosen from audience research; a calendar the team can actually sustain."
+        },
+        {
+          "id": "m3-t2",
+          "number": "3.2",
+          "type": "lesson",
+          "title": "The AI-assisted content workflow",
+          "minutes": 90,
+          "lesson": "modules/03-content-ai/3.2-ai-assisted-content-workflow.md",
+          "summary": "Prompting for drafts, verifying claims and sources, keeping brand voice, and disclosing AI use responsibly."
+        },
+        {
+          "id": "m3-t3",
+          "number": "3.3",
+          "type": "lesson",
+          "title": "Copywriting fundamentals",
+          "minutes": 90,
+          "lesson": "modules/03-content-ai/3.3-copywriting-fundamentals.md",
+          "summary": "Hooks that stop the scroll, structures that keep readers, and calls to action that name the next step."
+        },
+        {
+          "id": "m3-t4",
+          "number": "3.4",
+          "type": "lesson",
+          "title": "Repurposing and distribution",
+          "minutes": 90,
+          "lesson": "modules/03-content-ai/3.4-repurposing-and-distribution.md",
+          "summary": "One idea, many assets: the repurposing waterfall and a distribution checklist that treats publishing as the start."
+        },
+        {
+          "id": "m3-pb2",
+          "number": "PB2",
+          "type": "project",
+          "title": "Project Block 2 — 30-Day Content Engine",
+          "minutes": 60,
+          "lesson": "projects/pb2-content-engine.md",
+          "summary": "A 30-day calendar with briefs, one AI-assisted published piece, verification notes and a repurposing plan."
+        }
+      ]
+    },
+    {
+      "id": "m4",
+      "number": 4,
+      "slug": "04-sem-paid",
+      "title": "Search Engine Marketing & Paid Media",
+      "summary": "Paid media without wasting money: how auctions really work, writing search ads, choosing audiences and creatives on social, and the landing pages and tracking that make spend measurable.",
+      "weeks": "Week 5",
+      "hours": 6,
+      "outcomes": [
+        "Explain the ad auction — bid, quality and context — and why the highest bidder does not always win",
+        "Structure a search campaign: match types, negatives, ad groups and copy that matches intent",
+        "Plan display, video and social campaigns with realistic audiences, creatives and budgets",
+        "Design a landing page and a measurement plan so every rupee is accountable"
+      ],
+      "assessment": {
+        "title": "Paid Media Planning Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m4-t1",
+          "number": "4.1",
+          "type": "lesson",
+          "title": "The paid landscape and the ad auction",
+          "minutes": 90,
+          "lesson": "modules/04-sem-paid/4.1-paid-landscape-and-the-ad-auction.md",
+          "summary": "Where paid fits, what things cost, and the auction maths of bid × quality that decides who wins."
+        },
+        {
+          "id": "m4-t2",
+          "number": "4.2",
+          "type": "lesson",
+          "title": "Search ads that convert",
+          "minutes": 90,
+          "lesson": "modules/04-sem-paid/4.2-search-ads-that-convert.md",
+          "summary": "Keyword match types, negative keywords, ad group structure and copy that answers the query."
+        },
+        {
+          "id": "m4-t3",
+          "number": "4.3",
+          "type": "lesson",
+          "title": "Display, video and social ads",
+          "minutes": 90,
+          "lesson": "modules/04-sem-paid/4.3-display-video-and-social-ads.md",
+          "summary": "Awareness and retargeting: audience options, creative formats and the bidding choices that fit each goal."
+        },
+        {
+          "id": "m4-t4",
+          "number": "4.4",
+          "type": "lesson",
+          "title": "Landing pages, budgets and tracking",
+          "minutes": 90,
+          "lesson": "modules/04-sem-paid/4.4-landing-pages-budgets-and-tracking.md",
+          "summary": "Message match, daily budgets and pacing, and the conversion tracking you set up BEFORE launch."
+        }
+      ]
+    },
+    {
+      "id": "m5",
+      "number": 5,
+      "slug": "05-social",
+      "title": "Social Media Marketing",
+      "summary": "Social as a strategy, not a habit: picking platforms where your audience actually is, running a sustainable content operation, caring for the community, and working with creators. Ends with a full campaign plan.",
+      "weeks": "Week 6",
+      "hours": 7,
+      "outcomes": [
+        "Choose platforms from audience evidence and define what each is for",
+        "Run a weekly content operation: formats, batches, scheduling and a simple brand kit",
+        "Moderate and grow a community — reply, defuse, and turn complaints into trust",
+        "Plan a creator/UGC collaboration with briefs, permissions and honest measurement",
+        "Produce an integrated campaign plan (Project Block 3)"
+      ],
+      "assessment": {
+        "title": "Social Campaign Readiness Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m5-t1",
+          "number": "5.1",
+          "type": "lesson",
+          "title": "Social strategy and platform selection",
+          "minutes": 90,
+          "lesson": "modules/05-social/5.1-social-strategy-and-platform-selection.md",
+          "summary": "Why 'be on every platform' fails; how to pick your channels and define each one's job."
+        },
+        {
+          "id": "m5-t2",
+          "number": "5.2",
+          "type": "lesson",
+          "title": "Formats, scheduling and content ops",
+          "minutes": 90,
+          "lesson": "modules/05-social/5.2-formats-scheduling-and-content-ops.md",
+          "summary": "Reels, carousels, stories and posts; batching, a content calendar and free scheduling tools."
+        },
+        {
+          "id": "m5-t3",
+          "number": "5.3",
+          "type": "lesson",
+          "title": "Community management and social care",
+          "minutes": 90,
+          "lesson": "modules/05-social/5.3-community-management-and-social-care.md",
+          "summary": "The reply matrix, handling negative comments publicly and kindly, and escalation rules that protect the brand."
+        },
+        {
+          "id": "m5-t4",
+          "number": "5.4",
+          "type": "lesson",
+          "title": "Creators, UGC and influencer marketing",
+          "minutes": 90,
+          "lesson": "modules/05-social/5.4-creators-ugc-and-influencer-marketing.md",
+          "summary": "Nano to macro tiers, honest metrics over follower counts, briefs, permissions (and ASCI disclosure rules)."
+        },
+        {
+          "id": "m5-pb3",
+          "number": "PB3",
+          "type": "project",
+          "title": "Project Block 3 — Integrated Campaign Plan",
+          "minutes": 60,
+          "lesson": "projects/pb3-campaign-plan.md",
+          "summary": "A two-week campaign plan: goal, audience, channel mix, creative concepts, calendar, budget and measurement."
+        }
+      ]
+    },
+    {
+      "id": "m6",
+      "number": 6,
+      "slug": "06-analytics",
+      "title": "Marketing Analytics & Dashboards",
+      "summary": "The marketer who can read data gets the decisions: KPI trees, GA4 essentials, dashboards that answer questions, and the experiment mindset that turns numbers into action. Ends with a live dashboard.",
+      "weeks": "Weeks 7–8",
+      "hours": 7,
+      "outcomes": [
+        "Build a KPI tree that connects channel metrics to a business goal",
+        "Navigate GA4: events, key events (conversions), audiences and the standard reports",
+        "Assemble a Looker Studio dashboard from Sheets and GA4 data and automate a weekly report",
+        "Reason about attribution honestly and design simple A/B tests with valid conclusions",
+        "Ship a campaign dashboard (Project Block 4)"
+      ],
+      "assessment": {
+        "title": "Analytics Interpretation Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m6-t1",
+          "number": "6.1",
+          "type": "lesson",
+          "title": "The measurement mindset",
+          "minutes": 90,
+          "lesson": "modules/06-analytics/6.1-the-measurement-mindset.md",
+          "summary": "Vanity vs decision metrics, the KPI tree, and benchmarking so numbers have meaning."
+        },
+        {
+          "id": "m6-t2",
+          "number": "6.2",
+          "type": "lesson",
+          "title": "Google Analytics 4 essentials",
+          "minutes": 90,
+          "lesson": "modules/06-analytics/6.2-google-analytics-4-essentials.md",
+          "summary": "Events and parameters, key events, UTM links, and the reports you will actually open every week."
+        },
+        {
+          "id": "m6-t3",
+          "number": "6.3",
+          "type": "lesson",
+          "title": "Dashboards and automated reporting",
+          "minutes": 90,
+          "lesson": "modules/06-analytics/6.3-dashboards-and-automated-reporting.md",
+          "summary": "Looker Studio from Sheets and GA4; score cards, time series and the weekly email that writes itself."
+        },
+        {
+          "id": "m6-t4",
+          "number": "6.4",
+          "type": "lesson",
+          "title": "Attribution, experiments and optimisation",
+          "minutes": 90,
+          "lesson": "modules/06-analytics/6.4-attribution-experiments-and-optimisation.md",
+          "summary": "Models without the mysticism, a checklist before you optimise, and A/B tests you can defend in a meeting."
+        },
+        {
+          "id": "m6-pb4",
+          "number": "PB4",
+          "type": "project",
+          "title": "Project Block 4 — Campaign Dashboard",
+          "minutes": 60,
+          "lesson": "projects/pb4-analytics-dashboard.md",
+          "summary": "A working Looker Studio dashboard wired to your campaign data, with a written weekly-insight ritual."
+        }
+      ]
+    },
+    {
+      "id": "m7",
+      "number": 7,
+      "slug": "07-email-crm",
+      "title": "Email, Automation & CRM",
+      "summary": "The quiet channel with the best ROI: list building with consent, emails people open, lifecycle automation, and the CRM habits that turn enquiries into relationships — all inside India's privacy rules.",
+      "weeks": "Week 9",
+      "hours": 6,
+      "outcomes": [
+        "Build a consent-first email list and craft a campaign that survives the promotions tab",
+        "Design a lifecycle journey — welcome, nurture, win-back — with trigger, message and goal",
+        "Use a small-business CRM: pipeline stages, lead scoring signals and handoff notes",
+        "Apply DPDP-aware consent, unsubscribes and data hygiene to every marketing touchpoint"
+      ],
+      "assessment": {
+        "title": "Lifecycle and Consent Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m7-t1",
+          "number": "7.1",
+          "type": "lesson",
+          "title": "Email marketing essentials",
+          "minutes": 90,
+          "lesson": "modules/07-email-crm/7.1-email-marketing-essentials.md",
+          "summary": "Why email still wins: lists, consent, subject lines, preview text and one call to action per email."
+        },
+        {
+          "id": "m7-t2",
+          "number": "7.2",
+          "type": "lesson",
+          "title": "Automation and lifecycle journeys",
+          "minutes": 90,
+          "lesson": "modules/07-email-crm/7.2-automation-and-lifecycle-journeys.md",
+          "summary": "Triggers, branches and waits; the welcome series, the nurture drip and the win-back, mapped and measured."
+        },
+        {
+          "id": "m7-t3",
+          "number": "7.3",
+          "type": "lesson",
+          "title": "CRM basics and lead nurturing",
+          "minutes": 90,
+          "lesson": "modules/07-email-crm/7.3-crm-basics-and-lead-nurturing.md",
+          "summary": "Pipeline stages, lead scoring signals and the follow-up discipline that turns enquiries into admissions or sales."
+        },
+        {
+          "id": "m7-t4",
+          "number": "7.4",
+          "type": "lesson",
+          "title": "Consent and privacy in marketing",
+          "minutes": 90,
+          "lesson": "modules/07-email-crm/7.4-consent-and-privacy-in-marketing.md",
+          "summary": "India's DPDP Act for marketers: notice and consent, purpose limitation, unsubscribes and clean data habits."
+        }
+      ]
+    },
+    {
+      "id": "m8",
+      "number": 8,
+      "slug": "08-career-launch",
+      "title": "Campaign Capstone & Career Launch",
+      "summary": "Everything at once: an integrated campaign for a real client, then the career kit — portfolio, résumé and LinkedIn built for the three roles this course targets, and interview practice with campaign case questions.",
+      "weeks": "Week 10",
+      "hours": 6,
+      "outcomes": [
+        "Run an integrated campaign end-to-end — strategy, assets, launch, measurement and iteration",
+        "Present campaign results honestly, including what did not work and why",
+        "Assemble a marketing portfolio that proves the three target roles: Digital Marketing Executive, SEO Executive, Marketing Analyst",
+        "Answer campaign case questions with a structured framework under interview pressure"
+      ],
+      "assessment": {
+        "title": "Career Launch Portfolio Gate",
+        "passMark": 60,
+        "questionCount": 10
+      },
+      "topics": [
+        {
+          "id": "m8-t1",
+          "number": "8.1",
+          "type": "lesson",
+          "title": "Your marketing portfolio",
+          "minutes": 90,
+          "lesson": "modules/08-career-launch/8.1-your-marketing-portfolio.md",
+          "summary": "Case-study write-ups of your four project blocks and capstone: problem, action, result, evidence."
+        },
+        {
+          "id": "m8-t2",
+          "number": "8.2",
+          "type": "lesson",
+          "title": "Résumé, LinkedIn and certifications",
+          "minutes": 90,
+          "lesson": "modules/08-career-launch/8.2-resume-linkedin-and-certifications.md",
+          "summary": "A résumé that quantifies outcomes, a LinkedIn presence recruiters find, and the certifications worth your time."
+        },
+        {
+          "id": "m8-t3",
+          "number": "8.3",
+          "type": "lesson",
+          "title": "Interview practice and campaign cases",
+          "minutes": 90,
+          "lesson": "modules/08-career-launch/8.3-interview-practice-and-campaign-cases.md",
+          "summary": "The structured answer pattern for case questions, plus the twenty questions you will be asked."
+        },
+        {
+          "id": "m8-cap",
+          "number": "CAP",
+          "type": "project",
+          "title": "Capstone — Integrated Campaign Demo Day",
+          "minutes": 90,
+          "lesson": "projects/capstone-integrated-campaign.md",
+          "summary": "A live four-channel campaign with a real audience, weekly iteration and a 5-minute results pitch."
+        }
+      ]
+    }
+  ],
+  "finalAssessment": {
+    "title": "Final assessment",
+    "minutes": 90,
+    "blueprint": "assessments/final-assessment-blueprint.md"
+  },
+  "documents": {
+    "facilitatorGuide": "facilitator-guide.md",
+    "rubrics": "assessments/rubrics.md",
+    "certificationPolicy": "assessments/certification-policy.md"
+  },
+  "certificateEligibility": {
+    "minimumQuizAverage": 60,
+    "moduleAssessmentPassMark": 60,
+    "requireAllTopicsRead": true,
+    "requireAllLessonQuizzes": true
+  },
+  "lessonQuizQuestionCount": 5
+}

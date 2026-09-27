@@ -1,0 +1,388 @@
+{
+  "moduleId": "m4",
+  "questions": {
+    "m4-t1": [
+      {
+        "id": "m4-t1-q1",
+        "question": "Why did the lower-bidding bakery win more ad placements at a lower cost per click?",
+        "options": [
+          "The platform favoured small businesses",
+          "The auction ranks Bid × Quality — its relevant ad and matching landing page outranked the higher bid and paid just enough to beat the runner-up",
+          "It advertised during off-peak hours",
+          "The higher bidder ran out of budget"
+        ],
+        "answerIndex": 1,
+        "explanation": "Ad Rank = Bid × Quality; relevance wins at a discount because most auctions charge just enough to beat the ad below you."
+      },
+      {
+        "id": "m4-t1-q2",
+        "question": "Which is a legitimate job for paid media?",
+        "options": [
+          "Fixing a weak offer by exposing it to more people",
+          "Capturing existing intent, creating awareness fast, retargeting the almost-convinced, and testing messages cheaply",
+          "Replacing the need for a website",
+          "Guaranteeing first-page organic rankings"
+        ],
+        "answerIndex": 1,
+        "explanation": "Paid is rented, precisely targeted attention — a multiplier that exposes weak offers faster, not a foundation."
+      },
+      {
+        "id": "m4-t1-q3",
+        "question": "A campaign with a CPM buying model is most appropriate when the goal is…",
+        "options": [
+          "Enquiries from search",
+          "Cart-abandoner recovery",
+          "Awareness and reach — launches and brand-building",
+          "Cost per action optimisation"
+        ],
+        "answerIndex": 2,
+        "explanation": "CPC buys visits, CPM buys awareness, CPA needs trusted conversion tracking — match the model to the funnel stage."
+      },
+      {
+        "id": "m4-t1-q4",
+        "question": "₹6,000 budget, estimated CPC ₹12, expected landing conversion 4%. What is the cost per acquisition?",
+        "options": [
+          "₹48",
+          "₹300",
+          "₹500",
+          "₹1,200"
+        ],
+        "answerIndex": 1,
+        "explanation": "500 clicks × 4% = 20 conversions; ₹6,000 ÷ 20 = ₹300 CPA. Run this chain before launch, not after the invoice."
+      },
+      {
+        "id": "m4-t1-q5",
+        "question": "What does the lesson call the classic sign of bidding more to fix a bad ad?",
+        "options": [
+          "A quality score bonus",
+          "Paying a stupidity premium — quality is the cheaper lever",
+          "An auction penalty",
+          "Improved organic rankings"
+        ],
+        "answerIndex": 1,
+        "explanation": "Outbidding a rival to compensate for a mismatched ad is paying extra for the privilege of being ignored."
+      }
+    ],
+    "m4-t2": [
+      {
+        "id": "m4-t2-q1",
+        "question": "What is the test of a well-formed ad group?",
+        "options": [
+          "It contains at least 100 keywords",
+          "Every keyword in it could share one ad and one landing page",
+          "It targets all of India",
+          "It uses only broad match keywords"
+        ],
+        "answerIndex": 1,
+        "explanation": "Tight themes let one ad match every keyword — raising relevance, which lowers cost. If not, split the ad group."
+      },
+      {
+        "id": "m4-t2-q2",
+        "question": "Which match type gives the widest reach with the greatest waste risk?",
+        "options": [
+          "Exact match",
+          "Phrase match",
+          "Broad match",
+          "Negative match"
+        ],
+        "answerIndex": 2,
+        "explanation": "Broad match triggers on related searches — volume without control, survivable only with a maintained negative-keyword list."
+      },
+      {
+        "id": "m4-t2-q3",
+        "question": "Where does the lesson say wasted budgets are reclaimed?",
+        "options": [
+          "In raising quality scores",
+          "In negative keywords and the weekly search-terms review",
+          "In switching platforms",
+          "In lowering all bids"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reading what you actually paid for and pruning it is the fastest marketing education and the biggest quick win."
+      },
+      {
+        "id": "m4-t2-q4",
+        "question": "A search ad's Headline 1 should…",
+        "options": [
+          "Show the brand name and founding year",
+          "Mirror the query, with a specific number or differentiator in the other headlines",
+          "Contain a clever pun to stand out",
+          "List as many products as fit in 30 characters"
+        ],
+        "answerIndex": 1,
+        "explanation": "Search ads reward mirror-the-query clarity: the searcher must see their own words reflected, then the specifics that answer the next question."
+      },
+      {
+        "id": "m4-t2-q5",
+        "question": "High CTR but poor conversion rate. Where is the problem, and what is the fix?",
+        "options": [
+          "The ad — rewrite the headlines",
+          "The bid — lower it to buy better traffic",
+          "The landing page — the click's promise is not being kept on the page",
+          "The platform — switch to another network"
+        ],
+        "answerIndex": 2,
+        "explanation": "CTR is the market's verdict on the ad; conversion rate is the page's verdict. Diagnose before adjusting."
+      }
+    ],
+    "m4-t3": [
+      {
+        "id": "m4-t3-q1",
+        "question": "What is the fundamental difference between search ads and social/display/video ads?",
+        "options": [
+          "Social ads are always cheaper",
+          "Search captures existing intent; the others must interrupt attention that asked for nothing",
+          "Social ads cannot target by location",
+          "Search ads cannot contain images"
+        ],
+        "answerIndex": 1,
+        "explanation": "Interruption media earns attention relevant to the moment, not to a query — a different psychology and craft."
+      },
+      {
+        "id": "m4-t3-q2",
+        "question": "For a small budget, what is the professional audience sequence?",
+        "options": [
+          "Core audiences first, then retargeting, then lookalikes",
+          "Retargeting first, lookalikes second, sharp core audiences last",
+          "Lookalikes only, until they convert",
+          "All three equally from day one"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retargeting gives the cheapest conversions, lookalikes scale with the algorithm's best knowledge, core is the starting point only when sharp."
+      },
+      {
+        "id": "m4-t3-q3",
+        "question": "In a retargeting sequence, why must the converted be excluded?",
+        "options": [
+          "To reduce the audience size for faster delivery",
+          "So buyers stop seeing requests to buy — budget moves to the unconvinced, and the brand stops looking oblivious",
+          "Because platforms forbid advertising to customers",
+          "To reset the frequency counter"
+        ],
+        "answerIndex": 1,
+        "explanation": "Sequencing works when each message meets a person at their stage; the converted belong in a different journey (Module 7)."
+      },
+      {
+        "id": "m4-t3-q4",
+        "question": "The 3-second rule for video ads means…",
+        "options": [
+          "The ad must be three seconds long",
+          "The video must prove its relevance in the first three seconds — product visible, promise legible, sound optional",
+          "Bidding happens every three seconds",
+          "Viewers decide costs after three seconds"
+        ],
+        "answerIndex": 1,
+        "explanation": "If the logo appears before the story, you have paid to be skipped; most feeds are muted, so design for silence."
+      },
+      {
+        "id": "m4-t3-q5",
+        "question": "Why does the lesson say 'the creative is the targeting' on modern social platforms?",
+        "options": [
+          "Creative replaces the need for budgets",
+          "Algorithms decide who sees the ad largely from who engages with it — a blurry message finds a blurry audience",
+          "Targeting options were removed from platforms",
+          "Creative controls the auction bid automatically"
+        ],
+        "answerIndex": 1,
+        "explanation": "Delivery systems learn from engagement signals; a precise, native, single-idea creative attracts precisely the audience it deserves."
+      }
+    ],
+    "m4-t4": [
+      {
+        "id": "m4-t4-q1",
+        "question": "1,100 clicks produced 9 enquiries on an eleven-field form. What does the lesson identify as the real economics problem?",
+        "options": [
+          "The ad targeting was too broad",
+          "The landing page — message mismatch, hidden fees, and form friction taxed the conversion",
+          "The CPC was too high",
+          "The campaign needed a bigger budget"
+        ],
+        "answerIndex": 1,
+        "explanation": "The destination decides the campaign's economics: one promise, the answer above the fold, three fields, no exits."
+      },
+      {
+        "id": "m4-t4-q2",
+        "question": "What is 'message match' on a landing page?",
+        "options": [
+          "Using the same font as the ad",
+          "The headline completing the sentence the ad started — same words, same promise",
+          "Matching the competitor's messaging",
+          "Translating the ad into Kannada"
+        ],
+        "answerIndex": 1,
+        "explanation": "'B.Com with CA coaching' in the ad must appear as the page's H1; mismatched pages leak money silently."
+      },
+      {
+        "id": "m4-t4-q3",
+        "question": "What is the non-negotiable launch order?",
+        "options": [
+          "Ads → tracking → page",
+          "Tracking → ads → page",
+          "Page → tracking → ads",
+          "Ads → page → tracking"
+        ],
+        "answerIndex": 2,
+        "explanation": "You cannot retro-fit data you never collected: define the conversion, install and TEST the tag, UTM every link, then launch."
+      },
+      {
+        "id": "m4-t4-q4",
+        "question": "Week one: CPA per ad group computed. What is the standard ritual?",
+        "options": [
+          "Raise all bids to improve delivery",
+          "Pause the worst ~20%, move budget to the best, check frequency, and audit the page against the assumed conversion rate",
+          "Restart the campaign from scratch",
+          "Wait three more weeks before changing anything"
+        ],
+        "answerIndex": 1,
+        "explanation": "Prune waste, reinforce winners, and when conversion underperforms the assumption, the page is the project — not the ads."
+      },
+      {
+        "id": "m4-t4-q5",
+        "question": "What does a UTM like utm_campaign=admissions-oct&utm_content=adgroup-dumbbells buy you?",
+        "options": [
+          "Lower CPCs on those ads",
+          "Attribution in analytics that survives to the exact ad group, independent of platform reporting",
+          "Automatic negative keywords",
+          "Priority in the ad auction"
+        ],
+        "answerIndex": 1,
+        "explanation": "UTMs make traffic self-describing — Module 6's dashboards and honest attribution depend on them."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Paid Media Planning Gate",
+    "questions": [
+      {
+        "id": "m4-assessment-q1",
+        "question": "Client: ₹15,000 budget, CPC estimate ₹10, page converts at 2%, average order value ₹900 with no repeat purchase. What is the honest recommendation?",
+        "options": [
+          "Launch — 1,500 clicks is strong visibility",
+          "Do not launch yet: the arithmetic yields 30 orders and ₹500 CPA against ₹900 value — margins are too thin; fix the page or the offer first",
+          "Launch with broad match to increase volume",
+          "Spend the budget on one day for momentum"
+        ],
+        "answerIndex": 1,
+        "explanation": "1,500 × 2% = 30 orders; ₹15,000 ÷ 30 = ₹500 CPA against ₹900 one-time value leaves nothing for product or operations — fix the economics before buying traffic.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q2",
+        "question": "A campaign shows: CTR 6%, CPC ₹9, conversion rate 0.4%. Which diagnosis and action are correct?",
+        "options": [
+          "The ads are failing — rewrite headlines",
+          "The ads are winning clicks; the page is losing them — rebuild the landing experience (message match, friction, speed) before touching the ads",
+          "Raise bids to reach better users",
+          "Switch from CPC to CPM buying"
+        ],
+        "answerIndex": 1,
+        "explanation": "Strong CTR with weak conversion is the classic page problem: the click's promise is not being kept at the destination.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q3",
+        "question": "A gym-equipment seller wants 'gym' as a broad-match keyword with no negatives. What will the search-terms report most likely show, and what is the fix?",
+        "options": [
+          "Relevant traffic only; no fix needed",
+          "Wasted spend on 'gym tips', 'free workout plans', 'gym jobs' — add negatives (free, tips, jobs, how to, used) and structure product-line ad groups",
+          "Higher Quality Score from broad reach",
+          "Lower CPC because of volume"
+        ],
+        "answerIndex": 1,
+        "explanation": "Broad match without a negative shield is a budget vacuum; negatives plus tight ad-group themes reclaim it.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q4",
+        "question": "A ₹10,000 social plan allocates 70% to a broad core audience and 30% to retargeting. The site gets 400 visits/month. What is the professional critique?",
+        "options": [
+          "The split is correct — retargeting audiences are always too small",
+          "It is inverted for this stage: retargeting the 400 warm visitors converts cheapest; scale cold only after the message is proven on them",
+          "Retargeting requires a minimum of 50,000 visitors",
+          "Both audiences should be merged into one campaign"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retargeting first (cheapest conversions, proof of message), lookalikes/core second once the creative has earned its evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q5",
+        "question": "The enquiry form asks 11 fields including 'mother's occupation'. Post-launch, what single change is most likely to move CPA the most?",
+        "options": [
+          "Increasing the daily budget by 50%",
+          "Cutting the form to three fields (name, phone, programme) and moving everything else to the follow-up call",
+          "Adding more ad extensions",
+          "Changing the bid strategy to maximise clicks"
+        ],
+        "answerIndex": 1,
+        "explanation": "Every field is a tax on conversion; the rebuilt page in the lesson moved 9 enquiries to 240 with exactly this change plus message match.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q6",
+        "question": "A team launches ads on Monday and 'optimises' aggressively on Tuesday. What principle are they violating?",
+        "options": [
+          "The frequency cap rule",
+          "Auction algorithms need a learning period; judge pacing on day 2–3 and performance at week one, with the page as first suspect",
+          "The 3-second rule",
+          "The negative keyword rule"
+        ],
+        "answerIndex": 1,
+        "explanation": "Day-one judgements react to noise; the launch-week ritual exists to let signal accumulate before decisions.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q7",
+        "question": "Which UTM set is best practice for a search campaign with two ad groups?",
+        "options": [
+          "utm_source=google on all links; nothing else",
+          "source=google, medium=cpc, campaign=admissions-oct, content=adgroup-dumbbells vs adgroup-benches — consistent naming that survives to the ad group",
+          "The same UTM on every ad including social campaigns",
+          "No UTMs — the platform reports everything"
+        ],
+        "answerIndex": 1,
+        "explanation": "UTMs make traffic self-describing and cross-checkable in analytics, independent of any single platform's reporting.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q8",
+        "question": "A video ad shows the logo for 4 seconds before the product appears. Sound is on-screen-free. What are the two faults?",
+        "options": [
+          "Too long and too cheap",
+          "Logo-before-story breaks the 3-second rule, and relying on audio ignores muted feeds — the promise must be legible in silence",
+          "Wrong aspect ratio and platform",
+          "No CTA and no UTM"
+        ],
+        "answerIndex": 1,
+        "explanation": "The first three seconds must prove relevance: product visible, promise legible, sound optional.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q9",
+        "question": "Retargeting frequency has climbed to 8 with flat results. What does the lesson advise?",
+        "options": [
+          "Raise the bid to refresh delivery",
+          "Rotate fresh creative and/or cap frequency — past the sweet spot (~5), repetition breeds irritation and rising costs",
+          "Broaden the retargeting window to 180 days",
+          "Exclude the audience and stop retargeting forever"
+        ],
+        "answerIndex": 1,
+        "explanation": "Frequency has a sweet spot; when it climbs with flat results, refresh the message rather than repeat it louder.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q10",
+        "question": "Which launch-day item is most often skipped and most expensive to skip?",
+        "options": [
+          "Setting the campaign name",
+          "Testing that the conversion tag actually fires on a submission before spending",
+          "Choosing the campaign's time zone",
+          "Writing three headlines instead of two"
+        ],
+        "answerIndex": 1,
+        "explanation": "An untested tag is a story, not tracking — a week of optimisation blind, discovered only after the invoice.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

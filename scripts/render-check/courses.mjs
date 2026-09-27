@@ -165,16 +165,22 @@ await section('course assignment panel', '/src/shared/components/courses/CourseA
   const t = v.text();
   check('assignment panel: mounts and identifies the college', t.includes('Course assignments') && t.includes('North College'), t);
   check('assignment panel: shows the student URL and hidden-by-default state', t.includes(`/student/courses/${manifest.id}`) && /Hidden until assigned/.test(t), t);
-  const toggle = v.el('input[role="switch"]');
+  // The panel renders one card per bundled course pack (alphabetical), so the
+  // harness must scope every selector to THIS manifest's card — a new pack
+  // that sorts first would otherwise swallow the clicks below.
+  const card = () => v.all('article').find((a) => a.textContent.includes(manifest.code));
+  const toggle = card()?.querySelector('input[role="switch"]');
   check('assignment panel: provides an assignment switch', !!toggle, t);
   await v.click(toggle);
-  check('assignment panel: shows optional programme, start/due and notes controls', v.all('input[type="date"]').length === 2 && !!v.el('textarea'), v.text());
-  const bcomOption = v.all('input[type="checkbox"]').find((input) => input.parentElement?.textContent.includes('B.Com'));
+  const dates = () => [...(card()?.querySelectorAll('input[type="date"]') ?? [])];
+  const notes = () => card()?.querySelector('textarea') ?? null;
+  check('assignment panel: shows optional programme, start/due and notes controls', dates().length === 2 && !!notes(), v.text());
+  const bcomOption = [...(card()?.querySelectorAll('input[type="checkbox"]') ?? [])].find((input) => input.parentElement?.textContent.includes('B.Com'));
   check('assignment panel: offers college programme targeting', !!bcomOption, v.text());
   if (bcomOption) await v.click(bcomOption);
-  await v.change(v.all('input[type="date"]')[0], '2026-10-01');
-  await v.change(v.all('input[type="date"]')[1], '2026-12-01');
-  await v.change('textarea', 'Complete the cohort project before the due date.');
+  await v.change(dates()[0], '2026-10-01');
+  await v.change(dates()[1], '2026-12-01');
+  await v.change(notes(), 'Complete the cohort project before the due date.');
   const saveButton = v.byText('Save assignments');
   check('assignment panel: enables save after a draft change', !!saveButton && !saveButton.disabled, v.text());
   await v.click(saveButton);

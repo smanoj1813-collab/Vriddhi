@@ -1,0 +1,388 @@
+{
+  "moduleId": "m5",
+  "questions": {
+    "m5-t1": [
+      {
+        "id": "m5-t1-q1",
+        "question": "What is the correct first question in social platform selection?",
+        "options": [
+          "Which platform has the most users?",
+          "Which platforms are trending this year?",
+          "Where do our customers already make decisions like this?",
+          "Which platform is cheapest to advertise on?"
+        ],
+        "answerIndex": 2,
+        "explanation": "Platform choice = audience evidence + category fit + honest capacity; decision behaviour beats population size."
+      },
+      {
+        "id": "m5-t1-q2",
+        "question": "Why does the lesson say five half-alive accounts lose to one thriving one?",
+        "options": [
+          "Platforms cross-post automatically anyway",
+          "Grammar differences, the recency penalty and effort arithmetic — five grammars at 25% effort each",
+          "Because platforms ban multi-accounting",
+          "Followers get confused between profiles"
+        ],
+        "answerIndex": 1,
+        "explanation": "Each platform has its own grammar, platforms bury sporadic posters, and effort divides — one thriving account wins."
+      },
+      {
+        "id": "m5-t1-q3",
+        "question": "In the Kochi bakery's strategy one-liner, what makes it a strategy rather than a wish?",
+        "options": [
+          "It mentions all five platforms",
+          "It includes the 'ignore everything else' clause — the decision about what NOT to do",
+          "It sets a follower target",
+          "It uses marketing jargon correctly"
+        ],
+        "answerIndex": 1,
+        "explanation": "The strategy one-liner names audience, pillars, conversion path and KPIs — and closes the door on everything else until it works."
+      },
+      {
+        "id": "m5-t1-q4",
+        "question": "Which metric sits at the top of the value ladder (closest to business outcomes)?",
+        "options": [
+          "Likes and follower count",
+          "Link clicks and profile visits",
+          "Qualified DMs, WhatsApp conversations, enquiries and orders",
+          "Story views"
+        ],
+        "answerIndex": 2,
+        "explanation": "Vanity → engagement → traffic/action → business: conversations and orders are the tiers that pay rent."
+      },
+      {
+        "id": "m5-t1-q5",
+        "question": "For an Indian small business, which pairing reflects the lesson's platform-jobs map?",
+        "options": [
+          "LinkedIn discovers; YouTube closes",
+          "Instagram shows; WhatsApp closes",
+          "Pinterest explains; Instagram does B2B",
+          "Facebook is only for teenagers"
+        ],
+        "answerIndex": 1,
+        "explanation": "Instagram is the discovery engine for visual categories; WhatsApp Business is India's actual closing channel."
+      }
+    ],
+    "m5-t2": [
+      {
+        "id": "m5-t2-q1",
+        "question": "Which format is best suited to consideration-stage content that gets saved and shared?",
+        "options": [
+          "Static announcement post",
+          "Carousel — hook slide, one point per slide, CTA slide",
+          "15-second trend remix",
+          "Live stream"
+        ],
+        "answerIndex": 1,
+        "explanation": "Carousels teach, compare and prove; saves are their metric. Reels discover, stories build relationship, statics announce."
+      },
+      {
+        "id": "m5-t2-q2",
+        "question": "What does the monthly content-ops engine look like?",
+        "options": [
+          "Decide and shoot daily, publish whenever ready",
+          "Batch-make monthly, adjust weekly, engage daily in a fixed 15–20 minute slot",
+          "Post everything on day one, then reply for a month",
+          "Outsource everything to an agency weekly"
+        ],
+        "answerIndex": 1,
+        "explanation": "Make in batches, publish on schedule, engage in person — the system that survives exam weeks and bad days."
+      },
+      {
+        "id": "m5-t2-q3",
+        "question": "What does a one-page brand kit contain?",
+        "options": [
+          "A full style guide with 40 pages of rules",
+          "Palette, fonts, a cover template, voice lines and photo rules — enough for instant recognisability",
+          "The pricing sheet and refund policy",
+          "A list of competitors' handles"
+        ],
+        "answerIndex": 1,
+        "explanation": "Two colours + accent, two fonts, one cover layout, the voice sheet, simple photo rules: coherence at a glance."
+      },
+      {
+        "id": "m5-t2-q4",
+        "question": "Which part of social media must NEVER be automated?",
+        "options": [
+          "Publishing at scheduled times",
+          "Cover creation in Canva",
+          "The human conversation — replying to comments and DMs",
+          "The content calendar"
+        ],
+        "answerIndex": 2,
+        "explanation": "Scheduled posts plus abandoned comments equals a shop whose shutter never opens for conversation."
+      },
+      {
+        "id": "m5-t2-q5",
+        "question": "The café's account improved while doing LESS daily work. What explains it?",
+        "options": [
+          "The algorithm rewards accounts that post less",
+          "Batching removed daily decisions, scheduling kept rhythm alive, and effort moved to engagement",
+          "Followers prefer irregular posting",
+          "The captions were shorter"
+        ],
+        "answerIndex": 1,
+        "explanation": "Content ops is the machinery: one batch day, scheduled delivery, and 20 focused minutes of daily presence."
+      }
+    ],
+    "m5-t3": [
+      {
+        "id": "m5-t3-q1",
+        "question": "What does the lesson call the core arithmetic of public replies?",
+        "options": [
+          "Every reply costs one engagement credit",
+          "You are never replying to one person — you are performing for the hundreds who will read it",
+          "Public replies reduce ad costs",
+          "Replies should always be templates for speed"
+        ],
+        "answerIndex": 1,
+        "explanation": "Community management is customer service on a stage; the silent audience is the real recipient."
+      },
+      {
+        "id": "m5-t3-q2",
+        "question": "Put the four parts of a public complaint reply in order.",
+        "options": [
+          "Excuse, denial, legal note, block",
+          "Name the person, own the standard, move to a private channel with a named actor, follow through",
+          "Apologise generally, offer a discount, delete the comment, move on",
+          "Escalate to the owner, wait, reply after a week, close the thread"
+        ],
+        "answerIndex": 1,
+        "explanation": "So sorry, [name] — that is not our standard — WhatsApp the manager — then actually resolve it."
+      },
+      {
+        "id": "m5-t3-q3",
+        "question": "Why should genuine complaints never simply be deleted?",
+        "options": [
+          "Deleting violates platform rules",
+          "Screenshots outlive deletions, and the deletion becomes the story — a graceful public reply is read by every future customer",
+          "It reduces the account's engagement rate",
+          "Deleted comments count as negative SEO"
+        ],
+        "answerIndex": 1,
+        "explanation": "The audience watches how you handle the bad night; the reply is permanent marketing, the deletion is permanent suspicion."
+      },
+      {
+        "id": "m5-t3-q4",
+        "question": "What belongs on the escalation card?",
+        "options": [
+          "The ad budget and the CTA",
+          "Who may reply, which topics go immediately to the owner/legal, the NEVER list, and the after-hours protocol",
+          "The follower count milestones",
+          "A list of blocked users"
+        ],
+        "answerIndex": 1,
+        "explanation": "Deciding authority, triggers and never-lists in advance is the cheapest crisis insurance available."
+      },
+      {
+        "id": "m5-t3-q5",
+        "question": "Which of these is a community 'ritual' as the lesson defines it?",
+        "options": [
+          "A one-time giveaway for followers",
+          "The Friday poll, the monthly customer spotlight, the festival UGC call — small, repeated, genuine",
+          "Replying to every comment within seconds",
+          "Buying followers on a monthly schedule"
+        ],
+        "answerIndex": 1,
+        "explanation": "Rituals give people a reason to return and a shape to belong to — and generate the UGC and proof later modules feed on."
+      }
+    ],
+    "m5-t4": [
+      {
+        "id": "m5-t4-q1",
+        "question": "Why did five nano-creators outperform one 500k-follower influencer for the salon?",
+        "options": [
+          "Nano creators charge less, so more posts ran",
+          "Influence is audience match × trust — the nano creators' audiences were dense in the salon's actual city and demographic",
+          "Big influencers cannot post about salons",
+          "The algorithm favours smaller accounts"
+        ],
+        "answerIndex": 1,
+        "explanation": "The macro's audience was 70% outside Karnataka; five local, genuinely-engaged voices converted at a fraction of the cost."
+      },
+      {
+        "id": "m5-t4-q2",
+        "question": "How do you compute a creator's engagement rate?",
+        "options": [
+          "Followers ÷ likes",
+          "(Likes + comments) ÷ followers on recent posts, plus reading the comments for substance",
+          "Views ÷ impressions",
+          "Follower growth per month"
+        ],
+        "answerIndex": 1,
+        "explanation": "Engagement rate over recent posts, with comment quality checked — under ~1% on a mid-size account signals ghost followers."
+      },
+      {
+        "id": "m5-t4-q3",
+        "question": "What must a creator brief settle that beginners most often forget?",
+        "options": [
+          "The creator's favourite colour",
+          "Usage rights — whether you can reuse the content in ads, on your page, and for how long",
+          "The weather on the shoot day",
+          "The creator's other clients"
+        ],
+        "answerIndex": 1,
+        "explanation": "Paid ad usage usually costs extra — negotiate upfront, or discover you cannot boost the winning reel after it worked."
+      },
+      {
+        "id": "m5-t4-q4",
+        "question": "What do ASCI's influencer guidelines and platform branded-content tools require?",
+        "options": [
+          "That creators only promote Indian brands",
+          "Clear labelling of paid partnerships — #ad or the platform's paid-partnership tag",
+          "That brands approve every comment",
+          "A minimum follower count for paid promotions"
+        ],
+        "answerIndex": 1,
+        "explanation": "Undisclosed paid promotion is both regulatory risk and trust suicide; audiences forgive sponsorship and punish deception."
+      },
+      {
+        "id": "m5-t4-q5",
+        "question": "When is the right moment to ask for UGC?",
+        "options": [
+          "Weeks after purchase, by email only",
+          "At the moment of delight — the delivery message, the table thank-you, the 'tag us' invitation",
+          "Only when running a paid campaign",
+          "Never; UGC must be spontaneous"
+        ],
+        "answerIndex": 1,
+        "explanation": "The engine runs on timing plus incentive plus permission: ask at delight, reward with recognition, collect with a one-line usage permission."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Social Campaign Readiness Gate",
+    "questions": [
+      {
+        "id": "m5-assessment-q1",
+        "question": "A bakery is on 4 platforms, all dormant, and asks where to advertise. What is the professionally correct first response?",
+        "options": [
+          "Recommend a bigger ad budget across all four",
+          "Audit audience evidence first: which one or two platforms do their customers actually use to decide, then build presence there with a strategy one-liner and a stop-list",
+          "Start with whichever platform is cheapest",
+          "Post the same content on all four simultaneously"
+        ],
+        "answerIndex": 1,
+        "explanation": "Paid cannot fix dormancy, and five half-alive accounts lose to one thriving one — platform choice is an evidence decision.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q2",
+        "question": "A campaign week has 4 reels, 1 carousel and no stories planned. Reels are hitting 2,000 views but saves and DMs are near zero. What does the format plan need?",
+        "options": [
+          "More reels — the views prove it works",
+          "Consideration formats: carousels that teach and prove, plus daily stories with polls to convert views into conversations",
+          "Static announcement posts to break up the feed",
+          "A live stream every day"
+        ],
+        "answerIndex": 1,
+        "explanation": "Discovery without consideration formats leaks intent: reels discover, carousels convert attention into understanding, stories into dialogue.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q3",
+        "question": "During the campaign, a customer posts publicly: 'Ordered 3 days ago, still not delivered, no reply to my DMs.' The page has posted twice since. What is the correct response pattern?",
+        "options": [
+          "Delete the comment and DM an apology",
+          "Public four-part reply — name, owned standard, private channel with a named actor — then resolve and follow through; never leave it buried under new posts",
+          "Ignore it; replying draws more attention",
+          "Reply publicly that the courier is at fault"
+        ],
+        "answerIndex": 1,
+        "explanation": "Silence under active posting is the worst look possible; the reply is performed for the hundreds who will read it.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q4",
+        "question": "₹25,000 budget, local café, goal: footfall this month. Which creator structure fits the lesson's evidence?",
+        "options": [
+          "One macro reel for maximum reach",
+          "Four to six nano/micro local creators at ₹3–5k each, plus boost behind the best performer — audience density and trust where it matters",
+          "A celebrity endorsement for prestige",
+          "No creators; spend it all on boosts"
+        ],
+        "answerIndex": 1,
+        "explanation": "Nano/micro creators dominate local campaigns on cost per result; their audiences are dense in exactly one place — the creator's city.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q5",
+        "question": "A creator's 3,000-rupee reel performs brilliantly. You want to run it as a paid ad. What determines whether you can?",
+        "options": [
+          "Nothing — commissioning the post transfers all rights",
+          "The usage rights clause in the brief — paid ad usage is a separate, upfront negotiation",
+          "Platform policy forbids boosting creator content",
+          "Only the creator's follower count"
+        ],
+        "answerIndex": 1,
+        "explanation": "Usage rights (organic repost vs paid usage, duration) are the most-forgotten brief clause — and Lesson 4.3's boost strategy depends on them.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q6",
+        "question": "Which social measurement plan connects to business outcomes rather than applause?",
+        "options": [
+          "Weekly report of follower growth and total likes",
+          "Saves/shares as engagement tier, link clicks and DM starts as action tier, plus 'How did you hear about us?' logged at every order",
+          "Counting story views only",
+          "Comparing follower counts with competitors"
+        ],
+        "answerIndex": 1,
+        "explanation": "The ladder: engagement explains, action indicates intent, and the attribution question ties conversations to orders.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q7",
+        "question": "Your daily engagement slot is 30 minutes, and today there are 40 comments, 12 DMs and a complaint. Applying the reply matrix, what is the order?",
+        "options": [
+          "Oldest first, alphabetically",
+          "Complaint first (1–2 hour standard), then DMs with purchase intent, then comments — spam swept and hidden",
+          "Comments first because they are public",
+          "DMs first because they are private"
+        ],
+        "answerIndex": 1,
+        "explanation": "Speed and severity are pre-decided by the matrix: complaints have the tightest clock and the largest silent audience.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q8",
+        "question": "A brand's grid looks random and unprofessional despite daily posting. What is the fastest structural fix?",
+        "options": [
+          "Post more often to fill the gaps",
+          "A brand kit: fixed palette, two fonts, a repeated cover template for reels and carousels — recognisability at a glance",
+          "Switch to a business account",
+          "Delete old posts"
+        ],
+        "answerIndex": 1,
+        "explanation": "Consistency compounds visually; a one-page kit cuts production time in half and makes the profile look curated.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q9",
+        "question": "Which creator-evaluation signal suggests ghost followers?",
+        "options": [
+          "A 7% engagement rate with substantive comments",
+          "A large following with under ~1% engagement and emoji-wall comments",
+          "Fast, professional replies during negotiation",
+          "Audience insights showing 80% local followers"
+        ],
+        "answerIndex": 1,
+        "explanation": "Engagement rate plus comment substance is the honest check — totals are rentable, conversations are not.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q10",
+        "question": "A UGC engine is running but nothing is being collected. What is the most likely missing piece?",
+        "options": [
+          "The incentive budget",
+          "The collection habit — a saved folder plus the one-line permission ask at the moment of delight",
+          "The hashtag",
+          "The camera quality"
+        ],
+        "answerIndex": 1,
+        "explanation": "The engine has four parts: ask at delight, reward with recognition, COLLECT with permission, deploy everywhere — collection is the habit that fails silently.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

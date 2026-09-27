@@ -1,0 +1,388 @@
+{
+  "moduleId": "m7",
+  "questions": {
+    "m7-t1": [
+      {
+        "id": "m7-t1-q1",
+        "question": "Why did the photographer with 2,400 emails out-book the one with 18,000 followers?",
+        "options": [
+          "Her photos were better",
+          "Email is owned land — 2,400 × 95% delivery reached more humans than 18,000 × 7% algorithmic reach",
+          "Instagram had banned the other photographer",
+          "Emails cost less to send than posts"
+        ],
+        "answerIndex": 1,
+        "explanation": "Social reach is rented and throttled; the email list is owned, with stable delivery — a smaller list can out-reach a big following."
+      },
+      {
+        "id": "m7-t1-q2",
+        "question": "What is email marketing's strategic job in the funnel?",
+        "options": [
+          "Top-of-funnel discovery and cold reach",
+          "Retention and repeat — turning one-time buyers into repeat customers and enquiries into bookings",
+          "Replacing paid advertising entirely",
+          "Search engine visibility"
+        ],
+        "answerIndex": 1,
+        "explanation": "Acquisition happens elsewhere; email multiplies what acquisition brings — the second half of the funnel."
+      },
+      {
+        "id": "m7-t1-q3",
+        "question": "Which list practice is BOTH legally toxic and a deliverability killer?",
+        "options": [
+          "Sending a weekly newsletter",
+          "Buying an email list",
+          "Removing hard bounces",
+          "Using a signup form with an unchecked box"
+        ],
+        "answerIndex": 1,
+        "explanation": "Bought lists carry unprovable consent and spam traps — exposure plus a throttled domain."
+      },
+      {
+        "id": "m7-t1-q4",
+        "question": "Which of the five fundamental emails is typically the MOST opened you will ever send?",
+        "options": [
+          "The monthly offer",
+          "The win-back email",
+          "The welcome email, sent immediately on signup",
+          "The thank-you email"
+        ],
+        "answerIndex": 2,
+        "explanation": "The welcome email hits the peak-attention window and often earns 50%+ opens — deliver the promised resource, set expectations."
+      },
+      {
+        "id": "m7-t1-q5",
+        "question": "Which metric is the honest KPI of email performance, and why?",
+        "options": [
+          "Open rate — it measures attention",
+          "Delivery rate — it proves deliverability",
+          "Click rate — opens are inflated by auto-open behaviour, clicks drive action",
+          "List size — reach is everything"
+        ],
+        "answerIndex": 2,
+        "explanation": "Healthy clicks run 2–5%; Apple Mail auto-opens distort open rates, making clicks the decision-grade number."
+      }
+    ],
+    "m7-t2": [
+      {
+        "id": "m7-t2-q1",
+        "question": "What is the correct first step when designing an automated journey?",
+        "options": [
+          "Open the tool and start dragging blocks",
+          "Draw it on paper — boxes and arrows, every branch labelled",
+          "Write all the email copy",
+          "Buy a bigger plan for branching features"
+        ],
+        "answerIndex": 1,
+        "explanation": "Undrawn journeys become unfixable hairballs; the map IS the automation plan."
+      },
+      {
+        "id": "m7-t2-q2",
+        "question": "In a welcome series, what does email 3 (around day 5) deliver in the lesson's structure?",
+        "options": [
+          "The biggest discount of the year",
+          "Social proof — testimonials, results, UGC",
+          "A survey asking why they haven't bought",
+          "The origin story of the founder"
+        ],
+        "answerIndex": 1,
+        "explanation": "Day 0 delivers the promise, day 2 builds relationship (origin/difference), day 5 proves with social proof, day 10 makes the soft offer."
+      },
+      {
+        "id": "m7-t2-q3",
+        "question": "What ends a healthy win-back series?",
+        "options": [
+          "A fourth, fifth and sixth offer with bigger discounts",
+          "A goodbye 'should we part ways?' email, then exit and suppress",
+          "Moving them to the daily newsletter",
+          "A phone call from the owner"
+        ],
+        "answerIndex": 1,
+        "explanation": "Three emails, then dignity: the goodbye email either revives or cleans the list — unending win-backs train people to ignore you."
+      },
+      {
+        "id": "m7-t2-q4",
+        "question": "Which behavioural-trigger email crosses the creep line?",
+        "options": [
+          "Still thinking it over? Here's the demo video again",
+          "Your cart is waiting — complete in one click",
+          "We saw you staring at the ₹499 package for six minutes",
+          "Seats for the batch you viewed are filling up"
+        ],
+        "answerIndex": 2,
+        "explanation": "Trigger on what they did, speak to what they want, never narrate the watching — surveillance is not service."
+      },
+      {
+        "id": "m7-t2-q5",
+        "question": "How should a JOURNEY's health be judged?",
+        "options": [
+          "By the open rate of its best single email",
+          "By completion rate, drop-off step, and goal conversions per entrant",
+          "By total emails sent",
+          "By unsubscribe count alone"
+        ],
+        "answerIndex": 1,
+        "explanation": "A great email 2 with 70% drop-off at email 1 is a bad journey — measure the flow, not the parts."
+      }
+    ],
+    "m7-t3": [
+      {
+        "id": "m7-t3-q1",
+        "question": "In plain terms, what is a CRM?",
+        "options": [
+          "An email-sending platform with templates",
+          "A shared memory with discipline: every person, status, history and next action with an owner and date",
+          "A sales forecasting AI",
+          "A customer-facing chat widget"
+        ],
+        "answerIndex": 1,
+        "explanation": "Columns like Name, Source, Stage, Next step, Owner — everything else is decoration on those bones."
+      },
+      {
+        "id": "m7-t3-q2",
+        "question": "What design rule keeps a pipeline honest?",
+        "options": [
+          "Use as many stages as the tool allows",
+          "Copy the enterprise default pipeline exactly",
+          "Written stage definitions plus lost-with-reason for every deal that dies",
+          "Let each salesperson interpret stages their own way"
+        ],
+        "answerIndex": 2,
+        "explanation": "Undefined stages let everyone interpret 'qualified' their way — and the lost-reason list becomes marketing's feedback loop."
+      },
+      {
+        "id": "m7-t3-q3",
+        "question": "A lead has: referral source (+20), clicked the pricing page (+20), asked 'when can we start?' (+25), opened 2 nurture emails (+10). Under the lab's scoring, how is it routed?",
+        "options": [
+          "C-lead — automated nurture only",
+          "B-lead — nurture plus a weekly touch",
+          "A-lead — personal call within 24 hours",
+          "Discard — the score is too high to be real"
+        ],
+        "answerIndex": 2,
+        "explanation": "75 points ≥ 60 = A-lead: speed beats polish; a decent call today outsells a perfect call Friday."
+      },
+      {
+        "id": "m7-t3-q4",
+        "question": "What does the research-backed follow-up discipline say?",
+        "options": [
+          "Most enquiries convert on the first contact, so one polished call is enough",
+          "Most converting enquiries take a second or later contact — yet most businesses stop after one",
+          "Follow up daily forever until they buy",
+          "Wait a week between touches to seem uninterested"
+        ],
+        "answerIndex": 1,
+        "explanation": "Mechanical cadence with an end: day 0 call, day 1 WhatsApp, day 3 call + case study, day 7 email, day 14 close-file — then Lost-with-reason."
+      },
+      {
+        "id": "m7-t3-q5",
+        "question": "When should a small business buy a full-featured CRM suite?",
+        "options": [
+          "Immediately — better tooling creates better process",
+          "Only when the process has outgrown the sheet/lightweight tool; adoption beats features",
+          "When the free trial expires",
+          "Never; spreadsheets are always enough"
+        ],
+        "answerIndex": 1,
+        "explanation": "Buying Stage 2 tooling for a Stage 0 process produces an expensive spreadsheet — the tool should take LESS time than the diary it replaces."
+      }
+    ],
+    "m7-t4": [
+      {
+        "id": "m7-t4-q1",
+        "question": "What is the DPDP Act 2023's core requirement for processing personal data in India?",
+        "options": [
+          "Only companies above 500 employees need consent",
+          "Notice and consent for specified purposes, with rights to access, correct and erase",
+          "Data can be used for any purpose once collected",
+          "Consent is only needed for foreign users"
+        ],
+        "answerIndex": 1,
+        "explanation": "Purpose limitation plus data-principal rights — the 'we'll also text them about anything' habit is now a liability."
+      },
+      {
+        "id": "m7-t4-q2",
+        "question": "Which consent type is 'gold' for marketing?",
+        "options": [
+          "Explicit opt-in via an unchecked box or signup form",
+          "Implied consent from an order confirmation",
+          "Bundled consent in the terms of service",
+          "Consent purchased with a list"
+        ],
+        "answerIndex": 0,
+        "explanation": "Explicit opt-in is recorded, purpose-limited, and withdrawable — the foundation of a clean, deliverable channel."
+      },
+      {
+        "id": "m7-t4-q3",
+        "question": "What must an unsubscribe link do to be compliant?",
+        "options": [
+          "Require login to confirm identity first",
+          "Ask three survey questions, then process within 30 days",
+          "Work in one click, honoured immediately, present in every email",
+          "Redirect to a retention offer page with no exit"
+        ],
+        "answerIndex": 2,
+        "explanation": "Instant, frictionless withdrawal is a legal expectation and a mailbox-rule requirement — walls before the exit are a failure mode."
+      },
+      {
+        "id": "m7-t4-q4",
+        "question": "Which five-sentence privacy notice structure does the lesson recommend?",
+        "options": [
+          "Legalese definitions, jurisdiction clauses, arbitration terms",
+          "Who we are and what we collect; why; who else sees it; how long and how to erase; how to withdraw consent",
+          "A single line: 'We respect your privacy'",
+          "A link to the government's website"
+        ],
+        "answerIndex": 1,
+        "explanation": "A notice people can read is a notice that protects — name the tools, name the contact, commit to the deletion window."
+      },
+      {
+        "id": "m7-t4-q5",
+        "question": "Which is one of the seven failure modes the lesson warns about?",
+        "options": [
+          "Sending a weekly newsletter",
+          "Purpose creep — collecting data for orders, then using it for unrelated promotions",
+          "Using an email tool with built-in templates",
+          "Asking for a phone number on a contact form"
+        ],
+        "answerIndex": 1,
+        "explanation": "Purpose creep, bundled consent, pre-ticked boxes, broken unsubscribes, no records, scraped lists, invisible grievance routes — the seven sinkholes."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Lifecycle and Consent Gate",
+    "questions": [
+      {
+        "id": "m7-assessment-q1",
+        "question": "A business's email open rate is 38% but its click rate is 0.4%. What is the correct diagnosis and action?",
+        "options": [
+          "Great opens mean the strategy works; keep going",
+          "Subject lines earn opens but the body fails its promise — no clear single CTA, no value in the email; restructure around one idea and one CTA",
+          "The list is too small; buy more contacts",
+          "Switch to a more expensive email tool"
+        ],
+        "answerIndex": 1,
+        "explanation": "Clicks are the honest KPI (2–5% healthy): high opens plus dead clicks means the email is a brochure with a good headline.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q2",
+        "question": "A coaching centre wants mid-funnel leads to stop going cold. Which build is correct?",
+        "options": [
+          "Add them to the monthly newsletter and hope",
+          "A 4–6 email nurture journey, one objection per email, with a behavioural branch: pricing-page clicks routed to a personal call within 24 hours",
+          "A win-back series with escalating discounts",
+          "Daily promotional emails until they enrol"
+        ],
+        "answerIndex": 1,
+        "explanation": "Nurture answers objections in sequence; behavioural triggers hand hot leads to humans — journey machinery plus CRM memory.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q3",
+        "question": "Of 240 enquiries in a term, 96 were called back. Which system failure does this reveal?",
+        "options": [
+          "A channel-mix failure — the ads targeted the wrong people",
+          "A memory failure — no CRM, no owner, no next-action-with-date; enquiries live in inboxes and die",
+          "A creative failure — the ads over-promised",
+          "A pricing failure — the fee was too high"
+        ],
+        "answerIndex": 1,
+        "explanation": "Every enquiry recorded, every conversation logged, every next step owned — the CRM externalises memory so leads cannot rot.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q4",
+        "question": "A startup scraped 40,000 WhatsApp contacts and blasted a launch email. Their domain got throttled. What caused it?",
+        "options": [
+          "The email was too long",
+          "Unprovable consent plus spam complaints — spam-complaint rates above 0.3% get domains throttled by mailbox providers",
+          "They sent at the wrong time of day",
+          "The subject line was in English"
+        ],
+        "answerIndex": 1,
+        "explanation": "Mailbox rules (authentication, one-click unsubscribe, complaint rates) bite faster than regulators — the list shortcut destroyed the channel.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q5",
+        "question": "A term's lost-reason data shows 'fee too high' in 60% of losses. What is the correct marketing conclusion?",
+        "options": [
+          "Reduce the fee by 60%",
+          "The offer design (packaging, instalments, value framing) needs work — not necessarily the price itself",
+          "Increase the ad budget to offset losses",
+          "Stop tracking lost reasons; they demotivate the team"
+        ],
+        "answerIndex": 1,
+        "explanation": "Lost-with-reason is the feedback loop: when one reason dominates, the fix lives in offer design, not louder acquisition.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q6",
+        "question": "Welcome email 1 gets 55% opens; email 2 drops to 12%. What should you examine first?",
+        "options": [
+          "The subject line of email 2 and whether it arrives at the promised cadence with real value",
+          "Whether to delete email 2 entirely",
+          "The unsubscribe rate of email 1",
+          "The sending domain's DMARC record"
+        ],
+        "answerIndex": 0,
+        "explanation": "Drop-off at email 2 is the classic journey failure: the relationship email must earn its place, not just occupy day 2.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q7",
+        "question": "A client asks you to email everyone who bought from them three years ago, 'they won't mind.' What is the professional answer?",
+        "options": [
+          "Send it — past customers are always fair game",
+          "It depends: consent likely expired for unrelated promotions; re-permission with a short 'do you still want to hear from us?' email, and suppress non-responders",
+          "Send it but hide the unsubscribe link to protect the list",
+          "Refuse; email can never be used on old customers"
+        ],
+        "answerIndex": 1,
+        "explanation": "Purpose and time limits matter; a re-permission campaign either revives the relationship or cleans the list — both wins.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q8",
+        "question": "A business wants 'one CRM for everything' but has 30 leads a month and a two-person team. What do you recommend?",
+        "options": [
+          "An enterprise suite for future-proofing",
+          "A Stage-0 sheet CRM with dropdowns, scoring columns and a weekly review ritual — upgrade when the process outgrows it",
+          "No system; memory and WhatsApp suffice at this size",
+          "A CRM plus an automation consultant"
+        ],
+        "answerIndex": 1,
+        "explanation": "The tool should take less time than the diary it replaces; adoption beats features, and the ritual is the system.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q9",
+        "question": "A nurture journey branches: clicked pricing twice → personal call; no opens → slower cadence. What principle does the branch demonstrate?",
+        "options": [
+          "Bundled consent",
+          "Behavioural triggers route human attention where it pays — the machinery watches so people can sell",
+          "Vanity-metric optimisation",
+          "Last-click attribution"
+        ],
+        "answerIndex": 1,
+        "explanation": "The journey is the machinery, the CRM is the memory — automation decides WHO gets human effort, not whether humans matter.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q10",
+        "question": "Under DPDP-era practice, what must accompany a signup form's data collection?",
+        "options": [
+          "Nothing; collection is free by default",
+          "Clear notice of what will be sent and how often, an unchecked consent box, and a genuinely working exit — with records of when and how consent was given",
+          "Only a privacy policy link in the footer",
+          "A phone-number field for verification"
+        ],
+        "answerIndex": 1,
+        "explanation": "Notice, opt-in, easy withdrawal, and provable records — the four props that keep both the regulator and the mailbox providers happy.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

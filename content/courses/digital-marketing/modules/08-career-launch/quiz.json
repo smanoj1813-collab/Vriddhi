@@ -1,0 +1,326 @@
+{
+  "moduleId": "m8",
+  "questions": {
+    "m8-t1": [
+      {
+        "id": "m8-t1-q1",
+        "question": "What does a marketing portfolio have to prove that a résumé's skill list cannot?",
+        "options": [
+          "That you know the terminology",
+          "Proof of work — decisions made and results achieved, with evidence",
+          "That you own a laptop",
+          "How many courses you have enrolled in"
+        ],
+        "answerIndex": 1,
+        "explanation": "Marketing is a proof-of-work profession: case studies with problem, action, result and evidence — not claims."
+      },
+      {
+        "id": "m8-t1-q2",
+        "question": "What are the four PARE moves of a portfolio case study?",
+        "options": [
+          "Product, price, place, promotion",
+          "Plan, act, report, evaluate",
+          "Problem, action, result, evidence",
+          "Preparation, audience, reach, engagement"
+        ],
+        "answerIndex": 2,
+        "explanation": "PARE: honest problem paragraph, action as decisions, results with baselines, and screenshots/tables as evidence."
+      },
+      {
+        "id": "m8-t1-q3",
+        "question": "For an SEO Executive application, which exhibit should lead the portfolio?",
+        "options": [
+          "The most visually attractive reel you made",
+          "The PB1 SEO audit with the crawl table and a before/after ranking screenshot",
+          "Your résumé's skill list",
+          "The certificate alone"
+        ],
+        "answerIndex": 1,
+        "explanation": "Lead with the exhibit matching the role's #1 requirement — reorder the portfolio per application."
+      },
+      {
+        "id": "m8-t1-q4",
+        "question": "How do you handle the 'no experience' objection with course projects?",
+        "options": [
+          "Describe them as agency internships",
+          "Inflate the budget numbers so they look professional",
+          "Reframe honestly: real local business, real constraints, documented results — plus one live client however small",
+          "Wait until you have a job to build a portfolio"
+        ],
+        "answerIndex": 2,
+        "explanation": "Self-generated client work with real constraints and honest numbers IS experience — and one small live stakeholder upgrades every case study."
+      },
+      {
+        "id": "m8-t1-q5",
+        "question": "What does the ninety-second scan test check?",
+        "options": [
+          "Whether the page loads fast",
+          "Whether a stranger can tell your target role in 10s, see a number-led result in 30s, and meet evidence twice in 90s",
+          "Whether you used a premium template",
+          "How many projects you have listed"
+        ],
+        "answerIndex": 1,
+        "explanation": "Recruiters spend 60–120 seconds; the scroll order IS the pitch order — fix layout before content."
+      }
+    ],
+    "m8-t2": [
+      {
+        "id": "m8-t2-q1",
+        "question": "What is the résumé bullet pattern this lesson teaches?",
+        "options": [
+          "Adjective + role + years of experience",
+          "Action verb + specific mechanism + result with number and baseline",
+          "Tool list + percentage growth",
+          "Company name + responsibilities"
+        ],
+        "answerIndex": 1,
+        "explanation": "'Audited a 40-page café site; fixed 23 crawl issues; organic clicks +34%' — verbs, mechanisms, measurable results."
+      },
+      {
+        "id": "m8-t2-q2",
+        "question": "Why must résumé keywords mirror the job description's exact terms?",
+        "options": [
+          "To flatter the recruiter's vocabulary",
+          "Because applicant-tracking systems match literally — a beautiful PDF that never matches a keyword never meets a human",
+          "Because hiring managers skim only the first line",
+          "It doesn't matter; portfolios are all that count"
+        ],
+        "answerIndex": 1,
+        "explanation": "ATS keyword matching is the first gate; mirror the posting's terms within honesty."
+      },
+      {
+        "id": "m8-t2-q3",
+        "question": "What makes a LinkedIn headline work for recruiter search?",
+        "options": [
+          "Just your job title and company",
+          "An inspirational quote",
+          "Role keywords + proof + portfolio link — 'Digital Marketing Trainee | SEO audits, Meta Ads, GA4 dashboards | Portfolio: [link]'",
+          "Listing every tool you have ever opened"
+        ],
+        "answerIndex": 2,
+        "explanation": "Recruiters search LinkedIn like a search engine; the headline is your title tag — keywords plus a click-through reason."
+      },
+      {
+        "id": "m8-t2-q4",
+        "question": "What is the honest way to present course-project numbers on a résumé?",
+        "options": [
+          "Omit them; numbers invite questions",
+          "Present simulated results as real client work",
+          "Label them as course campaign (practice client) — honest labelling protects you when every bullet gets probed",
+          "Round them up to look stronger"
+        ],
+        "answerIndex": 2,
+        "explanation": "Interviews probe every number; honest labels plus a strong story beat inflated claims that collapse under one question."
+      },
+      {
+        "id": "m8-t2-q5",
+        "question": "According to the lesson, what is the correct relationship between certifications and portfolio?",
+        "options": [
+          "Certifications replace the need for a portfolio",
+          "Collect as many badges as possible; quantity signals dedication",
+          "Certifications are the garnish, not the meal — 'I have the cert, and here's the dashboard I built with it' is the whole game",
+          "Only paid certifications count"
+        ],
+        "answerIndex": 2,
+        "explanation": "Skillshop, Blueprint, GA4 certs are worth having — but one cert plus one demo beats a wall of badges."
+      }
+    ],
+    "m8-t3": [
+      {
+        "id": "m8-t3-q1",
+        "question": "What does the marketing-adapted STAR-R add to the classic STAR pattern?",
+        "options": [
+          "Rank — ordering your achievements",
+          "Reflection — what you'd do differently, after the Result",
+          "References — contacts who can vouch for you",
+          "Research — data about the company"
+        ],
+        "answerIndex": 1,
+        "explanation": "Result with baselines, then the reflection beat — maturity interviewers read as judgment."
+      },
+      {
+        "id": "m8-t3-q2",
+        "question": "In the GSMAP case framework, what does the first move establish?",
+        "options": [
+          "The channel plan",
+          "The budget split",
+          "The goal, KPIs and the guardrail (e.g., cost-per-order ceiling)",
+          "The creative concept"
+        ],
+        "answerIndex": 2,
+        "explanation": "Goal & metrics first — then Situation & audience, Strategy & channel mix (70/20/10), Actions & timeline, Prediction & measurement."
+      },
+      {
+        "id": "m8-t3-q3",
+        "question": "What is the strongest trust signal available to a junior marketer in an interview?",
+        "options": [
+          "Claiming every campaign succeeded",
+          "Confident body language",
+          "Honest failure analysis — miss, diagnosis, change, transfer",
+          "Knowing every tool's name"
+        ],
+        "answerIndex": 2,
+        "explanation": "'Everything worked' reads as 'never ran anything' — dissection of a real miss cannot be faked by someone who has never run anything."
+      },
+      {
+        "id": "m8-t3-q4",
+        "question": "The panel asks: 'A campaign's CPA doubled overnight. What do you do?' What is the correct first step?",
+        "options": [
+          "Immediately cut the budget in half",
+          "Restart the campaign from scratch",
+          "Check tracking first, then bids/budget changes, then creative fatigue, then audience shifts, then the landing page",
+          "Blame the platform's algorithm"
+        ],
+        "answerIndex": 2,
+        "explanation": "The diagnostic ladder from Lessons 4.4/6.4: rule out measurement before acting on the numbers."
+      },
+      {
+        "id": "m8-t3-q5",
+        "question": "Why should you end a case answer with 'happy to go deeper anywhere'?",
+        "options": [
+          "To fill silence",
+          "To hide that you ran out of material",
+          "It invites the panel into your structure — a strength signal, where monologue is not",
+          "It is a traditional Indian interview custom"
+        ],
+        "answerIndex": 2,
+        "explanation": "Cases grade structured thinking; the invitation shows confidence with the frame and collaboration over monologue."
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Career Launch Portfolio Gate",
+    "questions": [
+      {
+        "id": "m8-assessment-q1",
+        "question": "A recruiter gives your portfolio 90 seconds. Which page arrangement survives the scan?",
+        "options": [
+          "Ten project thumbnails in a grid, click to explore",
+          "Identity block with target role, a lead case study with a number-led result line, evidence screenshots within two scrolls, contact and résumé link",
+          "A long 'about my journey' essay first, projects below",
+          "A skills cloud with animated percentages"
+        ],
+        "answerIndex": 1,
+        "explanation": "The ninety-second test: role clarity in 10s, a number-led result in 30s, evidence twice in 90s — scroll order IS pitch order.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q2",
+        "question": "Two candidates, same skills listed. What makes one résumé get shortlisted from 340 applications?",
+        "options": [
+          "A longer skills list",
+          "Specific verbs, mechanisms and numbers near the top — plus a portfolio link in the header",
+          "A colourful template",
+          "Mentioning passion for marketing twice"
+        ],
+        "answerIndex": 1,
+        "explanation": "The 6-second scan plus ATS keyword matching both reward specificity; the portfolio link is the differentiator.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q3",
+        "question": "Case question: 'A Mangaluru dental clinic wants 30 enquiries/month on ₹15,000.' Which answer opens correctly?",
+        "options": [
+          "I'd start with Instagram reels — dental content does well",
+          "First, the goal and guardrail: 30 enquiries means CPA ≤ ₹500; leading indicators are map actions, calls and form fills — then I'd audit their listing and review presence before spending",
+          "I'd split the budget equally across five channels for safety",
+          "I'd ask for a bigger budget first"
+        ],
+        "answerIndex": 1,
+        "explanation": "GSMAP: establish metrics and the guardrail, diagnose the situation, THEN choose channels — structure before tactics.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q4",
+        "question": "An interviewer asks 'Tell me about a campaign that didn't work.' Which answer helps you most?",
+        "options": [
+          "Honestly, all my campaigns achieved their goals",
+          "My display-ad test spent ₹1,800 for 3 enquiries — my worst CPA; diagnosis: audience too broad, I ignored intent evidence; I killed it in week 2 and wrote a rule in the log; now I demand intent proof before any spend",
+          "The platform's algorithm changed, so it wasn't my fault",
+          "I prefer to focus on my successes"
+        ],
+        "answerIndex": 1,
+        "explanation": "Miss, diagnosis, change, transfer — the four-name pattern is the trust signal that cannot be faked.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q5",
+        "question": "Your LinkedIn has 12 skills but the profile shows no Featured items and no posts. What does this signal to a recruiter?",
+        "options": [
+          "Humility — letting the work speak",
+          "A contradiction: 'active practitioner' claims with a spectator's profile — pin three case studies and post weekly results",
+          "Nothing; LinkedIn profiles are rarely checked",
+          "That you are focused on your current job"
+        ],
+        "answerIndex": 1,
+        "explanation": "LinkedIn is SEO on yourself: keyword headline, proof-first About, Featured exhibits, and consistency that signals a practitioner.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q6",
+        "question": "Which set of five STAR-R stories covers 90% of behavioural marketing questions?",
+        "options": [
+          "Five stories about teamwork from college fests",
+          "One SEO audit, one content engine, one paid campaign, one analytics decision, one community/crisis handling — all from real project work",
+          "Five different tool tutorials you completed",
+          "One story told five different ways"
+        ],
+        "answerIndex": 1,
+        "explanation": "Map the stories to the craft's pillars — interviewers ask differently; you answer from the same shelf.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q7",
+        "question": "In a case answer, where does the 70/20/10 budget logic belong?",
+        "options": [
+          "Before establishing the goal — it is the universal rule",
+          "In the Strategy & channel mix step: core channel for the bulk, proven secondary, and one experiment — justified by the audience evidence gathered in the previous step",
+          "In the final prediction, as a hedge",
+          "Nowhere; 70/20/10 is only for existing accounts"
+        ],
+        "answerIndex": 1,
+        "explanation": "GSMAP's third move: the mix follows goal and situation — never precedes them.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q8",
+        "question": "'How do you measure content that doesn't convert directly?' Which answer shows Module 6 mastery?",
+        "options": [
+          "You can't; content is a branding exercise",
+          "Count likes and impressions as proxies",
+          "Assisted conversions, brand-search volume, saves and shares as leading indicators — and the how-did-you-hear log as the model-free truth-teller, with a pause test if the budget is significant",
+          "Only measure direct sales from UTM links"
+        ],
+        "answerIndex": 2,
+        "explanation": "Attribution honesty plus incrementality checks — the full 6.4 toolkit applied to content's indirect role.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q9",
+        "question": "When the interviewer asks 'Do you have questions for us?', what does the lesson recommend?",
+        "options": [
+          "Say 'no, you covered everything' to signal satisfaction",
+          "Ask about salary immediately as the first question",
+          "Two operator questions: what the first 90 days look like, and how the team decides where budget goes / the review rhythm",
+          "Ask a trivia question about the company's founding year"
+        ],
+        "answerIndex": 2,
+        "explanation": "Both questions prove you think like an operator — onboarding and measurement rhythm, the two things a marketer manages.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q10",
+        "question": "What turns interview readiness from talent into skill, per the lesson?",
+        "options": [
+          "Natural confidence and extroversion",
+          "The rehearsal protocol: answers practised aloud, timed case questions recorded and reviewed, mock loops with partners, and a scorecard tracked like the weekly ritual",
+          "Memorising answers word for word",
+          "Watching interview videos the night before"
+        ],
+        "answerIndex": 1,
+        "explanation": "The mouth needs practice the brain cannot substitute — aloud, timed, recorded, scored, and improved one fix at a time.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

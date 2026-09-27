@@ -7,6 +7,7 @@ Self-contained learning programmes rendered by the Vriddhi app under **Courses**
 | Folder | Code | Title | Hours |
 | --- | --- | --- | --- |
 | `genai-certification/` | VGC-101 | GenAI for Career Impact — Certificate Program | 60 |
+| `digital-marketing/` | VDM-101 | Digital Marketing — Certificate Program | 52 |
 
 ## Pack layout
 
