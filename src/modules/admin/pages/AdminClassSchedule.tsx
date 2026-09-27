@@ -63,6 +63,7 @@ import {
   type GenerateSessionsResult,
   type SessionConflict,
 } from '../api/classSessionApi'
+import { downloadTimetablePDF, downloadTimetableJPG, cohortLabel } from '@/shared/utils/timetableExport'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
 import type { SubjectInfo } from '../api/scheduleApi'
 import {
@@ -164,6 +165,40 @@ const AdminClassSchedule: React.FC = () => {
   } = useAdminSchedule(collegeId)
 
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('monday')
+  // ─── Timetable export (PDF / JPG) ───
+  const [exportOpen, setExportOpen] = useState(false)
+  const [exportCohort, setExportCohort] = useState('__all__')
+  const [exporting, setExporting] = useState<'' | 'pdf' | 'jpg'>('')
+  const allSlots = useMemo(
+    () => DAYS.flatMap((d) => (weeklySchedule[d] || []).filter((s: any) => s.isActive !== false)),
+    [weeklySchedule]
+  )
+  const cohortOptions = useMemo(
+    () => [...new Set(allSlots.map((s: any) => cohortLabel(s)).filter(Boolean))].sort(),
+    [allSlots]
+  )
+  const handleExport = async (format: 'pdf' | 'jpg') => {
+    const all = exportCohort === '__all__'
+    const slots = all ? allSlots : allSlots.filter((s: any) => cohortLabel(s) === exportCohort)
+    const opts = {
+      title: `${(user as any)?.collegeName || 'Class'} — Weekly Timetable`,
+      subtitle: all ? 'All classes' : exportCohort,
+      days: DAYS,
+      slots,
+      showCohort: all,
+      fileName: `timetable_${(all ? 'all' : exportCohort).replace(/[^a-z0-9]+/gi, '_')}`,
+    }
+    setExporting(format)
+    try {
+      if (format === 'pdf') await downloadTimetablePDF(opts)
+      else await downloadTimetableJPG(opts)
+    } catch (err) {
+      console.error('[timetable export]', err)
+      alert('Export failed. Please try again.')
+    } finally {
+      setExporting('')
+    }
+  }
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState<WeeklyScheduleFormData>({ ...EMPTY_FORM })
@@ -590,7 +625,15 @@ const AdminClassSchedule: React.FC = () => {
             Manage weekly recurring class schedules for all branches and batches
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={() => setExportOpen(true)}
+          >
+            Download
+          </Button>
+          <Tooltip title="Creates dated class sessions from this weekly timetable for a term — needed for faculty attendance, rescheduling and the student timetable.">
           <Button
             variant="outlined"
             startIcon={<MaterialiseIcon />}
@@ -598,6 +641,7 @@ const AdminClassSchedule: React.FC = () => {
           >
             Generate Sessions
           </Button>
+          </Tooltip>
           <Button
             variant="outlined"
             startIcon={<AutoIcon />}
@@ -1275,6 +1319,36 @@ const AdminClassSchedule: React.FC = () => {
               {previewing ? 'Importing…' : `Apply ${importPreview.plan.totals.valid} valid row${importPreview.plan.totals.valid === 1 ? '' : 's'}`}
             </Button>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* ─── Timetable download ─── */}
+      <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Download timetable</DialogTitle>
+        <DialogContent>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Class"
+            value={exportCohort}
+            onChange={(e) => setExportCohort(e.target.value)}
+            sx={{ mt: 1 }}
+          >
+            <MenuItem value="__all__">All classes ({allSlots.length} slots)</MenuItem>
+            {cohortOptions.map((c) => (
+              <MenuItem key={c} value={c}>{c}</MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExportOpen(false)}>Close</Button>
+          <Button variant="outlined" onClick={() => handleExport('jpg')} disabled={!!exporting}>
+            {exporting === 'jpg' ? 'Preparing…' : 'Download JPG'}
+          </Button>
+          <Button variant="contained" onClick={() => handleExport('pdf')} disabled={!!exporting}>
+            {exporting === 'pdf' ? 'Preparing…' : 'Download PDF'}
+          </Button>
         </DialogActions>
       </Dialog>
 

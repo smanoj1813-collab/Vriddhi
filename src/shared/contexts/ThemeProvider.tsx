@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
+import { ACCENT_EVENT, accentScale, applyAccentVars, applyStoredFontSize, getStoredAccent, rgbToHex } from '../theme/accent';
 import CssBaseline from '@mui/material/CssBaseline';
 
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -311,7 +312,28 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     handleSetMode(newMode);
   };
 
-  const theme = resolvedMode === 'dark' ? darkTheme : lightTheme;
+  // Accent colour (Settings → Appearance). Applied to Tailwind via CSS vars
+  // and to MUI via the palette's primary colour.
+  const [accent, setAccentState] = useState<string>(() => {
+    const a = getStoredAccent();
+    applyAccentVars(a);
+    applyStoredFontSize();
+    return a;
+  });
+  useEffect(() => {
+    const onAccent = (e: Event) => setAccentState((e as CustomEvent<string>).detail);
+    window.addEventListener(ACCENT_EVENT, onAccent);
+    return () => window.removeEventListener(ACCENT_EVENT, onAccent);
+  }, []);
+
+  const theme = React.useMemo(() => {
+    const base = resolvedMode === 'dark' ? darkTheme : lightTheme;
+    const sc = accentScale(accent);
+    const primary = resolvedMode === 'dark'
+      ? { main: rgbToHex(sc[500]), light: rgbToHex(sc[400]), dark: rgbToHex(sc[600]), contrastText: '#ffffff' }
+      : { main: rgbToHex(sc[600]), light: rgbToHex(sc[500]), dark: rgbToHex(sc[700]), contrastText: '#ffffff' };
+    return createTheme(base, { palette: { primary: base.palette.augmentColor({ color: primary }) } });
+  }, [resolvedMode, accent]);
 
   return (
     <ThemeContext.Provider value={{ mode, resolvedMode, setMode: handleSetMode, toggleMode }}>

@@ -22,6 +22,70 @@ import PaperAcademicInsights from '../components/PaperAcademicInsights'
 import { isSameSubject } from '@/shared/utils/curriculumMatcher'
 import { isPermissionDeniedError, staleClaimMessage } from '@/shared/utils/identityClaims'
 import { escapeHtml } from '@/shared/utils/pdfGenerator'
+import { fetchStudentsForSession } from '../api/facultyApi'
+
+type AssessmentType = 'C1' | 'C2' | 'C3' | 'CUSTOM'
+type CoverageMode = 'all' | 'topics' | 'units' | 'custom'
+
+interface BlueprintRow {
+  id: string
+  name: string
+  questionType: 'mcq' | 'short' | 'long' | 'any'
+  numQuestions: number
+  marksPerQuestion: number
+}
+
+const BLUEPRINT_PRESETS: Record<Exclude<AssessmentType, 'CUSTOM'>, BlueprintRow[]> = {
+  C1: [
+    { id: 'sec-a', name: 'Section A (MCQs)', questionType: 'mcq', numQuestions: 5, marksPerQuestion: 1 },
+    { id: 'sec-b', name: 'Section B (Short Answers)', questionType: 'short', numQuestions: 3, marksPerQuestion: 5 },
+  ],
+  C2: [
+    { id: 'sec-a', name: 'Section A (MCQs)', questionType: 'mcq', numQuestions: 10, marksPerQuestion: 1 },
+    { id: 'sec-b', name: 'Section B (Short Answers)', questionType: 'short', numQuestions: 4, marksPerQuestion: 5 },
+    { id: 'sec-c', name: 'Section C (Long Answers / Case)', questionType: 'long', numQuestions: 2, marksPerQuestion: 10 },
+  ],
+  C3: [
+    { id: 'sec-a', name: 'Section A (MCQs)', questionType: 'mcq', numQuestions: 10, marksPerQuestion: 1 },
+    { id: 'sec-b', name: 'Section B (Short Answers)', questionType: 'short', numQuestions: 6, marksPerQuestion: 5 },
+    { id: 'sec-c', name: 'Section C (Long Answers / Problems)', questionType: 'long', numQuestions: 4, marksPerQuestion: 10 },
+  ],
+}
+
+const PRESET_DURATION: Record<Exclude<AssessmentType, 'CUSTOM'>, number> = { C1: 45, C2: 90, C3: 180 }
+
+const ASSESSMENT_LABEL: Record<AssessmentType, string> = {
+  C1: 'Class Test',
+  C2: 'Midterm Exam',
+  C3: 'End Semester Examination',
+  CUSTOM: 'Examination',
+}
+
+/** Split a section's question count into an easy/medium/hard mix (30/50/20). */
+function difficultyMixFor(n: number) {
+  const easy = Math.round(n * 0.3)
+  const hard = Math.round(n * 0.2)
+  return { easy, medium: Math.max(0, n - easy - hard), hard }
+}
+
+const normTopic = (v: string) => v.trim().toLowerCase()
+const normUnit = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/^(unit|module)\s*[-:]?\s*/i, '')
+
+/** Group questions into sections by marks value — works for any blueprint. */
+function groupByMarks<T extends { marks: number }>(questions: T[]) {
+  const byMarks = new Map<number, T[]>()
+  questions.forEach((q) => {
+    const list = byMarks.get(q.marks) || []
+    list.push(q)
+    byMarks.set(q.marks, list)
+  })
+  return [...byMarks.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([marks, qs], i) => ({
+      name: `Section ${String.fromCharCode(65 + i)} (${marks} Mark${marks === 1 ? '' : 's'} each)`,
+      questions: qs,
+    }))
+}
 
 interface FacultyQuestion {
   id: string
@@ -32,6 +96,8 @@ interface FacultyQuestion {
   topic: string
   difficulty: string
   questionType: string
+  unit?: string
+  tags?: string[]
   options?: string[] | Array<{ id: string; text: string }>
 }
 
@@ -81,7 +147,22 @@ export default function FacultyPaperGenerator() {
   const [lastSavedPaperId, setLastSavedPaperId] = useState<string>('')
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [paperTitle, setPaperTitle] = useState('')
-  const [assessmentType, setAssessmentType] = useState<'C1' | 'C2' | 'C3'>('C3')
+  const [assessmentType, setAssessmentType] = useState<AssessmentType>('C3')
+  // ── Flexible blueprint (sections + marks are editable, not fixed) ──
+  const [blueprint, setBlueprint] = useState<BlueprintRow[]>(BLUEPRINT_PRESETS.C3)
+  // ── Syllabus coverage: whole syllabus, chosen topics, chosen units, or free text ──
+  const [coverageMode, setCoverageMode] = useState<CoverageMode>('all')
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+  const [selectedUnits, setSelectedUnits] = useState<string[]>([])
+  const [customTopic, setCustomTopic] = useState('')
+  const [poolSearch, setPoolSearch] = useState('')
+  // ── Curriculum ↔ student linkage check ──
+  const [linkCheck, setLinkCheck] = useState<{
+    status: 'idle' | 'checking' | 'linked' | 'no-students' | 'no-curriculum' | 'error'
+    matched?: number
+    collegeTotal?: number
+    hint?: string
+  }>({ status: 'idle' })
   const [customInstructions, setCustomInstructions] = useState('')
   const [duration, setDuration] = useState(120)
   const [showPreview, setShowPreview] = useState(false)
@@ -180,6 +261,9 @@ export default function FacultyPaperGenerator() {
         topic: q.topic || q.chapter || '',
         difficulty: q.difficulty || 'Medium',
         questionType: q.type || 'Short Answer',
+        unit: q.unit ? String(q.unit) : ((q as any).module ? String((q as any).module) : ''),
+        tags: Array.isArray(q.tags) ? q.tags.map(String) : [],
+        options: q.options as FacultyQuestion['options'],
       }))
       setAvailableQuestions(mapped.filter(q => q.status === 'Approved'))
 
@@ -277,17 +361,171 @@ export default function FacultyPaperGenerator() {
     setTimeout(() => setShowToast(''), 2500)
   }
 
-  const expectedMarks = assessmentType === 'C3' ? 80 : assessmentType === 'C2' ? 50 : 20
+  /** Target marks = whatever the (editable) blueprint adds up to. */
+  const expectedMarks = useMemo(
+    () => blueprint.reduce((sum, r) => sum + (Number(r.numQuestions) || 0) * (Number(r.marksPerQuestion) || 0), 0),
+    [blueprint]
+  )
+
+  const updateBlueprintRow = (id: string, patch: Partial<BlueprintRow>) => {
+    setBlueprint((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)))
+  }
+  const addBlueprintRow = () => {
+    setBlueprint((prev) => [
+      ...prev,
+      {
+        id: `sec-${Date.now()}`,
+        name: `Section ${String.fromCharCode(65 + prev.length)}`,
+        questionType: 'any',
+        numQuestions: 2,
+        marksPerQuestion: 5,
+      },
+    ])
+  }
+  const removeBlueprintRow = (id: string) => setBlueprint((prev) => prev.filter((r) => r.id !== id))
+
+  // ── Coverage options: curriculum modules + whatever the bank holds for this subject ──
+  const topicOptions = useMemo(() => {
+    const seen = new Map<string, string>()
+    ;(assignedCourse?.modules || []).forEach((m) => (m.topics || []).forEach((t) => {
+      if (t && !seen.has(normTopic(t))) seen.set(normTopic(t), t)
+    }))
+    filteredAvailableQuestions.forEach((q) => {
+      if (q.topic && !isSameSubject(q.topic, activeSubjectName) && !seen.has(normTopic(q.topic))) {
+        seen.set(normTopic(q.topic), q.topic)
+      }
+    })
+    return [...seen.values()].sort((a, b) => a.localeCompare(b))
+  }, [assignedCourse, filteredAvailableQuestions, activeSubjectName])
+
+  const unitOptions = useMemo(() => {
+    const seen = new Map<string, { value: string; label: string }>()
+    ;(assignedCourse?.modules || []).forEach((m) => {
+      const value = String(m.moduleNo ?? '').trim()
+      if (!value) return
+      const title = m.title || m.moduleName || m.name || ''
+      seen.set(normUnit(value), { value, label: `Unit ${value}${title ? ` — ${title}` : ''}` })
+    })
+    filteredAvailableQuestions.forEach((q) => {
+      if (q.unit && !seen.has(normUnit(q.unit))) seen.set(normUnit(q.unit), { value: q.unit, label: `Unit ${normUnit(q.unit)}` })
+    })
+    return [...seen.values()].sort((a, b) => a.value.localeCompare(b.value, undefined, { numeric: true }))
+  }, [assignedCourse, filteredAvailableQuestions])
+
+  /** Topics a unit selection expands to (from curriculum modules) — improves bank matching. */
+  const topicsForSelectedUnits = useMemo(() => {
+    const wanted = new Set(selectedUnits.map(normUnit))
+    return (assignedCourse?.modules || [])
+      .filter((m) => wanted.has(normUnit(m.moduleNo)))
+      .flatMap((m) => m.topics || [])
+  }, [assignedCourse, selectedUnits])
+
+  const coverageFilters = useMemo(() => {
+    if (coverageMode === 'topics') return { topicFilters: selectedTopics, unitFilters: [] as string[], customTopic: '' }
+    if (coverageMode === 'units') return { topicFilters: topicsForSelectedUnits, unitFilters: selectedUnits, customTopic: '' }
+    if (coverageMode === 'custom') {
+      const parts = customTopic.split(/[,;\n]/).map((t) => t.trim()).filter(Boolean)
+      return { topicFilters: parts, unitFilters: [] as string[], customTopic: customTopic.trim() }
+    }
+    return { topicFilters: [] as string[], unitFilters: [] as string[], customTopic: '' }
+  }, [coverageMode, selectedTopics, selectedUnits, topicsForSelectedUnits, customTopic])
+
+  const matchesCoverage = useCallback((q: FacultyQuestion) => {
+    const { topicFilters, unitFilters } = coverageFilters
+    if (topicFilters.length === 0 && unitFilters.length === 0) return coverageMode === 'all' || coverageMode === 'custom'
+    const qTopics = [q.topic, ...(q.tags || [])].map((t) => normTopic(t || '')).filter(Boolean)
+    if (topicFilters.some((t) => qTopics.some((qt) => qt === normTopic(t) || qt.includes(normTopic(t)) || normTopic(t).includes(qt)))) return true
+    if (unitFilters.length > 0 && q.unit && unitFilters.some((u) => normUnit(u) === normUnit(q.unit))) return true
+    return false
+  }, [coverageFilters, coverageMode])
+
+  const coverageReady =
+    coverageMode === 'all' ||
+    (coverageMode === 'topics' && selectedTopics.length > 0) ||
+    (coverageMode === 'units' && selectedUnits.length > 0) ||
+    (coverageMode === 'custom' && customTopic.trim().length > 0)
+
+  /** Manual-picker pool: subject + coverage + free-text search. */
+  const pickerPool = useMemo(() => {
+    const term = poolSearch.trim().toLowerCase()
+    return filteredAvailableQuestions
+      .filter((q) => coverageMode === 'all' || (coverageMode === 'custom' && coverageFilters.topicFilters.length === 0) || matchesCoverage(q))
+      .filter((q) => !term || q.questionText.toLowerCase().includes(term) || q.topic.toLowerCase().includes(term))
+  }, [filteredAvailableQuestions, coverageMode, coverageFilters, matchesCoverage, poolSearch])
+
+  const coverageMatchCount = useMemo(
+    () => (coverageMode === 'all' ? filteredAvailableQuestions.length : filteredAvailableQuestions.filter(matchesCoverage).length),
+    [coverageMode, filteredAvailableQuestions, matchesCoverage]
+  )
+
+  // Reset coverage picks when the subject changes — topics of one subject are meaningless for another.
+  useEffect(() => {
+    setSelectedTopics([])
+    setSelectedUnits([])
+  }, [selectedCourseId])
+
+  // ── Curriculum ↔ student linkage: does the mapped course's cohort have students? ──
+  const runLinkCheck = useCallback(async () => {
+    if (!collegeId) return
+    if (!assignedCourse) {
+      setLinkCheck({
+        status: 'no-curriculum',
+        hint: 'This subject comes only from the question bank — it is not mapped to you in the curriculum, so no student cohort is linked.',
+      })
+      return
+    }
+    setLinkCheck({ status: 'checking' })
+    try {
+      const { students, diagnostics } = await fetchStudentsForSession(
+        {
+          branch: assignedCourse.branch || '',
+          batch: assignedCourse.batch || '',
+          division: assignedCourse.division || '',
+          section: assignedCourse.section || '',
+          semester: assignedCourse.semester || '',
+          subject: assignedCourse.courseName,
+          subjectCode: assignedCourse.courseCode,
+        },
+        collegeId
+      )
+      if (students.length > 0) {
+        setLinkCheck({ status: 'linked', matched: students.length, collegeTotal: diagnostics?.collegeTotal })
+      } else {
+        const mism = diagnostics?.mismatches || {}
+        const worst = Object.entries(mism).sort((a, b) => (b[1]?.count || 0) - (a[1]?.count || 0))[0]
+        setLinkCheck({
+          status: 'no-students',
+          matched: 0,
+          collegeTotal: diagnostics?.collegeTotal,
+          hint: worst
+            ? `Most students differ on "${worst[0]}" (seen: ${(worst[1]?.values || []).join(', ') || '—'}). Align the student records or the curriculum mapping.`
+            : 'No student records found for this college.',
+        })
+      }
+    } catch (err: any) {
+      setLinkCheck({ status: 'error', hint: err?.message || 'Could not verify student linkage' })
+    }
+  }, [collegeId, assignedCourse])
+
+  useEffect(() => {
+    runLinkCheck()
+  }, [runLinkCheck])
 
   /** Class tests (C1) don't need sign-off; mid (C2) and end semester (C3) do. */
   const approvalDefault = assessmentType !== 'C1'
 
   useEffect(() => {
     if (!approvalTouched) setRequiresApproval(approvalDefault)
-    if (assessmentType === 'C1') setDuration(45)
-    else if (assessmentType === 'C2') setDuration(90)
-    else if (assessmentType === 'C3') setDuration(180)
-  }, [assessmentType, approvalDefault, approvalTouched])
+  }, [approvalDefault, approvalTouched])
+
+  // Picking a preset loads its blueprint + duration; everything stays editable afterwards.
+  const changeAssessmentType = (type: AssessmentType) => {
+    setAssessmentType(type)
+    if (type !== 'CUSTOM') {
+      setBlueprint(BLUEPRINT_PRESETS[type].map((r) => ({ ...r })))
+      setDuration(PRESET_DURATION[type])
+    }
+  }
 
   const toggleQuestion = (id: string) => {
     setSelectedQuestions(prev => 
@@ -302,28 +540,31 @@ export default function FacultyPaperGenerator() {
     setShowToast('')
 
     const subject = activeSubjectName
-    const title = paperTitle.trim() || `${subject} - ${assessmentType === 'C1' ? 'Class Test' : assessmentType === 'C2' ? 'Midterm Exam' : 'End Semester Examination'}`
+    const title = paperTitle.trim() || `${subject} - ${ASSESSMENT_LABEL[assessmentType]}`
 
-    // Blueprint configuration based on assessment type
-    let blueprintSections: any[] = []
-    if (assessmentType === 'C1') {
-      blueprintSections = [
-        { id: 'sec-a', name: 'Section A (MCQs)', title: 'Section A', questionType: 'mcq', numQuestions: 5, marksPerQuestion: 1, difficulty: 'medium', difficultyMix: { easy: 3, medium: 2, hard: 0 } },
-        { id: 'sec-b', name: 'Section B (Short Answers)', title: 'Section B', questionType: 'short', numQuestions: 3, marksPerQuestion: 5, difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 0 } },
-      ]
-    } else if (assessmentType === 'C2') {
-      blueprintSections = [
-        { id: 'sec-a', name: 'Section A (MCQs)', title: 'Section A', questionType: 'mcq', numQuestions: 10, marksPerQuestion: 1, difficulty: 'medium', difficultyMix: { easy: 4, medium: 4, hard: 2 } },
-        { id: 'sec-b', name: 'Section B (Short Answers)', title: 'Section B', questionType: 'short', numQuestions: 4, marksPerQuestion: 5, difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 1 } },
-        { id: 'sec-c', name: 'Section C (Long Answers / Case)', title: 'Section C', questionType: 'long', numQuestions: 2, marksPerQuestion: 10, difficulty: 'medium', difficultyMix: { easy: 0, medium: 1, hard: 1 } },
-      ]
-    } else {
-      blueprintSections = [
-        { id: 'sec-a', name: 'Section A (MCQs)', title: 'Section A', questionType: 'mcq', numQuestions: 10, marksPerQuestion: 1, difficulty: 'medium', difficultyMix: { easy: 4, medium: 4, hard: 2 } },
-        { id: 'sec-b', name: 'Section B (Short Answers)', title: 'Section B', questionType: 'short', numQuestions: 6, marksPerQuestion: 5, difficulty: 'medium', difficultyMix: { easy: 2, medium: 3, hard: 1 } },
-        { id: 'sec-c', name: 'Section C (Long Answers / Problems)', title: 'Section C', questionType: 'long', numQuestions: 4, marksPerQuestion: 10, difficulty: 'medium', difficultyMix: { easy: 1, medium: 2, hard: 1 } },
-      ]
+    if (!coverageReady) {
+      setIsAutoGenerating(false)
+      setShowToast('Pick at least one topic / unit (or enter a custom topic) for the chosen coverage.')
+      setTimeout(() => setShowToast(''), 4000)
+      return
     }
+    const validRows = blueprint.filter((r) => r.numQuestions > 0 && r.marksPerQuestion > 0)
+    if (validRows.length === 0) {
+      setIsAutoGenerating(false)
+      setShowToast('Add at least one section with questions and marks to the blueprint.')
+      setTimeout(() => setShowToast(''), 4000)
+      return
+    }
+    const blueprintSections: any[] = validRows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      title: r.name,
+      questionType: r.questionType,
+      numQuestions: Number(r.numQuestions),
+      marksPerQuestion: Number(r.marksPerQuestion),
+      difficulty: 'medium',
+      difficultyMix: difficultyMixFor(Number(r.numQuestions)),
+    }))
 
     try {
       const result = await generatePaper(
@@ -340,6 +581,7 @@ export default function FacultyPaperGenerator() {
           mode: autoMode,
           numSets,
           sections: blueprintSections,
+          ...coverageFilters,
         },
         user?.id || user?.uid || '',
         user?.name || user?.email || 'Faculty'
@@ -375,13 +617,7 @@ export default function FacultyPaperGenerator() {
 
   const generatePreviewHTML = () => {
     const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
-    const sections = assessmentType === 'C3'
-      ? [
-          { name: 'Section A (1 Mark each)', questions: selected.filter(q => q.marks <= 2) },
-          { name: 'Section B (5 Marks each)', questions: selected.filter(q => q.marks > 2 && q.marks <= 6) },
-          { name: 'Section C (10 Marks each)', questions: selected.filter(q => q.marks > 6) },
-        ]
-      : [{ name: 'Questions', questions: selected }]
+    const sections = groupByMarks(selected)
 
     // All user/AI-authored values are HTML-escaped before interpolation: this
     // string is injected via dangerouslySetInnerHTML AND written to a print
@@ -399,13 +635,15 @@ export default function FacultyPaperGenerator() {
         </div>
     `
 
-    sections.forEach((section, si) => {
+    let qNo = 0
+    sections.forEach((section) => {
       if (section.questions.length > 0) {
         html += `<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">${escapeHtml(section.name)}</h3>`
-        section.questions.forEach((q, i) => {
+        section.questions.forEach((q) => {
+          qNo += 1
           html += `
             <div style="margin-bottom: 12px; font-size: 12px;">
-              <p style="margin: 0;"><strong>Q${si * 10 + i + 1}.</strong> ${escapeHtml(q.questionText)} <span style="float: right; font-weight: bold;">[${escapeHtml(q.marks)} Mark${q.marks > 1 ? 's' : ''}]</span></p>
+              <p style="margin: 0;"><strong>Q${qNo}.</strong> ${escapeHtml(q.questionText)} <span style="float: right; font-weight: bold;">[${escapeHtml(q.marks)} Mark${q.marks > 1 ? 's' : ''}]</span></p>
               <p style="font-size: 10px; color: #777; margin: 2px 0 0 20px;">Topic: ${escapeHtml(q.topic)} • Difficulty: ${escapeHtml(q.difficulty)}</p>
             </div>
           `
@@ -443,13 +681,11 @@ export default function FacultyPaperGenerator() {
     const selected = availableQuestions.filter(q => selectedQuestions.includes(q.id)).map(withEdits)
     const questionIds = selected.map(q => q.id)
 
-    const sections = assessmentType === 'C3'
-      ? [
-          { name: 'Section A', questions: selected.filter(q => q.marks <= 2).map(q => ({ questionId: q.id, question: q })), totalMarks: selected.filter(q => q.marks <= 2).reduce((s, q) => s + q.marks, 0) },
-          { name: 'Section B', questions: selected.filter(q => q.marks > 2 && q.marks <= 6).map(q => ({ questionId: q.id, question: q })), totalMarks: selected.filter(q => q.marks > 2 && q.marks <= 6).reduce((s, q) => s + q.marks, 0) },
-          { name: 'Section C', questions: selected.filter(q => q.marks > 6).map(q => ({ questionId: q.id, question: q })), totalMarks: selected.filter(q => q.marks > 6).reduce((s, q) => s + q.marks, 0) },
-        ]
-      : [{ name: 'Questions', questions: selected.map(q => ({ questionId: q.id, question: q })), totalMarks: totalSelectedMarks }]
+    const sections = groupByMarks(selected).map((g) => ({
+      name: g.name,
+      questions: g.questions.map((q) => ({ questionId: q.id, question: q })),
+      totalMarks: g.questions.reduce((sum, q) => sum + q.marks, 0),
+    }))
 
     try {
       const saved = await createPaper(
@@ -618,7 +854,7 @@ export default function FacultyPaperGenerator() {
                 setSelectedCourseId(e.target.value)
                 const o = subjectOptions.find((item) => item.id === e.target.value)
                 if (o) {
-                  setPaperTitle(`${o.subjectName} - ${assessmentType} Examination`)
+                  setPaperTitle(`${o.subjectName} - ${ASSESSMENT_LABEL[assessmentType]}`)
                 }
               }}
               className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-teal-700 dark:text-teal-300 focus:outline-none focus:border-teal-500"
@@ -805,6 +1041,237 @@ export default function FacultyPaperGenerator() {
               )}
             </div>
 
+            {/* Curriculum ↔ Student linkage */}
+            <div
+              className={`p-3.5 rounded-2xl border shadow-sm flex items-start justify-between gap-3 ${
+                linkCheck.status === 'linked'
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-500/30'
+                  : linkCheck.status === 'checking' || linkCheck.status === 'idle'
+                    ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                    : 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-500/30'
+              }`}
+            >
+              <div className="flex items-start gap-2.5 min-w-0">
+                {linkCheck.status === 'linked' ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                ) : linkCheck.status === 'checking' || linkCheck.status === 'idle' ? (
+                  <Loader2 className="w-4 h-4 text-slate-400 animate-spin mt-0.5 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">
+                    {linkCheck.status === 'linked' && `Curriculum linked to students — ${linkCheck.matched} student${linkCheck.matched === 1 ? '' : 's'} will sit this paper`}
+                    {(linkCheck.status === 'checking' || linkCheck.status === 'idle') && 'Checking curriculum ↔ student linkage…'}
+                    {linkCheck.status === 'no-students' && 'Curriculum is mapped, but no students are linked to this course cohort'}
+                    {linkCheck.status === 'no-curriculum' && 'Subject not linked to curriculum'}
+                    {linkCheck.status === 'error' && 'Could not verify student linkage'}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {assignedCourse
+                      ? `Cohort: ${[assignedCourse.branch, assignedCourse.batch, assignedCourse.semester ? `Sem ${assignedCourse.semester}` : '', assignedCourse.division || assignedCourse.section || ''].filter(Boolean).join(' • ') || '—'}`
+                      : ''}
+                    {linkCheck.hint ? `${assignedCourse ? ' — ' : ''}${linkCheck.hint}` : ''}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={runLinkCheck}
+                disabled={linkCheck.status === 'checking'}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-teal-600 hover:bg-white/60 dark:hover:bg-slate-800 shrink-0 disabled:opacity-40"
+                title="Re-check linkage"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Syllabus Coverage */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  Syllabus Coverage
+                </h3>
+                <span className="text-[11px] text-slate-500">
+                  {coverageMatchCount} matching bank question{coverageMatchCount === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {([
+                  ['all', 'Entire Syllabus'],
+                  ['topics', 'By Topics'],
+                  ['units', 'By Units / Modules'],
+                  ['custom', 'Other (custom topic)'],
+                ] as Array<[CoverageMode, string]>).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setCoverageMode(mode)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      coverageMode === mode
+                        ? 'bg-teal-600 text-white'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {coverageMode === 'topics' && (
+                topicOptions.length === 0 ? (
+                  <p className="text-[11px] text-amber-600">No topics found in the curriculum or the question bank for this subject. Use “Other (custom topic)” instead.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                    {topicOptions.map((t) => {
+                      const on = selectedTopics.includes(t)
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setSelectedTopics((prev) => (on ? prev.filter((x) => x !== t) : [...prev, t]))}
+                          className={`px-2.5 py-1 rounded-full text-[11px] border transition-all flex items-center gap-1 ${
+                            on
+                              ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 text-teal-700 dark:text-teal-300 font-semibold'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          {on && <Check className="w-3 h-3" />} {t}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              )}
+
+              {coverageMode === 'units' && (
+                unitOptions.length === 0 ? (
+                  <p className="text-[11px] text-amber-600">No units/modules found for this subject. Use “By Topics” or “Other (custom topic)”.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {unitOptions.map((u) => {
+                      const on = selectedUnits.includes(u.value)
+                      return (
+                        <button
+                          key={u.value}
+                          type="button"
+                          onClick={() => setSelectedUnits((prev) => (on ? prev.filter((x) => x !== u.value) : [...prev, u.value]))}
+                          className={`px-2.5 py-1 rounded-full text-[11px] border transition-all flex items-center gap-1 ${
+                            on
+                              ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 text-teal-700 dark:text-teal-300 font-semibold'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          {on && <Check className="w-3 h-3" />} {u.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              )}
+
+              {coverageMode === 'custom' && (
+                <div>
+                  <input
+                    type="text"
+                    value={customTopic}
+                    onChange={(e) => setCustomTopic(e.target.value)}
+                    placeholder="e.g. Ratio Analysis, Cash Flow Statement (comma-separated)"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Bank questions matching these keywords are used; AI / Hybrid mode generates new questions on this topic.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Editable Blueprint — sections & marks */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Award className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    Question Paper Pattern &amp; Marks
+                  </h3>
+                  <p className="text-[11px] text-slate-500">Edit sections, question counts and marks — the preset only sets a starting point.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {assessmentType !== 'CUSTOM' && (
+                    <button
+                      type="button"
+                      onClick={() => changeAssessmentType(assessmentType)}
+                      className="text-[11px] px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1"
+                      title="Reset to preset"
+                    >
+                      <RotateCcw className="w-3 h-3" /> Reset
+                    </button>
+                  )}
+                  <span className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 text-xs font-extrabold">
+                    {expectedMarks} Marks
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                  <span className="col-span-4">Section</span>
+                  <span className="col-span-3">Type</span>
+                  <span className="col-span-2">Questions</span>
+                  <span className="col-span-2">Marks each</span>
+                  <span className="col-span-1" />
+                </div>
+                {blueprint.map((row) => (
+                  <div key={row.id} className="grid grid-cols-12 gap-2 items-center">
+                    <input
+                      value={row.name}
+                      onChange={(e) => updateBlueprintRow(row.id, { name: e.target.value })}
+                      className="col-span-12 sm:col-span-4 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    />
+                    <select
+                      value={row.questionType}
+                      onChange={(e) => updateBlueprintRow(row.id, { questionType: e.target.value as BlueprintRow['questionType'] })}
+                      className="col-span-5 sm:col-span-3 px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    >
+                      <option value="mcq">MCQ</option>
+                      <option value="short">Short Answer</option>
+                      <option value="long">Long Answer</option>
+                      <option value="any">Any type</option>
+                    </select>
+                    <input
+                      type="number"
+                      min={0}
+                      value={row.numQuestions}
+                      onChange={(e) => updateBlueprintRow(row.id, { numQuestions: Math.max(0, parseInt(e.target.value) || 0) })}
+                      className="col-span-3 sm:col-span-2 px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={row.marksPerQuestion}
+                      onChange={(e) => updateBlueprintRow(row.id, { marksPerQuestion: Math.max(0, Number(e.target.value) || 0) })}
+                      className="col-span-3 sm:col-span-2 px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeBlueprintRow(row.id)}
+                      className="col-span-1 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 justify-self-center"
+                      title="Remove section"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addBlueprintRow}
+                className="text-xs px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Section
+              </button>
+            </div>
+
             {/* Deterministic approved-question-pool context
                 (getPaperAcademicContext callable) — metadata only: counts,
                 difficulty/Blooms distributions and the stored blueprint for
@@ -835,12 +1302,13 @@ export default function FacultyPaperGenerator() {
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assessment Level</label>
                   <select
                     value={assessmentType}
-                    onChange={(e) => setAssessmentType(e.target.value as 'C1' | 'C2' | 'C3')}
+                    onChange={(e) => changeAssessmentType(e.target.value as AssessmentType)}
                     className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                   >
                     <option value="C1">C1: Class / Unit Test (20 marks • 45 min)</option>
                     <option value="C2">C2: Midterm Examination (50 marks • 90 min)</option>
                     <option value="C3">C3: End Semester University Exam (80 marks • 180 min)</option>
+                    <option value="CUSTOM">Custom: set your own sections, marks &amp; duration</option>
                   </select>
                 </div>
 
@@ -891,6 +1359,54 @@ export default function FacultyPaperGenerator() {
                 </div>
               </div>
 
+              {/* Manual picker — browse the bank and tick questions */}
+              {generationStrategy === 'manual' && (
+                <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/20">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Question Bank ({pickerPool.length} available{coverageMode !== 'all' ? ' for chosen coverage' : ''})
+                    </p>
+                    <input
+                      value={poolSearch}
+                      onChange={(e) => setPoolSearch(e.target.value)}
+                      placeholder="Search text or topic…"
+                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs w-48 focus:outline-none focus:border-teal-500"
+                    />
+                  </div>
+                  <div className="max-h-72 overflow-y-auto space-y-1">
+                    {loadingQuestions ? (
+                      <p className="text-xs text-slate-500 p-3 flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</p>
+                    ) : pickerPool.length === 0 ? (
+                      <p className="text-xs text-slate-500 p-3">No questions match this subject/coverage.</p>
+                    ) : (
+                      pickerPool.map((q) => {
+                        const on = selectedQuestions.includes(q.id)
+                        const edited = withEdits(q)
+                        return (
+                          <button
+                            key={q.id}
+                            type="button"
+                            onClick={() => toggleQuestion(q.id)}
+                            className={`w-full text-left p-2.5 rounded-lg flex items-start gap-2 transition-colors ${
+                              on ? 'bg-teal-50 dark:bg-teal-950/30' : 'hover:bg-white dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {on ? <CheckSquare className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" /> : <Square className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />}
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-xs text-slate-900 dark:text-white line-clamp-2">{edited.questionText}</span>
+                              <span className="block text-[10px] text-slate-500 mt-0.5">
+                                {edited.marks} mark{edited.marks === 1 ? '' : 's'} • {q.questionType} • {q.difficulty}
+                                {q.topic ? ` • ${q.topic}` : ''}{q.unit ? ` • Unit ${normUnit(q.unit)}` : ''}
+                              </span>
+                            </span>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Questions List */}
               <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[500px] overflow-y-auto p-2">
                 {selectedQuestions.length === 0 ? (
@@ -898,7 +1414,9 @@ export default function FacultyPaperGenerator() {
                     <Sparkles className="w-8 h-8 text-teal-500 mx-auto mb-2 opacity-60" />
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No questions selected yet</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      Click &quot;Generate Paper Automatically&quot; above to assemble questions instantly, or switch to Manual Picker.
+                      {generationStrategy === 'manual'
+                        ? 'Tick questions from the bank list above to add them to this paper.'
+                        : 'Click "Generate Paper Automatically" above to assemble questions instantly, or switch to Manual Picker.'}
                     </p>
                   </div>
                 ) : (
@@ -978,7 +1496,7 @@ export default function FacultyPaperGenerator() {
                 <div className="flex justify-between py-1.5">
                   <span className="text-slate-500">HOD Approval</span>
                   <span className="font-bold text-teal-600 dark:text-teal-400">
-                    {requiresApproval ? 'Required (C2/C3)' : 'Not Required (Direct Publish)'}
+                    {requiresApproval ? 'Required' : 'Not Required (Direct Publish)'}
                   </span>
                 </div>
               </div>

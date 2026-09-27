@@ -373,6 +373,36 @@ export interface ExtendedPaperConfig extends PaperConfig {
   numSets?: number;
   language?: string;
   courseCode?: string;
+  /**
+   * Syllabus coverage. When set, only bank questions whose topic/chapter/tags
+   * match one of `topicFilters`, or whose unit/module matches one of
+   * `unitFilters`, are eligible. `customTopic` steers AI generation.
+   */
+  topicFilters?: string[];
+  unitFilters?: string[];
+  customTopic?: string;
+}
+
+const normCoverage = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/^(unit|module)\s*[-:]?\s*/i, '');
+
+function matchesCoverage(q: Question, topics: string[], units: string[]): boolean {
+  if (topics.length === 0 && units.length === 0) return true;
+  const anyQ = q as any;
+  if (topics.length > 0) {
+    const qTopics = [anyQ.topic, anyQ.chapter, ...(Array.isArray(anyQ.tags) ? anyQ.tags : [])]
+      .map((t) => String(t ?? '').trim().toLowerCase())
+      .filter(Boolean);
+    const hit = topics.some((t) => {
+      const needle = t.trim().toLowerCase();
+      return qTopics.some((qt) => qt === needle || qt.includes(needle) || needle.includes(qt));
+    });
+    if (hit) return true;
+  }
+  if (units.length > 0) {
+    const qUnits = [anyQ.unit, anyQ.module, anyQ.moduleNo].map(normCoverage).filter(Boolean);
+    if (units.some((u) => qUnits.includes(normCoverage(u)))) return true;
+  }
+  return false;
 }
 
 export async function generatePaper(
@@ -395,7 +425,12 @@ export async function generatePaper(
       q.courseCode === subjectFilter ||
       isSameSubject(q.subject || q.courseName || '', subjectFilter)
     );
-  });
+  }).filter((q) => matchesCoverage(q, config.topicFilters || [], config.unitFilters || []));
+
+  const coverageTopicLabel =
+    config.customTopic?.trim() ||
+    (config.topicFilters && config.topicFilters.length > 0 ? config.topicFilters.join(', ') : '') ||
+    (config.unitFilters && config.unitFilters.length > 0 ? `Units ${config.unitFilters.join(', ')}` : '');
 
   const generateSingleSetSections = async (setLabel?: string) => {
     const generatedSections: any[] = [];
@@ -418,7 +453,7 @@ export async function generatePaper(
         try {
           const aiRes = await generateQuestionsWithAI({
             subject: config.subject,
-            topic: sec.topicFilter || 'General Syllabus',
+            topic: sec.topicFilter || coverageTopicLabel || 'General Syllabus',
             questionType: sec.questionType === 'any' ? 'mcq' : sec.questionType,
             difficulty: sec.difficulty === 'mixed' || !sec.difficulty ? 'medium' : sec.difficulty,
             count: neededAI,

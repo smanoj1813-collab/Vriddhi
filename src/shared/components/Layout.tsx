@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useCollegeBranding } from '@/shared/hooks/useCollegeBranding';
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth, type UserRole } from '../../modules/auth/context/AuthContext';
 import { useThemeMode } from "../contexts/ThemeProvider";
@@ -739,6 +740,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
+  const { data: collegeBranding } = useCollegeBranding(user?.collegeId);
   const { resolvedMode, toggleMode } = useThemeMode();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -1476,6 +1478,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {t("role.portal", { role: currentRoleInfo.label })}
               </span>
               <div className="flex items-center gap-2 min-w-0">
+                {collegeBranding?.logoUrl && (
+                  <img src={collegeBranding.logoUrl} alt="" className="h-6 w-6 rounded object-contain shrink-0" />
+                )}
                 <span className="truncate text-base lg:text-lg font-bold text-slate-800 dark:text-slate-100">
                   {collegeName || t("brand.academicManagement")}
                 </span>
@@ -1486,9 +1491,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Right Header Utilities */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
             <LanguageSwitcher compact showLabel={false} className="hidden sm:inline-flex" />
-            {/* Theme toggle */}
+            {/* Theme toggle + sign-out: phone/tablet only. On desktop (md+) the
+                permanent sidebar footer already has Dark Mode and Sign Out, so
+                showing them here too was a duplicate. */}
             <Tooltip title={resolvedMode === "dark" ? t("common.lightMode") : t("common.darkMode")}>
-              <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1 }}>
+              <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1, display: { xs: "inline-flex", md: "none" } }}>
                 {resolvedMode === "dark" ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
               </IconButton>
             </Tooltip>
@@ -1502,6 +1509,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 size="small"
                 sx={{
                   p: 1,
+                  display: { xs: "inline-flex", md: "none" },
                   color: "error.main",
                   "&:hover": { bgcolor: "error.light", opacity: 0.15 },
                 }}

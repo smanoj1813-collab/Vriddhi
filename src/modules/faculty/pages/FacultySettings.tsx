@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { getStoredAccent, setAccent } from '@/shared/theme/accent'
 import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, Building2, Phone, GraduationCap } from 'lucide-react'
 import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase/auth'
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
@@ -70,7 +71,9 @@ export default function FacultySettings() {
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
 
   // Appearance
-  const [accentColor, setAccentColor] = useState('#14b8a6')
+  const [accentColor, setAccentColor] = useState(() => getStoredAccent())
+  // Apply the accent app-wide as soon as it changes (swatch click, profile load, reset).
+  useEffect(() => { setAccent(accentColor) }, [accentColor])
   const [fontSize, setFontSize] = useState('medium')
   const [compactMode, setCompactMode] = useState(false)
   const [savingAppearance, setSavingAppearance] = useState(false)

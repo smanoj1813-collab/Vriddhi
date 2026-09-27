@@ -7,7 +7,7 @@ import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 import VriddhiLogo from '../../../shared/components/VriddhiLogo';
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install';
 import type { TranslationKey } from '../../../shared/i18n';
-import { STUDENT_NAV_ITEMS } from '../studentNav';
+import { STUDENT_NAV_ITEMS, STUDENT_NAV_GROUPS, type StudentNavItem } from '../studentNav';
 import {
   ChevronRight,
   Sun,
@@ -59,7 +59,50 @@ export default function StudentSidebar({ onSignOut }: { onSignOut: () => void })
 
   // In the installed app there is nothing left to install, so that row would
   // just be dead weight in the list.
-  const navItems = showInstallApp ? STUDENT_NAV_ITEMS : STUDENT_NAV_ITEMS.filter((item) => item.id !== 'install-app');
+  // Install is already a button in the footer, and the hub pages (Academics,
+  // Learning) are exactly what the section headings below represent — so on
+  // desktop the list is grouped under headings, matching the phone's sections.
+  const navItems = STUDENT_NAV_ITEMS.filter((item) => item.id !== 'install-app' && !item.hub);
+  const topItems = navItems.filter((item) => item.id === 'dashboard');
+  const groupedItems = STUDENT_NAV_GROUPS.map((g) => ({
+    ...g,
+    items: navItems.filter((item) => item.group === g.id && item.id !== 'dashboard'),
+  })).filter((g) => g.items.length > 0);
+
+  const renderItem = (item: StudentNavItem) => {
+    const Icon = item.icon;
+    const badge = item.badge === 'notifications' && unreadNotifications > 0 ? unreadNotifications : undefined;
+    const translatedLabel = item.translationKey ? t(item.translationKey as TranslationKey) : item.label;
+    return (
+      <NavLink
+        key={item.id}
+        to={item.path}
+        end={item.path === '/student/dashboard'}
+        title={isCollapsed ? translatedLabel : undefined}
+        className={({ isActive }) => `flex items-center gap-3 px-3 py-2 min-h-[38px] rounded-xl text-sm transition-all duration-150 group
+          ${isActive
+            ? 'bg-teal-600 text-white font-semibold shadow-sm shadow-teal-600/20'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium'
+          }
+          ${isCollapsed ? 'justify-center' : ''}
+        `}
+      >
+        {({ isActive }) => (
+          <>
+            <div className="relative shrink-0">
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400'}`} />
+              {badge && (
+                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                  {badge > 9 ? '9+' : badge}
+                </span>
+              )}
+            </div>
+            {!isCollapsed && <span className="truncate text-[13px]">{translatedLabel}</span>}
+          </>
+        )}
+      </NavLink>
+    );
+  };
 
   return (
     <>
@@ -118,39 +161,20 @@ export default function StudentSidebar({ onSignOut }: { onSignOut: () => void })
       )}
 
       {/* Navigation */}
-      <nav className="p-2 space-y-0.5 overflow-y-auto flex-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const badge = item.badge === 'notifications' && unreadNotifications > 0 ? unreadNotifications : undefined;
-          const translatedLabel = item.translationKey ? t(item.translationKey as TranslationKey) : item.label;
-          return (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              end={item.path === '/student/dashboard'}
-              title={isCollapsed ? translatedLabel : undefined}
-              className={({ isActive }) => `flex items-center gap-3 px-3 py-2 min-h-[40px] rounded-xl text-sm transition-all duration-150 group
-                ${isActive
-                  ? 'bg-teal-600 text-white font-semibold shadow-sm shadow-teal-600/20'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-medium'
-                }
-                ${isCollapsed ? 'justify-center' : ''}
-              `}
-            >
-              <div className="relative shrink-0">
-                <Icon className={`w-4 h-4 ${'text-slate-500 dark:text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400'}`} />
-                {badge && (
-                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-                    {badge > 9 ? '9+' : badge}
-                  </span>
-                )}
-              </div>
-              {!isCollapsed && (
-                <span className="truncate text-[13px]">{translatedLabel}</span>
-              )}
-            </NavLink>
-          );
-        })}
+      <nav className="p-2 overflow-y-auto flex-1">
+        {topItems.map(renderItem)}
+        {groupedItems.map((group) => (
+          <div key={group.id} className="pt-3">
+            {isCollapsed ? (
+              <div className="mx-3 mb-1 border-t border-slate-200 dark:border-slate-800" />
+            ) : (
+              <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">{group.items.map(renderItem)}</div>
+          </div>
+        ))}
       </nav>
 
       {/* Bottom Controls */}

@@ -3,7 +3,7 @@
 // treated as a RETURN; an available copy is ISSUED to the selected member.
 
 import { useMemo, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDownLeft, ArrowUpRight, BookOpen, CheckCircle2, RefreshCw, User, UserX } from 'lucide-react'
+import { AlertTriangle, ArrowDownLeft, ArrowUpRight, BookOpen, CheckCircle2, FileUp, RefreshCw, User, UserX } from 'lucide-react'
 import { ScanInput, type ScanInputHandle } from '../ScanInput'
 import { Badge, Field, btn, errMsg, fmtDate, inr } from '../officeUi'
 import { useNotification } from '@/shared/providers/NotificationProvider'
@@ -31,6 +31,7 @@ import {
   type LibrarySettings,
 } from '../../utils/libraryEngine'
 import { todayIso } from '../../api/officeDb'
+import CsvBulkImport from '../CsvBulkImport'
 import { useActiveLoans, useLibraryMembers, useLibraryRefresh } from '../../hooks/useLibrary'
 
 interface LogRow {
@@ -56,6 +57,7 @@ export default function CirculationDesk({ settings }: { settings: LibrarySetting
   const [loan, setLoan] = useState<LibraryLoan | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [log, setLog] = useState<LogRow[]>([])
+  const [bulkOpen, setBulkOpen] = useState(false)
   // issue form
   const [dueOverride, setDueOverride] = useState('')
   // return form
@@ -206,7 +208,51 @@ export default function CirculationDesk({ settings }: { settings: LibrarySetting
     }
   }
 
+  async function processBulkRow(r: Record<string, string>) {
+    const action = String(r.action || '').trim().toLowerCase() || (r.memberCode ? 'issue' : 'return')
+    const acc = String(r.accessionNo || '').trim()
+    if (!acc) return false
+    const c = await findCopyByAccession(acc)
+    if (!c) throw new Error(`No copy with accession "${acc}"`)
+    if (action === 'return') {
+      if (c.status !== 'issued') throw new Error(`${acc} is not on loan`)
+      const loans = (await loansQ.refetch()).data || []
+      const l = loans.find(x => x.copyId === c.id)
+      if (!l) throw new Error(`${acc}: no open loan found`)
+      await returnLoan({ loan: l, settings, condition: 'ok', extraCharge: 0, waiveOverdue: false })
+      addLog('return', `${l.accessionNo} ← ${l.memberName} (bulk)`)
+      return
+    }
+    if (action !== 'issue') throw new Error(`Unknown action "${r.action}" (use issue or return)`)
+    const code = String(r.memberCode || '').trim()
+    if (!code) throw new Error('memberCode is required to issue')
+    const matches = findMembers(membersQ.data || [], code)
+    const exact = matches.filter(m => (m.code || '').toLowerCase() === code.toLowerCase())
+    const m = exact.length === 1 ? exact[0] : matches.length === 1 ? matches[0] : null
+    if (!m) throw new Error(matches.length ? `"${code}" matches ${matches.length} members — use the exact reg. no / staff code` : `No member "${code}"`)
+    if (!['available', 'on_hold'].includes(c.status)) throw new Error(`${acc} cannot be issued (${COPY_STATUS_LABEL[c.status]})`)
+    const l = await issueCopy({ copyId: c.id, member: m, settings, dueDateOverride: r.dueDate?.trim() || undefined })
+    addLog('issue', `${l.accessionNo} → ${m.name} (bulk)`)
+  }
+
   return (
+    <div className="space-y-3">
+    <div className="flex justify-end">
+      <button onClick={() => setBulkOpen(true)} className={btn.ghost}><FileUp className="w-4 h-4" /> Bulk issue / return (CSV)</button>
+    </div>
+    {bulkOpen && (
+      <CsvBulkImport
+        title="Bulk issue / return"
+        description={<>One row per book. <b>action</b> = <code>issue</code> or <code>return</code>. For issues give the member’s reg. no / staff code in <b>memberCode</b>; <b>dueDate</b> (YYYY-MM-DD) is optional — the member’s loan policy is used otherwise. Returns are recorded in good condition with the normal overdue fine.</>}
+        templateName="circulation-bulk-template.csv"
+        columns={['action', 'memberCode', 'accessionNo', 'dueDate']}
+        templateRows={[{ action: 'issue', memberCode: 'VRD2026147', accessionNo: 'ACC000001', dueDate: '' }, { action: 'return', memberCode: '', accessionNo: 'ACC000002', dueDate: '' }]}
+        aliases={{ 'reg no': 'memberCode', 'member': 'memberCode', 'member code': 'memberCode', 'acc no': 'accessionNo', 'accession': 'accessionNo', 'accession no': 'accessionNo', 'due date': 'dueDate' }}
+        processRow={processBulkRow}
+        onClose={() => setBulkOpen(false)}
+        onDone={(res) => { refresh(); if (res.ok) showSuccess(`Bulk circulation: ${res.ok} done${res.failed ? `, ${res.failed} failed` : ''}.`) }}
+      />
+    )}
     <div className="grid lg:grid-cols-2 gap-5">
       {/* ── Member ───────────────────────────── */}
       <section className="glass-card p-4 space-y-3">
@@ -346,6 +392,7 @@ export default function CirculationDesk({ settings }: { settings: LibrarySetting
           </div>
         )}
       </section>
+    </div>
     </div>
   )
 }
