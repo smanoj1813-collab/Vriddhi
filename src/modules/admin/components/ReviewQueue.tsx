@@ -67,6 +67,7 @@ interface ReviewDetailDialogProps {
   questionContent: QuestionContent | null;
   questionMetadata: QuestionMetadata | null;
   loading: boolean;
+  contentError: string | null;
   onApprove: (comment?: string) => void;
   onReject: (reason: string) => void;
   isProcessing: boolean;
@@ -79,6 +80,7 @@ function ReviewDetailDialog({
   questionContent,
   questionMetadata,
   loading,
+  contentError,
   onApprove,
   onReject,
   isProcessing,
@@ -120,6 +122,10 @@ function ReviewDetailDialog({
           </Box>
         ) : (
           <Stack spacing={3}>
+            {contentError && <Alert severity="error">Could not load this question: {contentError}</Alert>}
+            {!contentError && !questionContent && (
+              <Alert severity="warning">Question details are not available for this review.</Alert>
+            )}
             {/* Submitter info */}
             <MuiPaper sx={{ p: 2, bgcolor: 'background.default' }}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -417,8 +423,10 @@ export function ReviewQueue() {
 
   const reviews: QuestionReview[] = hookResult.reviews || [];
   const selectedQuestion = hookResult.selectedQuestion || null;
-  const loading = hookResult.loading || false;
-  const error = hookResult.error || null;
+  const loading = hookResult.loadingUniversal?.reviews ?? hookResult.loading ?? false;
+  const detailLoading = hookResult.loadingUniversal?.questionDetail ?? false;
+  const detailError = hookResult.errorsUniversal?.questionDetail ?? null;
+  const error = hookResult.errorsUniversal?.reviews ?? hookResult.error ?? null;
 
   // Dynamically resolve methods
   const loadPendingReviews = hookResult.loadPendingReviews || hookResult.loadReviews || (() => {});
@@ -642,8 +650,9 @@ export function ReviewQueue() {
         onClose={() => { setDetailOpen(false); setSelectedReview(null); }}
         review={selectedReview}
         questionContent={selectedQuestion}
-        questionMetadata={null} // Would need to fetch separately
-        loading={loading}
+        questionMetadata={null} // The detail loader currently exposes question content only.
+        loading={detailLoading}
+        contentError={detailError}
         onApprove={handleApprove}
         onReject={handleReject}
         isProcessing={isProcessing}

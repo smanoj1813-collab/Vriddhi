@@ -240,16 +240,15 @@ export default function FacultyUploadMaterial() {
     }
   }
 
-  const handleView = async (id: string, url?: string) => {
-    await trackView(id)
-    if (url) window.open(url, '_blank')
+  // Keep the file URL on the clicked anchor itself. Opening a new tab only
+  // after awaiting analytics loses the browser's user-activation gesture, so
+  // mobile browsers / installed PWAs block it (most visibly for PDF viewers).
+  const handleView = (id: string) => {
+    void trackView(id).catch(() => {})
   }
 
-  const handleDownload = async (id: string, url?: string) => {
-    await trackDownload(id)
-    if (url && url !== '#') {
-      window.open(url, '_blank')
-    }
+  const handleDownload = (id: string) => {
+    void trackDownload(id).catch(() => {})
   }
 
   const resetModal = () => {
@@ -415,17 +414,31 @@ export default function FacultyUploadMaterial() {
                     href={material.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => handleView(material.id, material.url)}
+                    onClick={() => handleView(material.id)}
                     className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
                     title="Open Link"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
-                ) : (
-                  <button
-                    onClick={() => handleDownload(material.id, material.url)}
+                ) : material.url && material.url !== '#' ? (
+                  <a
+                    href={material.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => handleDownload(material.id)}
                     className="p-2 rounded-xl bg-teal-500/10 text-teal-500 hover:bg-teal-500/20 transition-all"
                     title="Download / View"
+                    aria-label="Open or download material"
+                  >
+                    <Download className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="p-2 rounded-xl bg-slate-100 text-slate-400 dark:bg-slate-800"
+                    title="No file is available"
+                    aria-label="No file is available"
                   >
                     <Download className="w-4 h-4" />
                   </button>

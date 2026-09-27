@@ -1425,7 +1425,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box sx={{ display: "flex", width: "100%", minWidth: 0, minHeight: "100vh", bgcolor: "background.default" }}>
       {/* ─── Top App Bar ─── */}
       <AppBar
         position="fixed"
@@ -1640,6 +1640,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
+          minWidth: 0,
+          maxWidth: "100%",
           minHeight: "100vh",
           // Clear the fixed header (plus the notch inset on phones) and, on
           // phones, the bottom tab bar — same offsets the student layout uses.
