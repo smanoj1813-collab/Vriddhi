@@ -259,12 +259,13 @@ html {
 }
 
 @media (max-width: 767px) {
-  /* Keep the original mobile text guard scoped to text-bearing elements.
-     Applying `overflow-wrap:anywhere` to every div/list/flex wrapper changes
-     min-content sizing throughout the role portals: flex rows then shrink
-     unpredictably and headings, badges, and table columns stop lining up. */
-  h1, h2, h3, p, span, td, th, button, label {
-    overflow-wrap: anywhere;
+  /* Let long tokens wrap when they truly need to, but preserve each element's
+     min-content width. `anywhere` makes every character a sizing opportunity;
+     in flex/grid/table layouts that collapses labels and columns into narrow
+     strips (the vertical, letter-by-letter text seen on phones). */
+  h1, h2, h3, h4, h5, h6, p, span, a, li, td, th, button, label,
+  code, strong, em, small, dt, dd, figcaption {
+    overflow-wrap: break-word;
   }
   input, select, textarea {
     max-width: 100%;
