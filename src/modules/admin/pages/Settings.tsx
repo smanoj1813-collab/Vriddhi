@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { getStoredAccent, setAccent } from '@/shared/theme/accent'
 import { useSearchParams } from 'react-router-dom'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useAuth } from '../../auth/context/AuthContext'
@@ -165,7 +166,9 @@ export default function Settings() {
   const [saving2FA, setSaving2FA] = useState(false)
 
   // Appearance state
-  const [accentColor, setAccentColor] = useState('#14b8a6')
+  const [accentColor, setAccentColor] = useState(() => getStoredAccent())
+  // Apply the accent app-wide as soon as it changes (swatch click, profile load, reset).
+  useEffect(() => { setAccent(accentColor) }, [accentColor])
   const [fontSize, setFontSize] = useState('medium')
   const [compactMode, setCompactMode] = useState(false)
   const [animationsEnabled, setAnimationsEnabled] = useState(true)
@@ -356,6 +359,34 @@ export default function Settings() {
       setProfileMsg({ type: 'err', text: e.message || 'Failed to update profile' })
     } finally {
       setSavingProfile(false)
+    }
+  }
+
+  // Push toggle must actually ask the browser — before, it only flipped a flag.
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>(() =>
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported'
+  )
+  const handleTogglePush = async (value: boolean) => {
+    if (!value) { updateNotification('pushEnabled', false); return }
+    if (!('Notification' in window)) {
+      setPushPermission('unsupported')
+      setNotificationMsg({ type: 'err', text: 'This browser does not support notifications.' })
+      return
+    }
+    let perm = Notification.permission
+    if (perm === 'default') perm = await Notification.requestPermission()
+    setPushPermission(perm)
+    if (perm !== 'granted') {
+      updateNotification('pushEnabled', false)
+      setNotificationMsg({ type: 'err', text: 'Notifications are blocked for this site. Allow them in your browser settings and try again.' })
+      return
+    }
+    updateNotification('pushEnabled', true)
+    try {
+      new Notification('Vriddhi notifications enabled', { body: 'You will see alerts on this device.', icon: '/favicon.ico' })
+    } catch {
+      // Some mobile browsers only allow notifications via a service worker.
+      navigator.serviceWorker?.ready.then((reg) => reg.showNotification('Vriddhi notifications enabled', { body: 'You will see alerts on this device.' })).catch(() => undefined)
     }
   }
 
@@ -739,12 +770,21 @@ export default function Settings() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-800 dark:text-white">Push Notifications</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Enable push notifications on this device</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Enable push notifications on this device
+                        {' · '}
+                        <span className={pushPermission === 'granted' ? 'text-emerald-600' : pushPermission === 'denied' ? 'text-rose-600' : 'text-amber-600'}>
+                          {pushPermission === 'granted' ? 'Browser permission granted'
+                            : pushPermission === 'denied' ? 'Blocked in browser settings — allow notifications for this site'
+                            : pushPermission === 'unsupported' ? 'Not supported on this browser'
+                            : 'Browser permission not yet granted'}
+                        </span>
+                      </p>
                     </div>
                   </div>
                   <ToggleSwitch
                     checked={notifications.pushEnabled}
-                    onChange={(v) => updateNotification('pushEnabled', v)}
+                    onChange={handleTogglePush}
                   />
                 </div>
 

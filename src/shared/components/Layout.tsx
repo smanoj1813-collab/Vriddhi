@@ -1486,9 +1486,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Right Header Utilities */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
             <LanguageSwitcher compact showLabel={false} className="hidden sm:inline-flex" />
-            {/* Theme toggle */}
+            {/* Theme toggle + sign-out: phone/tablet only. On desktop (md+) the
+                permanent sidebar footer already has Dark Mode and Sign Out, so
+                showing them here too was a duplicate. */}
             <Tooltip title={resolvedMode === "dark" ? t("common.lightMode") : t("common.darkMode")}>
-              <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1 }}>
+              <IconButton onClick={toggleMode} color="inherit" size="small" sx={{ p: 1, display: { xs: "inline-flex", md: "none" } }}>
                 {resolvedMode === "dark" ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
               </IconButton>
             </Tooltip>
@@ -1502,6 +1504,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 size="small"
                 sx={{
                   p: 1,
+                  display: { xs: "inline-flex", md: "none" },
                   color: "error.main",
                   "&:hover": { bgcolor: "error.light", opacity: 0.15 },
                 }}
