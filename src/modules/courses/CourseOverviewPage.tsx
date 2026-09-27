@@ -284,7 +284,7 @@ export default function CourseOverviewPage({ basePath, uid, collegeId, learnerNa
             ))}
           </ul>
           <div className="mt-4 flex flex-wrap gap-2">
-            {[...manifest.assessment.grades].sort((a, b) => b.min - a.min).map((g) => (
+            {[...(manifest.assessment.grades ?? [])].sort((a, b) => b.min - a.min).map((g) => (
               <Chip key={g.band} tone={g.min >= 80 ? 'emerald' : g.min >= 65 ? 'teal' : g.min >= 50 ? 'amber' : 'slate'}>
                 {g.band} {g.min > 0 ? `≥ ${g.min}%` : ''}
               </Chip>

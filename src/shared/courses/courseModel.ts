@@ -342,7 +342,9 @@ export function touchTopic(progress: CourseProgress, topicId: string, now: Date 
 
 /** Grade band for an overall percentage, per the manifest's bands (highest min first). */
 export function gradeBand(manifest: CourseManifest, percent: number): string {
-  const bands = [...manifest.assessment.grades].sort((a, b) => b.min - a.min)
+  // Grades are optional at the type level so a pack without bands degrades to
+  // "—" instead of crashing the overview page.
+  const bands = [...(manifest.assessment.grades ?? [])].sort((a, b) => b.min - a.min)
   return bands.find((b) => percent >= b.min)?.band || bands[bands.length - 1]?.band || '—'
 }
 
@@ -419,6 +421,16 @@ export function validateManifest(manifest: CourseManifest): string[] {
   }
   const weights = manifest.assessment?.components?.reduce((n, c) => n + c.weight, 0) ?? 0
   if (weights !== 100) problems.push(`assessment component weights sum to ${weights}, expected 100`)
+  if (!Array.isArray(manifest.assessment?.grades) || manifest.assessment.grades.length === 0) {
+    problems.push('assessment.grades must be a non-empty array of { band, min } bands')
+  } else {
+    manifest.assessment.grades.forEach((band, gi) => {
+      if (!band.band) problems.push(`assessment.grades[${gi}] missing band`)
+      if (!(Number.isFinite(band.min) && band.min >= 0 && band.min <= 100)) {
+        problems.push(`assessment.grades[${gi}] min must be between 0 and 100`)
+      }
+    })
+  }
   const moduleHours = manifest.modules.reduce((n, m) => n + Number(m.hours), 0)
   if (moduleHours > manifest.totalHours) {
     problems.push(`module hours (${moduleHours}) exceed totalHours (${manifest.totalHours})`)

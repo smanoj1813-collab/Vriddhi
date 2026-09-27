@@ -8,6 +8,7 @@
 // Run with: npm run test:render:courses
 import { createServer } from 'vite';
 import path from 'path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'url';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -104,8 +105,17 @@ async function sectionComponent(label, Component, props, assertions) {
   }
 }
 
-// The pack under test.
-const { default: manifest } = await import(path.resolve(root, 'content/courses/genai-certification/course.json'), { with: { type: 'json' } });
+// Discover every bundled pack for overview and Markdown regression sweeps.
+const coursesDir = path.resolve(root, 'content/courses');
+const packs = fs.readdirSync(coursesDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(coursesDir, entry.name, 'course.json')))
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map((entry) => ({
+    packDir: path.join(coursesDir, entry.name),
+    manifest: JSON.parse(fs.readFileSync(path.join(coursesDir, entry.name, 'course.json'), 'utf8')),
+  }));
+// Keep the detailed interaction checks on their existing GenAI fixture.
+const { manifest } = packs.find((pack) => pack.manifest.id === 'genai-certification');
 const firstTopic = manifest.modules[0].topics[0];
 const secondTopic = manifest.modules[0].topics[1];
 const topicCount = manifest.modules.reduce((n, m) => n + m.topics.length, 0);
@@ -236,6 +246,20 @@ await section('overview', '/src/modules/courses/CourseOverviewPage.tsx', { baseP
   check('overview: links to the lesson player', v.hrefs().includes(`/courses/${manifest.id}/learn/${firstTopic.id}`), v.hrefs().join(' '));
 });
 
+// Every pack must render its title and grade bands on both overview routes.
+for (const { manifest: pack } of packs) {
+  globalThis.__RC_PARAMS = { courseId: pack.id };
+  for (const basePath of ['/courses', '/student/courses']) {
+    await section(`${pack.id}: ${basePath} overview`, '/src/modules/courses/CourseOverviewPage.tsx', { basePath }, (v) => {
+      const t = v.text();
+      check(`${pack.id}: ${basePath} overview renders title`, t.includes(pack.title), t);
+      check(`${pack.id}: ${basePath} overview renders grade bands`,
+        Array.isArray(pack.assessment.grades) && pack.assessment.grades.length > 0
+          && pack.assessment.grades.every((grade) => t.includes(grade.band) && (grade.min === 0 || t.includes(`≥ ${grade.min}%`))), t);
+    });
+  }
+}
+
 // ── Lesson player ───────────────────────────────────────────────────────────
 globalThis.__RC_PARAMS = { courseId: manifest.id, topicId: firstTopic.id };
 await section('lesson', '/src/modules/courses/CourseLessonPage.tsx', { basePath: '/courses', uid: 'student-1' }, async (v) => {
@@ -308,14 +332,12 @@ await section('lesson (missing)', '/src/modules/courses/CourseLessonPage.tsx', {
 });
 
 // ── Every lesson body renders through CourseMarkdown ────────────────────────
-// The page checks above exercise one lesson; this sweep renders all 41 files
+// The page checks above exercise one lesson; this sweep renders every pack's files
 // (with a per-file time budget) so a stray construct in any lesson — a table
 // without a separator row, a nested quote in a list, an unclosed fence — fails
 // here rather than in a learner's browser.
-{
-  const fs = await import('node:fs');
-  const packDir = path.resolve(root, 'content/courses/genai-certification');
-  const topics = manifest.modules.flatMap((m) => m.topics);
+for (const { packDir, manifest: pack } of packs) {
+  const topics = pack.modules.flatMap((m) => m.topics);
   let rendered = 0;
   let problems = [];
   for (const topic of topics) {
@@ -338,9 +360,9 @@ await section('lesson (missing)', '/src/modules/courses/CourseLessonPage.tsx', {
       problems.push(`${topic.id}: threw ${String(err.message).slice(0, 200)}`);
     }
   }
-  check(`markdown sweep: all ${topics.length} lesson files render`, rendered === topics.length && problems.length === 0, problems.join('\n'));
+  check(`${pack.id}: markdown sweep: all ${topics.length} lesson files render`, rendered === topics.length && problems.length === 0, problems.join('\n'));
   const tables = topics.length;
-  check('markdown sweep: every lesson has a plan or project call-out',
+  check(`${pack.id}: markdown sweep: every lesson has a plan or project call-out`,
     topics.every((topic) => /\*\*(Lesson|Project) plan\*\*/.test(fs.readFileSync(path.join(packDir, topic.lesson), 'utf8'))), String(tables));
 }
 

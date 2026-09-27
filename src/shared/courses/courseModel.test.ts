@@ -236,6 +236,15 @@ test('gradeBand picks the highest band whose minimum is met, regardless of decla
   assert.equal(gradeBand(m, 49), 'Not yet')
 })
 
+test('gradeBand degrades to an em dash when the pack declares no grade bands', () => {
+  // Regression: a manifest without assessment.grades used to throw
+  // "grades is not iterable" on the course overview page.
+  const m = fixture()
+  delete m.assessment.grades
+  assert.equal(gradeBand(m, 95), '—')
+  assert.equal(gradeBand(m, 0), '—')
+})
+
 test('formatMinutes', () => {
   assert.equal(formatMinutes(0), '0m')
   assert.equal(formatMinutes(45), '45m')
@@ -260,6 +269,16 @@ test('validateManifest: reports duplicate ids, bad weights, hour mismatches and 
   assert.ok(problems.some((p) => p.includes('declares 3h')), problems.join('\n'))
   assert.ok(problems.some((p) => p.includes('needs a .md lesson path')), problems.join('\n'))
   assert.ok(problems.some((p) => p.includes('exceed totalHours')), problems.join('\n'))
+})
+
+test('validateManifest: a manifest without grade bands is flagged, not silently accepted', () => {
+  // Regression guard: the digital-marketing pack shipped without
+  // assessment.grades and crashed the overview page ("grades is not
+  // iterable") because nothing validated the field.
+  const m = fixture()
+  delete m.assessment.grades
+  const problems = validateManifest(m)
+  assert.ok(problems.some((p) => p.includes('assessment.grades')), problems.join('\n'))
 })
 
 test('validateManifest: empty modules short-circuits with a single clear problem', () => {

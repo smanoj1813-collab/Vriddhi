@@ -93,7 +93,9 @@ export interface CourseManifest {
     passMark: number
     conditions?: string[]
     components: CourseAssessmentComponent[]
-    grades: CourseGradeBand[]
+    /** Optional at the type level (unguarded renders must not crash), but
+     *  validateManifest() requires it for shipped course packs. */
+    grades?: CourseGradeBand[]
   }
   /** Quiz-bank size per lesson; defaults to five for existing course packs. */
   lessonQuizQuestionCount?: number
