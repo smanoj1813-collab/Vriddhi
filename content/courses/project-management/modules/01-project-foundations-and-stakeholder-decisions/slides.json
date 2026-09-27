@@ -1,0 +1,200 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-s1",
+        "title": "Temporary change versus repeatable service",
+        "summary": "A project creates a specific change and has an identifiable end.",
+        "explanation": "A project creates a specific change and has an identifiable end. Operating the placement desk every day is an ongoing service; designing and introducing a new registration process is a project. Both need planning, but their control questions differ. A project needs acceptance and handover; operations need stable ownership, recurring capacity and service measures. Calling routine work a project does not make it more valuable. Classify the work to choose the right management method.",
+        "example": "A fictional Bengaluru college wants to replace a manual placement-registration queue with a simple booking service in six weeks. The principal asks for an app, the placement coordinator asks for fewer duplicate registrations, and students ask for shorter queues. These are related but not identical requests.",
+        "takeaway": "Distinguish a temporary project from ongoing operations and separate outputs from intended benefits.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Separate the request into one project and two ongoing operational responsibilities."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a pilot decision and name the evidence required before a full rollout."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s2",
+        "title": "Outputs, outcomes and benefits",
+        "summary": "A booking form is an output.",
+        "explanation": "A booking form is an output. Students completing registration without a second visit is an outcome. Staff hours saved while maintaining equitable access is a benefit. A delivered form does not prove either outcome. Write a chain linking the output to a changed behaviour and then to a measurable benefit. Identify who will measure the benefit after handover. Do not promise a result when you control only one contributor to it.",
+        "example": "A fictional Bengaluru college wants to replace a manual placement-registration queue with a simple booking service in six weeks. The principal asks for an app, the placement coordinator asks for fewer duplicate registrations, and students ask for shorter queues. These are related but not identical requests.",
+        "takeaway": "Distinguish a temporary project from ongoing operations and separate outputs from intended benefits.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Separate the request into one project and two ongoing operational responsibilities."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a pilot decision and name the evidence required before a full rollout."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s3",
+        "title": "Constraints and a minimum useful change",
+        "summary": "Time, cost, scope, quality and risk interact.",
+        "explanation": "Time, cost, scope, quality and risk interact. A fixed event date may mean reducing optional features rather than silently removing accessibility checks. Define the smallest useful change, its acceptance evidence and exclusions. The coordinator gathers options and obtains decisions; they do not commit someone else’s budget by declaring a deadline. A sponsor authorises the project and resolves trade-offs beyond the team’s authority. Record assumptions before estimating work.",
+        "example": "The desk handles 240 registrations per event. At six minutes each, handling effort is 1,440 minutes. A pilot target of four minutes implies 960 minutes, a potential saving of 480 minutes or eight staff-hours. This is a forecast, not a measured benefit. Check the pilot’s time per registration, error rate and student access before claiming the saving.",
+        "takeaway": "Distinguish a temporary project from ongoing operations and separate outputs from intended benefits.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Separate the request into one project and two ongoing operational responsibilities."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a pilot decision and name the evidence required before a full rollout."
+            }
+          ]
+        }
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-s1",
+        "title": "A charter creates a shared starting point",
+        "summary": "A lightweight charter states the problem, objective, sponsor, project lead, deadline, budget limit, high-level scope and major assumptions.",
+        "explanation": "A lightweight charter states the problem, objective, sponsor, project lead, deadline, budget limit, high-level scope and major assumptions. It is not a detailed task list and is not a substitute for approval. Distinguish a proposed charter from an authorised one by showing the approver, decision and date. Where funding is not yet approved, record that uncertainty explicitly. A coordinator prepares the evidence and routes it through the institution’s actual authority structure.",
+        "example": "The placement sponsor says “make registration smooth”. A volunteer interprets that as automated SMS, another adds a payments screen, and the college has not approved collection of phone numbers. Without a boundary, everyone can be busy while building different projects.",
+        "takeaway": "Write a charter that makes authority, boundaries and acceptance testable.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft a charter with sponsor, purpose, milestone, cost limit and approval status."
+            },
+            {
+              "title": "Decision",
+              "detail": "Log a request for SMS as pending, with impact questions rather than a promised delivery date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s2",
+        "title": "Scope includes exclusions",
+        "summary": "Scope describes the deliverables and necessary work.",
+        "explanation": "Scope describes the deliverables and necessary work. Exclusions tell stakeholders what the project will not provide, such as payment collection or integration with an external employer portal. Exclusions should be negotiated, not hidden in small print. Clarify who owns requests after the baseline is approved. A new request can be valuable and still require a change decision. Keeping a request in a log is not the same as approving it.",
+        "example": "The placement sponsor says “make registration smooth”. A volunteer interprets that as automated SMS, another adds a payments screen, and the college has not approved collection of phone numbers. Without a boundary, everyone can be busy while building different projects.",
+        "takeaway": "Write a charter that makes authority, boundaries and acceptance testable.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft a charter with sponsor, purpose, milestone, cost limit and approval status."
+            },
+            {
+              "title": "Decision",
+              "detail": "Log a request for SMS as pending, with impact questions rather than a promised delivery date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s3",
+        "title": "Acceptance is evidence, not enthusiasm",
+        "summary": "Acceptance criteria should be observable by a named reviewer.",
+        "explanation": "Acceptance criteria should be observable by a named reviewer. “Easy to use” is insufficient; “a learner can book, correct and cancel a slot in a supervised test without staff entering data for them” can be tested. Define the test conditions, sample, expected result and unresolved defects. Acceptance of the project deliverable and achievement of long-term benefits happen at different times. Record any conditional acceptance and the owner of remaining actions.",
+        "example": "A pilot includes 40 volunteer users and three basic journeys: create, amend and cancel a booking. If 37 complete all journeys without assistance, the observed success proportion is 37/40 = 92.5%. Whether that passes depends on the acceptance threshold agreed before the test. Do not invent a 90% threshold after seeing the result. Small volunteer samples also limit generalisation.",
+        "takeaway": "Write a charter that makes authority, boundaries and acceptance testable.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft a charter with sponsor, purpose, milestone, cost limit and approval status."
+            },
+            {
+              "title": "Decision",
+              "detail": "Log a request for SMS as pending, with impact questions rather than a promised delivery date."
+            }
+          ]
+        }
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-s1",
+        "title": "Interest, influence and impact are different",
+        "summary": "Map people by what they need, what decisions they can influence and how the change affects them.",
+        "explanation": "Map people by what they need, what decisions they can influence and how the change affects them. A low-power student can still face high impact and must have an accessible feedback route. Do not use an influence grid to silence affected groups. Stakeholder maps are working hypotheses; confirm needs through discussion and revise them as the project changes. Use role-based entries in classroom work instead of collecting real personal details.",
+        "example": "The pilot has a sponsor, placement staff, a student accessibility representative, an IT administrator and a vendor. A status meeting has fifteen invitees but no one can say who accepts the booking workflow. An important accessibility concern arrives only on launch day.",
+        "takeaway": "Map stakeholder needs and assign decision responsibilities without overloading every meeting.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "List five stakeholder roles, their needs and the impact of a failed rollout on each."
+            },
+            {
+              "title": "Decision",
+              "detail": "Roleplay a disagreement and record a decision, an action owner and an escalation date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s2",
+        "title": "RACI clarifies one deliverable at a time",
+        "summary": "Responsible means doing the work; Accountable means answerable for the decision or result; Consulted means input is sought; Informed means kept up to date.",
+        "explanation": "Responsible means doing the work; Accountable means answerable for the decision or result; Consulted means input is sought; Informed means kept up to date. In this course, assign one accountable role per deliverable to avoid unresolved ownership. Several responsible roles can contribute, but someone coordinates them. RACI is an agreement to confirm with the people involved, not a way to appoint absent colleagues without their consent.",
+        "example": "The pilot has a sponsor, placement staff, a student accessibility representative, an IT administrator and a vendor. A status meeting has fifteen invitees but no one can say who accepts the booking workflow. An important accessibility concern arrives only on launch day.",
+        "takeaway": "Map stakeholder needs and assign decision responsibilities without overloading every meeting.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "List five stakeholder roles, their needs and the impact of a failed rollout on each."
+            },
+            {
+              "title": "Decision",
+              "detail": "Roleplay a disagreement and record a decision, an action owner and an escalation date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s3",
+        "title": "Communication is a designed service",
+        "summary": "Specify audience, information, format, cadence, sender and escalation trigger.",
+        "explanation": "Specify audience, information, format, cadence, sender and escalation trigger. A sponsor may need a weekly decision brief; a student representative may need a short prototype review before acceptance. Status meetings should produce decisions or actions with owners and dates, not merely oral task lists. Confidential commercial details do not belong in a public board. Select channels according to sensitivity and accessibility as well as convenience.",
+        "example": "For pilot acceptance, the placement sponsor is Accountable, the coordinator Responsible for assembling evidence, the student representative and IT administrator Consulted, and participating staff Informed. If IT owns a separate security approval, give that approval its own row with its own accountable owner rather than forcing two unrelated decisions into one row.",
+        "takeaway": "Map stakeholder needs and assign decision responsibilities without overloading every meeting.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "List five stakeholder roles, their needs and the impact of a failed rollout on each."
+            },
+            {
+              "title": "Decision",
+              "detail": "Roleplay a disagreement and record a decision, an action owner and an escalation date."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

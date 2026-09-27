@@ -1,0 +1,341 @@
+{
+  "moduleId": "m1",
+  "questions": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-q1",
+        "question": "Which activity is the temporary project in the placement case?",
+        "options": [
+          "Introduce and hand over a new booking process",
+          "Answer routine placement calls each day",
+          "Update the ongoing attendance register",
+          "Run the desk indefinitely"
+        ],
+        "answerIndex": 0,
+        "explanation": "The project changes the process; recurring service delivery is operations.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q2",
+        "question": "Which is an outcome rather than an output?",
+        "options": [
+          "A training presentation",
+          "Fewer students need a second registration visit",
+          "A new registration form",
+          "An approved project plan"
+        ],
+        "answerIndex": 1,
+        "explanation": "An outcome is a change in behaviour or performance, not a produced document.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q3",
+        "question": "What is the forecast saving at 240 registrations if handling time falls from six to four minutes?",
+        "options": [
+          "Forty staff-hours",
+          "Four hundred eighty staff-hours",
+          "Eight staff-hours",
+          "Two staff-hours"
+        ],
+        "answerIndex": 2,
+        "explanation": "240 × 2 = 480 minutes; divide by 60 to get eight hours.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q4",
+        "question": "Who should resolve a scope and funding conflict outside the team’s authority?",
+        "options": [
+          "Any team member who is free",
+          "The software vendor alone",
+          "The last person to edit the plan",
+          "The authorised sponsor"
+        ],
+        "answerIndex": 3,
+        "explanation": "The sponsor owns authorisation and escalated trade-offs.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q5",
+        "question": "The pilot software is installed. Which benefit statement is defensible?",
+        "options": [
+          "The output is delivered; benefits still need measurement",
+          "The entire forecast saving has been realised",
+          "All registration errors have been removed",
+          "Student access is now guaranteed"
+        ],
+        "answerIndex": 0,
+        "explanation": "Delivery is not evidence that the intended operational benefit occurred.",
+        "difficulty": "core"
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-q1",
+        "question": "What makes “smooth registration” a usable acceptance criterion?",
+        "options": [
+          "The developer’s confidence",
+          "An observable test and an agreed threshold",
+          "Repeating the phrase in the charter",
+          "A colourful slide explaining it"
+        ],
+        "answerIndex": 1,
+        "explanation": "Acceptance requires agreed evidence, not only an aspiration.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q2",
+        "question": "How should an unapproved SMS feature be represented?",
+        "options": [
+          "As a completed deliverable",
+          "As an unrecorded verbal promise",
+          "As a pending change request",
+          "As committed scope immediately"
+        ],
+        "answerIndex": 2,
+        "explanation": "Impact and authorisation must precede commitment.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q3",
+        "question": "What proportion is 37 successful users out of 40?",
+        "options": [
+          "37%",
+          "95%",
+          "7.5%",
+          "92.5%"
+        ],
+        "answerIndex": 3,
+        "explanation": "37 ÷ 40 × 100 = 92.5%; compare it with the pre-agreed target.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q4",
+        "question": "Who should be named beside an acceptance test?",
+        "options": [
+          "The authorised reviewer or acceptor",
+          "Only the person who wrote the code",
+          "Every possible observer",
+          "No one until launch"
+        ],
+        "answerIndex": 0,
+        "explanation": "A named acceptor makes the decision route explicit.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q5",
+        "question": "What does an explicit exclusion achieve?",
+        "options": [
+          "Proves a feature has no value",
+          "Clarifies a negotiated boundary",
+          "Guarantees no one requests a change",
+          "Removes the need for communication"
+        ],
+        "answerIndex": 1,
+        "explanation": "Exclusions clarify the baseline; valuable new work can still enter change control.",
+        "difficulty": "core"
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-q1",
+        "question": "Which stakeholder needs consultation even with little formal authority?",
+        "options": [
+          "Only the vendor account manager",
+          "Only the project lead",
+          "A student strongly affected by accessibility barriers",
+          "Only the budget approver"
+        ],
+        "answerIndex": 2,
+        "explanation": "Impact matters as well as formal influence.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q2",
+        "question": "In the course RACI convention, how many accountable roles should a deliverable have?",
+        "options": [
+          "Zero",
+          "At least three",
+          "Everyone attending the meeting",
+          "One"
+        ],
+        "answerIndex": 3,
+        "explanation": "One accountable role makes the decision route clear.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q3",
+        "question": "What does Consulted mean in RACI?",
+        "options": [
+          "Input is sought before the relevant decision",
+          "The person owns all project funding",
+          "The person merely receives the final notice",
+          "The person must perform every task"
+        ],
+        "answerIndex": 0,
+        "explanation": "Consultation is a two-way input relationship.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q4",
+        "question": "What belongs in a useful meeting action record?",
+        "options": [
+          "An unassigned promise to improve",
+          "Action, owner and due date",
+          "Only names of attendees",
+          "Only the meeting duration"
+        ],
+        "answerIndex": 1,
+        "explanation": "Actions need ownership and a review point.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q5",
+        "question": "Two distinct approvals have different owners. What is the clearest RACI treatment?",
+        "options": [
+          "Delete the approvals",
+          "Ask the vendor to decide both",
+          "Create separate approval rows",
+          "Name both people accountable for everything"
+        ],
+        "answerIndex": 2,
+        "explanation": "Separate deliverables avoid conflating different authority boundaries.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 1 scenario assessment",
+    "questions": [
+      {
+        "id": "m1-assessment-q1",
+        "question": "A sponsor celebrates an installed booking form, but repeat visits have not been measured. What should the coordinator report?",
+        "options": [
+          "Benefit equals software installation cost",
+          "Output delivered; outcome and benefit remain unverified",
+          "All forecast benefits realised",
+          "Project has no usable output"
+        ],
+        "answerIndex": 1,
+        "explanation": "Separate delivered outputs from observed outcomes and benefits.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q2",
+        "question": "A booking pilot saves two minutes for 150 cases, but staff spend two hours correcting errors. What is the net observed time saving?",
+        "options": [
+          "Two hours",
+          "Seven hours",
+          "Three hours",
+          "Five hours"
+        ],
+        "answerIndex": 2,
+        "explanation": "Gross saving is 300 minutes or five hours; subtract two hours of rework.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q3",
+        "question": "A high-impact learner group has little budget authority and is absent from consultation. What is the best correction?",
+        "options": [
+          "Exclude them because influence is low",
+          "Let the vendor represent them without checking",
+          "Consult only after permanent rollout",
+          "Add an accessible consultation route before acceptance"
+        ],
+        "answerIndex": 3,
+        "explanation": "Stakeholder impact and access matter independently of power.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q4",
+        "question": "A charter excludes payments. A senior lecturer requests them verbally. What is the defensible response?",
+        "options": [
+          "Log the request and seek impact review and authorisation",
+          "Implement immediately due to seniority",
+          "Delete the exclusion without a record",
+          "Refuse to record any new request"
+        ],
+        "answerIndex": 0,
+        "explanation": "Authority and change control apply even to valuable requests.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q5",
+        "question": "Two reviewers each think the other approves launch. How should the RACI be repaired?",
+        "options": [
+          "Make every consulted role the sponsor",
+          "Separate distinct approvals and name one accountable role for each",
+          "Mark all staff accountable for everything",
+          "Remove accountability entirely"
+        ],
+        "answerIndex": 1,
+        "explanation": "Distinct decisions need clear ownership rather than shared ambiguity.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q6",
+        "question": "A user test succeeds for 46 of 50 participants against a pre-agreed 95% target. What is the conclusion?",
+        "options": [
+          "46%; test invalid automatically",
+          "100%; only successes count",
+          "92%; target not met, investigate failures",
+          "95%; target met by rounding"
+        ],
+        "answerIndex": 2,
+        "explanation": "46/50 = 92%; the denominator includes all participants.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q7",
+        "question": "A prototype volunteer sample excludes users needing assistive technology. What should be added to the acceptance plan?",
+        "options": [
+          "A claim that all users will succeed",
+          "A lower target set after testing",
+          "Only a more attractive demo",
+          "Representative accessibility testing and a limitation note"
+        ],
+        "answerIndex": 3,
+        "explanation": "The sample omits an important use context.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q8",
+        "question": "The sponsor is unavailable and the team has only a draft charter. What can the coordinator accurately claim?",
+        "options": [
+          "The proposal is prepared; authorisation is pending",
+          "The project is fully approved",
+          "Budget authority has transferred automatically",
+          "All stakeholders have accepted scope"
+        ],
+        "answerIndex": 0,
+        "explanation": "Preparation and approval are different states.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q9",
+        "question": "A project team disbands after launch. Who should have been assigned to monitor staff-hour savings?",
+        "options": [
+          "The software tool without a responsible role",
+          "An operational benefits owner with a review date",
+          "No one because launch proves savings",
+          "Only the temporary intern forever"
+        ],
+        "answerIndex": 1,
+        "explanation": "Benefits often materialise after project closure.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q10",
+        "question": "A weekly sponsor meeting receives raw task lists but no choices. What is the highest-value redesign?",
+        "options": [
+          "Lengthen every task description",
+          "Replace the meeting with a colour alone",
+          "Summarise evidence, options and decisions due",
+          "Invite more observers without changing content"
+        ],
+        "answerIndex": 2,
+        "explanation": "Communication should support the recipient’s decisions.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

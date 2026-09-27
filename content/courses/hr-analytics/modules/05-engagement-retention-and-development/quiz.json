@@ -1,0 +1,341 @@
+{
+  "moduleId": "m5",
+  "questions": {
+    "m5-t1": [
+      {
+        "id": "m5-t1-q1",
+        "question": "What is response rate for 48 of 80 invitations?",
+        "options": [
+          "60%",
+          "48%",
+          "62.5%",
+          "80%"
+        ],
+        "answerIndex": 0,
+        "explanation": "48/80 × 100 = 60%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q2",
+        "question": "What does 30 favourable responses out of 48 describe?",
+        "options": [
+          "Every nonrespondent dissatisfied",
+          "62.5% favourable among respondents",
+          "62.5% of all employees definitely favourable",
+          "30% favourable among respondents"
+        ],
+        "answerIndex": 1,
+        "explanation": "The denominator is respondents, not the whole workforce.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q3",
+        "question": "Why show a response distribution?",
+        "options": [
+          "A mean is always illegal",
+          "Every response must be publicly identifiable",
+          "A mean can hide polarised views",
+          "Distributions remove all bias"
+        ],
+        "answerIndex": 2,
+        "explanation": "The distribution reveals patterns an average can conceal.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q4",
+        "question": "Which question design is preferable?",
+        "options": [
+          "Two unrelated issues in every question",
+          "Leading wording toward approval",
+          "Only questions that praise management",
+          "One clear idea per item"
+        ],
+        "answerIndex": 3,
+        "explanation": "Single-idea questions are easier to interpret.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q5",
+        "question": "What should be said if anonymity cannot be guaranteed?",
+        "options": [
+          "Describe actual confidentiality controls honestly",
+          "Promise anonymity anyway",
+          "Avoid explaining data use",
+          "Publish raw responses"
+        ],
+        "answerIndex": 0,
+        "explanation": "Trust requires accurate statements about access and identifiability.",
+        "difficulty": "core"
+      }
+    ],
+    "m5-t2": [
+      {
+        "id": "m5-t2-q1",
+        "question": "What is ninety-day retention for 34 of 40 eligible joiners?",
+        "options": [
+          "90%",
+          "85%",
+          "34%",
+          "15%"
+        ],
+        "answerIndex": 1,
+        "explanation": "34/40 × 100 = 85%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q2",
+        "question": "Only 10 of 30 recent joiners have complete follow-up and 9 remain. What can be reported?",
+        "options": [
+          "100% for all recent joiners",
+          "30% retention",
+          "90% among the 10 eligible observed joiners",
+          "90% for all 30 at ninety days"
+        ],
+        "answerIndex": 2,
+        "explanation": "Eligibility and exposure must be explicit.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q3",
+        "question": "Why is comparing one-month and six-month follow-up misleading?",
+        "options": [
+          "All cohorts always behave identically",
+          "Retention cannot be measured",
+          "Only calendar colour matters",
+          "The groups have different time at risk"
+        ],
+        "answerIndex": 3,
+        "explanation": "Longer observation allows more exits to occur.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q4",
+        "question": "How should exit-interview themes be treated?",
+        "options": [
+          "As contextual evidence with possible response bias",
+          "As proven causes in every case",
+          "As irrelevant automatically",
+          "As a public ranking of employees"
+        ],
+        "answerIndex": 0,
+        "explanation": "Qualitative evidence is useful but not free of bias.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q5",
+        "question": "Which action is appropriate for this course?",
+        "options": [
+          "Make dismissal recommendations from a small cohort",
+          "Pilot a process-level onboarding improvement",
+          "Publish a list of predicted leavers",
+          "Deny training based on a speculative risk score"
+        ],
+        "answerIndex": 1,
+        "explanation": "The learning focuses on responsible system improvement.",
+        "difficulty": "core"
+      }
+    ],
+    "m5-t3": [
+      {
+        "id": "m5-t3-q1",
+        "question": "What does video completion directly establish?",
+        "options": [
+          "A proven business benefit",
+          "An external qualification",
+          "Participation or completion of that activity",
+          "Guaranteed job competence"
+        ],
+        "answerIndex": 2,
+        "explanation": "Further evidence is needed for learning and application.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q2",
+        "question": "What is the change from 60% to 78%?",
+        "options": [
+          "18% relative improvement",
+          "78 percentage points",
+          "60 percentage points",
+          "18 percentage points"
+        ],
+        "answerIndex": 3,
+        "explanation": "The absolute difference between percentages is 18 points.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q3",
+        "question": "Why report fifteen workplace observations separately from twenty test takers?",
+        "options": [
+          "The follow-up denominator differs",
+          "The missing five automatically failed",
+          "All twenty were observed",
+          "It makes the programme look better"
+        ],
+        "answerIndex": 0,
+        "explanation": "Different evidence stages can have different coverage.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q4",
+        "question": "A checklist changed alongside training. What does that limit?",
+        "options": [
+          "The need for any evaluation",
+          "Attribution of improvement to training alone",
+          "The ability to count participants",
+          "The existence of the checklist"
+        ],
+        "answerIndex": 1,
+        "explanation": "Concurrent changes can confound causal interpretation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q5",
+        "question": "What should a mobility-access measure define?",
+        "options": [
+          "Only manager preferences",
+          "Only total payroll",
+          "Eligible employees and available opportunities",
+          "Only successful applicants"
+        ],
+        "answerIndex": 2,
+        "explanation": "Access cannot be interpreted without opportunity and eligibility context.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 5 scenario assessment",
+    "questions": [
+      {
+        "id": "m5-assessment-q1",
+        "question": "A survey has 60 replies from 100 invitations and 42 favourable replies. What rates should be reported?",
+        "options": [
+          "100% response",
+          "60% response and 70% favourable among respondents",
+          "70% response and 60% favourable",
+          "42% favourable among respondents"
+        ],
+        "answerIndex": 1,
+        "explanation": "60/100 = 60%; 42/60 = 70%.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q2",
+        "question": "Night-shift participation is low despite a high office response. What is a responsible next step?",
+        "options": [
+          "Identify and pressure nonrespondents",
+          "Delete the shift field and claim no bias",
+          "Offer accessible participation and report coverage limitations",
+          "Assume the office result represents all shifts"
+        ],
+        "answerIndex": 2,
+        "explanation": "Access and response patterns can affect representativeness.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q3",
+        "question": "A mean survey score is moderate but responses cluster at both extremes. What should the report add?",
+        "options": [
+          "Only a rounded mean",
+          "A claim everyone is moderately satisfied",
+          "Individual names beside scores",
+          "The response distribution with safe group sizes"
+        ],
+        "answerIndex": 3,
+        "explanation": "The mean can hide polarisation.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q4",
+        "question": "A cohort has 50 eligible joiners and 44 remain at ninety days. What is retention?",
+        "options": [
+          "88%",
+          "44%",
+          "12%",
+          "90%"
+        ],
+        "answerIndex": 0,
+        "explanation": "44/50 = 88%.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q5",
+        "question": "Only 15 of a recent 40-person cohort have reached ninety days. What should the analysis avoid?",
+        "options": [
+          "Comparing matched windows later",
+          "Counting all remaining recent joiners as ninety-day successes",
+          "Reporting the eligible count",
+          "Stating the cut-off date"
+        ],
+        "answerIndex": 1,
+        "explanation": "Incomplete follow-up must not be treated as completed survival.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q6",
+        "question": "Exit interviews suggest workload concerns, but only half of leavers respond. What is justified?",
+        "options": [
+          "Proof nonrespondents had no concern",
+          "An individual diagnosis",
+          "A hypothesis for investigation with response limitations",
+          "Proof workload caused every exit"
+        ],
+        "answerIndex": 2,
+        "explanation": "Themes are contextual evidence, not complete causal attribution.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q7",
+        "question": "Pre-test average is 55% and post-test 75% on comparable tests. What is the absolute improvement?",
+        "options": [
+          "20% relative improvement",
+          "75 percentage points",
+          "55 percentage points",
+          "20 percentage points"
+        ],
+        "answerIndex": 3,
+        "explanation": "Absolute difference is 75 − 55 = 20 points.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q8",
+        "question": "A training programme and new SOP launch together and errors fall. What limits the evaluation?",
+        "options": [
+          "The separate training effect is not isolated",
+          "The observed error count cannot be reported",
+          "The training caused everything by definition",
+          "No future evaluation is possible"
+        ],
+        "answerIndex": 0,
+        "explanation": "Concurrent interventions confound attribution.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q9",
+        "question": "All learners finish a video but no workplace behaviour is observed. What can be claimed directly?",
+        "options": [
+          "A permanent productivity increase",
+          "Completion, not demonstrated workplace transfer",
+          "Guaranteed job competence",
+          "Proven ROI"
+        ],
+        "answerIndex": 1,
+        "explanation": "Participation is one level of evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q10",
+        "question": "Internal mobility participation is lower in one group with fewer eligible openings. What should be checked?",
+        "options": [
+          "Only total applications",
+          "Whether names can be published",
+          "Opportunity and eligibility differences before attributing motivation",
+          "That the group lacks ambition"
+        ],
+        "answerIndex": 2,
+        "explanation": "Access conditions can explain participation differences.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

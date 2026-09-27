@@ -1,0 +1,341 @@
+{
+  "moduleId": "m1",
+  "questions": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-q1",
+        "question": "What should come before selecting dashboard charts?",
+        "options": [
+          "A decision question and defined population",
+          "Choosing a colour palette",
+          "Buying an analytics tool",
+          "Ranking employees"
+        ],
+        "answerIndex": 0,
+        "explanation": "The chart should serve a specific decision.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q2",
+        "question": "A dataset has 120 applications from 100 people. Which statement is accurate?",
+        "options": [
+          "There are 20 hires",
+          "There are 120 applications and 100 distinct candidates",
+          "There are 120 distinct candidates",
+          "There are 100 applications"
+        ],
+        "answerIndex": 1,
+        "explanation": "Applications and people are different units.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q3",
+        "question": "Which question is descriptive?",
+        "options": [
+          "What caused every departure?",
+          "Which intervention is guaranteed to work?",
+          "How many approved vacancies remained open at month-end?",
+          "Which employee should be dismissed?"
+        ],
+        "answerIndex": 2,
+        "explanation": "Descriptive analysis summarises observed conditions.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q4",
+        "question": "Why define the unit of analysis?",
+        "options": [
+          "To make every chart larger",
+          "To avoid needing a reporting period",
+          "To guarantee causality",
+          "To know what each row or count represents"
+        ],
+        "answerIndex": 3,
+        "explanation": "Interpretation depends on whether records are people, events or applications.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t1-q5",
+        "question": "What does a prediction alone not provide?",
+        "options": [
+          "Authorisation for an adverse individual decision",
+          "An estimate under assumptions",
+          "A model output",
+          "A reason to inspect uncertainty"
+        ],
+        "answerIndex": 0,
+        "explanation": "Decisions affecting people need context, governance and accountable review.",
+        "difficulty": "core"
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-q1",
+        "question": "What is a headcount snapshot?",
+        "options": [
+          "A guaranteed measure of hours worked",
+          "A count at a specified point in time",
+          "Every application during a year",
+          "Only the number of exits"
+        ],
+        "answerIndex": 1,
+        "explanation": "A snapshot describes a state, not a period flow.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q2",
+        "question": "What closing headcount follows opening 80, joins 8 and exits 5?",
+        "options": [
+          "77",
+          "85",
+          "83",
+          "93"
+        ],
+        "answerIndex": 2,
+        "explanation": "80 + 8 − 5 = 83 under consistent boundaries.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q3",
+        "question": "What does an internal transfer do to organisation headcount?",
+        "options": [
+          "Always adds one employee",
+          "Always removes one employee",
+          "Always counts as both external hire and exit",
+          "Normally no change if the organisation boundary is unchanged"
+        ],
+        "answerIndex": 3,
+        "explanation": "Department flows differ from organisation flows.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q4",
+        "question": "What must a metric dictionary specify?",
+        "options": [
+          "Numerator, denominator, period and inclusion rules",
+          "Only an attractive metric name",
+          "Only a chart type",
+          "Only the author’s initials"
+        ],
+        "answerIndex": 0,
+        "explanation": "Definitions enable reproducibility and comparison.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t2-q5",
+        "question": "An accepted offer has no joining event yet. How should it be classified?",
+        "options": [
+          "An exit",
+          "An acceptance, not a confirmed join",
+          "An active employee automatically",
+          "A completed onboarding"
+        ],
+        "answerIndex": 1,
+        "explanation": "Lifecycle stages should not be conflated.",
+        "difficulty": "core"
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-q1",
+        "question": "What data should learners use in this course?",
+        "options": [
+          "A scraped employee directory",
+          "Confidential payroll exports",
+          "Synthetic classroom records",
+          "Real candidate records from a friend"
+        ],
+        "answerIndex": 2,
+        "explanation": "Synthetic data provides practice without unnecessary exposure.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q2",
+        "question": "Does replacing names with IDs guarantee anonymity?",
+        "options": [
+          "Yes, in every context",
+          "Only if the IDs are short",
+          "Only if the sheet is colourful",
+          "No; records may still be re-identified"
+        ],
+        "answerIndex": 3,
+        "explanation": "Pseudonymisation reduces direct identifiers but does not remove all linkability.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q3",
+        "question": "What is the course’s minimum group size of five?",
+        "options": [
+          "A classroom disclosure safeguard, not a universal legal rule",
+          "A guarantee of anonymity",
+          "A statutory threshold for every dashboard",
+          "Permission to publish all other fields"
+        ],
+        "answerIndex": 0,
+        "explanation": "Thresholds require context and do not eliminate inference risk.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q4",
+        "question": "What should happen before uploading identifiable HR data to an external tool?",
+        "options": [
+          "Remove the company logo only",
+          "Use authorised governance; public tools are not appropriate for this course’s real data",
+          "Assume free tools are approved",
+          "Rename the file only"
+        ],
+        "answerIndex": 1,
+        "explanation": "Data handling requires purpose, authority and security, not cosmetic changes.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m1-t3-q5",
+        "question": "Why check totals after suppressing a small cell?",
+        "options": [
+          "It changes every average",
+          "It guarantees higher recruitment quality",
+          "The hidden value may be inferred by subtraction",
+          "Totals are always prohibited"
+        ],
+        "answerIndex": 2,
+        "explanation": "Complementary disclosure can reveal a suppressed count.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 1 scenario assessment",
+    "questions": [
+      {
+        "id": "m1-assessment-q1",
+        "question": "A manager asks for an HR dashboard without identifying a decision. What should the analyst do first?",
+        "options": [
+          "Buy a predictive tool",
+          "Clarify the action, audience, population and deadline",
+          "Build every available chart",
+          "Rank employees by activity"
+        ],
+        "answerIndex": 1,
+        "explanation": "A decision brief prevents unfocused reporting and unnecessary data use.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q2",
+        "question": "A file contains 150 applications from 120 candidates for five roles. Which count is suitable for application-processing workload?",
+        "options": [
+          "Five candidates",
+          "150 unique people",
+          "150 applications with the unit stated",
+          "120 applications"
+        ],
+        "answerIndex": 2,
+        "explanation": "Processing workload can use applications; unique-person reach uses a different count.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q3",
+        "question": "Opening headcount is 90, joins 12 and exits 7 with no other boundary changes. What closing count should reconcile?",
+        "options": [
+          "109",
+          "85",
+          "102",
+          "95"
+        ],
+        "answerIndex": 3,
+        "explanation": "90 + 12 − 7 = 95.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q4",
+        "question": "The organisation has ten internal transfers in September. What is their direct effect on total organisation headcount?",
+        "options": [
+          "Zero if the organisation boundary is unchanged",
+          "Plus ten",
+          "Minus ten",
+          "Plus twenty"
+        ],
+        "answerIndex": 0,
+        "explanation": "Transfers redistribute department counts without changing the organisation total.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q5",
+        "question": "Payroll and active-employee counts differ. What is the best initial response?",
+        "options": [
+          "Accuse one team of misconduct",
+          "Compare definitions, effective dates and population coverage",
+          "Choose the larger number",
+          "Average the two counts"
+        ],
+        "answerIndex": 1,
+        "explanation": "Different system boundaries can create legitimate differences or reveal data defects.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q6",
+        "question": "An ID-coded table includes a rare role, exact salary and location. Is it necessarily anonymous?",
+        "options": [
+          "Yes if sorted by ID",
+          "Yes if shared only as a screenshot",
+          "No; combinations may permit re-identification",
+          "Yes because names are absent"
+        ],
+        "answerIndex": 2,
+        "explanation": "Pseudonymisation is not guaranteed anonymity.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q7",
+        "question": "A suppressed three-person group can be recovered from the total minus other groups. What is needed?",
+        "options": [
+          "Keep it because the cell is blank",
+          "Publish the underlying names",
+          "Call the table anonymous automatically",
+          "Review complementary disclosure and change the release"
+        ],
+        "answerIndex": 3,
+        "explanation": "Totals can reveal suppressed values indirectly.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q8",
+        "question": "A learner is offered real interview notes for the lab. What is the appropriate choice?",
+        "options": [
+          "Use synthetic records and decline unnecessary personal data",
+          "Upload the notes to a public AI tool",
+          "Remove only the company logo",
+          "Share them with classmates for realism"
+        ],
+        "answerIndex": 0,
+        "explanation": "The learning purpose does not require real sensitive records.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q9",
+        "question": "A dashboard suggests a group with high absence needs support. What does it not establish?",
+        "options": [
+          "A need to inspect data definitions",
+          "Any individual’s medical condition or misconduct",
+          "The reported aggregate count under its rules",
+          "A possible question for authorised review"
+        ],
+        "answerIndex": 1,
+        "explanation": "Aggregate patterns do not justify individual diagnosis or adverse conclusions.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m1-assessment-q10",
+        "question": "The course uses a minimum public group size of five. How should a learner describe it?",
+        "options": [
+          "Permission to publish all groups of five",
+          "Proof no indirect disclosure remains",
+          "A classroom safeguard that does not guarantee legal compliance or anonymity",
+          "A universal Indian statutory threshold"
+        ],
+        "answerIndex": 2,
+        "explanation": "Disclosure controls require context, not reliance on one number.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

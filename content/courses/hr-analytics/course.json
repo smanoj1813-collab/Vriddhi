@@ -1,0 +1,564 @@
+{
+  "schemaVersion": 1,
+  "id": "hr-analytics",
+  "code": "VHR-101",
+  "title": "HR Analytics — Certificate Program",
+  "shortTitle": "HR Analytics",
+  "tagline": "Turn recruitment and workforce data into clear metrics, trustworthy dashboards and responsible people decisions.",
+  "version": "1.0.0",
+  "lastReviewed": "2026-09-28",
+  "owner": "Vriddhi Academic Cloud — Learning Content",
+  "audience": "Beginner undergraduate learners (B.Com, BBA, BA, B.Sc) preparing for HR Executive, HR Analyst, Talent Acquisition Associate roles. No coding or prior industry experience required.",
+  "level": "Beginner → applied workplace practice",
+  "language": "English; reflections and presentations may be in Kannada or Hindi by arrangement",
+  "totalHours": 60,
+  "credits": 4,
+  "durationWeeks": 10,
+  "weeklyCommitment": "6 hours per week: guided practice, independent study and portfolio projects",
+  "certificateTitle": "HR Analytics Practice — Certificate of Completion",
+  "prerequisites": [
+    "Basic arithmetic, percentages and comfort with spreadsheets or a willingness to learn",
+    "Access to a browser or shared college computer; offline spreadsheet alternatives are accepted",
+    "No paid tool subscription, live client account or real personal dataset required"
+  ],
+  "outcomes": [
+    "Frame recruitment and workforce questions with explicit populations, periods and decision owners.",
+    "Clean synthetic HR records and maintain data dictionaries, reconciliation checks and an audit trail.",
+    "Calculate recruitment funnels, duration and cost metrics using consistent cohort definitions.",
+    "Reconcile headcount and FTE and model turnover, retention, absence and workforce demand.",
+    "Interpret survey, onboarding and retention evidence with sample and causal limitations.",
+    "Build accessible dashboards and insight memos with tested filters and disclosure safeguards.",
+    "Recognise model errors, confounding, fairness concerns and the need for authorised human review.",
+    "Present a reproducible portfolio for HR Executive, HR Analyst and Talent Acquisition Associate roles."
+  ],
+  "assessment": {
+    "passMark": 50,
+    "conditions": [
+      "Overall weighted score ≥ 50%",
+      "Capstone score ≥ 12/30",
+      "At least three of four Project Blocks submitted",
+      "At least 75% attendance for instructor-led cohorts",
+      "Institutional award requires facilitator marking and integrity clearance; platform eligibility alone is not the award"
+    ],
+    "components": [
+      {
+        "id": "quizzes",
+        "name": "Lesson quizzes",
+        "weight": 15,
+        "description": "Best-attempt percentage averaged equally over all 24 lesson quizzes, scaled to 15 marks."
+      },
+      {
+        "id": "projects",
+        "name": "Project Blocks 1–4",
+        "weight": 28,
+        "description": "Four applied portfolio projects, each marked out of 7 using the published rubric."
+      },
+      {
+        "id": "capstone",
+        "name": "Capstone and presentation",
+        "weight": 30,
+        "description": "An integrated simulation with traceable evidence, a five-minute pitch and individual questions."
+      },
+      {
+        "id": "final",
+        "name": "Final assessment",
+        "weight": 20,
+        "description": "A 90-minute assessment: 40 MCQs and two applied cases, scaled from 100 to 20 marks."
+      },
+      {
+        "id": "journal",
+        "name": "Reflection journal",
+        "weight": 7,
+        "description": "Evidence of corrections, professional judgement and learning across all modules."
+      }
+    ],
+    "grades": [
+      {
+        "band": "Distinction",
+        "min": 80
+      },
+      {
+        "band": "Merit",
+        "min": 65
+      },
+      {
+        "band": "Pass",
+        "min": 50
+      },
+      {
+        "band": "Not yet",
+        "min": 0
+      }
+    ]
+  },
+  "toolkit": [
+    {
+      "category": "Data preparation and metrics",
+      "tools": [
+        "Excel or Google Sheets",
+        "LibreOffice Calc"
+      ],
+      "note": "All required analyses work in a spreadsheet; no coding or paid feature is required."
+    },
+    {
+      "category": "Dashboards and presentation",
+      "tools": [
+        "Spreadsheet charts and pivots",
+        "Presentation software",
+        "Optional institution-approved BI tool"
+      ],
+      "note": "An offline aggregate dashboard is fully acceptable; public sharing of personal data is prohibited."
+    },
+    {
+      "category": "Responsible practice",
+      "tools": [
+        "Synthetic practice data",
+        "Metric dictionary",
+        "Quality and disclosure checklists"
+      ],
+      "note": "Do not upload real employee, payroll or candidate data to public AI tools."
+    }
+  ],
+  "modules": [
+    {
+      "id": "m1",
+      "number": 1,
+      "slug": "01-people-analytics-foundations-and-responsible-questions",
+      "title": "People analytics foundations and responsible questions",
+      "summary": "Translate an HR concern into an answerable question with a clear population, decision and privacy boundary.",
+      "hours": 4.5,
+      "outcomes": [
+        "Connect recruitment and workforce measures to a practical decision without treating people as scores.",
+        "Map the employee lifecycle and document consistent definitions for HR reporting.",
+        "Apply minimisation, access controls and cautious reporting to sensitive workforce information."
+      ],
+      "topics": [
+        {
+          "id": "m1-t1",
+          "number": "1.1",
+          "type": "lesson",
+          "title": "From HR activity to a decision question",
+          "minutes": 90,
+          "lesson": "modules/01-people-analytics-foundations-and-responsible-questions/1.1-from-hr-activity-to-a-decision-question.md",
+          "summary": "Connect recruitment and workforce measures to a practical decision without treating people as scores."
+        },
+        {
+          "id": "m1-t2",
+          "number": "1.2",
+          "type": "lesson",
+          "title": "Employee lifecycle and a useful metric dictionary",
+          "minutes": 90,
+          "lesson": "modules/01-people-analytics-foundations-and-responsible-questions/1.2-employee-lifecycle-and-a-useful-metric-dictionary.md",
+          "summary": "Map the employee lifecycle and document consistent definitions for HR reporting."
+        },
+        {
+          "id": "m1-t3",
+          "number": "1.3",
+          "type": "lesson",
+          "title": "Privacy, access and safe people-data practice",
+          "minutes": 90,
+          "lesson": "modules/01-people-analytics-foundations-and-responsible-questions/1.3-privacy-access-and-safe-people-data-practice.md",
+          "summary": "Apply minimisation, access controls and cautious reporting to sensitive workforce information."
+        }
+      ],
+      "assessment": {
+        "title": "Module 1 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m2",
+      "number": 2,
+      "slug": "02-data-preparation-and-spreadsheet-analysis",
+      "title": "Data preparation and spreadsheet analysis",
+      "summary": "Create a reproducible cleaning workflow and use transparent spreadsheet calculations before interpreting people metrics.",
+      "hours": 7.5,
+      "outcomes": [
+        "Preserve raw data, identify record keys and document cleaning decisions before calculating HR metrics.",
+        "Use transparent formulas and denominator checks to calculate grouped HR measures.",
+        "Summarise HR data with suitable distributions and write a note that preserves context and limitations."
+      ],
+      "topics": [
+        {
+          "id": "m2-t1",
+          "number": "2.1",
+          "type": "lesson",
+          "title": "Data structure, quality and cleaning",
+          "minutes": 90,
+          "lesson": "modules/02-data-preparation-and-spreadsheet-analysis/2.1-data-structure-quality-and-cleaning.md",
+          "summary": "Preserve raw data, identify record keys and document cleaning decisions before calculating HR metrics."
+        },
+        {
+          "id": "m2-t2",
+          "number": "2.2",
+          "type": "lesson",
+          "title": "Spreadsheet formulas and reconciliation",
+          "minutes": 90,
+          "lesson": "modules/02-data-preparation-and-spreadsheet-analysis/2.2-spreadsheet-formulas-and-reconciliation.md",
+          "summary": "Use transparent formulas and denominator checks to calculate grouped HR measures."
+        },
+        {
+          "id": "m2-t3",
+          "number": "2.3",
+          "type": "lesson",
+          "title": "Pivots, distributions and analytical notes",
+          "minutes": 90,
+          "lesson": "modules/02-data-preparation-and-spreadsheet-analysis/2.3-pivots-distributions-and-analytical-notes.md",
+          "summary": "Summarise HR data with suitable distributions and write a note that preserves context and limitations."
+        },
+        {
+          "id": "m2-pb1",
+          "number": "PB1",
+          "type": "project",
+          "title": "Project Block 1 — HR data quality and definitions",
+          "minutes": 180,
+          "lesson": "projects/project-block-1-hr-data-quality-and-definitions.md",
+          "summary": "Create a clean, reproducible synthetic HR workbook with a metric dictionary, quality log and reconciled baseline summaries."
+        }
+      ],
+      "assessment": {
+        "title": "Module 2 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m3",
+      "number": 3,
+      "slug": "03-recruitment-funnel-and-selection-analytics",
+      "title": "Recruitment funnel and selection analytics",
+      "summary": "Measure recruitment stages and costs with consistent cohorts while preserving fair, structured human selection.",
+      "hours": 7.5,
+      "outcomes": [
+        "Calculate stage conversion and compare candidate sources using consistent cohorts.",
+        "Define recruitment duration boundaries and calculate comparable cost per hire.",
+        "Use job-related scorecards and process evidence while avoiding unsupported candidate ranking."
+      ],
+      "topics": [
+        {
+          "id": "m3-t1",
+          "number": "3.1",
+          "type": "lesson",
+          "title": "Recruitment funnels and source performance",
+          "minutes": 90,
+          "lesson": "modules/03-recruitment-funnel-and-selection-analytics/3.1-recruitment-funnels-and-source-performance.md",
+          "summary": "Calculate stage conversion and compare candidate sources using consistent cohorts."
+        },
+        {
+          "id": "m3-t2",
+          "number": "3.2",
+          "type": "lesson",
+          "title": "Time-to-fill, time-to-hire and recruitment cost",
+          "minutes": 90,
+          "lesson": "modules/03-recruitment-funnel-and-selection-analytics/3.2-time-to-fill-time-to-hire-and-recruitment-cost.md",
+          "summary": "Define recruitment duration boundaries and calculate comparable cost per hire."
+        },
+        {
+          "id": "m3-t3",
+          "number": "3.3",
+          "type": "lesson",
+          "title": "Structured selection and candidate experience",
+          "minutes": 90,
+          "lesson": "modules/03-recruitment-funnel-and-selection-analytics/3.3-structured-selection-and-candidate-experience.md",
+          "summary": "Use job-related scorecards and process evidence while avoiding unsupported candidate ranking."
+        },
+        {
+          "id": "m3-pb2",
+          "number": "PB2",
+          "type": "project",
+          "title": "Project Block 2 — Recruitment funnel and selection review",
+          "minutes": 180,
+          "lesson": "projects/project-block-2-recruitment-funnel-and-selection-review.md",
+          "summary": "Analyse a matched recruitment cohort, compare source performance and propose a job-related candidate-process improvement."
+        }
+      ],
+      "assessment": {
+        "title": "Module 3 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m4",
+      "number": 4,
+      "slug": "04-workforce-planning-and-core-hr-metrics",
+      "title": "Workforce planning and core HR metrics",
+      "summary": "Reconcile headcount, FTE, turnover and attendance measures before building a scenario-based workforce plan.",
+      "hours": 7.5,
+      "outcomes": [
+        "Calculate headcount and full-time equivalents and reconcile workforce movements at the correct boundary.",
+        "Calculate workforce rates with explicit periods, eligible populations and limitations.",
+        "Model staffing demand and supply using transparent assumptions instead of a single false-precision forecast."
+      ],
+      "topics": [
+        {
+          "id": "m4-t1",
+          "number": "4.1",
+          "type": "lesson",
+          "title": "Headcount, FTE and movement reconciliation",
+          "minutes": 90,
+          "lesson": "modules/04-workforce-planning-and-core-hr-metrics/4.1-headcount-fte-and-movement-reconciliation.md",
+          "summary": "Calculate headcount and full-time equivalents and reconcile workforce movements at the correct boundary."
+        },
+        {
+          "id": "m4-t2",
+          "number": "4.2",
+          "type": "lesson",
+          "title": "Turnover, retention and absence",
+          "minutes": 90,
+          "lesson": "modules/04-workforce-planning-and-core-hr-metrics/4.2-turnover-retention-and-absence.md",
+          "summary": "Calculate workforce rates with explicit periods, eligible populations and limitations."
+        },
+        {
+          "id": "m4-t3",
+          "number": "4.3",
+          "type": "lesson",
+          "title": "Demand, supply and workforce scenarios",
+          "minutes": 90,
+          "lesson": "modules/04-workforce-planning-and-core-hr-metrics/4.3-demand-supply-and-workforce-scenarios.md",
+          "summary": "Model staffing demand and supply using transparent assumptions instead of a single false-precision forecast."
+        },
+        {
+          "id": "m4-pb3",
+          "number": "PB3",
+          "type": "project",
+          "title": "Project Block 3 — Workforce metrics and scenario plan",
+          "minutes": 180,
+          "lesson": "projects/project-block-3-workforce-metrics-and-scenario-plan.md",
+          "summary": "Build a reconciled headcount/FTE bridge and a scenario-based capacity plan with clearly distinguished turnover, retention and absence measures."
+        }
+      ],
+      "assessment": {
+        "title": "Module 4 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m5",
+      "number": 5,
+      "slug": "05-engagement-retention-and-development",
+      "title": "Engagement, retention and development",
+      "summary": "Interpret employee feedback and cohort outcomes without confusing association with causation or exposing individuals.",
+      "hours": 4.5,
+      "outcomes": [
+        "Design a concise survey and interpret response distributions with confidentiality and nonresponse limits.",
+        "Compare retention at matched observation windows and develop process-level hypotheses without labelling individuals.",
+        "Evaluate development activities beyond attendance and distinguish observed change from demonstrated impact."
+      ],
+      "topics": [
+        {
+          "id": "m5-t1",
+          "number": "5.1",
+          "type": "lesson",
+          "title": "Engagement surveys and response bias",
+          "minutes": 90,
+          "lesson": "modules/05-engagement-retention-and-development/5.1-engagement-surveys-and-response-bias.md",
+          "summary": "Design a concise survey and interpret response distributions with confidentiality and nonresponse limits."
+        },
+        {
+          "id": "m5-t2",
+          "number": "5.2",
+          "type": "lesson",
+          "title": "Retention cohorts and fair investigation",
+          "minutes": 90,
+          "lesson": "modules/05-engagement-retention-and-development/5.2-retention-cohorts-and-fair-investigation.md",
+          "summary": "Compare retention at matched observation windows and develop process-level hypotheses without labelling individuals."
+        },
+        {
+          "id": "m5-t3",
+          "number": "5.3",
+          "type": "lesson",
+          "title": "Learning, onboarding and internal mobility metrics",
+          "minutes": 90,
+          "lesson": "modules/05-engagement-retention-and-development/5.3-learning-onboarding-and-internal-mobility-metrics.md",
+          "summary": "Evaluate development activities beyond attendance and distinguish observed change from demonstrated impact."
+        }
+      ],
+      "assessment": {
+        "title": "Module 5 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m6",
+      "number": 6,
+      "slug": "06-dashboards-and-hr-storytelling",
+      "title": "Dashboards and HR storytelling",
+      "summary": "Build accessible, auditable dashboards that connect a small set of trustworthy measures to responsible decisions.",
+      "hours": 7.5,
+      "outcomes": [
+        "Choose dashboard measures and visual encodings based on a decision, not on the number of available fields.",
+        "Create an aggregate dashboard with tested filters, reproducible totals and safe sharing settings.",
+        "Communicate a people-analytics finding with evidence, uncertainty, alternatives and a proportionate next step."
+      ],
+      "topics": [
+        {
+          "id": "m6-t1",
+          "number": "6.1",
+          "type": "lesson",
+          "title": "Design an HR dashboard for its audience",
+          "minutes": 90,
+          "lesson": "modules/06-dashboards-and-hr-storytelling/6.1-design-an-hr-dashboard-for-its-audience.md",
+          "summary": "Choose dashboard measures and visual encodings based on a decision, not on the number of available fields."
+        },
+        {
+          "id": "m6-t2",
+          "number": "6.2",
+          "type": "lesson",
+          "title": "Build and quality-check a dashboard",
+          "minutes": 90,
+          "lesson": "modules/06-dashboards-and-hr-storytelling/6.2-build-and-quality-check-a-dashboard.md",
+          "summary": "Create an aggregate dashboard with tested filters, reproducible totals and safe sharing settings."
+        },
+        {
+          "id": "m6-t3",
+          "number": "6.3",
+          "type": "lesson",
+          "title": "Write an insight memo and recommend action",
+          "minutes": 90,
+          "lesson": "modules/06-dashboards-and-hr-storytelling/6.3-write-an-insight-memo-and-recommend-action.md",
+          "summary": "Communicate a people-analytics finding with evidence, uncertainty, alternatives and a proportionate next step."
+        },
+        {
+          "id": "m6-pb4",
+          "number": "PB4",
+          "type": "project",
+          "title": "Project Block 4 — Privacy-safe HR dashboard",
+          "minutes": 180,
+          "lesson": "projects/project-block-4-privacy-safe-hr-dashboard.md",
+          "summary": "Publish an aggregate dashboard and insight memo with tested filters, accessible charts and an explicit disclosure review."
+        }
+      ],
+      "assessment": {
+        "title": "Module 6 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m7",
+      "number": 7,
+      "slug": "07-responsible-people-analytics-and-evaluation",
+      "title": "Responsible people analytics and evaluation",
+      "summary": "Understand confounding, predictive-model limits and fair-use checks before proposing interventions affecting people.",
+      "hours": 4.5,
+      "outcomes": [
+        "Recognise alternative explanations and design a more credible evaluation of an HR intervention.",
+        "Interpret a simple classifier’s errors and identify why employee-risk predictions require strict governance.",
+        "Review selection-rate disparities and reporting risks without treating a single ratio as a legal verdict."
+      ],
+      "topics": [
+        {
+          "id": "m7-t1",
+          "number": "7.1",
+          "type": "lesson",
+          "title": "Correlation, confounding and causal claims",
+          "minutes": 90,
+          "lesson": "modules/07-responsible-people-analytics-and-evaluation/7.1-correlation-confounding-and-causal-claims.md",
+          "summary": "Recognise alternative explanations and design a more credible evaluation of an HR intervention."
+        },
+        {
+          "id": "m7-t2",
+          "number": "7.2",
+          "type": "lesson",
+          "title": "Predictive analytics limits and model review",
+          "minutes": 90,
+          "lesson": "modules/07-responsible-people-analytics-and-evaluation/7.2-predictive-analytics-limits-and-model-review.md",
+          "summary": "Interpret a simple classifier’s errors and identify why employee-risk predictions require strict governance."
+        },
+        {
+          "id": "m7-t3",
+          "number": "7.3",
+          "type": "lesson",
+          "title": "Fairness, disclosure and intervention governance",
+          "minutes": 90,
+          "lesson": "modules/07-responsible-people-analytics-and-evaluation/7.3-fairness-disclosure-and-intervention-governance.md",
+          "summary": "Review selection-rate disparities and reporting risks without treating a single ratio as a legal verdict."
+        }
+      ],
+      "assessment": {
+        "title": "Module 7 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m8",
+      "number": 8,
+      "slug": "08-hr-analytics-capstone-and-career-launch",
+      "title": "HR analytics capstone and career launch",
+      "summary": "Present a reproducible, privacy-safe portfolio for HR Executive, HR Analyst and Talent Acquisition Associate roles.",
+      "hours": 16.5,
+      "outcomes": [
+        "Assemble a reproducible case study with a data dictionary, quality log, dashboard and bounded recommendation.",
+        "Explain an HR analysis clearly and respond to ethical or metric questions within an entry-level role’s authority.",
+        "Defend a privacy-safe HR recommendation and create a focused plan for further analytical practice."
+      ],
+      "topics": [
+        {
+          "id": "m8-t1",
+          "number": "8.1",
+          "type": "lesson",
+          "title": "Build a credible HR analytics portfolio",
+          "minutes": 90,
+          "lesson": "modules/08-hr-analytics-capstone-and-career-launch/8.1-build-a-credible-hr-analytics-portfolio.md",
+          "summary": "Assemble a reproducible case study with a data dictionary, quality log, dashboard and bounded recommendation."
+        },
+        {
+          "id": "m8-t2",
+          "number": "8.2",
+          "type": "lesson",
+          "title": "HR interviews and stakeholder conversations",
+          "minutes": 90,
+          "lesson": "modules/08-hr-analytics-capstone-and-career-launch/8.2-hr-interviews-and-stakeholder-conversations.md",
+          "summary": "Explain an HR analysis clearly and respond to ethical or metric questions within an entry-level role’s authority."
+        },
+        {
+          "id": "m8-t3",
+          "number": "8.3",
+          "type": "lesson",
+          "title": "Capstone presentation and analytical development",
+          "minutes": 90,
+          "lesson": "modules/08-hr-analytics-capstone-and-career-launch/8.3-capstone-presentation-and-analytical-development.md",
+          "summary": "Defend a privacy-safe HR recommendation and create a focused plan for further analytical practice."
+        },
+        {
+          "id": "m8-cap",
+          "number": "CAP",
+          "type": "project",
+          "title": "Capstone — Responsible recruitment and workforce insight",
+          "minutes": 720,
+          "lesson": "projects/capstone-responsible-recruitment-and-workforce-insight.md",
+          "summary": "Deliver a reproducible HR analytics portfolio that connects data quality, recruitment and workforce metrics, a safe dashboard and a bounded intervention recommendation."
+        }
+      ],
+      "assessment": {
+        "title": "Module 8 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    }
+  ],
+  "finalAssessment": {
+    "title": "Final assessment",
+    "minutes": 90,
+    "blueprint": "assessments/final-assessment-blueprint.md"
+  },
+  "documents": {
+    "facilitatorGuide": "facilitator-guide.md",
+    "rubrics": "assessments/rubrics.md",
+    "certificationPolicy": "assessments/certification-policy.md",
+    "practiceData": "resources/practice-data.md",
+    "portfolioTemplates": "resources/portfolio-templates.md"
+  },
+  "certificateEligibility": {
+    "minimumQuizAverage": 60,
+    "moduleAssessmentPassMark": 60,
+    "requireAllTopicsRead": true,
+    "requireAllLessonQuizzes": true
+  },
+  "lessonQuizQuestionCount": 5
+}

@@ -1,0 +1,341 @@
+{
+  "moduleId": "m3",
+  "questions": {
+    "m3-t1": [
+      {
+        "id": "m3-t1-q1",
+        "question": "What does the Agile Manifesto imply about documentation?",
+        "options": [
+          "Documentation is the only measure of progress",
+          "Every document must be approved daily",
+          "It has value but working outcomes are valued more",
+          "All documentation is prohibited"
+        ],
+        "answerIndex": 2,
+        "explanation": "The Manifesto values the items on the right, while valuing those on the left more.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q2",
+        "question": "Which condition particularly supports adaptive delivery?",
+        "options": [
+          "All work is legally fixed and fully known",
+          "No possibility of inspecting outputs",
+          "A preference for more meetings",
+          "Uncertain user needs with access to feedback"
+        ],
+        "answerIndex": 3,
+        "explanation": "Adaptive delivery uses learning to shape the solution.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q3",
+        "question": "What is a reasonable hybrid in the pilot?",
+        "options": [
+          "Fixed approval gates with iterative workflow testing",
+          "No approvals and no feedback",
+          "A complete ban on planning",
+          "Calling every meeting a Sprint"
+        ],
+        "answerIndex": 0,
+        "explanation": "Different parts of the work can require different control approaches.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q4",
+        "question": "What does seven of eight successful users establish?",
+        "options": [
+          "A reason to omit further testing",
+          "A limited pilot observation to investigate",
+          "A guaranteed population success rate",
+          "Proof that every user prefers the flow"
+        ],
+        "answerIndex": 1,
+        "explanation": "A small pilot informs learning but does not establish broad certainty.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q5",
+        "question": "Which behaviour demonstrates useful adaptation?",
+        "options": [
+          "Ignore new information",
+          "Measure success by meeting count",
+          "Reorder work after reviewing evidence against the goal",
+          "Change everything whenever anyone asks"
+        ],
+        "answerIndex": 2,
+        "explanation": "Adaptation should be evidence-led and goal-oriented.",
+        "difficulty": "core"
+      }
+    ],
+    "m3-t2": [
+      {
+        "id": "m3-t2-q1",
+        "question": "Who is accountable for effective Product Backlog management?",
+        "options": [
+          "Only the Scrum Master",
+          "An external auditor",
+          "The sponsor’s assistant by default",
+          "The Product Owner"
+        ],
+        "answerIndex": 3,
+        "explanation": "The Product Owner retains accountability even when work is delegated.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q2",
+        "question": "What is the Daily Scrum primarily for?",
+        "options": [
+          "Developers inspect progress toward the Sprint Goal and adapt their plan",
+          "The sponsor assigns individual tasks",
+          "Customers approve the budget",
+          "Managers conduct performance appraisal"
+        ],
+        "answerIndex": 0,
+        "explanation": "It is a 15-minute event for Developers, not a reporting ceremony for managers.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q3",
+        "question": "Which commitment is associated with the Increment?",
+        "options": [
+          "Project charter",
+          "Definition of Done",
+          "Product Goal",
+          "Sprint Goal"
+        ],
+        "answerIndex": 1,
+        "explanation": "The Definition of Done describes the quality state required of the Increment.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q4",
+        "question": "How does Scrum describe backlog refinement?",
+        "options": [
+          "The same event as Sprint Review",
+          "A replacement for Sprint Planning",
+          "An ongoing activity",
+          "A required sixth Scrum event"
+        ],
+        "answerIndex": 2,
+        "explanation": "Refinement is ongoing work, not a named formal event.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q5",
+        "question": "An item fails the Definition of Done. How is it treated?",
+        "options": [
+          "It counts if the card is moved",
+          "It counts if most effort is spent",
+          "It becomes Done at the Review automatically",
+          "It is not part of the Increment"
+        ],
+        "answerIndex": 3,
+        "explanation": "Completion must be transparent and satisfy the shared quality standard.",
+        "difficulty": "core"
+      }
+    ],
+    "m3-t3": [
+      {
+        "id": "m3-t3-q1",
+        "question": "Which is an end-to-end valuable slice?",
+        "options": [
+          "A student can book one available slot safely",
+          "Create every database table first",
+          "Design all icons first",
+          "Write a list of all planned screens"
+        ],
+        "answerIndex": 0,
+        "explanation": "A vertical slice supports a usable outcome, not only a technical layer.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q2",
+        "question": "What distinguishes acceptance criteria from the Definition of Done?",
+        "options": [
+          "Done is only a delivery date",
+          "Criteria are item-specific; Done is a shared quality standard",
+          "They are always identical",
+          "Criteria replace all testing"
+        ],
+        "answerIndex": 1,
+        "explanation": "Both matter, but at different scopes.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q3",
+        "question": "What is capacity for 28 available person-days at five focused hours per day?",
+        "options": [
+          "28 hours",
+          "50 hours",
+          "140 hours",
+          "240 hours"
+        ],
+        "answerIndex": 2,
+        "explanation": "28 × 5 = 140 before further support commitments.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q4",
+        "question": "What is an inappropriate use of velocity?",
+        "options": [
+          "Helping the same team forecast",
+          "Discussing uncertainty in delivery",
+          "Inspecting its own historical trend carefully",
+          "Ranking different teams by productivity"
+        ],
+        "answerIndex": 3,
+        "explanation": "Point scales and contexts differ across teams.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q5",
+        "question": "Who is accountable for ordering the Product Backlog?",
+        "options": [
+          "The Product Owner",
+          "The newest Developer alone",
+          "Every stakeholder independently",
+          "The finance department automatically"
+        ],
+        "answerIndex": 0,
+        "explanation": "Ordering is part of effective Product Backlog management.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 3 scenario assessment",
+    "questions": [
+      {
+        "id": "m3-assessment-q1",
+        "question": "A team uses a daily meeting to receive assigned tasks from the sponsor. Which Scrum correction is most appropriate?",
+        "options": [
+          "Rename the sponsor Scrum Master and keep the control pattern",
+          "Cancel all planning",
+          "Require customers to assign each task",
+          "Let Developers inspect progress and adapt their plan toward the Sprint Goal"
+        ],
+        "answerIndex": 3,
+        "explanation": "The Daily Scrum is not a sponsor task-dispatch meeting.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q2",
+        "question": "Mid-Sprint learning makes an optional feature unnecessary. What can the team do while protecting the Sprint Goal?",
+        "options": [
+          "Renegotiate scope with the Product Owner",
+          "Change the Sprint Goal casually every day",
+          "Mark the feature Done without work",
+          "Ban all discussion until the next month"
+        ],
+        "answerIndex": 0,
+        "explanation": "Scope can be clarified and renegotiated as learning occurs.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q3",
+        "question": "A completed screen fails the shared security checks in Done. How should it appear in the Increment?",
+        "options": [
+          "It counts after a status colour change",
+          "It must not count as Done",
+          "It counts because coding is complete",
+          "It counts if the sponsor likes it"
+        ],
+        "answerIndex": 1,
+        "explanation": "The Increment must meet the Definition of Done.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q4",
+        "question": "Two teams have velocities 20 and 40 using different point scales. What conclusion is valid?",
+        "options": [
+          "The first team should double every estimate",
+          "Both deliver equal business value",
+          "The numbers alone do not rank their productivity",
+          "The second team is exactly twice as productive"
+        ],
+        "answerIndex": 2,
+        "explanation": "Point scales and work contexts are not comparable productivity units.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q5",
+        "question": "A fixed regulatory approval and uncertain user workflow coexist. Which approach is defensible?",
+        "options": [
+          "Remove approvals in the name of Agile",
+          "Freeze every detail despite evidence",
+          "Use ceremonies as proof of compliance",
+          "Retain mandatory gates and iterate the uncertain workflow"
+        ],
+        "answerIndex": 3,
+        "explanation": "Hybrid control can respect fixed constraints while enabling learning.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q6",
+        "question": "Three people each have eight available days at four focused hours daily; support consumes twelve hours total. What capacity remains?",
+        "options": [
+          "84 hours",
+          "96 hours",
+          "108 hours",
+          "24 hours"
+        ],
+        "answerIndex": 0,
+        "explanation": "3×8×4 − 12 = 84 hours; this is not a point conversion.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q7",
+        "question": "A backlog item says “build all database tables” but delivers no inspectable user outcome. What refinement helps?",
+        "options": [
+          "Estimate it at zero points",
+          "Find a thin end-to-end booking slice and its acceptance examples",
+          "Add more technical subtasks only",
+          "Rename the item an epic and stop"
+        ],
+        "answerIndex": 1,
+        "explanation": "A vertical slice enables meaningful feedback.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q8",
+        "question": "A team postpones all feedback until the Sprint Review and claims release is prohibited earlier. What is accurate?",
+        "options": [
+          "Every Review must approve a contract",
+          "The Retrospective authorises every release",
+          "Usable Done Increments may be released before the Review",
+          "Scrum requires one release only at project end"
+        ],
+        "answerIndex": 2,
+        "explanation": "The Review is not a mandatory release gate.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q9",
+        "question": "Stakeholders ask the Scrum Master to order the Product Backlog instead of the Product Owner. What should be clarified?",
+        "options": [
+          "The Scrum Master always owns ordering",
+          "All stakeholders independently control order",
+          "Developers cannot discuss value",
+          "The Product Owner retains backlog-management accountability"
+        ],
+        "answerIndex": 3,
+        "explanation": "Collaboration does not erase the Product Owner accountability.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q10",
+        "question": "A pilot has favourable feedback from six volunteers. What should an adaptive plan do next?",
+        "options": [
+          "Use the evidence with limitations and test remaining uncertainties",
+          "Declare universal success",
+          "Stop inspecting outputs",
+          "Replace the goal with every suggestion"
+        ],
+        "answerIndex": 0,
+        "explanation": "Empiricism requires honest interpretation and further learning.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

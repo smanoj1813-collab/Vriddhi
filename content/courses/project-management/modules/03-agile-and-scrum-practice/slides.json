@@ -1,0 +1,200 @@
+{
+  "moduleId": "m3",
+  "topics": {
+    "m3-t1": [
+      {
+        "id": "m3-t1-s1",
+        "title": "Agile values are trade-offs, not bans",
+        "summary": "The Agile Manifesto values individuals and interactions, working software, customer collaboration and responding to change more highly than their paired items.",
+        "explanation": "The Agile Manifesto values individuals and interactions, working software, customer collaboration and responding to change more highly than their paired items. It does not say that tools, documentation, contracts or plans have no value. In a college project, concise documentation can support continuity and accountability. The useful question is which practice helps the team learn and deliver value in this situation, not how many ceremonies it can perform.",
+        "example": "The event date is fixed, but the best student booking workflow is uncertain. A vendor wants every screen signed off immediately; students want to try a small prototype first. The team needs a reasoned delivery approach, not a contest over whether “Agile” is fashionable.",
+        "takeaway": "Choose predictive, adaptive or hybrid planning based on uncertainty and feedback needs.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "List what is fixed and what is uncertain in the placement pilot."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend an approach and state the evidence that would cause you to revisit it."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t1-s2",
+        "title": "Match planning to uncertainty",
+        "summary": "Predictive planning can suit well-understood work with stable acceptance conditions.",
+        "explanation": "Predictive planning can suit well-understood work with stable acceptance conditions. Adaptive delivery suits uncertain needs where short feedback cycles can change the solution. A hybrid may fix procurement and safety approvals while developing the user workflow iteratively. Fixed dates do not eliminate learning, but learning does not eliminate constraints. Compare consequences explicitly instead of claiming one method works for every project.",
+        "example": "The event date is fixed, but the best student booking workflow is uncertain. A vendor wants every screen signed off immediately; students want to try a small prototype first. The team needs a reasoned delivery approach, not a contest over whether “Agile” is fashionable.",
+        "takeaway": "Choose predictive, adaptive or hybrid planning based on uncertainty and feedback needs.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "List what is fixed and what is uncertain in the placement pilot."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend an approach and state the evidence that would cause you to revisit it."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t1-s3",
+        "title": "Inspect evidence and adapt deliberately",
+        "summary": "An iteration should produce something that can be inspected, not just a presentation of activity.",
+        "explanation": "An iteration should produce something that can be inspected, not just a presentation of activity. Use feedback to change the ordered work, assumptions or process. Agree what will be tested and with whom, then record what was learned. Retaining an unchanged plan after contradictory evidence is not disciplined delivery. Changing direction every hour without a goal is not agility either. Make changes visible and preserve a useful decision trail.",
+        "example": "The team spends one week testing two booking flows with eight volunteer users, rather than building all requested screens. Six can complete Flow A without help; seven can complete Flow B. This small pilot suggests questions for the next iteration, not a statistically proven winner. The event-date and privacy constraints remain fixed while the workflow design can adapt.",
+        "takeaway": "Choose predictive, adaptive or hybrid planning based on uncertainty and feedback needs.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "List what is fixed and what is uncertain in the placement pilot."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend an approach and state the evidence that would cause you to revisit it."
+            }
+          ]
+        }
+      }
+    ],
+    "m3-t2": [
+      {
+        "id": "m3-t2-s1",
+        "title": "Three accountabilities, not a command chain",
+        "summary": "The Scrum Team contains a Product Owner, a Scrum Master and Developers.",
+        "explanation": "The Scrum Team contains a Product Owner, a Scrum Master and Developers. The Product Owner is accountable for maximising product value and effective Product Backlog management. Developers create a usable Increment and manage their plan. The Scrum Master is accountable for establishing Scrum and helping improve effectiveness. These accountabilities do not make the Scrum Master a task-dispatch manager or make the Product Owner the boss of every technical decision.",
+        "example": "A team labels its weekly staff meeting a Daily Scrum and asks the sponsor to assign every task. The board is busy, but there is no Product Goal, no Sprint Goal and no shared understanding of Done. Learn the framework before borrowing its vocabulary.",
+        "takeaway": "Explain Scrum accountabilities and the purpose of its events, artefacts and commitments.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Assign the three accountabilities to role cards for a classroom simulation."
+            },
+            {
+              "title": "Decision",
+              "detail": "Explain the difference between a Sprint Review and a Retrospective using separate agenda items."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t2-s2",
+        "title": "Events create opportunities to inspect and adapt",
+        "summary": "A Sprint is a fixed-length event of one month or less containing the other events.",
+        "explanation": "A Sprint is a fixed-length event of one month or less containing the other events. Sprint Planning establishes the Sprint Goal and plan; the Daily Scrum is a 15-minute event for Developers to inspect progress and adapt their plan. The Sprint Review inspects the outcome with stakeholders; the Retrospective plans improvements in quality and effectiveness. The Review is not a mandatory release gate, and refinement is an ongoing activity rather than an official Scrum event.",
+        "example": "A team labels its weekly staff meeting a Daily Scrum and asks the sponsor to assign every task. The board is busy, but there is no Product Goal, no Sprint Goal and no shared understanding of Done. Learn the framework before borrowing its vocabulary.",
+        "takeaway": "Explain Scrum accountabilities and the purpose of its events, artefacts and commitments.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Assign the three accountabilities to role cards for a classroom simulation."
+            },
+            {
+              "title": "Decision",
+              "detail": "Explain the difference between a Sprint Review and a Retrospective using separate agenda items."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t2-s3",
+        "title": "Artefacts have commitments",
+        "summary": "The Product Backlog is linked to the Product Goal, the Sprint Backlog to the Sprint Goal, and the Increment to the Definition of Done.",
+        "explanation": "The Product Backlog is linked to the Product Goal, the Sprint Backlog to the Sprint Goal, and the Increment to the Definition of Done. These commitments support transparency and focus. An Increment must be usable and meet the Definition of Done. Work that does not meet Done is not part of the Increment merely because someone moved a card. During a Sprint, scope can be clarified and renegotiated with the Product Owner as learning occurs without endangering the Sprint Goal.",
+        "example": "A two-week Sprint Goal is “students can book and cancel a placement slot safely”. The team selects three backlog items and discovers an access-control defect. It can negotiate removing a low-value optional reminder while protecting the goal, but it cannot declare the unsafe workflow Done. A Review can gather feedback even when some planned items remain unfinished; unfinished work must be represented honestly.",
+        "takeaway": "Explain Scrum accountabilities and the purpose of its events, artefacts and commitments.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Assign the three accountabilities to role cards for a classroom simulation."
+            },
+            {
+              "title": "Decision",
+              "detail": "Explain the difference between a Sprint Review and a Retrospective using separate agenda items."
+            }
+          ]
+        }
+      }
+    ],
+    "m3-t3": [
+      {
+        "id": "m3-t3-s1",
+        "title": "A story is a conversation starter",
+        "summary": "A common user-story format names a user, a need and a reason.",
+        "explanation": "A common user-story format names a user, a need and a reason. It is not a requirement to force all technical work into a fictional persona. Acceptance criteria clarify item-specific behaviour; the Definition of Done provides shared quality expectations across items. Include negative paths such as invalid input and cancelled bookings. An elegant sentence with no agreed examples is not ready merely because it follows the template.",
+        "example": "The backlog contains “complete student portal” estimated as a single item. The team cannot inspect progress meaningfully until the final week. Meanwhile one of three members is away for training, but the Sprint forecast assumes everyone is available.",
+        "takeaway": "Create small valuable backlog items with acceptance criteria and plan within realistic capacity.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write six backlog items for booking, cancellation and staff oversight."
+            },
+            {
+              "title": "Decision",
+              "detail": "Choose a Sprint Goal and forecast scope, leaving a clear explanation of uncertainty."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t3-s2",
+        "title": "Slice by value rather than only layers",
+        "summary": "A thin end-to-end slice lets a user achieve something and can be inspected.",
+        "explanation": "A thin end-to-end slice lets a user achieve something and can be inspected. Splitting a feature into database, interface and report tasks may help implementation planning but can leave no usable outcome until all layers are complete. Reduce the breadth of a workflow while preserving the necessary quality. Ordering considers value, risk, dependencies and learning, not just the loudest requester. The Product Owner remains accountable for backlog ordering.",
+        "example": "The backlog contains “complete student portal” estimated as a single item. The team cannot inspect progress meaningfully until the final week. Meanwhile one of three members is away for training, but the Sprint forecast assumes everyone is available.",
+        "takeaway": "Create small valuable backlog items with acceptance criteria and plan within realistic capacity.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write six backlog items for booking, cancellation and staff oversight."
+            },
+            {
+              "title": "Decision",
+              "detail": "Choose a Sprint Goal and forecast scope, leaving a clear explanation of uncertainty."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t3-s3",
+        "title": "Forecast with capacity and past evidence",
+        "summary": "Story points are relative estimates within a team, not universal hours or measures of individual productivity.",
+        "explanation": "Story points are relative estimates within a team, not universal hours or measures of individual productivity. Velocity can help a stable team forecast; it should not be used to compare different teams. Account for leave, support work and uncertainty when selecting work. The Sprint Goal creates focus even if the exact scope is adjusted. A forecast is not a guarantee that justifies hiding unfinished work or sacrificing Done.",
+        "example": "Three members have ten working days, but one is away for two days. There are 28 person-days before other commitments. If each person expects only five focused project hours per available day, capacity is 140 hours, not 240. This is a planning input, not a conversion formula from story points. Slice “portal” into a usable booking flow, cancellation flow and staff visibility rather than isolated technology layers.",
+        "takeaway": "Create small valuable backlog items with acceptance criteria and plan within realistic capacity.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write six backlog items for booking, cancellation and staff oversight."
+            },
+            {
+              "title": "Decision",
+              "detail": "Choose a Sprint Goal and forecast scope, leaving a clear explanation of uncertainty."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

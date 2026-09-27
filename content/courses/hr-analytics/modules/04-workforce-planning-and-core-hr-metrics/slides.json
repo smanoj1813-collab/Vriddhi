@@ -1,0 +1,200 @@
+{
+  "moduleId": "m4",
+  "topics": {
+    "m4-t1": [
+      {
+        "id": "m4-t1-s1",
+        "title": "Headcount and FTE are different",
+        "summary": "Headcount counts people under defined inclusion rules.",
+        "explanation": "Headcount counts people under defined inclusion rules. FTE expresses contracted or worked hours relative to a stated full-time standard. Choose one basis and do not mix contracted and actual hours silently. FTE is a capacity convention, not a measure of a person’s worth or individual productivity. People on leave or different contracts may need separate treatment depending on the planning question.",
+        "example": "The operations team says it has ten people, but their contracted hours total the equivalent of eight full-time roles. Another report treats transfers into the team as external hires. These mistakes can distort both capacity planning and recruitment demand.",
+        "takeaway": "Calculate headcount and full-time equivalents and reconcile workforce movements at the correct boundary.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a small contracted-hours table and calculate headcount and FTE separately."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a capacity note identifying one skill or availability gap that headcount alone misses."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t1-s2",
+        "title": "Reconcile movements at the right boundary",
+        "summary": "Opening plus joins minus exits yields closing headcount only when other changes are absent.",
+        "explanation": "Opening plus joins minus exits yields closing headcount only when other changes are absent. At department level add transfers in and subtract transfers out; at organisation level those internal transfers cancel. Check effective dates and employment spells. A rehire may be a new spell for one metric but the same person for another. The dictionary must say how repeated employment is handled.",
+        "example": "The operations team says it has ten people, but their contracted hours total the equivalent of eight full-time roles. Another report treats transfers into the team as external hires. These mistakes can distort both capacity planning and recruitment demand.",
+        "takeaway": "Calculate headcount and full-time equivalents and reconcile workforce movements at the correct boundary.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a small contracted-hours table and calculate headcount and FTE separately."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a capacity note identifying one skill or availability gap that headcount alone misses."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t1-s3",
+        "title": "Compare stock and capacity",
+        "summary": "A stable headcount can conceal changing hours, leave or skill availability.",
+        "explanation": "A stable headcount can conceal changing hours, leave or skill availability. Report FTE, critical skills and planned availability where relevant. Avoid counting overtime as permanent capacity without a sustainability and policy check. Workforce plans should show assumptions about workload and service quality, not just a target number of people. Reconcile the plan with approved roles and funding.",
+        "example": "Six employees work 40 contracted hours and four work 20 hours weekly. Headcount is 10 and FTE at a 40-hour standard is (6×40 + 4×20)/40 = 8. A department starting with 20 people, adding 3 external joins and 2 transfers in, losing 1 exit and 2 transfers out, closes at 22.",
+        "takeaway": "Calculate headcount and full-time equivalents and reconcile workforce movements at the correct boundary.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a small contracted-hours table and calculate headcount and FTE separately."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a capacity note identifying one skill or availability gap that headcount alone misses."
+            }
+          ]
+        }
+      }
+    ],
+    "m4-t2": [
+      {
+        "id": "m4-t2-s1",
+        "title": "Define turnover and retention independently",
+        "summary": "This course’s basic period turnover rate is exits during the period divided by average headcount, with opening/closing average used only when appropriate and disclosed.",
+        "explanation": "This course’s basic period turnover rate is exits during the period divided by average headcount, with opening/closing average used only when appropriate and disclosed. Voluntary and involuntary exits should be separated when relevant. Retention follows an opening cohort and counts how many remain at the end. It is not automatically one minus turnover when hires and different denominators are involved. Avoid casually annualising a volatile short period.",
+        "example": "A manager divides annual exits by closing headcount and compares it with another department’s monthly figure. An absence chart counts leave days without showing scheduled workdays. Both comparisons risk assigning meaning to inconsistent denominators.",
+        "takeaway": "Calculate workforce rates with explicit periods, eligible populations and limitations.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create metric cards for period turnover, opening-cohort retention and absence hours."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a process-level investigation without diagnosing individuals or attributing misconduct."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t2-s2",
+        "title": "Use scheduled exposure for absence",
+        "summary": "An absence rate can use absent scheduled hours divided by total scheduled hours in the period.",
+        "explanation": "An absence rate can use absent scheduled hours divided by total scheduled hours in the period. Define which absence types are included and how part-time schedules and approved leave are treated. Days may be appropriate under consistent work patterns but hours can be more comparable when schedules differ. Do not infer misconduct or health status from aggregate absence. Sensitive details require authorised handling.",
+        "example": "A manager divides annual exits by closing headcount and compares it with another department’s monthly figure. An absence chart counts leave days without showing scheduled workdays. Both comparisons risk assigning meaning to inconsistent denominators.",
+        "takeaway": "Calculate workforce rates with explicit periods, eligible populations and limitations.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create metric cards for period turnover, opening-cohort retention and absence hours."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a process-level investigation without diagnosing individuals or attributing misconduct."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t2-s3",
+        "title": "Interpret rates with counts and context",
+        "summary": "Small groups can show large percentage swings from one event.",
+        "explanation": "Small groups can show large percentage swings from one event. Show counts, denominators and comparable periods, applying disclosure safeguards. Seasonal work, tenure mix and organisational changes can affect rates. A metric can trigger supportive investigation without identifying an individual as a problem. Record limitations and consult HR professionals before decisions affecting employment, health or accommodations.",
+        "example": "Opening headcount is 100 and closing 120, giving an approximate average of 110. Eleven exits yield 10% turnover for that period. If 92 of the original 100 remain, opening-cohort retention is 92%, not 90%. In an absence example, 80 absent scheduled hours out of 2,000 scheduled hours equals 4%; the treatment of approved leave must be stated.",
+        "takeaway": "Calculate workforce rates with explicit periods, eligible populations and limitations.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create metric cards for period turnover, opening-cohort retention and absence hours."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a process-level investigation without diagnosing individuals or attributing misconduct."
+            }
+          ]
+        }
+      }
+    ],
+    "m4-t3": [
+      {
+        "id": "m4-t3-s1",
+        "title": "Translate workload into capacity carefully",
+        "summary": "A simple demand model divides workload by sustainable productive capacity per FTE under a stated service and quality standard.",
+        "explanation": "A simple demand model divides workload by sustainable productive capacity per FTE under a stated service and quality standard. Include time for training, breaks, support and non-case work appropriately. Do not equate all paid hours with case-processing time. Different skills and shift requirements may prevent staff from being interchangeable. A capacity model supports planning; it is not a licence to intensify work without operational review.",
+        "example": "The service team expects demand to rise, but the forecast range is wide. Recruitment takes time and attrition is uncertain. The HR analyst must explain a staffing gap under several scenarios rather than present one number as a guaranteed future.",
+        "takeaway": "Model staffing demand and supply using transparent assumptions instead of a single false-precision forecast.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build base, lower-demand and higher-demand scenarios with explicit workload inputs."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a trigger-based plan and state which assumptions need monthly review."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t3-s2",
+        "title": "Project supply with distinct flows",
+        "summary": "Start with current capacity, then consider expected joins, exits, transfers, changed hours and availability.",
+        "explanation": "Start with current capacity, then consider expected joins, exits, transfers, changed hours and availability. Use probabilities or scenarios where uncertainty is material. An accepted offer is not a guaranteed join. Separate already approved hiring from proposed positions and include lead time. Avoid subtracting attrition twice, once in the base supply and again in a generic contingency allowance.",
+        "example": "The service team expects demand to rise, but the forecast range is wide. Recruitment takes time and attrition is uncertain. The HR analyst must explain a staffing gap under several scenarios rather than present one number as a guaranteed future.",
+        "takeaway": "Model staffing demand and supply using transparent assumptions instead of a single false-precision forecast.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build base, lower-demand and higher-demand scenarios with explicit workload inputs."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a trigger-based plan and state which assumptions need monthly review."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t3-s3",
+        "title": "Compare actions, costs and risks",
+        "summary": "Options include hiring, internal mobility, training, process improvement, demand smoothing and appropriately governed temporary capacity.",
+        "explanation": "Options include hiring, internal mobility, training, process improvement, demand smoothing and appropriately governed temporary capacity. Each has lead time, cost and quality implications. A workforce gap is not automatically solved by recruiting more people. State the trigger for moving from one scenario to another and review assumptions as evidence arrives. Preserve human review and institutional employment policies.",
+        "example": "Expected monthly workload is 9,600 cases. Sustainable productive capacity is 800 cases per FTE, so demand is 12 FTE. Current supply is 10 FTE; expected confirmed capacity additions total 2 and planned departures remove 1, giving 11 FTE and a gap of 1. At 10,400 cases demand becomes 13 FTE, giving a gap of 2 if other assumptions hold.",
+        "takeaway": "Model staffing demand and supply using transparent assumptions instead of a single false-precision forecast.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build base, lower-demand and higher-demand scenarios with explicit workload inputs."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a trigger-based plan and state which assumptions need monthly review."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

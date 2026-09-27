@@ -8,6 +8,19 @@ Self-contained learning programmes rendered by the Vriddhi app under **Courses**
 | --- | --- | --- | --- |
 | `genai-certification/` | VGC-101 | GenAI for Career Impact — Certificate Program | 60 |
 | `digital-marketing/` | VDM-101 | Digital Marketing — Certificate Program | 52 |
+| `project-management/` | VPM-101 | Project Management — Certificate Program | 60 |
+| `hr-analytics/` | VHR-101 | HR Analytics — Certificate Program | 60 |
+
+### Project Management and HR Analytics
+
+Both new packs contain **8 modules, 24 lessons, 4 project blocks and a 12-hour capstone**. Each has five formative questions per lesson, ten advanced questions per module (**200 quiz items**), three companion slides per lesson (**72 slides**), worked examples, labs, journals, rubrics, certification policy and a facilitator guide. The 60 learning hours are 36 lesson hours (including labs) plus 12 project-block hours and 12 capstone hours; the institutional 90-minute final is scheduled separately.
+
+- **VPM-101:** Agile, Scrum, planning, risks and Jira, with cost/schedule control, PMO reporting, vendor coordination and operations handover. Target roles: Project Coordinator, PMO Analyst and Operations Associate.
+- **VHR-101:** Recruitment, HR metrics, dashboards and people analytics, with spreadsheet cleaning, workforce scenarios, survey/cohort interpretation and responsible evaluation. Target roles: HR Executive, HR Analyst and Talent Acquisition Associate.
+- `resources/practice-data.md` provides copyable synthetic fixtures and calculation checkpoints; `resources/portfolio-templates.md` provides submission templates. No real personal data or paid tool is required.
+- Public quiz banks and final-assessment practice cases are learning resources, not secure exam banks. Facilitators prepare an unseen final under the published blueprint and mark external projects separately.
+- Platform reading/quiz certificate eligibility is distinct from the institutional award, which also requires marked projects, capstone, final assessment and applicable attendance/integrity checks.
+- The app discovers both packs automatically. College/programme assignment is still required for visibility in the protected student catalog; no assignment or production deployment is performed by adding content.
 
 ## Pack layout
 

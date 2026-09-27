@@ -1,0 +1,200 @@
+{
+  "moduleId": "m6",
+  "topics": {
+    "m6-t1": [
+      {
+        "id": "m6-t1-s1",
+        "title": "Use a small decision-led metric set",
+        "summary": "For each audience, identify the recurring question, available action, cadence and sensitivity level.",
+        "explanation": "For each audience, identify the recurring question, available action, cadence and sensitivity level. Select a handful of metrics with owners and definitions. An operational view may show open requisitions needing feedback; an executive view may show workforce gaps and trend context. More charts do not automatically provide more insight. Keep drill-down access separate from broadly shared summaries.",
+        "example": "The HR Executive needs an action queue, the recruitment lead needs funnel bottlenecks, and a senior sponsor needs a small set of workforce decisions. One dense dashboard cannot serve all three equally well. Begin with audience and purpose.",
+        "takeaway": "Choose dashboard measures and visual encodings based on a decision, not on the number of available fields.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose HR Executive, HR Analyst or Talent Acquisition Associate as the primary audience."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a peer to identify the required action without your narration and revise the wireframe."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t1-s2",
+        "title": "Choose appropriate visual forms",
+        "summary": "Use bars for category comparisons, lines for time trends and tables for exact values and action lists.",
+        "explanation": "Use bars for category comparisons, lines for time trends and tables for exact values and action lists. Show denominators and periods beside rates. Avoid three-dimensional effects, dual axes without clear justification and truncated bar axes that exaggerate differences. Use accessible contrast and labels rather than colour alone to communicate status. A chart title should explain the measured question, not just name the tool.",
+        "example": "The HR Executive needs an action queue, the recruitment lead needs funnel bottlenecks, and a senior sponsor needs a small set of workforce decisions. One dense dashboard cannot serve all three equally well. Begin with audience and purpose.",
+        "takeaway": "Choose dashboard measures and visual encodings based on a decision, not on the number of available fields.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose HR Executive, HR Analyst or Talent Acquisition Associate as the primary audience."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a peer to identify the required action without your narration and revise the wireframe."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t1-s3",
+        "title": "Pair every signal with context",
+        "summary": "Display refresh time, source, definition link, filters and limitations.",
+        "explanation": "Display refresh time, source, definition link, filters and limitations. A threshold needs a rationale and an owner; red is not an explanation. Include a note describing what the viewer should do if the metric crosses a trigger. Prevent individual identification through tiny filtered groups. Design the wireframe before building so the team can challenge the information hierarchy without being distracted by software.",
+        "example": "A recruitment view might show open requisitions by age band, offer acceptance for a mature cohort, and a table of pending interviewer feedback. Each serves a different action. A headcount trend without joiner and exit context may raise questions but cannot explain movement. A five-chart mock-up with explicit decisions is more useful than twenty unrelated numbers.",
+        "takeaway": "Choose dashboard measures and visual encodings based on a decision, not on the number of available fields.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose HR Executive, HR Analyst or Talent Acquisition Associate as the primary audience."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a peer to identify the required action without your narration and revise the wireframe."
+            }
+          ]
+        }
+      }
+    ],
+    "m6-t2": [
+      {
+        "id": "m6-t2-s1",
+        "title": "Separate data, calculations and presentation",
+        "summary": "Use raw, cleaned, metric and dashboard layers so transformations are inspectable.",
+        "explanation": "Use raw, cleaned, metric and dashboard layers so transformations are inspectable. A pivot or formula layer should produce the values displayed; avoid typing summary numbers directly into chart labels. Keep an Unknown group visible when data is incomplete. A refresh should not silently change definitions. Document how new rows are included and how dates are interpreted.",
+        "example": "A spreadsheet dashboard looks correct until a department filter changes the numerator but leaves the denominator fixed. The resulting conversion rate is plausible enough to escape notice. Dashboard QA needs known test cases, not only a visual inspection.",
+        "takeaway": "Create an aggregate dashboard with tested filters, reproducible totals and safe sharing settings.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build three dashboard measures from the cleaned synthetic workbook."
+            },
+            {
+              "title": "Decision",
+              "detail": "Export an aggregate-only portfolio view and check that hidden raw data is not inadvertently included."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t2-s2",
+        "title": "Test filters and totals deliberately",
+        "summary": "Check an unfiltered total, a single group, an empty selection and a combination of filters.",
+        "explanation": "Check an unfiltered total, a single group, an empty selection and a combination of filters. Numerator and denominator must use compatible populations. Test duplicates, missing dates and late-arriving records. Compare key values to a manual calculation and reconcile summaries to detail. A dashboard with correct charts but incorrect filters is analytically wrong, even if it looks professional.",
+        "example": "A spreadsheet dashboard looks correct until a department filter changes the numerator but leaves the denominator fixed. The resulting conversion rate is plausible enough to escape notice. Dashboard QA needs known test cases, not only a visual inspection.",
+        "takeaway": "Create an aggregate dashboard with tested filters, reproducible totals and safe sharing settings.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build three dashboard measures from the cleaned synthetic workbook."
+            },
+            {
+              "title": "Decision",
+              "detail": "Export an aggregate-only portfolio view and check that hidden raw data is not inadvertently included."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t2-s3",
+        "title": "Share only the necessary layer",
+        "summary": "Use aggregate outputs for portfolio work and check access using the intended viewer role.",
+        "explanation": "Use aggregate outputs for portfolio work and check access using the intended viewer role. Hidden spreadsheet tabs are not a security boundary if viewers can unhide or download them. Remove real identifiers rather than relying on visual hiding. Excel, Google Sheets and an offline equivalent are acceptable; an optional BI tool can be used only if access and data handling are appropriate. No paid publication feature is required.",
+        "example": "A department has 8 acceptances from 10 offers, while the organisation has 30 from 40. The department rate is 80%, not 8/40 = 20%. A filter test should assert both counts change together. For an empty department, display “not applicable, n=0”. Before sharing, inspect whether the exported file contains underlying rows that the audience should not receive.",
+        "takeaway": "Create an aggregate dashboard with tested filters, reproducible totals and safe sharing settings.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build three dashboard measures from the cleaned synthetic workbook."
+            },
+            {
+              "title": "Decision",
+              "detail": "Export an aggregate-only portfolio view and check that hidden raw data is not inadvertently included."
+            }
+          ]
+        }
+      }
+    ],
+    "m6-t3": [
+      {
+        "id": "m6-t3-s1",
+        "title": "Separate observation from interpretation",
+        "summary": "State the metric, period, population and comparison first.",
+        "explanation": "State the metric, period, population and comparison first. Then identify plausible explanations and which evidence supports each. Use language such as “associated with” when causation is not established. Avoid implying an individual caused an aggregate pattern. A memo can recommend checking missing timestamps or interviewing process owners before changing policy. Good analysis sometimes narrows the question rather than delivering an instant answer.",
+        "example": "A dashboard shows slower hiring in one department. The sponsor asks for a recommendation before tomorrow’s meeting. A useful memo should not jump from a chart to blame; it should explain what is known, what remains uncertain and which action is justified now.",
+        "takeaway": "Communicate a people-analytics finding with evidence, uncertainty, alternatives and a proportionate next step.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose one dashboard finding and write its observation with period and denominator."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a one-page memo with owner, review date, success measure and stop condition."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t3-s2",
+        "title": "Quantify the practical difference",
+        "summary": "Show absolute counts and relevant differences, not only relative percentages.",
+        "explanation": "Show absolute counts and relevant differences, not only relative percentages. A rate rising from 2% to 4% doubles but changes by two percentage points; the practical significance depends on denominator, impact and context. Round consistently without obscuring small samples. Explain whether a difference is stable across periods or driven by a few cases. Do not equate statistical language with certainty.",
+        "example": "A dashboard shows slower hiring in one department. The sponsor asks for a recommendation before tomorrow’s meeting. A useful memo should not jump from a chart to blame; it should explain what is known, what remains uncertain and which action is justified now.",
+        "takeaway": "Communicate a people-analytics finding with evidence, uncertainty, alternatives and a proportionate next step.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose one dashboard finding and write its observation with period and denominator."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a one-page memo with owner, review date, success measure and stop condition."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t3-s3",
+        "title": "Make the recommendation reviewable",
+        "summary": "Provide options, expected benefit, risk, owner, timeline and success measure.",
+        "explanation": "Provide options, expected benefit, risk, owner, timeline and success measure. Prefer a bounded process pilot when evidence is preliminary. Include a balancing measure for unintended effects, such as candidate experience alongside faster hiring. State what evidence would cause the organisation to stop or revise the action. Keep the memo accessible to a non-technical HR manager and link detailed calculations separately.",
+        "example": "A late-feedback rate rises from 2 of 100 interviews to 4 of 100. That is a two-percentage-point increase and a 100% relative increase, but only two additional events. A proportionate recommendation is to inspect the four cases and test a reminder workflow, not declare a systemic staffing failure. If role mix or timestamp capture changed, investigate that before attributing the rise to behaviour.",
+        "takeaway": "Communicate a people-analytics finding with evidence, uncertainty, alternatives and a proportionate next step.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose one dashboard finding and write its observation with period and denominator."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a one-page memo with owner, review date, success measure and stop condition."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

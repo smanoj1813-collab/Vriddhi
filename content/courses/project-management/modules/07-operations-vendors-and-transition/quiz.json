@@ -1,0 +1,341 @@
+{
+  "moduleId": "m7",
+  "questions": {
+    "m7-t1": [
+      {
+        "id": "m7-t1-q1",
+        "question": "At three minutes per request, what is one desk’s theoretical hourly capacity?",
+        "options": [
+          "Sixty requests",
+          "One hundred eighty requests",
+          "Twenty requests",
+          "Three requests"
+        ],
+        "answerIndex": 2,
+        "explanation": "60 minutes ÷ 3 = 20, before other constraints.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q2",
+        "question": "Why is three desks for 180 requests over three hours fragile?",
+        "options": [
+          "It always triples quality",
+          "It guarantees zero queues",
+          "It assumes only one request arrives",
+          "It leaves no buffer for variability or breaks"
+        ],
+        "answerIndex": 3,
+        "explanation": "The calculation is a theoretical lower bound, not a resilient plan.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q3",
+        "question": "What should accompany a speed measure?",
+        "options": [
+          "A quality or resolution measure",
+          "Only another colour",
+          "An individual popularity score",
+          "A count of keyboard clicks"
+        ],
+        "answerIndex": 0,
+        "explanation": "Balanced measures reduce incentives to close work prematurely.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q4",
+        "question": "What makes an SOP maintainable?",
+        "options": [
+          "A rule that it never changes",
+          "A named owner, revision date and exception route",
+          "A very long document with no owner",
+          "Only screenshots of old menus"
+        ],
+        "answerIndex": 1,
+        "explanation": "Operations documents require ownership and updating.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q5",
+        "question": "What must an SLA define?",
+        "options": [
+          "A promise without conditions",
+          "Every employee’s salary",
+          "The service target and measurement boundaries",
+          "Only the title of the service"
+        ],
+        "answerIndex": 2,
+        "explanation": "A service commitment needs a clear scope and clock.",
+        "difficulty": "core"
+      }
+    ],
+    "m7-t2": [
+      {
+        "id": "m7-t2-q1",
+        "question": "What is Vendor A’s comparable total in the example?",
+        "options": [
+          "₹18,000",
+          "₹22,000",
+          "₹21,000",
+          "₹25,000"
+        ],
+        "answerIndex": 3,
+        "explanation": "18,000 + 4,000 + 3,000 = 25,000.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q2",
+        "question": "What should precede supplier price comparison?",
+        "options": [
+          "A clear statement of requirements",
+          "Choosing the lowest headline number",
+          "Signing an invoice",
+          "Publishing confidential offers"
+        ],
+        "answerIndex": 0,
+        "explanation": "Offers must address a comparable need.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q3",
+        "question": "What should support invoice approval?",
+        "options": [
+          "A promise of future delivery",
+          "Verified delivery and required authorisation",
+          "A friendly message from the supplier",
+          "Only a quoted price"
+        ],
+        "answerIndex": 1,
+        "explanation": "Receipt and acceptance must be evidenced under institutional controls.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q4",
+        "question": "Which is a mandatory-criteria treatment?",
+        "options": [
+          "Hide it in a footnote",
+          "Assume every supplier qualifies",
+          "Reject or resolve a failure before preference scoring",
+          "Average the failure away with low price"
+        ],
+        "answerIndex": 2,
+        "explanation": "Mandatory requirements are not ordinary weighted preferences.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q5",
+        "question": "What is the coordinator’s comparison document?",
+        "options": [
+          "An automatic contract award",
+          "Proof of market-wide best price",
+          "Permission to bypass procurement",
+          "A recommendation subject to approval"
+        ],
+        "answerIndex": 3,
+        "explanation": "Decision authority remains with the authorised process.",
+        "difficulty": "core"
+      }
+    ],
+    "m7-t3": [
+      {
+        "id": "m7-t3-q1",
+        "question": "What proves operational handover better than sending a manual?",
+        "options": [
+          "The receiving team demonstrates key tasks and accepts ownership",
+          "The project team deletes its files",
+          "A launch announcement is posted",
+          "Every issue is renamed"
+        ],
+        "answerIndex": 0,
+        "explanation": "Readiness requires demonstrated capability and accepted responsibility.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q2",
+        "question": "What is the rework proportion for 18 of 90 requests?",
+        "options": [
+          "30%",
+          "20%",
+          "18%",
+          "10%"
+        ],
+        "answerIndex": 1,
+        "explanation": "18 ÷ 90 × 100 = 20%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q3",
+        "question": "A rate falls from 30% to 20%. What is the absolute change?",
+        "options": [
+          "Thirty percentage points",
+          "Twenty percentage points",
+          "Ten percentage points",
+          "Ten percent relative reduction"
+        ],
+        "answerIndex": 2,
+        "explanation": "Absolute differences between percentages are measured in percentage points.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q4",
+        "question": "What does the Check step in PDCA involve?",
+        "options": [
+          "Declare success before testing",
+          "Skip inconvenient records",
+          "Assign blame without evidence",
+          "Compare observed results with the prediction"
+        ],
+        "answerIndex": 3,
+        "explanation": "The learning cycle depends on comparison and interpretation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q5",
+        "question": "What should happen to residual risks at closure?",
+        "options": [
+          "Transfer them to named accepting owners",
+          "Erase them from the log",
+          "Keep them with no one",
+          "Assume launch removed them"
+        ],
+        "answerIndex": 0,
+        "explanation": "Closure must not remove accountability for remaining exposure.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 7 scenario assessment",
+    "questions": [
+      {
+        "id": "m7-assessment-q1",
+        "question": "Requests take four minutes each. Two desks work for two hours. What is the theoretical total capacity before variability?",
+        "options": [
+          "30 requests",
+          "120 requests",
+          "15 requests",
+          "60 requests"
+        ],
+        "answerIndex": 3,
+        "explanation": "2×120/4 = 60; real capacity may be lower.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q2",
+        "question": "Average demand equals theoretical maximum capacity, with variable arrivals. What is the prudent conclusion?",
+        "options": [
+          "Queues and overload remain possible; add buffer or smooth demand",
+          "No waiting is possible",
+          "Every service target is guaranteed",
+          "Quality checks can be removed"
+        ],
+        "answerIndex": 0,
+        "explanation": "Averages conceal peaks and leave no resilience.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q3",
+        "question": "Vendor A totals ₹26,000 including setup; B is ₹22,000 plus ₹5,000 required setup. What is the price comparison?",
+        "options": [
+          "B is always better because its headline is lower",
+          "A is ₹1,000 lower on that basis",
+          "B is ₹4,000 lower",
+          "They cost the same"
+        ],
+        "answerIndex": 1,
+        "explanation": "Compare equivalent inclusions: B totals ₹27,000.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q4",
+        "question": "A supplier invoice arrives before acceptance evidence. What should the coordinator do?",
+        "options": [
+          "Pay privately and seek reimbursement later",
+          "Delete the delivery tracker",
+          "Route it through verification and authorised approval",
+          "Certify delivery without checking"
+        ],
+        "answerIndex": 2,
+        "explanation": "Payment control needs evidence and authority.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q5",
+        "question": "An SOP improves closure speed but repeat complaints increase. What should be investigated?",
+        "options": [
+          "Only the speed success",
+          "Whether complaints can be excluded",
+          "How to stop recording rework",
+          "Premature closure and the balancing quality measure"
+        ],
+        "answerIndex": 3,
+        "explanation": "A single speed metric can create harmful incentives.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q6",
+        "question": "After launch, no role owns access administration. What does this indicate?",
+        "options": [
+          "Incomplete operational handover",
+          "A completed transition because software runs",
+          "A reason to publish passwords",
+          "No risk because the project is over"
+        ],
+        "answerIndex": 0,
+        "explanation": "Service ownership and access controls are handover requirements.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q7",
+        "question": "Rework falls from 24 of 80 to 15 of 75 cases. What is the absolute rate reduction?",
+        "options": [
+          "Thirty percentage points",
+          "Ten percentage points",
+          "Nine percentage points",
+          "Five percentage points"
+        ],
+        "answerIndex": 1,
+        "explanation": "Rates are 30% and 20%, not raw-count percentages.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q8",
+        "question": "A before-and-after trial changes both staffing and the script. What claim is justified?",
+        "options": [
+          "Staffing cannot matter",
+          "The result must be discarded entirely",
+          "Improvement was observed, but the script’s causal effect is not isolated",
+          "The script alone caused all improvement"
+        ],
+        "answerIndex": 2,
+        "explanation": "Confounding limits causal attribution, not the existence of observed change.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q9",
+        "question": "A vendor misses a milestone. Which escalation is strongest?",
+        "options": [
+          "A public accusation only",
+          "A silent deadline change",
+          "A new contract signed by an unauthorised intern",
+          "Evidence of delay, affected dependency and feasible alternatives"
+        ],
+        "answerIndex": 3,
+        "explanation": "The escalation should support a responsible recovery decision.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q10",
+        "question": "Closure leaves three unresolved support issues. What is needed?",
+        "options": [
+          "Named accepting owners, actions and review dates",
+          "Deleting the issues",
+          "Calling them all benefits",
+          "Leaving them with a disbanded team"
+        ],
+        "answerIndex": 0,
+        "explanation": "Residual responsibilities must be transferred explicitly.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

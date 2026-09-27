@@ -1,0 +1,341 @@
+{
+  "moduleId": "m2",
+  "questions": {
+    "m2-t1": [
+      {
+        "id": "m2-t1-q1",
+        "question": "What does a WBS primarily describe?",
+        "options": [
+          "A list of project risks",
+          "The decomposed scope of work and deliverables",
+          "The payroll hierarchy",
+          "Only the final deadline"
+        ],
+        "answerIndex": 1,
+        "explanation": "Scheduling and risk planning use the WBS but are not the WBS itself.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q2",
+        "question": "Twelve hours of work at three available hours a day requires at least how long?",
+        "options": [
+          "One working day",
+          "Thirty-six working days",
+          "Four working days",
+          "Twelve working days"
+        ],
+        "answerIndex": 2,
+        "explanation": "12 ÷ 3 = 4, before additional dependencies or interruption.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q3",
+        "question": "What is the PERT estimate for 6, 9 and 18 hours?",
+        "options": [
+          "11 hours",
+          "9 hours",
+          "18 hours",
+          "10 hours"
+        ],
+        "answerIndex": 3,
+        "explanation": "(6 + 4×9 + 18) ÷ 6 = 10.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q4",
+        "question": "Which estimate is most reviewable?",
+        "options": [
+          "A range with scope and availability assumptions",
+          "A precise number without a basis",
+          "The shortest number suggested",
+          "The previous deadline copied unchanged"
+        ],
+        "answerIndex": 0,
+        "explanation": "Assumptions explain what the estimate means and when it needs revision.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q5",
+        "question": "Why might adding a second person not halve duration?",
+        "options": [
+          "More people always slow every task",
+          "Some work is sequential and coordination takes time",
+          "Effort and duration are always equal",
+          "Only one person can ever work on a project"
+        ],
+        "answerIndex": 1,
+        "explanation": "Parallelism depends on the work, not merely headcount.",
+        "difficulty": "core"
+      }
+    ],
+    "m2-t2": [
+      {
+        "id": "m2-t2-q1",
+        "question": "How long is path A–B–D with durations 2, 4 and 2?",
+        "options": [
+          "Six days",
+          "Four days",
+          "Eight days",
+          "Seven days"
+        ],
+        "answerIndex": 2,
+        "explanation": "Dependent durations add to 8 days.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q2",
+        "question": "Why does shortening C by one day not shorten the original project?",
+        "options": [
+          "C is not real work",
+          "Every task has unlimited float",
+          "A schedule never changes",
+          "The eight-day A–B–D path still controls the finish"
+        ],
+        "answerIndex": 3,
+        "explanation": "A non-critical path can shorten without affecting the critical path.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q3",
+        "question": "If C becomes five days, what is the new unconstrained finish?",
+        "options": [
+          "Nine days",
+          "Eight days",
+          "Seven days",
+          "Eleven days"
+        ],
+        "answerIndex": 0,
+        "explanation": "A–C–D becomes 2 + 5 + 2 = 9 days.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q4",
+        "question": "What must be checked before scheduling B and C in parallel?",
+        "options": [
+          "Whether both have the same sponsor",
+          "Whether required resources are available to both",
+          "Whether their colours match",
+          "Whether task names are alphabetical"
+        ],
+        "answerIndex": 1,
+        "explanation": "Logical parallelism does not guarantee resource capacity.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q5",
+        "question": "What is a risk of fast-tracking?",
+        "options": [
+          "Quality becomes guaranteed",
+          "Approvals become unnecessary",
+          "Rework from overlapping dependent activities",
+          "All costs automatically fall"
+        ],
+        "answerIndex": 2,
+        "explanation": "Overlapping uncertain work can require later rework.",
+        "difficulty": "core"
+      }
+    ],
+    "m2-t3": [
+      {
+        "id": "m2-t3-q1",
+        "question": "With AC ₹18,000 and ETC ₹22,000, what is bottom-up EAC?",
+        "options": [
+          "₹4,000",
+          "₹22,000",
+          "₹18,000",
+          "₹40,000"
+        ],
+        "answerIndex": 3,
+        "explanation": "EAC = actual cost + estimated remaining cost.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q2",
+        "question": "What is CV when EV is ₹15,000 and AC is ₹18,000?",
+        "options": [
+          "−₹3,000",
+          "₹3,000",
+          "−₹5,000",
+          "₹33,000"
+        ],
+        "answerIndex": 0,
+        "explanation": "CV = EV − AC; negative means over budget for the earned work.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q3",
+        "question": "What are the units of EV minus PV in this example?",
+        "options": [
+          "Percent satisfaction",
+          "Rupees of budgeted work",
+          "Calendar days",
+          "Number of employees"
+        ],
+        "answerIndex": 1,
+        "explanation": "Earned-value schedule variance is not a direct day-delay measure.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q4",
+        "question": "A forecast changes after new vendor information. What should happen to the baseline?",
+        "options": [
+          "Delete all actual costs",
+          "Treat the forecast as acceptance",
+          "Retain it unless a change is authorised",
+          "Replace it without a record"
+        ],
+        "answerIndex": 2,
+        "explanation": "Forecast and approved baseline serve different purposes.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q5",
+        "question": "Why can low actual spend be a warning?",
+        "options": [
+          "It always proves efficiency",
+          "It proves all suppliers are paid",
+          "It means scope has no cost",
+          "Planned work may not have been completed"
+        ],
+        "answerIndex": 3,
+        "explanation": "Interpret cost together with delivery progress.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 2 scenario assessment",
+    "questions": [
+      {
+        "id": "m2-assessment-q1",
+        "question": "A task needs 18 effort-hours from a person available three hours daily, after a two-day approval wait. What is the minimum sequential duration?",
+        "options": [
+          "Twenty working days",
+          "Three working days",
+          "Eight working days",
+          "Six working days"
+        ],
+        "answerIndex": 2,
+        "explanation": "Six workdays plus the preceding two-day approval wait.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q2",
+        "question": "Paths A–B–D and A–C–D take 10 and 8 days. B is shortened by one day. What is the new earliest finish if resources are unchanged?",
+        "options": [
+          "Eight days",
+          "Seven days",
+          "Ten days",
+          "Nine days"
+        ],
+        "answerIndex": 3,
+        "explanation": "The first path remains controlling at nine days.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q3",
+        "question": "A five-day and a four-day task can logically run together but use one full-time specialist. What must planning do?",
+        "options": [
+          "Model resource sequencing or obtain additional capacity",
+          "Promise a five-day finish without checking",
+          "Remove one task from scope silently",
+          "Average the durations to 4.5 days"
+        ],
+        "answerIndex": 0,
+        "explanation": "Logical independence does not remove a resource conflict.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q4",
+        "question": "Optimistic, likely and pessimistic effort estimates are 4, 7 and 16 hours. What is weighted PERT effort?",
+        "options": [
+          "Twelve hours",
+          "Eight hours",
+          "Nine hours",
+          "Seven hours"
+        ],
+        "answerIndex": 1,
+        "explanation": "(4 + 4×7 + 16)/6 = 8.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q5",
+        "question": "AC is ₹12,000 and a newly estimated ETC is ₹19,000 against a ₹28,000 baseline. What should the forecast show?",
+        "options": [
+          "EAC ₹7,000",
+          "EAC ₹19,000 excluding spend",
+          "EAC ₹31,000 and ₹3,000 over baseline",
+          "EAC ₹28,000 because baseline cannot change"
+        ],
+        "answerIndex": 2,
+        "explanation": "Forecast is actual plus current remaining estimate; baseline stays a reference.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q6",
+        "question": "EV is ₹24,000, AC ₹30,000 and PV ₹32,000. What is the interpretation?",
+        "options": [
+          "Under budget and ahead",
+          "Ahead because actual spend is high",
+          "Exactly on plan",
+          "Over budget for completed work and behind planned work"
+        ],
+        "answerIndex": 3,
+        "explanation": "CV = −6,000 and SV = −8,000; both are unfavourable.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q7",
+        "question": "An estimate includes licence purchase but no ongoing support. What should the coordinator add before approval?",
+        "options": [
+          "Separate operational costs and their funding owner",
+          "Assume support is free",
+          "Hide support in the labour rate",
+          "Delete the licence estimate"
+        ],
+        "answerIndex": 0,
+        "explanation": "Handover must not conceal recurring unfunded costs.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q8",
+        "question": "A scheduler saves two days on a path with three days of float while the critical path is unchanged. What finish-date claim is justified?",
+        "options": [
+          "Three days earlier",
+          "No overall reduction from that change alone",
+          "Two days earlier automatically",
+          "Five days earlier"
+        ],
+        "answerIndex": 1,
+        "explanation": "Shortening non-controlling work does not necessarily shorten the project.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q9",
+        "question": "The team adds contingency to every task and again to the total without explanation. What review is needed?",
+        "options": [
+          "Call the total exact",
+          "Ignore it because more budget is always safer",
+          "Check for double counting and state the reserve method",
+          "Remove every uncertainty allowance"
+        ],
+        "answerIndex": 2,
+        "explanation": "Reserves should be explicit and consistently applied.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q10",
+        "question": "A sponsor proposes overlapping testing with unstable configuration to recover time. What should the recommendation include?",
+        "options": [
+          "Only the saved days",
+          "A guarantee of no quality impact",
+          "A statement that dependencies no longer exist",
+          "Time benefit, rework risk and approval conditions"
+        ],
+        "answerIndex": 3,
+        "explanation": "Fast-tracking trades time against risk and possible rework.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

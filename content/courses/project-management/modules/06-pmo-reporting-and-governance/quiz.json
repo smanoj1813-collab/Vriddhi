@@ -1,0 +1,341 @@
+{
+  "moduleId": "m6",
+  "questions": {
+    "m6-t1": [
+      {
+        "id": "m6-t1-q1",
+        "question": "Why is eight of ten closed tasks not necessarily 80% complete?",
+        "options": [
+          "Every task must have identical dates",
+          "Tasks may represent different effort or value",
+          "Closed tasks never matter",
+          "Percentages are prohibited"
+        ],
+        "answerIndex": 1,
+        "explanation": "Progress requires a defined basis, not automatic equal weighting.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q2",
+        "question": "What should RAG thresholds be?",
+        "options": [
+          "Kept secret from sponsors",
+          "Chosen by chart software",
+          "Agreed before applying them to the report",
+          "Changed to keep every project green"
+        ],
+        "answerIndex": 2,
+        "explanation": "Stable definitions make status interpretable.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q3",
+        "question": "What date belongs beside a baseline milestone?",
+        "options": [
+          "Only the prettiest date format",
+          "The author’s birthday",
+          "An unrelated meeting date",
+          "The current forecast and any actual date"
+        ],
+        "answerIndex": 3,
+        "explanation": "Comparing baseline and forecast reveals variance.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q4",
+        "question": "Which decision request is actionable?",
+        "options": [
+          "Approve or defer the reminder change by Thursday",
+          "Please support the project",
+          "Everything is progressing",
+          "We need alignment soon"
+        ],
+        "answerIndex": 0,
+        "explanation": "A clear choice and deadline support action.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q5",
+        "question": "A critical unresolved security defect exists. What should the report do?",
+        "options": [
+          "Count it as a minor completed task",
+          "Show it explicitly even if other dimensions are green",
+          "Average it away",
+          "Hide it until launch"
+        ],
+        "answerIndex": 1,
+        "explanation": "Critical risk must remain visible.",
+        "difficulty": "core"
+      }
+    ],
+    "m6-t2": [
+      {
+        "id": "m6-t2-q1",
+        "question": "What is the difference between a position and an interest?",
+        "options": [
+          "An interest is only a financial rate",
+          "A position is always wrong",
+          "A position is the demand; an interest is the underlying need",
+          "They always mean the same thing"
+        ],
+        "answerIndex": 2,
+        "explanation": "Understanding needs can reveal alternative solutions.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q2",
+        "question": "The required approver is absent. How should the result be labelled?",
+        "options": [
+          "An automatically authorised decision",
+          "A signed contract",
+          "A completed project",
+          "A recommendation pending approval"
+        ],
+        "answerIndex": 3,
+        "explanation": "Authority cannot be manufactured by the minutes.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q3",
+        "question": "What is essential in decision minutes?",
+        "options": [
+          "Decision, authority, rationale and follow-up ownership",
+          "Every conversational detail",
+          "Only the meeting start time",
+          "Only the facilitator’s opinion"
+        ],
+        "answerIndex": 0,
+        "explanation": "The record must explain what happens next and why.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q4",
+        "question": "Which concession is not appropriate?",
+        "options": [
+          "Offering a lower-cost compliant alternative",
+          "Removing mandatory safety checks to meet the date",
+          "Deferring an optional feature after approval",
+          "Rescheduling an internal review"
+        ],
+        "answerIndex": 1,
+        "explanation": "Mandatory controls are not casual bargaining chips.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q5",
+        "question": "What should happen to an unresolved vendor concern?",
+        "options": [
+          "Call it resolved because the meeting ended",
+          "Replace it with a success statement",
+          "Record it as an open action with an owner",
+          "Remove it to simplify the minutes"
+        ],
+        "answerIndex": 2,
+        "explanation": "Open issues need traceable follow-up.",
+        "difficulty": "core"
+      }
+    ],
+    "m6-t3": [
+      {
+        "id": "m6-t3-q1",
+        "question": "What primarily distinguishes a portfolio?",
+        "options": [
+          "Every project must use the same software",
+          "All work has one identical deadline",
+          "It is only a list of completed tasks",
+          "Investments are selected and balanced for strategic objectives"
+        ],
+        "answerIndex": 3,
+        "explanation": "Portfolio management considers strategic alignment and resources.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q2",
+        "question": "What is A’s score at equal weights for scores 4 and 2?",
+        "options": [
+          "3.0",
+          "6.0",
+          "2.0",
+          "4.0"
+        ],
+        "answerIndex": 0,
+        "explanation": "0.5×4 + 0.5×2 = 3.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q3",
+        "question": "Why test scoring-weight sensitivity?",
+        "options": [
+          "To avoid discussing criteria",
+          "To see whether the recommendation is fragile",
+          "To guarantee approval",
+          "To hide uncertainty"
+        ],
+        "answerIndex": 1,
+        "explanation": "A ranking that reverses easily needs careful interpretation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q4",
+        "question": "Who should own a continuing benefit after handover?",
+        "options": [
+          "Only the software tool",
+          "Every student collectively",
+          "A named operational role with authority to measure it",
+          "No one once the project closes"
+        ],
+        "answerIndex": 2,
+        "explanation": "Benefits outlive the temporary delivery team.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q5",
+        "question": "What should a PMO analyst confirm before approving expenditure?",
+        "options": [
+          "Whether the spreadsheet is complete",
+          "Whether the score is high",
+          "Whether the project name sounds urgent",
+          "Whether their role has that authority"
+        ],
+        "answerIndex": 3,
+        "explanation": "Reporting responsibility does not automatically grant approval authority.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 6 scenario assessment",
+    "questions": [
+      {
+        "id": "m6-assessment-q1",
+        "question": "A report shows baseline launch Friday and forecast Tuesday after it. What should not be done?",
+        "options": [
+          "Explain the delay",
+          "Request a decision",
+          "Replace the baseline date silently to erase variance",
+          "Show both dates"
+        ],
+        "answerIndex": 2,
+        "explanation": "Silently overwriting the reference destroys control history.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q2",
+        "question": "Equal-weight scores are A: 5 and 1, B: 3 and 4. Which ranks higher on that model?",
+        "options": [
+          "A at 6 versus B at 7",
+          "A because its first score is 5",
+          "They are tied",
+          "B at 3.5 versus A at 3.0"
+        ],
+        "answerIndex": 3,
+        "explanation": "Weighted averages are 3.0 and 3.5; constraints still matter.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q3",
+        "question": "The portfolio ranking reverses when a weight changes modestly. What should the analyst communicate?",
+        "options": [
+          "Sensitivity and the need to inspect assumptions",
+          "The first ranking is objective truth",
+          "Weights must be hidden",
+          "No decision can ever be made"
+        ],
+        "answerIndex": 0,
+        "explanation": "Sensitivity helps decision-makers understand uncertainty.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q4",
+        "question": "A meeting ends with broad support but no authorised approver present. How should minutes describe the choice?",
+        "options": [
+          "Accepted project closure",
+          "Recommended option pending named approval",
+          "Approved contract change",
+          "Automatic budget release"
+        ],
+        "answerIndex": 1,
+        "explanation": "Support does not substitute for required authority.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q5",
+        "question": "A project is green on cost but red on a critical unresolved dependency. What should the summary do?",
+        "options": [
+          "Hide the dependency in an appendix only",
+          "Use cost alone to decide status",
+          "Show the critical dependency explicitly, not average it away",
+          "Call everything amber by arithmetic"
+        ],
+        "answerIndex": 2,
+        "explanation": "Dimensions and critical exceptions require transparent reporting.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q6",
+        "question": "Two initiatives claim the same eight staff-hours saved per event. What should PMO check?",
+        "options": [
+          "Only the sum of both claims",
+          "Whether both slide decks match",
+          "Whether savings exceed software cost",
+          "Double counting and benefit attribution"
+        ],
+        "answerIndex": 3,
+        "explanation": "Portfolio benefits should not count the same effect twice.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q7",
+        "question": "An analyst has reporting responsibility but no spending authority. What is the appropriate output?",
+        "options": [
+          "A recommendation and approval request",
+          "An unapproved purchase order",
+          "A signed vendor award",
+          "A promise of guaranteed funding"
+        ],
+        "answerIndex": 0,
+        "explanation": "Responsibility for analysis does not confer approval authority.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q8",
+        "question": "A sponsor needs a choice by Thursday; the report contains twenty pages of tasks. What revision is most useful?",
+        "options": [
+          "Change only the font",
+          "Put the decision, options and deadline in the opening summary",
+          "Add more raw records",
+          "Remove all evidence"
+        ],
+        "answerIndex": 1,
+        "explanation": "The brief should reduce decision effort while preserving traceability.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q9",
+        "question": "Minutes record “vendor will improve” without owner or date. What is missing?",
+        "options": [
+          "More attendees",
+          "An automatically approved extension",
+          "A concrete action, responsible role and due date",
+          "A decorative heading"
+        ],
+        "answerIndex": 2,
+        "explanation": "Follow-up needs an executable commitment.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q10",
+        "question": "A project closes before the benefit measurement window. What should the benefits register include?",
+        "options": [
+          "A claim of full benefit at closure",
+          "No future action",
+          "A deleted baseline",
+          "An accepting operations owner and scheduled review"
+        ],
+        "answerIndex": 3,
+        "explanation": "Post-project benefits need continuing ownership and measurement.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

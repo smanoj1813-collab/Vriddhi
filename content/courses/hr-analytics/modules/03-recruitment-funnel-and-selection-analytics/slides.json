@@ -1,0 +1,200 @@
+{
+  "moduleId": "m3",
+  "topics": {
+    "m3-t1": [
+      {
+        "id": "m3-t1-s1",
+        "title": "Choose a cohort or a period flow",
+        "summary": "A cohort follows the same eligible applications or requisitions through stages.",
+        "explanation": "A cohort follows the same eligible applications or requisitions through stages. A period-flow report counts events in a calendar interval and may include different people at each stage. Both can be useful, but dividing unrelated flows can produce misleading conversion rates. State the entry rule, observation end date and treatment of still-open cases. Recent cohorts have had less time to progress and should not be compared naively with mature cohorts.",
+        "example": "The company’s dashboard divides this month’s acceptances by this month’s offers, even though many acceptances relate to offers from the previous month. Another chart counts duplicate applications as separate people. The recruitment lead needs a coherent cohort view before changing sourcing spend.",
+        "takeaway": "Calculate stage conversion and compare candidate sources using consistent cohorts.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build the six-stage cohort table and calculate each adjacent conversion."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend one process check at the largest decision-relevant drop, not simply the largest count drop."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t1-s2",
+        "title": "Define each conversion denominator",
+        "summary": "Application-to-screen conversion, screen-to-interview conversion, offer acceptance and joining yield use different eligible denominators.",
+        "explanation": "Application-to-screen conversion, screen-to-interview conversion, offer acceptance and joining yield use different eligible denominators. Show counts beside rates and identify the stage owner. A drop can reflect quality thresholds, candidate withdrawal, process delay or incomplete follow-up. Do not assume all funnel loss is bad: a valid selection process should screen out unsuitable applications using job-related criteria.",
+        "example": "The company’s dashboard divides this month’s acceptances by this month’s offers, even though many acceptances relate to offers from the previous month. Another chart counts duplicate applications as separate people. The recruitment lead needs a coherent cohort view before changing sourcing spend.",
+        "takeaway": "Calculate stage conversion and compare candidate sources using consistent cohorts.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build the six-stage cohort table and calculate each adjacent conversion."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend one process check at the largest decision-relevant drop, not simply the largest count drop."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t1-s3",
+        "title": "Compare sources beyond volume",
+        "summary": "Source comparison should consider qualified applicants, conversion, cost, time and downstream outcomes under an agreed definition.",
+        "explanation": "Source comparison should consider qualified applicants, conversion, cost, time and downstream outcomes under an agreed definition. Referral and job-board populations may differ by role and seniority. A high raw joining rate does not prove a source causes better performance. Retain multi-source attribution rules and avoid rewriting source labels after seeing outcomes. Recommendations should balance efficiency, access and job-related quality.",
+        "example": "A mature cohort has 200 applications, 80 screens passed, 40 interviews, 20 offers, 15 acceptances and 12 joins. Screen conversion is 40%; interview-to-offer conversion is 50%; acceptance is 75%; application-to-join yield is 6%. These percentages describe different transitions. The 188 applications not resulting in a join are not all recruiter failures; investigate stage reasons and eligibility.",
+        "takeaway": "Calculate stage conversion and compare candidate sources using consistent cohorts.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build the six-stage cohort table and calculate each adjacent conversion."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend one process check at the largest decision-relevant drop, not simply the largest count drop."
+            }
+          ]
+        }
+      }
+    ],
+    "m3-t2": [
+      {
+        "id": "m3-t2-s1",
+        "title": "Name the start and end events",
+        "summary": "Conventions vary, so this course defines time-to-fill as requisition approval to accepted offer, and time-to-hire as candidate application to accepted offer.",
+        "explanation": "Conventions vary, so this course defines time-to-fill as requisition approval to accepted offer, and time-to-hire as candidate application to accepted offer. State calendar versus working days and whether day zero is excluded. Joining lag is a separate interval. Open requisitions are not completed durations; report their age separately so unresolved work does not disappear from the analysis.",
+        "example": "A hiring report uses “time-to-hire” for both requisition approval to offer acceptance and candidate application to acceptance. The same label now describes two different clocks. A finance report excludes internal hiring effort while another includes it, making cost comparisons equally unreliable.",
+        "takeaway": "Define recruitment duration boundaries and calculate comparable cost per hire.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write explicit start, end and calendar rules for both duration metrics."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend one delay investigation while protecting job-related selection standards."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t2-s2",
+        "title": "Use comparable cost boundaries",
+        "summary": "Cost per hire divides eligible recruitment costs by hires under a defined period or cohort.",
+        "explanation": "Cost per hire divides eligible recruitment costs by hires under a defined period or cohort. Specify internal and external costs, allocations, currency and any exclusions. Recruitment costs can occur before the hires they support; match the attribution method carefully. Training and salary are not automatically recruitment cost in every convention. A lower cost per hire does not prove a better hiring process if quality or access deteriorates.",
+        "example": "A hiring report uses “time-to-hire” for both requisition approval to offer acceptance and candidate application to acceptance. The same label now describes two different clocks. A finance report excludes internal hiring effort while another includes it, making cost comparisons equally unreliable.",
+        "takeaway": "Define recruitment duration boundaries and calculate comparable cost per hire.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write explicit start, end and calendar rules for both duration metrics."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend one delay investigation while protecting job-related selection standards."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t2-s3",
+        "title": "Diagnose delay before assigning blame",
+        "summary": "Break duration into approval, screening, scheduling, interview feedback and offer stages when timestamps are reliable.",
+        "explanation": "Break duration into approval, screening, scheduling, interview feedback and offer stages when timestamps are reliable. Role difficulty, hiring-manager availability and candidate notice periods can influence outcomes. Compare like roles and use distributions, not only one overall mean. A service target should not encourage skipping fair selection or pressuring candidates. The analyst supports a process improvement decision, not a simplistic recruiter ranking.",
+        "example": "A requisition is approved on 1 June; a candidate applies on 11 June and accepts on 21 June. Using elapsed calendar days with start day excluded, time-to-fill is 20 days and time-to-hire is 10 days. Eligible recruitment costs of ₹60,000 for six joined hires give ₹10,000 per hire under a stated joining-cohort allocation. Different cost or hire definitions would produce a different measure.",
+        "takeaway": "Define recruitment duration boundaries and calculate comparable cost per hire.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write explicit start, end and calendar rules for both duration metrics."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend one delay investigation while protecting job-related selection standards."
+            }
+          ]
+        }
+      }
+    ],
+    "m3-t3": [
+      {
+        "id": "m3-t3-s1",
+        "title": "Define job-related evidence",
+        "summary": "Start with the role’s actual tasks and essential competencies.",
+        "explanation": "Start with the role’s actual tasks and essential competencies. Use a structured scorecard with observable behavioural anchors, consistent core questions and a relevant work sample where appropriate. Vague labels invite inconsistent judgement and bias. An analyst can monitor score completeness and agreement, but a numeric score is not inherently objective. Review accommodations and accessibility through the authorised HR process.",
+        "example": "Two interviewers assess support-role candidates with different questions. One gives a low score for “not a culture fit” without examples. Candidates receive no update for two weeks. The recruitment analyst can improve process consistency without automating who should be hired.",
+        "takeaway": "Use job-related scorecards and process evidence while avoiding unsupported candidate ranking.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define three job-related competencies for an entry-level support role."
+            },
+            {
+              "title": "Decision",
+              "detail": "Propose a candidate-update standard and an aggregate monitoring measure."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t3-s2",
+        "title": "Calibrate and document judgement",
+        "summary": "Interviewers should record evidence before group discussion to reduce anchoring on a senior person’s opinion.",
+        "explanation": "Interviewers should record evidence before group discussion to reduce anchoring on a senior person’s opinion. Calibration compares interpretations of scoring anchors, not a requirement that everyone gives identical scores. Investigate large disagreements using the evidence and job requirements. Do not infer protected or sensitive characteristics from names, photographs or social-media proxies. Automated ranking is outside this beginner course’s practice.",
+        "example": "Two interviewers assess support-role candidates with different questions. One gives a low score for “not a culture fit” without examples. Candidates receive no update for two weeks. The recruitment analyst can improve process consistency without automating who should be hired.",
+        "takeaway": "Use job-related scorecards and process evidence while avoiding unsupported candidate ranking.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define three job-related competencies for an entry-level support role."
+            },
+            {
+              "title": "Decision",
+              "detail": "Propose a candidate-update standard and an aggregate monitoring measure."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m3-t3-s3",
+        "title": "Measure candidate experience responsibly",
+        "summary": "Useful measures include response timeliness, withdrawal reasons and voluntary feedback with a defined denominator.",
+        "explanation": "Useful measures include response timeliness, withdrawal reasons and voluntary feedback with a defined denominator. Survey respondents may differ from nonrespondents. Separate process feedback from selection decisions so criticism does not penalise a candidate. Use aggregate reporting and avoid revealing identifiable free-text comments. Improvement could mean a clear update schedule or accessible interview instructions, not merely higher satisfaction scores.",
+        "example": "On a 1–5 anchored communication scale, one interviewer scores a work sample 2 and another 4. The correct first step is to compare evidence against the anchors, not automatically average to 3 and call it objective. If 18 of 30 invited candidates answer a feedback survey, response rate is 60%; satisfaction among those 18 does not necessarily represent all 30.",
+        "takeaway": "Use job-related scorecards and process evidence while avoiding unsupported candidate ranking.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define three job-related competencies for an entry-level support role."
+            },
+            {
+              "title": "Decision",
+              "detail": "Propose a candidate-update standard and an aggregate monitoring measure."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

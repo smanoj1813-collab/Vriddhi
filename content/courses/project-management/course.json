@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 1,
+  "id": "project-management",
+  "code": "VPM-101",
+  "title": "Project Management — Certificate Program",
+  "shortTitle": "Project Management",
+  "tagline": "Plan, coordinate and improve delivery with Agile, Scrum, risk discipline and Jira — backed by an evidence-led portfolio.",
+  "version": "1.0.0",
+  "lastReviewed": "2026-09-28",
+  "owner": "Vriddhi Academic Cloud — Learning Content",
+  "audience": "Beginner undergraduate learners (B.Com, BBA, BA, B.Sc) preparing for Project Coordinator, PMO Analyst, Operations Associate roles. No coding or prior industry experience required.",
+  "level": "Beginner → applied workplace practice",
+  "language": "English; reflections and presentations may be in Kannada or Hindi by arrangement",
+  "totalHours": 60,
+  "credits": 4,
+  "durationWeeks": 10,
+  "weeklyCommitment": "6 hours per week: guided practice, independent study and portfolio projects",
+  "certificateTitle": "Project Management Practice — Certificate of Completion",
+  "prerequisites": [
+    "Basic arithmetic, percentages and comfort with spreadsheets or a willingness to learn",
+    "Access to a browser or shared college computer; offline spreadsheet alternatives are accepted",
+    "No paid tool subscription, live client account or real personal dataset required"
+  ],
+  "outcomes": [
+    "Translate a request into a charter, scope boundary, stakeholder map and measurable acceptance criteria.",
+    "Build a work breakdown, dependency schedule and cost forecast with explicit assumptions.",
+    "Apply Agile and Scrum concepts appropriately, including goals, accountabilities and the Definition of Done.",
+    "Use Jira or an equivalent board to manage backlog items, dependencies, filters and workflow evidence.",
+    "Maintain risk, issue, quality and change records and escalate decisions within authority.",
+    "Produce reconciled PMO status reports and support portfolio and benefits reviews.",
+    "Plan vendor coordination, SOPs and operational handover with realistic capacity and controls.",
+    "Present an honest portfolio for Project Coordinator, PMO Analyst and Operations Associate interviews."
+  ],
+  "assessment": {
+    "passMark": 50,
+    "conditions": [
+      "Overall weighted score ≥ 50%",
+      "Capstone score ≥ 12/30",
+      "At least three of four Project Blocks submitted",
+      "At least 75% attendance for instructor-led cohorts",
+      "Institutional award requires facilitator marking and integrity clearance; platform eligibility alone is not the award"
+    ],
+    "components": [
+      {
+        "id": "quizzes",
+        "name": "Lesson quizzes",
+        "weight": 15,
+        "description": "Best-attempt percentage averaged equally over all 24 lesson quizzes, scaled to 15 marks."
+      },
+      {
+        "id": "projects",
+        "name": "Project Blocks 1–4",
+        "weight": 28,
+        "description": "Four applied portfolio projects, each marked out of 7 using the published rubric."
+      },
+      {
+        "id": "capstone",
+        "name": "Capstone and presentation",
+        "weight": 30,
+        "description": "An integrated simulation with traceable evidence, a five-minute pitch and individual questions."
+      },
+      {
+        "id": "final",
+        "name": "Final assessment",
+        "weight": 20,
+        "description": "A 90-minute assessment: 40 MCQs and two applied cases, scaled from 100 to 20 marks."
+      },
+      {
+        "id": "journal",
+        "name": "Reflection journal",
+        "weight": 7,
+        "description": "Evidence of corrections, professional judgement and learning across all modules."
+      }
+    ],
+    "grades": [
+      {
+        "band": "Distinction",
+        "min": 80
+      },
+      {
+        "band": "Merit",
+        "min": 65
+      },
+      {
+        "band": "Pass",
+        "min": 50
+      },
+      {
+        "band": "Not yet",
+        "min": 0
+      }
+    ]
+  },
+  "toolkit": [
+    {
+      "category": "Planning and reporting",
+      "tools": [
+        "Excel or Google Sheets",
+        "LibreOffice Calc",
+        "Google Docs or a local word processor"
+      ],
+      "note": "All calculations and templates can be completed offline."
+    },
+    {
+      "category": "Delivery boards",
+      "tools": [
+        "Jira sandbox",
+        "Spreadsheet or paper Kanban board"
+      ],
+      "note": "No paid feature or live organisational Jira access is required; interfaces and free-tier availability vary."
+    },
+    {
+      "category": "Collaboration",
+      "tools": [
+        "Presentation software",
+        "Institution-approved shared folder"
+      ],
+      "note": "Use synthetic data; do not publish credentials or confidential records."
+    }
+  ],
+  "modules": [
+    {
+      "id": "m1",
+      "number": 1,
+      "slug": "01-project-foundations-and-stakeholder-decisions",
+      "title": "Project foundations and stakeholder decisions",
+      "summary": "Translate a business request into a bounded project, an approval route and a measurable definition of success.",
+      "hours": 4.5,
+      "outcomes": [
+        "Distinguish a temporary project from ongoing operations and separate outputs from intended benefits.",
+        "Write a charter that makes authority, boundaries and acceptance testable.",
+        "Map stakeholder needs and assign decision responsibilities without overloading every meeting."
+      ],
+      "topics": [
+        {
+          "id": "m1-t1",
+          "number": "1.1",
+          "type": "lesson",
+          "title": "Projects, operations and value",
+          "minutes": 90,
+          "lesson": "modules/01-project-foundations-and-stakeholder-decisions/1.1-projects-operations-and-value.md",
+          "summary": "Distinguish a temporary project from ongoing operations and separate outputs from intended benefits."
+        },
+        {
+          "id": "m1-t2",
+          "number": "1.2",
+          "type": "lesson",
+          "title": "Charters, scope and acceptance",
+          "minutes": 90,
+          "lesson": "modules/01-project-foundations-and-stakeholder-decisions/1.2-charters-scope-and-acceptance.md",
+          "summary": "Write a charter that makes authority, boundaries and acceptance testable."
+        },
+        {
+          "id": "m1-t3",
+          "number": "1.3",
+          "type": "lesson",
+          "title": "Stakeholders, RACI and communication",
+          "minutes": 90,
+          "lesson": "modules/01-project-foundations-and-stakeholder-decisions/1.3-stakeholders-raci-and-communication.md",
+          "summary": "Map stakeholder needs and assign decision responsibilities without overloading every meeting."
+        }
+      ],
+      "assessment": {
+        "title": "Module 1 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m2",
+      "number": 2,
+      "slug": "02-planning-scheduling-and-cost",
+      "title": "Planning, scheduling and cost",
+      "summary": "Build a deliverable-based plan with dependencies, realistic capacity and a controlled cost baseline.",
+      "hours": 7.5,
+      "outcomes": [
+        "Decompose deliverables into estimable work packages and distinguish effort from duration.",
+        "Calculate a simple critical path and recognise resource constraints that a network alone misses.",
+        "Build a cost baseline and explain variance without confusing spend with progress."
+      ],
+      "topics": [
+        {
+          "id": "m2-t1",
+          "number": "2.1",
+          "type": "lesson",
+          "title": "Work breakdown and estimating",
+          "minutes": 90,
+          "lesson": "modules/02-planning-scheduling-and-cost/2.1-work-breakdown-and-estimating.md",
+          "summary": "Decompose deliverables into estimable work packages and distinguish effort from duration."
+        },
+        {
+          "id": "m2-t2",
+          "number": "2.2",
+          "type": "lesson",
+          "title": "Dependencies and the critical path",
+          "minutes": 90,
+          "lesson": "modules/02-planning-scheduling-and-cost/2.2-dependencies-and-the-critical-path.md",
+          "summary": "Calculate a simple critical path and recognise resource constraints that a network alone misses."
+        },
+        {
+          "id": "m2-t3",
+          "number": "2.3",
+          "type": "lesson",
+          "title": "Budgets, baselines and cost forecasts",
+          "minutes": 90,
+          "lesson": "modules/02-planning-scheduling-and-cost/2.3-budgets-baselines-and-cost-forecasts.md",
+          "summary": "Build a cost baseline and explain variance without confusing spend with progress."
+        },
+        {
+          "id": "m2-pb1",
+          "number": "PB1",
+          "type": "project",
+          "title": "Project Block 1 — Authorised pilot plan",
+          "minutes": 180,
+          "lesson": "projects/project-block-1-authorised-pilot-plan.md",
+          "summary": "Plan a six-week placement-registration pilot for the fictional Namma Campus Services team, with a bounded scope, acceptance tests, dependency schedule and cost baseline."
+        }
+      ],
+      "assessment": {
+        "title": "Module 2 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m3",
+      "number": 3,
+      "slug": "03-agile-and-scrum-practice",
+      "title": "Agile and Scrum practice",
+      "summary": "Choose an adaptive approach, apply Scrum accountabilities and use empirical feedback without ritual-driven management.",
+      "hours": 7.5,
+      "outcomes": [
+        "Choose predictive, adaptive or hybrid planning based on uncertainty and feedback needs.",
+        "Explain Scrum accountabilities and the purpose of its events, artefacts and commitments.",
+        "Create small valuable backlog items with acceptance criteria and plan within realistic capacity."
+      ],
+      "topics": [
+        {
+          "id": "m3-t1",
+          "number": "3.1",
+          "type": "lesson",
+          "title": "Agile values and choosing an approach",
+          "minutes": 90,
+          "lesson": "modules/03-agile-and-scrum-practice/3.1-agile-values-and-choosing-an-approach.md",
+          "summary": "Choose predictive, adaptive or hybrid planning based on uncertainty and feedback needs."
+        },
+        {
+          "id": "m3-t2",
+          "number": "3.2",
+          "type": "lesson",
+          "title": "Scrum accountabilities, events and artefacts",
+          "minutes": 90,
+          "lesson": "modules/03-agile-and-scrum-practice/3.2-scrum-accountabilities-events-and-artefacts.md",
+          "summary": "Explain Scrum accountabilities and the purpose of its events, artefacts and commitments."
+        },
+        {
+          "id": "m3-t3",
+          "number": "3.3",
+          "type": "lesson",
+          "title": "Stories, slicing and Sprint planning",
+          "minutes": 90,
+          "lesson": "modules/03-agile-and-scrum-practice/3.3-stories-slicing-and-sprint-planning.md",
+          "summary": "Create small valuable backlog items with acceptance criteria and plan within realistic capacity."
+        },
+        {
+          "id": "m3-pb2",
+          "number": "PB2",
+          "type": "project",
+          "title": "Project Block 2 — Agile delivery simulation",
+          "minutes": 180,
+          "lesson": "projects/project-block-2-agile-delivery-simulation.md",
+          "summary": "Turn the pilot into an ordered backlog and simulate one Sprint with a usable goal, a Definition of Done and an evidence-led response to change."
+        }
+      ],
+      "assessment": {
+        "title": "Module 3 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m4",
+      "number": 4,
+      "slug": "04-jira-and-flow-based-execution",
+      "title": "Jira and flow-based execution",
+      "summary": "Translate an agreed workflow into a practical board and use flow measures to reveal bottlenecks, not monitor individuals.",
+      "hours": 4.5,
+      "outcomes": [
+        "Create a coherent issue hierarchy and workflow using Jira or an equivalent offline board.",
+        "Build reviewable Jira queries and dashboards without confusing missing data with healthy status.",
+        "Use work-in-progress limits, ageing and cycle time to diagnose a delivery bottleneck."
+      ],
+      "topics": [
+        {
+          "id": "m4-t1",
+          "number": "4.1",
+          "type": "lesson",
+          "title": "Build a usable Jira work system",
+          "minutes": 90,
+          "lesson": "modules/04-jira-and-flow-based-execution/4.1-build-a-usable-jira-work-system.md",
+          "summary": "Create a coherent issue hierarchy and workflow using Jira or an equivalent offline board."
+        },
+        {
+          "id": "m4-t2",
+          "number": "4.2",
+          "type": "lesson",
+          "title": "Filters, dashboards and issue hygiene",
+          "minutes": 90,
+          "lesson": "modules/04-jira-and-flow-based-execution/4.2-filters-dashboards-and-issue-hygiene.md",
+          "summary": "Build reviewable Jira queries and dashboards without confusing missing data with healthy status."
+        },
+        {
+          "id": "m4-t3",
+          "number": "4.3",
+          "type": "lesson",
+          "title": "Kanban, WIP and flow measures",
+          "minutes": 90,
+          "lesson": "modules/04-jira-and-flow-based-execution/4.3-kanban-wip-and-flow-measures.md",
+          "summary": "Use work-in-progress limits, ageing and cycle time to diagnose a delivery bottleneck."
+        }
+      ],
+      "assessment": {
+        "title": "Module 4 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m5",
+      "number": 5,
+      "slug": "05-risk-quality-and-change-control",
+      "title": "Risk, quality and change control",
+      "summary": "Keep uncertainty, current issues, acceptance evidence and scope decisions visible and owned.",
+      "hours": 7.5,
+      "outcomes": [
+        "Distinguish a future risk from a current issue and choose an owned, reviewable response.",
+        "Design acceptance evidence and defect triage without lowering quality to meet a date.",
+        "Assess a change request, preserve the baseline and escalate with options and a clear decision request."
+      ],
+      "topics": [
+        {
+          "id": "m5-t1",
+          "number": "5.1",
+          "type": "lesson",
+          "title": "Risk registers and practical responses",
+          "minutes": 90,
+          "lesson": "modules/05-risk-quality-and-change-control/5.1-risk-registers-and-practical-responses.md",
+          "summary": "Distinguish a future risk from a current issue and choose an owned, reviewable response."
+        },
+        {
+          "id": "m5-t2",
+          "number": "5.2",
+          "type": "lesson",
+          "title": "Quality planning, testing and acceptance",
+          "minutes": 90,
+          "lesson": "modules/05-risk-quality-and-change-control/5.2-quality-planning-testing-and-acceptance.md",
+          "summary": "Design acceptance evidence and defect triage without lowering quality to meet a date."
+        },
+        {
+          "id": "m5-t3",
+          "number": "5.3",
+          "type": "lesson",
+          "title": "Changes, issues and escalation",
+          "minutes": 90,
+          "lesson": "modules/05-risk-quality-and-change-control/5.3-changes-issues-and-escalation.md",
+          "summary": "Assess a change request, preserve the baseline and escalate with options and a clear decision request."
+        },
+        {
+          "id": "m5-pb3",
+          "number": "PB3",
+          "type": "project",
+          "title": "Project Block 3 — Jira risk and change desk",
+          "minutes": 180,
+          "lesson": "projects/project-block-3-jira-risk-and-change-desk.md",
+          "summary": "Build a sandbox or offline work board and operate a traceable risk, issue, quality and change-control workflow."
+        }
+      ],
+      "assessment": {
+        "title": "Module 5 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m6",
+      "number": 6,
+      "slug": "06-pmo-reporting-and-governance",
+      "title": "PMO reporting and governance",
+      "summary": "Create a reconciled status pack and facilitate decisions with useful measures, clear minutes and portfolio context.",
+      "hours": 7.5,
+      "outcomes": [
+        "Produce a concise status report that separates baseline, forecast, evidence and decisions.",
+        "Facilitate an evidence-led meeting and record decisions without manufacturing agreement.",
+        "Compare project proposals and track benefits without confusing PMO reporting with authorisation."
+      ],
+      "topics": [
+        {
+          "id": "m6-t1",
+          "number": "6.1",
+          "type": "lesson",
+          "title": "Status reports and decision-ready RAG",
+          "minutes": 90,
+          "lesson": "modules/06-pmo-reporting-and-governance/6.1-status-reports-and-decision-ready-rag.md",
+          "summary": "Produce a concise status report that separates baseline, forecast, evidence and decisions."
+        },
+        {
+          "id": "m6-t2",
+          "number": "6.2",
+          "type": "lesson",
+          "title": "Meetings, minutes and negotiation",
+          "minutes": 90,
+          "lesson": "modules/06-pmo-reporting-and-governance/6.2-meetings-minutes-and-negotiation.md",
+          "summary": "Facilitate an evidence-led meeting and record decisions without manufacturing agreement."
+        },
+        {
+          "id": "m6-t3",
+          "number": "6.3",
+          "type": "lesson",
+          "title": "Portfolio visibility and benefits tracking",
+          "minutes": 90,
+          "lesson": "modules/06-pmo-reporting-and-governance/6.3-portfolio-visibility-and-benefits-tracking.md",
+          "summary": "Compare project proposals and track benefits without confusing PMO reporting with authorisation."
+        },
+        {
+          "id": "m6-pb4",
+          "number": "PB4",
+          "type": "project",
+          "title": "Project Block 4 — PMO decision pack",
+          "minutes": 180,
+          "lesson": "projects/project-block-4-pmo-decision-pack.md",
+          "summary": "Prepare a reconciled weekly status pack and portfolio recommendation that a sponsor can act on without reading every task record."
+        }
+      ],
+      "assessment": {
+        "title": "Module 6 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m7",
+      "number": 7,
+      "slug": "07-operations-vendors-and-transition",
+      "title": "Operations, vendors and transition",
+      "summary": "Design sustainable service handovers, supplier controls and small improvement experiments.",
+      "hours": 4.5,
+      "outcomes": [
+        "Design a repeatable process with service measures, capacity assumptions and exception handling.",
+        "Compare supplier offers and manage delivery evidence within approval and procurement rules.",
+        "Close a project with accepted evidence and transfer ownership before testing a small operational improvement."
+      ],
+      "topics": [
+        {
+          "id": "m7-t1",
+          "number": "7.1",
+          "type": "lesson",
+          "title": "Operations planning and SOPs",
+          "minutes": 90,
+          "lesson": "modules/07-operations-vendors-and-transition/7.1-operations-planning-and-sops.md",
+          "summary": "Design a repeatable process with service measures, capacity assumptions and exception handling."
+        },
+        {
+          "id": "m7-t2",
+          "number": "7.2",
+          "type": "lesson",
+          "title": "Vendor coordination and procurement basics",
+          "minutes": 90,
+          "lesson": "modules/07-operations-vendors-and-transition/7.2-vendor-coordination-and-procurement-basics.md",
+          "summary": "Compare supplier offers and manage delivery evidence within approval and procurement rules."
+        },
+        {
+          "id": "m7-t3",
+          "number": "7.3",
+          "type": "lesson",
+          "title": "Handover, closure and continuous improvement",
+          "minutes": 90,
+          "lesson": "modules/07-operations-vendors-and-transition/7.3-handover-closure-and-continuous-improvement.md",
+          "summary": "Close a project with accepted evidence and transfer ownership before testing a small operational improvement."
+        }
+      ],
+      "assessment": {
+        "title": "Module 7 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    },
+    {
+      "id": "m8",
+      "number": 8,
+      "slug": "08-capstone-and-career-readiness",
+      "title": "Capstone and career readiness",
+      "summary": "Integrate the delivery evidence into a credible portfolio for Project Coordinator, PMO Analyst and Operations Associate roles.",
+      "hours": 16.5,
+      "outcomes": [
+        "Assemble a portfolio that traces a decision from problem through evidence to outcome without overstating experience.",
+        "Answer coordination, PMO and operations scenarios using evidence, trade-offs and appropriate authority.",
+        "Present an integrated delivery simulation and turn feedback into a focused development plan."
+      ],
+      "topics": [
+        {
+          "id": "m8-t1",
+          "number": "8.1",
+          "type": "lesson",
+          "title": "Build a coherent delivery case study",
+          "minutes": 90,
+          "lesson": "modules/08-capstone-and-career-readiness/8.1-build-a-coherent-delivery-case-study.md",
+          "summary": "Assemble a portfolio that traces a decision from problem through evidence to outcome without overstating experience."
+        },
+        {
+          "id": "m8-t2",
+          "number": "8.2",
+          "type": "lesson",
+          "title": "Interviews and workplace communication",
+          "minutes": 90,
+          "lesson": "modules/08-capstone-and-career-readiness/8.2-interviews-and-workplace-communication.md",
+          "summary": "Answer coordination, PMO and operations scenarios using evidence, trade-offs and appropriate authority."
+        },
+        {
+          "id": "m8-t3",
+          "number": "8.3",
+          "type": "lesson",
+          "title": "Demo Day, feedback and professional development",
+          "minutes": 90,
+          "lesson": "modules/08-capstone-and-career-readiness/8.3-demo-day-feedback-and-professional-development.md",
+          "summary": "Present an integrated delivery simulation and turn feedback into a focused development plan."
+        },
+        {
+          "id": "m8-cap",
+          "number": "CAP",
+          "type": "project",
+          "title": "Capstone — Namma Campus delivery and operations handover",
+          "minutes": 720,
+          "lesson": "projects/capstone-namma-campus-delivery-and-operations-handover.md",
+          "summary": "Integrate the four project blocks into a coherent delivery simulation, handle a disruption and hand over a sustainable operating process with a five-minute evidence-led pitch."
+        }
+      ],
+      "assessment": {
+        "title": "Module 8 scenario assessment",
+        "passMark": 60,
+        "questionCount": 10
+      }
+    }
+  ],
+  "finalAssessment": {
+    "title": "Final assessment",
+    "minutes": 90,
+    "blueprint": "assessments/final-assessment-blueprint.md"
+  },
+  "documents": {
+    "facilitatorGuide": "facilitator-guide.md",
+    "rubrics": "assessments/rubrics.md",
+    "certificationPolicy": "assessments/certification-policy.md",
+    "practiceData": "resources/practice-data.md",
+    "portfolioTemplates": "resources/portfolio-templates.md"
+  },
+  "certificateEligibility": {
+    "minimumQuizAverage": 60,
+    "moduleAssessmentPassMark": 60,
+    "requireAllTopicsRead": true,
+    "requireAllLessonQuizzes": true
+  },
+  "lessonQuizQuestionCount": 5
+}

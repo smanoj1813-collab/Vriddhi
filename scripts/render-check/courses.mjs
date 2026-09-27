@@ -129,7 +129,7 @@ localStorage.clear();
 await section('catalog', '/src/modules/courses/CourseCatalogPage.tsx', { basePath: '/courses', publicPreview: true }, (v) => {
   const t = v.text();
   check('catalog: mounts without throwing', true);
-  check('catalog: lists the GenAI course by title', t.includes(manifest.title), t);
+  check('catalog: lists every bundled course by title', packs.every(({ manifest: pack }) => t.includes(pack.title)), t);
   check('catalog: shows the course code and hour count', t.includes(manifest.code) && new RegExp(`Hours\\s*${manifest.totalHours}`).test(t), t);
   check('catalog: fresh learner starts at 0%', t.includes('0%'), t);
   check('catalog: "Start course" deep-links to the first topic',
@@ -144,7 +144,8 @@ await section('student catalog (assigned)', '/src/modules/courses/CourseCatalogP
   assignments: { [manifest.id]: { enabled: true, startsOn: '2026-09-01', dueOn: '2026-12-01', notes: 'Complete this course with your cohort.' } },
 }, (v) => {
   const t = v.text();
-  check('student catalog: shows only the assigned GenAI course', t.includes(manifest.title) && !t.includes('No courses assigned'), t);
+  check('student catalog: shows only the assigned GenAI course', t.includes(manifest.title) && !t.includes('No courses assigned')
+    && packs.every(({ manifest: pack }) => pack.id === manifest.id || !t.includes(pack.title)), t);
   check('student catalog: shows programme assignment notes and due date', t.includes('Complete this course with your cohort.') && t.includes('Due 2026-12-01'), t);
   check('student catalog: course actions use the protected student route', v.hrefs().includes(`/student/courses/${manifest.id}`), v.hrefs().join(' '));
 });
@@ -325,6 +326,43 @@ await section('overview (after progress)', '/src/modules/courses/CourseOverviewP
   check('overview: "Continue with" points at the second topic', new RegExp(`Continue with ${secondTopic.number}`).test(t), t);
 });
 
+// Smoke-test every additional pack through the real lazy lesson, slides and
+// quiz loaders. Keep the detailed GenAI checks above as the interaction fixture.
+for (const { manifest: pack } of packs.filter(({ manifest: item }) => item.id !== manifest.id)) {
+  const course = getCourse(pack.id);
+  const topic = pack.modules[0].topics[0];
+  const questions = course.quizzes[topic.id];
+  const deck = course.slides[topic.id] ?? [];
+  const uid = `pack-smoke-${pack.id}`;
+  globalThis.__RC_PARAMS = { courseId: pack.id, topicId: topic.id };
+  await section(`${pack.id}: first lesson`, '/src/modules/courses/CourseLessonPage.tsx', { basePath: '/courses', uid }, async (v) => {
+    for (let i = 0; i < 20 && !/Learning objectives/.test(v.text()); i += 1) await v.settle(50);
+    check(`${pack.id}: first lesson body loads`, v.text().includes(topic.title) && /Learning objectives/.test(v.text()), v.text());
+    check(`${pack.id}: quiz count matches manifest`, questions.length === (pack.lessonQuizQuestionCount ?? 5)
+      && v.text().includes(`Quiz · ${questions.length}`), v.text());
+    if (deck.length) {
+      await v.click(v.byText('Slides'));
+      check(`${pack.id}: slide walkthrough loads`, v.text().includes(deck[0].title) && v.text().includes(`Slide 1 of ${deck.length}`), v.text());
+    }
+    await v.click(v.byText('Quiz'));
+    check(`${pack.id}: every question has four answer controls`, v.all('input[type=radio]').length === questions.length * 4, v.text());
+    for (const q of questions) await v.click(v.el(`input[name="${q.id}"][value="${q.answerIndex}"]`));
+    await v.click(v.byText('Check answers'));
+    check(`${pack.id}: quiz scores against its own bank`, v.text().includes(`${questions.length} / ${questions.length} correct`) && /Why:/.test(v.text()), v.text());
+    const stored = JSON.parse(localStorage.getItem(`vriddhi.course.progress.${uid}.${pack.id}`) || '{}');
+    check(`${pack.id}: quiz progress is stored under its course id`, stored.quiz?.[topic.id]?.score === questions.length
+      && stored.quiz?.[topic.id]?.total === questions.length && stored.quiz?.[topic.id]?.attempts === 1, JSON.stringify(stored));
+  });
+  globalThis.__RC_PARAMS = undefined;
+  await section(`${pack.id}: assigned student catalog`, '/src/modules/courses/CourseCatalogPage.tsx', {
+    basePath: '/student/courses', uid, assignedCourseIds: [pack.id],
+  }, (v) => {
+    check(`${pack.id}: only the assigned course is listed`, v.text().includes(pack.title)
+      && packs.every(({ manifest: other }) => other.id === pack.id || !v.text().includes(other.title)), v.text());
+    check(`${pack.id}: assigned course uses the protected route`, v.hrefs().includes(`/student/courses/${pack.id}`), v.hrefs().join(' '));
+  });
+}
+
 // ── Unknown ids degrade gracefully ──────────────────────────────────────────
 globalThis.__RC_PARAMS = { courseId: 'nope', topicId: 'nope' };
 await section('lesson (missing)', '/src/modules/courses/CourseLessonPage.tsx', { basePath: '/courses' }, (v) => {
@@ -364,6 +402,19 @@ for (const { packDir, manifest: pack } of packs) {
   const tables = topics.length;
   check(`${pack.id}: markdown sweep: every lesson has a plan or project call-out`,
     topics.every((topic) => /\*\*(Lesson|Project) plan\*\*/.test(fs.readFileSync(path.join(packDir, topic.lesson), 'utf8'))), String(tables));
+}
+
+// Supporting documents include the synthetic fixtures, templates, rubrics and
+// facilitator calendar. Verify their tables/code blocks render without errors.
+for (const { packDir, manifest: pack } of packs) {
+  const documents = [...new Set([...Object.values(pack.documents ?? {}), pack.finalAssessment?.blueprint].filter(Boolean))];
+  for (const doc of documents) {
+    const source = fs.readFileSync(path.join(packDir, doc), 'utf8');
+    await section(`${pack.id}: ${doc}`, '/src/shared/components/courses/CourseMarkdown.tsx', { source }, (v) => {
+      check(`${pack.id}: supporting document ${doc} renders`, !!v.el('h1') && v.all('h2').length > 0
+        && !/\[object Object\]/.test(v.text()), v.text());
+    });
+  }
 }
 
 await server.close();

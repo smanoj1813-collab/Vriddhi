@@ -1,0 +1,200 @@
+{
+  "moduleId": "m5",
+  "topics": {
+    "m5-t1": [
+      {
+        "id": "m5-t1-s1",
+        "title": "Measure a defined construct",
+        "summary": "Engagement, satisfaction and intention to stay are related but distinct.",
+        "explanation": "Engagement, satisfaction and intention to stay are related but distinct. Write questions that address one idea at a time, use a consistent response scale and avoid leading language. Pilot wording for clarity and accessibility. A course-built survey is a practice instrument, not a validated psychological test. Do not claim clinical or personality conclusions from a few workplace questions.",
+        "example": "A survey receives enthusiastic replies from office staff but few from night-shift workers. The HR team wants to publish an overall engagement score and identify the “least engaged” team. The analyst must inspect participation and disclosure risk before comparing results.",
+        "takeaway": "Design a concise survey and interpret response distributions with confidentiality and nonresponse limits.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft four single-idea survey questions with a consistent response scale."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend an accessible follow-up method that does not coerce individual disclosure."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t1-s2",
+        "title": "Participation shapes interpretation",
+        "summary": "Response rate is responses divided by eligible invitations under the stated rule.",
+        "explanation": "Response rate is responses divided by eligible invitations under the stated rule. Nonrespondents may differ systematically from respondents, especially if access, trust or shift timing varies. High response is helpful but does not prove unbiased results. Report group participation where safe and consider an alternative collection window. Do not pressure individuals to reveal how they answered or link criticism to performance assessment.",
+        "example": "A survey receives enthusiastic replies from office staff but few from night-shift workers. The HR team wants to publish an overall engagement score and identify the “least engaged” team. The analyst must inspect participation and disclosure risk before comparing results.",
+        "takeaway": "Design a concise survey and interpret response distributions with confidentiality and nonresponse limits.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft four single-idea survey questions with a consistent response scale."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend an accessible follow-up method that does not coerce individual disclosure."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t1-s3",
+        "title": "Report distributions and protect trust",
+        "summary": "Show counts or proportions across the scale rather than only a mean.",
+        "explanation": "Show counts or proportions across the scale rather than only a mean. Averages can hide polarised experiences. Suppress small groups and review free text for identifying details before sharing. Explain who can see raw responses and how results will be used. If the organisation cannot guarantee anonymity, do not promise it; describe the actual confidentiality controls and limitations accurately.",
+        "example": "Of 80 eligible employees, 48 respond: a 60% response rate. Thirty of the 48 choose favourable responses, yielding 62.5% favourable among respondents. It is not correct to say 62.5% of all 80 employees are favourable. At least 30 are known favourable; the views of 32 nonrespondents remain unknown. Explore participation by shift without exposing small groups.",
+        "takeaway": "Design a concise survey and interpret response distributions with confidentiality and nonresponse limits.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft four single-idea survey questions with a consistent response scale."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend an accessible follow-up method that does not coerce individual disclosure."
+            }
+          ]
+        }
+      }
+    ],
+    "m5-t2": [
+      {
+        "id": "m5-t2-s1",
+        "title": "Define cohort entry and follow-up",
+        "summary": "A hiring cohort groups people by an entry event such as joining month.",
+        "explanation": "A hiring cohort groups people by an entry event such as joining month. Retention at ninety days asks which eligible joiners remain at the agreed day ninety boundary. Recent joiners who have not reached the window should not be counted as fully observed successes. Document exits, rehires and transfers consistently. Different exposure time is a measurement issue, not proof of improvement.",
+        "example": "The company compares a January hiring cohort after six months with an August cohort after one month and concludes retention improved. The August group has simply had less time at risk. A fair comparison needs aligned windows and transparent treatment of incomplete follow-up.",
+        "takeaway": "Compare retention at matched observation windows and develop process-level hypotheses without labelling individuals.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define a ninety-day retention metric including eligibility and transfer rules."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a pilot and explicitly rule out individual adverse decisions from the classroom analysis."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t2-s2",
+        "title": "Segment carefully and generate hypotheses",
+        "summary": "Compare like roles, locations or shifts only where the sample and confidentiality rules allow.",
+        "explanation": "Compare like roles, locations or shifts only where the sample and confidentiality rules allow. A higher exit rate may relate to workload, manager changes, compensation, commute or cohort mix; the dataset may not contain enough evidence to distinguish them. Exit interviews can add context but may have nonresponse and social-desirability bias. Treat themes as hypotheses for investigation rather than unquestionable causes.",
+        "example": "The company compares a January hiring cohort after six months with an August cohort after one month and concludes retention improved. The August group has simply had less time at risk. A fair comparison needs aligned windows and transparent treatment of incomplete follow-up.",
+        "takeaway": "Compare retention at matched observation windows and develop process-level hypotheses without labelling individuals.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define a ninety-day retention metric including eligibility and transfer rules."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a pilot and explicitly rule out individual adverse decisions from the classroom analysis."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t2-s3",
+        "title": "Act on systems, not speculative labels",
+        "summary": "Retention analysis should support improvements such as clearer job previews, onboarding support or scheduling review.",
+        "explanation": "Retention analysis should support improvements such as clearer job previews, onboarding support or scheduling review. Avoid marking employees as “likely leavers” in public or using speculative risk scores for exclusion. Individual employment decisions need authorised HR processes and evidence beyond aggregate patterns. Frame recommendations with an owner, a safe pilot and a measure of unintended consequences.",
+        "example": "A January cohort has 40 joiners with complete ninety-day follow-up; 34 remain, so retention is 85%. A recent cohort has 30 joiners, but only 10 have reached ninety days; 9 of those remain. Its observed eligible retention is 90% for n=10, not 29/30 or a claim that the whole cohort achieved ninety-day retention. The small completed window limits comparison.",
+        "takeaway": "Compare retention at matched observation windows and develop process-level hypotheses without labelling individuals.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define a ninety-day retention metric including eligibility and transfer rules."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a pilot and explicitly rule out individual adverse decisions from the classroom analysis."
+            }
+          ]
+        }
+      }
+    ],
+    "m5-t3": [
+      {
+        "id": "m5-t3-s1",
+        "title": "Build an evidence chain",
+        "summary": "Track participation, learning evidence, workplace application and relevant outcomes as distinct levels.",
+        "explanation": "Track participation, learning evidence, workplace application and relevant outcomes as distinct levels. A quiz can test knowledge but may not show on-the-job behaviour. A supervisor observation can help if criteria are clear and consistently applied. Do not force every training activity into a monetary ROI calculation. Choose a measure aligned with the learning objective and the decision about improving or continuing the programme.",
+        "example": "All new hires completed an onboarding video, so a manager declares onboarding effective. Yet support errors remain high. Completion is evidence of participation, not necessarily learning, behaviour change or business impact.",
+        "takeaway": "Evaluate development activities beyond attendance and distinguish observed change from demonstrated impact.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Map an onboarding activity to participation, learning, application and outcome evidence."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write an evaluation recommendation that separates observed improvement from causal attribution."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t3-s2",
+        "title": "Use comparable pre and post measures",
+        "summary": "A pre/post comparison needs consistent tasks, scales, timing and eligible participants.",
+        "explanation": "A pre/post comparison needs consistent tasks, scales, timing and eligible participants. Improvement can reflect practice effects, changing case mix or other support rather than training alone. A comparison group or phased rollout may strengthen evaluation where ethical and practical, but causal claims still require assumptions. Show missing follow-up and attrition from the evaluation sample.",
+        "example": "All new hires completed an onboarding video, so a manager declares onboarding effective. Yet support errors remain high. Completion is evidence of participation, not necessarily learning, behaviour change or business impact.",
+        "takeaway": "Evaluate development activities beyond attendance and distinguish observed change from demonstrated impact.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Map an onboarding activity to participation, learning, application and outcome evidence."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write an evaluation recommendation that separates observed improvement from causal attribution."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t3-s3",
+        "title": "Monitor access and mobility pathways",
+        "summary": "Internal mobility metrics can describe application, selection and movement within the organisation.",
+        "explanation": "Internal mobility metrics can describe application, selection and movement within the organisation. Define eligible employees and opportunity availability. Unequal participation may reflect access barriers rather than low motivation. Support development decisions with job-related criteria and human review. Keep individual assessment details restricted and report aggregate patterns with the same privacy safeguards used elsewhere.",
+        "example": "Twenty learners average 60% on a pre-test and 78% on a comparable post-test, an increase of 18 percentage points. Only fifteen have a later workplace observation, so report that denominator separately. If error rates improve during the same period as a new checklist, the data do not isolate the training effect. Recommend follow-up rather than attributing every change to the video.",
+        "takeaway": "Evaluate development activities beyond attendance and distinguish observed change from demonstrated impact.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Map an onboarding activity to participation, learning, application and outcome evidence."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write an evaluation recommendation that separates observed improvement from causal attribution."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

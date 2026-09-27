@@ -1,0 +1,200 @@
+{
+  "moduleId": "m6",
+  "topics": {
+    "m6-t1": [
+      {
+        "id": "m6-t1-s1",
+        "title": "Define status before reporting it",
+        "summary": "RAG means red, amber and green only within an agreed policy.",
+        "explanation": "RAG means red, amber and green only within an agreed policy. Define thresholds for milestone delay, cost forecast and critical unresolved risks before the reporting cycle. A green schedule does not imply green quality or risk. State the reporting cut-off, baseline version and data owner. Do not change the threshold because the current project would otherwise look uncomfortable.",
+        "example": "The PMO asks for a one-page update. The team wants to report “80% done” because eight of ten tasks are closed, but the two remaining tasks contain most of the testing risk. The sponsor needs a decision, not a reassuring colour.",
+        "takeaway": "Produce a concise status report that separates baseline, forecast, evidence and decisions.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define RAG thresholds for schedule, cost and risk in a classroom reporting policy."
+            },
+            {
+              "title": "Decision",
+              "detail": "Have a reviewer locate the main concern in thirty seconds; revise for clarity."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t1-s2",
+        "title": "Use evidence and forecasts",
+        "summary": "Distinguish baseline dates from actuals and current forecasts.",
+        "explanation": "Distinguish baseline dates from actuals and current forecasts. Progress should reflect accepted deliverables or a defined weighting method rather than equal task counts when sizes differ. Explain the cause and consequence of a variance, not only its number. If information is missing, say so and assign an action to obtain it. A status report is a controlled summary, not a place to bury unresolved assumptions.",
+        "example": "The PMO asks for a one-page update. The team wants to report “80% done” because eight of ten tasks are closed, but the two remaining tasks contain most of the testing risk. The sponsor needs a decision, not a reassuring colour.",
+        "takeaway": "Produce a concise status report that separates baseline, forecast, evidence and decisions.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define RAG thresholds for schedule, cost and risk in a classroom reporting policy."
+            },
+            {
+              "title": "Decision",
+              "detail": "Have a reviewer locate the main concern in thirty seconds; revise for clarity."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t1-s3",
+        "title": "Make the decision request visible",
+        "summary": "A sponsor brief should show achievements, next milestones, top risks/issues and the decisions needed by a stated date.",
+        "explanation": "A sponsor brief should show achievements, next milestones, top risks/issues and the decisions needed by a stated date. Use plain language and link to detailed records. A request such as “approve moving the pilot by two days or defer reminders by Thursday” is actionable. Avoid asking the sponsor to reconstruct the decision from ten separate attachments. Escalate consistently even when the news is unwelcome.",
+        "example": "Ten tasks have equal counts but not equal weights: eight minor tasks represent 40% of planned effort and two testing tasks represent 60%. Closing the eight does not establish 80% delivery completion. If the policy is amber for a forecast delay of one to three working days, a two-day delay is amber on schedule, while a critical security defect may make the quality dimension red.",
+        "takeaway": "Produce a concise status report that separates baseline, forecast, evidence and decisions.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Define RAG thresholds for schedule, cost and risk in a classroom reporting policy."
+            },
+            {
+              "title": "Decision",
+              "detail": "Have a reviewer locate the main concern in thirty seconds; revise for clarity."
+            }
+          ]
+        }
+      }
+    ],
+    "m6-t2": [
+      {
+        "id": "m6-t2-s1",
+        "title": "Prepare a decision-centred agenda",
+        "summary": "State the purpose, required decision, evidence to read and who must attend because of authority or expertise.",
+        "explanation": "State the purpose, required decision, evidence to read and who must attend because of authority or expertise. Separate information items from decisions. Timebox discussion and circulate concise options early enough to review. If a necessary approver is absent, distinguish a recommendation from a decision. Accessibility includes readable materials and a way for quieter or remote participants to contribute.",
+        "example": "The vendor wants an extra week, the placement team cannot move the event, and the project lead says “everyone agreed” after a discussion with no written decision. The next meeting should clarify choices and authority, not repeat the argument.",
+        "takeaway": "Facilitate an evidence-led meeting and record decisions without manufacturing agreement.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an agenda with one decision and the minimum required participants."
+            },
+            {
+              "title": "Decision",
+              "detail": "Publish minutes with actions and a correction route; separate pending approvals clearly."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t2-s2",
+        "title": "Negotiate interests and constraints",
+        "summary": "A position is a stated demand; an interest is the underlying need.",
+        "explanation": "A position is a stated demand; an interest is the underlying need. A vendor demanding an extra week may need an available tester; the college insisting on a date may need a safe event workflow rather than every optional feature. Explore alternatives before assuming one side must lose. Do not negotiate away mandatory privacy or safety controls. Confirm who can make any cost or contract commitment.",
+        "example": "The vendor wants an extra week, the placement team cannot move the event, and the project lead says “everyone agreed” after a discussion with no written decision. The next meeting should clarify choices and authority, not repeat the argument.",
+        "takeaway": "Facilitate an evidence-led meeting and record decisions without manufacturing agreement.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an agenda with one decision and the minimum required participants."
+            },
+            {
+              "title": "Decision",
+              "detail": "Publish minutes with actions and a correction route; separate pending approvals clearly."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t2-s3",
+        "title": "Minutes are a durable record",
+        "summary": "Capture the decision, authority, rationale, dissent where relevant, actions, owners and dates.",
+        "explanation": "Capture the decision, authority, rationale, dissent where relevant, actions, owners and dates. Minutes need not transcribe every sentence. Read back important decisions and distribute the record for correction using an agreed response window. Silence should not be invented as approval if policy requires explicit authorisation. Keep sensitive details in appropriately restricted records and link to them rather than copying them into broad circulation.",
+        "example": "The meeting considers three options: move the event, remove optional reminders, or bring in a qualified tester at added cost. The sponsor approves deferring reminders while retaining core safety testing. The record says what was approved, why, by whom and which baseline version changes. The vendor’s concern about later support remains an open action rather than disappearing from the minutes.",
+        "takeaway": "Facilitate an evidence-led meeting and record decisions without manufacturing agreement.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an agenda with one decision and the minimum required participants."
+            },
+            {
+              "title": "Decision",
+              "detail": "Publish minutes with actions and a correction route; separate pending approvals clearly."
+            }
+          ]
+        }
+      }
+    ],
+    "m6-t3": [
+      {
+        "id": "m6-t3-s1",
+        "title": "Projects, programmes and portfolios differ",
+        "summary": "A project delivers a bounded change.",
+        "explanation": "A project delivers a bounded change. A programme coordinates related work to obtain benefits that require combined management. A portfolio groups investments to support strategy and resource decisions, even when projects are unrelated. A PMO can provide standards, reporting and governance support, but its authority varies. Never assume an analyst can approve a project merely because they maintain the portfolio spreadsheet.",
+        "example": "The college has capacity for one of three initiatives: placement booking, library stock verification or an attendance reminder process. Each proposer claims urgency. The PMO analyst needs a transparent comparison and a realistic view of shared staff capacity.",
+        "takeaway": "Compare project proposals and track benefits without confusing PMO reporting with authorisation.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create three fictional proposals with expected benefits and resource needs."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a benefits-register entry with baseline, owner and a post-handover review date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t3-s2",
+        "title": "Scoring is decision support",
+        "summary": "A weighted score can compare strategic fit, expected benefit, urgency, effort and risk, using agreed definitions.",
+        "explanation": "A weighted score can compare strategic fit, expected benefit, urgency, effort and risk, using agreed definitions. Avoid double counting the same benefit under several labels. Show uncertainty and capacity constraints alongside the ranking. A high score does not make a mandatory compliance initiative optional or make an unfunded project feasible. Test whether small weight changes reverse the ranking and discuss the sensitivity.",
+        "example": "The college has capacity for one of three initiatives: placement booking, library stock verification or an attendance reminder process. Each proposer claims urgency. The PMO analyst needs a transparent comparison and a realistic view of shared staff capacity.",
+        "takeaway": "Compare project proposals and track benefits without confusing PMO reporting with authorisation.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create three fictional proposals with expected benefits and resource needs."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a benefits-register entry with baseline, owner and a post-handover review date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m6-t3-s3",
+        "title": "Benefits require operational ownership",
+        "summary": "A benefits register records baseline, target, measure, owner, review date and external influences.",
+        "explanation": "A benefits register records baseline, target, measure, owner, review date and external influences. The owner is often in the receiving operation, not the temporary project team. Distinguish forecast benefits from measured benefits and avoid counting the same staff-hour saving in two initiatives. Schedule post-handover reviews. A benefit that depends on adoption needs adoption evidence, not only an installation record.",
+        "example": "With weights of 50% for strategic fit and 50% for feasibility, Project A scores 4 and 2, giving 3.0 out of 5. Project B scores 3 and 4, giving 3.5. If strategic fit becomes 80%, A scores 3.6 and B 3.2. The ranking reverses, showing sensitivity rather than proving either project is objectively best. Check constraints and evidence before recommending an investment.",
+        "takeaway": "Compare project proposals and track benefits without confusing PMO reporting with authorisation.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create three fictional proposals with expected benefits and resource needs."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a benefits-register entry with baseline, owner and a post-handover review date."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

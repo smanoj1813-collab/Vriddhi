@@ -1,0 +1,341 @@
+{
+  "moduleId": "m5",
+  "questions": {
+    "m5-t1": [
+      {
+        "id": "m5-t1-q1",
+        "question": "A test account is already inaccessible. What is it?",
+        "options": [
+          "A current issue",
+          "Only a future risk",
+          "An achieved benefit",
+          "A scope exclusion"
+        ],
+        "answerIndex": 0,
+        "explanation": "The condition already exists and requires resolution.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q2",
+        "question": "What does a priority score of 3 × 4 mean here?",
+        "options": [
+          "A twelve-day delay",
+          "A triage score of 12",
+          "A 12% chance of failure",
+          "A guaranteed loss of ₹12"
+        ],
+        "answerIndex": 1,
+        "explanation": "Ordinal scoring supports comparison, not precise probability.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q3",
+        "question": "What is EMV for a 25% chance of a ₹20,000 loss?",
+        "options": [
+          "₹25,000",
+          "₹80,000",
+          "₹5,000",
+          "₹20,000"
+        ],
+        "answerIndex": 2,
+        "explanation": "0.25 × 20,000 = 5,000 expected exposure.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q4",
+        "question": "What type of response is arranging a backup demonstrator?",
+        "options": [
+          "Automatic elimination of every risk",
+          "Unrecorded acceptance",
+          "A benefit measurement",
+          "Mitigation"
+        ],
+        "answerIndex": 3,
+        "explanation": "The action reduces likelihood or impact.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t1-q5",
+        "question": "Which risk entry is most actionable?",
+        "options": [
+          "Cause, uncertain event, impact, owner and trigger",
+          "A single word: vendor",
+          "A red colour without explanation",
+          "A complaint about the team"
+        ],
+        "answerIndex": 0,
+        "explanation": "Specific structure makes monitoring and response possible.",
+        "difficulty": "core"
+      }
+    ],
+    "m5-t2": [
+      {
+        "id": "m5-t2-q1",
+        "question": "Why can 20 of 21 passing tests still be insufficient?",
+        "options": [
+          "The project must always have exactly 100 tests",
+          "The failed test may violate a mandatory critical condition",
+          "A pass rate has no use anywhere",
+          "Only the number of testers matters"
+        ],
+        "answerIndex": 1,
+        "explanation": "Risk and acceptance conditions matter more than a raw count.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q2",
+        "question": "What does defect severity describe?",
+        "options": [
+          "The developer’s seniority",
+          "The board colour alone",
+          "The impact of the defect",
+          "The order of its creation"
+        ],
+        "answerIndex": 2,
+        "explanation": "Priority is urgency; severity is impact.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q3",
+        "question": "What belongs in a reproducible test case?",
+        "options": [
+          "Only a screenshot with no context",
+          "Only the tester’s name",
+          "A general hope that it works",
+          "Preconditions, steps and expected outcome"
+        ],
+        "answerIndex": 3,
+        "explanation": "A reviewer must be able to repeat the test.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q4",
+        "question": "When should a repaired defect be closed?",
+        "options": [
+          "After relevant re-test evidence is reviewed",
+          "When the repair is promised",
+          "When the deadline arrives",
+          "When the card is oldest"
+        ],
+        "answerIndex": 0,
+        "explanation": "Changed implementation is not proof of corrected behaviour.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t2-q5",
+        "question": "Which activity is preventive quality work?",
+        "options": [
+          "Renaming failures as enhancements",
+          "Peer review before final testing",
+          "Hiding unsuccessful cases",
+          "Removing acceptance criteria late"
+        ],
+        "answerIndex": 1,
+        "explanation": "Early review can prevent defects and rework.",
+        "difficulty": "core"
+      }
+    ],
+    "m5-t3": [
+      {
+        "id": "m5-t3-q1",
+        "question": "What is the first status of a newly requested feature?",
+        "options": [
+          "Already accepted",
+          "A completed benefit",
+          "Pending assessment and authorisation",
+          "Automatically approved"
+        ],
+        "answerIndex": 2,
+        "explanation": "A request must be assessed and authorised before commitment.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q2",
+        "question": "What is 18 hours at ₹500 per hour?",
+        "options": [
+          "₹6,000",
+          "₹18,000",
+          "₹500",
+          "₹9,000"
+        ],
+        "answerIndex": 3,
+        "explanation": "Include both development and testing hours in direct effort cost.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q3",
+        "question": "What distinguishes a defect from an enhancement?",
+        "options": [
+          "Whether the existing agreed requirement is being met",
+          "Whether the requester is senior",
+          "Whether it is easy to fix",
+          "Whether it appears on a Friday"
+        ],
+        "answerIndex": 0,
+        "explanation": "Classification depends on the baseline requirement.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q4",
+        "question": "What belongs in an escalation brief?",
+        "options": [
+          "A promise that no trade-off exists",
+          "Options, recommendation and decision deadline",
+          "Only an accusation",
+          "Only a long chat transcript"
+        ],
+        "answerIndex": 1,
+        "explanation": "Escalation should enable a timely decision.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m5-t3-q5",
+        "question": "After an authorised change, what should be preserved?",
+        "options": [
+          "No previous assumptions",
+          "Only a verbal memory",
+          "The prior baseline and approval trail",
+          "Only the newest dates"
+        ],
+        "answerIndex": 2,
+        "explanation": "Traceability explains what changed and why.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 5 scenario assessment",
+    "questions": [
+      {
+        "id": "m5-assessment-q1",
+        "question": "A vendor absence becomes confirmed and blocks tomorrow’s test. How should its record evolve?",
+        "options": [
+          "Mark it as a benefit",
+          "Link the risk to a current issue and activate the response",
+          "Keep it only as a low-probability future risk",
+          "Erase the risk history"
+        ],
+        "answerIndex": 1,
+        "explanation": "The event has occurred; current action and traceability are needed.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q2",
+        "question": "A low-likelihood event could expose personal data. What should risk triage avoid?",
+        "options": [
+          "Assigning an owner",
+          "Escalating authority needs",
+          "Dismissing it solely because an ordinal product is low",
+          "Considering consequence severity"
+        ],
+        "answerIndex": 2,
+        "explanation": "High-consequence risks deserve attention beyond a mechanical score.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q3",
+        "question": "A risk has 10% estimated probability and ₹80,000 impact. What is its EMV?",
+        "options": [
+          "₹80,000",
+          "₹800",
+          "₹88,000",
+          "₹8,000"
+        ],
+        "answerIndex": 3,
+        "explanation": "0.10×80,000 = 8,000 expected exposure, not a guaranteed loss.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q4",
+        "question": "A reminder change needs 10 build hours and 8 test hours at ₹600 hourly. What direct effort cost should be reported?",
+        "options": [
+          "₹10,800 before other charges",
+          "₹6,000",
+          "₹4,800",
+          "₹18,000"
+        ],
+        "answerIndex": 0,
+        "explanation": "All 18 hours count: 18×600 = 10,800.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q5",
+        "question": "A repair is coded but the duplicate-booking case has not been rerun. What status is justified?",
+        "options": [
+          "Quality assured by elapsed time",
+          "Repair awaiting verification",
+          "Defect conclusively closed",
+          "Acceptance automatically granted"
+        ],
+        "answerIndex": 1,
+        "explanation": "Verification must follow implementation.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q6",
+        "question": "An optional change arrives near a fixed event. Which comparison best supports a decision?",
+        "options": [
+          "Only the coding time",
+          "A promise that all constraints stay fixed",
+          "Accept now, defer or reduce scope with impacts",
+          "Only the requester’s seniority"
+        ],
+        "answerIndex": 2,
+        "explanation": "A meaningful option set makes trade-offs visible.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q7",
+        "question": "Most tests pass but one critical unauthorised-access test fails. What is the appropriate release recommendation?",
+        "options": [
+          "Release because the average is high",
+          "Delete the test",
+          "Count the failure as a training issue only",
+          "Do not release the unsafe path; resolve and verify the mandatory condition"
+        ],
+        "answerIndex": 3,
+        "explanation": "Critical acceptance conditions cannot be averaged away.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q8",
+        "question": "Insurance covers part of a supplier loss. What risk remains?",
+        "options": [
+          "Delivery and operational consequences may remain",
+          "All risk disappears",
+          "No monitoring is needed",
+          "The supplier automatically becomes the sponsor"
+        ],
+        "answerIndex": 0,
+        "explanation": "Transfer may address some exposure, not all consequences.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q9",
+        "question": "A stakeholder asks for behaviour already specified in the approved baseline. The implementation lacks it. What is likely the correct classification?",
+        "options": [
+          "An irrelevant request",
+          "A defect or unmet requirement, not automatically new scope",
+          "Always an enhancement",
+          "A benefit already achieved"
+        ],
+        "answerIndex": 1,
+        "explanation": "Check the baseline before deciding it is additional scope.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m5-assessment-q10",
+        "question": "A decision must be made by tomorrow to protect testing. What should an escalation contain?",
+        "options": [
+          "Only a raw chat export",
+          "A revised baseline with no approval",
+          "Impact, options, recommendation, owner and deadline",
+          "Only an emotional warning"
+        ],
+        "answerIndex": 2,
+        "explanation": "Escalation should support authorised action under time pressure.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

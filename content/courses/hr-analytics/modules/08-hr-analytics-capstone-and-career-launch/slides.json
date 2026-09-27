@@ -1,0 +1,200 @@
+{
+  "moduleId": "m8",
+  "topics": {
+    "m8-t1": [
+      {
+        "id": "m8-t1-s1",
+        "title": "Tell the decision story",
+        "summary": "Structure the case as question, population, data, cleaning, method, finding, recommendation and limitation.",
+        "explanation": "Structure the case as question, population, data, cleaning, method, finding, recommendation and limitation. Label every dataset and result as synthetic classroom work. Explain why a metric was chosen and what action it supports. Do not invent employer names, paid consulting experience or measured business savings. A rigorous simulation is a legitimate portfolio artefact when its scope is honest.",
+        "example": "A learner’s dashboard is visually strong but its recruitment rates cannot be traced to source rows. Another learner has a modest chart with clear definitions, checks and a useful recommendation. A recruiter assessing an entry-level analyst needs evidence of trustworthy work, not only design flair.",
+        "takeaway": "Assemble a reproducible case study with a data dictionary, quality log, dashboard and bounded recommendation.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an evidence index linking each headline finding to a formula and source table."
+            },
+            {
+              "title": "Decision",
+              "detail": "Review the public export for hidden data, identifiers and unsupported claims."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t1-s2",
+        "title": "Make the analysis reproducible",
+        "summary": "Include a data dictionary, immutable source copy, cleaning log, formula or pivot notes, QA checks and evidence index.",
+        "explanation": "Include a data dictionary, immutable source copy, cleaning log, formula or pivot notes, QA checks and evidence index. A reviewer should be able to reproduce two headline values without asking you to narrate every step. Keep versions aligned between the memo and dashboard. Export only safe aggregate views for public use; preserve editable work in the institution-approved submission location.",
+        "example": "A learner’s dashboard is visually strong but its recruitment rates cannot be traced to source rows. Another learner has a modest chart with clear definitions, checks and a useful recommendation. A recruiter assessing an entry-level analyst needs evidence of trustworthy work, not only design flair.",
+        "takeaway": "Assemble a reproducible case study with a data dictionary, quality log, dashboard and bounded recommendation.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an evidence index linking each headline finding to a formula and source table."
+            },
+            {
+              "title": "Decision",
+              "detail": "Review the public export for hidden data, identifiers and unsupported claims."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t1-s3",
+        "title": "Match evidence to the role",
+        "summary": "An HR Executive portfolio can emphasise accurate records and process coordination; an HR Analyst portfolio should show definitions, analysis and interpretation; a Talent Acquisition Associate portfolio can demonstrate funnel management, candidate communication and structured selection support.",
+        "explanation": "An HR Executive portfolio can emphasise accurate records and process coordination; an HR Analyst portfolio should show definitions, analysis and interpretation; a Talent Acquisition Associate portfolio can demonstrate funnel management, candidate communication and structured selection support. Job titles vary by employer. Use the actual job description to select evidence and distinguish your own contribution from group work.",
+        "example": "A defensible résumé bullet is “Analysed a synthetic 200-application recruitment cohort, reconciled stage conversions and produced a privacy-reviewed dashboard with three process recommendations.” An indefensible bullet is “Reduced a company’s attrition by 40%” when only a classroom scenario was analysed. Claim the analysis and reasoning you performed, not an operational impact you never observed.",
+        "takeaway": "Assemble a reproducible case study with a data dictionary, quality log, dashboard and bounded recommendation.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an evidence index linking each headline finding to a formula and source table."
+            },
+            {
+              "title": "Decision",
+              "detail": "Review the public export for hidden data, identifiers and unsupported claims."
+            }
+          ]
+        }
+      }
+    ],
+    "m8-t2": [
+      {
+        "id": "m8-t2-s1",
+        "title": "Explain definitions before numbers",
+        "summary": "When a question is ambiguous, clarify the population, period, unit and denominator.",
+        "explanation": "When a question is ambiguous, clarify the population, period, unit and denominator. Demonstrate arithmetic with a small example instead of hiding behind jargon. If you do not know the organisation’s convention, say so and ask for its dictionary. Entry-level credibility comes from careful reasoning, not pretending every company uses the same definition.",
+        "example": "An interviewer asks why turnover and retention do not add to 100%, then asks whether you would share raw employee data with a manager who requests it urgently. The answer needs both metric fluency and responsible judgement.",
+        "takeaway": "Explain an HR analysis clearly and respond to ethical or metric questions within an entry-level role’s authority.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Prepare a two-minute explanation of turnover versus opening-cohort retention."
+            },
+            {
+              "title": "Decision",
+              "detail": "Record feedback on clarity, authority boundaries and honesty, then revise one answer."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t2-s2",
+        "title": "Use evidence-led interview structure",
+        "summary": "STAR can organise an example: situation, task, action and result, followed by learning if useful.",
+        "explanation": "STAR can organise an example: situation, task, action and result, followed by learning if useful. Use a course artefact honestly and label it as a simulation. Explain a correction you made, such as a denominator error or a misleading chart. For a hypothetical question, describe what you would do rather than inventing a past event. Keep the result bounded to the evidence.",
+        "example": "An interviewer asks why turnover and retention do not add to 100%, then asks whether you would share raw employee data with a manager who requests it urgently. The answer needs both metric fluency and responsible judgement.",
+        "takeaway": "Explain an HR analysis clearly and respond to ethical or metric questions within an entry-level role’s authority.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Prepare a two-minute explanation of turnover versus opening-cohort retention."
+            },
+            {
+              "title": "Decision",
+              "detail": "Record feedback on clarity, authority boundaries and honesty, then revise one answer."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t2-s3",
+        "title": "Respect access and escalation boundaries",
+        "summary": "Urgency does not automatically authorise raw-data sharing.",
+        "explanation": "Urgency does not automatically authorise raw-data sharing. Confirm purpose, recipient access and the minimum necessary information; an aggregate response may meet the need. Escalate legal, health, discrimination or employment decisions to qualified roles under policy. An analyst can identify a discrepancy and recommend review without issuing a legal verdict or deciding someone’s employment outcome.",
+        "example": "A strong response is “I would clarify whether the manager needs an aggregate turnover trend or identifiable case records. I would check authorisation, use the minimum necessary data and share through the approved channel. For the trend I would include period, numerator and denominator.” A weak response is “I would email the full spreadsheet immediately because the manager is senior.”",
+        "takeaway": "Explain an HR analysis clearly and respond to ethical or metric questions within an entry-level role’s authority.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Prepare a two-minute explanation of turnover versus opening-cohort retention."
+            },
+            {
+              "title": "Decision",
+              "detail": "Record feedback on clarity, authority boundaries and honesty, then revise one answer."
+            }
+          ]
+        }
+      }
+    ],
+    "m8-t3": [
+      {
+        "id": "m8-t3-s1",
+        "title": "Present the decision path",
+        "summary": "Use five sections: question and audience, data and safeguards, method and checks, findings and limitations, and proposed action with evaluation.",
+        "explanation": "Use five sections: question and audience, data and safeguards, method and checks, findings and limitations, and proposed action with evaluation. Show a small number of clear visuals. Keep a source and evidence index available for questions. Explain why a more complex method was unnecessary if a simple one answered the decision. Do not imply that completion confers an external HR, software-vendor or professional-body credential.",
+        "example": "The jury asks you to reproduce a recruitment conversion, explain a suppressed dashboard cell and defend the next action. A successful presentation demonstrates traceability, judgement and the ability to correct mistakes—not merely confidence.",
+        "takeaway": "Defend a privacy-safe HR recommendation and create a focused plan for further analytical practice.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build a five-minute presentation using the five-section decision path."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a thirty-day plan with two tasks, review dates and evidence of completion."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t3-s2",
+        "title": "Prepare to reproduce and revise",
+        "summary": "Practise recalculating one rate, one duration and one headcount bridge.",
+        "explanation": "Practise recalculating one rate, one duration and one headcount bridge. Be ready to show filter behaviour and explain a missing-data decision. If the jury finds an error, identify which claims depend on it, correct the analysis and update the recommendation. A transparent correction demonstrates analytical discipline. Defending a known wrong result to avoid embarrassment undermines trust.",
+        "example": "The jury asks you to reproduce a recruitment conversion, explain a suppressed dashboard cell and defend the next action. A successful presentation demonstrates traceability, judgement and the ability to correct mistakes—not merely confidence.",
+        "takeaway": "Defend a privacy-safe HR recommendation and create a focused plan for further analytical practice.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build a five-minute presentation using the five-section decision path."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a thirty-day plan with two tasks, review dates and evidence of completion."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t3-s3",
+        "title": "Plan growth through bounded practice",
+        "summary": "Choose two or three next skills linked to target roles: spreadsheet joins, recruitment cohort tracking, dashboard QA, structured-interview support or evaluation design.",
+        "explanation": "Choose two or three next skills linked to target roles: spreadsheet joins, recruitment cohort tracking, dashboard QA, structured-interview support or evaluation design. Define a practice task, evidence, reviewer and date. Seek supervised opportunities using authorised data; do not collect employee records independently to build a portfolio. Advanced modelling is optional and should follow strong definitions, privacy and evaluation foundations.",
+        "example": "A jury discovers that a dashboard used 40 organisation offers as the denominator for 8 department acceptances, instead of the department’s 10 offers. Correct the rate from 20% to 80%, identify every chart and memo statement affected, and explain whether the recommendation changes. A useful development task is to test all, single-group and empty filter cases in three new synthetic dashboards.",
+        "takeaway": "Defend a privacy-safe HR recommendation and create a focused plan for further analytical practice.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build a five-minute presentation using the five-section decision path."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a thirty-day plan with two tasks, review dates and evidence of completion."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
