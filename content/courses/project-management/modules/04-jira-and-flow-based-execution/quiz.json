@@ -1,0 +1,341 @@
+{
+  "moduleId": "m4",
+  "questions": {
+    "m4-t1": [
+      {
+        "id": "m4-t1-q1",
+        "question": "What should remain stable when Jira menu names differ?",
+        "options": [
+          "The exact location of every button",
+          "The paid subscription tier",
+          "The colour of each icon",
+          "The work hierarchy and workflow meaning"
+        ],
+        "answerIndex": 3,
+        "explanation": "Learn the control concepts rather than a brittle click sequence.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q2",
+        "question": "What should a Review-to-Done transition require?",
+        "options": [
+          "Agreed acceptance and quality evidence",
+          "Only elapsed time",
+          "A request from anyone",
+          "A full board column"
+        ],
+        "answerIndex": 0,
+        "explanation": "States must reflect verified work.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q3",
+        "question": "What is an acceptable substitute if Jira is unavailable?",
+        "options": [
+          "Submitting an empty screenshot",
+          "A spreadsheet implementing the same records and transitions",
+          "Skipping all execution work",
+          "Buying a subscription to receive marks"
+        ],
+        "answerIndex": 1,
+        "explanation": "Tool access is not the learning outcome.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q4",
+        "question": "Which information must stay out of a public Jira sandbox?",
+        "options": [
+          "Synthetic task titles",
+          "A made-up project goal",
+          "Real student personal data",
+          "Fictional issue identifiers"
+        ],
+        "answerIndex": 2,
+        "explanation": "Public practice systems are not authorised personal-data repositories.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q5",
+        "question": "What is the purpose of dependency links?",
+        "options": [
+          "Guarantee tasks finish automatically",
+          "Replace acceptance testing",
+          "Assign every task to the same person",
+          "Make blocking relationships visible"
+        ],
+        "answerIndex": 3,
+        "explanation": "Links support coordination; they do not perform the work.",
+        "difficulty": "core"
+      }
+    ],
+    "m4-t2": [
+      {
+        "id": "m4-t2-q1",
+        "question": "Why might an overdue filter miss problematic work?",
+        "options": [
+          "Some items have no due date",
+          "All missing dates mean tasks are finished",
+          "Queries always include every record",
+          "Undated work cannot matter"
+        ],
+        "answerIndex": 0,
+        "explanation": "Missing dates require their own hygiene check.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q2",
+        "question": "How should a new filter first be tested?",
+        "options": [
+          "By asking the sponsor to guess",
+          "Against records with known expected membership",
+          "Only by choosing an attractive chart",
+          "By assuming no syntax error means correct logic"
+        ],
+        "answerIndex": 1,
+        "explanation": "Known cases test the meaning as well as syntax.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q3",
+        "question": "What does `assignee IS EMPTY` seek?",
+        "options": [
+          "Only records due yesterday",
+          "Records with the highest cost",
+          "Records with no assigned owner",
+          "All completed records"
+        ],
+        "answerIndex": 2,
+        "explanation": "It is an ownership-hygiene query.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q4",
+        "question": "A colleague sees fewer dashboard records. What is one plausible reason?",
+        "options": [
+          "The project has automatically improved",
+          "The data must be identical for everyone",
+          "The dashboard cannot use filters",
+          "Different access permissions"
+        ],
+        "answerIndex": 3,
+        "explanation": "Visibility can vary by permissions and filter sharing.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q5",
+        "question": "Why are ticket counts a weak individual ranking?",
+        "options": [
+          "Items differ in complexity and value",
+          "Every ticket measures exactly one hour",
+          "Counts automatically control for context",
+          "The busiest chart always identifies the best worker"
+        ],
+        "answerIndex": 0,
+        "explanation": "Use work evidence and context, not simplistic surveillance metrics.",
+        "difficulty": "core"
+      }
+    ],
+    "m4-t3": [
+      {
+        "id": "m4-t3-q1",
+        "question": "What is throughput?",
+        "options": [
+          "The percentage of staff online",
+          "Items completed per period",
+          "All items ever requested",
+          "The number of board columns"
+        ],
+        "answerIndex": 1,
+        "explanation": "Throughput measures completions within a stated period.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q2",
+        "question": "Under stable conditions, what cycle time corresponds to WIP 12 and throughput 4 per week?",
+        "options": [
+          "Eight weeks",
+          "One-third of a week",
+          "Three weeks",
+          "Forty-eight weeks"
+        ],
+        "answerIndex": 2,
+        "explanation": "Cycle time = WIP ÷ throughput = 3 weeks.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q3",
+        "question": "Why monitor work-item age?",
+        "options": [
+          "It proves staff are idle",
+          "It replaces all completion measures",
+          "It measures employee tenure",
+          "It reveals delay in unfinished work"
+        ],
+        "answerIndex": 3,
+        "explanation": "Ageing shows current risk before items finish.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q4",
+        "question": "Review has reached its WIP limit. What is the useful response?",
+        "options": [
+          "Help clear the bottleneck before starting more work",
+          "Hide review items",
+          "Raise the limit without discussion",
+          "Declare them Done"
+        ],
+        "answerIndex": 0,
+        "explanation": "The limit should trigger collaboration and policy-based action.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q5",
+        "question": "What must be stated when reporting cycle time?",
+        "options": [
+          "Only the project title",
+          "The start and finish boundaries and calendar basis",
+          "Only the chart colour",
+          "The identity of every worker"
+        ],
+        "answerIndex": 1,
+        "explanation": "Measurements are interpretable only with consistent definitions.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 4 scenario assessment",
+    "questions": [
+      {
+        "id": "m4-assessment-q1",
+        "question": "A Jira filter shows no overdue items, but four active records lack dates. What should the dashboard say?",
+        "options": [
+          "No dated overdue matches; missing dates need separate review",
+          "All work is on time",
+          "The four undated items are completed",
+          "The query proves full data quality"
+        ],
+        "answerIndex": 0,
+        "explanation": "Zero matches do not resolve missing-field uncertainty.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q2",
+        "question": "A board has Review WIP 5 against a limit of 3 while staff start more work. What is the useful intervention?",
+        "options": [
+          "Raise the limit forever without evidence",
+          "Help clear review and inspect the bottleneck policy",
+          "Hide two review cards",
+          "Move untested items to Done"
+        ],
+        "answerIndex": 1,
+        "explanation": "WIP limits should trigger collaboration, not cosmetic compliance.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q3",
+        "question": "Stable average WIP is 15 and throughput is 5 items weekly. What can be inferred under consistent boundaries?",
+        "options": [
+          "Each employee completes three items daily",
+          "Lead time must be exactly one week",
+          "Average cycle time is about three weeks",
+          "Every item is guaranteed in three weeks"
+        ],
+        "answerIndex": 2,
+        "explanation": "Little’s Law relates averages under stated system assumptions.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q4",
+        "question": "Two dashboard users see different issue counts from the same saved filter. What should be checked first?",
+        "options": [
+          "Whether one user works harder",
+          "Whether Jira changes project scope automatically",
+          "Only browser colours",
+          "Permissions, sharing and visibility rules"
+        ],
+        "answerIndex": 3,
+        "explanation": "Different visibility can explain different counts.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q5",
+        "question": "An item has waited twelve days in review while completed-item average cycle time is four days. What should be highlighted?",
+        "options": [
+          "Ageing unfinished work as a current risk",
+          "Only the favourable completed average",
+          "That the item must be finished already",
+          "An individual productivity ranking"
+        ],
+        "answerIndex": 0,
+        "explanation": "Completion averages can conceal open-item delays.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q6",
+        "question": "A team puts student phone numbers in public issue comments to simplify testing. What is the correct response?",
+        "options": [
+          "Copy the numbers into more screenshots",
+          "Remove exposure through the authorised process and use synthetic data",
+          "Keep it because the board is convenient",
+          "Only rename the epic"
+        ],
+        "answerIndex": 1,
+        "explanation": "Public practice tools are not authorised personal-data stores.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q7",
+        "question": "A workflow has a Done column but no exit criteria. What should be established before relying on completion counts?",
+        "options": [
+          "A compulsory paid plan",
+          "A rule that old cards become Done",
+          "Shared acceptance and quality evidence for the transition",
+          "More board colours"
+        ],
+        "answerIndex": 2,
+        "explanation": "Counts are meaningful only when state semantics are agreed.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q8",
+        "question": "An automation would close an issue when its due date passes. Why is this a poor completion rule?",
+        "options": [
+          "Automation is always forbidden",
+          "Every due date is inaccurate",
+          "Completed work cannot have dates",
+          "Time passing does not prove acceptance"
+        ],
+        "answerIndex": 3,
+        "explanation": "Completion is an evidence state, not a calendar event.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q9",
+        "question": "A query is syntactically valid but excludes the intended project. What test would catch this?",
+        "options": [
+          "Expected-result checks using known fixture records",
+          "Only counting characters",
+          "Only checking the query name",
+          "Trusting the lack of an error message"
+        ],
+        "answerIndex": 0,
+        "explanation": "Logic must be tested independently of syntax.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q10",
+        "question": "Throughput rises after splitting every ticket into tiny fragments. What must interpretation consider?",
+        "options": [
+          "That quality is guaranteed",
+          "Changed item definitions and whether value flow improved",
+          "That productivity doubled automatically",
+          "That no other evidence matters"
+        ],
+        "answerIndex": 1,
+        "explanation": "Changing units can change counts without changing useful delivery.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

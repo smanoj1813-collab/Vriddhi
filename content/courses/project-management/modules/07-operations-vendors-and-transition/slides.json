@@ -1,0 +1,200 @@
+{
+  "moduleId": "m7",
+  "topics": {
+    "m7-t1": [
+      {
+        "id": "m7-t1-s1",
+        "title": "Describe a service from request to resolution",
+        "summary": "Map the trigger, inputs, activities, decisions, outputs and customer of the process.",
+        "explanation": "Map the trigger, inputs, activities, decisions, outputs and customer of the process. Identify handoffs and waiting, not only active work. An SOP should specify role ownership, steps, checks and exception routes in language a new staff member can follow. Keep a revision date and owner. A document that no one can locate or maintain is not an operational control.",
+        "example": "After the pilot, the placement desk receives 180 requests in a three-hour morning window. The project team is moving on. Operations needs a process that staff can follow during both routine work and exceptions, not a folder of development notes.",
+        "takeaway": "Design a repeatable process with service measures, capacity assumptions and exception handling.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Map the request-to-resolution process with at least one decision and one exception."
+            },
+            {
+              "title": "Decision",
+              "detail": "Propose an appointment or triage experiment and explain how to check unintended effects."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m7-t1-s2",
+        "title": "Capacity is constrained by actual availability",
+        "summary": "Compare arrival demand with service capacity using consistent time units.",
+        "explanation": "Compare arrival demand with service capacity using consistent time units. At three minutes per request, one fully available desk can process at most twenty per hour before breaks, variability and other duties. Average demand below theoretical capacity does not guarantee no queues, especially when arrivals bunch together. Identify peaks and bottlenecks before recommending staff increases or automation. State what the simple model leaves out.",
+        "example": "After the pilot, the placement desk receives 180 requests in a three-hour morning window. The project team is moving on. Operations needs a process that staff can follow during both routine work and exceptions, not a folder of development notes.",
+        "takeaway": "Design a repeatable process with service measures, capacity assumptions and exception handling.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Map the request-to-resolution process with at least one decision and one exception."
+            },
+            {
+              "title": "Decision",
+              "detail": "Propose an appointment or triage experiment and explain how to check unintended effects."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m7-t1-s3",
+        "title": "Measures should balance speed and quality",
+        "summary": "A response-time target should not encourage staff to close unresolved requests.",
+        "explanation": "A response-time target should not encourage staff to close unresolved requests. Pair timeliness with first-contact resolution, rework or quality checks. Define SLA targets as agreed service commitments, with clock boundaries and exclusions; do not call an informal wish an enforceable contract. Exceptions such as missing documents need a visible queue, owner and customer communication. Review trends rather than punishing a single difficult case.",
+        "example": "At three minutes per request, one desk has a theoretical capacity of 60 requests over three hours. Handling 180 requests requires at least three fully available desks at that rate, leaving no buffer for variability or breaks. A practical plan must add capacity, spread arrivals or reduce handling effort while protecting quality. Simply writing “three desks” is not a robust service commitment.",
+        "takeaway": "Design a repeatable process with service measures, capacity assumptions and exception handling.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Map the request-to-resolution process with at least one decision and one exception."
+            },
+            {
+              "title": "Decision",
+              "detail": "Propose an appointment or triage experiment and explain how to check unintended effects."
+            }
+          ]
+        }
+      }
+    ],
+    "m7-t2": [
+      {
+        "id": "m7-t2-s1",
+        "title": "Specify the need before seeking prices",
+        "summary": "Define required capabilities, acceptance evidence, service period, delivery location and constraints.",
+        "explanation": "Define required capabilities, acceptance evidence, service period, delivery location and constraints. A clear statement of work reduces mismatched offers. Follow the institution’s procurement thresholds and conflict-of-interest rules; this lesson does not authorise purchases. Keep suppliers’ confidential pricing in approved storage. Clarifications should be fair and documented rather than giving one supplier hidden information.",
+        "example": "Two vendors quote for event check-in devices. One offer is cheaper but excludes setup and support; another includes both but requires an earlier deposit. A coordinator must compare like with like without awarding a contract outside their authority.",
+        "takeaway": "Compare supplier offers and manage delivery evidence within approval and procurement rules.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write a short statement of work with measurable acceptance conditions."
+            },
+            {
+              "title": "Decision",
+              "detail": "Draft a supplier-delay escalation that offers a fallback without making an unauthorised commitment."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m7-t2-s2",
+        "title": "Compare total relevant cost and risk",
+        "summary": "Purchase price is only one element.",
+        "explanation": "Purchase price is only one element. Include delivery, setup, training, support, recurring charges and any applicable taxes under a consistent basis. Compare assumptions and exclusions explicitly. The cheapest offer can still be best, but only after assessing whether it meets requirements and whether risk is acceptable. Weighted scoring supports a recommendation; mandatory criteria and approval authority still apply.",
+        "example": "Two vendors quote for event check-in devices. One offer is cheaper but excludes setup and support; another includes both but requires an earlier deposit. A coordinator must compare like with like without awarding a contract outside their authority.",
+        "takeaway": "Compare supplier offers and manage delivery evidence within approval and procurement rules.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write a short statement of work with measurable acceptance conditions."
+            },
+            {
+              "title": "Decision",
+              "detail": "Draft a supplier-delay escalation that offers a fallback without making an unauthorised commitment."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m7-t2-s3",
+        "title": "Track obligations and acceptance",
+        "summary": "Record milestones, deliverables, acceptance conditions, invoice references and responsible roles.",
+        "explanation": "Record milestones, deliverables, acceptance conditions, invoice references and responsible roles. Do not certify receipt of a service that has not been verified. Handle scope changes through the contract’s authorised mechanism rather than casual chat messages. Escalate late delivery with evidence, alternatives and impact. A supplier relationship benefits from clarity and fairness, not from either blind trust or constant blame.",
+        "example": "Vendor A quotes ₹18,000 plus ₹4,000 setup and ₹3,000 support, total ₹25,000 on the stated comparable basis. Vendor B quotes ₹24,000 including those services. If both meet mandatory requirements, B is ₹1,000 lower on this basis, but payment timing, service quality and exclusions still need review. The comparison is a recommendation, not a purchase order.",
+        "takeaway": "Compare supplier offers and manage delivery evidence within approval and procurement rules.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write a short statement of work with measurable acceptance conditions."
+            },
+            {
+              "title": "Decision",
+              "detail": "Draft a supplier-delay escalation that offers a fallback without making an unauthorised commitment."
+            }
+          ]
+        }
+      }
+    ],
+    "m7-t3": [
+      {
+        "id": "m7-t3-s1",
+        "title": "Transition is a deliverable",
+        "summary": "Handover should include the service owner, support route, access arrangements, training evidence, operating instructions, unresolved issues and agreed acceptance.",
+        "explanation": "Handover should include the service owner, support route, access arrangements, training evidence, operating instructions, unresolved issues and agreed acceptance. Transfer credentials through approved secure mechanisms, not through a public portfolio. Verify that the receiving team can perform important tasks. A meeting invitation or emailed manual is not proof of operational readiness. Make the transition criteria part of the plan early.",
+        "example": "The pilot has launched, but staff cannot find the support contact or restore a lost booking export. The project lead wants to close immediately. A launch is not a complete handover if the receiving operation cannot run the service safely.",
+        "takeaway": "Close a project with accepted evidence and transfer ownership before testing a small operational improvement.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build a handover checklist with service owner, support, training and access evidence."
+            },
+            {
+              "title": "Decision",
+              "detail": "Plan a bounded improvement trial with a balancing quality measure and a stop rule."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m7-t3-s2",
+        "title": "Closure makes obligations visible",
+        "summary": "Confirm acceptance, outstanding contractual and financial actions, records retention and ownership of residual risks.",
+        "explanation": "Confirm acceptance, outstanding contractual and financial actions, records retention and ownership of residual risks. Capture lessons as context, observed effect and actionable recommendation rather than blame. Close access no longer needed and archive records according to institutional policy. If some work remains, name an owner and decision authority. “Closed” must not mean that unresolved responsibilities have become invisible.",
+        "example": "The pilot has launched, but staff cannot find the support contact or restore a lost booking export. The project lead wants to close immediately. A launch is not a complete handover if the receiving operation cannot run the service safely.",
+        "takeaway": "Close a project with accepted evidence and transfer ownership before testing a small operational improvement.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build a handover checklist with service owner, support, training and access evidence."
+            },
+            {
+              "title": "Decision",
+              "detail": "Plan a bounded improvement trial with a balancing quality measure and a stop rule."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m7-t3-s3",
+        "title": "Improve with a small learning cycle",
+        "summary": "Use a Plan–Do–Check–Act cycle: specify a problem and prediction, test a bounded change, compare evidence, and adopt, revise or stop.",
+        "explanation": "Use a Plan–Do–Check–Act cycle: specify a problem and prediction, test a bounded change, compare evidence, and adopt, revise or stop. Improvement does not require a large software project. A booking reminder script or clearer triage instruction can be tested safely with synthetic or approved data. Avoid claiming causation from a simple before-and-after comparison without considering demand, staffing and seasonal changes.",
+        "example": "Before a triage change, 30 of 100 requests need rework; after a small trial, 18 of 90 do. Rework proportions are 30% and 20%, a reduction of ten percentage points. The trials have different denominators and may differ in case mix. Treat the result as promising evidence to investigate, not proof that the script caused all improvement. Record adoption criteria and a review date.",
+        "takeaway": "Close a project with accepted evidence and transfer ownership before testing a small operational improvement.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build a handover checklist with service owner, support, training and access evidence."
+            },
+            {
+              "title": "Decision",
+              "detail": "Plan a bounded improvement trial with a balancing quality measure and a stop rule."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

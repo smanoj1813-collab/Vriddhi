@@ -1,0 +1,341 @@
+{
+  "moduleId": "m4",
+  "questions": {
+    "m4-t1": [
+      {
+        "id": "m4-t1-q1",
+        "question": "What is FTE for six 40-hour and four 20-hour contracts at a 40-hour standard?",
+        "options": [
+          "10",
+          "6",
+          "12",
+          "8"
+        ],
+        "answerIndex": 3,
+        "explanation": "Total contracted hours are 320; 320/40 = 8.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q2",
+        "question": "What is the headcount of that group?",
+        "options": [
+          "10",
+          "8",
+          "320",
+          "40"
+        ],
+        "answerIndex": 0,
+        "explanation": "Headcount counts the ten people, not hour equivalents.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q3",
+        "question": "What closing department count follows 20 + 3 + 2 − 1 − 2?",
+        "options": [
+          "26",
+          "22",
+          "24",
+          "20"
+        ],
+        "answerIndex": 1,
+        "explanation": "Include both external movements and department transfers.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q4",
+        "question": "What must be stated for an FTE calculation?",
+        "options": [
+          "Only the payroll date",
+          "Every employee’s personal address",
+          "The hours basis and full-time standard",
+          "Only the department colour"
+        ],
+        "answerIndex": 2,
+        "explanation": "Without a standard and basis, FTE is ambiguous.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t1-q5",
+        "question": "Why can headcount alone miss a capacity problem?",
+        "options": [
+          "Every person always works identical hours",
+          "Headcount guarantees service quality",
+          "Transfers never affect teams",
+          "Hours, skills and availability can differ"
+        ],
+        "answerIndex": 3,
+        "explanation": "Capacity depends on more than the number of people.",
+        "difficulty": "core"
+      }
+    ],
+    "m4-t2": [
+      {
+        "id": "m4-t2-q1",
+        "question": "What is turnover for 11 exits and average headcount 110?",
+        "options": [
+          "10%",
+          "11%",
+          "9.2%",
+          "110%"
+        ],
+        "answerIndex": 0,
+        "explanation": "11/110 × 100 = 10% for the stated period.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q2",
+        "question": "What is retention when 92 of an opening cohort of 100 remain?",
+        "options": [
+          "10%",
+          "92%",
+          "90%",
+          "8%"
+        ],
+        "answerIndex": 1,
+        "explanation": "Retention follows the opening cohort, not the turnover denominator.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q3",
+        "question": "What is absence rate for 80 of 2,000 scheduled hours?",
+        "options": [
+          "2.5%",
+          "40%",
+          "4%",
+          "8%"
+        ],
+        "answerIndex": 2,
+        "explanation": "80/2000 × 100 = 4%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q4",
+        "question": "What should accompany a turnover percentage?",
+        "options": [
+          "Only a red or green colour",
+          "Only a manager’s name",
+          "A disciplinary recommendation",
+          "Period, counts, denominator and exit definition"
+        ],
+        "answerIndex": 3,
+        "explanation": "Rates need context and consistent definitions.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t2-q5",
+        "question": "What cannot be concluded from absence data alone?",
+        "options": [
+          "An individual’s medical condition or misconduct",
+          "The recorded absent-hours total",
+          "A rate under stated rules",
+          "A need to review data quality"
+        ],
+        "answerIndex": 0,
+        "explanation": "Aggregate measurement is not diagnosis or evidence of wrongdoing.",
+        "difficulty": "core"
+      }
+    ],
+    "m4-t3": [
+      {
+        "id": "m4-t3-q1",
+        "question": "What FTE demand follows 9,600 cases at 800 cases per FTE?",
+        "options": [
+          "8",
+          "12",
+          "10",
+          "11"
+        ],
+        "answerIndex": 1,
+        "explanation": "9,600/800 = 12 FTE under the stated capacity assumption.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q2",
+        "question": "What supply follows 10 current FTE plus 2 additions minus 1 departure?",
+        "options": [
+          "9",
+          "12",
+          "11",
+          "13"
+        ],
+        "answerIndex": 2,
+        "explanation": "10 + 2 − 1 = 11.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q3",
+        "question": "At demand 12 and supply 11, what is the capacity gap?",
+        "options": [
+          "11 FTE",
+          "12 FTE",
+          "23 FTE",
+          "1 FTE"
+        ],
+        "answerIndex": 3,
+        "explanation": "Gap is demand minus supply.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q4",
+        "question": "Why include recruitment lead time?",
+        "options": [
+          "Capacity may not arrive when the workload starts",
+          "It guarantees every offer joins",
+          "It removes the need for approval",
+          "It makes training unnecessary"
+        ],
+        "answerIndex": 0,
+        "explanation": "Hiring decisions and effective availability occur at different times.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m4-t3-q5",
+        "question": "Which is a suitable alternative to automatic hiring?",
+        "options": [
+          "Ignore the demand forecast",
+          "Evaluate internal mobility or process improvement with safeguards",
+          "Assume unpaid overtime is unlimited",
+          "Remove quality standards"
+        ],
+        "answerIndex": 1,
+        "explanation": "Workforce responses should consider several responsible options.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 4 scenario assessment",
+    "questions": [
+      {
+        "id": "m4-assessment-q1",
+        "question": "Eight people work 40 hours and four work 20 hours weekly. What are headcount and FTE at a 40-hour standard?",
+        "options": [
+          "12 people and 10 FTE",
+          "10 people and 12 FTE",
+          "12 people and 12 FTE",
+          "8 people and 10 FTE"
+        ],
+        "answerIndex": 0,
+        "explanation": "Headcount is 12; total 400 hours divided by 40 is 10 FTE.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q2",
+        "question": "A department opens at 30, has 4 joins, 3 exits, 2 transfers in and 1 transfer out. What is closing headcount?",
+        "options": [
+          "36",
+          "32",
+          "34",
+          "30"
+        ],
+        "answerIndex": 1,
+        "explanation": "30 + 4 − 3 + 2 − 1 = 32.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q3",
+        "question": "Opening and closing headcounts are 80 and 100; there are 9 exits. What is period turnover using their simple average?",
+        "options": [
+          "11.25%",
+          "90%",
+          "10%",
+          "9%"
+        ],
+        "answerIndex": 2,
+        "explanation": "Average headcount is 90; 9/90 = 10%.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q4",
+        "question": "Of the original 80 employees, 74 remain at period end while new hires increased total headcount. What is opening-cohort retention?",
+        "options": [
+          "90%",
+          "74%",
+          "82.2%",
+          "92.5%"
+        ],
+        "answerIndex": 3,
+        "explanation": "74/80 = 92.5%; new hires do not enter that cohort denominator.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q5",
+        "question": "Scheduled hours are 3,000 and included absence is 90 hours. What is the rate?",
+        "options": [
+          "3%",
+          "9%",
+          "30%",
+          "0.3%"
+        ],
+        "answerIndex": 0,
+        "explanation": "90/3000 × 100 = 3%.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q6",
+        "question": "Why can one minus turnover differ from retention?",
+        "options": [
+          "New hires never matter",
+          "The populations and denominators can differ",
+          "All rates must sum to 100%",
+          "Retention is always a count not a rate"
+        ],
+        "answerIndex": 1,
+        "explanation": "Opening-cohort retention and period turnover are distinct definitions.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q7",
+        "question": "Demand is 12,000 cases at 1,000 cases per FTE. Supply is 10 plus 2 joins minus 1 departure. What is the gap?",
+        "options": [
+          "11 FTE",
+          "12 FTE",
+          "1 FTE",
+          "2 FTE"
+        ],
+        "answerIndex": 2,
+        "explanation": "Demand 12; supply 11; gap 1.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q8",
+        "question": "A hiring plan counts every accepted offer as immediately productive FTE. What needs correction?",
+        "options": [
+          "Only the chart title",
+          "The fact that FTE equals salary",
+          "Nothing because acceptance guarantees output",
+          "Joining uncertainty, start dates and onboarding availability"
+        ],
+        "answerIndex": 3,
+        "explanation": "Capacity arrives later and may differ from accepted offers.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q9",
+        "question": "A monthly turnover rate is volatile in a small team. What should an analyst avoid?",
+        "options": [
+          "Mechanically annualising it as a reliable forecast",
+          "Showing the count and period",
+          "Using a longer comparable window",
+          "Discussing uncertainty"
+        ],
+        "answerIndex": 0,
+        "explanation": "Short-period volatility makes naive annual projections misleading.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m4-assessment-q10",
+        "question": "The capacity model assumes all paid hours are case-processing hours. What should be reviewed?",
+        "options": [
+          "Whether to omit all non-case work",
+          "Breaks, training, support work and sustainable quality constraints",
+          "Only the currency format",
+          "Only headcount names"
+        ],
+        "answerIndex": 1,
+        "explanation": "Productive capacity is not identical to total paid hours.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "moduleId": "m8",
+  "questions": {
+    "m8-t1": [
+      {
+        "id": "m8-t1-q1",
+        "question": "How should a classroom project be described in a portfolio?",
+        "options": [
+          "As a paid client engagement",
+          "As a guaranteed business success",
+          "Without any context",
+          "Clearly as a simulation with evidenced contributions"
+        ],
+        "answerIndex": 3,
+        "explanation": "Honest scope and evidence make simulated work credible.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q2",
+        "question": "What should an evidence index connect?",
+        "options": [
+          "Claims to specific artefacts and versions",
+          "Only filenames to colours",
+          "Only attendance to grades",
+          "Every screenshot to a social post"
+        ],
+        "answerIndex": 0,
+        "explanation": "Traceability allows a reviewer to verify the story.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q3",
+        "question": "Which evidence is especially relevant to a PMO Analyst role?",
+        "options": [
+          "A claim of authority without records",
+          "A reconciled status and forecast pack",
+          "An unsupported motivational quote",
+          "A copied vendor logo"
+        ],
+        "answerIndex": 1,
+        "explanation": "The role involves consistent reporting and decision support.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q4",
+        "question": "Why show a corrected mistake?",
+        "options": [
+          "It replaces all delivery evidence",
+          "It removes the need for verification",
+          "It demonstrates judgement and learning",
+          "It proves the project must fail"
+        ],
+        "answerIndex": 2,
+        "explanation": "Professional learning includes identifying and fixing errors.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q5",
+        "question": "What is essential when using shared group artefacts?",
+        "options": [
+          "Claim sole authorship",
+          "Remove all team context",
+          "Invent a job title",
+          "State your personal contribution"
+        ],
+        "answerIndex": 3,
+        "explanation": "Attribution distinguishes individual capability from collective output.",
+        "difficulty": "core"
+      }
+    ],
+    "m8-t2": [
+      {
+        "id": "m8-t2-q1",
+        "question": "How should a hypothetical interview scenario be framed?",
+        "options": [
+          "As actions you would take",
+          "As a real achievement you already delivered",
+          "As confidential client history",
+          "As proof of guaranteed results"
+        ],
+        "answerIndex": 0,
+        "explanation": "Do not turn hypothetical reasoning into invented experience.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q2",
+        "question": "A sponsor pressures you to make an amber report green. What is appropriate?",
+        "options": [
+          "Promise the delay cannot matter",
+          "Apply the agreed threshold and explain evidence",
+          "Change the colour and remove the risk",
+          "Delete the forecast"
+        ],
+        "answerIndex": 1,
+        "explanation": "Truthful reporting supports decisions even under pressure.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q3",
+        "question": "What should a first-week plan prioritise?",
+        "options": [
+          "Approving all budgets",
+          "Comparing staff through ticket counts",
+          "Understanding workflows, stakeholders and authority",
+          "Replacing every process immediately"
+        ],
+        "answerIndex": 2,
+        "explanation": "Learning the context precedes responsible intervention.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q4",
+        "question": "What makes an interview action statement strong?",
+        "options": [
+          "A long list of buzzwords",
+          "A claim that everything was easy",
+          "Only the project title",
+          "Specific steps linked to evidence and responsibility"
+        ],
+        "answerIndex": 3,
+        "explanation": "Specificity helps the interviewer assess judgement.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q5",
+        "question": "What should be clarified before a supplier recovery promise?",
+        "options": [
+          "Impact, feasibility and decision authority",
+          "Only the supplier’s logo",
+          "Only the date of the interview",
+          "The colour of the board"
+        ],
+        "answerIndex": 0,
+        "explanation": "Promises need a basis and an authorised owner.",
+        "difficulty": "core"
+      }
+    ],
+    "m8-t3": [
+      {
+        "id": "m8-t3-q1",
+        "question": "What is the strongest presentation structure here?",
+        "options": [
+          "Only future ambitions",
+          "Problem, plan, disruption decision, evidence and learning",
+          "Every task in alphabetical order",
+          "Only tool screenshots"
+        ],
+        "answerIndex": 1,
+        "explanation": "The narrative should demonstrate delivery judgement.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q2",
+        "question": "What should you do when evidence does not answer a jury question?",
+        "options": [
+          "Hide the source file",
+          "Claim the question is irrelevant automatically",
+          "State the limit and propose a way to investigate",
+          "Invent a confident answer"
+        ],
+        "answerIndex": 2,
+        "explanation": "Honesty about limitations is part of professional competence.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q3",
+        "question": "Does course completion confer a PMI or Scrum credential?",
+        "options": [
+          "Yes, automatically",
+          "Only if the slides look professional",
+          "Only if the capstone uses Jira",
+          "No; those have separate requirements"
+        ],
+        "answerIndex": 3,
+        "explanation": "The course does not claim external certification or affiliation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q4",
+        "question": "What is a useful development action?",
+        "options": [
+          "Reconcile three forecast cases and get a peer review next week",
+          "Become world-class immediately",
+          "Watch videos without practice or review",
+          "Change all portfolio colours"
+        ],
+        "answerIndex": 0,
+        "explanation": "Specific practice and evidence make development measurable.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q5",
+        "question": "A reviewer finds an incorrect forecast formula. What is the best response?",
+        "options": [
+          "Blame the spreadsheet automatically",
+          "Recompute transparently and record the correction",
+          "Keep the old number for consistency",
+          "Remove the calculation from view"
+        ],
+        "answerIndex": 1,
+        "explanation": "Professional correction preserves the evidence trail.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 8 scenario assessment",
+    "questions": [
+      {
+        "id": "m8-assessment-q1",
+        "question": "A portfolio claims real savings from a wholly synthetic case. What correction is necessary?",
+        "options": [
+          "Label the simulation and distinguish forecast from observed results",
+          "Increase the claimed saving",
+          "Remove only the case title",
+          "Add a vendor logo"
+        ],
+        "answerIndex": 0,
+        "explanation": "Honest provenance is essential for credible evidence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q2",
+        "question": "An interviewer asks about an experience the learner has not had. What is appropriate?",
+        "options": [
+          "Claim confidentiality to hide invention",
+          "State that and explain a reasoned hypothetical approach",
+          "Invent a client engagement",
+          "Reuse a peer’s story as personal history"
+        ],
+        "answerIndex": 1,
+        "explanation": "Hypothetical reasoning can demonstrate skill without fabrication.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q3",
+        "question": "A jury finds AC ₹14,000 and latest ETC ₹17,000, but the slide says EAC ₹28,000. What should the learner do?",
+        "options": [
+          "Add the baseline to both figures",
+          "Remove all cost evidence",
+          "Recompute EAC as ₹31,000 and document the correction",
+          "Keep ₹28,000 because it looks better"
+        ],
+        "answerIndex": 2,
+        "explanation": "Bottom-up EAC uses current actual plus current remaining estimate.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q4",
+        "question": "A team portfolio has no individual contribution statement. What evidence should be added?",
+        "options": [
+          "A claim of sole leadership",
+          "Only all members’ photos",
+          "A new fictional job title",
+          "The learner’s specific actions and shared-output attribution"
+        ],
+        "answerIndex": 3,
+        "explanation": "Assessment and hiring need clear attribution.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q5",
+        "question": "A capstone schedule and status report use different baseline versions. What should happen before presentation?",
+        "options": [
+          "Reconcile them and explain approved changes",
+          "Choose whichever looks earlier",
+          "Hide version identifiers",
+          "Present both as the same baseline"
+        ],
+        "answerIndex": 0,
+        "explanation": "A coherent delivery story requires version traceability.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q6",
+        "question": "A learner lists this course as an official Scrum or PMI credential. What should be changed?",
+        "options": [
+          "Claim Jira vendor certification too",
+          "Use the actual course completion title and remove the external claim",
+          "Keep it because Scrum was taught",
+          "Replace the title with a more senior credential"
+        ],
+        "answerIndex": 1,
+        "explanation": "Studying a framework does not confer its external credentials.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q7",
+        "question": "The first-week workplace plan promises to replace all processes immediately. What is a better plan?",
+        "options": [
+          "Begin by approving budgets",
+          "Rank staff using raw ticket counts",
+          "Learn workflow and authority, then propose bounded evidence-led improvements",
+          "Promise even faster changes"
+        ],
+        "answerIndex": 2,
+        "explanation": "Entry-level contribution starts with context and responsible scope.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q8",
+        "question": "A five-minute presentation contains thirty unreadable screenshots. What should be prioritised?",
+        "options": [
+          "More animations",
+          "Every task description",
+          "Removing all limitations",
+          "A concise decision narrative with evidence references"
+        ],
+        "answerIndex": 3,
+        "explanation": "The jury needs understandable reasoning, not an image dump.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q9",
+        "question": "A development plan says only “improve planning”. What makes it actionable?",
+        "options": [
+          "A practice task, evidence of success and a review date",
+          "A longer motivational slogan",
+          "A promise of expertise tomorrow",
+          "A list of paid subscriptions"
+        ],
+        "answerIndex": 0,
+        "explanation": "Specific practice creates a reviewable improvement loop.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q10",
+        "question": "The jury asks for a conclusion unsupported by the dataset. What is the professional response?",
+        "options": [
+          "Pretend the source is unavailable",
+          "State the limit and propose the evidence needed",
+          "Invent a number confidently",
+          "Blame the reviewer"
+        ],
+        "answerIndex": 1,
+        "explanation": "Acknowledging uncertainty is preferable to fabricating evidence.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

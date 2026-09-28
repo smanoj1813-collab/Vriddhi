@@ -1,0 +1,341 @@
+{
+  "moduleId": "m2",
+  "questions": {
+    "m2-t1": [
+      {
+        "id": "m2-t1-q1",
+        "question": "What is the grain of an application table?",
+        "options": [
+          "One row per distinct person automatically",
+          "One row per application under the defined structure",
+          "One row per company always",
+          "One row per chart"
+        ],
+        "answerIndex": 1,
+        "explanation": "A person may submit multiple applications.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q2",
+        "question": "Why retain a raw copy?",
+        "options": [
+          "To avoid documenting changes",
+          "To publish confidential data twice",
+          "To preserve provenance and reproduce cleaning",
+          "To double the reported headcount"
+        ],
+        "answerIndex": 2,
+        "explanation": "Raw data is the reference for an auditable transformation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q3",
+        "question": "What is the usable count after 52 rows, two exact repeats and one quarantined invalid record?",
+        "options": [
+          "50",
+          "51",
+          "52",
+          "49"
+        ],
+        "answerIndex": 3,
+        "explanation": "52 − 2 − 1 = 49 usable rows for that analysis.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q4",
+        "question": "How should an impossible acceptance date be handled?",
+        "options": [
+          "Investigate or quarantine with a documented rule",
+          "Invent a convenient replacement",
+          "Ignore chronology",
+          "Delete the whole course dataset"
+        ],
+        "answerIndex": 0,
+        "explanation": "Uncertainty should be visible rather than fabricated away.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t1-q5",
+        "question": "Why not replace every blank with zero?",
+        "options": [
+          "Every blank means an employee left",
+          "Missing, zero and not applicable have different meanings",
+          "Zero is always a text value",
+          "Blanks never affect analysis"
+        ],
+        "answerIndex": 1,
+        "explanation": "Treating unknown as zero can distort metrics.",
+        "difficulty": "core"
+      }
+    ],
+    "m2-t2": [
+      {
+        "id": "m2-t2-q1",
+        "question": "What is acceptance for 9 accepted offers out of 12 issued?",
+        "options": [
+          "66.7%",
+          "50%",
+          "75%",
+          "9%"
+        ],
+        "answerIndex": 2,
+        "explanation": "9/12 × 100 = 75%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q2",
+        "question": "How should a group with zero issued offers be shown?",
+        "options": [
+          "0% acceptance without qualification",
+          "100% acceptance",
+          "A fabricated average",
+          "Not applicable with denominator zero"
+        ],
+        "answerIndex": 3,
+        "explanation": "The rate has no eligible denominator.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q3",
+        "question": "What is accepted-to-joined conversion for six joins from nine acceptances?",
+        "options": [
+          "About 66.7%",
+          "50%",
+          "75%",
+          "150%"
+        ],
+        "answerIndex": 0,
+        "explanation": "The denominator is acceptances, not issued offers.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q4",
+        "question": "What should an exact-match lookup audit include?",
+        "options": [
+          "A guarantee all names are correct",
+          "Unmatched and duplicate keys",
+          "Only chart colours",
+          "Only the file size"
+        ],
+        "answerIndex": 1,
+        "explanation": "Key problems can create missing or incorrect joins.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t2-q5",
+        "question": "Why reconcile grouped counts to a total?",
+        "options": [
+          "To guarantee recruitment quality",
+          "To avoid documenting categories",
+          "To detect missing, duplicated or differently filtered records",
+          "To prove causation"
+        ],
+        "answerIndex": 2,
+        "explanation": "Reconciliation checks whether the summary represents its source population.",
+        "difficulty": "core"
+      }
+    ],
+    "m2-t3": [
+      {
+        "id": "m2-t3-q1",
+        "question": "What is the median of 10, 12, 14, 16 and 60?",
+        "options": [
+          "22.4 days",
+          "60 days",
+          "13 days",
+          "14 days"
+        ],
+        "answerIndex": 3,
+        "explanation": "The middle ordered observation is 14.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q2",
+        "question": "What is the mean of those five values?",
+        "options": [
+          "22.4 days",
+          "14 days",
+          "13 days",
+          "20 days"
+        ],
+        "answerIndex": 0,
+        "explanation": "112 divided by 5 equals 22.4.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q3",
+        "question": "What should happen before removing the 60-day observation?",
+        "options": [
+          "Hide it from reviewers",
+          "Check validity and the pre-defined scope",
+          "Delete it because it raises the mean",
+          "Replace it with the median automatically"
+        ],
+        "answerIndex": 1,
+        "explanation": "An extreme observation may be real and important.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q4",
+        "question": "What can change an overall average without worsening each role category?",
+        "options": [
+          "Only recruiter misconduct",
+          "A change in chart colour",
+          "A shift toward harder-to-fill role types",
+          "Only a formula error"
+        ],
+        "answerIndex": 2,
+        "explanation": "Composition effects can change aggregated measures.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m2-t3-q5",
+        "question": "Which wording is an observation rather than an unsupported cause?",
+        "options": [
+          "The recruiter caused all delay",
+          "The source guarantees poor hires",
+          "The manager is inefficient",
+          "Median fill time was fourteen days in five cases"
+        ],
+        "answerIndex": 3,
+        "explanation": "Separate measured results from explanations needing evidence.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 2 scenario assessment",
+    "questions": [
+      {
+        "id": "m2-assessment-q1",
+        "question": "A candidate applies to two vacancies. Deduplication by candidate ID would do what to an application-level table?",
+        "options": [
+          "Create another candidate",
+          "Guarantee correct workload counts",
+          "Potentially remove a valid application",
+          "Always improve accuracy"
+        ],
+        "answerIndex": 2,
+        "explanation": "The deduplication key must match the grain.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q2",
+        "question": "A source has 65 rows, three exact repeated applications and two invalid date records. How many usable records remain after the stated exclusions?",
+        "options": [
+          "62",
+          "63",
+          "65",
+          "60"
+        ],
+        "answerIndex": 3,
+        "explanation": "65 − 3 − 2 = 60; report exclusions and distinct-person counts separately.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q3",
+        "question": "An acceptance date precedes its offer date. What is the responsible cleaning action?",
+        "options": [
+          "Quarantine or seek correction and log the decision",
+          "Replace it with a guessed date",
+          "Ignore it because the chart loads",
+          "Delete all records from that source"
+        ],
+        "answerIndex": 0,
+        "explanation": "Impossible sequences should not be repaired by invention.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q4",
+        "question": "A department has no offers. A formula returns a division error. What should the dashboard show?",
+        "options": [
+          "The organisation average as if observed",
+          "Not applicable with n=0 after explicit denominator handling",
+          "0% without explanation",
+          "100%"
+        ],
+        "answerIndex": 1,
+        "explanation": "No eligible denominator is not the same as a zero rate.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q5",
+        "question": "A lookup returns two department labels for one key. What should be checked?",
+        "options": [
+          "Whether the workbook is colourful",
+          "Whether all errors can be replaced with zero",
+          "Reference-key uniqueness and the join rule",
+          "Only the dashboard font"
+        ],
+        "answerIndex": 2,
+        "explanation": "Ambiguous reference keys can duplicate or misclassify records.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q6",
+        "question": "Durations are 8, 10, 12, 14 and 56 days. What are mean and median?",
+        "options": [
+          "Mean 12; median 20",
+          "Both 20",
+          "Mean 14; median 56",
+          "Mean 20 days; median 12 days"
+        ],
+        "answerIndex": 3,
+        "explanation": "The sum is 100, divided by five; the middle ordered value is 12.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q7",
+        "question": "A genuine hard-to-fill role is removed solely to improve the mean. What is wrong?",
+        "options": [
+          "The population is changed selectively and the difficulty is hidden",
+          "All outliers must always be removed",
+          "The median cannot be computed",
+          "Only the chart type is affected"
+        ],
+        "answerIndex": 0,
+        "explanation": "Valid unusual cases require explanation, not cosmetic deletion.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q8",
+        "question": "Grouped source counts total 97 while the filtered detail has 100 applications. What should be investigated?",
+        "options": [
+          "Whether to overwrite the total",
+          "Unknown categories, filtering and missing or duplicated group membership",
+          "Only whether 97 looks reasonable",
+          "Whether three candidates should be invented"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reconciliation detects coverage and transformation problems.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q9",
+        "question": "A summary has 8 joins from 10 accepted offers and 20 issued offers. What is accepted-to-joined conversion?",
+        "options": [
+          "50%",
+          "8%",
+          "80%",
+          "40%"
+        ],
+        "answerIndex": 2,
+        "explanation": "The named denominator is acceptances, not all issued offers.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m2-assessment-q10",
+        "question": "Overall fill time rises while each role category improves. What is one plausible explanation?",
+        "options": [
+          "Improvement is mathematically impossible",
+          "All records must be fraudulent",
+          "The median is always wrong",
+          "A shift toward more hard-to-fill roles"
+        ],
+        "answerIndex": 3,
+        "explanation": "Composition changes can alter the overall measure.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

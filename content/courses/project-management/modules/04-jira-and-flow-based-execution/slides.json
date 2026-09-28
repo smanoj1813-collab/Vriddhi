@@ -1,0 +1,200 @@
+{
+  "moduleId": "m4",
+  "topics": {
+    "m4-t1": [
+      {
+        "id": "m4-t1-s1",
+        "title": "Represent work at useful levels",
+        "summary": "Jira configurations may use terms such as project or space, and issue or work item; permissions and templates vary.",
+        "explanation": "Jira configurations may use terms such as project or space, and issue or work item; permissions and templates vary. The concepts are stable: larger outcomes can group smaller stories or tasks, and subtasks can organise implementation work. An epic is not proof of strategic value, and a subtask is not automatically a usable deliverable. Choose a simple hierarchy that supports navigation without creating unnecessary administration.",
+        "example": "A project coordinator opens a Jira sandbox and sees different names for work items than a colleague’s site. Rather than memorising clicks, the team must represent the same project clearly: a larger outcome, small testable items, ownership, status and acceptance evidence.",
+        "takeaway": "Create a coherent issue hierarchy and workflow using Jira or an equivalent offline board.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw a hierarchy containing one epic, three stories or tasks and two useful subtasks."
+            },
+            {
+              "title": "Decision",
+              "detail": "Export or capture a redacted board and include a permission/access note."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t1-s2",
+        "title": "Workflow states need entry and exit rules",
+        "summary": "A board column is meaningful only when people agree what it means.",
+        "explanation": "A board column is meaningful only when people agree what it means. “In review” might require an attached test record and a named reviewer; “Done” might require accepted evidence and no unresolved blocking defects. Separate blocked information from completion status so a blocked task does not disappear. Jira workflow configuration does not create team agreement by itself. Test the rules with a small case before expanding the board.",
+        "example": "A project coordinator opens a Jira sandbox and sees different names for work items than a colleague’s site. Rather than memorising clicks, the team must represent the same project clearly: a larger outcome, small testable items, ownership, status and acceptance evidence.",
+        "takeaway": "Create a coherent issue hierarchy and workflow using Jira or an equivalent offline board.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw a hierarchy containing one epic, three stories or tasks and two useful subtasks."
+            },
+            {
+              "title": "Decision",
+              "detail": "Export or capture a redacted board and include a permission/access note."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t1-s3",
+        "title": "Permissions and traceability matter",
+        "summary": "Use a sandbox with fictional data.",
+        "explanation": "Use a sandbox with fictional data. Do not put passwords, personal student information or confidential contracts in descriptions, comments or attachments. Record a clear owner, acceptance criteria, dependency links and evidence location. Screen captures can support a portfolio only after redaction. If Jira access is unavailable, use a spreadsheet with the same columns and transitions; the learning objective is a reviewable work system, not possession of a paid account.",
+        "example": "Create an epic “placement registration pilot” and three items: create a booking, cancel a booking and view remaining capacity. A task cannot move from Review to Done until a reviewer has checked the acceptance examples. An offline board can store ID, parent, title, owner role, status, blocker, due date and evidence link. It demonstrates the same control logic even without automated workflow enforcement.",
+        "takeaway": "Create a coherent issue hierarchy and workflow using Jira or an equivalent offline board.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw a hierarchy containing one epic, three stories or tasks and two useful subtasks."
+            },
+            {
+              "title": "Decision",
+              "detail": "Export or capture a redacted board and include a permission/access note."
+            }
+          ]
+        }
+      }
+    ],
+    "m4-t2": [
+      {
+        "id": "m4-t2-s1",
+        "title": "Query the decision, not the whole database",
+        "summary": "Start with a question: which active pilot items are overdue, which are unassigned, and which are waiting for review? Jira Query Language can combine project, status, due date and assignee fields, though field availability and names depend on configuration.",
+        "explanation": "Start with a question: which active pilot items are overdue, which are unassigned, and which are waiting for review? Jira Query Language can combine project, status, due date and assignee fields, though field availability and names depend on configuration. Save each filter with its purpose, owner and expected scope. Test it against a few known records before relying on a dashboard.",
+        "example": "The coordinator shares a dashboard with zero overdue items. It looks reassuring until someone notices the filter excludes unassigned work and several records have no due date. A correct-looking chart can conceal a faulty selection rule.",
+        "takeaway": "Build reviewable Jira queries and dashboards without confusing missing data with healthy status.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create six fictional issues with known due dates, owners and statuses."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a caveat explaining permissions and missing fields so a zero count is not overclaimed."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t2-s2",
+        "title": "Missing fields need separate checks",
+        "summary": "An item without a due date will not necessarily appear in a due-date comparison.",
+        "explanation": "An item without a due date will not necessarily appear in a due-date comparison. Empty owner, absent acceptance criteria and stale status can be quality defects even when no deadline is technically missed. Create complementary data-hygiene checks rather than pretending one filter answers every question. Define who corrects records and how often. A query returning zero can mean no matching work, incorrect logic, insufficient permissions or incomplete data.",
+        "example": "The coordinator shares a dashboard with zero overdue items. It looks reassuring until someone notices the filter excludes unassigned work and several records have no due date. A correct-looking chart can conceal a faulty selection rule.",
+        "takeaway": "Build reviewable Jira queries and dashboards without confusing missing data with healthy status.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create six fictional issues with known due dates, owners and statuses."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a caveat explaining permissions and missing fields so a zero count is not overclaimed."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t2-s3",
+        "title": "Dashboards support a conversation",
+        "summary": "A useful dashboard pairs a small set of measures with decisions and named owners.",
+        "explanation": "A useful dashboard pairs a small set of measures with decisions and named owners. Show open blockers, ageing review work and milestone risk, not only total cards completed. Access permissions affect what each viewer can see; verify the intended audience’s view. Do not publish individual rankings from raw ticket counts. One complex incident and one minor text change are not equivalent units of effort or value.",
+        "example": "A conceptual JQL filter is `project = PILOT AND statusCategory != Done AND due < now() ORDER BY due ASC`. Add separate checks such as `project = PILOT AND assignee IS EMPTY` and `project = PILOT AND due IS EMPTY`. Verify the project key and supported fields on the local site. A six-item fixture with two overdue, one undated and one unassigned item should produce predictable sets before publication.",
+        "takeaway": "Build reviewable Jira queries and dashboards without confusing missing data with healthy status.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create six fictional issues with known due dates, owners and statuses."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a caveat explaining permissions and missing fields so a zero count is not overclaimed."
+            }
+          ]
+        }
+      }
+    ],
+    "m4-t3": [
+      {
+        "id": "m4-t3-s1",
+        "title": "Visualise the actual system",
+        "summary": "Kanban uses a visible workflow, explicit policies and control of work in progress to improve flow.",
+        "explanation": "Kanban uses a visible workflow, explicit policies and control of work in progress to improve flow. Represent queues and blocked work instead of hiding them outside the board. A WIP limit is a signal to collaborate and remove impediments; it is not a reason to delete cards or mislabel active work. Start where the work is, then inspect the system. A board without shared policies is only a visual list.",
+        "example": "Five items wait in review while developers start six more. The board shows activity everywhere, but nothing reaches learners. The coordinator must help the team finish work rather than celebrate how much it has started.",
+        "takeaway": "Use work-in-progress limits, ageing and cycle time to diagnose a delivery bottleneck.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Sketch a board with Ready, Doing, Review and Done, including blocked markers."
+            },
+            {
+              "title": "Decision",
+              "detail": "Design a two-week experiment with baseline, outcome measure, owner and rollback condition."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t3-s2",
+        "title": "Distinguish the flow measures",
+        "summary": "Throughput is the number of items completed per period.",
+        "explanation": "Throughput is the number of items completed per period. Cycle time is elapsed time from a defined work-start point to completion; lead time may start earlier at request arrival. State boundaries and calendar conventions. Work-item age describes still-open work and can reveal trouble before completion averages do. Report distributions or percentiles where useful: a single average can hide long delays. Do not compare unlike item types without context.",
+        "example": "Five items wait in review while developers start six more. The board shows activity everywhere, but nothing reaches learners. The coordinator must help the team finish work rather than celebrate how much it has started.",
+        "takeaway": "Use work-in-progress limits, ageing and cycle time to diagnose a delivery bottleneck.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Sketch a board with Ready, Doing, Review and Done, including blocked markers."
+            },
+            {
+              "title": "Decision",
+              "detail": "Design a two-week experiment with baseline, outcome measure, owner and rollback condition."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m4-t3-s3",
+        "title": "Use Little’s Law carefully",
+        "summary": "Under stable conditions and consistent system boundaries, average WIP equals average throughput multiplied by average cycle time.",
+        "explanation": "Under stable conditions and consistent system boundaries, average WIP equals average throughput multiplied by average cycle time. It is a relationship about averages, not a guarantee for the next item. A changing backlog, inconsistent item definitions or a short observation period can make naive forecasts misleading. Reducing unnecessary WIP can expose constraints and shorten waiting, but investigate the actual bottleneck rather than merely imposing a smaller number.",
+        "example": "With average WIP of 12 items and average throughput of 4 items per week in a stable system, implied average cycle time is 12/4 = 3 weeks. This does not mean every item takes exactly three weeks. If review is the queue, trial a review WIP limit of three and arrange a daily review slot; compare ageing and throughput before and after without claiming causality from one week alone.",
+        "takeaway": "Use work-in-progress limits, ageing and cycle time to diagnose a delivery bottleneck.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Sketch a board with Ready, Doing, Review and Done, including blocked markers."
+            },
+            {
+              "title": "Decision",
+              "detail": "Design a two-week experiment with baseline, outcome measure, owner and rollback condition."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

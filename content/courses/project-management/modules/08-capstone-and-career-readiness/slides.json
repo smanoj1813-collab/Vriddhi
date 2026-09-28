@@ -1,0 +1,200 @@
+{
+  "moduleId": "m8",
+  "topics": {
+    "m8-t1": [
+      {
+        "id": "m8-t1-s1",
+        "title": "Tell a verifiable delivery story",
+        "summary": "Use problem, constraints, actions, evidence, result and learning.",
+        "explanation": "Use problem, constraints, actions, evidence, result and learning. Explain the initial scope and any approved changes. Distinguish a delivered output from a measured outcome and a forecast benefit. Label the course case as a simulation. Employers can value simulated work when it demonstrates sound reasoning; inventing a client or business result undermines credibility. Keep the story short enough to discuss in an interview.",
+        "example": "A learner has a charter, Jira screenshots and a status report, but the dates contradict one another. A recruiter cannot tell what the learner personally did or whether the project was real. A coherent case study is more persuasive than a large collection of disconnected files.",
+        "takeaway": "Assemble a portfolio that traces a decision from problem through evidence to outcome without overstating experience.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an evidence index linking five claims to the correct artefact versions."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a reviewer to challenge one claim and improve its evidence reference."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t1-s2",
+        "title": "Trace claims to artefacts",
+        "summary": "Give each key claim an evidence reference, version and date.",
+        "explanation": "Give each key claim an evidence reference, version and date. A timeline should reconcile charter approval, baseline, change decisions, testing and handover. Screenshots are illustrations, not substitutes for a readable explanation or editable calculation. Remove names, account identifiers and confidential content. If working in a group, state your contribution and identify shared outputs without claiming sole authorship.",
+        "example": "A learner has a charter, Jira screenshots and a status report, but the dates contradict one another. A recruiter cannot tell what the learner personally did or whether the project was real. A coherent case study is more persuasive than a large collection of disconnected files.",
+        "takeaway": "Assemble a portfolio that traces a decision from problem through evidence to outcome without overstating experience.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an evidence index linking five claims to the correct artefact versions."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a reviewer to challenge one claim and improve its evidence reference."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t1-s3",
+        "title": "Show correction and judgement",
+        "summary": "A useful portfolio includes a mistake discovered, how it was corrected and what evidence changed the decision.",
+        "explanation": "A useful portfolio includes a mistake discovered, how it was corrected and what evidence changed the decision. It can include an option rejected on cost or risk grounds. Do not edit the history to make the project appear frictionless. Select artefacts relevant to the role: coordination evidence for a Project Coordinator, reconciled reporting for a PMO Analyst, and a sustainable SOP for an Operations Associate.",
+        "example": "A defensible bullet is “Built a synthetic six-week pilot plan with eight work packages, a dependency network and a risk register; revised the forecast after a two-day test delay.” An indefensible version is “Managed a successful college transformation saving ₹5 lakh” when no live project or measured savings exist. Specific, bounded evidence is stronger than invented scale.",
+        "takeaway": "Assemble a portfolio that traces a decision from problem through evidence to outcome without overstating experience.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create an evidence index linking five claims to the correct artefact versions."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a reviewer to challenge one claim and improve its evidence reference."
+            }
+          ]
+        }
+      }
+    ],
+    "m8-t2": [
+      {
+        "id": "m8-t2-s1",
+        "title": "Use structure without scripting away the facts",
+        "summary": "STAR means Situation, Task, Action and Result; add a reflection when useful.",
+        "explanation": "STAR means Situation, Task, Action and Result; add a reflection when useful. Keep the situation brief, describe your responsibility and make actions specific. For a hypothetical case, say what you would do rather than claiming it happened. Do not invent metrics to make a result sound impressive. Explain how you would verify the impact and who has authority for the next decision.",
+        "example": "An interviewer asks what you would do if a supplier missed a date and the sponsor demanded a green report. A memorised definition of project management will not answer the question. The interviewer is testing judgement, communication and integrity.",
+        "takeaway": "Answer coordination, PMO and operations scenarios using evidence, trade-offs and appropriate authority.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose one job description for each target role or use the role summaries here."
+            },
+            {
+              "title": "Decision",
+              "detail": "Draft a first-week plan with three discovery questions and two low-risk contributions."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t2-s2",
+        "title": "Diagnose before proposing a solution",
+        "summary": "Clarify the deadline, dependency, impact, available alternatives and current approval rules.",
+        "explanation": "Clarify the deadline, dependency, impact, available alternatives and current approval rules. Separate known facts from estimates. Present options with consequences and a recommendation. For a delayed vendor, you might check the recovery plan, evaluate a fallback and escalate a milestone risk. Do not promise a new date or approve extra spend without evidence and authority. Honest status is more useful than a demanded colour.",
+        "example": "An interviewer asks what you would do if a supplier missed a date and the sponsor demanded a green report. A memorised definition of project management will not answer the question. The interviewer is testing judgement, communication and integrity.",
+        "takeaway": "Answer coordination, PMO and operations scenarios using evidence, trade-offs and appropriate authority.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose one job description for each target role or use the role summaries here."
+            },
+            {
+              "title": "Decision",
+              "detail": "Draft a first-week plan with three discovery questions and two low-risk contributions."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t2-s3",
+        "title": "Connect skills to entry-level responsibilities",
+        "summary": "Project Coordinators maintain plans, actions and communication; PMO Analysts reconcile reporting and support governance; Operations Associates run and improve repeatable services.",
+        "explanation": "Project Coordinators maintain plans, actions and communication; PMO Analysts reconcile reporting and support governance; Operations Associates run and improve repeatable services. Titles vary by employer, so read the actual job description. A first-week plan should include learning the workflow, confirming stakeholders, checking data definitions and understanding approval boundaries. It should not promise to redesign the organisation before listening.",
+        "example": "A strong answer is “I would confirm the supplier’s latest committed date, identify the affected milestone and compare recovery options. I would apply the agreed RAG threshold, not change it under pressure, and escalate the decision required with evidence.” It recognises urgency while preserving truthful reporting. A weak answer is “I would mark it green and work harder” because it hides the decision risk.",
+        "takeaway": "Answer coordination, PMO and operations scenarios using evidence, trade-offs and appropriate authority.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Choose one job description for each target role or use the role summaries here."
+            },
+            {
+              "title": "Decision",
+              "detail": "Draft a first-week plan with three discovery questions and two low-risk contributions."
+            }
+          ]
+        }
+      }
+    ],
+    "m8-t3": [
+      {
+        "id": "m8-t3-s1",
+        "title": "Build a decision narrative",
+        "summary": "Use five slides or sections: problem and boundaries, plan and delivery approach, a disruption and decision, evidence of acceptance and handover, and learning.",
+        "explanation": "Use five slides or sections: problem and boundaries, plan and delivery approach, a disruption and decision, evidence of acceptance and handover, and learning. Every claim should be traceable to the portfolio. Select the details that explain judgement, not every task completed. Show the synthetic-data label prominently. A clear explanation of an unresolved limitation is better than an unsupported claim of flawless execution.",
+        "example": "The capstone jury has five minutes for your presentation and five minutes for questions. They cannot inspect every file while you speak. You need to show the decision path, reveal limitations and demonstrate that you can reproduce the key calculations.",
+        "takeaway": "Present an integrated delivery simulation and turn feedback into a focused development plan.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a five-minute presentation using the five-section narrative."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a thirty-day development plan with two tasks, evidence and review dates."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t3-s2",
+        "title": "Prepare for evidence questions",
+        "summary": "Expect to reproduce a dependency calculation, a cost forecast and a risk response.",
+        "explanation": "Expect to reproduce a dependency calculation, a cost forecast and a risk response. Know which file contains the source values and which assumption is most sensitive. If a question goes beyond the evidence, say so and describe how you would investigate. The presentation is not an external professional certification exam, and completing this course does not confer Scrum, Jira or PMI credentials.",
+        "example": "The capstone jury has five minutes for your presentation and five minutes for questions. They cannot inspect every file while you speak. You need to show the decision path, reveal limitations and demonstrate that you can reproduce the key calculations.",
+        "takeaway": "Present an integrated delivery simulation and turn feedback into a focused development plan.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a five-minute presentation using the five-section narrative."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a thirty-day development plan with two tasks, evidence and review dates."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m8-t3-s3",
+        "title": "Turn feedback into practice",
+        "summary": "Separate feedback about content accuracy, communication and tool fluency.",
+        "explanation": "Separate feedback about content accuracy, communication and tool fluency. Choose a small number of actions with practice tasks, evidence and review dates. For example, rebuild a schedule from a new case, audit a dashboard filter or facilitate a short decision meeting. Avoid a vague plan to “become an expert”. Map each action to an entry-level responsibility and seek supervised experience rather than exaggerating current competence.",
+        "example": "A reviewer finds that your EAC uses a baseline remainder instead of the latest estimate to complete. A useful response is to show the formula, acknowledge the mismatch, recompute from actual cost and the updated remaining estimate, and record the correction. A development action is to reconcile three new forecast cases and have a peer check them next week, not simply to add more animation to the slides.",
+        "takeaway": "Present an integrated delivery simulation and turn feedback into a focused development plan.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a five-minute presentation using the five-section narrative."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a thirty-day development plan with two tasks, evidence and review dates."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

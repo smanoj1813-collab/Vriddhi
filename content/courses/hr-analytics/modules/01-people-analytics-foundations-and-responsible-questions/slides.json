@@ -1,0 +1,200 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": [
+      {
+        "id": "m1-t1-s1",
+        "title": "Start with the decision and stakeholder",
+        "summary": "People analytics uses workforce evidence to inform decisions, not merely to produce attractive reports.",
+        "explanation": "People analytics uses workforce evidence to inform decisions, not merely to produce attractive reports. Identify the decision maker, available action, deadline and consequence of being wrong. HR activity counts such as interviews held can describe workload but do not prove better hiring. A useful question links a population and period to an action: which stage delays approved support-role hiring this quarter, and what process change should the recruitment lead test?",
+        "example": "The fictional Bengaluru service company Namma People Services plans to expand its support team. A manager asks for “an HR dashboard” but cannot say whether the immediate decision concerns hiring speed, staffing capacity or early attrition. An analyst must define the decision before choosing a chart.",
+        "takeaway": "Connect recruitment and workforce measures to a practical decision without treating people as scores.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write three possible HR questions and identify the decision each would support."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a limitation explaining what your proposed measure cannot conclude."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s2",
+        "title": "Separate levels of analysis",
+        "summary": "Descriptive analysis asks what happened; diagnostic analysis explores possible explanations; predictive analysis estimates what may happen; prescriptive work evaluates possible actions.",
+        "explanation": "Descriptive analysis asks what happened; diagnostic analysis explores possible explanations; predictive analysis estimates what may happen; prescriptive work evaluates possible actions. These are not a ladder that every problem must climb. A well-defined count may be more useful than a complex model. Diagnostic associations do not establish causes, and a prediction does not authorise action against an individual. Human accountability remains essential.",
+        "example": "The fictional Bengaluru service company Namma People Services plans to expand its support team. A manager asks for “an HR dashboard” but cannot say whether the immediate decision concerns hiring speed, staffing capacity or early attrition. An analyst must define the decision before choosing a chart.",
+        "takeaway": "Connect recruitment and workforce measures to a practical decision without treating people as scores.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write three possible HR questions and identify the decision each would support."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a limitation explaining what your proposed measure cannot conclude."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t1-s3",
+        "title": "Use operational definitions",
+        "summary": "Define a vacancy, applicant, employee, joiner, exit and reporting period before counting.",
+        "explanation": "Define a vacancy, applicant, employee, joiner, exit and reporting period before counting. Applicant rows may represent applications rather than unique people; one person can apply to two roles. An employee snapshot differs from a table of employment events. Write the unit of analysis and exclusions in a data dictionary. Align definitions with the decision and keep them stable during comparison.",
+        "example": "The recruitment lead receives 120 applications from 100 distinct candidates for two vacancies. Reporting “120 candidates” overstates unique people; reporting “100 applications” understates workload. Both measures can be useful if labelled correctly. A question about processing effort may use applications, while one about reach may use distinct candidates. Neither count alone establishes hiring quality.",
+        "takeaway": "Connect recruitment and workforce measures to a practical decision without treating people as scores.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write three possible HR questions and identify the decision each would support."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a limitation explaining what your proposed measure cannot conclude."
+            }
+          ]
+        }
+      }
+    ],
+    "m1-t2": [
+      {
+        "id": "m1-t2-s1",
+        "title": "Map stages and owners",
+        "summary": "The lifecycle includes workforce planning, attraction, selection, offer, joining, onboarding, development, movement and exit.",
+        "explanation": "The lifecycle includes workforce planning, attraction, selection, offer, joining, onboarding, development, movement and exit. Each stage has operational owners and records. A candidate who accepts an offer has not necessarily joined. A payroll payment is not always proof of active employment during the reporting date. Mapping the events helps reconcile systems and identify where responsibility changes.",
+        "example": "The recruitment team reports offer acceptances, payroll reports paid employees, and operations reports active staff. Their totals differ. The difference may be legitimate because the systems use different events and dates, or it may signal missing or duplicated records.",
+        "takeaway": "Map the employee lifecycle and document consistent definitions for HR reporting.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw the lifecycle with one record and responsible role at each stage."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a peer to calculate a metric from your definition without verbal clarification."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s2",
+        "title": "Build a metric dictionary before a dashboard",
+        "summary": "For each metric record its business question, numerator, denominator, time basis, inclusion rules, source, owner, refresh cadence and caveats.",
+        "explanation": "For each metric record its business question, numerator, denominator, time basis, inclusion rules, source, owner, refresh cadence and caveats. A dictionary turns an ambiguous label such as attrition into a reproducible measure. It also reveals when two departments use different conventions. Resolve differences explicitly; do not average incompatible numbers or choose the one that makes performance look better.",
+        "example": "The recruitment team reports offer acceptances, payroll reports paid employees, and operations reports active staff. Their totals differ. The difference may be legitimate because the systems use different events and dates, or it may signal missing or duplicated records.",
+        "takeaway": "Map the employee lifecycle and document consistent definitions for HR reporting.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw the lifecycle with one record and responsible role at each stage."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a peer to calculate a metric from your definition without verbal clarification."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t2-s3",
+        "title": "Snapshots and flows answer different questions",
+        "summary": "A snapshot counts a state at a point in time, such as active headcount on 30 September.",
+        "explanation": "A snapshot counts a state at a point in time, such as active headcount on 30 September. A flow counts events over an interval, such as joiners during September. Specify treatment of transfers, contractors, leave and same-day joins/exits. At organisation level, internal transfers do not change total headcount; at department level, they do. Reconciliation depends on matching boundaries and event rules.",
+        "example": "Opening headcount is 80, there are 8 joins and 5 exits, and there are no other boundary changes. Closing headcount is 80 + 8 − 5 = 83. A transfer between two departments changes their local counts but not the organisation total. If the snapshot shows 85, investigate timing, missing exits, duplicate records or population differences before publishing.",
+        "takeaway": "Map the employee lifecycle and document consistent definitions for HR reporting.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw the lifecycle with one record and responsible role at each stage."
+            },
+            {
+              "title": "Decision",
+              "detail": "Ask a peer to calculate a metric from your definition without verbal clarification."
+            }
+          ]
+        }
+      }
+    ],
+    "m1-t3": [
+      {
+        "id": "m1-t3-s1",
+        "title": "Purpose and minimum necessary data",
+        "summary": "Define why each field is needed before collecting it.",
+        "explanation": "Define why each field is needed before collecting it. Avoid personal identifiers when an aggregate or synthetic dataset answers the question. Access should be based on authorised need, with approved storage and sharing. Employment data can be sensitive even when it is not labelled as such. Never upload identifiable employee or candidate records to public AI tools or personal cloud accounts merely because analysis would be easier.",
+        "example": "A classmate offers a real candidate spreadsheet containing phone numbers, salary expectations and interview notes. It would make the exercise look realistic, but the course does not need those records. The safe choice is to use the supplied synthetic data and practise the same analytical controls.",
+        "takeaway": "Apply minimisation, access controls and cautious reporting to sensitive workforce information.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Reject the real-data offer and document why synthetic data meets the learning purpose."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write storage, retention and deletion steps with an owner and a review date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s2",
+        "title": "Pseudonymisation is not anonymity",
+        "summary": "Replacing names with IDs reduces direct exposure but can still allow re-identification through a key or combinations such as role, location and rare tenure.",
+        "explanation": "Replacing names with IDs reduces direct exposure but can still allow re-identification through a key or combinations such as role, location and rare tenure. Separate any re-identification key from analytical data and restrict access. In this course, no real key is needed because records are fictional. Suppress or combine small groups in published examples and consider whether totals or adjacent charts could reveal the suppressed value indirectly.",
+        "example": "A classmate offers a real candidate spreadsheet containing phone numbers, salary expectations and interview notes. It would make the exercise look realistic, but the course does not need those records. The safe choice is to use the supplied synthetic data and practise the same analytical controls.",
+        "takeaway": "Apply minimisation, access controls and cautious reporting to sensitive workforce information.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Reject the real-data offer and document why synthetic data meets the learning purpose."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write storage, retention and deletion steps with an owner and a review date."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m1-t3-s3",
+        "title": "Governance is broader than a consent checkbox",
+        "summary": "Use the institution’s authorised privacy, employment and information-security process to establish lawful handling, retention and rights procedures.",
+        "explanation": "Use the institution’s authorised privacy, employment and information-security process to establish lawful handling, retention and rights procedures. Do not assume employee consent alone resolves all obligations or that one classroom threshold is a legal standard. India’s data-protection requirements and implementation timelines should be checked against current official sources by the programme owner. This course teaches analytical safeguards, not legal advice.",
+        "example": "A dashboard shows a team of four employees and a single resignation. Even without names, colleagues may infer the person. For classroom publication use a minimum group-size rule of five, combine groups where meaningful, and inspect totals for back-calculation. Five is a teaching safeguard, not a universal legal threshold or a guarantee of anonymity. Restrict detailed analysis to authorised reviewers.",
+        "takeaway": "Apply minimisation, access controls and cautious reporting to sensitive workforce information.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Reject the real-data offer and document why synthetic data meets the learning purpose."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write storage, retention and deletion steps with an owner and a review date."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "moduleId": "m6",
+  "questions": {
+    "m6-t1": [
+      {
+        "id": "m6-t1-q1",
+        "question": "What should determine dashboard metric selection?",
+        "options": [
+          "The designer’s favourite colours",
+          "The audience’s decisions and actions",
+          "The maximum number of charts supported",
+          "Only the software template"
+        ],
+        "answerIndex": 1,
+        "explanation": "A dashboard is a decision aid.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q2",
+        "question": "Which chart is usually suitable for a time trend?",
+        "options": [
+          "An unlabeled icon wall",
+          "A random category order",
+          "A line chart with a clear time axis",
+          "A three-dimensional pie chart"
+        ],
+        "answerIndex": 2,
+        "explanation": "Time trends need ordered temporal encoding.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q3",
+        "question": "Why avoid colour-only status?",
+        "options": [
+          "Colour is always prohibited",
+          "Every metric must be text only",
+          "It guarantees data accuracy",
+          "Some viewers cannot distinguish it reliably"
+        ],
+        "answerIndex": 3,
+        "explanation": "Accessible labels and symbols supplement colour.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q4",
+        "question": "What context belongs beside a rate?",
+        "options": [
+          "Denominator, period and definition",
+          "Only a large percentage",
+          "Only a ranking",
+          "Only a manager’s photo"
+        ],
+        "answerIndex": 0,
+        "explanation": "Rates are ambiguous without their basis.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t1-q5",
+        "question": "What should a threshold crossing support?",
+        "options": [
+          "Deletion of the metric",
+          "A defined action or review by an owner",
+          "Automatic punishment",
+          "An unexplained red tile"
+        ],
+        "answerIndex": 1,
+        "explanation": "Thresholds should connect evidence to responsible review.",
+        "difficulty": "core"
+      }
+    ],
+    "m6-t2": [
+      {
+        "id": "m6-t2-q1",
+        "question": "What is the department rate for eight acceptances from ten offers?",
+        "options": [
+          "75%",
+          "8%",
+          "80%",
+          "20%"
+        ],
+        "answerIndex": 2,
+        "explanation": "Use the department’s compatible denominator.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q2",
+        "question": "Why test an empty filter selection?",
+        "options": [
+          "To guarantee every department has staff",
+          "To remove privacy controls",
+          "To make the file smaller",
+          "To verify zero-denominator and no-data behaviour"
+        ],
+        "answerIndex": 3,
+        "explanation": "No-data states are a common source of misleading rates.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q3",
+        "question": "Are hidden spreadsheet tabs a reliable access boundary?",
+        "options": [
+          "No; recipients may unhide or access underlying data",
+          "Yes, always",
+          "Only if coloured red",
+          "Only if the sheet name is short"
+        ],
+        "answerIndex": 0,
+        "explanation": "Share an appropriately reduced dataset, not merely hidden detail.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q4",
+        "question": "What is a useful dashboard QA method?",
+        "options": [
+          "Assume a refresh succeeded",
+          "Compare known expected values with filtered outputs",
+          "Only inspect appearance",
+          "Only count chart objects"
+        ],
+        "answerIndex": 1,
+        "explanation": "Known fixtures test calculation and filter logic.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t2-q5",
+        "question": "Why separate calculation and presentation layers?",
+        "options": [
+          "To guarantee causality",
+          "To eliminate the need for definitions",
+          "To make metrics reproducible and auditable",
+          "To prevent all updates"
+        ],
+        "answerIndex": 2,
+        "explanation": "The viewer should be able to trace a value to its source.",
+        "difficulty": "core"
+      }
+    ],
+    "m6-t3": [
+      {
+        "id": "m6-t3-q1",
+        "question": "A rate rises from 2% to 4%. What is the absolute change?",
+        "options": [
+          "Two hundred percentage points",
+          "One hundred percentage points",
+          "Fifty percentage points",
+          "Two percentage points"
+        ],
+        "answerIndex": 3,
+        "explanation": "Absolute change subtracts the percentages.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q2",
+        "question": "What is the relative increase from 2% to 4%?",
+        "options": [
+          "100%",
+          "2%",
+          "4%",
+          "50%"
+        ],
+        "answerIndex": 0,
+        "explanation": "(4−2)/2 × 100 = 100%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q3",
+        "question": "What should an insight memo distinguish?",
+        "options": [
+          "Only the final chart",
+          "Observation, interpretation and recommendation",
+          "Only colours and fonts",
+          "Only employee rankings"
+        ],
+        "answerIndex": 1,
+        "explanation": "Separating these reduces unsupported inference.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q4",
+        "question": "What is a balancing measure for faster hiring?",
+        "options": [
+          "Number of chart pages",
+          "Number of emails sent regardless of value",
+          "Candidate experience or job-related selection quality",
+          "Only more speed measures"
+        ],
+        "answerIndex": 2,
+        "explanation": "A process improvement can have unintended effects.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m6-t3-q5",
+        "question": "When evidence is preliminary, what is often appropriate?",
+        "options": [
+          "An irreversible policy immediately",
+          "An individual adverse decision",
+          "A guarantee of savings",
+          "A bounded pilot with a review trigger"
+        ],
+        "answerIndex": 3,
+        "explanation": "The action should be proportionate to the evidence.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 6 scenario assessment",
+    "questions": [
+      {
+        "id": "m6-assessment-q1",
+        "question": "A filtered department has 6 acceptances from 8 offers; the organisation has 24 offers. What is the correct department acceptance rate?",
+        "options": [
+          "33.3%",
+          "6%",
+          "75%",
+          "25%"
+        ],
+        "answerIndex": 2,
+        "explanation": "6/8 = 75%; the denominator must follow the filter.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q2",
+        "question": "A dashboard returns 0% for a department with no offers. What should QA require?",
+        "options": [
+          "A green success flag",
+          "A fabricated organisation average",
+          "An automatic poor-performance label",
+          "A not-applicable state and visible zero denominator"
+        ],
+        "answerIndex": 3,
+        "explanation": "No eligible cases is not a failed acceptance rate.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q3",
+        "question": "A public workbook hides a tab containing personal records. What is the sharing problem?",
+        "options": [
+          "Hidden tabs may remain accessible; publish a reduced aggregate file",
+          "Hidden tabs guarantee confidentiality",
+          "Only visible cells count as data exposure",
+          "Changing the tab colour secures it"
+        ],
+        "answerIndex": 0,
+        "explanation": "Presentation hiding is not an access boundary.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q4",
+        "question": "The dashboard refresh adds rows but the pivot range stays fixed. What would catch the defect?",
+        "options": [
+          "An unchanged chart title",
+          "Reconciliation to detail and refresh test cases",
+          "Only visual alignment checks",
+          "A larger font"
+        ],
+        "answerIndex": 1,
+        "explanation": "A stale range can silently omit new records.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q5",
+        "question": "A metric doubles from 3 of 100 to 6 of 100. What should the memo report?",
+        "options": [
+          "Six hundred percent increase",
+          "No change because both counts are small",
+          "Three extra events, three percentage points and 100% relative increase",
+          "Only a 100% crisis"
+        ],
+        "answerIndex": 2,
+        "explanation": "Absolute and relative context prevent exaggeration.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q6",
+        "question": "A recruitment dashboard uses red and green without labels. What accessibility improvement is needed?",
+        "options": [
+          "Use smaller coloured dots",
+          "Remove all titles",
+          "Assume everyone distinguishes colours",
+          "Add meaningful text or symbols and adequate contrast"
+        ],
+        "answerIndex": 3,
+        "explanation": "Meaning should not depend on colour alone.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q7",
+        "question": "The sponsor asks what action a chart supports and no one can answer. What should be revisited?",
+        "options": [
+          "The decision question and metric selection",
+          "Only the chart border",
+          "Only the file format",
+          "The number of software licences"
+        ],
+        "answerIndex": 0,
+        "explanation": "A dashboard should serve decisions, not accumulate decorative measures.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q8",
+        "question": "A hiring-speed pilot improves time but candidate complaints increase. What is the right interpretation?",
+        "options": [
+          "Assume faster always means better",
+          "Review the balancing measure before wider rollout",
+          "Declare unconditional success",
+          "Delete complaints from the dataset"
+        ],
+        "answerIndex": 1,
+        "explanation": "Improvements can create adverse effects that need investigation.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q9",
+        "question": "An insight memo blames a recruiter for an aggregate delay without checking role mix. What should change?",
+        "options": [
+          "Remove all denominator notes",
+          "Rank every recruiter immediately",
+          "Separate observation from causal attribution and investigate alternatives",
+          "Make the accusation stronger"
+        ],
+        "answerIndex": 2,
+        "explanation": "Aggregate patterns do not establish individual causation.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m6-assessment-q10",
+        "question": "A new dashboard filter is tested only on the full organisation. What additional cases are essential?",
+        "options": [
+          "Only another colour theme",
+          "Only one screenshot",
+          "Only a file-size check",
+          "Single group, empty selection and combined filters with expected values"
+        ],
+        "answerIndex": 3,
+        "explanation": "Boundary and combination tests reveal denominator and no-data defects.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

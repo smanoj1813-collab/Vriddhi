@@ -1,0 +1,341 @@
+{
+  "moduleId": "m3",
+  "questions": {
+    "m3-t1": [
+      {
+        "id": "m3-t1-q1",
+        "question": "What is application-to-join yield for 12 joins from 200 applications?",
+        "options": [
+          "75%",
+          "40%",
+          "6%",
+          "12%"
+        ],
+        "answerIndex": 2,
+        "explanation": "12/200 × 100 = 6%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q2",
+        "question": "What is interview-to-offer conversion for 20 offers from 40 interviews?",
+        "options": [
+          "20%",
+          "10%",
+          "75%",
+          "50%"
+        ],
+        "answerIndex": 3,
+        "explanation": "The eligible denominator is interviewed applications.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q3",
+        "question": "Why can monthly acceptances divided by monthly offers mislead?",
+        "options": [
+          "The events may belong to different cohorts",
+          "Every offer is accepted immediately",
+          "Months cannot be used in reports",
+          "All conversion rates must be identical"
+        ],
+        "answerIndex": 0,
+        "explanation": "Period flows are not necessarily matched-stage populations.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q4",
+        "question": "What should accompany a source conversion rate?",
+        "options": [
+          "A claim of guaranteed quality",
+          "Counts, cohort definition and role context",
+          "Only a ranking",
+          "Only the source logo"
+        ],
+        "answerIndex": 1,
+        "explanation": "Context and sample size determine interpretability.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t1-q5",
+        "question": "Is every funnel drop necessarily undesirable?",
+        "options": [
+          "Only if the chart is red",
+          "No drop should ever be investigated",
+          "No; job-related screening may appropriately reduce the pool",
+          "Yes, all applicants must be hired"
+        ],
+        "answerIndex": 2,
+        "explanation": "Interpret the reason for the drop rather than assuming failure.",
+        "difficulty": "core"
+      }
+    ],
+    "m3-t2": [
+      {
+        "id": "m3-t2-q1",
+        "question": "Under this course convention, what is time-to-fill?",
+        "options": [
+          "Application to first interview only",
+          "Joining to first payroll",
+          "Exit notice to last day",
+          "Requisition approval to accepted offer"
+        ],
+        "answerIndex": 3,
+        "explanation": "The convention is stated explicitly because industry definitions vary.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q2",
+        "question": "What is elapsed time from 1 June to 21 June with start day excluded?",
+        "options": [
+          "20 days",
+          "21 days",
+          "10 days",
+          "31 days"
+        ],
+        "answerIndex": 0,
+        "explanation": "Date difference is 20 calendar days.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q3",
+        "question": "What is cost per hire for ₹60,000 across six hires?",
+        "options": [
+          "₹360,000",
+          "₹10,000",
+          "₹60,000",
+          "₹6,000"
+        ],
+        "answerIndex": 1,
+        "explanation": "60,000/6 = 10,000 under the defined cost and hire boundary.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q4",
+        "question": "How should unfilled requisitions appear?",
+        "options": [
+          "As completed hires",
+          "Nowhere in any report",
+          "As open work with age and status",
+          "As zero-day successful fills"
+        ],
+        "answerIndex": 2,
+        "explanation": "Completed-duration summaries need complementary open-age visibility.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t2-q5",
+        "question": "Why is lowest cost per hire not automatically best?",
+        "options": [
+          "Cost is never relevant",
+          "All roles cost the same to hire",
+          "Lower spend guarantees better candidates",
+          "Quality, fairness and outcomes also matter"
+        ],
+        "answerIndex": 3,
+        "explanation": "Efficiency metrics need balancing measures.",
+        "difficulty": "core"
+      }
+    ],
+    "m3-t3": [
+      {
+        "id": "m3-t3-q1",
+        "question": "What is the best basis for a selection scorecard?",
+        "options": [
+          "Observable job-related competencies",
+          "Personal similarity to the interviewer",
+          "Unverified social-media impressions",
+          "A candidate’s name"
+        ],
+        "answerIndex": 0,
+        "explanation": "Selection evidence should relate to the role.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q2",
+        "question": "Two interviewers score 2 and 4. What should happen first?",
+        "options": [
+          "Reject the candidate automatically",
+          "Compare evidence against the scoring anchors",
+          "Average and declare all bias removed",
+          "Choose the senior interviewer automatically"
+        ],
+        "answerIndex": 1,
+        "explanation": "Calibration examines why the scores differ.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q3",
+        "question": "What is response rate for 18 replies from 30 invitations?",
+        "options": [
+          "30%",
+          "40%",
+          "60%",
+          "18%"
+        ],
+        "answerIndex": 2,
+        "explanation": "18/30 × 100 = 60%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q4",
+        "question": "What is a limitation of candidate feedback?",
+        "options": [
+          "Every response is necessarily false",
+          "No feedback can ever help",
+          "Response rate proves satisfaction",
+          "Respondents may differ from nonrespondents"
+        ],
+        "answerIndex": 3,
+        "explanation": "Voluntary participation can create selection bias.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m3-t3-q5",
+        "question": "How should criticism of the recruitment process be used?",
+        "options": [
+          "For process improvement, separated from selection judgement",
+          "As a reason to reject the candidate",
+          "As public identifiable content",
+          "As proof of poor job performance"
+        ],
+        "answerIndex": 0,
+        "explanation": "Protect feedback integrity and candidate fairness.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 3 scenario assessment",
+    "questions": [
+      {
+        "id": "m3-assessment-q1",
+        "question": "A mature cohort has 160 applications, 40 interviews, 16 offers and 12 joins. What is application-to-join yield?",
+        "options": [
+          "30%",
+          "75%",
+          "10%",
+          "7.5%"
+        ],
+        "answerIndex": 3,
+        "explanation": "12/160 × 100 = 7.5%.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q2",
+        "question": "Twenty offers issued this month are compared with fifteen acceptances, ten from earlier months. What must be clarified before calling 75% an acceptance rate?",
+        "options": [
+          "Whether offers and acceptances form a matched cohort",
+          "Only whether fifteen is a large number",
+          "The chart colour",
+          "The manager’s preferred target"
+        ],
+        "answerIndex": 0,
+        "explanation": "Unmatched period events may not support cohort conversion.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q3",
+        "question": "A recent sourcing cohort has many open applications. How should it be compared with a mature cohort?",
+        "options": [
+          "Ignore the difference",
+          "Align observation windows or report incomplete follow-up explicitly",
+          "Treat all open cases as failures",
+          "Treat all open cases as hires"
+        ],
+        "answerIndex": 1,
+        "explanation": "Recent cohorts have less time to progress.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q4",
+        "question": "A requisition is approved on 3 July, application arrives 13 July and acceptance occurs 23 July. What are fill and hire durations under course rules?",
+        "options": [
+          "10 and 20 days",
+          "30 and 20 days",
+          "20 and 10 elapsed calendar days",
+          "21 and 11 days"
+        ],
+        "answerIndex": 2,
+        "explanation": "Time-to-fill starts at approval; time-to-hire starts at application, excluding start day.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q5",
+        "question": "Eligible cost is ₹84,000 for seven joined hires under an agreed allocation. What is cost per hire?",
+        "options": [
+          "₹7,000",
+          "₹84,000",
+          "₹588,000",
+          "₹12,000"
+        ],
+        "answerIndex": 3,
+        "explanation": "84,000/7 = 12,000.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q6",
+        "question": "Source A has a higher joining rate but serves easier-to-fill roles. What should the recommendation consider?",
+        "options": [
+          "Role mix, comparable cohorts, cost and downstream outcomes",
+          "That source A is causally superior",
+          "Only raw volume",
+          "That all other sources should close immediately"
+        ],
+        "answerIndex": 0,
+        "explanation": "Context can explain rate differences without a source effect.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q7",
+        "question": "Two interviewers disagree strongly on a work sample. What is the most useful next step?",
+        "options": [
+          "Reject the candidate for causing disagreement",
+          "Compare job-related evidence against behavioural anchors",
+          "Always choose the senior interviewer",
+          "Average and assume bias is eliminated"
+        ],
+        "answerIndex": 1,
+        "explanation": "Calibration examines the basis of judgement.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q8",
+        "question": "Only 12 of 40 rejected candidates respond to feedback. What is the response rate and key caveat?",
+        "options": [
+          "40%, representative by definition",
+          "70%, all nonrespondents satisfied",
+          "30%, with possible nonresponse bias",
+          "12%, with no bias possible"
+        ],
+        "answerIndex": 2,
+        "explanation": "12/40 = 30%; respondents may differ from others.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q9",
+        "question": "A dashboard shows low average fill time after excluding every open vacancy. What complementary view is needed?",
+        "options": [
+          "Only another completed average",
+          "An automatic recruiter reward",
+          "A claim that no delays remain",
+          "Age and status of open requisitions"
+        ],
+        "answerIndex": 3,
+        "explanation": "Unfinished work can contain the longest unresolved delays.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m3-assessment-q10",
+        "question": "A candidate criticises scheduling in a survey. What should the team avoid?",
+        "options": [
+          "Using criticism as an adverse selection signal",
+          "Improving update communication",
+          "Aggregating process feedback safely",
+          "Reviewing scheduling delays"
+        ],
+        "answerIndex": 0,
+        "explanation": "Feedback should inform process quality, not punish respondents.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

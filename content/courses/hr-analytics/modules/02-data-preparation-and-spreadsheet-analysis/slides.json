@@ -1,0 +1,200 @@
+{
+  "moduleId": "m2",
+  "topics": {
+    "m2-t1": [
+      {
+        "id": "m2-t1-s1",
+        "title": "Understand the grain and key",
+        "summary": "The grain is what one row represents: an application, employee-month, interview event or requisition.",
+        "explanation": "The grain is what one row represents: an application, employee-month, interview event or requisition. Select a key appropriate to that grain. A candidate may legitimately have several application records; deleting rows by candidate ID alone can destroy valid activity. A duplicate application ID may be an exact repeat or conflicting versions. Investigate and record the rule used to retain, merge or quarantine records.",
+        "example": "The applicant file contains repeated application IDs, inconsistent department labels and mixed date formats. One row says an offer was accepted before it was issued. A dashboard built directly from this file would convert data-quality defects into management claims.",
+        "takeaway": "Preserve raw data, identify record keys and document cleaning decisions before calculating HR metrics.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Copy the synthetic practice table into raw and working tabs without changing raw."
+            },
+            {
+              "title": "Decision",
+              "detail": "Produce a quality summary and reconcile raw, distinct and usable record counts."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t1-s2",
+        "title": "Preserve source and make changes traceable",
+        "summary": "Keep a read-only raw copy, a working table and a cleaning log.",
+        "explanation": "Keep a read-only raw copy, a working table and a cleaning log. Standardise labels through an explicit mapping, trim unwanted spaces and parse dates using a declared format. Distinguish blanks from zero and “not applicable”. Never infer a sensitive personal characteristic from a name. If a record is impossible, quarantine it or request correction rather than inventing a plausible value to make the spreadsheet complete.",
+        "example": "The applicant file contains repeated application IDs, inconsistent department labels and mixed date formats. One row says an offer was accepted before it was issued. A dashboard built directly from this file would convert data-quality defects into management claims.",
+        "takeaway": "Preserve raw data, identify record keys and document cleaning decisions before calculating HR metrics.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Copy the synthetic practice table into raw and working tabs without changing raw."
+            },
+            {
+              "title": "Decision",
+              "detail": "Produce a quality summary and reconcile raw, distinct and usable record counts."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t1-s3",
+        "title": "Check validity, completeness and reconciliation",
+        "summary": "Test unique keys, required fields, valid category values, chronological event order and totals before and after cleaning.",
+        "explanation": "Test unique keys, required fields, valid category values, chronological event order and totals before and after cleaning. A quality report should show counts of changed, excluded and unresolved rows. Reconcile distinct entities as well as row counts where necessary. A cleaned dataset can still have missing coverage; document limitations rather than calling it perfect. The goal is reproducibility, not a cosmetic absence of blanks.",
+        "example": "A source has 52 rows. Two are exact repeated application records and one has an impossible acceptance date. Removing the exact repeats yields 50 distinct application records; quarantining the invalid record leaves 49 usable records for time-based analysis. Report all three counts. Do not claim 49 is the number of distinct candidates unless candidate IDs are separately deduplicated.",
+        "takeaway": "Preserve raw data, identify record keys and document cleaning decisions before calculating HR metrics.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Copy the synthetic practice table into raw and working tabs without changing raw."
+            },
+            {
+              "title": "Decision",
+              "detail": "Produce a quality summary and reconcile raw, distinct and usable record counts."
+            }
+          ]
+        }
+      }
+    ],
+    "m2-t2": [
+      {
+        "id": "m2-t2-s1",
+        "title": "Use formulas appropriate to the question",
+        "summary": "COUNTIFS counts records matching conditions; SUMIFS aggregates numeric values by conditions; lookup functions connect reference fields using keys.",
+        "explanation": "COUNTIFS counts records matching conditions; SUMIFS aggregates numeric values by conditions; lookup functions connect reference fields using keys. Use exact-match lookups for identifiers and inspect unmatched keys. Spreadsheet function availability varies, so an equivalent pivot or carefully documented manual method is acceptable. Lock reference ranges when copying formulas where needed, and keep source values separate from calculated outputs.",
+        "example": "The HR team needs joined candidates by source and offer acceptance by department. A manually typed summary is quick, but it will not update when a record changes. A reliable workbook needs consistent tables, documented filters and visible checks.",
+        "takeaway": "Use transparent formulas and denominator checks to calculate grouped HR measures.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build counts by source for offers, acceptances and joins from the practice records."
+            },
+            {
+              "title": "Decision",
+              "detail": "Reconcile grouped totals and hand-check two rates before writing a recommendation."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t2-s2",
+        "title": "Guard denominators explicitly",
+        "summary": "A rate is numerator divided by an eligible denominator over a defined period or cohort.",
+        "explanation": "A rate is numerator divided by an eligible denominator over a defined period or cohort. If no offers were issued, offer acceptance is not meaningfully zero percent; it is not applicable for that group. Use a conditional expression that displays a clear label and preserves the underlying counts. Avoid replacing every formula error with zero through a blanket error handler, because that can hide broken references or missing lookups.",
+        "example": "The HR team needs joined candidates by source and offer acceptance by department. A manually typed summary is quick, but it will not update when a record changes. A reliable workbook needs consistent tables, documented filters and visible checks.",
+        "takeaway": "Use transparent formulas and denominator checks to calculate grouped HR measures.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build counts by source for offers, acceptances and joins from the practice records."
+            },
+            {
+              "title": "Decision",
+              "detail": "Reconcile grouped totals and hand-check two rates before writing a recommendation."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t2-s3",
+        "title": "Reconcile detail to summary",
+        "summary": "A grouped summary should reconcile to the same filtered total when categories are mutually exclusive and complete.",
+        "explanation": "A grouped summary should reconcile to the same filtered total when categories are mutually exclusive and complete. Include an Unknown category where necessary rather than dropping blanks silently. Check formulas against a hand-calculated sample and test a changed input. Document whether counts represent applications or distinct people. A pivot table can summarise duplicates just as efficiently as clean records; aggregation does not solve data quality.",
+        "example": "For Source A, 12 offers were issued and 9 accepted, so acceptance is 9/12 = 75%. Source B has no issued offers, so report “not applicable, n=0”, not 0%. If A has six joins, offer-to-join yield is 6/12 = 50%, while accepted-to-joined conversion is 6/9 ≈ 66.7%. These are different metrics and must have different labels.",
+        "takeaway": "Use transparent formulas and denominator checks to calculate grouped HR measures.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Build counts by source for offers, acceptances and joins from the practice records."
+            },
+            {
+              "title": "Decision",
+              "detail": "Reconcile grouped totals and hand-check two rates before writing a recommendation."
+            }
+          ]
+        }
+      }
+    ],
+    "m2-t3": [
+      {
+        "id": "m2-t3-s1",
+        "title": "Mean and median answer different questions",
+        "summary": "The mean uses every value and is affected by extreme observations.",
+        "explanation": "The mean uses every value and is affected by extreme observations. The median is the middle ordered value and can better describe a typical case in a skewed distribution. Neither is universally superior. Show sample size and, where useful, the range or a percentile. Investigate an extreme value before deciding it is erroneous; a genuine difficult vacancy may be operationally important.",
+        "example": "Five filled requisitions took 10, 12, 14, 16 and 60 days. A manager wants a single number and another wants the slow case removed. The analyst must describe typical experience while keeping the difficult case visible.",
+        "takeaway": "Summarise HR data with suitable distributions and write a note that preserves context and limitations.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a pivot showing filled requisition counts and durations by role group."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a six-sentence note separating observation, hypothesis, limitation and action."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t3-s2",
+        "title": "Segment with a purpose",
+        "summary": "Pivots can compare department, role, source or period, but groups must use consistent definitions.",
+        "explanation": "Pivots can compare department, role, source or period, but groups must use consistent definitions. Avoid slicing until every cell has one person. Small samples create unstable rates and disclosure risks. Distinguish a mix shift from within-group change: overall time-to-fill can rise because the organisation hired more hard-to-fill roles even if each role category improved. Keep the decision question central.",
+        "example": "Five filled requisitions took 10, 12, 14, 16 and 60 days. A manager wants a single number and another wants the slow case removed. The analyst must describe typical experience while keeping the difficult case visible.",
+        "takeaway": "Summarise HR data with suitable distributions and write a note that preserves context and limitations.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a pivot showing filled requisition counts and durations by role group."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a six-sentence note separating observation, hypothesis, limitation and action."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t3-s3",
+        "title": "Write observations before explanations",
+        "summary": "An analytical note should separate the observed result, plausible explanations, checks still needed and recommended action.",
+        "explanation": "An analytical note should separate the observed result, plausible explanations, checks still needed and recommended action. “Median is fourteen days across five cases” is an observation; “the recruiter is inefficient” is an unsupported attribution. Use cautious language for associations and specify the evidence needed to investigate. A recommendation can be to collect better data rather than make an immediate personnel decision.",
+        "example": "The five durations sum to 112 days, so mean time is 22.4 days. The median is 14 days and the range is 10–60. Removing the 60-day case changes the mean to 13 days but also changes the population. Unless it is demonstrably invalid or outside the agreed scope, keep it and explain why it differs; compare both summaries transparently if useful.",
+        "takeaway": "Summarise HR data with suitable distributions and write a note that preserves context and limitations.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create a pivot showing filled requisition counts and durations by role group."
+            },
+            {
+              "title": "Decision",
+              "detail": "Write a six-sentence note separating observation, hypothesis, limitation and action."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "moduleId": "m5",
+  "topics": {
+    "m5-t1": [
+      {
+        "id": "m5-t1-s1",
+        "title": "Write cause, event and impact",
+        "summary": "A useful risk statement links a cause to an uncertain event and an effect on objectives: because the vendor has one specialist, absence may delay testing and threaten the launch milestone.",
+        "explanation": "A useful risk statement links a cause to an uncertain event and an effect on objectives: because the vendor has one specialist, absence may delay testing and threaten the launch milestone. An issue has already occurred and needs an action or decision now. Risks can concern opportunities as well as threats. Avoid labels such as “vendor risk” that do not explain what might happen or why the team should act.",
+        "example": "The pilot depends on a vendor demonstration next Friday. The vendor has not confirmed availability. Separately, the test account already fails to open. One is uncertainty about a future event; the other is a condition that exists now.",
+        "takeaway": "Distinguish a future risk from a current issue and choose an owned, reviewable response.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write four cause–event–impact risks and two current issues for the pilot."
+            },
+            {
+              "title": "Decision",
+              "detail": "Calculate the EMV example and explain why it is not the ordinal priority score."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t1-s2",
+        "title": "Prioritise consistently, not mechanically",
+        "summary": "Define probability and impact scales before scoring.",
+        "explanation": "Define probability and impact scales before scoring. Multiplying ordinal scores can help triage but does not create a precise financial probability. Review high-consequence risks even if their likelihood is low. Record an owner, trigger, response, due date and residual exposure. Ownership means someone monitors and coordinates the response; it does not mean that person caused the risk.",
+        "example": "The pilot depends on a vendor demonstration next Friday. The vendor has not confirmed availability. Separately, the test account already fails to open. One is uncertainty about a future event; the other is a condition that exists now.",
+        "takeaway": "Distinguish a future risk from a current issue and choose an owned, reviewable response.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write four cause–event–impact risks and two current issues for the pilot."
+            },
+            {
+              "title": "Decision",
+              "detail": "Calculate the EMV example and explain why it is not the ordinal priority score."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t1-s3",
+        "title": "Responses change exposure",
+        "summary": "Threat responses include avoidance, mitigation, transfer and acceptance.",
+        "explanation": "Threat responses include avoidance, mitigation, transfer and acceptance. A backup demonstrator mitigates availability risk; a contract may transfer some financial exposure but does not eliminate delivery risk. Active acceptance can include contingency and triggers. Distinguish preventive action before the event from contingency after a trigger. Escalate risks outside the team’s authority rather than disguising them as routine tasks.",
+        "example": "On a classroom 1–5 scale, probability 3 and impact 4 produce a priority score of 12, not a 12% probability. A separate expected monetary value example uses an actual probability assumption: 0.25 × ₹20,000 impact = ₹5,000 expected exposure. Neither number means the loss will definitely be ₹5,000. State the uncertainty and assumptions.",
+        "takeaway": "Distinguish a future risk from a current issue and choose an owned, reviewable response.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write four cause–event–impact risks and two current issues for the pilot."
+            },
+            {
+              "title": "Decision",
+              "detail": "Calculate the EMV example and explain why it is not the ordinal priority score."
+            }
+          ]
+        }
+      }
+    ],
+    "m5-t2": [
+      {
+        "id": "m5-t2-s1",
+        "title": "Build quality into the work",
+        "summary": "Quality planning identifies standards, acceptance criteria, review methods and responsibilities before testing begins.",
+        "explanation": "Quality planning identifies standards, acceptance criteria, review methods and responsibilities before testing begins. Quality assurance concerns the processes that support good work; quality control checks outputs. A peer review can prevent errors earlier than a final inspection. Keep the concepts practical: define how the team will detect duplicate reservations, inaccessible controls and unauthorised access before live use.",
+        "example": "The booking flow looks correct in a demonstration, but two students can reserve the final slot simultaneously. The sponsor asks whether the launch can proceed because the majority of tests passed. The team must consider consequences, not just the percentage of green checks.",
+        "takeaway": "Design acceptance evidence and defect triage without lowering quality to meet a date.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write six test cases including the last-slot boundary and a rejected unauthorised request."
+            },
+            {
+              "title": "Decision",
+              "detail": "Specify re-test and regression checks for a repaired duplicate-booking defect."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t2-s2",
+        "title": "Risk-based tests beat a raw count",
+        "summary": "A test case specifies preconditions, inputs, steps, expected outcome and actual result.",
+        "explanation": "A test case specifies preconditions, inputs, steps, expected outcome and actual result. Include ordinary, boundary and failure paths. Ten cosmetic tests passing cannot compensate for a severe access-control failure. Severity describes impact; priority describes the urgency of addressing it in context. They can differ. Triage should be recorded with an owner and rationale, not decided silently by whoever updates the board.",
+        "example": "The booking flow looks correct in a demonstration, but two students can reserve the final slot simultaneously. The sponsor asks whether the launch can proceed because the majority of tests passed. The team must consider consequences, not just the percentage of green checks.",
+        "takeaway": "Design acceptance evidence and defect triage without lowering quality to meet a date.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write six test cases including the last-slot boundary and a rejected unauthorised request."
+            },
+            {
+              "title": "Decision",
+              "detail": "Specify re-test and regression checks for a repaired duplicate-booking defect."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t2-s3",
+        "title": "Acceptance and handover need honest exceptions",
+        "summary": "A named acceptor reviews evidence against agreed criteria.",
+        "explanation": "A named acceptor reviews evidence against agreed criteria. Record unresolved defects and the conditions under which any exception is approved. Do not bypass mandatory safety, privacy or institutional controls because most features work. A release decision, a project acceptance decision and a Scrum Definition of Done are related but not interchangeable. Re-test the repair and relevant regression paths before declaring a defect closed.",
+        "example": "Twenty of twenty-one test cases pass, a pass proportion of about 95.2%. The failed case allows duplicate allocation of the final slot and violates a mandatory acceptance condition. The percentage alone therefore does not justify release. Log the defect, prevent live use of the unsafe path, repair the concurrency rule and repeat both the failing test and related cancellation/rebooking tests.",
+        "takeaway": "Design acceptance evidence and defect triage without lowering quality to meet a date.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Write six test cases including the last-slot boundary and a rejected unauthorised request."
+            },
+            {
+              "title": "Decision",
+              "detail": "Specify re-test and regression checks for a repaired duplicate-booking defect."
+            }
+          ]
+        }
+      }
+    ],
+    "m5-t3": [
+      {
+        "id": "m5-t3-s1",
+        "title": "A request is not an approval",
+        "summary": "Record the requester, reason, desired outcome, urgency and affected deliverables.",
+        "explanation": "Record the requester, reason, desired outcome, urgency and affected deliverables. Separate correction of a defect against approved scope from an enhancement that changes scope. The classification depends on the agreed baseline, not on whether the request seems small. Capture the decision owner and status. Verbal requests should be summarised and confirmed through the institution’s agreed process.",
+        "example": "Two days before pilot testing, the sponsor requests WhatsApp reminders and expects the original date and cost to stay unchanged. The coordinator should not refuse reflexively or promise silently. The request needs an impact assessment and an authorised decision.",
+        "takeaway": "Assess a change request, preserve the baseline and escalate with options and a clear decision request.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft a change request with a baseline reference and the reason for reminders."
+            },
+            {
+              "title": "Decision",
+              "detail": "Record an example decision and show which plans and stakeholders must be updated."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t3-s2",
+        "title": "Evaluate options across constraints",
+        "summary": "Compare at least three options: accept now, defer, or offer a smaller alternative.",
+        "explanation": "Compare at least three options: accept now, defer, or offer a smaller alternative. Assess time, cost, quality, risk, dependencies and operational impact. A reminder feature may require consent, integration, testing and ongoing support. Do not price only the visible screen. If approved, update affected plans, acceptance criteria and communications through a controlled version change. Preserve the old baseline and the approval reference.",
+        "example": "Two days before pilot testing, the sponsor requests WhatsApp reminders and expects the original date and cost to stay unchanged. The coordinator should not refuse reflexively or promise silently. The request needs an impact assessment and an authorised decision.",
+        "takeaway": "Assess a change request, preserve the baseline and escalate with options and a clear decision request.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft a change request with a baseline reference and the reason for reminders."
+            },
+            {
+              "title": "Decision",
+              "detail": "Record an example decision and show which plans and stakeholders must be updated."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m5-t3-s3",
+        "title": "Escalation is a decision service",
+        "summary": "Escalate when a threshold is reached or authority is insufficient, not only when someone is angry.",
+        "explanation": "Escalate when a threshold is reached or authority is insufficient, not only when someone is angry. State the issue, impact, deadline for decision, options, recommendation and consequence of no decision. Distinguish what is known from an estimate. A useful escalation makes a decision easier; it does not transfer every detail to the sponsor or publicly blame a colleague.",
+        "example": "The team estimates reminders at 12 development hours plus 6 testing hours. At a classroom cost of ₹500 per hour, direct effort cost is ₹9,000 before any provider charges. With three focused hours available daily from the relevant specialist, 18 sequential hours require six working days. An option to defer reminders preserves the pilot date, while adding them requires a revised commitment or a justified scope trade-off.",
+        "takeaway": "Assess a change request, preserve the baseline and escalate with options and a clear decision request.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draft a change request with a baseline reference and the reason for reminders."
+            },
+            {
+              "title": "Decision",
+              "detail": "Record an example decision and show which plans and stakeholders must be updated."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

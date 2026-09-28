@@ -1,0 +1,341 @@
+{
+  "moduleId": "m8",
+  "questions": {
+    "m8-t1": [
+      {
+        "id": "m8-t1-q1",
+        "question": "What makes a simulated HR case credible?",
+        "options": [
+          "Invented employer results",
+          "A claim of confidential client work",
+          "Only a polished colour scheme",
+          "Honest labelling and reproducible evidence"
+        ],
+        "answerIndex": 3,
+        "explanation": "A simulation can demonstrate real skills without fabricated experience.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q2",
+        "question": "What should an evidence index link?",
+        "options": [
+          "Findings to source tables and calculations",
+          "Only charts to colours",
+          "Only job titles to salaries",
+          "Every learner to a rank"
+        ],
+        "answerIndex": 0,
+        "explanation": "Traceability allows independent verification.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q3",
+        "question": "Which evidence particularly suits Talent Acquisition Associate work?",
+        "options": [
+          "Unverified salary gossip",
+          "Funnel tracking and candidate-process coordination",
+          "A medical diagnosis",
+          "A speculative dismissal model"
+        ],
+        "answerIndex": 1,
+        "explanation": "The role commonly supports recruitment stages and candidate communication.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q4",
+        "question": "What should be checked before public portfolio export?",
+        "options": [
+          "Only the number of charts",
+          "Whether every formula is hidden",
+          "Underlying or hidden data and disclosure risks",
+          "Only the file name"
+        ],
+        "answerIndex": 2,
+        "explanation": "Exports can accidentally include more detail than the visible dashboard.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t1-q5",
+        "question": "How should group work be represented?",
+        "options": [
+          "Claim all work individually",
+          "Remove every collaborator reference",
+          "Invent a management role",
+          "State the learner’s contribution and shared outputs"
+        ],
+        "answerIndex": 3,
+        "explanation": "Attribution is part of honest professional evidence.",
+        "difficulty": "core"
+      }
+    ],
+    "m8-t2": [
+      {
+        "id": "m8-t2-q1",
+        "question": "What should be clarified before answering an ambiguous turnover question?",
+        "options": [
+          "Population, period and denominator",
+          "Only the chart colour",
+          "Only the company logo",
+          "Only the interviewer’s preference"
+        ],
+        "answerIndex": 0,
+        "explanation": "Definitions determine the calculation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q2",
+        "question": "A senior manager urgently requests all raw HR records. What is appropriate?",
+        "options": [
+          "Remove only names and assume safety",
+          "Check purpose, authorisation and minimum necessary data",
+          "Send everything automatically",
+          "Publish it in a shared public folder"
+        ],
+        "answerIndex": 1,
+        "explanation": "Seniority and urgency do not replace access controls.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q3",
+        "question": "How should a course example be used in STAR?",
+        "options": [
+          "Invent a company outcome",
+          "Avoid mentioning limitations",
+          "Label it as a simulation and explain actual actions",
+          "Describe it as paid employment"
+        ],
+        "answerIndex": 2,
+        "explanation": "Honesty preserves credibility.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q4",
+        "question": "What should an entry-level analyst do with a potential discrimination concern?",
+        "options": [
+          "Issue a legal verdict alone",
+          "Ignore it automatically",
+          "Publish individual accusations",
+          "Document evidence and escalate to qualified authorised reviewers"
+        ],
+        "answerIndex": 3,
+        "explanation": "Consequential interpretation requires appropriate authority and expertise.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t2-q5",
+        "question": "What often meets a reporting need with less exposure?",
+        "options": [
+          "A properly defined aggregate summary",
+          "A complete payroll dump",
+          "Raw interview notes",
+          "A public candidate list"
+        ],
+        "answerIndex": 0,
+        "explanation": "Minimum necessary information can answer the decision without unnecessary detail.",
+        "difficulty": "core"
+      }
+    ],
+    "m8-t3": [
+      {
+        "id": "m8-t3-q1",
+        "question": "What should the capstone presentation make traceable?",
+        "options": [
+          "Every employee’s identity",
+          "The path from question and data to recommendation",
+          "Only the animation sequence",
+          "Only the final grade"
+        ],
+        "answerIndex": 1,
+        "explanation": "The jury assesses reasoning and evidence.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q2",
+        "question": "What correction is needed for 8 acceptances from 10 department offers?",
+        "options": [
+          "Use 8%",
+          "Average 20% and 80%",
+          "Use 80%, not 20% from the organisation denominator",
+          "Keep 20% for consistency"
+        ],
+        "answerIndex": 2,
+        "explanation": "The denominator must match the filtered population.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q3",
+        "question": "What should follow discovery of a metric error?",
+        "options": [
+          "Correct only the slide colour",
+          "Hide the source table",
+          "Assume no conclusion can change",
+          "Review all dependent claims and recommendations"
+        ],
+        "answerIndex": 3,
+        "explanation": "Errors can propagate across charts and narrative.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q4",
+        "question": "What is a suitable next practice task?",
+        "options": [
+          "QA three synthetic dashboards with known filter cases",
+          "Collect real employee records without permission",
+          "Deploy a leaver-risk ranking immediately",
+          "Claim professional certification"
+        ],
+        "answerIndex": 0,
+        "explanation": "Bounded authorised practice builds skill safely.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m8-t3-q5",
+        "question": "What does this course certificate represent?",
+        "options": [
+          "A guarantee of employment",
+          "Completion under the course’s stated requirements",
+          "Automatic external HR-body certification",
+          "A software-vendor licence"
+        ],
+        "answerIndex": 1,
+        "explanation": "The course does not confer external credentials or guarantee roles.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 8 scenario assessment",
+    "questions": [
+      {
+        "id": "m8-assessment-q1",
+        "question": "A portfolio says a real employer’s retention improved after analysing only a synthetic case. What must be corrected?",
+        "options": [
+          "The provenance and unsupported impact claim",
+          "Only the spelling",
+          "Only the chart colours",
+          "The course title to sound more senior"
+        ],
+        "answerIndex": 0,
+        "explanation": "Simulation work must not be presented as observed employer impact.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q2",
+        "question": "A recruiter asks the learner to reproduce a rate. Which portfolio element best supports this?",
+        "options": [
+          "Only the final presentation title",
+          "A source-to-formula evidence index and editable analysis",
+          "Only a screenshot",
+          "Only a résumé claim"
+        ],
+        "answerIndex": 1,
+        "explanation": "Reproducibility demonstrates analytical competence.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q3",
+        "question": "An interview asks for a definition that differs from the learner’s course convention. What is appropriate?",
+        "options": [
+          "Guess silently",
+          "Avoid all numeric discussion",
+          "Clarify the organisation’s start, end and denominator rules",
+          "Insist every company must use the course definition"
+        ],
+        "answerIndex": 2,
+        "explanation": "Metric conventions vary and must be made explicit.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q4",
+        "question": "A manager requests raw interview notes urgently. What should the learner do?",
+        "options": [
+          "Email all notes because of seniority",
+          "Publish them in the portfolio",
+          "Remove only surnames and assume safety",
+          "Confirm purpose and access, then share minimum necessary information through approved channels"
+        ],
+        "answerIndex": 3,
+        "explanation": "Data sharing needs authorisation and minimisation.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q5",
+        "question": "A jury finds a department numerator paired with an organisation denominator. What should follow?",
+        "options": [
+          "Correct the rate and review dependent findings and recommendations",
+          "Keep the rate to preserve the story",
+          "Change only the chart title",
+          "Delete all source evidence"
+        ],
+        "answerIndex": 0,
+        "explanation": "A denominator error can change the entire conclusion.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q6",
+        "question": "A group dashboard was built by four learners. How should one learner present it?",
+        "options": [
+          "Omit all methods",
+          "State personal contributions and shared attribution",
+          "Claim sole authorship",
+          "Invent a leadership position"
+        ],
+        "answerIndex": 1,
+        "explanation": "Honest attribution supports assessment of individual skills.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q7",
+        "question": "The learner is asked for a legal conclusion about a hiring disparity. What is within an entry-level analytical response?",
+        "options": [
+          "Ignore the disparity",
+          "Publish accusations against individuals",
+          "Explain the evidence and limitations and refer to qualified authorised reviewers",
+          "Issue a definitive legal ruling"
+        ],
+        "answerIndex": 2,
+        "explanation": "The analyst supports review without exceeding competence or authority.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q8",
+        "question": "A development plan proposes collecting real payroll data independently for practice. What is a safer replacement?",
+        "options": [
+          "Scrape salaries from private files",
+          "Use a friend’s confidential export",
+          "Hide names and proceed without permission",
+          "Use synthetic cases and supervised authorised opportunities"
+        ],
+        "answerIndex": 3,
+        "explanation": "Practice does not justify unauthorised data collection.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q9",
+        "question": "A capstone certificate is listed as an external HR professional qualification. What should be used instead?",
+        "options": [
+          "The actual course completion title with no external credential claim",
+          "A more senior invented qualification",
+          "A vendor certification not taken",
+          "A guarantee of employment"
+        ],
+        "answerIndex": 0,
+        "explanation": "Course completion has its own requirements and does not confer outside credentials.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m8-assessment-q10",
+        "question": "A presentation has a clear recommendation but no limitation or evaluation plan. What should be added?",
+        "options": [
+          "A list of employee names",
+          "Evidence boundaries, action owner, review date and success and balancing measures",
+          "Only more animation",
+          "A stronger guarantee"
+        ],
+        "answerIndex": 1,
+        "explanation": "A responsible recommendation is bounded and reviewable.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

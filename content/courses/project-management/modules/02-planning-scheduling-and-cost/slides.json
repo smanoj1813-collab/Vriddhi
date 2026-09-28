@@ -1,0 +1,200 @@
+{
+  "moduleId": "m2",
+  "topics": {
+    "m2-t1": [
+      {
+        "id": "m2-t1-s1",
+        "title": "Start with deliverables, then work",
+        "summary": "A work breakdown structure decomposes the agreed scope into manageable pieces.",
+        "explanation": "A work breakdown structure decomposes the agreed scope into manageable pieces. Begin with the booking workflow, training materials, test evidence and handover package, then identify the work required for each. The coverage check is that all approved scope is represented without double counting. A WBS is not a schedule: it shows what must be delivered, while dependencies and dates explain when and in what order.",
+        "example": "A coordinator lists “design, build, test” and promises the placement pilot in two weeks. The list hides user testing, translation, staff training and permission checks. Two volunteers each have only six hours per week; neither is available full time.",
+        "takeaway": "Decompose deliverables into estimable work packages and distinguish effort from duration.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Break the pilot into at least eight work packages grouped by deliverable."
+            },
+            {
+              "title": "Decision",
+              "detail": "Identify a missing piece of scope and revise the WBS without double counting it."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t1-s2",
+        "title": "Estimate with assumptions and ranges",
+        "summary": "Estimate small work packages using comparable past work, informed judgement or a three-point range.",
+        "explanation": "Estimate small work packages using comparable past work, informed judgement or a three-point range. A number without a basis invites false certainty. Record what is included, who estimated it, the skill assumptions and what could make it vary. Do not add the same contingency in every task and then again at the whole-project level without explaining it. A range can support a better decision than a precise but unsupported deadline.",
+        "example": "A coordinator lists “design, build, test” and promises the placement pilot in two weeks. The list hides user testing, translation, staff training and permission checks. Two volunteers each have only six hours per week; neither is available full time.",
+        "takeaway": "Decompose deliverables into estimable work packages and distinguish effort from duration.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Break the pilot into at least eight work packages grouped by deliverable."
+            },
+            {
+              "title": "Decision",
+              "detail": "Identify a missing piece of scope and revise the WBS without double counting it."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t1-s3",
+        "title": "Effort does not equal elapsed time",
+        "summary": "Effort is person-hours of work; duration is elapsed working time.",
+        "explanation": "Effort is person-hours of work; duration is elapsed working time. Twelve hours of effort at three available hours per day needs at least four working days before dependencies and interruptions. Two people do not necessarily halve duration: some tasks are sequential and collaboration creates overhead. Confirm availability with the person’s manager. Do not plan someone at full capacity across two projects simply because both schedules look feasible separately.",
+        "example": "A training guide is estimated at 6 optimistic, 9 most likely and 18 pessimistic hours. A simple triangular average is (6 + 9 + 18)/3 = 11 hours. A weighted PERT estimate is (6 + 4×9 + 18)/6 = 10 hours. These are different conventions; state which you used. At two available hours daily, ten hours of effort requires five working days.",
+        "takeaway": "Decompose deliverables into estimable work packages and distinguish effort from duration.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Break the pilot into at least eight work packages grouped by deliverable."
+            },
+            {
+              "title": "Decision",
+              "detail": "Identify a missing piece of scope and revise the WBS without double counting it."
+            }
+          ]
+        }
+      }
+    ],
+    "m2-t2": [
+      {
+        "id": "m2-t2-s1",
+        "title": "Dependencies describe necessary order",
+        "summary": "A finish-to-start dependency means the successor cannot start until the predecessor finishes.",
+        "explanation": "A finish-to-start dependency means the successor cannot start until the predecessor finishes. Record the real reason: approval, technical input, shared resource or external delivery. Do not add a dependency merely because two tasks were adjacent in a spreadsheet. Distinguish a hard constraint from a preferred order; unnecessary constraints make the schedule less flexible. Use working days consistently and state the calendar used.",
+        "example": "The team can configure the form while preparing staff training, but testing needs both a configured form and approved test cases. The sponsor asks whether speeding up training will necessarily bring launch forward. The answer depends on the network, not on which task feels most visible.",
+        "takeaway": "Calculate a simple critical path and recognise resource constraints that a network alone misses.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw the four-task network with start and finish points; label every dependency."
+            },
+            {
+              "title": "Decision",
+              "detail": "Prepare a milestone brief showing the original plan, revised forecast and recovery trade-off."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t2-s2",
+        "title": "Find the longest dependent path",
+        "summary": "In a simple deterministic network without resource limits, the critical path is the longest-duration path and determines the earliest project finish.",
+        "explanation": "In a simple deterministic network without resource limits, the critical path is the longest-duration path and determines the earliest project finish. Tasks on it have zero total float under the stated assumptions. A shorter path may have float, but that float is not automatically spare time for unrelated work. Multiple critical paths are possible. Recalculate when a duration, dependency or deadline changes.",
+        "example": "The team can configure the form while preparing staff training, but testing needs both a configured form and approved test cases. The sponsor asks whether speeding up training will necessarily bring launch forward. The answer depends on the network, not on which task feels most visible.",
+        "takeaway": "Calculate a simple critical path and recognise resource constraints that a network alone misses.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw the four-task network with start and finish points; label every dependency."
+            },
+            {
+              "title": "Decision",
+              "detail": "Prepare a milestone brief showing the original plan, revised forecast and recovery trade-off."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t2-s3",
+        "title": "Resource levelling can change the answer",
+        "summary": "A network can assume two tasks run together even when the same person must do both.",
+        "explanation": "A network can assume two tasks run together even when the same person must do both. Check named resource availability after the dependency calculation. Levelling may move the finish beyond the unconstrained critical-path date. Fast-tracking overlaps activities and may increase rework; crashing adds suitable resources at a cost. Neither technique is a magic promise. Present schedule recovery options with consequences and obtain approval where needed.",
+        "example": "Using day zero as the start: A takes 2 days; B takes 4 after A; C takes 3 after A; D takes 2 after both B and C. Paths A–B–D and A–C–D take 8 and 7 days. The finish is day 8, B is on the critical path, and C has one day of total float if resources are unconstrained. Saving one day on C alone does not shorten the finish.",
+        "takeaway": "Calculate a simple critical path and recognise resource constraints that a network alone misses.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Draw the four-task network with start and finish points; label every dependency."
+            },
+            {
+              "title": "Decision",
+              "detail": "Prepare a milestone brief showing the original plan, revised forecast and recovery trade-off."
+            }
+          ]
+        }
+      }
+    ],
+    "m2-t3": [
+      {
+        "id": "m2-t3-s1",
+        "title": "Separate cost categories and assumptions",
+        "summary": "List labour effort and rates, materials, licences, vendor charges and any taxes or reimbursements relevant to the institution’s rules.",
+        "explanation": "List labour effort and rates, materials, licences, vendor charges and any taxes or reimbursements relevant to the institution’s rules. Separate one-time costs from recurring operational costs so handover does not conceal an unfunded service. Show the estimate date and exclusions. A classroom rate is a modelling assumption, not a market-price claim. Budget approval belongs to authorised people, not to the spreadsheet author.",
+        "example": "The placement pilot has spent less than expected, so a weekly note calls it “under budget”. Yet testing has barely started. The sponsor needs to know whether the project is efficient or simply late, and what completing the remaining work is now likely to cost.",
+        "takeaway": "Build a cost baseline and explain variance without confusing spend with progress.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create cost lines for the pilot using declared classroom rates and quantities."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a cost decision with an impact on scope or schedule and an approver."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t3-s2",
+        "title": "Baseline, actual and forecast have different jobs",
+        "summary": "The cost baseline is the approved reference for control.",
+        "explanation": "The cost baseline is the approved reference for control. Actual cost is incurred cost as of a stated cut-off; committed but unpaid spend may also matter for forecasting. Estimate to complete is the current expected remaining cost. Estimate at completion equals actual cost plus estimate to complete in the bottom-up method used here. Updating a forecast does not silently replace the approved baseline. Keep a change history.",
+        "example": "The placement pilot has spent less than expected, so a weekly note calls it “under budget”. Yet testing has barely started. The sponsor needs to know whether the project is efficient or simply late, and what completing the remaining work is now likely to cost.",
+        "takeaway": "Build a cost baseline and explain variance without confusing spend with progress.",
+        "visual": {
+          "kind": "cards",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create cost lines for the pilot using declared classroom rates and quantities."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a cost decision with an impact on scope or schedule and an approver."
+            }
+          ]
+        }
+      },
+      {
+        "id": "m2-t3-s3",
+        "title": "Relate spend to accepted work",
+        "summary": "Low spend can signal delay rather than efficiency.",
+        "explanation": "Low spend can signal delay rather than efficiency. In a simplified earned-value example, planned value is budgeted scheduled work, earned value is budgeted completed work, and actual cost is what that work cost. Cost variance is EV minus AC; schedule variance is EV minus PV in cost units, not days. Use these only where completion is defined credibly. A percentage invented to make status look green gives misleading indicators.",
+        "example": "At the reporting date PV is ₹20,000, EV ₹15,000 and AC ₹18,000. CV = −₹3,000 and SV = −₹5,000: the work completed cost more than its budget and less work was completed than planned. CPI = 15,000/18,000 ≈ 0.83. If a fresh bottom-up remaining estimate is ₹22,000, EAC is ₹40,000. Do not add EV to actual cost to forecast spend.",
+        "takeaway": "Build a cost baseline and explain variance without confusing spend with progress.",
+        "visual": {
+          "kind": "flow",
+          "items": [
+            {
+              "title": "Evidence",
+              "detail": "Create cost lines for the pilot using declared classroom rates and quantities."
+            },
+            {
+              "title": "Decision",
+              "detail": "Recommend a cost decision with an impact on scope or schedule and an approver."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

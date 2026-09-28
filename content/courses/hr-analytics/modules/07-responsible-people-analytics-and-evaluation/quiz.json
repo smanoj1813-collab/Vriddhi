@@ -1,0 +1,341 @@
+{
+  "moduleId": "m7",
+  "questions": {
+    "m7-t1": [
+      {
+        "id": "m7-t1-q1",
+        "question": "Why might workshop attendance and retention be associated without a causal workshop effect?",
+        "options": [
+          "Retention cannot be measured",
+          "All participants are randomly selected automatically",
+          "Pre-existing motivation may influence both",
+          "Correlation always proves causation"
+        ],
+        "answerIndex": 2,
+        "explanation": "A shared cause can explain the association.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q2",
+        "question": "What is reverse causality in this example?",
+        "options": [
+          "The workshop definitely causes every exit",
+          "The data file is sorted backwards",
+          "A formula has a negative sign",
+          "Intention to stay may influence workshop attendance"
+        ],
+        "answerIndex": 3,
+        "explanation": "The direction of influence may differ from the proposed story.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q3",
+        "question": "What is the illustrative difference-in-differences estimate for changes −8 and −2 points?",
+        "options": [
+          "−6 percentage points",
+          "−10 percentage points",
+          "6 percent relative increase",
+          "−2 percentage points"
+        ],
+        "answerIndex": 0,
+        "explanation": "−8 − (−2) = −6 points.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q4",
+        "question": "What is needed beyond the arithmetic for a causal interpretation?",
+        "options": [
+          "A renamed variable",
+          "Credible design assumptions and context",
+          "Only a polished chart",
+          "Only a large percentage"
+        ],
+        "answerIndex": 1,
+        "explanation": "The estimate depends on assumptions such as comparable trends.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t1-q5",
+        "question": "When should evaluation outcomes be defined?",
+        "options": [
+          "After deleting missing cases",
+          "Never in writing",
+          "Before inspecting intervention results",
+          "Only after finding a favourable metric"
+        ],
+        "answerIndex": 2,
+        "explanation": "Pre-definition reduces selective reporting.",
+        "difficulty": "core"
+      }
+    ],
+    "m7-t2": [
+      {
+        "id": "m7-t2-q1",
+        "question": "What is precision for four true exits among eight flagged records?",
+        "options": [
+          "40%",
+          "90%",
+          "8%",
+          "50%"
+        ],
+        "answerIndex": 3,
+        "explanation": "Precision is TP/(TP+FP) = 4/8.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q2",
+        "question": "What is recall for four detected exits out of ten actual exits?",
+        "options": [
+          "40%",
+          "50%",
+          "90%",
+          "4%"
+        ],
+        "answerIndex": 0,
+        "explanation": "Recall is TP/(TP+FN) = 4/10.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q3",
+        "question": "Why is a 90% accuracy claim insufficient in this example?",
+        "options": [
+          "Every flagged record exits",
+          "An all-stay baseline also achieves 90%",
+          "Accuracy is always negative",
+          "There are no false positives"
+        ],
+        "answerIndex": 1,
+        "explanation": "Class imbalance can make a trivial classifier look strong.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q4",
+        "question": "Which is an example of leakage when predicting future exits?",
+        "options": [
+          "Holding out a later test period",
+          "Documenting the positive class",
+          "Using an exit-processing date already known only after exit",
+          "Using a pre-period authorised aggregate workload measure"
+        ],
+        "answerIndex": 2,
+        "explanation": "Post-outcome information creates unrealistically optimistic evaluation.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t2-q5",
+        "question": "What does the classroom model review authorise?",
+        "options": [
+          "Automatic employee ranking for dismissal",
+          "Public lists of predicted leavers",
+          "Unrestricted use of real HR records",
+          "Learning from synthetic aggregate examples only"
+        ],
+        "answerIndex": 3,
+        "explanation": "Real deployment requires separate governance and is outside the course exercise.",
+        "difficulty": "core"
+      }
+    ],
+    "m7-t3": [
+      {
+        "id": "m7-t3-q1",
+        "question": "What is Group B’s selection rate for 12 of 40?",
+        "options": [
+          "30%",
+          "40%",
+          "12%",
+          "75%"
+        ],
+        "answerIndex": 0,
+        "explanation": "12/40 × 100 = 30%.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q2",
+        "question": "What is the B/A rate ratio for 30% and 40%?",
+        "options": [
+          "0.30",
+          "0.75",
+          "1.33",
+          "0.10"
+        ],
+        "answerIndex": 1,
+        "explanation": "0.30/0.40 = 0.75.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q3",
+        "question": "What does that ratio alone establish?",
+        "options": [
+          "Proof the process is fair",
+          "A mandate to reject more candidates",
+          "A disparity signal requiring context and investigation",
+          "A complete legal finding"
+        ],
+        "answerIndex": 2,
+        "explanation": "A screening ratio does not identify cause or legal status.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q4",
+        "question": "How should real demographic attributes be obtained for analysis?",
+        "options": [
+          "Guess from names",
+          "Infer from photographs",
+          "Scrape private profiles without review",
+          "Only through authorised lawful processes, not inference from names"
+        ],
+        "answerIndex": 3,
+        "explanation": "Sensitive-data handling needs purpose, authority and safeguards.",
+        "difficulty": "core"
+      },
+      {
+        "id": "m7-t3-q5",
+        "question": "What is part of responsible intervention governance?",
+        "options": [
+          "Human accountability and a route to correct data or contest decisions",
+          "Only model accuracy",
+          "Only a vendor brochure",
+          "Only a high dashboard score"
+        ],
+        "answerIndex": 0,
+        "explanation": "Consequential use requires broader safeguards than a technical metric.",
+        "difficulty": "core"
+      }
+    ]
+  },
+  "moduleAssessment": {
+    "title": "Module 7 scenario assessment",
+    "questions": [
+      {
+        "id": "m7-assessment-q1",
+        "question": "Workshop participants have lower exits, but participation is voluntary. What threatens a causal claim?",
+        "options": [
+          "The existence of any data",
+          "The use of a spreadsheet",
+          "A clear outcome definition",
+          "Selection differences such as motivation or manager support"
+        ],
+        "answerIndex": 3,
+        "explanation": "A shared cause can influence participation and retention.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q2",
+        "question": "Pilot exit rate falls from 18% to 10%; comparison falls from 12% to 9%. What is the illustrative difference-in-differences estimate?",
+        "options": [
+          "−5 percentage points",
+          "−11 percentage points",
+          "−8 percentage points",
+          "5% relative increase"
+        ],
+        "answerIndex": 0,
+        "explanation": "Pilot change −8 minus comparison change −3 equals −5 points.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q3",
+        "question": "What is needed before treating that estimate as causal?",
+        "options": [
+          "A larger chart",
+          "Credible comparison assumptions, including underlying trends",
+          "Only correct subtraction",
+          "A positive presentation tone"
+        ],
+        "answerIndex": 1,
+        "explanation": "The arithmetic alone cannot validate the design.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q4",
+        "question": "A sample has 90 stayers and 10 exits. A model predicts everyone stays. What are accuracy and exit recall?",
+        "options": [
+          "10% accuracy and 100% recall",
+          "90% accuracy and 90% recall",
+          "90% accuracy and 0% exit recall",
+          "100% accuracy and 90% recall"
+        ],
+        "answerIndex": 2,
+        "explanation": "The model gets stayers right but detects no exits.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q5",
+        "question": "A model flags 12 records, 6 of which exit; there are 15 actual exits. What are precision and recall?",
+        "options": [
+          "40% precision and 50% recall",
+          "80% precision and 90% recall",
+          "12% precision and 15% recall",
+          "50% precision and 40% recall"
+        ],
+        "answerIndex": 3,
+        "explanation": "Precision 6/12; recall 6/15.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q6",
+        "question": "A future-exit model includes completed exit-interview dates. What is the main defect?",
+        "options": [
+          "Outcome leakage from information unavailable at prediction time",
+          "Too few chart colours",
+          "A harmless extra field",
+          "Guaranteed fairness"
+        ],
+        "answerIndex": 0,
+        "explanation": "Post-event data can make evaluation unrealistically strong.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q7",
+        "question": "Group A selects 18 of 60 and B selects 8 of 40. What is B/A selection-rate ratio?",
+        "options": [
+          "0.44",
+          "About 0.67",
+          "1.5",
+          "0.10"
+        ],
+        "answerIndex": 1,
+        "explanation": "Rates are 30% and 20%; 0.20/0.30 ≈ 0.67.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q8",
+        "question": "A selection-rate ratio is below a chosen screening threshold. What is justified?",
+        "options": [
+          "Automatic rejection of future applicants",
+          "Proof of the cause",
+          "Authorised investigation of disparity with context",
+          "A complete legal finding from the ratio alone"
+        ],
+        "answerIndex": 2,
+        "explanation": "A heuristic flags questions; it does not replace legal or substantive review.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q9",
+        "question": "An analyst proposes inferring demographic groups from names to audit hiring. What should happen?",
+        "options": [
+          "Proceed because it is convenient",
+          "Use photographs instead",
+          "Scrape social profiles without review",
+          "Do not infer; seek an authorised lawful data approach"
+        ],
+        "answerIndex": 3,
+        "explanation": "Sensitive attributes should not be guessed from proxies.",
+        "difficulty": "advanced"
+      },
+      {
+        "id": "m7-assessment-q10",
+        "question": "A vendor model has high accuracy but no correction or contest route. What is missing?",
+        "options": [
+          "Governance for consequential use, including human accountability",
+          "Only a better logo",
+          "Only more decimal places",
+          "Nothing if accuracy is high"
+        ],
+        "answerIndex": 0,
+        "explanation": "Technical performance is not sufficient for responsible use.",
+        "difficulty": "advanced"
+      }
+    ]
+  }
+}

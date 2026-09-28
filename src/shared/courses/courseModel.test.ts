@@ -236,6 +236,15 @@ test('gradeBand picks the highest band whose minimum is met, regardless of decla
   assert.equal(gradeBand(m, 49), 'Not yet')
 })
 
+test('gradeBand degrades to an em dash when the pack declares no grade bands', () => {
+  // Regression: a manifest without assessment.grades used to throw
+  // "grades is not iterable" on the course overview page.
+  const m = fixture()
+  delete m.assessment.grades
+  assert.equal(gradeBand(m, 95), '—')
+  assert.equal(gradeBand(m, 0), '—')
+})
+
 test('formatMinutes', () => {
   assert.equal(formatMinutes(0), '0m')
   assert.equal(formatMinutes(45), '45m')
@@ -260,6 +269,16 @@ test('validateManifest: reports duplicate ids, bad weights, hour mismatches and 
   assert.ok(problems.some((p) => p.includes('declares 3h')), problems.join('\n'))
   assert.ok(problems.some((p) => p.includes('needs a .md lesson path')), problems.join('\n'))
   assert.ok(problems.some((p) => p.includes('exceed totalHours')), problems.join('\n'))
+})
+
+test('validateManifest: a manifest without grade bands is flagged, not silently accepted', () => {
+  // Regression guard: the digital-marketing pack shipped without
+  // assessment.grades and crashed the overview page ("grades is not
+  // iterable") because nothing validated the field.
+  const m = fixture()
+  delete m.assessment.grades
+  const problems = validateManifest(m)
+  assert.ok(problems.some((p) => p.includes('assessment.grades')), problems.join('\n'))
 })
 
 test('validateManifest: empty modules short-circuits with a single clear problem', () => {
@@ -290,4 +309,152 @@ test('the bundled GenAI certification manifest is valid and matches its publishe
   // Topic ids are unique and every lesson path lives under the pack.
   assert.equal(new Set(seq.map((t) => t.id)).size, seq.length)
   assert.ok(seq.every((t) => /^(modules|projects)\//.test(t.lesson)))
+})
+
+for (const [courseId, code] of [['project-management', 'VPM-101'], ['hr-analytics', 'VHR-101']]) {
+  const packDir = resolve(dirname(PACK), '..', courseId)
+  const manifest = JSON.parse(readFileSync(resolve(packDir, 'course.json'), 'utf8')) as CourseManifest
+
+  test(`${courseId}: complete 60-hour pack with consistent grading and support documents`, () => {
+    assert.deepEqual(validateManifest(manifest), [])
+    assert.equal(manifest.code, code)
+    assert.equal(manifest.totalHours, 60)
+    assert.equal(manifest.durationWeeks, 10)
+    assert.equal(manifest.modules.length, 8)
+    const topics = flattenTopics(manifest)
+    assert.equal(topics.filter((topic) => topic.type === 'lesson').length, 24)
+    assert.equal(topics.filter((topic) => topic.type === 'project').length, 5)
+    assert.equal(topics.reduce((sum, topic) => sum + topic.minutes, 0), 3600)
+    assert.equal(new Set(topics.map((topic) => topic.id)).size, topics.length)
+    for (const mod of manifest.modules) {
+      assert.equal(mod.topics.reduce((sum, topic) => sum + topic.minutes, 0), mod.hours * 60)
+      assert.equal(mod.assessment?.passMark, 60)
+      assert.equal(mod.assessment?.questionCount, 10)
+    }
+    assert.deepEqual(manifest.assessment.grades, [
+      { band: 'Distinction', min: 80 }, { band: 'Merit', min: 65 },
+      { band: 'Pass', min: 50 }, { band: 'Not yet', min: 0 },
+    ])
+    for (const [percent, band] of [[80, 'Distinction'], [65, 'Merit'], [50, 'Pass'], [49, 'Not yet']] as const) {
+      assert.equal(gradeBand(manifest, percent), band)
+    }
+    for (const topic of topics) {
+      const body = readFileSync(resolve(packDir, topic.lesson), 'utf8')
+      assert.ok(body.startsWith(`# ${topic.number} `), topic.lesson)
+      if (topic.type === 'lesson') assert.ok(body.split(/\s+/).length >= 900, topic.lesson)
+    }
+    for (const path of [...Object.values(manifest.documents || {}), manifest.finalAssessment!.blueprint!]) {
+      assert.ok(readFileSync(resolve(packDir, path), 'utf8').startsWith('# '), path)
+    }
+  })
+
+  test(`${courseId}: 200 scoreable questions and 72 lesson slides with no project quiz banks`, () => {
+    let questions = 0
+    let slides = 0
+    const ids = new Set<string>()
+    for (const mod of manifest.modules) {
+      const bank = JSON.parse(readFileSync(resolve(packDir, 'modules', mod.slug, 'quiz.json'), 'utf8')) as import('./types').CourseQuizBank
+      const deck = JSON.parse(readFileSync(resolve(packDir, 'modules', mod.slug, 'slides.json'), 'utf8')) as import('./types').CourseSlideBank
+      assert.equal(bank.moduleId, mod.id)
+      assert.equal(deck.moduleId, mod.id)
+      for (const topic of mod.topics) {
+        if (topic.type === 'project') {
+          assert.equal(bank.questions[topic.id], undefined)
+          continue
+        }
+        assert.equal(bank.questions[topic.id].length, manifest.lessonQuizQuestionCount)
+        assert.equal(deck.topics[topic.id].length, 3)
+        slides += deck.topics[topic.id].length
+      }
+      assert.equal(bank.moduleAssessment?.title, mod.assessment?.title)
+      assert.equal(bank.moduleAssessment?.questions.length, 10)
+      assert.ok(bank.moduleAssessment?.questions.every((q) => q.difficulty === 'advanced'))
+      for (const list of [...Object.values(bank.questions), bank.moduleAssessment!.questions]) {
+        const answers = Object.fromEntries(list.map((q) => [q.id, q.answerIndex]))
+        const result = scoreQuiz(list, answers)
+        assert.equal(result.score, list.length)
+        assert.equal(result.total, list.length)
+        for (const q of list) {
+          assert.ok(!ids.has(q.id), q.id)
+          ids.add(q.id)
+          assert.equal(new Set(q.options).size, 4, q.id)
+          assert.ok(q.options[q.answerIndex], q.id)
+          assert.ok(q.explanation, q.id)
+        }
+        questions += list.length
+      }
+    }
+    assert.equal(questions, 200)
+    assert.equal(slides, 72)
+  })
+
+  test(`${courseId}: all module gates and platform eligibility work at the declared 60% boundary`, () => {
+    let progress = emptyProgress()
+    assert.equal(certificateEligibility(manifest, progress).eligible, false)
+    for (const [index, mod] of manifest.modules.entries()) {
+      assert.equal(isModuleUnlocked(manifest, progress, index), true)
+      assert.equal(canTakeModuleAssessment(mod, progress), false)
+      for (const topic of mod.topics) {
+        assert.equal(isTopicUnlocked(manifest, progress, topic.id), true, topic.id)
+        progress = markComplete(progress, topic.id)
+        if (topic.type === 'lesson') progress = recordQuizAttempt(progress, topic.id, { score: 3, total: 5 })
+      }
+      assert.equal(canTakeModuleAssessment(mod, progress), true)
+      progress = recordModuleAssessmentAttempt(progress, mod.id, { score: 5, total: 10 })
+      if (index < manifest.modules.length - 1) assert.equal(isModuleUnlocked(manifest, progress, index + 1), false)
+      assert.equal(certificateEligibility(manifest, progress).eligible, false)
+      progress = recordModuleAssessmentAttempt(progress, mod.id, { score: 6, total: 10 })
+    }
+    assert.equal(coursePercent(manifest, progress), 100)
+    assert.equal(quizAverage(progress), 60)
+    assert.equal(certificateEligibility(manifest, progress).eligible, true)
+  })
+}
+
+// These simple teaching fixtures deliberately contain no quoted commas. Keep
+// their published checkpoints executable so content edits cannot silently
+// invalidate the portfolio projects' expected results.
+function practiceTables(courseId: string): Record<string, string>[][] {
+  const source = readFileSync(resolve(dirname(PACK), '..', courseId, 'resources/practice-data.md'), 'utf8')
+  return [...source.matchAll(/```csv\n([\s\S]*?)\n```/g)].map((match) => {
+    const [header, ...rows] = match[1].trim().split('\n').map((row) => row.split(','))
+    return rows.map((row) => Object.fromEntries(header.map((field, index) => [field, row[index]])))
+  })
+}
+
+test('project-management: synthetic schedule, cost and board checkpoints reconcile', () => {
+  const [tasks, costs, board] = practiceTables('project-management')
+  assert.equal(tasks.length, 8)
+  const finishes = new Map<string, number>()
+  for (const task of tasks) {
+    const predecessors = task.predecessors ? task.predecessors.split(';') : []
+    assert.ok(predecessors.every((id) => finishes.has(id)))
+    finishes.set(task.id, Math.max(0, ...predecessors.map((id) => finishes.get(id)!)) + Number(task.duration_days))
+  }
+  assert.equal(finishes.get('H'), 14)
+  const amounts = Object.fromEntries(costs.map((row) => [row.measure, Number(row.rupees)]))
+  assert.equal(amounts['Actual cost at cutoff'] + amounts['Current bottom-up estimate to complete'], 40000)
+  assert.deepEqual(board.filter((row) => row.status !== 'Done' && row.due_date && row.due_date < '2026-09-28').map((row) => row.id), ['PILOT-2', 'PILOT-3'])
+  assert.equal(board.filter((row) => !row.owner_role).length, 1)
+  assert.equal(board.filter((row) => !row.due_date).length, 1)
+})
+
+test('hr-analytics: synthetic funnel, duration and contracted-FTE checkpoints reconcile', () => {
+  const [applications, events, employees] = practiceTables('hr-analytics')
+  assert.equal(new Set(applications.map((row) => row.application_id)).size, 24)
+  const sum = (rows: Record<string, string>[], key: string) => rows.reduce((n, row) => n + Number(row[key]), 0)
+  assert.deepEqual(['screen_passed', 'interviewed', 'offered', 'accepted', 'joined'].map((field) => sum(applications, field)), [18, 16, 12, 9, 7])
+  for (const row of applications) {
+    const stages = ['screen_passed', 'interviewed', 'offered', 'accepted', 'joined'].map((field) => Number(row[field]))
+    assert.ok(stages.every((value, i) => (value === 0 || value === 1) && (i === 0 || value <= stages[i - 1])))
+  }
+  assert.equal(sum(applications.filter((row) => row.source === 'A'), 'joined'), 4)
+  assert.equal(sum(applications.filter((row) => row.source === 'B'), 'joined'), 3)
+  const days = (start: string, end: string) => (Date.parse(end) - Date.parse(start)) / 86400000
+  assert.equal(days(events[0].approved_date, events[0].accepted_date), 20)
+  assert.equal(days(events[0].application_date, events[0].accepted_date), 10)
+  assert.equal(days(events[1].approved_date, events[1].accepted_date), 25)
+  assert.equal(events[2].accepted_date, '')
+  assert.equal(new Set(employees.map((row) => row.employee_id)).size, 30)
+  assert.equal(sum(employees, 'contracted_weekly_hours') / 40, 27)
 })
