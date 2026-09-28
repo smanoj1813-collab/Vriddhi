@@ -11,6 +11,7 @@ import {
   normalizeParsedStructure,
   normalizeQuestionType,
   SUPPORTED_QUESTION_TYPES,
+  mergeSubpartQuestions,
 } from '../src/paperParsing'
 import { canDeletePaper, canEditExistingPaper, hasActiveScheduledTest, paperReadiness } from '../src/paperWorkflow'
 
@@ -579,5 +580,170 @@ describe('delete paper gates (who/when may remove a paper)', () => {
     assert.equal(hasActiveScheduledTest([{ status: 'published' }, { status: 'cancelled' }]), true)
     assert.equal(hasActiveScheduledTest([{ status: 'cancelled' }]), false)
     assert.equal(hasActiveScheduledTest([null]), false)
+  })
+})
+
+// ─── Sub-topic grouping (one question = all its sub-topics) ─────────────────
+//
+// University papers commonly print ONE question that carries several
+// sub-topics — "(A) … (B) … (C) … (D) …", "a) … b) …", "(i) … (ii) …" or
+// numbered "1) … 2) …". The import must surface such a group as ONE question
+// carrying ALL sub-topics (marks summed), never as one question per
+// sub-topic.
+
+describe('deterministic parse keeps sub-topics inside their parent question', () => {
+  it('groups "(A) … (B) … (C) … (D) …" sub-topics into a single question', () => {
+    const parsed = deterministicParse([
+      'SECTION - A',
+      '(Answer any FIVE questions. Each question carries 4 marks.)',
+      'Q.1. (A) Define Business Environment.',
+      '(B) Explain the features of Business Environment.',
+      '(C) What do you mean by Economic Environment ?',
+      '(D) Describe the objectives of Business Environment.',
+      'Q.2. (A) What is Globalisation ?',
+      '(B) Explain the impact of Globalisation on Indian Economy.',
+      '(C) Write a note on LPG Model.',
+      '(D) Distinguish between WTO and IMF.',
+    ].join('\n'))
+    assert.equal(parsed.accepted, true)
+    assert.equal(parsed.questionCount, 2, 'two printed questions, not eight sub-topics')
+    const [first, second] = parsed.sections[0].questions
+    assert.match(first.text, /\(A\) Define Business Environment\./)
+    assert.match(first.text, /\(D\) Describe the objectives of Business Environment\./)
+    assert.match(second.text, /\(A\) What is Globalisation \?/)
+    assert.match(second.text, /\(D\) Distinguish between WTO and IMF\./)
+    assert.equal(first.options, undefined, 'sub-topics are not MCQ options')
+  })
+
+  it('groups numbered sub-parts after an "Answer the following" opener', () => {
+    const parsed = deterministicParse([
+      'SECTION - B',
+      '1. Answer the following questions :',
+      '1) Define Computer. (2)',
+      '2) Explain the features of Computer. (3)',
+      '3) What are the applications of Computer ? (5)',
+      '2. Write a note on operating systems. (10)',
+    ].join('\n'))
+    assert.equal(parsed.questionCount, 2, 'numbered sub-parts stay with their parent')
+    const [group, plain] = parsed.sections[0].questions
+    assert.match(group.text, /1\) Define Computer\./)
+    assert.match(group.text, /3\) What are the applications of Computer \?/)
+    assert.equal(group.marks, 10, 'sub-part marks are summed (2+3+5)')
+    assert.equal(plain.text, 'Write a note on operating systems.')
+    assert.equal(plain.marks, 10)
+  })
+
+  it('groups lettered sub-topics after an opener (a) … d)', () => {
+    const parsed = deterministicParse([
+      'SECTION - B',
+      '(Answer any THREE. Each question carries 10 marks.)',
+      '11. Answer the following :',
+      'a) Define Business Environment and explain its nature.',
+      'b) Explain the objectives of Business Environment in detail.',
+      'c) Describe the components of Economic Environment.',
+      'd) What is LPG model ? Explain its impact on Indian business.',
+    ].join('\n'))
+    assert.equal(parsed.questionCount, 1, 'all four lettered sub-topics belong to question 11')
+    const question = parsed.sections[0].questions[0]
+    assert.match(question.text, /Answer the following :/)
+    assert.match(question.text, /d\) What is LPG model \?/)
+    assert.equal(question.type, 'long_answer')
+  })
+
+  it('recovers table layouts where the number sits alone and (A)-(D) follow', () => {
+    const parsed = deterministicParse([
+      'SECTION - A',
+      '(Answer any FIVE. Each question carries 4 marks.)',
+      '1.',
+      '(A) Define Management.',
+      '(B) Explain Planning.',
+      '(C) What is Organising ?',
+      '(D) Describe Controlling.',
+    ].join('\n'))
+    assert.equal(parsed.accepted, true)
+    assert.equal(parsed.questionCount, 1, 'the (A)-(D) body is no longer dropped')
+    const question = parsed.sections[0].questions[0]
+    assert.match(question.text, /\(A\) Define Management\./)
+    assert.match(question.text, /\(D\) Describe Controlling\./)
+  })
+
+  it('does not treat directive-lettered sub-topics as MCQ options', () => {
+    const parsed = deterministicParse([
+      'SECTION - B',
+      '(Answer any THREE. Each question carries 10 marks.)',
+      '11. Explain the following concepts :',
+      'A) Define GDP and explain its significance.',
+      'B) Explain GNP with a suitable example.',
+      'C) What is NNP ? Describe its calculation.',
+      'D) Discuss per capita income of India.',
+    ].join('\n'))
+    assert.equal(parsed.questionCount, 1)
+    const question = parsed.sections[0].questions[0]
+    assert.equal(question.options, undefined, 'directive sub-topics are not options')
+    assert.equal(question.type, 'long_answer')
+    assert.match(question.text, /A\) Define GDP/)
+    assert.match(question.text, /D\) Discuss per capita income of India\./)
+  })
+
+  it('keeps separate "(A) …" questions separate when each is numbered', () => {
+    // The merge must not glue two distinct numbered questions together just
+    // because both open with "(A)".
+    const parsed = deterministicParse([
+      'SECTION - A',
+      '(Answer any TWO. Each question carries 4 marks.)',
+      'Q.1. (A) Define demand. (B) State the law of demand.',
+      'Q.2. (A) Define supply. (B) State the law of supply.',
+    ].join('\n'))
+    assert.equal(parsed.questionCount, 2)
+    assert.match(parsed.sections[0].questions[0].text, /law of demand\./)
+    assert.match(parsed.sections[0].questions[1].text, /law of supply\./)
+  })
+})
+
+describe('mergeSubpartQuestions (AI output re-combines split sub-topics)', () => {
+  it('merges lettered sub-parts split by the model into one question, summing marks', () => {
+    const merged = mergeSubpartQuestions([
+      { text: '11. Answer the following : (a) Define GDP.', type: 'short_answer', marks: 2 },
+      { text: '(b) Explain GNP with an example.', type: 'short_answer', marks: 3 },
+      { text: '(c) What is NNP ?', type: 'short_answer', marks: 5 },
+    ])
+    assert.equal(merged.length, 1)
+    assert.match(merged[0].text, /\(a\) Define GDP\./)
+    assert.match(merged[0].text, /\(c\) What is NNP \?/)
+    assert.equal(merged[0].marks, 10, 'marks summed')
+  })
+
+  it('does not merge a fresh question that opens its own "(A)" group', () => {
+    const merged = mergeSubpartQuestions([
+      { text: '(A) Define demand. (B) State the law of demand.', type: 'short_answer', marks: 4 },
+      { text: '(A) Define supply. (B) State the law of supply.', type: 'short_answer', marks: 4 },
+    ])
+    assert.equal(merged.length, 2, 'second "(A)" starts a new group, not a sub-part')
+  })
+
+  it('never merges digit-leading entries without layout context', () => {
+    const merged = mergeSubpartQuestions([
+      { text: 'Answer the following :', type: 'short_answer', marks: 0 },
+      { text: '1) Define computer.', type: 'short_answer', marks: 2 },
+    ])
+    assert.equal(merged.length, 2, 'digit markers need the deterministic layout context')
+  })
+
+  it('normalizeParsedStructure applies the merge to the AI path too', () => {
+    const parsed = normalizeParsedStructure({
+      meta: {},
+      sections: [
+        {
+          name: 'Section B',
+          questions: [
+            { text: '11. Answer the following : (a) Define GDP.', type: 'short_answer', marks: 2 },
+            { text: '(b) Explain GNP.', type: 'short_answer', marks: 3 },
+          ],
+        },
+      ],
+    })
+    assert.equal(parsed.questionCount, 1)
+    assert.match(parsed.sections[0].questions[0].text, /\(b\) Explain GNP\./)
+    assert.equal(parsed.sections[0].questions[0].marks, 5)
   })
 })
