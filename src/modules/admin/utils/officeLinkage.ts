@@ -67,13 +67,26 @@ export function classifyOfficeLinkageFailure(facts: OfficeLinkageFacts): OfficeL
   return 'unknown'
 }
 
+/** A short, quotable description of the error that actually happened. */
+export function describeErrorDetail(error: unknown): string {
+  if (!error) return ''
+  const code = String((error as { code?: unknown } | null)?.code ?? '').trim()
+  const message =
+    error instanceof Error ? error.message : String((error as { message?: unknown } | null)?.message ?? error)
+  const text = String(message || '').trim()
+  if (code && text) return `${code}: ${text}`
+  return text || code
+}
+
 /**
  * What the desk should be told. Every branch names the ONE action that fixes
- * it, because the operator reading this has no access to the console.
+ * it, because the operator reading this has no access to the console — and the
+ * `unknown` branch carries the error itself, because "check the browser
+ * console" is not an instruction a college office can act on.
  */
 export function describeOfficeLinkageFailure(
   failure: OfficeLinkageFailure,
-  context: { desk: string; collegeName?: string }
+  context: { desk: string; collegeName?: string; detail?: unknown }
 ): string {
   const where = context.collegeName ? `${context.collegeName}` : 'this college'
   switch (failure) {
@@ -86,20 +99,24 @@ export function describeOfficeLinkageFailure(
     case 'permission-denied':
       return (
         `Security rules refused this ${context.desk} read, so nothing is shown for ${where}. This usually means ` +
-        `your sign-in token carries no college claim (sign out and back in), or the deployed security rules are ` +
-        `older than this app. If a sign-out does not help, ask a superadmin to redeploy the rules ` +
-        `(npm run deploy:rules) and run Access Control → Identity repair for your account.`
+        `your sign-in token carries no college claim (press Retry — the app re-issues the claims itself — or ` +
+        `sign out and back in), or the deployed security rules are older than this app. If a retry does not help, ` +
+        `ask a superadmin to redeploy the rules (npm run deploy:rules) and run Access Control → Identity repair ` +
+        `for your account.`
       )
     case 'missing-index':
       return (
         `This ${context.desk} query needs a Firestore index that has not been created yet, so nothing could be ` +
         `loaded for ${where}. Ask a superadmin to run npm run deploy:indexes, then reload.`
       )
-    default:
+    default: {
+      const detail = describeErrorDetail(context.detail)
       return (
-        `Could not load the ${context.desk} data for ${where}. The details are in the browser console; ` +
-        `retry, and if it keeps failing ask a superadmin to check this account's college link.`
+        `Could not load the ${context.desk} data for ${where}.` +
+        (detail ? ` The read failed with: ${detail}.` : '') +
+        ` Retry; if it keeps failing, send this message to a superadmin — it identifies the exact read that broke.`
       )
+    }
   }
 }
 

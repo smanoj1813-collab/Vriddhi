@@ -24,6 +24,8 @@ import {
   classifyOfficeLinkageFailure,
   describeOfficeLinkageFailure,
 } from '../utils/officeLinkage'
+import { isPermissionDeniedError } from '../../../shared/utils/identityClaims'
+import { ensureIdentityClaims } from '../../../shared/services/identitySelfHeal'
 import {
   calculateSummary,
   applyDiscount,
@@ -79,6 +81,17 @@ export function useFeeData(studentId?: string) {
   const [students, setStudents] = useState<FeeStudent[]>([])
   const loadedRef = useRef(false)
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /**
+   * The fee ledger is authorised from the ID-token CLAIM (`isFinance(cid)`
+   * compares `collegeId() == cid`), so an accounts account whose collegeId
+   * claim was never issued reads nothing at all — while its profile document
+   * still supplies the college name the header shows. The repair already
+   * exists in the app (`ensureIdentityClaims` → `syncMyIdentity`); the faculty
+   * pages call it on demand and this hook did not, so the desk's only remedy
+   * was a manual sign-out. One attempt per mount, then one retry — the retry
+   * cannot double-count anything, it only re-reads.
+   */
+  const healAttempted = useRef(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -104,6 +117,25 @@ export function useFeeData(studentId?: string) {
       loadedRef.current = true
     } catch (err) {
       console.error('[useFeeData] Failed to load fee ledger:', err)
+      if (isPermissionDeniedError(err) && user && !healAttempted.current) {
+        healAttempted.current = true
+        try {
+          const outcome = await ensureIdentityClaims({
+            role: user.role,
+            collegeId: user.collegeId ?? null,
+          })
+          if (outcome === 'refreshed') {
+            // The token now carries the college the rules check; read again.
+            // Awaited (not returned) so this frame's `finally` cannot clear
+            // `loading` while the retry is still in flight.
+            await fetchData()
+            return
+          }
+          console.warn('[useFeeData] claim refresh did not repair the read:', outcome)
+        } catch (healErr) {
+          console.warn('[useFeeData] claim refresh failed:', healErr)
+        }
+      }
       // Keep the last good data on screen and say WHY it may be missing,
       // rather than replacing a working desk with an empty one.
       setError(
@@ -113,13 +145,13 @@ export function useFeeData(studentId?: string) {
             message: err instanceof Error ? err.message : String(err),
             collegeId: identityCollegeId,
           }),
-          { desk: 'fee ledger' }
+          { desk: 'fee ledger', detail: err }
         )
       )
     } finally {
       setLoading(false)
     }
-  }, [filters.batch, filters.category, filters.course, filters.dateFrom, filters.dateTo, filters.search, filters.status, studentId, identityCollegeId])
+  }, [filters.batch, filters.category, filters.course, filters.dateFrom, filters.dateTo, filters.search, filters.status, studentId, identityCollegeId, user])
 
   useEffect(() => {
     if (!loadedRef.current) void fetchData()

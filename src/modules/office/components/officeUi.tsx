@@ -154,7 +154,7 @@ export function OfficeReadError({
     >
       <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
       <p className="text-sm text-amber-700 dark:text-amber-300 flex-1">
-        {describeOfficeLinkageFailure(failure, { desk })}
+        {describeOfficeLinkageFailure(failure, { desk, detail: failed.error })}
       </p>
       {onRetry && (
         <button

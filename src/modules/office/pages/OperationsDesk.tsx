@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, BookOpen, Boxes, ClipboardList, LayoutDashboard, Library, PackageCheck, ShieldCheck, ShoppingCart, ArrowLeftRight, Wrench } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 import { OfficeReadError, PageHeader, StatCard, btn } from '../components/officeUi'
+import { useOfficeSelfHeal } from '../hooks/useOfficeSelfHeal'
 import { fetchActiveLoans, fetchOpenReservations } from '../api/libraryApi'
 import { fetchNoDuesRequests, fetchNoDuesSettings } from '../api/noDuesApi'
 import { useAssets, useInventorySettings, useItems } from '../hooks/useInventory'
@@ -20,6 +21,7 @@ import { Todo } from './AccountsDesk'
 export default function OperationsDesk() {
   const { user } = useAuth()
   const cid = useCollegeId()
+  const healClaims = useOfficeSelfHeal()
   const today = todayIso()
   const loansQ = useQuery({ queryKey: ['opsDesk', cid, 'loans'], queryFn: fetchActiveLoans, enabled: !!cid, staleTime: 60 * 1000 })
   const resQ = useQuery({ queryKey: ['opsDesk', cid, 'res'], queryFn: fetchOpenReservations, enabled: !!cid, staleTime: 60 * 1000 })
@@ -61,7 +63,10 @@ export default function OperationsDesk() {
         desk="operations desk"
         collegeId={cid}
         errors={[loansQ, resQ, ndQ, itemsQ, assetsQ, prsQ, posQ]}
-        onRetry={() => {
+        onRetry={async () => {
+          // The rules authorise these reads from the token, so a retry on an
+          // unrepaired stale claim just fails identically. Repair first.
+          await healClaims()
           void loansQ.refetch(); void resQ.refetch(); void ndQ.refetch()
           void itemsQ.refetch(); void assetsQ.refetch(); void prsQ.refetch(); void posQ.refetch()
         }}

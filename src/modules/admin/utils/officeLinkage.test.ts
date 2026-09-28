@@ -75,8 +75,38 @@ test('every message names an action, and none of them blames the student data', 
   assert.match(unlinked, /not linked to a college/)
   assert.equal(unlinked.includes('Import students'), false)
   // The rules copy must point at a redeploy, because that is the fix that
-  // works when signing out does not.
-  assert.match(describeOfficeLinkageFailure('permission-denied', context), /deploy|redeploy|redeploy/i)
+  // works when signing out does not — and it must tell the operator to press
+  // Retry first, since the desk now repairs the claim itself.
+  const denied = describeOfficeLinkageFailure('permission-denied', context)
+  assert.match(denied, /deploy|redeploy|redeploy/i)
+  assert.match(denied, /Retry/)
+})
+
+test('an unclassified failure is reported with the error that caused it', () => {
+  // The old copy ended "the details are in the browser console", which is not
+  // an instruction a college office can act on — the whole point of this
+  // message is that whoever reads it is the person who can fix it.
+  const error = Object.assign(new Error('Firestore has no collection "items"'), { code: 'failed-precondition' })
+  const message = describeOfficeLinkageFailure('unknown', { desk: 'accounts desk', detail: error })
+  assert.equal(message.includes('console'), false)
+  assert.match(message, /failed-precondition/)
+  assert.match(message, /Firestore has no collection "items"/)
+
+  // A code with no message still has to name the code.
+  assert.match(
+    describeOfficeLinkageFailure('unknown', { desk: 'accounts desk', detail: { code: 'unavailable' } }),
+    /unavailable/
+  )
+  // A message with no code still has to name the message.
+  assert.match(
+    describeOfficeLinkageFailure('unknown', { desk: 'accounts desk', detail: new Error('network error') }),
+    /network error/
+  )
+  // And with nothing to report it must not pretend it knows the cause.
+  const bare = describeOfficeLinkageFailure('unknown', { desk: 'accounts desk' })
+  assert.equal(bare.includes('undefined'), false)
+  assert.equal(bare.includes('null'), false)
+  assert.equal(bare.includes('console'), false)
 })
 
 test('the empty state is a different sentence from every failure', () => {

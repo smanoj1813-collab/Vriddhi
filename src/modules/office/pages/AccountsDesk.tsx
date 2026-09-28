@@ -12,6 +12,7 @@ import { fetchFines } from '../api/libraryApi'
 import { billPayState } from '../api/procurementApi'
 import { useProcurementSettings, usePurchaseRequests, useVendorBills } from '../hooks/useProcurement'
 import { useCollegeId } from '../hooks/useLibrary'
+import { useOfficeSelfHeal } from '../hooks/useOfficeSelfHeal'
 import { todayIso } from '../api/officeDb'
 import { canActOnStep, nextStep } from '../utils/procurementEngine'
 import { summarizeDaybook } from '../utils/tallyExport'
@@ -19,6 +20,7 @@ import { summarizeDaybook } from '../utils/tallyExport'
 export default function AccountsDesk() {
   const { user } = useAuth()
   const cid = useCollegeId()
+  const healClaims = useOfficeSelfHeal()
   const today = todayIso()
   const feesQ = useQuery({ queryKey: ['accountsDesk', cid, 'fees'], queryFn: () => fetchFeePayments(), enabled: !!cid, staleTime: 60 * 1000 })
   const todayQ = useQuery({ queryKey: ['accountsDesk', cid, 'today', today], queryFn: () => buildDaybook({ from: today, to: today, includeFees: true, includeFines: true, includeVendors: false, includePayroll: false }), enabled: !!cid, staleTime: 60 * 1000 })
@@ -52,7 +54,11 @@ export default function AccountsDesk() {
         desk="accounts desk"
         collegeId={cid}
         errors={[feesQ, todayQ, finesQ, billsQ, prsQ]}
-        onRetry={() => {
+        onRetry={async () => {
+          // Re-issue a stale college claim BEFORE retrying: the rules authorise
+          // these reads from the token, so a retry on an unrepaired token just
+          // fails the same way.
+          await healClaims()
           void feesQ.refetch(); void todayQ.refetch(); void finesQ.refetch()
           void billsQ.refetch(); void prsQ.refetch()
         }}
