@@ -27,6 +27,7 @@ import {
 import { db } from '@/Firebase/config'
 import { actor, clean, nextCounter, nowIso, num, officeCol, officeDoc, str, todayIso } from './officeDb'
 import { applyMovement, formatAssetTag, normalizeInventorySettings, type AssetCategory, type DepMethod, type InventorySettings } from '../utils/inventoryEngine'
+import { cappedLimit, warnIfTruncated } from '@/shared/utils/firestoreLimits';
 
 // ─── Settings ─────────────────────────────────────────────
 export async function fetchInventorySettings(cid?: string): Promise<InventorySettings> {
@@ -113,7 +114,8 @@ const mapAsset = (id: string, r: DocumentData): Asset => ({
 })
 
 export async function fetchAssets(): Promise<Asset[]> {
-  const snap = await getDocs(query(officeCol('assets'), limit(50000)))
+  const snap = await getDocs(query(officeCol('assets'), limit(cappedLimit(50000))))
+  warnIfTruncated(snap.size, 'assets');
   return snap.docs.map(d => mapAsset(d.id, d.data())).sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))
 }
 
@@ -286,7 +288,7 @@ export async function fetchMovements(opts: { itemId?: string; from?: string; to?
   const cons = opts.itemId
     ? [where('itemId', '==', opts.itemId)]
     : [where('date', '>=', opts.from || '2000-01-01'), where('date', '<=', opts.to || '2999-12-31')]
-  const snap = await getDocs(query(officeCol('stockMovements'), ...cons, limit(20000)))
+  const snap = await getDocs(query(officeCol('stockMovements'), ...cons, limit(cappedLimit(20000))))
   return snap.docs.map(d => mapMove(d.id, d.data())).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 

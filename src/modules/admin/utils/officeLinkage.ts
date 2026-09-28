@@ -86,7 +86,7 @@ export function describeErrorDetail(error: unknown): string {
  */
 export function describeOfficeLinkageFailure(
   failure: OfficeLinkageFailure,
-  context: { desk: string; collegeName?: string; detail?: unknown }
+  context: { desk: string; collegeName?: string; detail?: unknown; healAttempted?: boolean }
 ): string {
   const where = context.collegeName ? `${context.collegeName}` : 'this college'
   switch (failure) {
@@ -97,13 +97,23 @@ export function describeOfficeLinkageFailure(
         `role/college claims (Access Control → Admins → your account), and make sure the account row names a college.`
       )
     case 'permission-denied':
-      return (
-        `Security rules refused this ${context.desk} read, so nothing is shown for ${where}. This usually means ` +
-        `your sign-in token carries no college claim (press Retry — the app re-issues the claims itself — or ` +
-        `sign out and back in), or the deployed security rules are older than this app. If a retry does not help, ` +
-        `ask a superadmin to redeploy the rules (npm run deploy:rules) and run Access Control → Identity repair ` +
-        `for your account.`
-      )
+      // What to do next depends entirely on whether the app has ALREADY tried
+      // to re-issue the claims. Telling someone to sign out again when the app
+      // has just called syncMyIdentity and it changed nothing sends them in a
+      // circle; and "ask a superadmin to check the rules" is the wrong next step
+      // when the account row simply has no college on it.
+      return context.healAttempted
+        ? `Security rules refused this ${context.desk} read, and the app has already tried to re-issue ` +
+          `your sign-in claims — the read is still refused, so the problem is the account itself, not a stale ` +
+          `session. A superadmin needs to run Access Control → Identity repair for your account, and the ` +
+          `account row must name your college (an account with no college on it cannot be repaired from here). ` +
+          `If your reads work in other parts of the app and only this one fails, the deployed security rules ` +
+          `may also be older than the app — ask for a rules redeploy (npm run deploy:rules).`
+        : `Security rules refused this ${context.desk} read, so nothing is shown for ${where}. This usually means ` +
+          `your sign-in token carries no college claim (press Retry — the app re-issues the claims itself — or ` +
+          `sign out and back in), or the deployed security rules are older than this app. If a retry does not help, ` +
+          `ask a superadmin to redeploy the rules (npm run deploy:rules) and run Access Control → Identity repair ` +
+          `for your account.`
     case 'missing-index':
       return (
         `This ${context.desk} query needs a Firestore index that has not been created yet, so nothing could be ` +

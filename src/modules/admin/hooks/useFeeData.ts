@@ -136,6 +136,10 @@ export function useFeeData(studentId?: string) {
           console.warn('[useFeeData] claim refresh failed:', healErr)
         }
       }
+      // Reaching here on a permission denial means the self-heal ran (or was
+      // already spent) and the read is STILL refused — so the message must say
+      // so, instead of sending the reader round the sign-out loop a second time.
+      const healRan = isPermissionDeniedError(err) && !!user
       // Keep the last good data on screen and say WHY it may be missing,
       // rather than replacing a working desk with an empty one.
       setError(
@@ -145,7 +149,7 @@ export function useFeeData(studentId?: string) {
             message: err instanceof Error ? err.message : String(err),
             collegeId: identityCollegeId,
           }),
-          { desk: 'fee ledger', detail: err }
+          { desk: 'fee ledger', detail: err, healAttempted: healRan }
         )
       )
     } finally {

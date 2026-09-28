@@ -133,12 +133,19 @@ export function OfficeReadError({
   collegeId,
   desk,
   onRetry,
+  healAttempted = false,
 }: {
   /** Anything with a `isError` / `error` shape (react-query results). */
   errors: Array<{ isError?: boolean; error?: unknown }>
   collegeId: string
   desk: string
   onRetry?: () => void
+  /**
+   * True once the desk has already tried to re-issue this account's claims.
+   * It changes what the reader should do next — a sign-out they have already
+   * done, or a refresh the app already ran, is not advice.
+   */
+  healAttempted?: boolean
 }) {
   const failed = errors.find((entry) => entry.isError || entry.error)
   if (!failed) return null
@@ -154,7 +161,7 @@ export function OfficeReadError({
     >
       <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
       <p className="text-sm text-amber-700 dark:text-amber-300 flex-1">
-        {describeOfficeLinkageFailure(failure, { desk, detail: failed.error })}
+        {describeOfficeLinkageFailure(failure, { desk, detail: failed.error, healAttempted })}
       </p>
       {onRetry && (
         <button

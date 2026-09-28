@@ -20,7 +20,7 @@ import { summarizeDaybook } from '../utils/tallyExport'
 export default function AccountsDesk() {
   const { user } = useAuth()
   const cid = useCollegeId()
-  const healClaims = useOfficeSelfHeal()
+  const { healClaims, hasHealed } = useOfficeSelfHeal()
   const today = todayIso()
   const feesQ = useQuery({ queryKey: ['accountsDesk', cid, 'fees'], queryFn: () => fetchFeePayments(), enabled: !!cid, staleTime: 60 * 1000 })
   const todayQ = useQuery({ queryKey: ['accountsDesk', cid, 'today', today], queryFn: () => buildDaybook({ from: today, to: today, includeFees: true, includeFines: true, includeVendors: false, includePayroll: false }), enabled: !!cid, staleTime: 60 * 1000 })
@@ -52,6 +52,7 @@ export default function AccountsDesk() {
       <PageHeader title="Accounts Desk" subtitle={`Good day${user?.name ? `, ${user.name.split(' ')[0]}` : ''} — here's what needs attention`} icon={<Wallet className="w-5 h-5" />} />
       <OfficeReadError
         desk="accounts desk"
+        healAttempted={hasHealed}
         collegeId={cid}
         errors={[feesQ, todayQ, finesQ, billsQ, prsQ]}
         onRetry={async () => {

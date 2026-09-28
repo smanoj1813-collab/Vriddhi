@@ -61,6 +61,7 @@ import {
 } from '../utils/libraryEngine'
 import { fetchCollegeFaculty } from '@/modules/admin/api/facultyDirectoryApi'
 import { waiveFee } from '@/modules/admin/api/feeApi'
+import { cappedLimit, warnIfTruncated } from '@/shared/utils/firestoreLimits';
 
 // ─── Types ────────────────────────────────────────────────
 export type TitleType = 'book' | 'journal' | 'magazine' | 'ebook' | 'ejournal' | 'database' | 'thesis' | 'media'
@@ -472,7 +473,8 @@ export function findMembers(members: LibraryMember[], raw: string, max = 8): Lib
 
 // ─── Catalogue ────────────────────────────────────────────
 export async function fetchTitles(cid?: string): Promise<LibraryTitle[]> {
-  const snap = await getDocs(query(officeCol('libraryTitles', cid), limit(20000)))
+  const snap = await getDocs(query(officeCol('libraryTitles', cid), limit(cappedLimit(20000))))
+  warnIfTruncated(snap.size, 'libraryTitles');
   return snap.docs.map(d => mapTitle(d.id, d.data())).sort((a, b) => a.title.localeCompare(b.title))
 }
 
@@ -512,7 +514,7 @@ export async function deleteTitle(id: string): Promise<void> {
 
 // ─── Copies / accession register ─────────────────────────
 export async function fetchCopies(titleId?: string): Promise<LibraryCopy[]> {
-  const constraints: QueryConstraint[] = titleId ? [where('titleId', '==', titleId)] : [limit(50000)]
+  const constraints: QueryConstraint[] = titleId ? [where('titleId', '==', titleId)] : [limit(cappedLimit(50000))]
   const snap = await getDocs(query(officeCol('libraryCopies'), ...constraints))
   return snap.docs.map(d => mapCopy(d.id, d.data())).sort((a, b) => a.accessionNo.localeCompare(b.accessionNo, undefined, { numeric: true }))
 }
@@ -601,7 +603,8 @@ export async function updateCopyDetails(id: string, patch: Partial<Pick<LibraryC
 
 // ─── Circulation ──────────────────────────────────────────
 export async function fetchActiveLoans(): Promise<LibraryLoan[]> {
-  const snap = await getDocs(query(officeCol('libraryLoans'), where('status', '==', 'issued'), limit(20000)))
+  const snap = await getDocs(query(officeCol('libraryLoans'), where('status', '==', 'issued'), limit(cappedLimit(20000))))
+  warnIfTruncated(snap.size, 'libraryLoans(status==issued)');
   return snap.docs.map(d => mapLoan(d.id, d.data())).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 }
 
@@ -611,7 +614,7 @@ export async function fetchLoansForMember(memberId: string): Promise<LibraryLoan
 }
 
 export async function fetchLoansBetween(from: string, to: string): Promise<LibraryLoan[]> {
-  const snap = await getDocs(query(officeCol('libraryLoans'), where('issueDate', '>=', from), where('issueDate', '<=', to), limit(50000)))
+  const snap = await getDocs(query(officeCol('libraryLoans'), where('issueDate', '>=', from), where('issueDate', '<=', to), limit(cappedLimit(50000))))
   return snap.docs.map(d => mapLoan(d.id, d.data()))
 }
 
@@ -907,7 +910,8 @@ export async function reserveForMember(title: LibraryTitle, member: LibraryMembe
 export async function fetchFines(status?: FineStatus | 'open'): Promise<LibraryFine[]> {
   const constraints: QueryConstraint[] =
     status === 'open' ? [where('status', 'in', ['pending', 'posted'])] : status ? [where('status', '==', status)] : []
-  const snap = await getDocs(query(officeCol('libraryFines'), ...constraints, limit(20000)))
+  const snap = await getDocs(query(officeCol('libraryFines'), ...constraints, limit(cappedLimit(20000))))
+  warnIfTruncated(snap.size, 'libraryFines');
   return snap.docs.map(d => mapFine(d.id, d.data())).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
@@ -1022,7 +1026,7 @@ export async function syncPostedFines(fines: LibraryFine[]): Promise<number> {
 
 // ─── Gate register ────────────────────────────────────────
 export async function fetchVisits(from: string, to: string): Promise<LibraryVisit[]> {
-  const snap = await getDocs(query(officeCol('libraryVisits'), where('date', '>=', from), where('date', '<=', to), limit(50000)))
+  const snap = await getDocs(query(officeCol('libraryVisits'), where('date', '>=', from), where('date', '<=', to), limit(cappedLimit(50000))))
   return snap.docs.map(d => mapVisit(d.id, d.data())).sort((a, b) => b.inAt.localeCompare(a.inAt))
 }
 

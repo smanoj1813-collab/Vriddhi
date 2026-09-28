@@ -117,3 +117,18 @@ test('the empty state is a different sentence from every failure', () => {
   assert.equal(empty, 'No students found.')
   assert.equal(describeOfficeEmptyState('students', 'Vriddhi Demo College'), 'No students found in Vriddhi Demo College.')
 })
+
+test('a refusal that survived the self-heal points at the account, not at another sign-out', () => {
+  const context = { desk: 'accounts desk', collegeName: 'Vriddhi Demo College' }
+  const before = describeOfficeLinkageFailure('permission-denied', { ...context, healAttempted: false });
+  const after = describeOfficeLinkageFailure('permission-denied', { ...context, healAttempted: true });
+
+  // Before: the app repairs the claim on Retry, so that IS the next step.
+  assert.match(before, /press Retry/i);
+  // After: the repair already ran and changed nothing. Sending the reader
+  // back through "sign out and back in" is a loop; the account is the problem.
+  assert.equal(/sign out and back in/i.test(after), false);
+  assert.match(after, /already tried to re-issue/i);
+  assert.match(after, /Identity repair/i);
+  assert.match(after, /account row must name your college/i);
+});

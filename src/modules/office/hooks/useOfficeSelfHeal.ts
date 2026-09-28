@@ -19,20 +19,25 @@
 // desk can call this before every retry without cost. The one-shot guard keeps
 // a genuinely broken account from looping a callable on every click.
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 import { ensureIdentityClaims } from '@/shared/services/identitySelfHeal'
 
 /**
- * @returns true when the claims were re-issued, i.e. a retry is worth making.
+ * @returns `healClaims` resolves true when the claims were re-issued, i.e. a
+ *   retry is worth making; `hasHealed` is true once the one attempt is spent,
+ *   which the banner needs so it can stop telling someone to press Retry when
+ *   the repair has already been tried and changed nothing.
  */
-export function useOfficeSelfHeal(): () => Promise<boolean> {
+export function useOfficeSelfHeal(): { healClaims: () => Promise<boolean>; hasHealed: boolean } {
   const { user } = useAuth()
   const attempted = useRef(false)
+  const [hasHealed, setHasHealed] = useState(false)
 
-  return useCallback(async () => {
+  const healClaims = useCallback(async () => {
     if (!user || attempted.current) return false
     attempted.current = true
+    setHasHealed(true)
     try {
       const outcome = await ensureIdentityClaims({
         role: user.role,
@@ -51,4 +56,6 @@ export function useOfficeSelfHeal(): () => Promise<boolean> {
       return false
     }
   }, [user])
+
+  return { healClaims, hasHealed }
 }

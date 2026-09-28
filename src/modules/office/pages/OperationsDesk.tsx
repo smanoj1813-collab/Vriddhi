@@ -21,7 +21,7 @@ import { Todo } from './AccountsDesk'
 export default function OperationsDesk() {
   const { user } = useAuth()
   const cid = useCollegeId()
-  const healClaims = useOfficeSelfHeal()
+  const { healClaims, hasHealed } = useOfficeSelfHeal()
   const today = todayIso()
   const loansQ = useQuery({ queryKey: ['opsDesk', cid, 'loans'], queryFn: fetchActiveLoans, enabled: !!cid, staleTime: 60 * 1000 })
   const resQ = useQuery({ queryKey: ['opsDesk', cid, 'res'], queryFn: fetchOpenReservations, enabled: !!cid, staleTime: 60 * 1000 })
@@ -61,6 +61,7 @@ export default function OperationsDesk() {
       <PageHeader title="Operations Desk" subtitle={`Library, stores and purchasing${user?.name ? ` — ${user.name.split(' ')[0]}` : ''}`} icon={<LayoutDashboard className="w-5 h-5" />} />
       <OfficeReadError
         desk="operations desk"
+        healAttempted={hasHealed}
         collegeId={cid}
         errors={[loansQ, resQ, ndQ, itemsQ, assetsQ, prsQ, posQ]}
         onRetry={async () => {
