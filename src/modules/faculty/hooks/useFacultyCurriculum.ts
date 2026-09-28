@@ -7,6 +7,19 @@ import type {
 } from '../types/curriculum';
 import { getFacultyCurriculum } from '../../admin/api/curriculumMappingApi';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
+import { fetchFacultyTopicLedger } from '../../admin/api/curriculumMappingApi';
+
+import type { LedgerTopicRow, ModuleCoverage, TopicCoverage } from '../utils/curriculumCoverage';
+import { classifyModule, indexLedger, localToday } from '../utils/curriculumCoverage';
+
+/** Coverage for one subject: a roll-up plus the per-module detail. */
+export interface CourseCoverage {
+  topics: number;
+  covered: number;
+  planned: number;
+  pct: number;
+  modules: Record<string, { coverage: ModuleCoverage; topics: TopicCoverage[] }>;
+}
 
 export interface UseFacultyCurriculumReturn {
   curriculum: FacultyCurriculumView[];
@@ -22,6 +35,14 @@ export interface UseFacultyCurriculumReturn {
   getCourseSchedule: () => FacultyScheduleItem[];
   getTodaySchedule: () => FacultyScheduleItem[];
   getUpcomingSchedule: () => FacultyScheduleItem[];
+  /**
+   * Per-course coverage, keyed by courseCode, joined from the `facultyTopics`
+   * ledger. Empty until the ledger loads — the modules render either way, so a
+   * denied or slow ledger never blanks the page.
+   */
+  coverage: Record<string, CourseCoverage>;
+  coverageLoading: boolean;
+  coverageError: string | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
@@ -65,6 +86,9 @@ export function useFacultyCurriculum(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [ledger, setLedger] = useState<LedgerTopicRow[]>([]);
+  const [coverageLoading, setCoverageLoading] = useState(false);
+  const [coverageError, setCoverageError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!facultyId || !collegeId) {
@@ -104,6 +128,22 @@ export function useFacultyCurriculum(
         };
       });
       setSchedules(mapped);
+
+      // Coverage evidence. Deliberately NOT inside the try's critical path: a
+      // denied or failing ledger must not take the whole page down, because
+      // the modules themselves are the thing the teacher came to read.
+      setCoverageLoading(true);
+      setCoverageError(null);
+      fetchFacultyTopicLedger(facultyId)
+        .then((rows) => setLedger(rows))
+        .catch((err) => {
+          console.warn('[useFacultyCurriculum] topic ledger unavailable:', err);
+          setLedger([]);
+          setCoverageError(
+            err instanceof Error ? err.message : 'Covered topics could not be loaded'
+          );
+        })
+        .finally(() => setCoverageLoading(false));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load curriculum');
     } finally {
@@ -134,6 +174,43 @@ export function useFacultyCurriculum(
     const today = localISO(new Date());
     return schedules.filter(s => s.date === today);
   }, [schedules]);
+
+  /**
+   * Join the ledger onto every module of every course this teacher holds.
+   * Pure, memoised on the ledger + curriculum so it recomputes only when one
+   * of them actually changes.
+   */
+  const coverage = useMemo<Record<string, CourseCoverage>>(() => {
+    const index = indexLedger(ledger);
+    const today = localToday();
+    const out: Record<string, CourseCoverage> = {};
+    for (const course of curriculum) {
+      const modules: CourseCoverage['modules'] = {};
+      let topics = 0;
+      let covered = 0;
+      let planned = 0;
+      for (const mod of course.modules || []) {
+        const key = String(mod.moduleNo ?? mod.id ?? '');
+        const { topics: topicList, coverage: modCoverage } = classifyModule(
+          mod.topics || [],
+          index,
+          { subject: course.courseName, subjectCode: course.courseCode, today }
+        );
+        modules[key] = { coverage: modCoverage, topics: topicList };
+        topics += modCoverage.topics;
+        covered += modCoverage.covered;
+        planned += modCoverage.planned;
+      }
+      out[course.courseCode || course.courseId] = {
+        topics,
+        covered,
+        planned,
+        pct: topics ? Math.round((covered / topics) * 100) : 0,
+        modules,
+      };
+    }
+    return out;
+  }, [curriculum, ledger]);
 
   const upcomingSchedule = useMemo(() => {
     const today = localISO(new Date());
@@ -173,6 +250,9 @@ export function useFacultyCurriculum(
     getCourseSchedule: () => courseSchedule,
     getTodaySchedule: () => todaySchedule,
     getUpcomingSchedule: () => upcomingSchedule,
+    coverage,
+    coverageLoading,
+    coverageError,
   };
 }
 

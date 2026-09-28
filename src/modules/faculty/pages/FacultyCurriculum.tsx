@@ -14,6 +14,7 @@ import { openAIChatWithQuery } from '@/shared/components/FloatingAIChatWidget'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import type { ParsedModule, FacultyCurriculumView, FacultyScheduleItem, FacultyCurriculumStats } from '../types/curriculum'
+import { normalizeTopicKey } from '../utils/curriculumCoverage'
 
 // ─── Module → classes estimate ────────────────────────────────────────────
 
@@ -51,6 +52,9 @@ export default function FacultyCurriculum() {
     getCourseSchedule,
     getTodaySchedule,
     getUpcomingSchedule,
+    coverage,
+    coverageLoading,
+    coverageError,
   } = useFacultyCurriculum(facultyId, collegeId)
 
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null)
@@ -75,6 +79,18 @@ export default function FacultyCurriculum() {
   const courseModules = useMemo(() =>
     selectedCourse ? getCourseModules() : [],
   [selectedCourse, getCourseModules])
+
+  /**
+   * Coverage for the course currently open, joined from the `facultyTopics`
+   * ledger. This page previously showed the PLAN only — a teacher who marked
+   * topics covered on the attendance page saw nothing change here, because
+   * nothing here read the ledger.
+   */
+  const courseCoverage = useMemo(
+    () => (selectedCourseData ? coverage[selectedCourseData.courseCode || selectedCourseData.courseId] ?? null : null),
+    [selectedCourseData, coverage]
+  )
+  const modCoverage = courseCoverage?.modules ?? {}
 
   const courseSchedule = useMemo(() =>
     selectedCourse ? getCourseSchedule() : [],
@@ -322,6 +338,18 @@ export default function FacultyCurriculum() {
                           <p className="text-xs text-slate-500 dark:text-slate-400">Modules</p>
                           <p className="text-slate-900 dark:text-white font-medium">{course.modules.length}</p>
                         </div>
+                        {(() => {
+                          const cov = coverage[course.courseCode || course.courseId];
+                          if (!cov || cov.topics === 0) return null;
+                          return (
+                            <div className="text-center hidden sm:block">
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Topics done</p>
+                              <p className={cov.pct === 100 ? 'font-medium text-emerald-500' : 'font-medium text-teal-400'}>
+                                {cov.covered}/{cov.topics}
+                              </p>
+                            </div>
+                          );
+                        })()}
                         <div className="text-center hidden sm:block">
                           <p className="text-xs text-slate-500 dark:text-slate-400">Hours</p>
                           <p className="text-slate-900 dark:text-white font-medium">{course.totalHours}h</p>
@@ -497,13 +525,54 @@ export default function FacultyCurriculum() {
                 {selectedCourseData.courseCode} · {selectedCourseData.branch} · Semester {selectedCourseData.semester}
               </p>
             </div>
-            <button
-              onClick={() => setActiveView('overview')}
-              className="text-sm text-teal-400 hover:text-teal-300"
-            >
-              ← Back to Overview
-            </button>
+            <div className="flex items-center gap-4">
+              {courseCoverage && courseCoverage.topics > 0 && (
+                <div className="text-right">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Topics covered across this subject
+                  </p>
+                  <p
+                    className={
+                      courseCoverage.pct === 100
+                        ? 'text-lg font-semibold text-emerald-500'
+                        : 'text-lg font-semibold text-teal-400'
+                    }
+                  >
+                    {courseCoverage.covered} / {courseCoverage.topics}
+                    <span className="text-sm text-slate-500 dark:text-slate-400"> ({courseCoverage.pct}%)</span>
+                  </p>
+                </div>
+              )}
+              <button
+                onClick={() => setActiveView('overview')}
+                className="text-sm text-teal-400 hover:text-teal-300"
+              >
+                ← Back to Overview
+              </button>
+            </div>
           </div>
+
+          {/*
+            The ledger is a second, independent read. If it is denied or slow
+            the modules above are still the right answer, so this says the
+            badges are missing instead of letting empty progress bars imply
+            "you have taught nothing" — the one claim this page must never
+            make without evidence.
+          */}
+          {coverageError && (
+            <div className="mb-4 p-3 rounded-xl border border-amber-300/70 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                Covered-topic progress could not be loaded, so the ticks and progress bars are
+                missing below — this does <strong>not</strong> mean nothing has been taught. {coverageError}
+              </span>
+            </div>
+          )}
+          {!coverageError && coverageLoading && (
+            <p className="mb-4 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading covered topics…
+            </p>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {courseModules.map((mod: ParsedModule) => (
@@ -536,19 +605,58 @@ export default function FacultyCurriculum() {
 
                 {mod.topics && mod.topics.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Topics (tap to ask AI):</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      Topics (tap to ask AI):
+                    </p>
                     <div className="flex flex-wrap gap-1.5">
-                      {mod.topics.map((topic, i) => (
-                        <button
-                          key={i}
-                          onClick={() => askAI(topic, selectedCourseData.courseName)}
-                          title={`Ask AI about ${topic}`}
-                          className="text-xs px-2 py-1 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
-                        >
-                          {topic}
-                        </button>
-                      ))}
+                      {mod.topics.map((topic, i) => {
+                        const modState = modCoverage[String(mod.moduleNo ?? mod.id)];
+                        const state =
+                          modState?.topics.find(
+                            (t) => normalizeTopicKey(t.title) === normalizeTopicKey(topic)
+                          )?.state ?? 'not-planned';
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => askAI(topic, selectedCourseData.courseName)}
+                            title={`Ask AI about ${topic}`}
+                            className={
+                              state === 'covered'
+                                ? 'text-xs px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors'
+                                : state === 'planned'
+                                  ? 'text-xs px-2 py-1 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-colors'
+                                  : 'text-xs px-2 py-1 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 transition-colors'
+                            }
+                          >
+                            {state === 'covered' ? '\u2713 ' : state === 'planned' ? '\u25b8 ' : ''}
+                            {topic}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {(() => {
+                      const c = modCoverage[String(mod.moduleNo ?? mod.id)]?.coverage;
+                      if (!c || c.topics === 0) return null;
+                      return (
+                        <div className="mt-2.5">
+                          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                            <span>
+                              {c.covered} of {c.topics} topics covered
+                              {c.planned > 0 && ` \u00b7 ${c.planned} planned`}
+                            </span>
+                            <span className={c.pct === 100 ? 'text-emerald-500 font-medium' : ''}>
+                              {c.pct}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                            <div
+                              className={c.pct === 100 ? 'h-full bg-emerald-500 transition-all' : 'h-full bg-teal-500 transition-all'}
+                              style={{ width: `${c.pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 

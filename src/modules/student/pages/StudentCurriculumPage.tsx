@@ -329,11 +329,53 @@ export default function StudentCurriculumPage() {
 
       {data.noCurriculumAssigned ? (
         <div className="p-6 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-          <p className="font-bold text-slate-800 dark:text-slate-100">No curriculum has been mapped to your class yet</p>
-          <p className="text-sm text-slate-500 mt-1">
-            Your college has not assigned subjects to {data.student.branch || 'your branch'}{data.student.semester ? ` semester ${data.student.semester}` : ''}{data.student.batch ? ` (batch ${data.student.batch})` : ''} yet.
-            Once the admin maps the syllabus and faculty, every subject, module and topic will appear here with live progress.
-          </p>
+          {data.cohortDiagnosis && data.cohortDiagnosis.mismatches.length > 0 ? (
+            <>
+              <p className="font-bold text-slate-800 dark:text-slate-100">
+                Your subjects are mapped — but to a different class than yours
+              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                Your college has mapped {data.cohortDiagnosis.totalActiveMappings} subject
+                {data.cohortDiagnosis.totalActiveMappings === 1 ? '' : 's'}, but none of them address
+                your class. Compare the two sides before changing anything:
+              </p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {data.cohortDiagnosis.mismatches.map((m) => (
+                  <li
+                    key={m.field}
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-lg bg-white dark:bg-slate-900/50 px-3 py-2 border border-slate-200 dark:border-slate-700"
+                  >
+                    <span className="font-semibold capitalize text-slate-800 dark:text-slate-100">{m.field}</span>
+                    <span className="text-slate-500 dark:text-slate-400">your record:</span>
+                    <span className="font-mono text-slate-900 dark:text-slate-100">{m.studentValue}</span>
+                    <span className="text-slate-500 dark:text-slate-400">· mapped subjects use:</span>
+                    <span className="font-mono text-slate-900 dark:text-slate-100">
+                      {m.mappingValues.join(', ')}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      · matching them just on this would bring back {m.wouldMatch} subject
+                      {m.wouldMatch === 1 ? '' : 's'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-3">
+                Either your record or the class schedule is wrong — this page cannot tell which. If
+                your {data.cohortDiagnosis.mismatches.map((m) => m.field).join(' / ')} is right, ask
+                the college admin to re-map the subjects to your class (Academics → Curriculum →
+                Faculty mappings). If the mapping is the right one, ask for a correction to your own
+                record. Subjects and modules appear here as soon as the two agree.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-bold text-slate-800 dark:text-slate-100">No curriculum has been mapped to your class yet</p>
+              <p className="text-sm text-slate-500 mt-1">
+                Your college has not assigned subjects to {data.student.branch || 'your branch'}{data.student.semester ? ` semester ${data.student.semester}` : ''}{data.student.batch ? ` (batch ${data.student.batch})` : ''} yet.
+                Once the admin maps the syllabus and faculty, every subject, module and topic will appear here with live progress.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <>
