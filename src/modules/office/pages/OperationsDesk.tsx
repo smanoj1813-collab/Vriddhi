@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, BookOpen, Boxes, ClipboardList, LayoutDashboard, Library, PackageCheck, ShieldCheck, ShoppingCart, ArrowLeftRight, Wrench } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
-import { PageHeader, StatCard, btn } from '../components/officeUi'
+import { OfficeReadError, PageHeader, StatCard, btn } from '../components/officeUi'
 import { fetchActiveLoans, fetchOpenReservations } from '../api/libraryApi'
 import { fetchNoDuesRequests, fetchNoDuesSettings } from '../api/noDuesApi'
 import { useAssets, useInventorySettings, useItems } from '../hooks/useInventory'
@@ -57,6 +57,15 @@ export default function OperationsDesk() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       <PageHeader title="Operations Desk" subtitle={`Library, stores and purchasing${user?.name ? ` — ${user.name.split(' ')[0]}` : ''}`} icon={<LayoutDashboard className="w-5 h-5" />} />
+      <OfficeReadError
+        desk="operations desk"
+        collegeId={cid}
+        errors={[loansQ, resQ, ndQ, itemsQ, assetsQ, prsQ, posQ]}
+        onRetry={() => {
+          void loansQ.refetch(); void resQ.refetch(); void ndQ.refetch()
+          void itemsQ.refetch(); void assetsQ.refetch(); void prsQ.refetch(); void posQ.refetch()
+        }}
+      />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard label="Books on loan" value={loansQ.isLoading ? '…' : loans.length} icon={<BookOpen className="w-5 h-5" />} hint={`${overdue.length} overdue · ${dueToday.length} due today`} tone={overdue.length ? 'text-amber-500' : undefined} />
         <StatCard label="Reservations" value={reservations.length} icon={<Library className="w-5 h-5" />} hint={`${ready.length} ready for pickup`} />

@@ -140,7 +140,18 @@ export async function fetchFacultyCurriculumTopics(
     const key = topicKey(option.title)
     if (!key) return
     const existing = results.get(key)
-    if (!existing || priority > existing.priority) results.set(key, { option, priority })
+    if (!existing) {
+      results.set(key, { option, priority })
+      return
+    }
+    // Higher priority wins the row (curriculum rows carry the module context),
+    // but a topic already marked covered in the legacy bank must not be
+    // downgraded to "pending" by a same-titled row that knows nothing about it.
+    const covered = existing.option.covered || option.covered
+    if (priority > existing.priority) results.set(key, { option: { ...option, covered }, priority })
+    else if (covered !== existing.option.covered) {
+      results.set(key, { option: { ...existing.option, covered }, priority: existing.priority })
+    }
   }
 
   const aliases = await resolveFacultyAliases(facultyId).catch(() => null)
@@ -264,11 +275,22 @@ export async function fetchSessionTopicOptions(input: {
     const key = topicKey(option.title)
     if (!key) return
     const existing = results.get(key)
-    // A curriculum row wins over a ledger row with the same title, because
-    // only the curriculum row has a stable id to store in `topicIds`.
-    if (!existing || (existing.source === 'ledger' && option.source === 'curriculum')) {
+    if (!existing) {
       results.set(key, option)
+      return
     }
+    // A curriculum row wins over a ledger row with the same title, because
+    // only the curriculum row has a stable id to store in `topicIds` — but
+    // COVERAGE lives on the ledger row, and a curriculum row is always
+    // `covered: false`. Keeping the curriculum row verbatim meant a topic the
+    // teacher had already covered kept rendering as pending in the picker,
+    // because the row that knows it is covered was the one being discarded.
+    // The flag is OR'd across both stores.
+    if (existing.source === 'ledger' && option.source === 'curriculum') {
+      results.set(key, { ...option, covered: existing.covered || option.covered })
+      return
+    }
+    if (existing.covered && !option.covered) results.set(key, { ...option, covered: true })
   }
 
   // ─── Curriculum bank: topics for the subjects this faculty teaches ──────

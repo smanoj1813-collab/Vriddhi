@@ -9,6 +9,7 @@ import { useAuth } from '../../auth/context/AuthContext'
 import { useFacultyAttendance } from '../hooks/useFacultyAttendance'
 import { completeClassSession } from '../../admin/api/classSessionApi'
 import { fetchSessionTopicOptions, type SessionTopicOption } from '../api/sessionTopicsApi'
+import { isPermissionDeniedError } from '../../../shared/utils/identityClaims'
 import { useAttendanceExport } from '../hooks/useAttendanceExport'
 import { DateRangeSelector } from '../../../components/shared/DateRangeSelector'
 import { ExportButton } from '../../../components/shared/ExportButton'
@@ -193,6 +194,7 @@ export default function FacultyAttendance() {
     setAllStatus,
     resetAttendance,
     handleSave,
+    selfHealOnce,
   } = useFacultyAttendance();
 
   // The schedule left its semester blank, so the roster was widened to every
@@ -264,27 +266,41 @@ export default function FacultyAttendance() {
     }
     setCompleting(true)
     setCompleteNotice(null)
+    const chosen = topicOptions.filter(option => selectedTopicIds.includes(option.id))
+    // Pairs first: a curriculum option's id is a COMPOSITE
+    // (curriculumId__module__topicKey), which the server cannot resolve
+    // against the `topics/*` bank — the title has to travel with it or the
+    // topic silently stops being attached/covered. topicIds/topicTitles
+    // stay for older deployed functions, which ignore `topics`.
+    const topics = chosen.map(option => ({
+      topicId: option.source === 'curriculum' ? option.id : '',
+      title: option.title,
+    }))
+    if (extraTopic.trim()) topics.push({ topicId: '', title: extraTopic.trim() })
+    const payload = {
+      sessionId: selectedClass.id,
+      topics,
+      topicIds: chosen.filter(option => option.source === 'curriculum').map(option => option.id),
+      topicTitles: [
+        ...chosen.filter(option => option.source === 'ledger').map(option => option.title),
+        ...(extraTopic.trim() ? [extraTopic.trim()] : []),
+      ],
+    }
     try {
-      const chosen = topicOptions.filter(option => selectedTopicIds.includes(option.id))
-      // Pairs first: a curriculum option's id is a COMPOSITE
-      // (curriculumId__module__topicKey), which the server cannot resolve
-      // against the `topics/*` bank — the title has to travel with it or the
-      // topic silently stops being attached/covered. topicIds/topicTitles
-      // stay for older deployed functions, which ignore `topics`.
-      const topics = chosen.map(option => ({
-        topicId: option.source === 'curriculum' ? option.id : '',
-        title: option.title,
-      }))
-      if (extraTopic.trim()) topics.push({ topicId: '', title: extraTopic.trim() })
-      const result = await completeClassSession({
-        sessionId: selectedClass.id,
-        topics,
-        topicIds: chosen.filter(option => option.source === 'curriculum').map(option => option.id),
-        topicTitles: [
-          ...chosen.filter(option => option.source === 'ledger').map(option => option.title),
-          ...(extraTopic.trim() ? [extraTopic.trim()] : []),
-        ],
-      })
+      let result
+      try {
+        result = await completeClassSession(payload)
+      } catch (err) {
+        // The callable authorises from the caller's token claims, so a token
+        // minted before this account's role/college existed is refused exactly
+        // the way it refuses the attendance write. Re-issue once and retry —
+        // completing a session is idempotent server-side (topics are merged,
+        // never replaced), so the retry cannot double-count.
+        if (!isPermissionDeniedError(err)) throw err
+        const outcome = await selfHealOnce()
+        if (outcome !== 'refreshed') throw err
+        result = await completeClassSession(payload)
+      }
       const parts = [`Marked complete — ${result.topicsAttached} topic(s) attached.`]
       if (result.ledgerRowsUpdated) parts.push(`${result.ledgerRowsUpdated} ledger row(s) set to covered.`)
       if (result.ledgerRowsCreated) parts.push(`${result.ledgerRowsCreated} new ledger row(s) created.`)

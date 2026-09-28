@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ArrowRight, BookOpen, CreditCard, IndianRupee, Receipt, ShoppingCart, Wallet } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 import { calculateSummary, fetchFeePayments } from '@/modules/admin/api/feeApi'
-import { Loading, PageHeader, StatCard, btn, inr } from '../components/officeUi'
+import { Loading, OfficeReadError, PageHeader, StatCard, btn, inr } from '../components/officeUi'
 import { buildDaybook } from '../api/financeReportsApi'
 import { fetchFines } from '../api/libraryApi'
 import { billPayState } from '../api/procurementApi'
@@ -48,6 +48,15 @@ export default function AccountsDesk() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       <PageHeader title="Accounts Desk" subtitle={`Good day${user?.name ? `, ${user.name.split(' ')[0]}` : ''} — here's what needs attention`} icon={<Wallet className="w-5 h-5" />} />
+      <OfficeReadError
+        desk="accounts desk"
+        collegeId={cid}
+        errors={[feesQ, todayQ, finesQ, billsQ, prsQ]}
+        onRetry={() => {
+          void feesQ.refetch(); void todayQ.refetch(); void finesQ.refetch()
+          void billsQ.refetch(); void prsQ.refetch()
+        }}
+      />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard label="Collected today" value={todaySum ? inr(todaySum.receipts) : '…'} icon={<IndianRupee className="w-5 h-5" />} tone="text-emerald-500" hint={todaySum ? Object.entries(todaySum.byMode).map(([k, v]) => `${k.toUpperCase()} ${inr(v)}`).join(' · ') || 'No receipts yet' : undefined} />
         <StatCard label="Fees outstanding" value={sum ? inr(sum.totalPending + sum.totalOverdue) : '…'} icon={<CreditCard className="w-5 h-5" />} hint={sum ? `${sum.countOverdue} overdue · ${inr(sum.totalOverdue)}` : undefined} />

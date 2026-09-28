@@ -19,6 +19,11 @@ export type {
 } from '../api/feeApi'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAuth } from '../../auth/context/AuthContext'
+import {
+  classifyOfficeLinkageFailure,
+  describeOfficeLinkageFailure,
+} from '../utils/officeLinkage'
 import {
   calculateSummary,
   applyDiscount,
@@ -48,7 +53,24 @@ import {
 } from '../api/feeApi'
 
 export function useFeeData(studentId?: string) {
+  const { user } = useAuth()
+  // The finance desk is the ONE surface whose tenant used to come from
+  // localStorage alone. The signed-in identity is the verified value the
+  // rules compare against, so it is what the queries are scoped by; the
+  // localStorage copy stays as the fallback for callers that have no session
+  // context (the student portal resolves its own college explicitly).
+  const identityCollegeId = user?.collegeId || ''
   const [loading, setLoading] = useState(true)
+  /**
+   * WHY THIS EXISTS: every load error used to be `console.error`-ed and
+   * dropped, so a permission denial — an account whose collegeId claim was
+   * never issued, or deployed rules older than the office roles — rendered as
+   * an empty college, and the Record Payment modal told the accounts team
+   * "No students found for this college." The desk then went to audit student
+   * imports instead of the account. An unread college and a college with
+   * nothing in it are different facts and must look different.
+   */
+  const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<FeeFilters>({
     course: 'all', batch: 'all', status: 'all', category: 'all', search: '', dateFrom: '', dateTo: '',
   })
@@ -60,6 +82,7 @@ export function useFeeData(studentId?: string) {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const [paymentsData, structuresData, studentsData] = await Promise.all([
         fetchFeePayments({
@@ -71,20 +94,32 @@ export function useFeeData(studentId?: string) {
           dateFrom: filters.dateFrom,
           dateTo: filters.dateTo,
           ...(studentId ? { studentId } : {}),
-        }),
-        fetchFeeStructures(),
-        studentId ? Promise.resolve([] as FeeStudent[]) : fetchFeeStudents(),
+        }, identityCollegeId),
+        fetchFeeStructures(identityCollegeId),
+        studentId ? Promise.resolve([] as FeeStudent[]) : fetchFeeStudents(identityCollegeId),
       ])
       setAllPayments(paymentsData)
       setFeeStructures(structuresData)
       setStudents(studentsData)
       loadedRef.current = true
-    } catch (error) {
-      console.error('[useFeeData] Failed to load fee ledger:', error)
+    } catch (err) {
+      console.error('[useFeeData] Failed to load fee ledger:', err)
+      // Keep the last good data on screen and say WHY it may be missing,
+      // rather than replacing a working desk with an empty one.
+      setError(
+        describeOfficeLinkageFailure(
+          classifyOfficeLinkageFailure({
+            code: (err as { code?: unknown })?.code,
+            message: err instanceof Error ? err.message : String(err),
+            collegeId: identityCollegeId,
+          }),
+          { desk: 'fee ledger' }
+        )
+      )
     } finally {
       setLoading(false)
     }
-  }, [filters.batch, filters.category, filters.course, filters.dateFrom, filters.dateTo, filters.search, filters.status, studentId])
+  }, [filters.batch, filters.category, filters.course, filters.dateFrom, filters.dateTo, filters.search, filters.status, studentId, identityCollegeId])
 
   useEffect(() => {
     if (!loadedRef.current) void fetchData()
@@ -196,6 +231,13 @@ export function useFeeData(studentId?: string) {
 
   return {
     loading,
+    /**
+     * Non-null when the ledger could not be READ. Exposed as `loadError`
+     * because these pages also own a per-action `error` (modal/form), and two
+     * unrelated `error` names in one destructure is how a real failure gets
+     * rendered by the wrong banner.
+     */
+    loadError: error,
     filters,
     allPayments,
     summary,

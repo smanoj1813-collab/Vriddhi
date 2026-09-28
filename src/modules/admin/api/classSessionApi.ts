@@ -13,6 +13,12 @@
 
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/Firebase/config'
+import {
+  describeSessionError,
+  SESSION_WRITER_MESSAGES,
+} from '@/shared/utils/sessionErrorMessage'
+
+export { describeSessionError } from '@/shared/utils/sessionErrorMessage'
 
 // ─── Types ────────────────────────────────────────────
 
@@ -100,27 +106,17 @@ export interface CancelWeeklyScheduleResult {
 }
 
 // ─── Error surface ────────────────────────────────────
-
-/**
- * Callable failures arrive as `functions/xxx` codes. Admin-facing copy here so
- * the page can show something actionable instead of a raw error string.
- */
-const MESSAGES: Record<string, string> = {
-  'functions/unauthenticated': 'Your session has expired. Sign out and back in, then try again.',
-  'functions/permission-denied':
-    'Only college administrators (admin, principal, HOD) can generate or cancel class sessions.',
-  'functions/invalid-argument': 'The date range is not valid. Use a start and end date within one term (92 days).',
-  'functions/not-found': 'That weekly schedule no longer exists. Refresh the page and try again.',
-  // S2.5: most failed-preconditions in this module are the server refusing a
-  // double-booking, so the copy leads with that and names the escape hatch.
-  'functions/failed-precondition':
-    'This would double-book a faculty member or a room. Fix the timetable first, or skip the conflicting slots.',
-}
-
-function toMessage(error: unknown, fallback: string): string {
-  const code = String((error as { code?: string } | null)?.code || '')
-  return MESSAGES[code] || (error instanceof Error ? error.message : fallback)
-}
+//
+// The copy itself lives in src/shared/utils/sessionErrorMessage.ts: it is
+// pure, so it is unit-tested, and it is shared by the two halves of this
+// module, which are not the same feature. Generating and cancelling the
+// timetable is a scheduling-administration act; ensuring and completing a
+// session is what a teacher does in front of their own class. One shared table
+// used to answer every code in both halves with "Only college administrators
+// (admin, principal, HOD) can generate or cancel class sessions." — so a
+// faculty member pressing "Mark topics covered" on their own class was told
+// their own feature was admin-only, and the server's actual reason was thrown
+// away.
 
 // ─── Callables ────────────────────────────────────────
 
@@ -157,7 +153,7 @@ export async function generateClassSessions(
         conflicts
       )
     }
-    throw new Error(toMessage(error, 'Class sessions could not be generated.'))
+    throw new Error(describeSessionError(error, 'Class sessions could not be generated.'))
   }
 }
 
@@ -181,7 +177,7 @@ export async function cancelWeeklySchedule(
     })
     return response.data
   } catch (error) {
-    throw new Error(toMessage(error, 'The weekly schedule could not be cancelled.'))
+    throw new Error(describeSessionError(error, 'The weekly schedule could not be cancelled.'))
   }
 }
 
@@ -263,7 +259,7 @@ export async function ensureClassSession(
         conflicts
       )
     }
-    throw new Error(toMessage(error, 'The class session could not be created.'))
+    throw new Error(describeSessionError(error, 'The class session could not be created.', SESSION_WRITER_MESSAGES))
   }
 }
 
@@ -323,7 +319,7 @@ export async function completeClassSession(
     })
     return response.data
   } catch (error) {
-    throw new Error(toMessage(error, 'The class session could not be completed.'))
+    throw new Error(describeSessionError(error, 'The class session could not be completed.', SESSION_WRITER_MESSAGES))
   }
 }
 
@@ -414,7 +410,7 @@ export async function getCurriculumProgress(
     })
     return response.data
   } catch (error) {
-    throw new Error(toMessage(error, 'Curriculum progress could not be loaded.'))
+    throw new Error(describeSessionError(error, 'Curriculum progress could not be loaded.', SESSION_WRITER_MESSAGES))
   }
 }
 

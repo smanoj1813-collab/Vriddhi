@@ -306,15 +306,23 @@ function mapStructure(id: string, raw: Record<string, unknown>): FeeStructure {
 
 // ─── Reads ──────────────────────────────────────────────
 
-export async function fetchFeeStructures(): Promise<FeeStructure[]> {
-  const snap = await getDocs(query(collegeRef('feeStructures'), limit(MAX_READS)))
+/**
+ * `collegeId` is the signed-in identity's college, passed in by the finance
+ * desk. It is a TENANT SCOPE, not an authorisation decision: the security rules
+ * still compare every document against the ID-token claim, so passing a college
+ * the caller does not hold can only ever produce an empty result, never a
+ * cross-tenant read. Passing it means the desk is scoped by the same verified
+ * value the rules use instead of by a localStorage copy that can be stale.
+ */
+export async function fetchFeeStructures(collegeId?: string | null): Promise<FeeStructure[]> {
+  const snap = await getDocs(query(collegeRef('feeStructures', collegeId), limit(MAX_READS)))
   return snap.docs
     .map(d => mapStructure(d.id, d.data() as Record<string, unknown>))
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 }
 
-export async function fetchFeeStudents(): Promise<FeeStudent[]> {
-  const collegeId = getCollegeId()
+export async function fetchFeeStudents(scopeCollegeId?: string | null): Promise<FeeStudent[]> {
+  const collegeId = getCollegeId(scopeCollegeId)
   const snap = await getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId), limit(MAX_READS)))
   return snap.docs
     .map(d => {
@@ -331,11 +339,14 @@ export async function fetchFeeStudents(): Promise<FeeStudent[]> {
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export async function fetchFeePayments(filters?: Partial<FeeFilters>): Promise<FeePayment[]> {
+export async function fetchFeePayments(
+  filters?: Partial<FeeFilters>,
+  collegeId?: string | null
+): Promise<FeePayment[]> {
   const constraints = filters?.studentId
     ? [where('studentId', '==', filters.studentId), limit(MAX_READS)]
     : [limit(MAX_READS)]
-  const snap = await getDocs(query(collegeRef('feePayments'), ...constraints))
+  const snap = await getDocs(query(collegeRef('feePayments', collegeId), ...constraints))
 
   let payments = snap.docs.map(d => mapPayment(d.id, d.data() as Record<string, unknown>))
   if (filters?.course && filters.course !== 'all') payments = payments.filter(p => p.course === filters.course)

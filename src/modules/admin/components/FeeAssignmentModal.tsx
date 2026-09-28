@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Calendar, Check, Loader2, X } from 'lucide-react'
+import { AlertCircle, Calendar, Check, Loader2, X } from 'lucide-react'
 import type { CreateFeePaymentInput, FeeCategory, FeeStudent, FeeStructure } from '../api/feeApi'
 
 const CATEGORIES: FeeCategory[] = ['tuition', 'exam', 'university_exam', 'eligibility', 'library', 'lab', 'hostel', 'transport', 'misc']
@@ -7,13 +7,18 @@ const CATEGORIES: FeeCategory[] = ['tuition', 'exam', 'university_exam', 'eligib
 export default function FeeAssignmentModal({
   students,
   structures,
+  loadError,
   onClose,
   onSubmit,
+  onRetry,
 }: {
   students: FeeStudent[]
   structures: FeeStructure[]
+  /** Set when the student directory could not be READ (see RecordPaymentModal). */
+  loadError?: string | null
   onClose: () => void
   onSubmit: (input: CreateFeePaymentInput) => Promise<boolean>
+  onRetry?: () => void
 }) {
   const [studentId, setStudentId] = useState(students[0]?.id || '')
   const [structureId, setStructureId] = useState('')
@@ -70,7 +75,20 @@ export default function FeeAssignmentModal({
           </button>
         </div>
 
-        {students.length === 0 ? (
+        {students.length === 0 && loadError ? (
+          <div className="m-5 rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 flex flex-col items-center gap-3 text-center">
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <p className="text-sm text-amber-700 dark:text-amber-300">{loadError}</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="rounded-lg bg-amber-500/15 px-3 py-1.5 text-sm font-medium text-amber-700 dark:text-amber-200 hover:bg-amber-500/25 transition-colors"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        ) : students.length === 0 ? (
           <div className="p-8 text-center text-sm text-vriddhi-muted">
             No students were found for this college. Import students before assigning fees.
           </div>
