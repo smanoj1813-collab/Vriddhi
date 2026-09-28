@@ -66,6 +66,29 @@ import {
   isKnownQuestionType as sharedIsKnownQuestionType,
   SCHEDULABLE_ONLINE_TYPES,
 } from './questionTypes'
+import {
+  containsSubpartMarker,
+  isFirstSubpartMarker,
+  lastSubpartRank,
+  leadingSubpartMarker,
+  mergeSubpartQuestions,
+  prevAcceptsSubpart,
+  prevOpensNumberedSubparts,
+  subpartRank,
+} from './subpartMerge'
+
+// The sub-topic helpers live in ./subpartMerge so the superadmin bulk import
+// (questionImport.ts) shares the exact same grouping rules as this parser.
+export {
+  containsSubpartMarker,
+  isFirstSubpartMarker,
+  lastSubpartRank,
+  leadingSubpartMarker,
+  mergeSubpartQuestions,
+  prevAcceptsSubpart,
+  prevOpensNumberedSubparts,
+  subpartRank,
+} from './subpartMerge'
 
 const PDF_TYPE = 'application/pdf'
 const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -299,7 +322,7 @@ Respond with ONLY a JSON object in this shape:
 }
 
 RULES — follow all of them exactly:
-1. Include every question exactly as printed, in order. Keep sub-parts (a, b, c) inside the same question text.
+1. Include every question exactly as printed, in order. When a question carries sub-parts or sub-topics — printed as (a), (b), (c) / (A), (B), (C) / (i), (ii), (iii) / 1), 2) etc. — return it as ONE single question whose "text" contains the full question with ALL its sub-parts in order, exactly as printed. NEVER split sub-parts into separate questions, and NEVER list them as "options". If the sub-parts carry separate printed marks, set the question's "marks" to their sum.
 2. "type" per question:
    - "short_answer" for define / state / list / give / mention / any-two / difference-type questions.
    - "long_answer" for explain / describe / discuss / derive / prove / essay-type questions.
@@ -378,6 +401,7 @@ export function normalizeParsedStructure(raw: unknown): NormalizedParse {
 
   const sections: ParsedSection[] = []
   let questionCount = 0
+  let rawCount = 0
   let droppedTypes = 0
 
   for (const rawSection of rawSections.slice(0, MAX_SECTIONS)) {
@@ -387,7 +411,7 @@ export function normalizeParsedStructure(raw: unknown): NormalizedParse {
     const questions: ParsedQuestion[] = []
 
     for (const rawQuestion of sourceQuestions) {
-      if (questionCount >= MAX_QUESTIONS) break
+      if (rawCount >= MAX_QUESTIONS) break
       if (!rawQuestion || typeof rawQuestion !== 'object' || Array.isArray(rawQuestion)) continue
       const question = rawQuestion as Record<string, unknown>
       const text = String(question.text || '').replace(/\s+/g, ' ').trim()
@@ -406,21 +430,27 @@ export function normalizeParsedStructure(raw: unknown): NormalizedParse {
         topic,
         ...(options && options.length > 0 ? { options } : {}),
       })
-      questionCount += 1
+      rawCount += 1
     }
 
-    if (questions.length === 0) continue
+    // Merge pass: even when the model split a question's sub-topics
+    // ("(a) … (b) … (c) …") into separate entries, the paper is transcribed
+    // the way it is printed — ONE question carrying all its sub-topics, with
+    // the sub-part marks summed.
+    const merged = mergeSubpartQuestions(questions)
+    questionCount += merged.length
+    if (merged.length === 0) continue
     sections.push({
       name: String(section.name || section.title || '').trim().slice(0, 200) || `Section ${sections.length + 1}`,
       instructions: String(section.instructions || '').trim().slice(0, 2_000),
-      questions,
+      questions: merged,
     })
   }
 
   if (droppedTypes > 0) {
     warnings.push(`${droppedTypes} question(s) had an unrecognised type and were kept as short/long answer.`)
   }
-  if (questionCount >= MAX_QUESTIONS) {
+  if (rawCount >= MAX_QUESTIONS) {
     warnings.push(`Only the first ${MAX_QUESTIONS} questions were kept.`)
   }
 
@@ -458,6 +488,13 @@ export const MIN_DETERMINISTIC_COVERAGE = 0.3
  * question. Continuation never counts towards coverage anyway (see below).
  */
 const DET_MAX_CONTINUATION_CHARS = 600
+/**
+ * Compound questions (one printed question carrying sub-topics like
+ * "(A) … (B) … (C) … (D) …" or "a) … b) … c) …") legitimately run much
+ * longer than plain questions, so their continuation budget is wider —
+ * 600 chars silently chopped the later sub-topics of university papers.
+ */
+const DET_COMPOUND_CONTINUATION_CHARS = 3000
 
 const DET_SECTION_RE = /^(?:section|part)\s+[-–—:.]?\s*(?:[A-J]\b|[IVX]{1,4}\b|\d{1,2}\b)[^\n]{0,90}$/i
 const DET_QUESTION_START_RE = /^(?:Q(?:uestion)?\s*[.:]?\s*)?(\d{1,3})\s*[.)]\s*(.*)$/
@@ -488,6 +525,10 @@ interface DetDraftQuestion {
   marks: number | null
   nextOptionLetter: string | null
   continuationChars: number
+  /** True when the printed question carries sub-topics ("(A)…(B)…" / "a)…b)…"). */
+  compound: boolean
+  /** The printed question number (used by the numbered-sub-topic merge). */
+  num: number | null
 }
 
 interface DetDraftSection {
@@ -511,6 +552,11 @@ function detQuestionType(question: DetDraftQuestion): string {
   if (DET_LONG_ANSWER_RE.test(question.text) || (question.marks ?? 0) >= 6) return 'long_answer'
   return 'short_answer'
 }
+
+/** Option-shaped lines that are really sub-topics: they begin with a question
+ * verb ("Define …", "Explain …") or carry their own printed marks "(5M)". */
+const DET_SUBPART_DIRECTIVE_RE = /^(?:define|explain|describe|discuss|what|which|who|whom|write|state|list|mention|differentiate|distinguish|compare|contrast|compute|calculate|solve|prove|derive|elaborate|illustrate|evaluate|analyse|analyze|match|fill|choose|select|find|give|name|draw|sketch|justify|comment|expand|note|classify|identify|convert|prepare|journalise|journalize|record|show|establish|verify|examine|outline|summarise|summarize|answer|attempt|enumerate|highlight|critically|briefly)\b/i
+const DET_OPTION_MARKS_RE = /[[(]\s*\d{1,3}(?:\.\d)?\s*(?:marks?|mks?\.?|M\.?)?[\])]/
 
 /**
  * Rule-based transcription of a standard printed question paper. Deterministic
@@ -589,6 +635,8 @@ export function deterministicParse(text: string): DeterministicParseResult {
           marks: null,
           nextOptionLetter: null,
           continuationChars: 0,
+          compound: false,
+          num: Number(questionMatch[1]),
         }
         openerSection.questions.push(pending)
         lastQuestion = pending
@@ -617,6 +665,8 @@ export function deterministicParse(text: string): DeterministicParseResult {
         marks,
         nextOptionLetter: null,
         continuationChars: 0,
+        compound: containsSubpartMarker(rest),
+        num: Number(questionMatch[1]),
       }
       section.questions.push(question)
       lastQuestion = question
@@ -626,8 +676,11 @@ export function deterministicParse(text: string): DeterministicParseResult {
     }
 
     // A pending numbered opener ("1." on its own line) is filled by the next
-    // real line — either "[n] Text" (float-right marks first) or plain text via
-    // the continuation branch below. Option-shaped lines never become the text.
+    // real line — either "[n] Text" (float-right marks first) or a sub-topic
+    // shaped line ("(A) Define …" / "A. Explain …"), which is the body of a
+    // compound question in table/flex layouts. Dropping those lines used to
+    // erase entire questions; absorbing them keeps every sub-topic visible
+    // for faculty review.
     if (lastQuestion && lastQuestion.text === '') {
       const lead = line.match(DET_LEADING_MARKS_RE)
       if (lead) {
@@ -636,10 +689,15 @@ export function deterministicParse(text: string): DeterministicParseResult {
           lastQuestion.marks = leadMarks
         }
         lastQuestion.text = lead[2].replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+        lastQuestion.compound = containsSubpartMarker(lastQuestion.text)
         consume(line)
         continue
       }
-      if (/^\(?\s*[A-H]\s*[.)]\s/.test(line)) continue
+      if (/^\(?\s*[A-H]\s*[.)]\s*$/.test(line)) continue // bare "A." with no text — nothing to absorb
+      lastQuestion.text = line.replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+      lastQuestion.compound = containsSubpartMarker(lastQuestion.text) || Boolean(leadingSubpartMarker(lastQuestion.text))
+      consume(line)
+      continue
     }
 
     const optionMatch = line.match(DET_OPTION_RE)
@@ -649,7 +707,13 @@ export function deterministicParse(text: string): DeterministicParseResult {
         lastQuestion.options.length === 0
           ? letter === 'A'
           : lastQuestion.nextOptionLetter === letter
-      if (accepts) {
+      // A lettered line that BEGINS with a question verb ("Define …",
+      // "Explain …") or carries its own printed marks "(5M)" is a SUB-TOPIC
+      // of the current question, not an MCQ option — let it fall through to
+      // the continuation branch so it stays inside the question text.
+      const looksLikeSubtopic =
+        DET_SUBPART_DIRECTIVE_RE.test(optionMatch[2]) || DET_OPTION_MARKS_RE.test(optionMatch[2])
+      if (accepts && !looksLikeSubtopic) {
         if (lastQuestion.options.length < MAX_OPTIONS) {
           lastQuestion.options.push(optionMatch[2].replace(/\s+/g, ' ').trim().slice(0, 2000))
         }
@@ -701,17 +765,23 @@ export function deterministicParse(text: string): DeterministicParseResult {
     if (lastQuestion) {
       // Continuation of the current question — including printed sub-parts
       // like "(a) … (b) …", which stay inside the question text on purpose.
-      // The text is absorbed (so wrapped questions come out complete), but it
-      // is NOT counted as recognised: continuation is ordinary prose, not
-      // evidence of the standard layout, and counting it would let a wall of
-      // text after one "1." line fake its way past the coverage guard.
+      // Plain prose is absorbed (so wrapped questions come out complete) but
+      // is NOT counted as recognised: it is not evidence of the standard
+      // layout, and counting it would let a wall of text after one "1." line
+      // fake its way past the coverage guard. Sub-topic lines that START with
+      // a marker ("(B) …", "b) …", "(ii) …") ARE structured and count.
       const { rest, marks } = detStripMarks(line)
       if (marks !== null && lastQuestion.marks === null) lastQuestion.marks = marks
-      if (rest && lastQuestion.continuationChars < DET_MAX_CONTINUATION_CHARS) {
-        const budget = DET_MAX_CONTINUATION_CHARS - lastQuestion.continuationChars
+      const cap = lastQuestion.compound ? DET_COMPOUND_CONTINUATION_CHARS : DET_MAX_CONTINUATION_CHARS
+      if (rest && lastQuestion.continuationChars < cap) {
+        const budget = cap - lastQuestion.continuationChars
         const keep = countChars(rest) > budget ? `${rest.slice(0, budget)}…` : rest
         lastQuestion.continuationChars += countChars(keep)
         lastQuestion.text = `${lastQuestion.text} ${keep}`.replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+        if (leadingSubpartMarker(rest)) {
+          lastQuestion.compound = true
+          consume(line)
+        }
       }
       continue
     }
@@ -738,16 +808,70 @@ export function deterministicParse(text: string): DeterministicParseResult {
   let zeroMarks = 0
   const outSections: ParsedSection[] = []
   for (const section of sections.slice(0, MAX_SECTIONS)) {
-    const questions: ParsedQuestion[] = []
+    // Merge pass: sub-topic lines that the numbered-question rule split into
+    // their own drafts ("1. Answer the following :" / "1) …" / "2) …") are
+    // re-combined into ONE question carrying ALL sub-topics, exactly as
+    // printed. Letter/roman markers follow mergeSubpartQuestions semantics;
+    // numbered drafts additionally need layout context — they merge only as a
+    // consecutive chain (1 → 2 → 3) opened by a "following"-type question, so
+    // papers numbered "1) 2) 3)" at the top level stay intact.
+    const mergedDrafts: DetDraftQuestion[] = []
+    let digitChain: number | null = null
     for (const question of section.questions) {
       // A pending opener that never got body text (a stray "2." / page number)
       // is dropped — it was not a question.
       if (!question.text.trim()) continue
+      const prev = mergedDrafts[mergedDrafts.length - 1]
+      const marker = leadingSubpartMarker(question.text)
+      if (prev) {
+        let merge = false
+        // How the merged sub-topic is re-attached: letter/roman markers are
+        // already part of the text; numbered drafts had their "N)" stripped
+        // when the line rule created them, so it is restored here.
+        let attachText = question.text
+        if (marker && !/^\d+$/.test(marker)) {
+          const first = isFirstSubpartMarker(marker)
+          const prevRank = lastSubpartRank(prev.text)
+          merge = !first || (prevAcceptsSubpart(prev.text) && (prevRank === null || prevRank < subpartRank(marker)))
+        } else if (question.num !== null) {
+          // A numbered chain starts at "1)" right after an "Answer the
+          // following"-style opener that has no letter sub-topics of its own,
+          // then continues 1 → 2 → 3 …. Top-level numbering never restarts
+          // at 1 mid-section, so this cannot swallow a genuine next question.
+          merge =
+            digitChain !== null
+              ? question.num === digitChain + 1
+              : question.num === 1 &&
+                prevOpensNumberedSubparts(prev.text) &&
+                !containsSubpartMarker(prev.text)
+          if (merge) {
+            digitChain = question.num
+            attachText = `${question.num}) ${question.text}`
+          }
+        }
+        if (merge) {
+          prev.text = `${prev.text} ${attachText}`.replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_TEXT)
+          prev.marks =
+            prev.marks === null ? question.marks : question.marks === null ? prev.marks : prev.marks + question.marks
+          prev.compound = true
+          prev.continuationChars += question.continuationChars
+          continue
+        }
+      }
+      digitChain = null
+      mergedDrafts.push(question)
+    }
+
+    const questions: ParsedQuestion[] = []
+    for (const question of mergedDrafts) {
       const marks = question.marks ?? (section.defaultMarks || 0)
       if (marks === 0) zeroMarks += 1
       questions.push({
         text: question.text.trim(),
-        type: detQuestionType(question),
+        // Resolve the section-default marks BEFORE typing so a compound
+        // question worth 10 marks via "Each question carries 10 marks" is
+        // typed long_answer, not short_answer.
+        type: detQuestionType({ ...question, marks }),
         marks: normalizeMarks(marks),
         topic: '',
         ...(question.options.length > 0 ? { options: question.options.filter(Boolean) } : {}),

@@ -41,6 +41,7 @@ import {
   normalizeDefaults,
   normalizeImportedQuestions,
   normalizeQuestionText,
+  mergeImportedSubparts,
   requeueFailedImportFiles,
   singleDocumentRow,
   stripUndefinedValues,
@@ -653,4 +654,65 @@ test('job: chunks respect the Firestore batch ceiling (3 docs per question)', ()
 test('job: inline (vision) guard blocks oversized scans before the API call', () => {
   assert.equal(isBufferTooLargeForInline(2 * 1024 * 1024), false)
   assert.equal(isBufferTooLargeForInline(40 * 1024 * 1024), true)
+})
+
+// ─── Sub-topic grouping in the bulk paper import ────────────────────────────
+//
+// The superadmin "Import papers (ZIP / PDF)" flow must surface ONE question
+// consisting of all its sub-topics, exactly like the faculty paper-upload
+// parser: printed parts folded into the visible text, and AI-split sub-topics
+// re-combined into their parent question.
+
+test('import: printed parts are folded into the visible question text', () => {
+  const { questions } = normalizeImportedQuestions({
+    questions: [
+      {
+        text: 'Q.1. Answer the following :',
+        type: 'long_answer',
+        marks: 10,
+        parts: ['(a) Define Business Environment.', '(b) Explain its features.'],
+      },
+    ],
+  })
+  assert.equal(questions.length, 1)
+  assert.match(questions[0].text, /Q\.1\. Answer the following :/)
+  assert.match(questions[0].text, /\(a\) Define Business Environment\./)
+  assert.match(questions[0].text, /\(b\) Explain its features\./)
+  assert.deepEqual(questions[0].parts, ['(a) Define Business Environment.', '(b) Explain its features.'])
+})
+
+test('import: AI-split sub-topics are re-combined into one question with summed marks', () => {
+  const { questions, warnings } = normalizeImportedQuestions({
+    questions: [
+      { text: '(A) Define Business Environment.', type: 'short_answer', marks: 4 },
+      { text: '(B) Explain the features of Business Environment.', type: 'short_answer', marks: 4 },
+      { text: '(C) What do you mean by Economic Environment ?', type: 'short_answer', marks: 4 },
+      { text: '(D) Describe the objectives of Business Environment.', type: 'short_answer', marks: 4 },
+    ],
+  })
+  assert.equal(questions.length, 1, 'the whole (A)…(D) group is ONE question')
+  assert.match(questions[0].text, /\(A\) Define Business Environment\./)
+  assert.match(questions[0].text, /\(D\) Describe the objectives of Business Environment\./)
+  assert.equal(questions[0].marks, 16, 'sub-part marks summed')
+  assert.equal(questions[0].parts.length, 3, 'merged sub-topics recorded in parts too')
+  assert.ok(warnings.some((w) => /joined into .*parent question/.test(w)))
+})
+
+test('import: separate "(A) …" groups are NOT glued together', () => {
+  const merged = mergeImportedSubparts([
+    { text: '(A) Define demand. (B) State the law of demand.', type: 'short_answer', marks: 4, section: 'A', topic: '', parts: [], options: [], correctAnswer: '' },
+    { text: '(A) Define supply. (B) State the law of supply.', type: 'short_answer', marks: 4, section: 'A', topic: '', parts: [], options: [], correctAnswer: '' },
+  ])
+  assert.equal(merged.length, 2, 'a fresh "(A)" after a finished group opens a new question')
+})
+
+test('import: sub-parts split after a stem merge back into the stem', () => {
+  const merged = mergeImportedSubparts([
+    { text: '11. Answer the following :', type: 'long_answer', marks: 0, section: 'B', topic: '', parts: [], options: [], correctAnswer: '' },
+    { text: '(a) Define GDP.', type: 'short_answer', marks: 5, section: 'B', topic: '', parts: [], options: [], correctAnswer: '' },
+    { text: '(b) Explain GNP.', type: 'short_answer', marks: 5, section: 'B', topic: '', parts: [], options: [], correctAnswer: '' },
+  ])
+  assert.equal(merged.length, 1)
+  assert.match(merged[0].text, /11\. Answer the following : \(a\) Define GDP\. \(b\) Explain GNP\./)
+  assert.equal(merged[0].marks, 10)
 })
