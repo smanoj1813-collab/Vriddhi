@@ -30,6 +30,14 @@ import { createHash } from 'node:crypto'
 import { SchemaType, type ResponseSchema } from '@google/generative-ai'
 
 import { geminiModelsFor } from './config/aiModels'
+import {
+  combinedMarks,
+  isFirstSubpartMarker,
+  lastSubpartRank,
+  leadingSubpartMarker,
+  prevAcceptsSubpart,
+  subpartRank,
+} from './subpartMerge'
 
 // ─── Limits ─────────────────────────────────────────────────────────────────
 
@@ -582,13 +590,22 @@ export function normalizeImportedQuestions(
       ? source.options.map((o: unknown) => clampString(o, 400)).filter(Boolean).slice(0, maxOptions)
       : []
 
+    // Sub-topics must be visible everywhere the bank shows a question — the
+    // Review Queue and the pool cards render `text` only — so the printed
+    // parts are folded into the question text: ONE question that consists of
+    // all its sub-topics, exactly as printed.
+    const fullText =
+      parts.length > 0
+        ? `${text} ${parts.join(' ')}`.replace(/\s+/g, ' ').trim().slice(0, IMPORT_MAX_QUESTION_CHARS)
+        : text
+
     // An "mcq" without printed options would be unanswerable — demote it, the
     // same rule the client's toUniversalQuestionType applies.
     let type = toUniversalQuestionType(source.type, options.length > 1)
     if (type === 'mcq' && options.length < 2) type = 'short_answer'
 
     out.push({
-      text,
+      text: fullText,
       type,
       marks: clampMarks(source.marks),
       section: clampString(source.section, 24),
@@ -600,6 +617,11 @@ export function normalizeImportedQuestions(
         type === 'mcq' && options.length > 1 ? clampString(source.correctAnswer, 400) : '',
     })
   }
+
+  // Despite rule 3 the model sometimes still splits a printed sub-topic group
+  // into separate entries — re-combine them, same rules as the paper-upload
+  // parser, so one question consists of all its sub-topics.
+  const mergedQuestions = mergeImportedSubparts(out)
 
   const rawMeta = (root.meta ?? {}) as Record<string, any>
   const year = Number(rawMeta.examYear)
@@ -618,7 +640,40 @@ export function normalizeImportedQuestions(
   if (rawQuestions.length > out.length) {
     warnings.push(`${rawQuestions.length - out.length} entr${rawQuestions.length - out.length === 1 ? 'y was' : 'ies were'} dropped (blank or unusable).`)
   }
-  return { questions: out, meta, warnings }
+  if (mergedQuestions.length < out.length) {
+    warnings.push(`${out.length - mergedQuestions.length} sub-topic entr${out.length - mergedQuestions.length === 1 ? 'y was' : 'ies were'} joined into ${out.length - mergedQuestions.length === 1 ? 'its' : 'their'} parent question${out.length - mergedQuestions.length === 1 ? '' : 's'}.`)
+  }
+  return { questions: mergedQuestions, meta, warnings }
+}
+
+/**
+ * Re-combines sub-topic entries the model split into separate questions —
+ * same rules as the paper-upload parser (./subpartMerge), so BOTH import
+ * flows surface ONE question that consists of all its sub-topics. The merged
+ * sub-topic is appended to the previous question's visible text AND recorded
+ * in its `parts`, keeping the structured field complete too.
+ */
+export function mergeImportedSubparts(questions: ImportedQuestion[]): ImportedQuestion[] {
+  const out: ImportedQuestion[] = []
+  for (const question of questions) {
+    const prev = out[out.length - 1]
+    const marker = leadingSubpartMarker(question.text)
+    if (prev && marker && !/^\d+$/.test(marker)) {
+      const first = isFirstSubpartMarker(marker)
+      const prevRank = lastSubpartRank(prev.text)
+      if (!first || (prevAcceptsSubpart(prev.text) && (prevRank === null || prevRank < subpartRank(marker)))) {
+        out[out.length - 1] = {
+          ...prev,
+          text: `${prev.text} ${question.text}`.replace(/\s+/g, ' ').trim().slice(0, IMPORT_MAX_QUESTION_CHARS),
+          parts: [...prev.parts, question.text, ...question.parts].slice(0, 12),
+          marks: combinedMarks(prev.marks, question.marks),
+        }
+        continue
+      }
+    }
+    out.push(question)
+  }
+  return out
 }
 
 /** Extracts the first JSON object from a model reply that may carry a code fence. */
