@@ -26,7 +26,7 @@ import {
   describeOfficeLinkageFailure,
 } from '../utils/officeLinkage'
 import { isPermissionDeniedError } from '../../../shared/utils/identityClaims'
-import { ensureIdentityClaims } from '../../../shared/services/identitySelfHeal'
+import { currentTokenClaims, ensureIdentityClaims } from '../../../shared/services/identitySelfHeal'
 import {
   calculateSummary,
   applyDiscount,
@@ -152,8 +152,24 @@ export function useFeeData(studentId?: string) {
       if (failed.length > 0) {
         // Report EVERY refused read, not just the first: one fault is common,
         // but two of them are two different rules and two different fixes.
+        //
+        // The scope matters as much as the label. The top-level `students`
+        // list is authorised per document against the CLAIM, while the query
+        // is pinned to the profile's collegeId — so if those two ever
+        // disagree, the query matches documents the rules then refuse, and
+        // the denial is indistinguishable from a broken account. Printing all
+        // three ends makes that difference visible instead of a guess.
+        const tokenClaim = await currentTokenClaims()
+        const scope = [
+          `query scope: ${identityCollegeId || '(empty)'}`,
+          `token claim: ${tokenClaim?.collegeId ?? '(none)'}`,
+          `profile: ${user?.collegeId || '(none)'}`,
+        ].join(', ')
         throw new LabelledReadError(
-          failed.map((entry) => `${entry.label} — ${describeErrorDetail(entry.result.reason, { withCode: false })}`)
+          failed.map(
+            (entry) =>
+              `${entry.label} — ${describeErrorDetail(entry.result.reason, { withCode: false })} (${scope})`
+          )
         )
       }
 
