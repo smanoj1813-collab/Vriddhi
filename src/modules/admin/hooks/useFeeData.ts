@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../auth/context/AuthContext'
 import {
   classifyOfficeLinkageFailure,
+  describeErrorDetail,
   describeOfficeLinkageFailure,
 } from '../utils/officeLinkage'
 import { isPermissionDeniedError } from '../../../shared/utils/identityClaims'
@@ -53,6 +54,28 @@ import {
   type PaymentMode,
   type SubmitProofInput,
 } from '../api/feeApi'
+
+/**
+ * A refusal that knows WHICH read was refused.
+ *
+ * `isPermissionDeniedError` reads `code` and `message`, both of which this
+ * preserves, so the existing classifier and the self-heal behave exactly as
+ * before — but the message a human reads now names the collection instead of
+ * describing three reads that happen to live in one `Promise.all`.
+ */
+class LabelledReadError extends Error {
+  readonly code: string;
+  readonly details: string[];
+
+  constructor(details: string[]) {
+    super(
+      `The ${details.length === 1 ? 'read' : 'reads'} failed: ${details.join('; ')}`
+    );
+    this.name = 'LabelledReadError';
+    this.code = 'permission-denied';
+    this.details = details;
+  }
+}
 
 export function useFeeData(studentId?: string) {
   const { user } = useAuth()
@@ -97,7 +120,12 @@ export function useFeeData(studentId?: string) {
     setLoading(true)
     setError(null)
     try {
-      const [paymentsData, structuresData, studentsData] = await Promise.all([
+      // Each read is labelled and settled independently. `Promise.all` would
+      // report only the FIRST rejection and drop the other two, so a desk that
+      // reads payments + structures + students could not tell the accounts team
+      // WHICH query the rules refused — and the copy had to guess. The label
+      // travels into the error message, so the answer is on screen.
+      const [payments, structures, students] = await Promise.allSettled([
         fetchFeePayments({
           course: filters.course,
           batch: filters.batch,
@@ -111,9 +139,27 @@ export function useFeeData(studentId?: string) {
         fetchFeeStructures(identityCollegeId),
         studentId ? Promise.resolve([] as FeeStudent[]) : fetchFeeStudents(identityCollegeId),
       ])
-      setAllPayments(paymentsData)
-      setFeeStructures(structuresData)
-      setStudents(studentsData)
+
+      const failed = [
+        { label: 'fee payments', result: payments },
+        { label: 'fee structures', result: structures },
+        { label: 'the student list', result: students },
+      ].filter((entry) => entry.result.status === 'rejected') as Array<{
+        label: string
+        result: PromiseRejectedResult
+      }>
+
+      if (failed.length > 0) {
+        // Report EVERY refused read, not just the first: one fault is common,
+        // but two of them are two different rules and two different fixes.
+        throw new LabelledReadError(
+          failed.map((entry) => `${entry.label} — ${describeErrorDetail(entry.result.reason, { withCode: false })}`)
+        )
+      }
+
+      setAllPayments((payments as PromiseFulfilledResult<FeePayment[]>).value)
+      setFeeStructures((structures as PromiseFulfilledResult<FeeStructure[]>).value)
+      setStudents((students as PromiseFulfilledResult<FeeStudent[]>).value)
       loadedRef.current = true
     } catch (err) {
       console.error('[useFeeData] Failed to load fee ledger:', err)

@@ -67,13 +67,20 @@ export function classifyOfficeLinkageFailure(facts: OfficeLinkageFacts): OfficeL
   return 'unknown'
 }
 
-/** A short, quotable description of the error that actually happened. */
-export function describeErrorDetail(error: unknown): string {
+/**
+ * A short, quotable description of the error that actually happened.
+ *
+ * `withCode: false` is for nesting: a labelled error already spells out the
+ * per-read code for each collection, and prefixing the whole thing again just
+ * prints "permission-denied: … permission-denied: …" at the reader.
+ */
+export function describeErrorDetail(error: unknown, opts: { withCode?: boolean } = {}): string {
   if (!error) return ''
   const code = String((error as { code?: unknown } | null)?.code ?? '').trim()
   const message =
     error instanceof Error ? error.message : String((error as { message?: unknown } | null)?.message ?? error)
   const text = String(message || '').trim()
+  if (opts.withCode === false) return text || code
   if (code && text) return `${code}: ${text}`
   return text || code
 }
@@ -102,18 +109,24 @@ export function describeOfficeLinkageFailure(
       // has just called syncMyIdentity and it changed nothing sends them in a
       // circle; and "ask a superadmin to check the rules" is the wrong next step
       // when the account row simply has no college on it.
+      // The label matters: a desk that reads three collections must say WHICH
+      // one the rules refused, or the reader cannot act on it at all. Both
+      // branches carry it — knowing the account is healthy does not tell you
+      // which collection's rule is refusing.
+      const which = describeErrorDetail(context.detail)
+      const whichClause = which ? ` Refused: ${which}.` : ''
       return context.healAttempted
         ? `Security rules refused this ${context.desk} read, and the app has already tried to re-issue ` +
           `your sign-in claims — the read is still refused, so the problem is the account itself, not a stale ` +
-          `session. A superadmin needs to run Access Control → Identity repair for your account, and the ` +
-          `account row must name your college (an account with no college on it cannot be repaired from here). ` +
-          `If your reads work in other parts of the app and only this one fails, the deployed security rules ` +
-          `may also be older than the app — ask for a rules redeploy (npm run deploy:rules).`
-        : `Security rules refused this ${context.desk} read, so nothing is shown for ${where}. This usually means ` +
-          `your sign-in token carries no college claim (press Retry — the app re-issues the claims itself — or ` +
-          `sign out and back in), or the deployed security rules are older than this app. If a retry does not help, ` +
-          `ask a superadmin to redeploy the rules (npm run deploy:rules) and run Access Control → Identity repair ` +
-          `for your account.`
+          `session.${whichClause} A superadmin needs to run Access Control → Identity repair for your account, ` +
+          `and the account row must name your college (an account with no college on it cannot be repaired from ` +
+          `here). If your reads work in other parts of the app and only this one fails, the deployed security ` +
+          `rules may also be older than the app — ask for a rules redeploy (npm run deploy:rules).`
+        : `Security rules refused this ${context.desk} read, so nothing is shown for ${where}.${whichClause} ` +
+          `This usually means your sign-in token carries no college claim (press Retry — the app re-issues the ` +
+          `claims itself — or sign out and back in), or the deployed security rules are older than this app. If ` +
+          `a retry does not help, ask a superadmin to redeploy the rules (npm run deploy:rules) and run ` +
+          `Access Control → Identity repair for your account.`
     case 'missing-index':
       return (
         `This ${context.desk} query needs a Firestore index that has not been created yet, so nothing could be ` +

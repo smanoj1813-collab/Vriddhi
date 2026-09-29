@@ -15,6 +15,7 @@ import {
   describeOfficeEmptyState,
   describeOfficeLinkageFailure,
 } from './officeLinkage'
+import { isPermissionDeniedError } from '@/shared/utils/identityClaims';
 
 test('an account with no college is reported as unlinked, not as an empty college', () => {
   // The failure this whole module exists for: AuthContext still renders a
@@ -131,4 +132,22 @@ test('a refusal that survived the self-heal points at the account, not at anothe
   assert.match(after, /already tried to re-issue/i);
   assert.match(after, /Identity repair/i);
   assert.match(after, /account row must name your college/i);
+});
+
+test('a labelled refusal keeps its code, so the classifier and the self-heal still fire', () => {
+  // The fee hook now settles its three reads independently and throws a
+  // LabelledReadError. If that error did not look like a permission denial,
+  // the claim self-heal would silently stop running — which is the whole fix.
+  const err = Object.assign(
+    new Error('The read failed: the student list — permission-denied: Missing or insufficient permissions.'),
+    { code: 'permission-denied' }
+  );
+  assert.equal(
+    classifyOfficeLinkageFailure({ code: err.code, message: err.message, collegeId: 'c1' }),
+    'permission-denied'
+  );
+  assert.equal(isPermissionDeniedError(err), true);
+  // …and the labelled message must survive into what the operator reads.
+  const shown = describeOfficeLinkageFailure('permission-denied', { desk: 'fee ledger', detail: err });
+  assert.match(shown, /the student list/);
 });
