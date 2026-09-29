@@ -118,9 +118,25 @@ service cloud.firestore {
       return isStaff() && (isSuperadmin() || collegeId() != null);
     }
 
+    // OPERAND ORDER IS LOAD-BEARING HERE. A list query evaluates its rule once
+    // per candidate document, and Firestore allows at most 10 document accesses
+    // (get()/exists()) per request — exceeding it denies the WHOLE query, which
+    // surfaces to the client as a bare "Missing or insufficient permissions".
+    //
+    // isSuperadmin() falls through to exists(superadmins/{uid}) for anyone who
+    // is not a claim-superadmin, so leading with it charged one document access
+    // per row on every sameCollege() caller. A college with more than ~10
+    // students then blew the budget and the entire query was refused — even
+    // though the rule's boolean outcome was "allow" for every single document.
+    //
+    // The claim-derived tenancy check costs nothing, so evaluate it first and let
+    // || short-circuit before isSuperadmin() can spend anything. isSuperadmin()
+    // still runs, and still grants, for callers that genuinely fail the cheap
+    // check. Purely a reordering of || operands: no condition was added, removed
+    // or weakened, and the result is identical for every input.
     function sameCollege(data) {
-      return isSuperadmin()
-        || (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId());
+      return (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId())
+        || isSuperadmin();
     }
 
     // -- College office roles -------------------------------------------------
@@ -334,9 +350,18 @@ service cloud.firestore {
       // allowed, while an unbounded sweep still fails. Without this line the
       // student dashboard cannot resolve its own profile and reports "no
       // student record" for a correctly provisioned account.
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff()
-        || ownsStudentProfile(id, resource.data)
-        || (isOffice() && sameCollege(resource.data)));
+      //
+      // The cheap claim-only tests are deliberately tested FIRST. isSuperadmin()
+      // ends in exists(superadmins/{uid}), so leading with it charged one
+      // document access per candidate row; the Fee Management desk queries the
+      // whole college roster, so it ran far past the 10-access request budget
+      // and Firestore refused the entire query. The office/tenancy predicate is
+      // satisfied from the ID token alone at zero cost, and || short-circuits
+      // there. Identical boolean result for every input — operands reordered
+      // only, so no caller gains access that did not already pass the same test.
+      allow list: if isSignedIn() && ((isOffice() && sameCollege(resource.data))
+        || isStaff() || isSuperadmin()
+        || ownsStudentProfile(id, resource.data));
       allow create: if canManageCollege(request.resource.data)
         && noPrivilegedRole(request.resource.data)
         && noPasswordField();
