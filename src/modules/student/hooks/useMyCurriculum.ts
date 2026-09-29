@@ -63,6 +63,22 @@ export interface StudentSubject {
   upcomingSessions: StudentSessionSummary[];
 }
 
+export interface CohortFieldMismatch {
+  field: 'branch' | 'batch' | 'semester' | 'division' | 'section';
+  /** What the student's own record says, or '(none)' when it is blank. */
+  studentValue: string;
+  /** The distinct values the excluded mappings carry. */
+  mappingValues: string[];
+  /** How many mappings would match if ONLY this field were ignored. */
+  wouldMatch: number;
+}
+
+export interface CohortDiagnosis {
+  totalActiveMappings: number;
+  mismatches: CohortFieldMismatch[];
+  needsMultipleCorrections: boolean;
+}
+
 export interface StudentCurriculumResult {
   generatedAt: string;
   student: { branch: string; batch: string; semester: number; division: string };
@@ -70,6 +86,12 @@ export interface StudentCurriculumResult {
   totals: { subjects: number; topics: number; completed: number; current: number; upcoming: number; pct: number };
   upcomingClasses: StudentSessionSummary[];
   noCurriculumAssigned: boolean;
+  /**
+   * Present when the college HAS mapped subjects but every one of them is
+   * excluded from this cohort. Without it the page can only say "nothing is
+   * assigned", which is false and points the reader at the wrong side.
+   */
+  cohortDiagnosis?: CohortDiagnosis;
 }
 
 const callable = httpsCallable<Record<string, never>, StudentCurriculumResult>(functions, 'getMyCurriculum');

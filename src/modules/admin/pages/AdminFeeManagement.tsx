@@ -5,6 +5,7 @@ import {
   ChevronUp, CreditCard, Wallet, Receipt, ArrowUpRight, ArrowDownRight,
   Loader2, GraduationCap, Calendar, BookOpen, Activity, Eye, Check, X,
   Upload, ShieldCheck, FileText, Image as ImageIcon, PlusCircle, Settings as SettingsIcon,
+  AlertCircle,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
@@ -12,6 +13,7 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import { useFeeData, FeePayment, FeeStatus, PaymentMode } from '../hooks/useFeeData'
+import { describeOfficeEmptyState } from '../utils/officeLinkage'
 import {
   fetchFeePayments,
   fetchFeeTransactions,
@@ -788,13 +790,22 @@ const FEE_CATEGORY_OPTIONS: { id: FeeCategory; label: string }[] = [
 ]
 
 function RecordPaymentModal({
-  students, structures, onClose, onPick, onCreateInvoice,
+  students, structures, loadError, onClose, onPick, onCreateInvoice, onRetry,
 }: {
   students: FeeStudent[]
   structures: FeeStructure[]
+  /**
+   * Set when the student directory could not be READ. Without it an
+   * authorisation or identity failure is indistinguishable from a college with
+   * no students, and this modal — the finance team's main entry point — told
+   * them "No students found for this college." when the real answer was that
+   * their account is not (yet) linked to the college the rules check.
+   */
+  loadError?: string | null
   onClose: () => void
   onPick: (payment: FeePayment) => void
   onCreateInvoice: (input: import('../api/feeApi').CreateFeePaymentInput) => Promise<FeePayment | null>
+  onRetry?: () => void
 }) {
   const [search, setSearch] = useState('')
   const [student, setStudent] = useState<FeeStudent | null>(null)
@@ -897,8 +908,23 @@ function RecordPaymentModal({
                   className="bg-transparent text-sm text-vriddhi-text focus:outline-none w-full placeholder:text-vriddhi-muted/50"
                 />
               </div>
-              {students.length === 0 ? (
-                <p className="text-sm text-vriddhi-muted py-6 text-center">No students found for this college.</p>
+              {students.length === 0 && loadError ? (
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 flex flex-col items-center gap-3 text-center">
+                  <AlertCircle className="w-5 h-5 text-amber-500" />
+                  <p className="text-sm text-amber-700 dark:text-amber-300">{loadError}</p>
+                  {onRetry && (
+                    <button
+                      onClick={onRetry}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-200 text-sm font-medium hover:bg-amber-500/25 transition-colors flex items-center gap-2"
+                    >
+                      <RefreshCw size={14} /> Retry
+                    </button>
+                  )}
+                </div>
+              ) : students.length === 0 ? (
+                <p className="text-sm text-vriddhi-muted py-6 text-center">
+                  {describeOfficeEmptyState('students')}
+                </p>
               ) : (
                 <div className="divide-y divide-vriddhi-border rounded-xl border border-vriddhi-border overflow-hidden">
                   {matches.map(st => (
@@ -1079,6 +1105,7 @@ export default function AdminFeeManagement() {
   const chartAxis = resolvedMode === 'dark' ? '#94a3b8' : '#64748b'
   const {
     loading,
+    loadError,
     filters,
     allPayments,
     summary,
@@ -1273,6 +1300,21 @@ export default function AdminFeeManagement() {
 
   return (
     <div className="page-container">
+      {/* A ledger that could not be READ is not a ledger with nothing in it.
+          Without this the desk sees an empty college and starts auditing
+          student imports instead of the account's college link. */}
+      {loadError && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+          <p className="text-sm text-amber-700 dark:text-amber-300 flex-1">{loadError}</p>
+          <button
+            onClick={refreshData}
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-200 text-sm font-medium hover:bg-amber-500/25 transition-colors flex items-center gap-2"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Retry
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
         <div>
@@ -1977,6 +2019,8 @@ export default function AdminFeeManagement() {
         <RecordPaymentModal
           students={students}
           structures={feeStructures}
+          loadError={loadError}
+          onRetry={refreshData}
           onClose={() => setShowRecordPayment(false)}
           onPick={(payment) => { setShowRecordPayment(false); setSelectedPayment(payment); setModalMode('collect') }}
           onCreateInvoice={async (input) => {
@@ -2004,6 +2048,8 @@ export default function AdminFeeManagement() {
         <FeeAssignmentModal
           students={students}
           structures={feeStructures}
+          loadError={loadError}
+          onRetry={refreshData}
           onClose={() => setShowAssignment(false)}
           onSubmit={handleCreateInvoice}
         />

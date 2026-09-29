@@ -363,5 +363,14 @@ export function useFacultyAttendance() {
     setAllStatus,
     resetAttendance,
     handleSave,
+    /**
+     * One on-demand claim refresh, shared with the "mark topics covered"
+     * action on the page: completeClassSession reads the caller's role and
+     * college from the same token, so a stale claim denies it exactly the way
+     * it denies the attendance write, and the same one-shot heal + single
+     * retry is the right response. Exposed rather than duplicated so the guard
+     * (one attempt per mount) stays single-sourced.
+     */
+    selfHealOnce,
   };
 }

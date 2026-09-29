@@ -44,6 +44,7 @@ import {
   type SessionCandidate,
   type SessionConflict,
 } from './utils/timetableConflicts'
+import { normalizeRole, pickCollegeId } from './identityShared'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -639,51 +640,377 @@ interface SchedulingStaff {
   role: string
   collegeId: string
   name: string
+  /**
+   * Every id this person is known by — the auth uid, the `faculty`/`hods`/
+   * `mentors` profile document id, and the `facultyId` field on that profile.
+   *
+   * WHY THIS EXISTS: the timetable, the curriculum mappings and therefore every
+   * class session they generate key a teacher by their FACULTY PROFILE DOCUMENT
+   * ID, while ownership and the auth claim are the Firebase Auth UID. Those two
+   * are different strings for most teachers (see the alias resolution in
+   * src/modules/admin/api/curriculumMappingApi.ts:resolveFacultyAliases and the
+   * two-step lookup in scheduleApi.fetchFacultyWeeklySchedule, both of which
+   * exist precisely because they disagree). Comparing the two with `===` refused
+   * a teacher their own class: ensureClassSession answered "You can only manage
+   * your own class sessions" and completeClassSession answered "You can only
+   * complete your own class sessions" for a class they were teaching — and the
+   * client rendered both as "Only college administrators can…".
+   */
+  ids: string[]
 }
 
 /**
- * Same contract as resolvePaperStaff in paperWorkflow.ts: the role comes from
- * the auth token with the user doc as fallback, and the college is resolved
- * server-side. A superadmin may target a college explicitly; everybody else is
+ * Staff profile collections, in the same resolution order the client uses
+ * (src/modules/auth/context/auth.ts). `students` is deliberately absent:
+ * membership here must prove TEACHING staff. `superadmins` is absent too — the
+ * superadmin identity comes from the claim or the canonical users document,
+ * never from a client-writable profile.
+ */
+const STAFF_PROFILE_COLLECTIONS = ['faculty', 'hods', 'mentors'] as const
+
+/** Role implied by membership of a staff profile collection. */
+const STAFF_PROFILE_ROLE: Record<string, string> = {
+  faculty: 'faculty',
+  hods: 'hod',
+  mentors: 'mentor',
+}
+
+/** What a legacy (pre-`users/{uid}`) staff profile contributes to an identity. */
+export interface LegacyStaffProfile {
+  role: string
+  collegeId: string
+  name: string
+  email: string
+  /** Profile document id + its `facultyId` field, besides the caller's uid. */
+  ids: string[]
+}
+
+function cleanText(value: unknown, maximum = 200): string {
+  return String(value ?? '').trim().slice(0, maximum)
+}
+
+/**
+ * Fold the id spellings a person may be filed under into one list, always
+ * starting with the auth uid. Order is stable and duplicates are dropped, so
+ * the result can be compared with `.includes()` and asserted in tests.
+ */
+export function mergeIdentityIds(...groups: Array<unknown>): string[] {
+  const out: string[] = []
+  for (const group of groups) {
+    for (const raw of Array.isArray(group) ? group : [group]) {
+      const value = cleanText(raw)
+      if (value && !out.includes(value)) out.push(value)
+    }
+  }
+  return out
+}
+
+/**
+ * Pure part of the identity chain: given the token claims, the `users/{uid}`
+ * document (when there is one) and an optional legacy staff profile, decide the
+ * caller's role, college and name.
+ *
+ * The role is normalised (`normalizeRole`) rather than string-compared, because
+ * a claim or a users document that says "Teacher", "Head of Department" or
+ * "HOD " describes exactly the same person as "faculty"/"hod" and used to fail
+ * every role check in this module. The college reads every spelling the client
+ * tolerates (`collegeId` / `collegeID` / `college_id`) for the same reason.
+ */
+export function staffIdentityFromDocs(input: {
+  uid: string
+  token: Record<string, unknown>
+  user?: Record<string, unknown> | null
+  profile?: LegacyStaffProfile | null
+}): { role: string; collegeId: string; name: string } {
+  const user = input.user || {}
+  const profile = input.profile || null
+  const role =
+    normalizeRole(input.token.role) ||
+    normalizeRole(user.role) ||
+    normalizeRole(profile?.role) ||
+    ''
+  const collegeId =
+    cleanText(input.token.collegeId) ||
+    pickCollegeId(user) ||
+    profile?.collegeId ||
+    ''
+  const name =
+    cleanText(user.name || user.displayName) ||
+    `${cleanText(user.firstName)} ${cleanText(user.lastName)}`.trim() ||
+    profile?.name ||
+    ''
+  return { role, collegeId, name }
+}
+
+/**
+ * Whether the staff profile collections still have to be consulted for this
+ * caller: a missing `users/{uid}` document, a role that is not on the token or
+ * the document, or no college on either. Split out so the decision is testable
+ * without Firestore — the resolvers use exactly this predicate.
+ */
+export function needsStaffProfileLookup(input: {
+  token: Record<string, unknown>
+  userExists: boolean
+}): boolean {
+  if (!input.userExists) return true
+  const { role, collegeId } = staffIdentityFromDocs({ uid: '', token: input.token })
+  return !role || (role !== 'superadmin' && !collegeId)
+}
+
+/**
+ * Legacy-account fallback: find the staff profile that describes this uid, so
+ * an account provisioned before the `users/{uid}` convention is still
+ * recognised. Mirrors resolveLegacyPaperStaff in paperWorkflow.ts: anchor on the
+ * document id first, then the `uid`/`userId` fields, then the token email; the
+ * role comes from COLLECTION MEMBERSHIP only (a client-writable `role` field
+ * must never be able to grant itself a privilege).
+ */
+async function resolveLegacyStaffProfile(uid: string, email: string): Promise<LegacyStaffProfile | null> {
+  const db = admin.firestore()
+  const anchors: Array<{ field: string; value: string }> = [
+    { field: 'uid', value: uid },
+    { field: 'userId', value: uid },
+  ]
+  if (email) anchors.push({ field: 'email', value: email.toLowerCase() })
+
+  for (const collectionName of STAFF_PROFILE_COLLECTIONS) {
+    let data: Record<string, unknown> | null = null
+    let docId = ''
+    try {
+      const byId = await db.collection(collectionName).doc(uid).get()
+      if (byId.exists) {
+        data = (byId.data() || {}) as Record<string, unknown>
+        docId = byId.id
+      }
+    } catch (err) {
+      logger.warn('[classSchedule] staff profile doc-id lookup failed', {
+        collection: collectionName,
+        error: (err as Error)?.message,
+      })
+    }
+
+    if (!data) {
+      for (const { field, value } of anchors) {
+        try {
+          const snap = await db.collection(collectionName).where(field, '==', value).limit(1).get()
+          if (!snap.empty) {
+            data = snap.docs[0].data() as Record<string, unknown>
+            docId = snap.docs[0].id
+            break
+          }
+        } catch (err) {
+          logger.warn('[classSchedule] staff profile lookup failed', {
+            collection: collectionName,
+            field,
+            error: (err as Error)?.message,
+          })
+        }
+      }
+    }
+
+    if (data) {
+      return {
+        role: STAFF_PROFILE_ROLE[collectionName] || '',
+        collegeId: pickCollegeId(data) || '',
+        name: cleanText(
+          data.name || data.displayName || `${cleanText(data.firstName)} ${cleanText(data.lastName)}`.trim()
+        ),
+        email: cleanText(data.email).toLowerCase(),
+        ids: mergeIdentityIds(uid, docId, data.facultyId, data.userId),
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * Every id the caller may be referenced by in a class session, a weekly slot or
+ * a curriculum mapping. The auth uid is always first; the profile ids are
+ * added lazily by the resolvers below only when a raw comparison fails, so the
+ * common (already-matching) case costs nothing.
+ */
+async function loadFacultyAliases(uid: string): Promise<string[]> {
+  const ids = mergeIdentityIds(uid)
+  const db = admin.firestore()
+  await Promise.all(
+    STAFF_PROFILE_COLLECTIONS.map(async (collectionName) => {
+      try {
+        const byId = await db.collection(collectionName).doc(uid).get()
+        if (byId.exists) {
+          const data = (byId.data() || {}) as Record<string, unknown>
+          ids.push(...mergeIdentityIds(byId.id, data.facultyId, data.userId).filter((id) => id !== uid))
+          return
+        }
+        const snap = await db.collection(collectionName).where('uid', '==', uid).limit(1).get()
+        if (!snap.empty) {
+          const data = snap.docs[0].data() as Record<string, unknown>
+          ids.push(...mergeIdentityIds(snap.docs[0].id, data.facultyId).filter((id) => id !== uid))
+        }
+      } catch (err) {
+        logger.warn('[classSchedule] faculty alias lookup failed', {
+          collection: collectionName,
+          error: (err as Error)?.message,
+        })
+      }
+    })
+  )
+  return mergeIdentityIds(uid, ids)
+}
+
+/** True when `facultyId` is one of the ids the caller is known by. */
+export function callerOwnsFacultyId(staff: { uid: string; ids: string[] }, facultyId: unknown): boolean {
+  const target = cleanText(facultyId)
+  if (!target) return false
+  return target === staff.uid || staff.ids.includes(target)
+}
+
+/**
+ * The college a class session belongs to, or '' when nothing on it says.
+ *
+ * `collegeId` is stamped on every session written by this module and by
+ * facultyApi.saveAttendance, but documents created by the pre-S2.2 browser
+ * writers do not carry it, and a strict `session.collegeId !== staff.collegeId`
+ * check refused those forever. The recurring parent is authoritative about
+ * tenancy, so it is consulted before giving up.
+ */
+async function resolveSessionCollege(
+  session: Record<string, unknown>,
+  callerCollegeId: string
+): Promise<string> {
+  const own = pickCollegeId(session)
+  if (own) return own
+  const weeklyScheduleId = cleanText(session.weeklyScheduleId)
+  if (!weeklyScheduleId) return ''
+  try {
+    const slotSnap = await admin.firestore().collection('weeklySchedules').doc(weeklyScheduleId).get()
+    return pickCollegeId(slotSnap.data() || null) || ''
+  } catch (err) {
+    logger.warn('[classSchedule] parent slot college lookup failed', {
+      weeklyScheduleId,
+      collegeId: callerCollegeId,
+      error: (err as Error)?.message,
+    })
+    return ''
+  }
+}
+
+/**
+ * Same check as `callerOwnsFacultyId`, but resolves the profile aliases on
+ * first miss — the raw comparison is the fast path, the extra reads only
+ * happen for a teacher whose timetable is keyed on their profile id.
+ */
+async function callerOwnsFaculty(
+  staff: SchedulingStaff,
+  facultyId: unknown,
+  cache?: { loaded: boolean; ids: string[] }
+): Promise<boolean> {
+  if (callerOwnsFacultyId(staff, facultyId)) return true
+  if (cache && cache.loaded) return callerOwnsFacultyId({ uid: staff.uid, ids: cache.ids }, facultyId)
+  const ids = await loadFacultyAliases(staff.uid)
+  if (cache) {
+    cache.ids = ids
+    cache.loaded = true
+  }
+  staff.ids = mergeIdentityIds(staff.ids, ids)
+  return callerOwnsFacultyId(staff, facultyId)
+}
+
+/**
+ * One identity chain for every callable in this module. `allowedRoles` is the
+ * only thing that differs between the scheduling-only pair and the
+ * session-writer pair, so the two cannot drift apart again.
+ */
+async function resolveStaff(
+  uid: string,
+  token: Record<string, unknown>,
+  allowedRoles: string[],
+  deniedMessage: string
+): Promise<SchedulingStaff> {
+  const db = admin.firestore()
+  const userSnap = await db.collection('users').doc(uid).get()
+  const user = (userSnap.exists ? userSnap.data() : null) as Record<string, unknown> | null
+
+  let profile: LegacyStaffProfile | null = null
+  if (needsStaffProfileLookup({ token, userExists: userSnap.exists })) {
+    profile = await resolveLegacyStaffProfile(uid, cleanText(token.email).toLowerCase())
+  }
+
+  const { role, collegeId, name } = staffIdentityFromDocs({ uid, token, user, profile })
+  if (!role || !allowedRoles.includes(role) || (role !== 'superadmin' && !collegeId)) {
+    logger.warn('[classSchedule] identity refused', {
+      uid,
+      role: role || 'none',
+      hasCollege: Boolean(collegeId),
+      hasUserDoc: userSnap.exists,
+      usedProfile: Boolean(profile),
+      allowedRoles,
+    })
+    throw new HttpsError('permission-denied', deniedMessage)
+  }
+
+  return {
+    uid,
+    role,
+    collegeId,
+    name,
+    ids: mergeIdentityIds(uid, profile?.ids),
+  }
+}
+
+/**
+ * Scheduling administration (generate / cancel). The role comes from the auth
+ * claim with the users document as fallback and the college is resolved
+ * server-side; a superadmin may target a college explicitly, everybody else is
  * pinned to the college on their own claim.
  */
 export async function resolveSchedulingStaff(
   uid: string,
   token: Record<string, unknown>
 ): Promise<SchedulingStaff> {
-  const userDoc = await admin.firestore().collection('users').doc(uid).get()
-  const user = userDoc.data()
-  const role = String(token.role || user?.role || '')
-  const collegeId = String(token.collegeId || user?.collegeId || '')
-  if (!userDoc.exists || !SCHEDULING_ROLES.includes(role) || (role !== 'superadmin' && !collegeId)) {
-    throw new HttpsError('permission-denied', 'Scheduling administration access is required')
-  }
-  return { uid, role, collegeId, name: String(user?.name || user?.displayName || '') }
+  return resolveStaff(uid, token, SCHEDULING_ROLES, 'Scheduling administration access is required')
 }
 
 /**
  * Same check as resolveSchedulingStaff, but also lets faculty and mentors
  * through — they are the ones standing in front of a class. A self-service
- * caller is pinned to their own uid by ensureClassSession, so a faculty
- * member can materialise their own lesson but not somebody else's.
+ * caller is pinned to their own identity by ensureClassSession and
+ * completeClassSession, so a faculty member can materialise and complete their
+ * own lesson but not somebody else's.
  */
 export async function resolveSessionWriter(
   uid: string,
   token: Record<string, unknown>
 ): Promise<SchedulingStaff> {
-  const userDoc = await admin.firestore().collection('users').doc(uid).get()
-  const user = userDoc.data()
-  const role = String(token.role || user?.role || '')
-  const collegeId = String(token.collegeId || user?.collegeId || '')
-  if (!userDoc.exists || !SESSION_WRITE_ROLES.includes(role)) {
-    throw new HttpsError('permission-denied', 'Teaching staff access is required')
-  }
+  const staff = await resolveStaff(uid, token, SESSION_WRITE_ROLES, 'Teaching staff access is required')
   // Even a superadmin needs a college to file a session under; unlike the
   // admin-only callables there is nothing meaningful to do without one.
-  if (!collegeId) {
+  if (!staff.collegeId) {
     throw new HttpsError('permission-denied', 'No college is associated with this account')
   }
-  return { uid, role, collegeId, name: String(user?.name || user?.displayName || '') }
+  return staff
+}
+
+/**
+ * The `facultyId` values a class session's teacher may have ledger rows under.
+ *
+ * A session carries the timetable's faculty id (the faculty PROFILE document
+ * id) while the teacher's own planner rows are written from the browser under
+ * their auth UID. Completing a class has to consider both, or the topic the
+ * teacher planned is never matched and a duplicate row is created instead of
+ * the existing one being flipped to covered. A scheduling role completing
+ * somebody else's class contributes no ids of their own — the set stays the
+ * session's, which is what the coverage readers query.
+ */
+export function resolveLedgerFacultyIds(
+  session: { facultyId?: unknown },
+  staff: { uid: string; ids: string[] }
+): string[] {
+  const sessionFacultyId = cleanText(session.facultyId)
+  if (!sessionFacultyId) return cleanText(staff.uid) ? [staff.uid] : []
+  if (callerOwnsFacultyId(staff, sessionFacultyId)) {
+    return mergeIdentityIds(staff.uid, staff.ids).slice(0, MAX_LEDGER_FACULTY_IDS)
+  }
+  return [sessionFacultyId]
 }
 
 /** Optional, length-bounded string filter supplied by the caller. */
@@ -1346,11 +1673,22 @@ export const ensureClassSession = onCall(
     const input = validateEnsureInput(request.data)
 
     const privileged = SCHEDULING_ROLES.includes(staff.role)
-    // Self-service callers may only touch their own classes.
-    const facultyId = privileged ? input.facultyId || staff.uid : staff.uid
-    if (!privileged && input.facultyId && input.facultyId !== staff.uid) {
+    // Self-service callers may only touch their own classes. "Own" means any
+    // id this person is filed under — their auth uid or their faculty profile
+    // id, which is what the timetable, the curriculum mappings and therefore
+    // the client's session list actually carry.
+    const requestedFacultyId = cleanText(input.facultyId)
+    // An omitted facultyId means "mine" — it used to default to the caller's
+    // uid, and the faculty Topics/attendance paths rely on that.
+    const ownsRequested =
+      privileged || !requestedFacultyId ? true : await callerOwnsFaculty(staff, requestedFacultyId)
+    if (!ownsRequested) {
       throw new HttpsError('permission-denied', 'You can only manage your own class sessions')
     }
+    // Keep the id the caller was given: every other reader (timetable, session
+    // list, progress) queries by that value, so normalising it to the uid here
+    // would make the session it just created invisible to them.
+    const facultyId = requestedFacultyId || staff.uid
     if (!facultyId) throw new HttpsError('invalid-argument', 'facultyId is required')
 
     const db = admin.firestore()
@@ -1493,6 +1831,13 @@ export const ensureClassSession = onCall(
 
 /** Upper bound on topics attached to one session, to bound the transaction. */
 export const MAX_TOPICS_PER_SESSION = 50
+
+/**
+ * Upper bound on the `facultyId` values one completion reads a teacher ledger
+ * for. The real set is 2–3; the cap only exists so a profile with a pile of
+ * stale alias fields cannot fan the callable out.
+ */
+export const MAX_LEDGER_FACULTY_IDS = 6
 
 /**
  * Statuses that mean "this topic has been taught". Both spellings are in the
@@ -1730,17 +2075,26 @@ export const completeClassSession = onCall(
     const sessionSnap = await sessionRef.get()
     if (!sessionSnap.exists) throw new HttpsError('not-found', 'Class session not found')
     const session = sessionSnap.data() || {}
-    if (String(session.collegeId || '') !== staff.collegeId) {
+    const privileged = SCHEDULING_ROLES.includes(staff.role)
+    // Ownership is alias-aware: a session generated from the timetable carries
+    // the faculty PROFILE id of its teacher, not their auth uid, so a raw
+    // `===` refused a teacher completing the class they had just taught.
+    // Scheduling roles manage the whole college, so they skip the lookup.
+    if (!privileged && !(await callerOwnsFaculty(staff, session.facultyId))) {
+      throw new HttpsError('permission-denied', 'You can only complete your own class sessions')
+    }
+    // Tenancy: a session written before collegeId was stamped still has to be
+    // completable by the college that owns its timetable, so fall back to the
+    // parent slot and only refuse when a college is actually known and is not
+    // the caller's.
+    const sessionCollege = await resolveSessionCollege(session, staff.collegeId)
+    if (sessionCollege && sessionCollege !== staff.collegeId) {
       throw new HttpsError('permission-denied', 'This session belongs to another college')
     }
     // A cancelled session is a class that did not happen; completing it would
     // credit topics that were never taught.
     if (String(session.status || 'scheduled') === 'cancelled') {
       throw new HttpsError('failed-precondition', 'A cancelled session cannot be completed')
-    }
-    const privileged = SCHEDULING_ROLES.includes(staff.role)
-    if (!privileged && String(session.facultyId || '') !== uid) {
-      throw new HttpsError('permission-denied', 'You can only complete your own class sessions')
     }
 
     // Resolve every requested topic to {topicId, title}. `topics/*` names the
@@ -1776,12 +2130,21 @@ export const completeClassSession = onCall(
 
     // Candidate ledger rows are found before the transaction (Firestore
     // transactions cannot run a fresh query), then re-read inside it.
-    const ledgerSnap = await db
-      .collection('facultyTopics')
-      .where('facultyId', '==', String(session.facultyId || ''))
-      .limit(300)
-      .get()
-    const ledgerRows = ledgerSnap.docs.map((doc) => ({ id: doc.id, data: doc.data() }))
+    //
+    // The set is read across EVERY id the teacher is filed under, not just the
+    // one on the session: a teacher's own planner rows (Faculty Topics page,
+    // written from the browser) are keyed by their auth uid, while the session
+    // carries their faculty profile id. Querying only the session's id meant a
+    // topic they had already planned was never found, so completing a class
+    // CREATED a second row instead of flipping the one they planned against —
+    // and the copy the Topics page reads (uid-keyed) kept showing it pending.
+    const ledgerFacultyIds = resolveLedgerFacultyIds(session, staff)
+    const ledgerSnaps = await Promise.all(
+      ledgerFacultyIds.map((facultyId) =>
+        db.collection('facultyTopics').where('facultyId', '==', facultyId).limit(300).get()
+      )
+    )
+    const ledgerRows = ledgerSnaps.flatMap((snap) => snap.docs.map((doc) => ({ id: doc.id, data: doc.data() })))
 
     const now = new Date()
     const stamp = now.toISOString()
@@ -2257,9 +2620,30 @@ export const getCurriculumProgress = onCall(
     const input = validateProgressInput(request.data, staff.role, staff.collegeId)
 
     // Faculty may only read their own progress; scheduling roles may read the
-    // whole college.
+    // whole college. A self-service caller is matched by ANY of the ids they
+    // are filed under, because the mappings and the sessions below are keyed on
+    // the faculty profile id while the caller arrives as an auth uid.
     const privileged = SCHEDULING_ROLES.includes(staff.role)
-    const facultyFilter = privileged ? input.facultyId : staff.uid
+    const selfIds = privileged ? [] : mergeIdentityIds(staff.uid, await loadFacultyAliases(staff.uid))
+    const matchesFaculty = (facultyId: unknown): boolean => {
+      if (privileged) {
+        return !input.facultyId || cleanText(facultyId) === cleanText(input.facultyId)
+      }
+      return callerOwnsFacultyId({ uid: staff.uid, ids: selfIds }, facultyId)
+    }
+    const facultyFilter = privileged ? cleanText(input.facultyId) : ''
+    // Per-row join: a session/slot and a mapping are joined on the faculty id
+    // they each carry, and those two can be the same person's two spellings
+    // (timetable rows keyed by profile id, ad-hoc rows keyed by auth uid). A
+    // self-service caller is that person, so their own rows join either way;
+    // for a scheduling role the raw comparison is kept, because "no filter"
+    // must never mean "everybody's".
+    const isSameFaculty = (rowFacultyId: unknown, subjectFacultyId: unknown): boolean => {
+      const row = cleanText(rowFacultyId)
+      const subject = cleanText(subjectFacultyId)
+      if (row && row === subject) return true
+      return !privileged && callerOwnsFacultyId({ uid: staff.uid, ids: selfIds }, subject)
+    }
 
     const db = admin.firestore()
 
@@ -2276,7 +2660,7 @@ export const getCurriculumProgress = onCall(
         ...(doc.data() as Record<string, unknown>),
       }))
       .filter((mapping) => {
-        if (facultyFilter && String(mapping.facultyId || '') !== facultyFilter) return false
+        if (!matchesFaculty(mapping.facultyId)) return false
         if (input.curriculumId && String(mapping.curriculumId || '') !== input.curriculumId) return false
         if (!matchesProgressFilter(mapping.batch, input.batch)) return false
         if (!matchesProgressFilter(mapping.branch, input.branch)) return false
@@ -2316,7 +2700,7 @@ export const getCurriculumProgress = onCall(
 
     for (const facultyId of facultyIds) {
       const facultyMappings = mappings.filter((m) => String(m.facultyId || '') === facultyId)
-      const facultySessions = sessions.filter((s) => String(s.facultyId || '') === facultyId)
+      const facultySessions = sessions.filter((s) => isSameFaculty(s.facultyId, facultyId))
 
       // The faculty's own planner ledger. The curriculum PLAN is fetched
       // below from the assigned documents — the old second input here was a
@@ -2385,7 +2769,7 @@ export const getCurriculumProgress = onCall(
       )
 
       const slotsPerWeek = weeklySlots.filter(
-        (slot) => String(slot.facultyId || '') === facultyId
+        (slot) => isSameFaculty(slot.facultyId, facultyId)
       ).length
 
       // Term window: what the caller asked for, else what actually happened.

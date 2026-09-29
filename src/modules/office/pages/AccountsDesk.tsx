@@ -6,12 +6,13 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ArrowRight, BookOpen, CreditCard, IndianRupee, Receipt, ShoppingCart, Wallet } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 import { calculateSummary, fetchFeePayments } from '@/modules/admin/api/feeApi'
-import { Loading, PageHeader, StatCard, btn, inr } from '../components/officeUi'
+import { Loading, OfficeReadError, PageHeader, StatCard, btn, inr } from '../components/officeUi'
 import { buildDaybook } from '../api/financeReportsApi'
 import { fetchFines } from '../api/libraryApi'
 import { billPayState } from '../api/procurementApi'
 import { useProcurementSettings, usePurchaseRequests, useVendorBills } from '../hooks/useProcurement'
 import { useCollegeId } from '../hooks/useLibrary'
+import { useOfficeSelfHeal } from '../hooks/useOfficeSelfHeal'
 import { todayIso } from '../api/officeDb'
 import { canActOnStep, nextStep } from '../utils/procurementEngine'
 import { summarizeDaybook } from '../utils/tallyExport'
@@ -19,6 +20,7 @@ import { summarizeDaybook } from '../utils/tallyExport'
 export default function AccountsDesk() {
   const { user } = useAuth()
   const cid = useCollegeId()
+  const { healClaims, hasHealed } = useOfficeSelfHeal()
   const today = todayIso()
   const feesQ = useQuery({ queryKey: ['accountsDesk', cid, 'fees'], queryFn: () => fetchFeePayments(), enabled: !!cid, staleTime: 60 * 1000 })
   const todayQ = useQuery({ queryKey: ['accountsDesk', cid, 'today', today], queryFn: () => buildDaybook({ from: today, to: today, includeFees: true, includeFines: true, includeVendors: false, includePayroll: false }), enabled: !!cid, staleTime: 60 * 1000 })
@@ -48,6 +50,20 @@ export default function AccountsDesk() {
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
       <PageHeader title="Accounts Desk" subtitle={`Good day${user?.name ? `, ${user.name.split(' ')[0]}` : ''} — here's what needs attention`} icon={<Wallet className="w-5 h-5" />} />
+      <OfficeReadError
+        desk="accounts desk"
+        healAttempted={hasHealed}
+        collegeId={cid}
+        errors={[feesQ, todayQ, finesQ, billsQ, prsQ]}
+        onRetry={async () => {
+          // Re-issue a stale college claim BEFORE retrying: the rules authorise
+          // these reads from the token, so a retry on an unrepaired token just
+          // fails the same way.
+          await healClaims()
+          void feesQ.refetch(); void todayQ.refetch(); void finesQ.refetch()
+          void billsQ.refetch(); void prsQ.refetch()
+        }}
+      />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard label="Collected today" value={todaySum ? inr(todaySum.receipts) : '…'} icon={<IndianRupee className="w-5 h-5" />} tone="text-emerald-500" hint={todaySum ? Object.entries(todaySum.byMode).map(([k, v]) => `${k.toUpperCase()} ${inr(v)}`).join(' · ') || 'No receipts yet' : undefined} />
         <StatCard label="Fees outstanding" value={sum ? inr(sum.totalPending + sum.totalOverdue) : '…'} icon={<CreditCard className="w-5 h-5" />} hint={sum ? `${sum.countOverdue} overdue · ${inr(sum.totalOverdue)}` : undefined} />

@@ -3,7 +3,11 @@
 
 import { useEffect, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Loader2, X } from 'lucide-react'
+import { AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react'
+import {
+  classifyOfficeLinkageFailure,
+  describeOfficeLinkageFailure,
+} from '@/modules/admin/utils/officeLinkage'
 
 export const inr = (n: number) => `₹${(Number(n) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 export const fmtDate = (iso: string) => {
@@ -109,6 +113,64 @@ export function Loading({ label = 'Loading…' }: { label?: string }) {
     <div className="glass-card h-48 flex flex-col items-center justify-center gap-2 text-vriddhi-muted">
       <Loader2 className="w-7 h-7 animate-spin" />
       <span className="text-sm">{label}</span>
+    </div>
+  )
+}
+
+/**
+ * A college-scoped read that FAILED, as opposed to one that succeeded and found
+ * nothing.
+ *
+ * Both office desks read several collections at once and used to render the same
+ * "…" / "0" / "nothing here" whether the query was refused or empty. The two
+ * desks most likely to be refused are the two whose tenant comes from the token
+ * claim (accounts, operations), so this is where an account that is not linked
+ * to a college — or rules that predate the office roles — has to become visible.
+ * The copy comes from the shared classifier so it names the actual fix.
+ */
+export function OfficeReadError({
+  errors,
+  collegeId,
+  desk,
+  onRetry,
+  healAttempted = false,
+}: {
+  /** Anything with a `isError` / `error` shape (react-query results). */
+  errors: Array<{ isError?: boolean; error?: unknown }>
+  collegeId: string
+  desk: string
+  onRetry?: () => void
+  /**
+   * True once the desk has already tried to re-issue this account's claims.
+   * It changes what the reader should do next — a sign-out they have already
+   * done, or a refresh the app already ran, is not advice.
+   */
+  healAttempted?: boolean
+}) {
+  const failed = errors.find((entry) => entry.isError || entry.error)
+  if (!failed) return null
+  const failure = classifyOfficeLinkageFailure({
+    code: (failed.error as { code?: unknown } | null)?.code,
+    message: failed.error instanceof Error ? failed.error.message : failed.error,
+    collegeId,
+  })
+  return (
+    <div
+      role="alert"
+      className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+    >
+      <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+      <p className="text-sm text-amber-700 dark:text-amber-300 flex-1">
+        {describeOfficeLinkageFailure(failure, { desk, detail: failed.error, healAttempted })}
+      </p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-amber-500/15 px-3 py-1.5 text-sm font-medium text-amber-700 dark:text-amber-200 hover:bg-amber-500/25 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" /> Retry
+        </button>
+      )}
     </div>
   )
 }

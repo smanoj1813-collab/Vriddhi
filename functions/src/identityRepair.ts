@@ -117,7 +117,18 @@ interface RepairItem {
   error?: string
 }
 
-const DEFAULT_COLLECTIONS = ['students', 'faculty', 'admins', 'hods', 'mentors', 'superadmins']
+// `officeStaff` is the college office roster (accounts / operations). It is
+// scanned as a subcollection — see the special case in the scan loop — and is
+// in this list so an unscoped pass covers office staff like every other role.
+const DEFAULT_COLLECTIONS = [
+  'students',
+  'faculty',
+  'admins',
+  'hods',
+  'mentors',
+  'superadmins',
+  'officeStaff',
+]
 
 /** Profile fields that can carry the Auth uid, in trust order. */
 function uidFieldsFor(_collection: string): string[] {
@@ -723,14 +734,29 @@ export const auditAndRepairIdentities = onCall(
       doc: admin.firestore.QueryDocumentSnapshot
     }> = []
     for (const collection of collections) {
-      const defaultRole = COLLECTION_ROLE[collection]
-      let query: admin.firestore.Query = db.collection(collection).limit(limit)
-      if (input.collegeId && collection !== 'superadmins') {
-        query = db.collection(collection).where('collegeId', '==', input.collegeId).limit(limit)
-      }
+      let defaultRole: string
       let snapshot: admin.firestore.QuerySnapshot
       try {
-        snapshot = await query.get()
+        if (collection === 'officeStaff') {
+          // The office roster is a SUBCOLLECTION of each college, not a
+          // top-level collection, so the generic scan below can never reach
+          // it. That is why the accounts and operations teams were invisible
+          // to this pass: a college full of office staff scanned as if it had
+          // none. Scoped to one college it is a single get; across all
+          // colleges it is a collectionGroup, which is why the UI tells you
+          // to scope a pass to one college.
+          defaultRole = ''
+          snapshot = input.collegeId
+            ? await db.collection(`colleges/${input.collegeId}/officeStaff`).limit(limit).get()
+            : await db.collectionGroup('officeStaff').limit(limit).get()
+        } else {
+          defaultRole = COLLECTION_ROLE[collection]
+          let query: admin.firestore.Query = db.collection(collection).limit(limit)
+          if (input.collegeId && collection !== 'superadmins') {
+            query = db.collection(collection).where('collegeId', '==', input.collegeId).limit(limit)
+          }
+          snapshot = await query.get()
+        }
       } catch (err: any) {
         errors.push(`${collection}: scan failed — ${err?.message || err}`)
         continue
@@ -744,7 +770,17 @@ export const auditAndRepairIdentities = onCall(
         break
       }
       if (snapshot.docs.length >= limit) scanTruncated = true
-      for (const doc of snapshot.docs) units.push({ collection, defaultRole, doc })
+      for (const doc of snapshot.docs) {
+        // The roster's own `role` field is the role: the path holds both
+        // office roles, so membership cannot say which. It is written only by
+        // a superadmin, and the per-unit role is still bounded by
+        // PROVISIONABLE_ROLES before any claim is issued.
+        const unitRole =
+          collection === 'officeStaff'
+            ? normalizeRole((doc.data() as Record<string, unknown>).role) || defaultRole
+            : defaultRole
+        units.push({ collection, defaultRole: unitRole, doc })
+      }
     }
 
     // One Auth account can be described by more than one profile document — this

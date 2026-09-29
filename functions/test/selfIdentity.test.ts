@@ -222,3 +222,80 @@ describe('the two production stale-claim shapes (client/server agreement)', () =
     assert.deepEqual(target, { role: 'faculty', collegeId: COLLEGE_A, source: 'users' })
   })
 })
+
+describe('resolveIdentityTarget — college office roster', () => {
+  // `accounts` and `operations` are the only roles with no top-level profile
+  // collection; they are filed at colleges/{cid}/officeStaff/{uid}. Before this
+  // the roster was invisible to the self-heal, so an office account with stale
+  // claims had exactly one remedy: a superadmin.
+  const roster = (over: Record<string, unknown> = {}) => ({
+    collection: 'officeStaff',
+    data: { uid: 'u1', role: 'accounts', collegeId: COLLEGE_A, ...over },
+  })
+
+  it('repairs an office account that has no users document at all', () => {
+    const target = resolveIdentityTarget({
+      hasSuperadminProfile: false,
+      usersDoc: null,
+      profileDoc: roster(),
+      claimedCollegeId: null,
+    } as IdentityLookupFacts)
+    assert.deepEqual(target, { role: 'accounts', collegeId: COLLEGE_A, source: 'profile' })
+  })
+
+  it('reads operations off the roster just as it does accounts', () => {
+    const target = resolveIdentityTarget({
+      hasSuperadminProfile: false,
+      usersDoc: null,
+      profileDoc: roster({ role: 'operations' }),
+      claimedCollegeId: null,
+    } as IdentityLookupFacts)
+    assert.equal(target.role, 'operations')
+    assert.equal(target.collegeId, COLLEGE_A)
+  })
+
+  it('never mints a role the roster is not allowed to name', () => {
+    // The roster's role field is read because the path holds two roles, but
+    // that must not become a general "trust the document's role field" hole.
+    for (const forged of ['superadmin', 'admin', 'principal', 'root', 'SUPERADMIN']) {
+      const target = resolveIdentityTarget({
+        hasSuperadminProfile: false,
+        usersDoc: null,
+        profileDoc: roster({ role: forged }),
+        claimedCollegeId: null,
+      } as IdentityLookupFacts)
+      assert.equal(target.role, null, `${forged} must not be issued from a roster row`)
+    }
+  })
+
+  it('a users document still wins over the roster, so a demotion is not undone', () => {
+    const target = resolveIdentityTarget({
+      hasSuperadminProfile: false,
+      usersDoc: { role: 'faculty', collegeId: COLLEGE_A },
+      profileDoc: roster(),
+      claimedCollegeId: null,
+    } as IdentityLookupFacts)
+    assert.equal(target.role, 'faculty')
+  })
+
+  it('a superadmin marker is never laundered through a roster college', () => {
+    const target = resolveIdentityTarget({
+      hasSuperadminProfile: true,
+      usersDoc: null,
+      profileDoc: roster(),
+      claimedCollegeId: COLLEGE_A,
+    } as IdentityLookupFacts)
+    assert.deepEqual(target, { role: 'superadmin', collegeId: null, source: 'superadmin' })
+  })
+
+  it('a roster with no college still falls back to the claim rather than inventing one', () => {
+    const target = resolveIdentityTarget({
+      hasSuperadminProfile: false,
+      usersDoc: null,
+      profileDoc: roster({ collegeId: undefined }),
+      claimedCollegeId: COLLEGE_A,
+    } as IdentityLookupFacts)
+    assert.equal(target.role, 'accounts')
+    assert.equal(target.collegeId, COLLEGE_A)
+  })
+})

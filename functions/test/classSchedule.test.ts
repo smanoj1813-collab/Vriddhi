@@ -10,8 +10,14 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   MAX_BATCH_OPS,
+  callerOwnsFacultyId,
+  mergeIdentityIds,
+  needsStaffProfileLookup,
+  staffIdentityFromDocs,
   MAX_CANCEL_DOCS_PER_TXN,
   MAX_GENERATE_RANGE_DAYS,
+  MAX_LEDGER_FACULTY_IDS,
+  resolveLedgerFacultyIds,
   addDays,
   buildSessionDoc,
   chunk,
@@ -1318,5 +1324,146 @@ describe('slot validity window (P1)', () => {
     const toOnly = { ...SLOT, effectiveTo: '2026-12-20' }
     assert.equal(slotAppliesOn(toOnly, '2020-01-01'), true)
     assert.equal(slotAppliesOn(toOnly, '2026-12-21'), false)
+  })
+})
+
+// ─── Identity: one teacher, several ids ─────────────────────────────────────
+//
+// Regression cover for "Mark topics covered" answering "Only college
+// administrators can…". The callable compares the caller with the class they
+// are teaching, and those two are frequently NOT the same string: the timetable,
+// the curriculum mappings and every session generated from them key a teacher
+// by their faculty PROFILE id, while ownership and the auth claim are the
+// Firebase Auth UID. The raw `===` refused a teacher their own class, and the
+// client rendered the refusal as an admin-only message.
+
+describe('staff identity (role + college resolution)', () => {
+  it('normalises the role instead of string-comparing it', () => {
+    // A claim minted as "Teacher" describes a faculty member, and used to fail
+    // every role check in this module.
+    assert.equal(
+      staffIdentityFromDocs({ uid: 'u1', token: { role: 'Teacher', collegeId: 'c1' } }).role,
+      'faculty'
+    )
+    assert.equal(
+      staffIdentityFromDocs({ uid: 'u1', token: { role: 'Head of Department', collegeId: 'c1' } }).role,
+      'hod'
+    )
+    assert.equal(
+      staffIdentityFromDocs({ uid: 'u1', token: { role: ' HOD ', collegeId: 'c1' } }).role,
+      'hod'
+    )
+    // A role nobody recognises stays empty rather than becoming a privilege.
+    assert.equal(staffIdentityFromDocs({ uid: 'u1', token: { role: 'wizard' } }).role, '')
+  })
+
+  it('reads every college id spelling the client tolerates', () => {
+    // The client maps faculty profiles via `collegeId || collegeID`
+    // (src/modules/auth/context/auth.ts) — the server used to read only one.
+    assert.equal(
+      staffIdentityFromDocs({ uid: 'u1', token: {}, user: { collegeID: 'c9' } }).collegeId,
+      'c9'
+    )
+    assert.equal(
+      staffIdentityFromDocs({ uid: 'u1', token: {}, user: { college_id: 'c8' } }).collegeId,
+      'c8'
+    )
+    assert.equal(
+      staffIdentityFromDocs({ uid: 'u1', token: { collegeId: 'c1' }, user: { collegeId: 'c2' } })
+        .collegeId,
+      'c1'
+    )
+  })
+
+  it('falls back to a legacy staff profile when the users document says nothing', () => {
+    const profile = {
+      role: 'faculty',
+      collegeId: 'c1',
+      name: 'Asha Rao',
+      email: 'asha@college.edu',
+      ids: ['u1', 'facultyProfile1'],
+    }
+    const resolved = staffIdentityFromDocs({ uid: 'u1', token: {}, user: null, profile })
+    assert.equal(resolved.role, 'faculty')
+    assert.equal(resolved.collegeId, 'c1')
+    assert.equal(resolved.name, 'Asha Rao')
+  })
+
+  it('builds a name out of first/last when the document has none', () => {
+    assert.equal(
+      staffIdentityFromDocs({
+        uid: 'u1',
+        token: { role: 'faculty', collegeId: 'c1' },
+        user: { firstName: 'Asha', lastName: 'Rao' },
+      }).name,
+      'Asha Rao'
+    )
+  })
+
+  it('decides when the profile collections still have to be consulted', () => {
+    // No users document at all: an account provisioned before that convention.
+    assert.equal(needsStaffProfileLookup({ token: { role: 'faculty', collegeId: 'c1' }, userExists: false }), true)
+    // A document that carries neither a role nor a college.
+    assert.equal(needsStaffProfileLookup({ token: {}, userExists: true }), true)
+    // Role present, college missing — a cross-tenant token.
+    assert.equal(needsStaffProfileLookup({ token: { role: 'faculty' }, userExists: true }), true)
+    // A superadmin has no college, and that is not a broken account.
+    assert.equal(needsStaffProfileLookup({ token: { role: 'superadmin' }, userExists: true }), false)
+    // Fully specified, including the aliased spellings.
+    assert.equal(needsStaffProfileLookup({ token: { role: 'Teacher', collegeId: 'c1' }, userExists: true }), false)
+  })
+})
+
+describe('faculty identity aliases (the class the teacher is actually teaching)', () => {
+  it('folds the id spellings into one de-duplicated list, uid first', () => {
+    assert.deepEqual(
+      mergeIdentityIds('u1', ['u1', 'profile1', 'FAC-01', ''], 'profile1', undefined),
+      ['u1', 'profile1', 'FAC-01']
+    )
+  })
+
+  it('recognises a session keyed on the profile id as the caller\'s own', () => {
+    const caller = { uid: 'u1', ids: ['u1', 'facultyProfile1'] }
+    // The regression: a session generated from the timetable carries the
+    // profile id, and the old `session.facultyId === uid` check refused it.
+    assert.equal(callerOwnsFacultyId(caller, 'facultyProfile1'), true)
+    assert.equal(callerOwnsFacultyId(caller, 'u1'), true)
+    assert.equal(callerOwnsFacultyId(caller, 'someoneElse'), false)
+    assert.equal(callerOwnsFacultyId(caller, ''), false)
+    assert.equal(callerOwnsFacultyId(caller, undefined), false)
+  })
+
+  it('never grants ownership on a caller with no known ids', () => {
+    assert.equal(callerOwnsFacultyId({ uid: 'u1', ids: [] }, 'profile1'), false)
+  })
+})
+
+describe('ledger faculty ids (one topic, one row)', () => {
+  it('reads the teacher\'s ledger under every id they are filed under', () => {
+    // The regression behind "marking topics covered created a second row
+    // instead of flipping the planned one": the session carries the profile
+    // id, the planner row the teacher sees on their Topics page is keyed by
+    // their auth uid.
+    const staff = { uid: 'u1', ids: ['u1', 'facultyProfile1', 'FAC-01'] }
+    assert.deepEqual(resolveLedgerFacultyIds({ facultyId: 'facultyProfile1' }, staff), [
+      'u1',
+      'facultyProfile1',
+      'FAC-01',
+    ])
+  })
+
+  it('never mixes a scheduling role\'s own ids into somebody else\'s class', () => {
+    const admin = { uid: 'admin1', ids: ['admin1'] }
+    assert.deepEqual(resolveLedgerFacultyIds({ facultyId: 'facultyProfile1' }, admin), ['facultyProfile1'])
+  })
+
+  it('falls back to the caller when the session names no teacher', () => {
+    assert.deepEqual(resolveLedgerFacultyIds({}, { uid: 'u1', ids: ['u1'] }), ['u1'])
+    assert.deepEqual(resolveLedgerFacultyIds({}, { uid: '', ids: [] }), [])
+  })
+
+  it('is bounded', () => {
+    const many = { uid: 'u1', ids: ['u1', ...Array.from({ length: 20 }, (_, i) => `alias${i}`)] }
+    assert.equal(resolveLedgerFacultyIds({ facultyId: 'alias0' }, many).length <= MAX_LEDGER_FACULTY_IDS, true)
   })
 })

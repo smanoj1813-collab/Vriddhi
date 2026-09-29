@@ -9,6 +9,8 @@ import {
   DocumentData, QueryDocumentSnapshot, Query,
 } from "firebase/firestore";
 
+import type { LedgerTopicRow } from '@/modules/faculty/utils/curriculumCoverage';
+
 import type {
   CurriculumFacultyMapping,
   CreateMappingInput,
@@ -349,4 +351,50 @@ export async function getMappingStats(collegeId: string): Promise<{
     console.error("Error fetching mapping stats:", error);
     return { totalMappings: 0, activeMappings: 0, facultyCount: 0, courseCount: 0, byBranch: {}, bySemester: {} };
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Coverage ledger (facultyTopics)
+// ═══════════════════════════════════════════════════════════════════════
+
+const LEDGER_COLLECTION = "facultyTopics";
+const LEDGER_LIMIT = 400;
+
+/**
+ * The signed-in teacher's own coverage rows: what they have marked covered,
+ * and what they have planned but not yet taught.
+ *
+ * Two id spellings exist for the same person — the Auth uid (what the Topics
+ * page stamps) and the `faculty/{doc}` profile id (what a class session
+ * carries). `completeClassSession` writes rows under EITHER, depending on
+ * whether the topic was pre-planned, so a uid-only query silently drops half
+ * the history and the curriculum page would report topics as untouched that
+ * the teacher closed a class on. Both spellings are read, exactly as the
+ * server's own ledger read does.
+ *
+ * Returns [] rather than throwing when the read is denied: the modules
+ * themselves are the primary content of the page, and a missing progress badge
+ * must not replace them with an error screen.
+ */
+export async function fetchFacultyTopicLedger(facultyId: string): Promise<LedgerTopicRow[]> {
+  const aliases = await resolveFacultyAliases(facultyId);
+  const ids = Array.from(new Set([facultyId, ...aliases.ids].filter(Boolean)));
+  const snapshots = await Promise.all(
+    ids.map((id) =>
+      getDocs(query(collection(db, LEDGER_COLLECTION), where("facultyId", "==", id), limit(LEDGER_LIMIT)))
+        .then((snap) => snap.docs.map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) } as LedgerTopicRow)))
+        .catch((error) => {
+          console.warn(`[CurriculumMappingApi] ledger read failed for ${id}:`, error);
+          return [] as LedgerTopicRow[];
+        })
+    )
+  );
+  const seen = new Set<string>();
+  const out: LedgerTopicRow[] = [];
+  for (const row of snapshots.flat()) {
+    if (!row?.id || seen.has(row.id)) continue;
+    seen.add(row.id);
+    out.push(row);
+  }
+  return out;
 }

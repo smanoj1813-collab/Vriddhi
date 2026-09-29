@@ -17,11 +17,18 @@ const ALL_COLLEGES = '*'
 
 
 /** Which Firestore profile collections one pass should walk. */
-const REPAIR_SCOPES: Record<'all' | 'students' | 'faculty' | 'staff', RepairInput['collections']> = {
+const REPAIR_SCOPES: Record<
+  'all' | 'students' | 'faculty' | 'staff' | 'office',
+  RepairInput['collections']
+> = {
   all: undefined,
   students: ['students'],
   faculty: ['faculty'],
   staff: ['admins', 'hods', 'mentors', 'superadmins'],
+  // The office roster is scanned as a subcollection, so it is selected
+  // separately rather than folded into "staff" — otherwise a pass scoped to
+  // admins/HODs would silently also walk every college's office staff.
+  office: ['officeStaff'],
 }
 
 type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent' | 'accounts' | 'operations'
@@ -42,7 +49,7 @@ export default function AccessControl() {
   // Scope controls. A full sweep of six collections across every college is a few
   // thousand Auth/Firestore round trips and can exceed the function's wall clock,
   // so the operator has to be able to narrow it — not just retry it.
-  const [repairCollections, setRepairCollections] = useState<'all' | 'students' | 'faculty' | 'staff'>('all')
+  const [repairCollections, setRepairCollections] = useState<'all' | 'students' | 'faculty' | 'staff' | 'office'>('all')
   const [repairLimit, setRepairLimit] = useState('500')
   const [repairBudget, setRepairBudget] = useState('420')
   const { data: collegesData, isLoading: collegesLoading } = useColleges()
@@ -192,6 +199,7 @@ export default function AccessControl() {
           <MenuItem value="students">Students only</MenuItem>
           <MenuItem value="faculty">Faculty only</MenuItem>
           <MenuItem value="staff">Admins / HODs / mentors / superadmins</MenuItem>
+          <MenuItem value="office">Accounts / Operations only</MenuItem>
         </TextField>
         <TextField fullWidth label="Docs per collection" type="number" value={repairLimit} onChange={e => setRepairLimit(e.target.value)}
           helperText="1–2000 per collection" />

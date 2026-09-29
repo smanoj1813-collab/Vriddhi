@@ -91,7 +91,115 @@ export interface StudentCurriculumResult {
   upcomingClasses: StudentSessionSummary[]
   /** True when no mapping exists for this cohort — the UI explains instead of showing zero. */
   noCurriculumAssigned: boolean
+  /**
+   * WHY nothing matched, when mappings for the college exist but all of them
+   * are excluded by the cohort filter. Absent when the college genuinely has
+   * no active mappings — "nothing is mapped" and "everything is mapped to a
+   * different semester/division" are different facts with different fixes.
+   */
+  cohortDiagnosis?: CohortDiagnosis
 }
+
+// ─── Cohort exclusion diagnosis ─────────────────────────────────────────────
+
+export interface CohortFieldMismatch {
+  field: 'branch' | 'batch' | 'semester' | 'division' | 'section'
+  /** What the student's own record says, verbatim ('(none)' when blank). */
+  studentValue: string
+  /** The distinct values the excluded mappings carry for this field. */
+  mappingValues: string[]
+  /**
+   * How many of the college's active mappings WOULD match this student if
+   * only this field were ignored. 0 means fixing this field alone changes
+   * nothing — the row disagrees on more than one field.
+   */
+  wouldMatch: number
+}
+
+export interface CohortDiagnosis {
+  totalActiveMappings: number
+  /** Per field, most decisive first: the fields that are actually excluding rows. */
+  mismatches: CohortFieldMismatch[]
+  /** True when no single field explains it — the rows disagree on several at once. */
+  needsMultipleCorrections: boolean
+}
+
+const COHORT_FIELDS = ['branch', 'batch', 'semester', 'division', 'section'] as const
+
+/** The student's own value for a cohort field, rendered for display. */
+function studentFieldValue(field: (typeof COHORT_FIELDS)[number], student: CohortLike): string {
+  if (field === 'semester') {
+    const n = Number(student.semester) || 0
+    return n ? String(n) : '(none)'
+  }
+  const raw = field === 'division' || field === 'section' ? student[field] : student[field]
+  return String(raw ?? '').trim() || '(none)'
+}
+
+/** The mappings' values for a cohort field, rendered for display. */
+function mappingFieldValue(field: (typeof COHORT_FIELDS)[number], row: CohortLike): string {
+  if (field === 'semester') {
+    const n = Number(row.semester) || 0
+    return n ? String(n) : '(none)'
+  }
+  return String(row[field] ?? '').trim() || '(none)'
+}
+
+/**
+ * When every active mapping is filtered out by `sessionMatchesCohort`, this
+ * says WHICH field is responsible — by asking the matcher the only question
+ * that can be answered from the stored data: how many rows would match if
+ * exactly this one field were ignored?
+ *
+ * This is deliberately both-sided. The student page used to assert "your
+ * college has not assigned subjects to BBA semester 3 yet" while sixteen
+ * mappings sat in the database excluded on a single field — and the honest
+ * answer might be the class schedule, not the sixteen student records. A
+ * number that says "ignore division and 16 rows match" is something a reader
+ * can act on; "no curriculum assigned" is not.
+ */
+export function diagnoseCohortExclusion(
+  activeMappings: CohortLike[],
+  student: CohortLike,
+): CohortDiagnosis {
+  const total = activeMappings.length
+  const mismatches: CohortFieldMismatch[] = []
+
+  for (const field of COHORT_FIELDS) {
+    // Ignore this one field, keep every other constraint, and see what lands.
+    // Only rows that are CURRENTLY excluded count: a mapping that already
+    // matched was never blocked by this field, and counting it would inflate
+    // the number into a claim the data does not support.
+    const wouldMatch = activeMappings.filter((row) => {
+      if (sessionMatchesCohort(row, student)) return false
+      const relaxed: CohortLike = { ...row, [field]: '' }
+      return sessionMatchesCohort(relaxed, student)
+    }).length
+
+    if (wouldMatch === 0) continue
+
+    const values = [
+      ...new Set(activeMappings.map((row) => mappingFieldValue(field, row))),
+    ].sort()
+    mismatches.push({
+      field,
+      studentValue: studentFieldValue(field, student),
+      mappingValues: values.slice(0, 12),
+      wouldMatch,
+    })
+  }
+
+  // Most decisive first: the field that alone recovers the most rows is the
+  // one a reader should look at first.
+  mismatches.sort((a, b) => b.wouldMatch - a.wouldMatch)
+
+  return {
+    totalActiveMappings: total,
+    mismatches,
+    needsMultipleCorrections: mismatches.length > 1,
+  }
+}
+
 
 // ─── Identity ───────────────────────────────────────────────────────────────
 
@@ -334,10 +442,10 @@ export const getMyCurriculum = onCall(
       .where('collegeId', '==', student.collegeId)
       .limit(MAX_MAPPINGS)
       .get()
-    const mappings: Array<Record<string, any> & { id: string }> = mappingsSnap.docs
+    const activeMappings: Array<Record<string, any> & { id: string }> = mappingsSnap.docs
       .map((d): Record<string, any> & { id: string } => ({ ...(d.data() as Record<string, any>), id: d.id }))
       .filter((m) => String(m.status || 'active') !== 'inactive')
-      .filter((m) => sessionMatchesCohort(m as CohortLike, student))
+    const mappings = activeMappings.filter((m) => sessionMatchesCohort(m as CohortLike, student))
 
     if (mappings.length === 0) {
       return {
@@ -347,6 +455,13 @@ export const getMyCurriculum = onCall(
         totals: { subjects: 0, topics: 0, completed: 0, current: 0, upcoming: 0, pct: 0 },
         upcomingClasses: await loadUpcomingClasses(db, student, today, upcomingEnd),
         noCurriculumAssigned: true,
+        // The college may well HAVE mapped everything — to a different
+        // semester, batch or division. Saying "nothing is assigned" in that
+        // case sends the reader to fix the wrong side, so the diagnosis is
+        // only attached when there is at least one active mapping to explain.
+        ...(activeMappings.length > 0
+          ? { cohortDiagnosis: diagnoseCohortExclusion(activeMappings as CohortLike[], student) }
+          : {}),
       }
     }
 

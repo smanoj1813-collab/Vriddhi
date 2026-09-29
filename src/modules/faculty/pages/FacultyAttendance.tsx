@@ -9,6 +9,7 @@ import { useAuth } from '../../auth/context/AuthContext'
 import { useFacultyAttendance } from '../hooks/useFacultyAttendance'
 import { completeClassSession } from '../../admin/api/classSessionApi'
 import { fetchSessionTopicOptions, type SessionTopicOption } from '../api/sessionTopicsApi'
+import { isPermissionDeniedError } from '../../../shared/utils/identityClaims'
 import { useAttendanceExport } from '../hooks/useAttendanceExport'
 import { DateRangeSelector } from '../../../components/shared/DateRangeSelector'
 import { ExportButton } from '../../../components/shared/ExportButton'
@@ -143,26 +144,53 @@ function RosterDiagnosticPanel({ diagnostics }: { diagnostics: RosterDiagnostics
  * out (the panel above only covered the all-or-nothing empty case). Partial
  * exclusion used to be invisible: a faculty saw "the class is missing half its
  * students" with no way to tell why. This names the fields to fix.
+ *
+ * It used to name only the FIELDS ("Semester — 123") and then assert the
+ * remedy on the student records ("Fix the semester on those students"). That
+ * is one-sided and it is the wrong instruction half the time: the same message
+ * appears when the CLASS is the odd one out — a timetable slot carrying a
+ * semester the college does not teach, which is exactly what happens after an
+ * admin re-aligns a batch. So the notice now shows both sides of the
+ * comparison: what this class is, and what the excluded students actually
+ * have, and offers the fix in either direction.
  */
 function RosterExclusionNotice({ diagnostics }: { diagnostics: RosterDiagnostics }) {
   const excluded = Object.entries(diagnostics.nearMisses)
     .filter(([, detail]) => detail.count > 0)
     .sort((a, b) => b[1].count - a[1].count)
   if (diagnostics.nearMissTotal === 0 || excluded.length === 0) return null
+  const fields = excluded.map(([field]) => MISMATCH_LABELS[field] ?? field).join(' / ')
   return (
     <div className="mb-4 p-3 rounded-xl border border-amber-300/70 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>
         {diagnostics.nearMissTotal}{' '}
         {diagnostics.nearMissTotal === 1 ? 'student is' : 'students are'} in this college and
-        program but not in this roster — their records differ from this class's cohort:{' '}
+        program but not in this roster — their records differ from this class's cohort.{' '}
+        <strong>This class is {describeCohortTarget(diagnostics.target)}.</strong>{' '}
         {excluded
           .slice(0, 3)
-          .map(([field, detail]) => `${MISMATCH_LABELS[field] ?? field} — ${detail.count}`)
-          .join(' · ')}
-        {excluded.length > 3 ? ` · +${excluded.length - 3} more` : ''}. Fix the semester / division /
-        section on those students (Superadmin → Students → Bulk change), or align the class
-        schedule, and they will appear here.
+          .flatMap(([field, detail], index) => [
+            index > 0 ? ' · ' : null,
+            <span key={field} className="inline">
+              {MISMATCH_LABELS[field] ?? field} — {detail.count}
+              {detail.values.length > 0 && (
+                <span className="text-amber-800/80 dark:text-amber-300/80">
+                  {' '}(recorded as: {detail.values.join(', ')}
+                  {detail.values.length >= 6 ? '…' : ''})
+                </span>
+              )}
+            </span>,
+          ])}
+        {excluded.length > 3 ? ` · +${excluded.length - 3} more field(s)` : ''}.{' '}
+        {/*
+          Which side is wrong is a judgement the reader has to make, so BOTH are
+          offered: correcting 123 students is destructive and must never be the
+          advice a UI gives on its own.
+        */}
+        Either correct the {fields} on those students (Superadmin → Students → Bulk change) or
+        correct this class's {fields} on its weekly schedule — whichever side is wrong. They
+        appear here as soon as the two agree.
         {diagnostics.truncated && ' (The roster scan also hit its student cap — see the notice below.)'}
       </span>
     </div>
@@ -193,6 +221,7 @@ export default function FacultyAttendance() {
     setAllStatus,
     resetAttendance,
     handleSave,
+    selfHealOnce,
   } = useFacultyAttendance();
 
   // The schedule left its semester blank, so the roster was widened to every
@@ -264,27 +293,41 @@ export default function FacultyAttendance() {
     }
     setCompleting(true)
     setCompleteNotice(null)
+    const chosen = topicOptions.filter(option => selectedTopicIds.includes(option.id))
+    // Pairs first: a curriculum option's id is a COMPOSITE
+    // (curriculumId__module__topicKey), which the server cannot resolve
+    // against the `topics/*` bank — the title has to travel with it or the
+    // topic silently stops being attached/covered. topicIds/topicTitles
+    // stay for older deployed functions, which ignore `topics`.
+    const topics = chosen.map(option => ({
+      topicId: option.source === 'curriculum' ? option.id : '',
+      title: option.title,
+    }))
+    if (extraTopic.trim()) topics.push({ topicId: '', title: extraTopic.trim() })
+    const payload = {
+      sessionId: selectedClass.id,
+      topics,
+      topicIds: chosen.filter(option => option.source === 'curriculum').map(option => option.id),
+      topicTitles: [
+        ...chosen.filter(option => option.source === 'ledger').map(option => option.title),
+        ...(extraTopic.trim() ? [extraTopic.trim()] : []),
+      ],
+    }
     try {
-      const chosen = topicOptions.filter(option => selectedTopicIds.includes(option.id))
-      // Pairs first: a curriculum option's id is a COMPOSITE
-      // (curriculumId__module__topicKey), which the server cannot resolve
-      // against the `topics/*` bank — the title has to travel with it or the
-      // topic silently stops being attached/covered. topicIds/topicTitles
-      // stay for older deployed functions, which ignore `topics`.
-      const topics = chosen.map(option => ({
-        topicId: option.source === 'curriculum' ? option.id : '',
-        title: option.title,
-      }))
-      if (extraTopic.trim()) topics.push({ topicId: '', title: extraTopic.trim() })
-      const result = await completeClassSession({
-        sessionId: selectedClass.id,
-        topics,
-        topicIds: chosen.filter(option => option.source === 'curriculum').map(option => option.id),
-        topicTitles: [
-          ...chosen.filter(option => option.source === 'ledger').map(option => option.title),
-          ...(extraTopic.trim() ? [extraTopic.trim()] : []),
-        ],
-      })
+      let result
+      try {
+        result = await completeClassSession(payload)
+      } catch (err) {
+        // The callable authorises from the caller's token claims, so a token
+        // minted before this account's role/college existed is refused exactly
+        // the way it refuses the attendance write. Re-issue once and retry —
+        // completing a session is idempotent server-side (topics are merged,
+        // never replaced), so the retry cannot double-count.
+        if (!isPermissionDeniedError(err)) throw err
+        const outcome = await selfHealOnce()
+        if (outcome !== 'refreshed') throw err
+        result = await completeClassSession(payload)
+      }
       const parts = [`Marked complete — ${result.topicsAttached} topic(s) attached.`]
       if (result.ledgerRowsUpdated) parts.push(`${result.ledgerRowsUpdated} ledger row(s) set to covered.`)
       if (result.ledgerRowsCreated) parts.push(`${result.ledgerRowsCreated} new ledger row(s) created.`)
