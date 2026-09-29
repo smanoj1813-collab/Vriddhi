@@ -5,6 +5,7 @@ import {
   IDENTITY_API_VERSION,
   OFFICE_ROLES,
   generateRandomPassword,
+  hasIdentityProfile,
   verifyAuthAccount,
 } from './identityShared'
 import { describeCollegeResolutionFailure, resolveCollegeReference } from './collegeResolve'
@@ -267,7 +268,15 @@ export const diagnoseIdentity = onCall(
         const snap = await db.doc(`${collectionName}/${uid}`).get()
         result[collectionName] = snap.exists ? { id: snap.id, ...snap.data() } : null
       }
-      if (!(result.users as any) && !(result.superadmins as any)) issues.push('No identity profile document exists')
+      // NOTE: the "no identity profile document" check is deliberately NOT made
+      // here. At this point the office roster has not been consulted yet, and
+      // `accounts`/`operations` are filed only at
+      // `colleges/{collegeId}/officeStaff/{uid}` — so for a correctly
+      // provisioned office account both `result.users` and
+      // `result.superadmins` are null. Reporting that as a missing profile is
+      // a false positive: it reads as a broken identity and invites an operator
+      // to "repair" an account that is perfectly healthy. The check runs below,
+      // once the roster rows are known.
 
       // The college office roster. `accounts` and `operations` are the only
       // roles with no top-level profile collection — they are filed at
@@ -298,6 +307,11 @@ export const diagnoseIdentity = onCall(
         if (snap.exists) officeRows.push({ collegeId: cid, ...(snap.data() as Record<string, unknown>) })
       }
       result.officeStaff = officeRows
+      // An office-only account has no top-level profile document by design —
+      // its roster row IS its identity. Only call the account unprovisioned
+      // when it has neither a users/superadmins document nor a roster row.
+      if (!hasIdentityProfile({ usersDoc: result.users, superadminDoc: result.superadmins, officeRows }))
+        issues.push('No identity profile document exists')
       if (OFFICE_ROLES.includes(claimRole) && officeRows.length === 0) {
         issues.push(
           `This is an "${claimRole}" account but it has no row in any college's officeStaff roster, so it cannot be listed, deactivated or re-granted from Access Control. Re-grant the role from here to recreate the roster row.`

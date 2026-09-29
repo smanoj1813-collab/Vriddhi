@@ -52,6 +52,25 @@ export const PROVISIONABLE_ROLES = [
 /** Office roles a principal may create for their own college. */
 export const OFFICE_ROLES = ['accounts', 'operations']
 
+/**
+ * Does this account have an identity profile of any recognised kind?
+ *
+ * `users` and `superadmins` are the top-level anchors, but `accounts` and
+ * `operations` are filed only on a college office roster — so for a correctly
+ * provisioned office account both are null and the roster row IS the profile.
+ *
+ * Counting it here is what stops Access Control from reporting a healthy
+ * office account as having no identity at all, which in turn is what invites
+ * an operator to "repair" an account that needs no repair.
+ */
+export function hasIdentityProfile(facts: {
+  usersDoc: unknown
+  superadminDoc: unknown
+  officeRows: readonly unknown[]
+}): boolean {
+  return Boolean(facts.usersDoc) || Boolean(facts.superadminDoc) || facts.officeRows.length > 0
+}
+
 // Profile collections that hold a person, in role-resolution order.
 export const PROFILE_COLLECTIONS = [
   'superadmins',
