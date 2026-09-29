@@ -71,6 +71,12 @@ const SUPERADMIN_MARKER = 'superadmins'
  */
 const PROFILE_FALLBACK_COLLECTIONS = ['admins', 'faculty', 'hods', 'mentors', 'students']
 
+/**
+ * The two roles that live on the college office roster instead of a top-level
+ * profile collection. See `findOfficeRosterDocument`.
+ */
+const OFFICE_ROLES = ['accounts', 'operations']
+
 /** Fields a profile document may store the Auth uid under, in trust order. */
 const PROFILE_UID_FIELDS = ['uid', 'userId', 'email'] as const
 
@@ -131,11 +137,26 @@ export function resolveIdentityTarget(facts: IdentityLookupFacts): IdentityTarge
   const profileDoc = facts.profileDoc
   if (profileDoc && (role === null || collegeId === null)) {
     if (role === null) {
-      // Membership, never the document's role field (see the header).
-      const membershipRole = COLLECTION_ROLE[profileDoc.collection]
-      if (membershipRole && PROVISIONABLE_ROLES.includes(membershipRole)) {
-        role = membershipRole
-        source = 'profile'
+      if (profileDoc.collection === 'officeStaff') {
+        // The one exception to "membership, never the document's role field":
+        // `colleges/{cid}/officeStaff` holds BOTH office roles under a single
+        // path, so membership cannot say which. The row is written only by a
+        // superadmin (grantUserRole / manageOfficeStaff refuse every other
+        // caller), so the field carries the same weight as the collections
+        // above — and it is still bounded by PROVISIONABLE_ROLES and by the
+        // refusal to raise an existing claim.
+        const rosterRole = normalizeRole(profileDoc.data.role)
+        if (rosterRole && OFFICE_ROLES.includes(rosterRole)) {
+          role = rosterRole
+          source = 'profile'
+        }
+      } else {
+        // Membership, never the document's role field (see the header).
+        const membershipRole = COLLECTION_ROLE[profileDoc.collection]
+        if (membershipRole && PROVISIONABLE_ROLES.includes(membershipRole)) {
+          role = membershipRole
+          source = 'profile'
+        }
       }
     }
     if (collegeId === null) {
@@ -224,6 +245,57 @@ async function findProfileDocument(
   return null
 }
 
+/**
+ * The college office roster: `colleges/{collegeId}/officeStaff/{uid}`.
+ *
+ * WHY THIS IS A SEPARATE LOOKUP
+ *
+ * `accounts` and `operations` are the only roles with no top-level profile
+ * collection — `grantUserRole` files them under the college and nowhere else
+ * ("Office roles have no profile collection of their own; the college roster
+ * the principal manages lives under the college"). So the loop above could
+ * never find an office account, and an office member whose claims went stale
+ * had exactly one remedy: a superadmin. That is the same blind spot that made
+ * the accounts desk un-diagnosable, in the one place that is supposed to fix
+ * such things by itself.
+ *
+ * TRUST. This is a collectionGroup lookup on a roster that only a superadmin
+ * can write — `grantUserRole` and `manageOfficeStaff` both refuse every other
+ * caller. That is a HIGHER trust bar than the `admins` collection already
+ * trusted above, which a college manager can write. The document's `role`
+ * field is read here rather than derived from collection membership, because
+ * the roster holds two roles under one path; the field is superadmin-authored,
+ * so it carries the same weight as the email anchor already used for the
+ * other collections. The callable still refuses to raise or change an
+ * existing role claim, so this widens what can be REPAIRED, never what can be
+ * ESCALATED to.
+ */
+async function findOfficeRosterDocument(
+  db: admin.firestore.Firestore,
+  uid: string,
+  email: string | null,
+): Promise<{ collection: string; data: Record<string, unknown> } | null> {
+  const anchors: Array<{ field: 'uid' | 'email'; value: string }> = [{ field: 'uid', value: uid }]
+  if (email) anchors.push({ field: 'email', value: email })
+
+  for (const { field, value } of anchors) {
+    try {
+      const snap = await db
+        .collectionGroup('officeStaff')
+        .where(field, '==', value)
+        .limit(1)
+        .get()
+      if (!snap.empty) return { collection: 'officeStaff', data: snap.docs[0].data() }
+    } catch (err) {
+      logger.warn('[syncMyIdentity] office roster lookup failed', {
+        field,
+        error: (err as Error)?.message,
+      })
+    }
+  }
+  return null
+}
+
 // ─── Callable ───────────────────────────────────────────────────────────────
 
 export const syncMyIdentity = onCall(
@@ -262,6 +334,12 @@ export const syncMyIdentity = onCall(
     let profileDoc: { collection: string; data: Record<string, unknown> } | null = null
     if (!isSuperadminProfile && !usersComplete) {
       profileDoc = await findProfileDocument(db, uid, email)
+      // The office roster lives under the college, so the loop above can never
+      // reach it. An office account with no users document — or a users
+      // document missing its college — has nothing else to be repaired from.
+      if (!profileDoc) {
+        profileDoc = await findOfficeRosterDocument(db, uid, email)
+      }
     }
 
     const target = resolveIdentityTarget({

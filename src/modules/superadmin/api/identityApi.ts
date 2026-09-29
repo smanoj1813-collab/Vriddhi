@@ -23,7 +23,14 @@ export type { CredentialRow, CredentialDelivery } from '@/shared/services/identi
 
 export interface RepairInput {
   collegeId?: string
-  collections?: Array<'students' | 'faculty' | 'admins' | 'hods' | 'mentors' | 'superadmins'>
+  /**
+   * Profile collections to walk. `officeStaff` is the college office roster
+   * (accounts / operations) — the server scans it as a subcollection of the
+   * selected college, so scoping a pass to one college is how it stays bounded.
+   */
+  collections?: Array<
+    'students' | 'faculty' | 'admins' | 'hods' | 'mentors' | 'superadmins' | 'officeStaff'
+  >
   /** Report only; no writes. Defaults to true (server-side as well). */
   dryRun?: boolean
   limit?: number
