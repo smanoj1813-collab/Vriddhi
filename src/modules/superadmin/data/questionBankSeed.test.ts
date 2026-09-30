@@ -59,6 +59,21 @@ describe('bundled seed datasets', () => {
     }
   })
 
+  it('normalises line endings, so a Windows checkout cannot change what gets seeded', () => {
+    // The regression this pins: the raw `?raw` import carries whatever the
+    // working tree holds. With CRLF, every row's last cell (examName) arrived
+    // with a trailing `\r` and the header comparisons in the suites below
+    // failed on Windows only. The module normalises once, so this holds on
+    // every platform and for every derived dataset.
+    assert.ok(!SEED_ALL_CSV.includes('\r'), 'the combined CSV must be LF-only')
+    for (const file of SEED_FILES) {
+      assert.ok(!file.csv.includes('\r'), `${file.key} must be LF-only`)
+    }
+    // …and the normalisation must be lossless: dropping the CRs is not the
+    // same as dropping rows or blanking cells.
+    assert.equal(parseSeedCsv(SEED_ALL_CSV).length, 759)
+  })
+
   it('parses the combined dataset with zero invalid rows (759 = 262 + 238 + 259)', () => {
     const resolved = resolveSeedRows('all', [])
     assert.equal(resolved.rows.length, 759)
@@ -709,7 +724,9 @@ describe('per-programme datasets are derived from the combined CSV', () => {
       const branch = file.branch as string
       assert.ok(branch, `${file.key} must name its branch`)
       assert.equal(file.csv, filterSeedCsvByBranch(SEED_ALL_CSV, branch))
-      assert.equal(file.csv.split('\n')[0], SEED_ALL_CSV.split('\n')[0], 'same header')
+      // `\r?\n` on purpose: the fixture must not care what line endings the
+      // working-tree CSV happens to have (see the LF-normalisation test below).
+      assert.equal(file.csv.split(/\r?\n/)[0], SEED_ALL_CSV.split(/\r?\n/)[0], 'same header')
       const rows = parseSeedCsv(file.csv)
       assert.equal(rows.length, file.expectedRows, `${file.key} row count`)
       assert.ok(rows.every((r) => r.branch === branch), `${file.key} holds only its own branch`)
@@ -736,7 +753,7 @@ describe('per-programme datasets are derived from the combined CSV', () => {
     assert.equal(filterSeedCsvByBranch('', 'B.Com'), '')
     assert.equal(filterSeedCsvByBranch('text,subject\nQ:,Economics', 'B.Com'), 'text,subject\nQ:,Economics',
       'a header with no branch column must not produce an empty dataset')
-    assert.equal(filterSeedCsvByBranch(SEED_ALL_CSV, 'BBA'), SEED_ALL_CSV.split('\n')[0],
+    assert.equal(filterSeedCsvByBranch(SEED_ALL_CSV, 'BBA'), SEED_ALL_CSV.split(/\r?\n/)[0],
       'an unknown programme filters down to just the header')
   })
 })

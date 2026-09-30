@@ -67,8 +67,20 @@ export interface SeedFile {
  */
 export const SEED_BRANCHES = ['B.Com', 'BA', 'B.Sc'] as const;
 
-/** The combined dataset, exactly as `generate_seed.py` wrote it. */
-export const SEED_ALL_CSV = String(allCsv ?? '');
+/**
+ * The combined dataset, exactly as `generate_seed.py` wrote it — with line
+ * endings normalised to LF.
+ *
+ * The file is inlined by Vite's `?raw` (and by the unit tests' raw-asset hook),
+ * so its bytes are whatever the working tree happens to hold: the repo pins
+ * `*.csv text eol=lf`, but a copy that was regenerated on Windows, or checked
+ * out before the attribute existed, arrives with CRLF. That would leave a `\r`
+ * on the last cell of every row, make the derived per-programme datasets
+ * platform-dependent, and fail the header comparisons in the seed tests on a
+ * Windows machine only. Normalising once, here, keeps everything downstream
+ * byte-identical on every platform.
+ */
+export const SEED_ALL_CSV = String(allCsv ?? '').replace(/\r\n?/g, '\n');
 
 /**
  * Filters the combined CSV down to one programme.
