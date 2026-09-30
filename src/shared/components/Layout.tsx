@@ -289,6 +289,16 @@ const facultyNav: SidebarEntry[] = [
 
   {
     kind: "group",
+    label: "Schedule",
+    icon: <CalendarToday fontSize="small" />,
+    children: [
+      { label: "My Weekly Schedule", path: "/faculty/schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
     label: "Assessments",
     icon: <Assignment fontSize="small" />,
     children: [

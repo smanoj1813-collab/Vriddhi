@@ -214,6 +214,13 @@ export interface UpdateMappingInput {
   facultyId?: string;
   facultyName?: string;
   facultyEmail?: string | null;
+  /**
+   * Corrected semester for the mapping. Normally the mapping inherits the
+   * curriculum's semester, but a curriculum can bundle courses from several
+   * semesters ("Semester" on the doc is just the primary one). Syncing
+   * rewrites this to the owning course's own `semester`.
+   */
+  semester?: number;
   batch?: string;
   division?: string | null;
   section?: string | null;

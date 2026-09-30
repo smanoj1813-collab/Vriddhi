@@ -301,9 +301,23 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     return Array.from(set).sort();
   }, [curriculumList]);
 
+  /**
+   * Every semester the college actually teaches.
+   *
+   * Read from the courses, not just the curriculum docs: a parsed curriculum
+   * can carry courses from several semesters under one header semester (a
+   * "Semester 3" B.Com doc routinely holds electives tagged 1–6), so the
+   * doc-level field alone hides most of the programme and leaves the filter
+   * offering only the two semesters that happen to head a document.
+   */
   const semesters = useCallback(() => {
     const set = new Set<number>();
-    curriculumList.forEach(c => set.add(c.semester));
+    curriculumList.forEach(c => {
+      if (typeof c.semester === 'number') set.add(c.semester);
+      c.courses?.forEach(course => {
+        if (typeof course.semester === 'number') set.add(course.semester);
+      });
+    });
     return Array.from(set).sort((a, b) => a - b);
   }, [curriculumList]);
 

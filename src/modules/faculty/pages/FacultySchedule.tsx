@@ -7,12 +7,15 @@ import {
   CardContent,
   Skeleton,
   Alert,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   AccessTime,
   LocationOn,
   CalendarToday,
   School,
+  Refresh,
 } from '@mui/icons-material';
 import { useFacultySchedule } from '../hooks/useFacultySchedule';
 import type { DayOfWeek } from '../../../types/schedule';
@@ -38,7 +41,7 @@ const dayColors: Record<DayOfWeek, string> = {
 };
 
 export default function FacultySchedule() {
-  const { weeklySchedule, todayClasses, totalClasses, isLoading, error } =
+  const { weeklySchedule, todayClasses, totalClasses, isLoading, error, refetch } =
     useFacultySchedule();
 
   if (isLoading) {
@@ -64,9 +67,21 @@ export default function FacultySchedule() {
 
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-      <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
-        Weekly Schedule
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          Weekly Schedule
+        </Typography>
+        <Tooltip title="Refresh schedule from server">
+          <IconButton
+            onClick={() => refetch()}
+            disabled={isLoading}
+            aria-label="Refresh schedule"
+            sx={{ color: 'primary.main' }}
+          >
+            <Refresh className={isLoading ? 'animate-spin' : ''} />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       {/* P4: academic-calendar banner — today */}
       <HolidayBanner
