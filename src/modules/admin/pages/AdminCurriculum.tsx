@@ -3,7 +3,7 @@
 // MUI v5 — matches AdminClassSchedule.tsx patterns
 // ═══════════════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -46,14 +46,37 @@ import {
   Book as BookIcon,
   School as SchoolIcon,
   ExpandMore as ExpandMoreIcon,
+  CheckCircle as CheckIcon,
   Refresh as RefreshIcon,
   AutoAwesome as AIIcon,
   Sync as SyncIcon,
 } from '@mui/icons-material'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
+import { fetchWeeklySchedules } from '../api/scheduleApi'
+import type { WeeklyClassSchedule } from '../types/schedule'
 import AutoMapDialog from '../components/AutoMapDialog'
 import type { CurriculumDoc, ParsedCourse } from '../../../shared/types/curriculum'
+
+/**
+ * Identity of a scheduled class across the curriculum and timetable
+ * collections. The timetable stores no courseId, so subject code + branch +
+ * batch + semester is the closest thing to a join key — and it is exactly
+ * what `handleScheduleClass` prefills when it opens the timetable page.
+ */
+function scheduledClassKey(
+  subjectCode: string | null | undefined,
+  branch: string | null | undefined,
+  batch: string | null | undefined,
+  semester: number | null | undefined,
+): string {
+  return [
+    (subjectCode ?? '').trim().toUpperCase(),
+    (branch ?? '').trim().toUpperCase(),
+    (batch ?? '').trim(),
+    semester ?? '',
+  ].join('|')
+}
 
 // ─── Tabs ──────────────────────────────────────────────────────────────
 type AdminTab = 'curriculum' | 'mappings' | 'schedule'
@@ -120,6 +143,11 @@ const AdminCurriculum: React.FC = () => {
   const [autoMapFor, setAutoMapFor] = useState<CurriculumDoc | null>(null)
   // True while the "Sync Semesters" bulk rewrite is running.
   const [syncing, setSyncing] = useState(false)
+  // The college's weekly timetable, used only to tell "already scheduled"
+  // apart from "not scheduled yet" — the Schedule button on a course or a
+  // mapping leads straight to this timetable, so it is the thing a user
+  // means when they say a class exists.
+  const [weeklySchedules, setWeeklySchedules] = useState<WeeklyClassSchedule[]>([])
   const [expandedCurriculum, setExpandedCurriculum] = useState<string | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' | 'warning' }>({
     open: false, message: '', severity: 'success',
@@ -141,6 +169,40 @@ const AdminCurriculum: React.FC = () => {
   const curriculumMappings = useMemo(() =>
     selectedCurriculumData ? getCurriculumMappings(selectedCurriculumData.id) : [],
   [selectedCurriculumData, getCurriculumMappings])
+
+  // ─── Load the weekly timetable ───────────────────────────────────────
+  useEffect(() => {
+    if (!collegeId) return
+    let cancelled = false
+    fetchWeeklySchedules(collegeId)
+      .then(rows => { if (!cancelled) setWeeklySchedules(rows) })
+      .catch(() => { if (!cancelled) setWeeklySchedules([]) })
+    return () => { cancelled = true }
+  }, [collegeId])
+
+  /**
+   * Active timetable rows grouped by subject code + branch + semester.
+   *
+   * Timetable rows carry no courseId, so subject code + branch + semester
+   * is the closest thing to a join key back to a curriculum course. Batch
+   * is deliberately left out of the key: a course card is not tied to one
+   * batch, so it should report every slot for that subject, and callers
+   * that do know the batch filter the group down themselves.
+   *
+   * Inactive rows are dropped — a retired slot must not read as
+   * "already scheduled".
+   */
+  const scheduledRows = useMemo(() => {
+    const groups = new Map<string, WeeklyClassSchedule[]>()
+    for (const row of weeklySchedules) {
+      if (row.isActive === false) continue
+      const key = scheduledClassKey(row.subjectCode, row.branch, null, row.semester)
+      const bucket = groups.get(key)
+      if (bucket) bucket.push(row)
+      else groups.set(key, [row])
+    }
+    return groups
+  }, [weeklySchedules])
 
   // ─── Subject-guided faculty options ──────────────────────────────────
   // Faculty are NOT pinned to a branch/batch — one person may teach across
@@ -462,7 +524,12 @@ const AdminCurriculum: React.FC = () => {
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={2}>
-                {selectedCurriculumData?.courses.map(course => (
+                {selectedCurriculumData?.courses.map(course => {
+                  const mapping = curriculumMappings.find(m => m.courseId === course.id)
+                  const scheduled = scheduledRows.get(
+                    scheduledClassKey(course.code, selectedCurriculumData.branch, null, course.semester)
+                  ) ?? []
+                  return (
                   <Grid size={{ xs: 12, sm: 6, md: 4 }} key={course.id}>
                     <Paper elevation={1} sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
                       <Box sx={{ mb: 1 }}>
@@ -471,19 +538,34 @@ const AdminCurriculum: React.FC = () => {
                           {course.code} · Sem {course.semester} · {course.credits} credits
                         </Typography>
                       </Box>
+                      {mapping && (
+                        <Typography variant="caption" sx={{ color: 'success.main', display: 'block', mb: 0.5 }}>
+                          {mapping.facultyName}{mapping.batch ? ` · ${mapping.batch}` : ''}
+                        </Typography>
+                      )}
+                      {scheduled.length > 0 && (
+                        <Chip
+                          size="small"
+                          color="success"
+                          icon={<CheckIcon />}
+                          label={`${scheduled.length} class${scheduled.length === 1 ? '' : 'es'} scheduled`}
+                          sx={{ alignSelf: 'flex-start', mb: 1 }}
+                        />
+                      )}
                       <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
                         <Button size="small" variant="outlined" startIcon={<EditIcon />}
                           onClick={() => handleOpenMapping(selectedCurriculumData!, course)}
                           disabled={!selectedCurriculumData}
-                        >Assign Faculty</Button>
+                        >{mapping ? 'Reassign' : 'Assign Faculty'}</Button>
                         <Button size="small" variant="outlined" startIcon={<ScheduleIcon />}
                           onClick={() => handleScheduleClass({ ...course, curriculumId: selectedCurriculumData!.id } as any)}
                           disabled={!selectedCurriculumData}
-                        >Schedule Class</Button>
+                        >{scheduled.length > 0 ? 'Manage schedule' : 'Schedule Class'}</Button>
                       </Box>
                     </Paper>
                   </Grid>
-                ))}
+                  )
+                })}
                 {selectedCurriculumData?.courses.length === 0 && (
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>No courses in this curriculum.</Typography>
@@ -600,9 +682,18 @@ const AdminCurriculum: React.FC = () => {
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Schedule class">
+                      <Tooltip title={
+                        scheduledRows.get(scheduledClassKey(m.courseCode, m.branch, null, m.semester))
+                          ?.filter(r => r.batch === m.batch).length
+                          ? 'Open the existing timetable entry'
+                          : 'Schedule class'
+                      }>
                         <IconButton size="small" onClick={() => handleScheduleClass(m)}>
-                          <ScheduleIcon fontSize="small" />
+                          <ScheduleIcon fontSize="small" color={
+                            scheduledRows.get(scheduledClassKey(m.courseCode, m.branch, null, m.semester))
+                              ?.some(r => r.batch === m.batch)
+                              ? 'success' : 'inherit'
+                          } />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
@@ -635,11 +726,24 @@ const AdminCurriculum: React.FC = () => {
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
               Select a mapping from the <strong>Mappings</strong> tab, then click the <ScheduleIcon fontSize="small" color="action" /> icon to prefill and jump to the Class Schedule page.
             </Typography>
-            {curriculumMappings.map(m => (
-              <Button key={m.id} variant="outlined" startIcon={<ScheduleIcon />} onClick={() => handleScheduleClass(m)} sx={{ mr: 1, mb: 1 }}>
+            {curriculumMappings.map(m => {
+              const forBatch = scheduledRows.get(
+                scheduledClassKey(m.courseCode, m.branch, null, m.semester)
+              )?.filter(r => r.batch === m.batch) ?? []
+              return (
+              <Button
+                key={m.id}
+                variant="outlined"
+                color={forBatch.length > 0 ? 'success' : 'primary'}
+                startIcon={forBatch.length > 0 ? <CheckIcon /> : <ScheduleIcon />}
+                onClick={() => handleScheduleClass(m)}
+                sx={{ mr: 1, mb: 1 }}
+              >
                 {m.courseName} ({m.batch} · Div {m.division || '–'})
+                {forBatch.length > 0 && ` · ${forBatch.length} scheduled`}
               </Button>
-            ))}
+              )
+            })}
             {curriculumMappings.length === 0 && (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>No mappings yet. Go to the Mappings tab to assign faculty first.</Typography>
             )}
