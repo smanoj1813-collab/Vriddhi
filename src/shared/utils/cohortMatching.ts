@@ -168,6 +168,38 @@ export function normalizeSection(value: unknown): string {
   return foldText(value).replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').replace(SECTION_PREFIXES, '').trim()
 }
 
+/**
+ * Prefix words that carry no letter of their own, so a list spelled out as
+ * "Div A, Div B" does not leave "div" behind as a letter of its own.
+ */
+const LETTER_PREFIX_WORDS = new Set(['div', 'division', 'sec', 'sect', 'section'])
+
+/** List separators: "A,B,C,D", "A/B", "A;B", "A B", "A&B". */
+const LETTER_SPLIT = /[,/;|&+]+|\s+/
+
+/**
+ * Every letter a division/section FIELD holds.
+ *
+ * Most records carry one letter ("A" = "div a"), but staff routinely write a
+ * LIST when one class covers several divisions — "A,B,C,D", "Div A, Div B",
+ * "a b". The old comparison read the whole field as a single token: "A,B,C,D"
+ * normalised to "abcd", which equals no student's "A", so the class matched
+ * nobody and the page blamed the student's division.
+ *
+ * A field with no separators is still ONE token: "ABCD" remains "abcd" and
+ * does not magically equal "A".
+ */
+export function cohortLetters(value: unknown, kind: 'division' | 'section'): string[] {
+  const normalize = kind === 'division' ? normalizeDivision : normalizeSection
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(LETTER_SPLIT)) {
+    const letter = normalize(raw)
+    if (!letter || LETTER_PREFIX_WORDS.has(letter)) continue
+    if (!out.includes(letter)) out.push(letter)
+  }
+  return out
+}
+
 /** 3, "3" → 3; 0, "", null, "x" → null (unknown, not "semester zero"). */
 export function normalizeSemester(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
@@ -259,14 +291,18 @@ export interface CohortMatchResult {
 
 /** Letters the class is taught to, from its division and section slots. */
 function scheduleLetters(criteria: CohortCriteria): string[] {
-  const letters = [normalizeDivision(criteria.division), normalizeSection(criteria.section)]
-  return letters.filter((l) => l !== '')
+  return [
+    ...cohortLetters(criteria.division, 'division'),
+    ...cohortLetters(criteria.section, 'section'),
+  ]
 }
 
 /** Letters the student is recorded under, from their division and section fields. */
 function studentLetters(fields: StudentCohortFields): string[] {
-  const letters = [normalizeDivision(fields.division), normalizeSection(fields.section)]
-  return letters.filter((l) => l !== '')
+  return [
+    ...cohortLetters(fields.division, 'division'),
+    ...cohortLetters(fields.section, 'section'),
+  ]
 }
 
 /**
@@ -361,11 +397,15 @@ export function matchStudentToCohort(fields: StudentCohortFields, criteria: Coho
     !stu.some((letter) => sched.includes(letter))
   ) {
     // Attribute the failure to the field(s) the student actually carries, so
-    // the UI can say which column to fix.
-    if (normalizeDivision(fields.division) !== '' && !sched.includes(normalizeDivision(fields.division))) {
+    // the UI can say which column to fix. Both sides are letter SETS: a class
+    // for "A,B,C,D" that omits the student's "E" fails on division, and a
+    // student's multi-letter field fails unless the class teaches one of them.
+    const ownDivision = cohortLetters(fields.division, 'division')
+    if (ownDivision.length > 0 && !ownDivision.some((letter) => sched.includes(letter))) {
       mismatches.push('division')
     }
-    if (normalizeSection(fields.section) !== '' && !sched.includes(normalizeSection(fields.section))) {
+    const ownSection = cohortLetters(fields.section, 'section')
+    if (ownSection.length > 0 && !ownSection.some((letter) => sched.includes(letter))) {
       mismatches.push('section')
     }
     // Both letters are off but were already attributed to neither field

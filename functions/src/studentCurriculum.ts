@@ -265,6 +265,31 @@ const normToken = (v: unknown) => fold(v).replace(NOISE_PUNCT, '')
 const normLetter = (v: unknown) =>
   fold(v).replace(/^div(ision)?[.\s]*/, '').replace(/^sec(tion)?[.\s]*/, '').trim()
 
+/** Words that carry no letter of their own: "Div A, Div B" → ["a", "b"]. */
+const LETTER_PREFIX_WORDS = new Set(['div', 'division', 'sec', 'sect', 'section'])
+
+/** List separators: "A,B,C,D", "A/B", "A;B", "A B", "A&B". */
+const LETTER_SPLIT = /[,/;|&+]+|\s+/
+
+/**
+ * Every letter a division/section FIELD holds.
+ *
+ * Staff write a LIST when one class covers several divisions — "A,B,C,D".
+ * Reading that as one token ("abcd") made the class equal nobody, so a
+ * correctly mapped subject was reported as "a different class than yours"
+ * (and the same value blanks the attendance roster). A field with no
+ * separators is still ONE token.
+ */
+export function cohortLetters(value: unknown): string[] {
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(LETTER_SPLIT)) {
+    const letter = normLetter(raw)
+    if (!letter || LETTER_PREFIX_WORDS.has(letter)) continue
+    if (!out.includes(letter)) out.push(letter)
+  }
+  return out
+}
+
 export interface CohortLike {
   branch?: unknown
   batch?: unknown
@@ -306,8 +331,8 @@ export function sessionMatchesCohort(row: CohortLike, student: CohortLike): bool
   const sSem = Number(student.semester) || 0
   if (rSem && sSem && rSem !== sSem) return false
 
-  const rowLetters = [normLetter(row.division), normLetter(row.section)].filter(Boolean)
-  const studentLetters = [normLetter(student.division), normLetter(student.section)].filter(Boolean)
+  const rowLetters = [...cohortLetters(row.division), ...cohortLetters(row.section)]
+  const studentLetters = [...cohortLetters(student.division), ...cohortLetters(student.section)]
   if (rowLetters.length && studentLetters.length) {
     if (!rowLetters.some((l) => studentLetters.includes(l))) return false
   }

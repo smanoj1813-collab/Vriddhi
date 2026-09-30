@@ -282,6 +282,33 @@ describe('cohort matching — division and section', () => {
     assert.equal(matches(student({ division: 'a', section: '' })), true)
   })
 
+  it('reads a division LIST as the set of letters the class covers', () => {
+    // Staff write one class's divisions as a list when the subject is taught
+    // to all of them: "A,B,C,D". Read as a single token it was "abcd", which
+    // equals no student's "A" — the mapping was correct and the page blamed
+    // the student's division.
+    assert.equal(matches(student({ division: 'A' }), criteria({ division: 'A,B,C,D', section: '' })), true)
+    assert.equal(matches(student({ division: 'C' }), criteria({ division: 'A,B,C,D', section: '' })), true)
+    assert.equal(matches(student({ division: 'A,B,C,D' }), criteria({ division: 'A' })), true)
+    // Both sides may be lists; the sets only need to intersect.
+    assert.equal(matches(student({ division: 'D,E' }), criteria({ division: 'A,B,C,D', section: '' })), true)
+    // Separators and the "Div" prefix are noise.
+    assert.equal(matches(student({ division: 'b' }), criteria({ division: 'Div A, Div B', section: '' })), true)
+    assert.equal(matches(student({ division: 'A' }), criteria({ division: 'a b c d', section: '' })), true)
+    // A letter the class does not teach is still excluded.
+    assert.equal(matches(student({ division: 'E' }), criteria({ division: 'A,B,C,D', section: '' })), false)
+  })
+
+  it('does not split a letter into letters it never meant', () => {
+    // No separators means ONE token: a single-letter "ABCD" letter code must
+    // not start matching division A.
+    assert.equal(matches(student({ division: 'A' }), criteria({ division: 'ABCD', section: '' })), false)
+    // Lists work through the section slot too. (Pin the student's division to
+    // '' so the fixture's own default "A" cannot answer the comparison.)
+    assert.equal(matches(student({ division: '', section: 'B' }), criteria({ division: '', section: 'A,B' })), true)
+    assert.equal(matches(student({ division: '', section: 'C' }), criteria({ division: '', section: 'A,B' })), false)
+  })
+
   it('excludes a student in a different letter with no overlap', () => {
     assert.equal(matches(student({ division: 'C' })), false)
     assert.equal(matches(student({ division: '', section: 'C' })), false)
@@ -422,6 +449,31 @@ describe('matchCohortRows — diagnostics', () => {
     // The cross-college row fails the tenant guard.
     assert.equal(diagnostics.mismatches.collegeId?.count, 1)
     assert.deepEqual(diagnostics.mismatches.collegeId?.values, ['college-b'])
+  })
+
+  it('does not report a division list as a mismatch for a student it covers', () => {
+    // The reported symptom (after the batch fix): mappings carry
+    // division "A,B,C,D", the student record says "A". Eight subjects were
+    // excluded and the page told the admin to re-map or correct the student.
+    const rows = [
+      student({ batch: '2027', division: 'A' }),
+      student({ batch: '2027', division: 'D' }),
+    ]
+    const { matched, diagnostics } = matchCohortRows(rows, criteria({ batch: '2027', division: 'A,B,C,D', section: '' }), 450)
+    assert.equal(matched.length, 2)
+    assert.equal(diagnostics.mismatches.division, undefined)
+    assert.equal(diagnostics.nearMissTotal, 0)
+  })
+
+  it('still attributes a letter the class does not teach, printing the list', () => {
+    const { matched, diagnostics } = matchCohortRows(
+      [student({ batch: '2027', division: 'E' })],
+      criteria({ batch: '2027', division: 'A,B,C,D', section: '' }),
+      450,
+    )
+    assert.equal(matched.length, 0)
+    assert.equal(diagnostics.mismatches.division?.count, 1)
+    assert.deepEqual(diagnostics.mismatches.division?.values, ['E'])
   })
 
   it('never counts an academic-year range as a batch mismatch', () => {

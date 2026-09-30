@@ -41,6 +41,20 @@ describe('sessionMatchesCohort', () => {
     // The trap in both directions: the range never collapses to its start.
     assert.equal(sessionMatchesCohort({ batch: '2026' }, { ...student, batch: '2026-2027' }), false)
   })
+  it('reads a division LIST as the set of letters the class covers', () => {
+    // The reported symptom: Auto-Map wrote division "A,B,C,D" (the subject is
+    // taught to all four divisions), the student record says "A". Read as one
+    // token it was "abcd", so a correct mapping matched nobody.
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2026-2027', division: 'A,B,C,D' }, student), true)
+    assert.equal(sessionMatchesCohort({ division: 'A,B,C,D' }, { ...student, division: 'D' }), true)
+    // Both sides may be lists; the sets only need to intersect.
+    assert.equal(sessionMatchesCohort({ division: 'A,B,C,D' }, { ...student, division: 'D,E' }), true)
+    assert.equal(sessionMatchesCohort({ division: 'Div A, Div B' }, { ...student, division: 'b' }), true)
+    // A letter the class does not teach is still excluded.
+    assert.equal(sessionMatchesCohort({ division: 'A,B,C,D' }, { ...student, division: 'E' }), false)
+    // No separators means ONE token: a bare "ABCD" letter code is not "A".
+    assert.equal(sessionMatchesCohort({ division: 'ABCD' }, student), false)
+  })
   it('accepts a class taught to the student section letter via the section slot', () => {
     assert.equal(sessionMatchesCohort({ division: '', section: 'A' }, student), true)
   })
@@ -257,6 +271,27 @@ describe('diagnoseCohortExclusion', () => {
     const d = diagnoseCohortExclusion(mappings, student)
     assert.equal(d.totalActiveMappings, 2)
     assert.deepEqual(d.mismatches, [])
+  })
+
+  it('does not call a covered division list a mismatch', () => {
+    // After the batch fix, the mappings and the student agreed on batch and
+    // semester but the page still reported division "A,B,C,D" vs "A".
+    const mappings = Array.from({ length: 8 }, (_, i) => ({
+      branch: 'BBA', batch: '2026-2027', semester: 3, division: 'A,B,C,D', courseId: `c${i}`,
+    }))
+    assert.equal(sessionMatchesCohort(mappings[0], student), true)
+    const d = diagnoseCohortExclusion(mappings, student)
+    assert.equal(d.totalActiveMappings, 8)
+    assert.deepEqual(d.mismatches, [])
+  })
+
+  it('still diagnoses a letter the class does not teach, printing the list', () => {
+    const mappings = [{ branch: 'BBA', batch: '2026-2027', semester: 3, division: 'A,B,C,D' }]
+    const d = diagnoseCohortExclusion(mappings, { ...student, division: 'E' })
+    assert.equal(d.mismatches.length, 1)
+    assert.equal(d.mismatches[0].field, 'division')
+    assert.equal(d.mismatches[0].studentValue, 'E')
+    assert.deepEqual(d.mismatches[0].mappingValues, ['A,B,C,D'])
   })
 
   it('still diagnoses a genuinely different batch, and shows both spellings', () => {
