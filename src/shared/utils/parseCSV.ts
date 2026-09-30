@@ -56,8 +56,13 @@ const STUDENT_COLUMNS: ColumnMapping[] = [
     },
   },
   {
+    /**
+     * Required: the registration number is the student's key in results
+     * imports, mentor sheets and every reconciliation. A blank one imports
+     * fine and then silently fails to match anything.
+     */
     field: 'regNo',
-    required: false,
+    required: true,
     aliases: ['registration number', 'reg no', 'regno', 'roll number', 'roll_no', 'rollno', 'reg_number', 'registration_no', 'enrollment number', 'enrollment_no'],
   },
   {
@@ -66,13 +71,21 @@ const STUDENT_COLUMNS: ColumnMapping[] = [
     aliases: ['phone', 'phone number', 'phonenumber', 'phone_number', 'mobile', 'mobile number', 'contact', 'contact number'],
   },
   {
+    /**
+     * The letter the student is taught in — the field rosters, attendance and
+     * the timetable compare against a class's division. Optional imports here
+     * are what produced students who matched no class at all, so it is now
+     * required: a per-row error beats a silently unmatchable student.
+     * ("Section" still maps here, as it always did in this importer.)
+     */
     field: 'division',
-    required: false,
+    required: true,
     aliases: ['division', 'class', 'section', 'class division', 'class_section'],
   },
   {
+    /** Admission year (e.g. 2027). Must equal the batch on the mapping. */
     field: 'batch',
-    required: false,
+    required: true,
     aliases: ['batch', 'year', 'academic year', 'academic_year', 'batch year', 'batch_year', 'passing year'],
   },
   {
@@ -86,16 +99,31 @@ const STUDENT_COLUMNS: ColumnMapping[] = [
     ],
   },
   {
+    /**
+     * The programme. `department` is what the student profile calls `branch`,
+     * and it is what every roster compares against the class's branch — the
+     * onboarding template's separate "Course" column never reached the
+     * database, so this single column carries both.
+     */
     field: 'department',
-    required: false,
-    aliases: ['department', 'branch', 'course', 'dept', 'stream', 'specialization'],
+    required: true,
+    aliases: ['department', 'branch', 'course', 'dept', 'stream', 'specialization', 'programme', 'program'],
   },
   {
+    /**
+     * Required, and validated 1–12. The server used to default a missing
+     * semester to 1, so a CSV without this column imported perfectly and put
+     * every student in semester 1 — a semester-3 mapping could then never
+     * reach them, with nothing in the UI to explain why.
+     */
     field: 'semester',
-    required: false,
+    required: true,
     aliases: ['semester', 'sem', 'current semester', 'current_semester'],
     validator: (val, rowNum) => {
-      if (val && isNaN(parseInt(val))) return `Row ${rowNum}: Semester must be a number, got "${val}"`;
+      const n = Number(String(val).trim());
+      if (!Number.isInteger(n) || n < 1 || n > 12) {
+        return `Row ${rowNum}: Semester must be a whole number between 1 and 12, got "${val}"`;
+      }
       return null;
     },
   },
@@ -607,17 +635,17 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       'Address',
     ];
     const sampleRow = [
-      'Rahul Sharma',
-      'rahul.sharma@college.edu',
-      'REG-2026-001',
+      'Ananya Rao',
+      'ananya.rao@college.edu',
+      'R2027001',
       '+91 98765 43210',
-      'A',
-      '2026',
+      'C',
+      '2027',
       'FAC001',
-      'B.Com',
-      '1',
-      '2005-03-15',
-      'Male',
+      'BBA',
+      '3',
+      '2006-03-15',
+      'Female',
       '123 Main St, Bangalore',
     ];
     return [headers.map(escape).join(','), sampleRow.map(escape).join(',')].join('\n');

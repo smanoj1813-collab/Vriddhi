@@ -129,6 +129,38 @@ function normalizeSemester(val: number | string | undefined): number {
   return isNaN(parsed) ? 1 : parsed
 }
 
+/**
+ * The cohort fields a student row MUST carry, checked per row.
+ *
+ * WHY: name + email alone produced perfectly importable students that matched
+ * no class — no batch, no division, no department (which is the profile's
+ * `branch`), and a semester that silently defaulted to 1. The student then saw
+ * "no curriculum assigned" (or "mapped to a different class") and every roster
+ * looked empty, with nothing in the import result to explain it. A row that
+ * cannot be placed in a class is rejected with the reason, and the operator
+ * fixes the file instead of the database.
+ *
+ * Returns the human-readable reason, or null when the row is complete.
+ * Pure: exported for unit tests.
+ */
+export function validateStudentCohortRow(row: {
+  department?: unknown
+  batch?: unknown
+  division?: unknown
+  semester?: unknown
+}): string | null {
+  if (!String(row.department ?? '').trim()) return 'Missing department/branch'
+  if (!String(row.batch ?? '').trim()) return 'Missing batch (admission year, e.g. 2027)'
+  if (!String(row.division ?? '').trim()) return 'Missing division'
+  const rawSemester = String(row.semester ?? '').trim()
+  if (!rawSemester) return 'Missing semester (1-12)'
+  const semester = Number(rawSemester)
+  if (!Number.isInteger(semester) || semester < 1 || semester > 12) {
+    return `Invalid semester "${rawSemester}" (1-12)`
+  }
+  return null
+}
+
 async function getCollegeData(collegeId: string) {
   const collegeDoc = await admin.firestore().doc(`colleges/${collegeId}`).get()
   if (!collegeDoc.exists) {
@@ -278,9 +310,12 @@ export const bulkCreateStudentAccounts = onCall(
       const email = normalizeEmail(row.email)
       const regNo = String(row.regNo || '').trim()
 
-      // ── Per-row validation (name + email are the only hard requirements,
-      //    matching the client CSV importer). Optional fields default to ''
-      //    below so an empty department/batch/division never blocks the import.
+      // ── Per-row validation ──
+      //    Name + email make the ACCOUNT; department, batch, division and
+      //    semester make the STUDENT placeable in a class. The old contract
+      //    accepted a row with none of the cohort fields and defaulted the
+      //    semester to 1, which is how a college ended up with 343 students
+      //    that every roster and every curriculum mapping missed.
       const name = String(row.name || '').trim()
       if (!name) {
         failedCount++
@@ -292,6 +327,13 @@ export const bulkCreateStudentAccounts = onCall(
         failedCount++
         errors.push({ row: rowNum, regNo, message: 'Invalid email address' })
         results.push({ regNo, name, email, success: false, error: 'Invalid email address' })
+        continue
+      }
+      const cohortError = validateStudentCohortRow(row)
+      if (cohortError) {
+        failedCount++
+        errors.push({ row: rowNum, regNo, message: cohortError })
+        results.push({ regNo, name, email, success: false, error: cohortError })
         continue
       }
       const semester = normalizeSemester(row.semester)

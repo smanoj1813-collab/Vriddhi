@@ -205,7 +205,18 @@ const UserImport: React.FC = () => {
         <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center hover:border-teal-500 dark:hover:border-teal-400 transition-colors">
           <FileSpreadsheet className="w-10 h-10 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Drag and drop or click to upload</p>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mb-3">Supports: Student Name, Email Address, Registration Number, Phone Number, Division, Batch, Mentor Name, Department</p>
+          {/* The column list must match `generateCSVTemplate('students')` and the
+              required flags in parseCSV.ts — every row is rejected without the
+              cohort fields, so promising a shorter list here sends the operator
+              into a wall of row errors. */}
+          <p className="text-xs text-slate-500 dark:text-slate-500 mb-1">
+            <span className="font-semibold text-slate-600 dark:text-slate-400">Required:</span> Student Name,
+            Email Address, Registration Number, Department, Batch, Semester, Division
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-500 mb-3">
+            <span className="font-semibold text-slate-600 dark:text-slate-400">Optional:</span> Phone Number, Date
+            of Birth, Gender, Address, Mentor ID. One letter per student in Division (A, B, C…) — never &quot;A,B,C,D&quot;.
+          </p>
           <input
             type="file"
             accept=".csv"
