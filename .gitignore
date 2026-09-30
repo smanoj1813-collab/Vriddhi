@@ -72,3 +72,4 @@ marketing/__pycache__/
 # python bytecode
 __pycache__/
 *.pyc
+database-debug.log*
