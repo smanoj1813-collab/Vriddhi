@@ -139,10 +139,18 @@ npx tsc --noEmit -p functions/tsconfig.json                            # clean
 node --import ./scripts/raw-asset-hooks.mjs --import tsx \
   --test src/modules/admin/utils/curriculumFlow.test.ts                # 24 pass
 
-npm run test:unit    # 599 pass (575 before this work)
+npm run test:unit    # 600 pass (575 before this work; 599 until the line-ending fix)
 npm run test:render  # 400 checks, 18 of them this flow (mounts the page in jsdom)
 npm run build        # tsc + vite build, clean
 ```
+
+The count moved 599 to 600 with `0e648e3`, which fixed the two failures that
+only appeared on a Windows checkout: the bundled question-bank CSV is inlined
+through Vite's `?raw`, so a CRLF working copy left a `\r` on the header that the
+per-programme datasets did not have. `questionBankSeed.ts` now normalises the CSV
+to LF at the module boundary and `generate_seed.py` writes with `newline="\n"`;
+the new test pins the invariant. Verified on Windows: 600/600 with the CRLF copy
+in place and 600/600 with it restored.
 
 The render checks mount the real page against stubbed Firestore fixtures and
 assert what lands in the DOM: the 1–6 ladder, the cross-collection join
